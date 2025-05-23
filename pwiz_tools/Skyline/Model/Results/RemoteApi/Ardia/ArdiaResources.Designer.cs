@@ -61,6 +61,24 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Do you want to upload {0} to Ardia at {1}?.
+        /// </summary>
+        public static string Ardia_FileUpload_ConfirmUploadToPath {
+            get {
+                return ResourceManager.GetString("Ardia_FileUpload_ConfirmUploadToPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select.
+        /// </summary>
+        public static string Ardia_FileUpload_SelectDestinationFolderLabel {
+            get {
+                return ResourceManager.GetString("Ardia_FileUpload_SelectDestinationFolderLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Upload Succeeded..
         /// </summary>
         public static string Ardia_FileUpload_SuccessfulUpload {

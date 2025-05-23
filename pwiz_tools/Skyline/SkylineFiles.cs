@@ -3515,17 +3515,23 @@ namespace pwiz.Skyline
             PublishToArdia();
         }
 
-        // BUG: users required to log back into their Ardia account each time Skyline starts
         // BUG: Removing RemoteAccounts using EditRemoteAccountsDlg appears to unexpectedly leave registered Ardia accounts intact
         // CONSIDER: when should an upload be split into multiple pieces?
         public void PublishToArdia()
         {
             Assume.IsTrue(HasRegisteredArdiaAccount, @"Expected Skyline has a registered Ardia account but none found");
 
-            // TODO: support choosing an Ardia account if > 1 account registered as part of choosing
-            //       the destination folder in the Ardia Platform
-            var ardiaAccount = Settings.Default.RemoteAccountList.
-                Where(a => a.AccountType == RemoteAccountType.ARDIA).Cast<ArdiaAccount>().First();
+            var ardiaAccounts = Settings.Default.RemoteAccountList.GetAccountsOfType(RemoteAccountType.ARDIA).ToList();
+
+            var fileDlg = new OpenArdiaFileDialogNE(ardiaAccounts);
+            fileDlg.Text = @"Select a destination folder";
+
+            if (fileDlg.ShowDialog(this) != DialogResult.OK)
+                return;
+
+            var destinationFolderPath = fileDlg.DestinationFolder; // @"/ZZZ-Document-Upload";
+
+            var ardiaAccount = fileDlg.SelectedAccount; 
 
             // Required for now - if the token is not set, show the prompt to log in to Ardia
             if (!ardiaAccount.HasToken())
@@ -3534,18 +3540,19 @@ namespace pwiz.Skyline
             var localZipFile = string.Empty;
             try
             {
-                // CONSIDER: For now, Skyline automatically sets the name of the .zip file to upload. Consider using
-                // the Windows File Explorer to set the name + location.
+                // CONSIDER: for now, automatically set the name of the .zip file. Should this be customizable?
                 localZipFile = FileEx.GetTimeStampedFileName(DocumentFilePath);
 
                 // Archive current Skyline document
                 var zipFileAvailable = ShareDocument(localZipFile, ShareType.COMPLETE);
-
-                // TODO: support choosing a destination directory on the Ardia server
-                const string ardiaPath = @"/ZZZ-Document-Upload";
-
                 if (zipFileAvailable)
                 {
+                    // CONSIDER: improve confirm UX and make it easier to read the message and paths
+                    var confirmMsg = 
+                        string.Format(ArdiaResources.Ardia_FileUpload_ConfirmUploadToPath, Path.GetFileName(localZipFile), destinationFolderPath);
+                    if (MessageDlg.Show(this, confirmMsg, false, MessageBoxButtons.OKCancel) != DialogResult.OK)
+                        return;
+
                     var isCanceled = false;
                     using (var waitDlg = new LongWaitDlg())
                     {
@@ -3553,7 +3560,7 @@ namespace pwiz.Skyline
                         waitDlg.PerformWork(this, 1000, longWaitBroker =>
                         {
                             var ardiaClient = ArdiaClient.Instance(ardiaAccount);
-                            ardiaClient.SendZipFile(ardiaPath, localZipFile, longWaitBroker, out _);
+                            ardiaClient.SendZipFile(destinationFolderPath, localZipFile, longWaitBroker, out _);
 
                             if (longWaitBroker.IsCanceled)
                                 isCanceled = true;

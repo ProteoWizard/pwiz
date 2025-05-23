@@ -97,11 +97,11 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
             return client;
         }
 
-        // TODO: how to user IProgressMonitor for a series of HTTP requests?
-        // TODO: improve error handling throughout, including parsing response body into JSON
-        // TODO: test success
-        // TODO: test failure - authentication, malformed json, file upload failure
+        // TODO: improve and test error handling throughout, incl. authentication, malformed json, file upload failure, invalid destination directory
+        // TODO: success tests
+        // TODO: HttpClient encodes destinationFolderPath by default
         // CONSIDER: destinationFolderPath must be an absolute path starting with "/". Add input validation?
+
         /// <summary>
         /// Upload a zip file to the Ardia API. The .zip file must contain Skyline files - including .sky, .sky.view, .skyl, etc.
         /// </summary>
