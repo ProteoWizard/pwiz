@@ -67,19 +67,13 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
                 return ArdiaUrl.Empty;
             }
 
-            public override string Label
-            {
-                get { return RemoteApiResources.Ardia_Label_Ardia; }
-            }
+            public override string Label => RemoteApiResources.Ardia_Label_Ardia;
 
-            public override string Name
-            {
-                get { return @"ardia"; }
-            }
+            public override string Name => @"ardia";
 
             public override RemoteAccount GetEmptyAccount()
             {
-                return new ArdiaAccount(string.Empty, null, null);
+                return new ArdiaAccount(string.Empty, null, null, null);
             }
         }
     }

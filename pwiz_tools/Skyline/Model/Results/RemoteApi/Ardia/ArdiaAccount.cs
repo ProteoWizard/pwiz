@@ -15,62 +15,92 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
+// BUG: now that access tokens are stored across sessions Skyline sessions, a new bug is exposed where EditRemoteAccountDlg shows
+//      the Ardia account as "not logged in" if it has not already talked with the remote API during the Skyline session.
+//      This happens because ArdiaAccount._authenticatedHttpClientFactory is only assigned when a request is made to the Ardia API.
+//      If EditRemoteAccountDlg appears prior to an Ardia API call using a given ArdiaAccount, the Dlg detects the ArdiaAccount as logged out.
 namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
 {
+    /// <summary>
+    /// Wiki docs about configuring Ardia accounts in Skyline:
+    ///     https://skyline.ms/wiki/home/software/Skyline/page.view?name=Ardia%20setup%20and%20importing%20a%20file%20from%20Ardia
+    ///
+    /// Once added, the account is listed under Tools => Options => Remote Accounts and can be accessed by Skyline developers using
+    /// <see cref="Settings.RemoteAccountList"/>.
+    ///
+    /// When Skyline closes, configuration info about the account is stored in Skyline's user.config file whose path
+    /// can be found under Tools => Options => Miscellaneous and is stored in a directory like:
+    /// 
+    ///     C:\Users\%USERNAME%\AppData\Local\University_of_Washington\Skyline-daily.exe_Url_db2lbzhuk4iiqiyc522okkxewhxy1qsq\24.1.1.493\user.config
+    /// 
+    /// </summary>
     [XmlRoot("ardia_account")]
     public class ArdiaAccount : RemoteAccount
     {
-        private static IDictionary<(string, string), string> _sessionCookieStrings = new ConcurrentDictionary<(string, string), string>();
-
-        private static (string, string) MakeKey(ArdiaAccount ardiaAccount)
-        {
-            return (ardiaAccount.ServerUrl, ardiaAccount.Username);
-        }
-
         public static string GetSessionCookieString(ArdiaAccount ardiaAccount)
         {
-            var key = MakeKey(ardiaAccount);
-            _sessionCookieStrings.TryGetValue(key, out var sessionCookieString);
-            return sessionCookieString;
+            return ardiaAccount.Token;
         }
 
         public static void SetSessionCookieString(ArdiaAccount ardiaAccount, string sessionCookieString)
         {
-            var key = MakeKey(ardiaAccount);
-            _sessionCookieStrings[key] = sessionCookieString;
+            ardiaAccount.Token = sessionCookieString;
         }
 
+        public static string GetSessionCookieStringForHostname(ArdiaAccount ardiaAccount)
+        {
+            var hostname = ardiaAccount.ServerUrl;
+            var username = ardiaAccount.Username;
+
+            var ardiaAccounts = Settings.Default.RemoteAccountList
+                .Where(account =>
+                    string.Equals(hostname, account.ServerUrl, StringComparison.OrdinalIgnoreCase) &&
+                    string.Equals(username, account.Username, StringComparison.OrdinalIgnoreCase)
+                ).Cast<ArdiaAccount>().ToList();
+
+            return ardiaAccounts.Count == 0 ?
+                string.Empty :
+                // CONSIDER: is it possible to register > 1 account with the same ServerUrl + Username? If so,
+                //           be resilient and just take the first one rather than raising an exception
+                ardiaAccounts.First().Token;
+        }
+
+        // TEST ONLY
         public static void ClearSessionCookieStrings()
         {
-            _sessionCookieStrings.Clear();
+            Settings.Default.RemoteAccountList.Where(a => a.AccountType == RemoteAccountType.ARDIA).Cast<ArdiaAccount>().ForEach(item => { item.Token = null; });
         }
 
+        // TEST ONLY
+        public static readonly ArdiaAccount DEFAULT = new ArdiaAccount(string.Empty, string.Empty, string.Empty, string.Empty);
 
-        public static readonly ArdiaAccount DEFAULT = new ArdiaAccount(string.Empty, string.Empty, string.Empty);
-
+        public override RemoteAccountType AccountType => RemoteAccountType.ARDIA;
         public bool DeleteRawAfterImport { get; private set; }
-        
-        //  Following 'TestingOnly...' properties are for only supporting the automated tests in class ArdiaTest
+        public string Token { get; protected set; }
+
+        // TEST ONLY properties for supporting the automated tests in class ArdiaTest
         public string TestingOnly_NotSerialized_Role { get; private set; }
         public string TestingOnly_NotSerialized_Username { get; private set; }
         public string TestingOnly_NotSerialized_Password { get; private set; }
 
-
-        public ArdiaAccount(string serverUrl, string username, string password)
+        public ArdiaAccount(string serverUrl, string username, string password, string token)
         {
             ServerUrl = serverUrl;
             Username = username;
             Password = password;
+            Token = token;
         }
 
         public string GetFolderContentsUrl(ArdiaUrl ardiaUrl)
@@ -91,23 +121,6 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
         {
             var rootUrl = GetRootArdiaUrl();
             return folderUrl.Replace(rootUrl.NavigationBaseUrl, "").Replace(rootUrl.ServerUrl, "").Replace(@"/path?itemPath=", "").TrimEnd('/');
-        }
-
-        private enum ATTR
-        {
-            delete_after_import
-        }
-
-        protected override void ReadXElement(XElement xElement)
-        {
-            base.ReadXElement(xElement);
-            DeleteRawAfterImport = Convert.ToBoolean((string) xElement.Attribute(ATTR.delete_after_import.ToString()));
-        }
-
-        public override void WriteXml(XmlWriter writer)
-        {
-            base.WriteXml(writer);
-            writer.WriteAttribute(ATTR.delete_after_import, DeleteRawAfterImport);
         }
 
         private Func<HttpClient> _authenticatedHttpClientFactory;
@@ -153,6 +166,13 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
             return _authenticatedHttpClientFactory();
         }
 
+        /// <summary>
+        /// Checks whether an HttpClient configured using this account can successfully call the Ardia API. This
+        /// makes a real request requiring authentication.
+        ///
+        /// Returns if the account is properly configured. Throws an <see cref="HttpRequestException"/> otherwise.
+        /// </summary>
+        /// <param name="httpClient"></param>
         private void CheckAuthentication(HttpClient httpClient)
         {
             var response = httpClient.GetAsync(GetFolderContentsUrl()).Result;
@@ -165,20 +185,21 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
             _authenticatedHttpClientFactory = null;
         }
 
-        public override RemoteAccountType AccountType
-        {
-            get { return RemoteAccountType.ARDIA; }
-        }
-
         public override RemoteSession CreateSession()
         {
             return new ArdiaSession(this);
         }
 
-
         public ArdiaAccount ChangeDeleteRawAfterImport(bool deleteAfterImport)
         {
             var result = ChangeProp(ImClone(this), im => im.DeleteRawAfterImport = deleteAfterImport);
+            result._authenticatedHttpClientFactory = _authenticatedHttpClientFactory;
+            return result;
+        }
+
+        public ArdiaAccount ChangeToken(string token)
+        {
+            var result = ChangeProp(ImClone(this), im => im.Token = token);
             result._authenticatedHttpClientFactory = _authenticatedHttpClientFactory;
             return result;
         }
@@ -204,17 +225,49 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
 
         public ArdiaUrl GetRootArdiaUrl()
         {
-            return (ArdiaUrl) ArdiaUrl.Empty.ChangeServerUrl(ServerUrl).ChangeUsername(Username); //  Copy along the Username value for code that matches the username works
+            return (ArdiaUrl)GetRootUrl();
         }
 
         public override RemoteUrl GetRootUrl()
         {
-            return GetRootArdiaUrl();
+            return ArdiaUrl.Empty.ChangeServerUrl(ServerUrl).ChangeUsername(Username); //  Copy along the Username value for code that matches the username works;
         }
 
-        private ArdiaAccount()
+        public bool HasToken()
         {
+            return !string.IsNullOrEmpty(Token);
         }
+        private ArdiaAccount() {}
+
+        private enum ATTR
+        {
+            delete_after_import,
+            token
+        }
+
+        protected override void ReadXElement(XElement xElement)
+        {
+            base.ReadXElement(xElement);
+            DeleteRawAfterImport = Convert.ToBoolean((string)xElement.Attribute(ATTR.delete_after_import.ToString()));
+
+            var tokenString = (string)xElement.Attribute(ATTR.token.ToString());
+            if (!string.IsNullOrEmpty(tokenString))
+            {
+                Token = TextUtil.DecryptString(tokenString);
+            }
+        }
+
+        public override void WriteXml(XmlWriter writer)
+        {
+            base.WriteXml(writer);
+            writer.WriteAttribute(ATTR.delete_after_import, DeleteRawAfterImport);
+
+            if (!string.IsNullOrEmpty(Token))
+            {
+                writer.WriteAttribute(ATTR.token, TextUtil.EncryptString(Token));
+            }
+        }
+
         public static ArdiaAccount Deserialize(XmlReader reader)
         {
             return reader.Deserialize(new ArdiaAccount());
@@ -226,7 +279,8 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
                    Equals(TestingOnly_NotSerialized_Role, other.TestingOnly_NotSerialized_Role) &&
                    Equals(TestingOnly_NotSerialized_Username, other.TestingOnly_NotSerialized_Username) &&
                    Equals(TestingOnly_NotSerialized_Password, other.TestingOnly_NotSerialized_Password) &&
-                   DeleteRawAfterImport == other.DeleteRawAfterImport;
+                   DeleteRawAfterImport == other.DeleteRawAfterImport &&
+                   string.Equals(Token, other.Token);
         }
 
         public override int GetHashCode()
@@ -238,6 +292,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
                 hashCode = (hashCode * 397) ^ (TestingOnly_NotSerialized_Username?.GetHashCode() ?? 0);
                 hashCode = (hashCode * 397) ^ (TestingOnly_NotSerialized_Password?.GetHashCode() ?? 0);
                 hashCode = (hashCode * 397) ^ DeleteRawAfterImport.GetHashCode();
+                hashCode = (hashCode * 397) ^ (Token != null ? Token.GetHashCode() : 0);
                 return hashCode;
             }
         }
