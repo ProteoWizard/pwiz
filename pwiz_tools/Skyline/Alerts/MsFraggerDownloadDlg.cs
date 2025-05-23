@@ -241,13 +241,8 @@ namespace pwiz.Skyline.Alerts
         {
             var verificationResultHtml = RequestVerificationCode();
             lblVerificationCode.Enabled = tbVerificationCode.Enabled = true;
-            var checkEmailDlg =
-                new AlertDlg(AlertsResources.MsFraggerDownloadDlg_btnRequestVerificationCode_Click_Check_your_email, MessageBoxButtons.OK)
-                {
-                    DetailMessage = verificationResultHtml,
-                    StartPosition = FormStartPosition.CenterParent
-                };
-            checkEmailDlg.Show(this);
+            new AlertDlg(AlertsResources.MsFraggerDownloadDlg_btnRequestVerificationCode_Click_Check_your_email, MessageBoxButtons.OK)
+                { DetailMessage = verificationResultHtml }.ShowAndDispose(this);
         }
 
         private bool CheckCursorWithinRange(RichTextBox rtb, MouseEventArgs e, LinkInfo linkInfo)
