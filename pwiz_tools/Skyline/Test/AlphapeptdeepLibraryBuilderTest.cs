@@ -61,12 +61,20 @@ namespace pwiz.SkylineTest
         public void TestAlphapeptdeepLibraryBuilder()
         {
             string outputPath = TestContext.GetTestResultsPath();
-            
+
             if (!Directory.Exists(outputPath))
-                Directory.CreateDirectory(outputPath);
-         
-            var peptides = new[]
             {
+                Directory.CreateDirectory(outputPath);
+                Console.WriteLine($@"Creating test directory '{outputPath}'");
+            }
+            else
+            {
+                Console.WriteLine($@"Using existing test directory '{outputPath}'");
+
+            }
+
+            var peptides = new[]
+                {
                 new Peptide("ELVISK"),
                 new Peptide("LIVESK"),
                 new Peptide("KINGPELVISKINK"),
@@ -90,7 +98,15 @@ namespace pwiz.SkylineTest
             TestTransformPeptDeepOutput(outputPath);
             TestImportSpectralLibrary(outputPath);
 
-            Directory.Delete(outputPath, true);
+            try
+            {
+                Directory.Delete(outputPath, true);
+            }
+            catch (Exception ex) 
+            {
+                Console.WriteLine( $@"Exception deleting test directory '{outputPath}' : {ex.Message}");
+            }
+
         }
 
         /// <summary>
