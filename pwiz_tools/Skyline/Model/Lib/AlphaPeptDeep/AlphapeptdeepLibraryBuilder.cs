@@ -221,6 +221,13 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 { ION_MOBILITY, null}
             };
 
+        /// <summary>
+        /// Constructor for AlphaPeptDeep Library Builder.
+        /// </summary>
+        /// <param name="libName">Name of the library to build.</param>
+        /// <param name="libOutPath">Path to the blib final product.</param>
+        /// <param name="document">Input document for building the library.</param>
+        /// <param name="irtStandard">iRT peptide standard to include in the library.</param>
         public AlphapeptdeepLibraryBuilder(string libName, string libOutPath,
             SrmDocument document, IrtStandard irtStandard) : base(document, irtStandard)
         {

@@ -45,6 +45,8 @@ namespace pwiz.SkylineTest
 
         public string LogOutput => Path.Combine(TestContext.GetTestResultsPath(), "TestConsole.log");
 
+        public string RootDir => TestContext.GetTestResultsPath();
+
 
         [TestMethod]
         public void TestModificationInfo()
@@ -60,21 +62,22 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestAlphapeptdeepLibraryBuilder()
         {
-            string outputPath = TestContext.GetTestResultsPath();
+            string outputPath = Path.Combine(RootDir, "TestAlphaPeptDeepLibrary.blib");
 
-            if (!Directory.Exists(outputPath))
+
+            if (!Directory.Exists(RootDir))
             {
-                Directory.CreateDirectory(outputPath);
-                Console.WriteLine($@"Creating test directory '{outputPath}'");
+                Directory.CreateDirectory(RootDir);
+                Console.WriteLine($@"Creating test directory '{RootDir}'");
             }
             else
             {
-                Console.WriteLine($@"Using existing test directory '{outputPath}'");
+                Console.WriteLine($@"Using existing test directory '{RootDir}'");
 
             }
 
             var peptides = new[]
-                {
+            {
                 new Peptide("ELVISK"),
                 new Peptide("LIVESK"),
                 new Peptide("KINGPELVISKINK"),
@@ -100,11 +103,11 @@ namespace pwiz.SkylineTest
 
             try
             {
-                Directory.Delete(outputPath, true);
+                Directory.Delete(RootDir, true);
             }
             catch (Exception ex) 
             {
-                Console.WriteLine( $@"Exception deleting test directory '{outputPath}' : {ex.Message}");
+                Console.WriteLine( $@"Exception deleting test directory '{RootDir}' : {ex.Message}");
             }
 
         }
@@ -112,7 +115,7 @@ namespace pwiz.SkylineTest
         /// <summary>
         /// Tests an AlphaPeptDeep unsupported modification.
         /// </summary>
-        /// <param name="outputPath">Path to the output directory.</param>
+        /// <param name="outputPath">Path to the output blib.</param>
         public void TestImportSpectralLibrary(string outputPath)
         {
             var document = CreateTestEmptyDocument();
@@ -127,7 +130,7 @@ namespace pwiz.SkylineTest
 
             using (var stream = GetType().Assembly.GetManifestResourceStream(GetType().Namespace + "." + input))
             {
-                using (var fileStream = new FileStream(Path.Combine(outputPath, input), FileMode.Create, FileAccess.Write))
+                using (var fileStream = new FileStream(Path.Combine(RootDir, input), FileMode.Create, FileAccess.Write))
                 {
                     // Copy the resource stream to the file
                     if (stream != null)
@@ -139,7 +142,7 @@ namespace pwiz.SkylineTest
 
             using (var stream = GetType().Assembly.GetManifestResourceStream(GetType().Namespace + "." + output))
             {
-                using (var fileStream = new FileStream(Path.Combine(outputPath, answer), FileMode.Create, FileAccess.Write))
+                using (var fileStream = new FileStream(Path.Combine(RootDir, answer), FileMode.Create, FileAccess.Write))
                 {
                     // Copy the resource stream to the file
                     if (stream != null)
@@ -149,9 +152,9 @@ namespace pwiz.SkylineTest
                 }
             }
          
-            answer = Path.Combine(outputPath, answer);
-            input = Path.Combine(outputPath, input);
-            output = Path.Combine(outputPath, output);
+            answer = Path.Combine(RootDir, answer);
+            input = Path.Combine(RootDir, input);
+            output = Path.Combine(RootDir, output);
             builder.ImportSpectralLibrary(progress, ref status, input, output);
 
             using (var answerReader = new StreamReader(answer))
@@ -180,7 +183,7 @@ namespace pwiz.SkylineTest
 
             using (var stream = GetType().Assembly.GetManifestResourceStream(GetType().Namespace + "." + input))
             {
-                using (var fileStream = new FileStream(Path.Combine(outputPath, input), FileMode.Create, FileAccess.Write))
+                using (var fileStream = new FileStream(Path.Combine(RootDir, input), FileMode.Create, FileAccess.Write))
                 {
                     // Copy the resource stream to the file
                     if (stream != null) 
@@ -194,7 +197,7 @@ namespace pwiz.SkylineTest
 
             using (var stream = GetType().Assembly.GetManifestResourceStream(GetType().Namespace + "." + output))
             {
-                using (var fileStream = new FileStream(Path.Combine(outputPath, answer), FileMode.Create, FileAccess.Write))
+                using (var fileStream = new FileStream(Path.Combine(RootDir, answer), FileMode.Create, FileAccess.Write))
                 {
                     // Copy the resource stream to the file
                     if (stream != null)
@@ -204,9 +207,9 @@ namespace pwiz.SkylineTest
                 }
             }
          
-            answer = Path.Combine(outputPath, answer);
-            input = Path.Combine(outputPath, input);
-            output = Path.Combine(outputPath, output);
+            answer = Path.Combine(RootDir, answer);
+            input = Path.Combine(RootDir, input);
+            output = Path.Combine(RootDir, output);
             builder.TransformPeptdeepOutput(progress, ref status, input, output);
 
             using (var answerReader = new StreamReader(answer))
@@ -219,7 +222,7 @@ namespace pwiz.SkylineTest
         /// Test of AlphapeptdeepLibraryBuilder.GetWarningMods()
         /// </summary>
         /// <param name="document">Input SrmDocument.</param>
-        /// <param name="outputPath">Path to the output directory.</param>
+        /// <param name="outputPath">Path to the output blib.</param>
         /// <param name="expectedWarningCount">Expected count of warnings generated.</param>
         public void TestGetWarningMods(SrmDocument document, string outputPath, int expectedWarningCount = 0)
         {
@@ -233,7 +236,7 @@ namespace pwiz.SkylineTest
         /// Test of AlphapeptdeepLibraryBuilder.GetPrecursorTable
         /// </summary>
         /// <param name="document">Input SrmDocument.</param>
-        /// <param name="outputPath">Path to the output directory.</param>
+        /// <param name="outputPath">Path to the output blib.</param>
         /// <param name="expectedLines">Expected lines of output.</param>
         public void TestGetPrecursorTable(SrmDocument document, string outputPath, IEnumerable<string> expectedLines)
         {
