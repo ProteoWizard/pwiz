@@ -61,7 +61,10 @@ namespace pwiz.SkylineTest
         public void TestAlphapeptdeepLibraryBuilder()
         {
             string outputPath = TestContext.GetTestResultsPath();
-
+            
+            if (!Directory.Exists(outputPath))
+                Directory.CreateDirectory(outputPath);
+         
             var peptides = new[]
             {
                 new Peptide("ELVISK"),
