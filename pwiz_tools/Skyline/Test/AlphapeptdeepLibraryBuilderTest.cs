@@ -41,7 +41,7 @@ namespace pwiz.SkylineTest
         /// <summary>
         /// When true the test write the answer file
         /// </summary>
-        public bool IsRecordMode => true;
+        public bool IsRecordMode => false;
 
         public string LogOutput => Path.Combine(TestContext.GetTestResultsPath(), "TestConsole.log");
 
