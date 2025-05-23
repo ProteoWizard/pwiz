@@ -1017,7 +1017,23 @@ namespace pwiz.Skyline.Util
             catch (Exception) { }
 // ReSharper restore EmptyGeneralCatchClause
         }
-
+        public static void CreateLongPathDirectory(string path)
+        {
+            try
+            {
+                string longPath = $@"\\?\{path}";
+                Helpers.TryTwice(() =>
+                {
+                    if (path != null && !Directory.Exists(longPath)) // Don't waste time trying to create a directory that already exists
+                    {
+                        Directory.CreateDirectory(longPath);
+                    }
+                });
+            }
+            // ReSharper disable EmptyGeneralCatchClause
+            catch (Exception) { }
+            // ReSharper restore EmptyGeneralCatchClause
+        } 
         public static void SafeDeleteLongPath(string path)
         {
             try
