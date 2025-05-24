@@ -619,15 +619,6 @@ Here are the last 3 errors:
   <data name="RtAlignment_AxisTitleAlignedTo" xml:space="preserve">
     <value>{0} aligned to {1}</value>
   </data>
-  <data name="RtGraphValue_FWB_Time" xml:space="preserve">
-    <value>FWB Time</value>
-  </data>
-  <data name="RtGraphValue_FWHM_Time" xml:space="preserve">
-    <value>FWHM Time</value>
-  </data>
-  <data name="RtGraphValue_Retention_Time" xml:space="preserve">
-    <value>Retention Time</value>
-  </data>
   <data name="RTLinearRegressionGraphPane_RTLinearRegressionGraphPane_Score" xml:space="preserve">
     <value>Score</value>
   </data>
