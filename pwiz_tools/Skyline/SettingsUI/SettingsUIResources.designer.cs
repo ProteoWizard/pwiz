@@ -323,6 +323,16 @@ namespace pwiz.Skyline.SettingsUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add peptide precursors to the document to build a library from AlphaPeptDeep predictions..
+        /// </summary>
+        public static string BuildLibraryDlg_CreateAlphaBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_AlphaPeptDeep_predictions_ {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_CreateAlphaBuilder_Add_peptide_precursors_to_the_document_to_buil" +
+                        "d_a_library_from_AlphaPeptDeep_predictions_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Finding library input files in.
         /// </summary>
         public static string BuildLibraryDlg_FindInputFiles_Finding_library_input_files_in {

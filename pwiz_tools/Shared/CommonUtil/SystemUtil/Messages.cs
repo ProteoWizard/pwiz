@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Diagnostics;
 
 namespace pwiz.Common.SystemUtil
@@ -30,16 +31,20 @@ namespace pwiz.Common.SystemUtil
     /// </summary>
     public static class Messages
     {
+        // Testing overrides
+        public static Action<string, object[]> WriteDebugMessage = (message, args) => Trace.TraceInformation(message, args);
+        public static Action<string, object[]> WriteUserMessage = (message, args) => Trace.TraceWarning(message, args);
+
         public static void WriteAsyncDebugMessage(string message, params object[] args)
         {
-            Trace.TraceInformation(message, args);
+            WriteDebugMessage(message, args);
         }
 
         public static void WriteAsyncUserMessage(string message, params object[] args)
         {
             // For Skyline UI, the TraceWarningListener class causes these messages to appear in the
             // Immediate Window, for commandline they appear in the console.
-            Trace.TraceWarning(message, args);  
+            WriteUserMessage(message, args);
         }
     }
 }

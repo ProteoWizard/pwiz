@@ -443,7 +443,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         private void GetPercolatorScores(string percolatorTsvFilepath, Dictionary<string, double> qvalueByPsmId)
         {
-            var percolatorTargetPsmsReader = new DsvFileReader(percolatorTsvFilepath, TextUtil.SEPARATOR_TSV);
+            using var percolatorTargetPsmsReader = new DsvFileReader(percolatorTsvFilepath, TextUtil.SEPARATOR_TSV);
             int psmIdColumn = percolatorTargetPsmsReader.GetFieldIndex(@"PSMId");
             int qvalueColumn = percolatorTargetPsmsReader.GetFieldIndex(@"q-value");
             int psmIdStartIndex = Path.GetDirectoryName(Path.GetDirectoryName(percolatorTsvFilepath))?.Length + 1 ?? 0; // trim off the directory name

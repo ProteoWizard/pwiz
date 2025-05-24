@@ -322,7 +322,7 @@ namespace pwiz.SkylineTest.MSstats.Normalization
 
         Dictionary<DataProcessedRowKey, double?> ReadDataProcessedRows(TextReader reader)
         {
-            DsvFileReader csvReader = new DsvFileReader(reader, TextUtil.SEPARATOR_CSV);
+            using var csvReader = new DsvFileReader(reader, TextUtil.SEPARATOR_CSV);
             var rows = new Dictionary<DataProcessedRowKey, double?>();
             while (null != csvReader.ReadLine())
             {
@@ -335,7 +335,7 @@ namespace pwiz.SkylineTest.MSstats.Normalization
                     Run = int.Parse(csvReader.GetFieldByName("RUN"), CultureInfo.InvariantCulture),
                 };
 
-                String strAbundance = csvReader.GetFieldByName("ABUNDANCE");
+                string strAbundance = csvReader.GetFieldByName("ABUNDANCE");
                 double? abundance = "NA" == strAbundance
                     ? default(double?)
                     : double.Parse(strAbundance, CultureInfo.InvariantCulture);
