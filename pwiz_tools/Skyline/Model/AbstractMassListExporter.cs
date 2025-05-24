@@ -27,6 +27,7 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -604,11 +605,11 @@ namespace pwiz.Skyline.Model
                     bool transitionWritten = false;
                     for (int i = -OptimizeStepCount; i <= OptimizeStepCount; i++)
                     {
-                        // But avoid writing zero or negative CE values, which will just mess up actuisition
+                        // But avoid writing zero or negative CE values, which will just mess up acquisition
                         // Always write the highest CE if no other transition has been written, even if it is
                         // negative, since not doing so makes it a lot harder to understand why a particular
                         // transition did not get written at all.
-                        if (Equals(OptimizeType, ExportOptimize.CE) && GetCollisionEnergy(nodePep, nodeGroup, nodeTran, i) <= 0)
+                        if (Equals(OptimizeType, ExportOptimize.CE) && !IsAllowedCE(GetCollisionEnergy(nodePep, nodeGroup, nodeTran, i)))
                         {
                             if (transitionWritten || i < OptimizeStepCount)
                                 continue;
@@ -618,6 +619,19 @@ namespace pwiz.Skyline.Model
                     }
                 }
             }
+        }
+
+        private bool IsAllowedCE(double ce)
+        {
+            if (ce > 0)
+                return true;
+            if (CanOptimizeWithoutEquations && ce == 0)
+            {
+                // Allow zero as a return value when the predictor is set to "None"
+                return Equals(CollisionEnergyList.NONE,
+                    Document.Settings.TransitionSettings.Prediction.CollisionEnergy);
+            }
+            return false;
         }
 
         private sealed class PeptideScheduleBucket : Collection<PeptideSchedule>
@@ -759,6 +773,8 @@ namespace pwiz.Skyline.Model
         }
 
         protected abstract string InstrumentType { get; }
+
+        protected virtual bool CanOptimizeWithoutEquations => false;
 
         public virtual bool HasHeaders { get { return false; } }
 

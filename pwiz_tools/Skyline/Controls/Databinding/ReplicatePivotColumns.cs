@@ -66,8 +66,9 @@ namespace pwiz.Skyline.Controls.Databinding
                 return null;
             }
 
+            var resultKeyWithoutFileIndex = new ResultKey(resultKey.ReplicateName, resultKey.ReplicateIndex, 0);
             Replicate replicate = null;
-            skylineDataSchema?.ReplicateList.TryGetValue(resultKey, out replicate);
+            skylineDataSchema?.ReplicateList.TryGetValue(resultKeyWithoutFileIndex, out replicate);
             return replicate;
         }
 
