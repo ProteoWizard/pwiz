@@ -26,30 +26,33 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest
 {
-    //This class holds basic unit tests for AlphapeptdeepLibraryBuilder internals,
-    //most of the testing of AlphaPeptDeep resides in TestPerf\AlphapeptdeepBuildLibraryTest.cs 
+    /// <summary>
+    /// Basic unit tests for <see cref="AlphapeptdeepLibraryBuilder"/> and its methods that
+    /// perform the work before and after running the AlphaPeptDeep python script.
+    /// The testing of installing Python and running the AlphaPeptDeep script can be found
+    /// in TestPerf\AlphapeptdeepBuildLibraryTest.cs
+    /// </summary>
     [TestClass]
     public class AlphapeptdeepLibraryBuilderTest : AbstractUnitTest
     {
         /// <summary>
-        /// When true the test write the answer file
+        /// When true the test writes the answer files that get included as Assembly resources
         /// </summary>
         public bool IsRecordMode => false;
 
-        public string LogOutput => Path.Combine(TestContext.GetTestResultsPath(), "TestConsole.log");
-
-        public string RootDir => TestContext.GetTestResultsPath();
-
+        public string LogOutput => TestContext.GetTestResultsPath("TestConsole.log");
 
         [TestMethod]
-        public void TestModificationInfo()
+        public void TestAlphapeptdeepModificationInfo()
         {
             var groupedByAccession = AlphapeptdeepLibraryBuilder.MODIFICATION_NAMES
                 .GroupBy(item => item.Accession);
@@ -62,19 +65,8 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestAlphapeptdeepLibraryBuilder()
         {
-            string outputPath = Path.Combine(RootDir, "TestAlphaPeptDeepLibrary.blib");
-
-
-            if (!Directory.Exists(RootDir))
-            {
-                Directory.CreateDirectory(RootDir);
-                Console.WriteLine($@"Creating test directory '{RootDir}'");
-            }
-            else
-            {
-                Console.WriteLine($@"Using existing test directory '{RootDir}'");
-
-            }
+            TestContext.EnsureTestResultsDir();
+            string outputPath = TestContext.GetTestResultsPath("TestAlphaPeptDeepLibrary.blib");
 
             var peptides = new[]
             {
@@ -100,143 +92,13 @@ namespace pwiz.SkylineTest
 
             TestTransformPeptDeepOutput(outputPath);
             TestImportSpectralLibrary(outputPath);
-
-            try
-            {
-                Directory.Delete(RootDir, true);
-            }
-            catch (Exception ex) 
-            {
-                Console.WriteLine( $@"Exception deleting test directory '{RootDir}' : {ex.Message}");
-            }
-
         }
 
         /// <summary>
-        /// Tests an AlphaPeptDeep unsupported modification.
+        /// Test of <see cref="AlphapeptdeepLibraryBuilder.GetPrecursorTable"/>
         /// </summary>
-        /// <param name="outputPath">Path to the output blib.</param>
-        public void TestImportSpectralLibrary(string outputPath)
-        {
-            var document = CreateTestEmptyDocument();
-            var builder = new AlphapeptdeepLibraryBuilder("TestLib", outputPath, document, null);
-            var progress = new SilentProgressMonitor();
-            IProgressStatus status = new ProgressStatus();
-
-
-            var input = "predict_transformed.speclib.tsv";
-            var output = "predict_transformed.speclib.blib";
-            var answer = "predict_transformed.speclib.blib.answer";
-
-            using (var stream = GetType().Assembly.GetManifestResourceStream(GetType().Namespace + "." + input))
-            {
-                using (var fileStream = new FileStream(Path.Combine(RootDir, input), FileMode.Create, FileAccess.Write))
-                {
-                    // Copy the resource stream to the file
-                    if (stream != null)
-                        stream.CopyTo(fileStream);
-                    else
-                        Console.WriteLine($@"Resource '{input}' not found.");
-                }
-            }
-
-            using (var stream = GetType().Assembly.GetManifestResourceStream(GetType().Namespace + "." + output))
-            {
-                using (var fileStream = new FileStream(Path.Combine(RootDir, answer), FileMode.Create, FileAccess.Write))
-                {
-                    // Copy the resource stream to the file
-                    if (stream != null)
-                        stream.CopyTo(fileStream);
-                    else
-                        Console.WriteLine($@"Resource '{input}' not found.");
-                }
-            }
-         
-            answer = Path.Combine(RootDir, answer);
-            input = Path.Combine(RootDir, input);
-            output = Path.Combine(RootDir, output);
-            builder.ImportSpectralLibrary(progress, ref status, input, output);
-
-            using (var answerReader = new StreamReader(answer))
-            using (var productReader = new StreamReader(output))
-            {
-                var ansInfo = new FileInfo(answer);
-                var outInfo = new FileInfo(output);
-                Assert.AreEqual(ansInfo.Length, outInfo.Length);
-            }
-        }
-        /// <summary>
-        /// Tests an AlphaPeptDeep unsupported modification.
-        /// </summary>
-        /// <param name="outputPath">Path to the output directory.</param>
-        public void TestTransformPeptDeepOutput(string outputPath)
-        {
-            var document = CreateTestEmptyDocument();
-            var builder = new AlphapeptdeepLibraryBuilder("TestLib", outputPath, document, IrtStandard.BIOGNOSYS_11);
-            var progress = new SilentProgressMonitor();
-            IProgressStatus status = new ProgressStatus();
-
-
-            var input = "predict.speclib.tsv";
-            var output = "predict_transformed.speclib.tsv";
-            var answer = "predict_transformed.speclib.tsv.answer";
-
-            using (var stream = GetType().Assembly.GetManifestResourceStream(GetType().Namespace + "." + input))
-            {
-                using (var fileStream = new FileStream(Path.Combine(RootDir, input), FileMode.Create, FileAccess.Write))
-                {
-                    // Copy the resource stream to the file
-                    if (stream != null) 
-                        stream.CopyTo(fileStream);
-                    else 
-                        Console.WriteLine($@"Resource '{input}' not found.");
-                }
-            }
-
-
-
-            using (var stream = GetType().Assembly.GetManifestResourceStream(GetType().Namespace + "." + output))
-            {
-                using (var fileStream = new FileStream(Path.Combine(RootDir, answer), FileMode.Create, FileAccess.Write))
-                {
-                    // Copy the resource stream to the file
-                    if (stream != null)
-                        stream.CopyTo(fileStream);
-                    else
-                        Console.WriteLine($@"Resource '{input}' not found.");
-                }
-            }
-         
-            answer = Path.Combine(RootDir, answer);
-            input = Path.Combine(RootDir, input);
-            output = Path.Combine(RootDir, output);
-            builder.TransformPeptdeepOutput(progress, ref status, input, output);
-
-            using (var answerReader = new StreamReader(answer))
-            using (var productReader = new StreamReader(output))
-            {
-                AssertEx.FieldsEqual(answerReader, productReader, 13, null);
-            }
-        }
-        /// <summary>
-        /// Test of AlphapeptdeepLibraryBuilder.GetWarningMods()
-        /// </summary>
-        /// <param name="document">Input SrmDocument.</param>
-        /// <param name="outputPath">Path to the output blib.</param>
-        /// <param name="expectedWarningCount">Expected count of warnings generated.</param>
-        public void TestGetWarningMods(SrmDocument document, string outputPath, int expectedWarningCount = 0)
-        {
-            var builder = new AlphapeptdeepLibraryBuilder("TestLib", outputPath, document, IrtStandard.BIOGNOSYS_11);
-            var warningList = builder.GetWarningMods();
-
-            Assert.AreEqual(expectedWarningCount, warningList.Count);
-        }
-
-        /// <summary>
-        /// Test of AlphapeptdeepLibraryBuilder.GetPrecursorTable
-        /// </summary>
-        /// <param name="document">Input SrmDocument.</param>
-        /// <param name="outputPath">Path to the output blib.</param>
+        /// <param name="document">Input <see cref="SrmDocument"/> from which to build the table.</param>
+        /// <param name="outputPath">Path to an output .blib file that never gets built.</param>
         /// <param name="expectedLines">Expected lines of output.</param>
         public void TestGetPrecursorTable(SrmDocument document, string outputPath, IEnumerable<string> expectedLines)
         {
@@ -250,65 +112,30 @@ namespace pwiz.SkylineTest
                 File.WriteAllLines(LogOutput, generatedResult);
             }
 
-            var generatedOutput = String.Join(Environment.NewLine, generatedResult);
-            var expectedOutput = String.Join(Environment.NewLine, expectedLines);
+            var generatedOutput = TextUtil.LineSeparate(generatedResult);
+            var expectedOutput = TextUtil.LineSeparate(expectedLines);
 
-            Assert.AreEqual(expectedOutput, generatedOutput);
+            AssertEx.NoDiff(expectedOutput, generatedOutput);
         }
 
         /// <summary>
-        /// Tests an AlphaPeptDeep unsupported modification.
+        /// Test of <see cref="AlphapeptdeepLibraryBuilder.GetWarningMods"/>
         /// </summary>
-        /// <param name="outputPath">Path to the output directory.</param>
-        public void TestValidateModifications_Unsupported(string outputPath)
+        /// <param name="document">Input <see cref="SrmDocument"/> that may generate warnings about modifications.</param>
+        /// <param name="outputPath">Path to an output .blib file that never gets built.</param>
+        /// <param name="expectedWarningCount">Expected count of warnings generated.</param>
+        public void TestGetWarningMods(SrmDocument document, string outputPath, int expectedWarningCount = 0)
         {
-            var document = CreateTestEmptyDocument();
             var builder = new AlphapeptdeepLibraryBuilder("TestLib", outputPath, document, IrtStandard.BIOGNOSYS_11);
+            var warningList = builder.GetWarningMods();
 
-            var peptideList = new[]
-            {
-                new Peptide("MSGSHSNDEDDVVQVPETSSPTK")
-            };
-
-            var answer_mods = new[]
-            {
-                "Acetyl-Oxidation (N-term-M)" //unsupported
-            };
-
-            var answer_modSites = new[]
-            {
-                "1" //unsupported
-            };
-
-            var aceOxMetMod = new StaticMod("Acetyl-Oxidation (N-term-M)", "M",ModTerminus.N, true, "H2C2O2", LabelAtoms.None, RelativeRT.Unknown, null,
-                null, null, -1, "Acetyl-Ox");
-
-            var explicitMods1 = new[]
-            {
-                new ExplicitMod(0, aceOxMetMod)
-            };
-
-            IEnumerable<ExplicitMods> explicitMods = new[]
-            {
-                new ExplicitMods(peptideList[0], explicitMods1, null, true),
-            };
-
-            var peptides = CreatePeptideDocNodes(peptideList, explicitMods).ToArray();
-            for (int i = 0; i < peptides.Length; i++)
-            {
-                var modifiedSeq = ModifiedSequence.GetModifiedSequence(document.Settings, peptides[i], IsotopeLabelType.light);
-                string mods;
-                string modSites;
-                Assert.IsFalse(builder.ValidateModifications(modifiedSeq, out mods, out modSites));
-                Assert.AreNotEqual(answer_mods[i], mods);
-                Assert.AreNotEqual(answer_modSites[i], modSites);
-            }
+            Assert.AreEqual(expectedWarningCount, warningList.Count);
         }
 
         /// <summary>
         /// Tests AlphaPeptDeep supported modifications only, of several types.
         /// </summary>
-        /// <param name="outputPath">Path to the output directory.</param>
+        /// <param name="outputPath">Path to an output .blib file that never gets built.</param>
         public void TestValidateModifications_Supported(string outputPath)
         {
             var document = CreateTestEmptyDocument();
@@ -372,9 +199,9 @@ namespace pwiz.SkylineTest
                 new ExplicitMods(peptideList[4], explicitMods4, null, true),
                 null
             };
-            
+
             var peptides = CreatePeptideDocNodes(peptideList, explicitMods).ToArray();
-            for (int i = 0; i< peptides.Length; i++)
+            for (int i = 0; i < peptides.Length; i++)
             {
                 var modifiedSeq = ModifiedSequence.GetModifiedSequence(document.Settings, peptides[i], IsotopeLabelType.light);
                 string mods;
@@ -384,10 +211,143 @@ namespace pwiz.SkylineTest
                 Assert.AreEqual(answer_modSites[i], modSites);
             }
         }
+
         /// <summary>
-        /// Creates an SrmDocument from the embedded resource file "Test-imported_24-11-short.sky"
+        /// Tests an AlphaPeptDeep unsupported modification.
         /// </summary>
-        /// <returns>An SrmDocument.</returns>
+        /// <param name="outputPath">Path to an output .blib file that never gets built.</param>
+        public void TestValidateModifications_Unsupported(string outputPath)
+        {
+            var document = CreateTestEmptyDocument();
+            var builder = new AlphapeptdeepLibraryBuilder("TestLib", outputPath, document, IrtStandard.BIOGNOSYS_11);
+
+            var peptideList = new[]
+            {
+                new Peptide("MSGSHSNDEDDVVQVPETSSPTK")
+            };
+
+            var answer_mods = new[]
+            {
+                "Acetyl-Oxidation (N-term-M)" //unsupported
+            };
+
+            var answer_modSites = new[]
+            {
+                "1" //unsupported
+            };
+
+            var aceOxMetMod = new StaticMod("Acetyl-Oxidation (N-term-M)", "M",ModTerminus.N, true, "H2C2O2", LabelAtoms.None, RelativeRT.Unknown, null,
+                null, null, -1, "Acetyl-Ox");
+
+            var explicitMods1 = new[]
+            {
+                new ExplicitMod(0, aceOxMetMod)
+            };
+
+            IEnumerable<ExplicitMods> explicitMods = new[]
+            {
+                new ExplicitMods(peptideList[0], explicitMods1, null, true),
+            };
+
+            var peptides = CreatePeptideDocNodes(peptideList, explicitMods).ToArray();
+            for (int i = 0; i < peptides.Length; i++)
+            {
+                var modifiedSeq = ModifiedSequence.GetModifiedSequence(document.Settings, peptides[i], IsotopeLabelType.light);
+                string mods;
+                string modSites;
+                Assert.IsFalse(builder.ValidateModifications(modifiedSeq, out mods, out modSites));
+                Assert.AreNotEqual(answer_mods[i], mods);
+                Assert.AreNotEqual(answer_modSites[i], modSites);
+            }
+        }
+
+        /// <summary>
+        /// Test of <see cref="AlphapeptdeepLibraryBuilder.TransformPeptdeepOutput"/> the function that
+        /// transforms between native AlphaPeptDeep output and BlibBuild input formats.
+        /// </summary>
+        /// <param name="outputPath">Path to an output .blib file that never gets built.</param>
+        public void TestTransformPeptDeepOutput(string outputPath)
+        {
+            var document = CreateTestEmptyDocument();
+            var builder = new AlphapeptdeepLibraryBuilder("TestLib", outputPath, document, IrtStandard.BIOGNOSYS_11);
+
+            var input = ResourceToTestFile("predict.speclib.tsv");
+            var output = TestContext.GetTestResultsPath("predict_transformed.speclib.tsv");
+
+            IProgressStatus status = new ProgressStatus();
+            builder.TransformPeptdeepOutput(new SilentProgressMonitor(), ref status, input, output);
+
+            var answer = ResourceToTestFile("predict_transformed.speclib.tsv.answer");
+
+            using (var answerReader = new StreamReader(answer))
+            using (var productReader = new StreamReader(output))
+            {
+                AssertEx.FieldsEqual(answerReader, productReader, 13, null, true);
+            }
+        }
+
+        /// <summary>
+        /// Test of <see cref="AlphapeptdeepLibraryBuilder.ImportSpectralLibrary"/> to see if it generates
+        /// a .blib file with the expected number of spectrum entries.
+        /// </summary>
+        /// <param name="outputPath">Path to an output .blib file that gets built by running BlibBuild and BlibFilter.</param>
+        public void TestImportSpectralLibrary(string outputPath)
+        {
+            var document = CreateTestEmptyDocument();
+            var builder = new AlphapeptdeepLibraryBuilder("TestLib", outputPath, document, null);
+
+            var input = ResourceToTestFile("predict_transformed.speclib.tsv");
+            var output = TestContext.GetTestResultsPath("predict_transformed.speclib.blib");
+
+            IProgressStatus status = new ProgressStatus();
+            builder.ImportSpectralLibrary(new SilentProgressMonitor(), ref status, input, output);
+
+            var answer = ResourceToTestFile("predict_transformed.speclib.blib.answer");
+            var ansLibrary = LoadLibrary(answer);
+            var outLibrary = LoadLibrary(output);
+            Assert.AreEqual(ansLibrary.SpectrumCount, outLibrary.SpectrumCount);
+        }
+
+        /// <summary>
+        /// Returns a loaded <see cref="BiblioSpecLiteLibrary"/> but with a closed stream.
+        /// </summary>
+        private static Library LoadLibrary(string path)
+        {
+            var loader = new LibraryLoadTest.TestLibraryLoader { StreamManager = FileStreamManager.Default };
+            var librarySpec = new BiblioSpecLiteSpec("Library", path);
+            var library = librarySpec.LoadLibrary(loader);
+            Assert.IsTrue(library.IsLoaded);
+            library.ReadStream.CloseStream();   // Release the library stream
+            return library;
+        }
+
+        /// <summary>
+        /// Copies an Assembly resource to the TestResultsPath folder for use in file operations.
+        /// </summary>
+        /// <param name="input">The name of the output file which also matches the resource name, potentially with ".answer" appended</param>
+        /// <returns>The full path to the output file</returns>
+        private string ResourceToTestFile(string input)
+        {
+            string testFile = TestContext.GetTestResultsPath(input);
+            string resourceName = input;
+            const string answerExt = ".answer";
+            if (resourceName.EndsWith(answerExt))
+                resourceName = resourceName.Substring(0, input.Length - answerExt.Length);
+
+            using (var stream = GetType().Assembly.GetManifestResourceStream(GetType().Namespace + "." + resourceName))
+            using (var fileStream = new FileStream(testFile, FileMode.Create, FileAccess.Write))
+            {
+                // Copy the resource stream to the file
+                Assert.IsNotNull(stream, $@"Resource '{resourceName}' not found.");
+                stream.CopyTo(fileStream);
+            }
+
+            return testFile;
+        }
+
+        /// <summary>
+        /// Creates and returns an <see cref="SrmDocument"/> from the embedded resource file "Test-imported_24-11-short.sky"
+        /// </summary>
         private SrmDocument CreateTestImportedDoc()
         {
             var document = ResultsUtil.DeserializeDocument("Test-imported_24-11-short.sky", GetType());
@@ -396,15 +356,15 @@ namespace pwiz.SkylineTest
         }
 
         /// <summary>
-        /// Creates a list of PeptideDocNodes.
+        /// Creates a list of <see cref="PeptideDocNode"/> from a list of <see cref="Peptide"/>,
+        /// with an optional set of modifications applied.
         /// </summary>
-        /// <param name="peptideList">List of Peptides.</param>
-        /// <param name="explicitMods">List of ExplicitMods, if not null should have same length as peptideList.</param>
-        /// <returns>List of PeptideDocNodes.</returns>
+        /// <param name="peptideList">List of <see cref="Peptide"/>.</param>
+        /// <param name="explicitMods">List of <see cref="ExplicitMod"/>, if not null should have same length as peptideList.</param>
+        /// <returns>List of <see cref="PeptideDocNode"/>.</returns>
         private IEnumerable<PeptideDocNode> CreatePeptideDocNodes(IEnumerable<Peptide> peptideList, IEnumerable<ExplicitMods> explicitMods = null)
         {
             var srmSettings = SrmSettingsList.GetDefault();
-
 
             var transitions = new TransitionGroupDocNode[1];
             var peptides = peptideList as Peptide[] ?? peptideList.ToArray();
@@ -428,7 +388,7 @@ namespace pwiz.SkylineTest
             }
 
 
-            //Add precursors and transitions
+            // Add precursors and transitions
             foreach (var peptideNode in peptideNodes)
             {
                 peptideNode.ChangeSettings(srmSettings, SrmSettingsDiff.ALL);
@@ -438,39 +398,34 @@ namespace pwiz.SkylineTest
         }
 
         /// <summary>
-        /// Creates an empty test SrmDocument.
+        /// Creates and returns an empty test <see cref="SrmDocument"/> with default settings.
         /// </summary>
-        /// <returns>An empty SrmDocument.</returns>
         private SrmDocument CreateTestEmptyDocument()
         {
-            var peptideNodes = new PeptideDocNode[]{};
-            var doc = new SrmDocument(SrmSettingsList.GetDefault());
-         
-            doc = (SrmDocument)doc.ChangeChildren(new[]
-            {
-                new PeptideGroupDocNode(new PeptideGroup(), "Peptide List", null, peptideNodes)
-            });
-
-            return doc;
+            return CreateTestDocumentInternal(Array.Empty<PeptideDocNode>());
         }
 
         /// <summary>
-        /// Creates a simple test SrmDocument.
+        /// Creates and returns a simple test <see cref="SrmDocument"/>.
         /// </summary>
-        /// <param name="peptideList">List of peptides to place into the document.</param>
-        /// <returns>A simple SrmDocument.</returns>
+        /// <param name="peptideList">List of <see cref="Peptide"/> to place into the document.</param>
         private SrmDocument CreateTestSimpleDocument(IEnumerable<Peptide> peptideList)
         {
-            var peptideNodes = CreatePeptideDocNodes(peptideList).ToArray();
+            return CreateTestDocumentInternal(CreatePeptideDocNodes(peptideList).ToArray());
+        }
+
+        private static SrmDocument CreateTestDocumentInternal(PeptideDocNode[] nodePepArray)
+        {
             var doc = new SrmDocument(SrmSettingsList.GetDefault());
 
             doc = (SrmDocument)doc.ChangeChildren(new[]
             {
-                new PeptideGroupDocNode(new PeptideGroup(), "Peptide List", null, peptideNodes)
+                new PeptideGroupDocNode(new PeptideGroup(), "Peptide List", null, nodePepArray)
             });
 
             return doc;
         }
+
         private readonly IEnumerable<string> SIMPLE_PRECURSOR_TABLE_ANSWER =
             new [] {
                 "sequence	mods	mod_sites	charge",

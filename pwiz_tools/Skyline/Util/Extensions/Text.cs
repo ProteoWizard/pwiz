@@ -854,7 +854,7 @@ namespace pwiz.Skyline.Util.Extensions
     /// the names of the columns, and all following lines contain data for each column.
     /// When ctor's optional hasHeaders arg == false, then columns are named "0", "1","2","3" etc.
     /// </summary>
-    public class DsvFileReader
+    public class DsvFileReader : IDisposable
     {
         private char _separator;
         private string[] _currentFields;
@@ -1004,13 +1004,13 @@ namespace pwiz.Skyline.Util.Extensions
         }
 
         /// <summary>
-        /// If loading from a file, use this to dispose the text reader.
+        /// IDisposable pattern implementation for using clause to dispose of the reader,
+        /// in case it is a StreamReader holding onto a file handle.
         /// </summary>
         public void Dispose()
         {
             _reader.Dispose();
         }
-
     }
 
     public class LineColNumberedIoException : IOException

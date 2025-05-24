@@ -370,7 +370,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             var result = new List<string>();
 
             input ??= OutputSpectraLibFilepath;
-            var reader = new DsvFileReader(input, TextUtil.SEPARATOR_TSV);
+            using var reader = new DsvFileReader(input, TextUtil.SEPARATOR_TSV);
 
             // Transform table header
             var colNames = reader.FieldNames;
@@ -418,7 +418,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 }
                 result.Add(string.Join(TextUtil.SEPARATOR_TSV_STR, line));
             }
-            reader.Dispose();
+
             // Write to new file
             output ??= TransformedOutputSpectraLibFilepath;
             File.WriteAllLines(output, result);
