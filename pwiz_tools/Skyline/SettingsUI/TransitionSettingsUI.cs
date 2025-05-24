@@ -1330,16 +1330,26 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        private MzTolerance.Units? _mzMatchToleranceUnitsCurrent;
+
         private void comboToleranceUnits_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (double.TryParse(textTolerance.Text, out var matchTolerance))
+            // Only perform tolerance scaling when the units are known, and
+            // they are being changed.
+            if (_mzMatchToleranceUnitsCurrent.HasValue &&
+                _mzMatchToleranceUnitsCurrent.Value != IonMatchToleranceUnits)
             {
-                if (IonMatchToleranceUnits == MzTolerance.Units.mz)
-                    IonMatchTolerance = matchTolerance / 1000;
-                else
-                    IonMatchTolerance = matchTolerance * 1000;
+                if (double.TryParse(textTolerance.Text, out var matchTolerance))
+                {
+                    if (IonMatchToleranceUnits == MzTolerance.Units.mz)
+                        IonMatchTolerance = matchTolerance / 1000;
+                    else
+                        IonMatchTolerance = matchTolerance * 1000;
+                }
             }
+            _mzMatchToleranceUnitsCurrent = IonMatchToleranceUnits;
         }
+
         private void btnEditSpectrumFilter_Click(object sender, EventArgs e)
         {
             EditSpectrumFilter();

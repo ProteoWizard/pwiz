@@ -60,7 +60,7 @@ namespace pwiz.Skyline.Model
             CacheFormatVersion.Eighteen, DocumentFormat.VERSION_23_1);
         public static readonly SkylineVersion V24_1 = ReleaseVersion(24, 1,
             CacheFormatVersion.Eighteen, DocumentFormat.VERSION_24_1);
-        public static readonly SkylineVersion V25_1 = ReleaseVersion(25, 1, 
+        public static readonly SkylineVersion V25_1 = ReleaseVersion(25, 1,
             CacheFormatVersion.Eighteen, DocumentFormat.VERSION_25_1);
 
         private SkylineVersion(Func<String> getLabelFunc, String versionName, 
