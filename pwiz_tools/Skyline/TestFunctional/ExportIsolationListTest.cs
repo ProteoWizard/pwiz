@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -268,21 +269,58 @@ namespace pwiz.SkylineTestFunctional
             var runStart = "0";
             var runEnd = "30";
             var thermoStellarMassListExporter = new ThermoStellarMassListExporter(SkylineWindow.Document);
+            double defaultNCE = ThermoStellarMassListExporter.DEFAULT_NCE;
+            var checkStrings = new List<string>
+            {
+                thermoStellarMassListExporter.GetHeader(),
+                FieldSeparate(mzFirst, zFirst, runStart, runEnd, defaultNCE),
+                FieldSeparate(mzLast, zLast, runStart, runEnd, defaultNCE)
+            };
             ExportIsolationList(
                 "StellarIsolationList.csv",
                 ExportInstrumentType.THERMO_STELLAR, FullScanAcquisitionMethod.PRM, ExportMethodType.Standard,
-                thermoStellarMassListExporter.GetHeader(),
-                FieldSeparate(mzFirst, zFirst, runStart, runEnd, ThermoStellarMassListExporter.WIDE_NCE),
-                FieldSeparate(mzLast, zLast, runStart, runEnd, ThermoStellarMassListExporter.WIDE_NCE)
-                );
-            if (!AsSmallMoleculesNegative || AsExplicitRetentionTimes)
-                ExportIsolationList(
-                "StellarIsolationList.csv",
-                ExportInstrumentType.THERMO_STELLAR, FullScanAcquisitionMethod.PRM, ExportMethodType.Scheduled,
-                thermoStellarMassListExporter.GetHeader(),
-                FieldSeparate(mzFirst, zFirst, t46 - halfWin, t46 + halfWin, ThermoStellarMassListExporter.WIDE_NCE),
-                FieldSeparate(mzLast, zLast, t39 - halfWin, t39 + halfWin, ThermoStellarMassListExporter.WIDE_NCE)
+                checkStrings.ToArray());
+            for (int i = 1; i <= CollisionEnergyRegression.DEFAULT_STEP_COUNT; i++)
+            {
+                checkStrings.Add(FieldSeparate(mzFirst, zFirst, runStart, runEnd, defaultNCE + i));
+                checkStrings.Add(FieldSeparate(mzFirst, zFirst, runStart, runEnd, defaultNCE - i));
+                checkStrings.Add(FieldSeparate(mzLast, zLast, runStart, runEnd, defaultNCE + i));
+                checkStrings.Add(FieldSeparate(mzLast, zLast, runStart, runEnd, defaultNCE - i));
+            }
+            ExportIsolationList(
+                "StellarNceOptIsolationList.csv",
+                ExportInstrumentType.THERMO_STELLAR, FullScanAcquisitionMethod.PRM, ExportMethodType.Standard, null, true,
+                checkStrings.ToArray()
             );
+            if (!AsSmallMoleculesNegative || AsExplicitRetentionTimes)
+            {
+                const int customNCE = 20;
+                const int customStepCount = 3;
+                const double customStepSize = 2.5;
+                var ceRegression = new CollisionEnergyRegression("NCE 20",
+                    new[] { new ChargeRegressionLine(2, 0, customNCE) }, customStepSize, customStepCount);
+                checkStrings = new List<string>
+                {
+                    thermoStellarMassListExporter.GetHeader(),
+                    FieldSeparate(mzFirst, zFirst, t46 - halfWin, t46 + halfWin, customNCE),
+                    FieldSeparate(mzLast, zLast, t39 - halfWin, t39 + halfWin, customNCE)
+                };
+                ExportIsolationList(
+                    "StellarScheduledIsolationList.csv",
+                    ExportInstrumentType.THERMO_STELLAR, FullScanAcquisitionMethod.PRM, ExportMethodType.Scheduled, ceRegression, false,
+                    checkStrings.ToArray());
+                for (int i = 1; i <= customStepCount; i++)
+                {
+                    checkStrings.Add(FieldSeparate(mzFirst, zFirst, t46 - halfWin, t46 + halfWin, customNCE + i*customStepSize));
+                    checkStrings.Add(FieldSeparate(mzFirst, zFirst, t46 - halfWin, t46 + halfWin, customNCE - i*customStepSize));
+                    checkStrings.Add(FieldSeparate(mzLast, zLast, t39 - halfWin, t39 + halfWin, customNCE + i*customStepSize));
+                    checkStrings.Add(FieldSeparate(mzLast, zLast, t39 - halfWin, t39 + halfWin, customNCE - i*customStepSize));
+                }
+                ExportIsolationList(
+                    "StellarScheduledNceOptIsolationList.csv",
+                    ExportInstrumentType.THERMO_STELLAR, FullScanAcquisitionMethod.PRM, ExportMethodType.Scheduled, ceRegression, true,
+                    checkStrings.ToArray());
+            }
             string fragmentsFirst;
             if (!AsSmallMoleculesNegative)
                 fragmentsFirst = FieldSeparate("582.3190", "951.4782", "595.3086", "708.3927", "837.4353", "1017.5251");
@@ -374,8 +412,15 @@ namespace pwiz.SkylineTestFunctional
         }
 
         private void ExportIsolationList(
-            string csvFilename, string instrumentType, FullScanAcquisitionMethod acquisitionMethod, 
+            string csvFilename, string instrumentType, FullScanAcquisitionMethod acquisitionMethod,
             ExportMethodType methodType, params string[] checkStrings)
+        {
+            ExportIsolationList(csvFilename, instrumentType, acquisitionMethod, methodType, null, false, checkStrings);
+        }
+
+        private void ExportIsolationList(
+            string csvFilename, string instrumentType, FullScanAcquisitionMethod acquisitionMethod,
+            ExportMethodType methodType, CollisionEnergyRegression ceRegression, bool ceOptimize, params string[] checkStrings)
         {
             // Set acquisition method, mass analyzer type, resolution, etc.
             if (Equals(instrumentType, ExportInstrumentType.AGILENT_TOF))
@@ -385,12 +430,26 @@ namespace pwiz.SkylineTestFunctional
                     .ChangeProductResolution(FullScanMassAnalyzerType.tof, 10000, null)
                     .ChangeAcquisitionMethod(acquisitionMethod, null)))));
             }
+            else if (Equals(instrumentType, ExportInstrumentType.THERMO_STELLAR))
+            {
+                RunUI(() => SkylineWindow.ModifyDocument("Set Stellar full-scan settings", doc => doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fs => fs
+                    .ChangePrecursorResolution(FullScanMassAnalyzerType.qit, 1.0, null)
+                    .ChangeProductResolution(FullScanMassAnalyzerType.qit, 1.0, null)
+                    .ChangeAcquisitionMethod(acquisitionMethod, null)))));
+            }
             else
             {
                 RunUI(() => SkylineWindow.ModifyDocument("Set Orbitrap full-scan settings", doc => doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fs => fs
                     .ChangePrecursorResolution(FullScanMassAnalyzerType.orbitrap, 60000, 400)
                     .ChangeProductResolution(FullScanMassAnalyzerType.orbitrap, 60000, 400)
                     .ChangeAcquisitionMethod(acquisitionMethod, null)))));
+            }
+
+            if (ceRegression != null)
+            {
+                RunUI(() => SkylineWindow.ModifyDocument("Set NCE prediction settings", doc =>
+                    doc.ChangeSettings(doc.Settings.ChangeTransitionPrediction(p => p
+                        .ChangeCollisionEnergy(ceRegression)))));
             }
 
             // Open Export Method dialog, and set method to scheduled or standard.
@@ -406,7 +465,14 @@ namespace pwiz.SkylineTestFunctional
                 exportMethodDlg.InstrumentType = instrumentType;
                 exportMethodDlg.MethodType = methodType;
                 exportMethodDlg.PolarityFilter = exportPolarityFilter;
-                Assert.IsFalse(exportMethodDlg.IsOptimizeTypeEnabled);
+                if (!instrumentType.StartsWith("Thermo"))
+                    Assert.IsFalse(exportMethodDlg.IsOptimizeTypeEnabled);
+                else
+                {
+                    Assert.IsTrue(exportMethodDlg.IsOptimizeTypeEnabled);
+                    if (ceOptimize)
+                        exportMethodDlg.OptimizeType = ExportOptimize.CE;
+                }
                 Assert.IsTrue(exportMethodDlg.IsTargetTypeEnabled);
                 Assert.IsFalse(exportMethodDlg.IsDwellTimeVisible);
                 Assert.IsFalse(exportMethodDlg.IsMaxTransitionsEnabled);

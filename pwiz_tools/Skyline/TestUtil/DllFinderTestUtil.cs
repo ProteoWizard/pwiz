@@ -41,8 +41,13 @@ namespace pwiz.SkylineTestUtil
             _testCase = testCase;
 
             // Build a dictionary of file path => FileData for quick lookups
-            _filesByPath = testCase.Files
-                .ToDictionary(f => f.Path, StringComparer.OrdinalIgnoreCase);
+            if (testCase.Files == null)
+                _filesByPath = new Dictionary<string, FileData>();
+            else
+            {
+                _filesByPath = testCase.Files
+                    .ToDictionary(f => f.Path, StringComparer.OrdinalIgnoreCase);
+            }
 
             // Create the root registry key structure in memory
             if (testCase.RegistrySubKeys != null)
