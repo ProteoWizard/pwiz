@@ -41,7 +41,7 @@ namespace pwiz.Common.DataBinding
             values => values.Mean());
 
         public static readonly AggregateOperation Median =
-            new NumericAggregate(@"Median", () => "Median", () => "Median {0}", values => values.Median());
+            new NumericAggregate(@"Median", () => Resources.AggregateOperation_Median_Median, () => Resources.AggregateOperation_Median_Median__0_, values => values.Median());
 
         public static readonly AggregateOperation Min = new SelectOne(@"Min",
             () => Resources.AggregateOperation_Min_Min, () => Resources.AggregateOperation_Min_Min__0_, 
@@ -154,7 +154,8 @@ namespace pwiz.Common.DataBinding
         private class CountDistinctImpl : AggregateOperation
         {
             public CountDistinctImpl() : base(@"CountDistinct",
-                () => "Count Distinct", ()=>"Count Distinct {0}")
+                () => Resources.CountDistinctImpl_CountDistinctImpl_Count_Distinct, 
+                ()=>Resources.CountDistinctImpl_CountDistinctImpl_Count_Distinct__0_)
             {
             }
 
