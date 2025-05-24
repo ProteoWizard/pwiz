@@ -719,11 +719,11 @@ namespace pwiz.Skyline.Model.Lib
                                 var retentionTimeReader = new RetentionTimeReader(dataReader, schemaVer);
                                 retentionTimeReader.ReadAllRows();
                                 retentionTimesBySpectraIdAndFileId =
-                                    retentionTimeReader.SpectaIdFileIdTimes.ToLookup(kvp => kvp.Key, kvp => kvp.Value);
+                                    retentionTimeReader.SpectaIdFileIdTimes.ToLookup(kvp => kvp.Item1, kvp => new KeyValuePair<int, double>(kvp.Item2, kvp.Item3));
                                 driftTimesBySpectraIdAndFileId =
-                                    retentionTimeReader.SpectraIdFileIdIonMobilities.ToLookup(kvp => kvp.Key, kvp => kvp.Value);
-                                peakBoundsBySpectraIdAndFileId = retentionTimeReader.PeakBoundaries.ToLookup(kvp => kvp.Key,
-                                    kvp => kvp.Value);
+                                    retentionTimeReader.SpectraIdFileIdIonMobilities.ToLookup(kvp => kvp.Item1, kvp => new KeyValuePair<int, IonMobilityAndCCS>(kvp.Item2, kvp.Item3));
+                                peakBoundsBySpectraIdAndFileId = retentionTimeReader.PeakBoundaries.ToLookup(kvp => kvp.Item1,
+                                    kvp => new KeyValuePair<int, ExplicitPeakBounds>(kvp.Item2, kvp.Item3));
                             }
                         }
                     }
@@ -2379,9 +2379,9 @@ namespace pwiz.Skyline.Model.Lib
 
             public RetentionTimeReader(IDataReader dataReader, int schemaVer)
             {
-                PeakBoundaries = new List<KeyValuePair<int, KeyValuePair<int, ExplicitPeakBounds>>>();
-                SpectraIdFileIdIonMobilities = new List<KeyValuePair<int, KeyValuePair<int, IonMobilityAndCCS>>>();
-                SpectaIdFileIdTimes = new List<KeyValuePair<int, KeyValuePair<int, double>>>();
+                PeakBoundaries = new List<Tuple<int, int, ExplicitPeakBounds>>();
+                SpectraIdFileIdIonMobilities = new List<Tuple<int, int, IonMobilityAndCCS>>();
+                SpectaIdFileIdTimes = new List<Tuple<int, int, double>>();
                 _schemaVer = schemaVer;
                 _columnIndexes = new int?[(int) Column.MAX_COLUMN];
                 _reader = dataReader;
@@ -2396,13 +2396,13 @@ namespace pwiz.Skyline.Model.Lib
                 }
             }
 
-            public List<KeyValuePair<int, KeyValuePair<int, double>>> SpectaIdFileIdTimes { get; private set; }
+            public List<Tuple<int, int, double>> SpectaIdFileIdTimes { get; private set; }
 
             // List of <RefSpectra Id, <FileId, ionMobility>>
-            public List<KeyValuePair<int, KeyValuePair<int, IonMobilityAndCCS>>> SpectraIdFileIdIonMobilities { get; private set;
+            public List<Tuple<int, int, IonMobilityAndCCS>> SpectraIdFileIdIonMobilities { get; private set;
             }
 
-            public List<KeyValuePair<int, KeyValuePair<int, ExplicitPeakBounds>>> PeakBoundaries
+            public List<Tuple<int, int, ExplicitPeakBounds>> PeakBoundaries
             {
                 get;
                 private set;
@@ -2422,22 +2422,18 @@ namespace pwiz.Skyline.Model.Lib
                     double? retentionTime = ReadRetentionTime();
                     if (retentionTime.HasValue)
                     {
-                        SpectaIdFileIdTimes.Add(new KeyValuePair<int, KeyValuePair<int, double>>(refSpectraId.Value,
-                            new KeyValuePair<int, double>(spectrumSourceId.Value, retentionTime.Value)));
+                        SpectaIdFileIdTimes.Add(Tuple.Create(refSpectraId.Value, spectrumSourceId.Value, retentionTime.Value));
                     }
                     IonMobilityAndCCS ionMobilityInfo = ReadIonMobilityInfo();
                     if (!IonMobilityAndCCS.IsNullOrEmpty(ionMobilityInfo))
                     {
-                        SpectraIdFileIdIonMobilities.Add(
-                            new KeyValuePair<int, KeyValuePair<int, IonMobilityAndCCS>>(refSpectraId.Value,
-                                new KeyValuePair<int, IonMobilityAndCCS>(spectrumSourceId.Value, ionMobilityInfo)));
+                        SpectraIdFileIdIonMobilities.Add(Tuple.Create(refSpectraId.Value, spectrumSourceId.Value,
+                            ionMobilityInfo));
                     }
                     var peakBounds = ReadPeakBounds();
                     if (peakBounds != null)
                     {
-                        PeakBoundaries.Add(
-                            new KeyValuePair<int, KeyValuePair<int, ExplicitPeakBounds>>(refSpectraId.Value,
-                                new KeyValuePair<int, ExplicitPeakBounds>(spectrumSourceId.Value, peakBounds)));
+                        PeakBoundaries.Add(Tuple.Create(refSpectraId.Value, spectrumSourceId.Value, peakBounds));
                     }
                 }
             }
