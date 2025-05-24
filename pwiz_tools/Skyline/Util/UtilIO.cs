@@ -1017,40 +1017,6 @@ namespace pwiz.Skyline.Util
             catch (Exception) { }
 // ReSharper restore EmptyGeneralCatchClause
         }
-        public static void CreateLongPathDirectory(string path)
-        {
-            try
-            {
-                string longPath = $@"\\?\{path}";
-                Helpers.TryTwice(() =>
-                {
-                    if (path != null && !Directory.Exists(longPath)) // Don't waste time trying to create a directory that already exists
-                    {
-                        Directory.CreateDirectory(longPath);
-                    }
-                });
-            }
-            // ReSharper disable EmptyGeneralCatchClause
-            catch (Exception) { }
-            // ReSharper restore EmptyGeneralCatchClause
-        } 
-        public static void SafeDeleteLongPath(string path)
-        {
-            try
-            {
-                string longPath = $@"\\?\{path}";
-                Helpers.TryTwice(() =>
-                    {
-                        if (path != null && Directory.Exists(longPath)) // Don't waste time trying to delete something that's already deleted
-                        {
-                            Directory.Delete(longPath, true);
-                        }
-                    }, $@"Directory.Delete({longPath})");
-            }
-            // ReSharper disable EmptyGeneralCatchClause
-            catch (Exception) { }
-            // ReSharper restore EmptyGeneralCatchClause
-        }
 
         public static string GetUniqueName(string dirName)
         {
@@ -1157,6 +1123,52 @@ namespace pwiz.Skyline.Util
             {
                 return false;
             }
+        }
+
+        public static void CreateLongPath(string path)
+        {
+            try
+            {
+                string longPath = path.ToLongPath();
+                Helpers.TryTwice(() =>
+                {
+                    if (path != null && !Directory.Exists(longPath)) // Don't waste time trying to create a directory that already exists
+                    {
+                        Directory.CreateDirectory(longPath);
+                    }
+                });
+            }
+            // ReSharper disable EmptyGeneralCatchClause
+            catch (Exception) { }
+            // ReSharper restore EmptyGeneralCatchClause
+        }
+
+        public static void SafeDeleteLongPath(string path)
+        {
+            try
+            {
+                string longPath = path.ToLongPath();
+                Helpers.TryTwice(() =>
+                    {
+                        if (path != null && Directory.Exists(longPath)) // Don't waste time trying to delete something that's already deleted
+                        {
+                            Directory.Delete(longPath, true);
+                        }
+                    }, $@"Directory.Delete({longPath})");
+            }
+            // ReSharper disable EmptyGeneralCatchClause
+            catch (Exception) { }
+            // ReSharper restore EmptyGeneralCatchClause
+        }
+
+        public static bool ExistsLongPath(string path)
+        {
+            return Directory.Exists(path.ToLongPath());
+        }
+
+        private static string ToLongPath(this string path)
+        {
+            return $@"\\?\{path}";
         }
     }
 

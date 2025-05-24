@@ -32,17 +32,23 @@ namespace pwiz.SkylineTest
         /// <summary>
         /// When true console output is added to clarify what the test has accomplished
         /// </summary>
-        public bool IsVerboseMode => true;
+        public bool IsVerboseMode => false;
 
+        /// <summary>
+        /// Test of long path functions in <see cref="DirectoryEx"/>. Because the test cannot
+        /// turn on long path support in the registry, this does not actually test long paths
+        /// if the feature is not enabled in the registry. Since the feature is required for
+        /// installing Python and testing AlphaPeptDeep and Carafe, we expect the majority
+        /// of systems on the Skyline dev team to eventually have this enabled.
+        /// </summary>
         [TestMethod]
-        //Simple test to exercise DirectoryEx.SafeDeleteLongPath
         public void DirectoryWithLongPathTest()
         {
-            string inputPath = Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), @"LongPathDirectoryTest");
+            string inputPath = TestContext.GetTestResultsPath();    // Start in the normal test directory that gets tested for file locking
 
             if (PythonInstaller.ValidateEnableLongpaths())
             {
-                //Make the directory path longer than 256 characters, but only when the registry has LongPathsEnabled set
+                // Make the directory path longer than 256 characters, but only when the registry has LongPathsEnabled set
                 for (int i = 0; i < 12; i++)
                 {
                     inputPath = Path.Combine(inputPath, @"LongPathDirectoryTest");
@@ -51,19 +57,18 @@ namespace pwiz.SkylineTest
             }
             else
             {
+                // Can't actually test long paths if the feature is not enabled.
                 Assert.IsFalse(inputPath.Length > 256);
             }
 
             if (IsVerboseMode)
                 Console.WriteLine($@"Creating directory with path ""{inputPath}"" that has length {inputPath.Length} characters");
 
-            DirectoryEx.CreateLongPathDirectory(inputPath);
-
-            var longPath = $@"\\?\{inputPath}";
-            Assert.IsTrue(Directory.Exists(longPath));
+            DirectoryEx.CreateLongPath(inputPath);
+            Assert.IsTrue(DirectoryEx.ExistsLongPath(inputPath));
 
             DirectoryEx.SafeDeleteLongPath(inputPath);
-            Assert.IsFalse(Directory.Exists(longPath));
+            Assert.IsFalse(DirectoryEx.ExistsLongPath(inputPath));
         }
     }
 }
