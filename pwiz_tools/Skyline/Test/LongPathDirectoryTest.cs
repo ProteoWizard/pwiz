@@ -58,10 +58,12 @@ namespace pwiz.SkylineTest
                 Console.WriteLine($@"Creating directory with path ""{inputPath}"" that has length {inputPath.Length} characters");
 
             DirectoryEx.CreateLongPathDirectory(inputPath);
-            Assert.IsTrue(Directory.Exists(inputPath));
+
+            var longPath = $@"\\?\{inputPath}";
+            Assert.IsTrue(Directory.Exists(longPath));
 
             DirectoryEx.SafeDeleteLongPath(inputPath);
-            Assert.IsFalse(Directory.Exists(inputPath));
+            Assert.IsFalse(Directory.Exists(longPath));
         }
     }
 }
