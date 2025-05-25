@@ -268,7 +268,8 @@ namespace pwiz.SkylineTest
         {
             var document = CreateTestEmptyDocument();
             const string blibName = "predict.speclib.blib";
-            var builder = new AlphapeptdeepLibraryBuilder("TestLib", blibName, document, IrtStandard.BIOGNOSYS_11);
+            var blibPath = TestContext.GetTestResultsPath(blibName);
+            var builder = new AlphapeptdeepLibraryBuilder("TestLib", blibPath, document, IrtStandard.BIOGNOSYS_11);
 
             // Mimic AlphaPeptDeep succeeding and writing a .speclib.tsv
             ResourceToTestFile("predict.speclib.tsv", builder.OutputSpectraLibFilepath);

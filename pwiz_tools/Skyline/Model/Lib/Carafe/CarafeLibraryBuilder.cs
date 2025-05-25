@@ -140,7 +140,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             string ionmob_ms1 = docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.IonMobilityInfo?.IonMobilityMS1.HasValue == true ?
                 docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.IonMobilityInfo.IonMobilityMS1.ToString() : NA;
             var apex_psm = @"unknown"; //docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.Identified
-            var filename = GetDataFileName();
+            var filename = Path.GetFileNameWithoutExtension(ExperimentDataFilePath);
             if (training)
             {
                 return string.Join(TextUtil.SEPARATOR_TSV_STR, precursor, modifiedSequence.GetUnmodifiedSequence(), charge,
@@ -165,6 +165,9 @@ namespace pwiz.Skyline.Model.Lib.Carafe
         internal string ExperimentDataFilePath { get; set;  }
         internal string ExperimentDataTuningFilePath { get; set; }
 
+        public override string InputFilePath => Path.Combine(RootDir, InputFileName);
+        public override string TrainingFilePath => null;    // Not yet implemented
+        
         private bool BuildLibraryForCurrentSkylineDocument => ProteinDatabaseFilePath.IsNullOrEmpty();
         private string PythonVirtualEnvironmentActivateScriptPath =>
             PythonInstallerUtil.GetPythonVirtualEnvironmentActivationScriptPath(PythonVersion,
@@ -253,8 +256,6 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             PythonVirtualEnvironmentName = pythonVirtualEnvironmentName;
             ExperimentDataFilePath = experimentDataFilePath;
             ExperimentDataTuningFilePath = experimentDataTuningFilePath;
-            EnsureWorkDir(RootDir, CARAFE);
-            InitPaths(Path.Combine(RootDir, InputFileName));
         }
 
         public CarafeLibraryBuilder(

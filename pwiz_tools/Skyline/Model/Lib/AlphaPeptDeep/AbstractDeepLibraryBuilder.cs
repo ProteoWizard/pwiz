@@ -60,24 +60,21 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         {
             Document = document;
             IrtStandard = irtStandard;
-            FractionOfExpectedOutputLinesGenerated = 1;
-            TotalGeneratedLinesOfOutput = 0;
-            TotalExpectedLinesOfOutput = 0;
         }
-
-        public string TimeStamp => _nowTime.ToString(@"yyyy-MM-dd_HH-mm-ss");
 
         public SrmDocument Document { get; private set; }
         
         public IrtStandard IrtStandard { get; private set; }
         
-        protected string WorkDir { get; private set; }
-
         public string AmbiguousMatchesMessage => null;
 
         public string BuildCommandArgs => null;
 
         public string BuildOutput => null;
+
+        public string TimeStamp => _nowTime.ToString(@"yyyy-MM-dd_HH-mm-ss");
+
+        protected string WorkDir { get; private set; }
 
         public void EnsureWorkDir(string path, string tool)
         {
@@ -88,29 +85,17 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             }
         }
         
-        public string InputFilePath { get; private set; }
+        public abstract string InputFilePath { get; }
         
-        public string TrainingFilePath { get; private set; }
+        public abstract string TrainingFilePath { get; }
 
-        public string DataFilePath { get; private set; }
-        public float FractionOfExpectedOutputLinesGenerated { get; private protected set; }
+        public float FractionOfExpectedOutputLinesGenerated => TotalExpectedLinesOfOutput != 0
+            ? TotalGeneratedLinesOfOutput / (float) TotalExpectedLinesOfOutput
+            : 1.0F;
+        
         public int TotalExpectedLinesOfOutput { get; private protected set; }
         public int TotalGeneratedLinesOfOutput { get; private protected set; }
 
-        public void InitPaths(string inputFilePath, string trainingFilePath = null, string dataFilePath = null)
-        {
-            InputFilePath = inputFilePath;
-            DataFilePath = dataFilePath;
-            TrainingFilePath = trainingFilePath;
-        }
-
-        public string GetDataFileName()
-        {
-            if (DataFilePath.IsNullOrEmpty())
-                return string.Empty;
-            return Path.GetFileName(DataFilePath);
-        }
-        
         public void PreparePrecursorInputFile(IList<ModificationType> modificationNames, IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
             progress.UpdateProgress(progressStatus = progressStatus

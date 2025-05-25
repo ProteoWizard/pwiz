@@ -104,33 +104,35 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
     {
         public const string ALPHAPEPTDEEP = @"AlphaPeptDeep";
 
+        // AlphaPeptDeep commands
+        private const string PEPTDEEP_EXECUTABLE = @"peptdeep.exe";
+        private const string CMD_FLOW_COMMAND = @"cmd-flow";
+        private const string EXPORT_SETTINGS_COMMAND = @"export-settings";
+
+        // Processing folders
+        private const string OUTPUT_MODELS = @"output_models";
+        private const string OUTPUT_SPECTRAL_LIBS = @"output_spectral_libs";
+
+        // Processing intermediate file names
+        private const string INPUT_FILE_NAME = @"input.tsv";
+        private const string SETTINGS_FILE_NAME = @"settings.yaml";
+        private const string OUTPUT_SPECTRAL_LIB_FILE_NAME = @"predict.speclib.tsv";
+        private const string TRANSFORMED_OUTPUT_SPECTRAL_LIB_FILE_NAME = @"predict_transformed.speclib.tsv";
+
+        // Column names for AlphaPeptDeep
         private const string SEQUENCE = @"sequence";
         private const string MODS = @"mods";
         private const string MOD_SITES = @"mod_sites";
         private const string CHARGE = @"charge";
 
-        private const string CMD_FLOW_COMMAND = @"cmd-flow";
-        private const string EXPORT_SETTINGS_COMMAND = @"export-settings";
-        private const string EXT_TSV = TextUtil.EXT_TSV;
-        private const string INPUT = @"input";
-        private const string LEFT_PARENTHESIS = TextUtil.LEFT_PARENTHESIS;
-        private const string LEFT_SQUARE_BRACKET = TextUtil.LEFT_SQUARE_BRACKET;
+        private static readonly IEnumerable<string> PrecursorTableColumnNames = new[] { SEQUENCE, MODS, MOD_SITES, CHARGE };
+
+        // Column names for BlibBuild
         private const string MODIFIED_PEPTIDE = "ModifiedPeptide";
         private const string NORMALIZED_RT = "RT";
         private const string ION_MOBILITY = "IonMobility";
         private const string CCS = "CCS";
         private const string COLLISIONAL_CROSS_SECTION = "CollisionalCrossSection";
-        private const string OUTPUT_MODELS = @"output_models";
-        private const string OUTPUT_SPECTRAL_LIB_FILE_NAME = @"predict.speclib.tsv";
-        private const string OUTPUT_SPECTRAL_LIBS = @"output_spectral_libs";
-        private const string PEPTDEEP_EXECUTABLE = "peptdeep.exe";
-        private const string RIGHT_PARENTHESIS = TextUtil.RIGHT_PARENTHESIS;
-        private const string RIGHT_SQUARE_BRACKET = TextUtil.RIGHT_SQUARE_BRACKET;
-        private const string SETTINGS_FILE_NAME = @"settings.yaml";
-        private const string TRANSFORMED_OUTPUT_SPECTRAL_LIB_FILE_NAME = @"predict_transformed.speclib.tsv";
-        private const string UNDERSCORE = TextUtil.UNDERSCORE;
-
-        private static readonly IEnumerable<string> PrecursorTableColumnNames = new[] { SEQUENCE, MODS, MOD_SITES, CHARGE };
 
         public static string PythonVersion => Settings.Default.PythonEmbeddableVersion;
         public static string ScriptsDir => PythonInstallerUtil.GetPythonVirtualEnvironmentScriptsDir(PythonVersion, ALPHAPEPTDEEP);
@@ -175,17 +177,15 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
         private string PeptdeepExecutablePath => Path.Combine(ScriptsDir, PEPTDEEP_EXECUTABLE);
 
-        private string SettingsFilePath => Path.Combine(RootDir, SETTINGS_FILE_NAME);
-        private string InputFileName => INPUT + UNDERSCORE + EXT_TSV; 
-        private string OutputModelsDir => Path.Combine(RootDir, OUTPUT_MODELS);
-        private string OutputSpectralLibsDir => Path.Combine(RootDir, OUTPUT_SPECTRAL_LIBS);
-
-        public string OutputSpectraLibFilepath =>  
-            Path.Combine(OutputSpectralLibsDir, OUTPUT_SPECTRAL_LIB_FILE_NAME);
-
+        public override string InputFilePath => Path.Combine(WorkDir, INPUT_FILE_NAME);
+        public override string TrainingFilePath => null;
+        
+        private string SettingsFilePath => Path.Combine(WorkDir, SETTINGS_FILE_NAME);
+        private string OutputModelsDir => Path.Combine(WorkDir, OUTPUT_MODELS);
+        private string OutputSpectralLibsDir => Path.Combine(WorkDir, OUTPUT_SPECTRAL_LIBS);
+        
+        public string OutputSpectraLibFilepath => Path.Combine(OutputSpectralLibsDir, OUTPUT_SPECTRAL_LIB_FILE_NAME);
         public string TransformedOutputSpectraLibFilepath => Path.Combine(OutputSpectralLibsDir, TRANSFORMED_OUTPUT_SPECTRAL_LIB_FILE_NAME);
-
-        public string RootDir { get; private set; }
 
         /// <summary>
         /// The peptdeep cmd-flow command is how we can pass arguments that will override the settings.yaml file.
@@ -196,7 +196,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             {
                 new ArgumentAndValue(@"task_workflow", @"library"),
                 new ArgumentAndValue(@"settings_yaml", SettingsFilePath, true),
-                new ArgumentAndValue(@"PEPTDEEP_HOME", RootDir, true),
+                new ArgumentAndValue(@"PEPTDEEP_HOME", WorkDir, true),
                 new ArgumentAndValue(@"transfer--model_output_folder", OutputModelsDir, true),
                 new ArgumentAndValue(@"library--infile_type", @"precursor_table"),
                 new ArgumentAndValue(@"library--infiles", InputFilePath, true),
@@ -233,18 +233,12 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         {
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
 
-            RootDir = Path.GetDirectoryName(libOutPath);
-            if (RootDir != null)
-            {
-                RootDir = Path.Combine(RootDir, libName);
-                EnsureWorkDir(RootDir, ALPHAPEPTDEEP);
-                InitPaths(Path.Combine(RootDir, InputFileName));
-            }
-        }
-
-        public bool AlphaPeptDeepExecutableExists()
-        {
-            return File.Exists(PeptdeepExecutablePath);
+            string rootProcessingDir = Path.GetDirectoryName(libOutPath);
+            if (rootProcessingDir == null)
+                throw new ArgumentException($@"AlphapeptdeepLibraryBuilder libOutputPath {libOutPath} must be a full path.");
+            rootProcessingDir = Path.Combine(rootProcessingDir, Path.GetFileNameWithoutExtension(libOutPath));
+            
+            EnsureWorkDir(rootProcessingDir, ALPHAPEPTDEEP);
         }
 
         public bool BuildLibrary(IProgressMonitor progress)
@@ -268,7 +262,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         {
             // Note: Segments are distributed to balance the expected work of each task
             var segmentEndPercentages = new[] { 5, 10, 15, 95 };
-            progressStatus = progressStatus.ChangeSegments(0, ImmutableList<int>.ValueOf( segmentEndPercentages));
+            progressStatus = progressStatus.ChangeSegments(0, ImmutableList<int>.ValueOf(segmentEndPercentages));
             PreparePrecursorInputFile(MODIFICATION_NAMES, progress, ref progressStatus);
             progressStatus = progressStatus.NextSegment();
             PrepareSettingsFile(progress, ref progressStatus);
@@ -278,9 +272,6 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             TransformPeptdeepOutput(progress, ref progressStatus);
             progressStatus = progressStatus.NextSegment();
             ImportSpectralLibrary(progress, ref progressStatus);
-
-            if (TotalExpectedLinesOfOutput > 0)
-                FractionOfExpectedOutputLinesGenerated = (float)TotalGeneratedLinesOfOutput / TotalExpectedLinesOfOutput;
         }
 
         private void PrepareSettingsFile(IProgressMonitor progress, ref IProgressStatus progressStatus)
@@ -399,9 +390,9 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                     var cell = reader.GetFieldByName(colName);
                     if (colName == MODIFIED_PEPTIDE)
                     {
-                        var transformedCell = cell.Replace(UNDERSCORE, String.Empty)
-                            .Replace(LEFT_SQUARE_BRACKET, LEFT_PARENTHESIS)
-                            .Replace(RIGHT_SQUARE_BRACKET, RIGHT_PARENTHESIS);
+                        var transformedCell = cell.Replace(TextUtil.UNDERSCORE, string.Empty)
+                            .Replace(TextUtil.LEFT_SQUARE_BRACKET, TextUtil.LEFT_PARENTHESIS)
+                            .Replace(TextUtil.RIGHT_SQUARE_BRACKET, TextUtil.RIGHT_PARENTHESIS);
                         line.Add(transformedCell);
                     }
                     else if (colName == NORMALIZED_RT)
