@@ -153,7 +153,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         /// <summary>
         /// List of UniMod Modifications available
         /// </summary>
-        internal static readonly IList<ModificationType> MODIFICATION_NAMES = PopulateUniModList(null);
+        public static readonly IList<ModificationType> MODIFICATION_NAMES = PopulateUniModList(null);
 
         protected override string ToolName => ALPHAPEPTDEEP;
         
@@ -180,7 +180,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         private string OutputModelsDir => Path.Combine(RootDir, OUTPUT_MODELS);
         private string OutputSpectralLibsDir => Path.Combine(RootDir, OUTPUT_SPECTRAL_LIBS);
 
-        internal string OutputSpectraLibFilepath =>  
+        public string OutputSpectraLibFilepath =>  
             Path.Combine(OutputSpectralLibsDir, OUTPUT_SPECTRAL_LIB_FILE_NAME);
 
         public string TransformedOutputSpectraLibFilepath => Path.Combine(OutputSpectralLibsDir, TRANSFORMED_OUTPUT_SPECTRAL_LIB_FILE_NAME);
@@ -312,7 +312,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             }
         }
 
-        internal void ExecutePeptdeep(IProgressMonitor progress, ref IProgressStatus progressStatus)
+        private void ExecutePeptdeep(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
             Stopwatch timer = new Stopwatch();
             progress.UpdateProgress(progressStatus = progressStatus
@@ -362,15 +362,14 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
         }
 
-        internal void TransformPeptdeepOutput(IProgressMonitor progress, ref IProgressStatus progressStatus, string input = null, string output = null)
+        public void TransformPeptdeepOutput(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
             progress.UpdateProgress(progressStatus = progressStatus
                 .ChangeMessage(ModelResources.AlphapeptdeepLibraryBuilder_Importing_spectral_library));
 
             var result = new List<string>();
 
-            input ??= OutputSpectraLibFilepath;
-            using var reader = new DsvFileReader(input, TextUtil.SEPARATOR_TSV);
+            using var reader = new DsvFileReader(OutputSpectraLibFilepath, TextUtil.SEPARATOR_TSV);
 
             // Transform table header
             var colNames = reader.FieldNames;
@@ -420,15 +419,13 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             }
 
             // Write to new file
-            output ??= TransformedOutputSpectraLibFilepath;
-            File.WriteAllLines(output, result);
+            File.WriteAllLines(TransformedOutputSpectraLibFilepath, result);
         }
 
-        internal void ImportSpectralLibrary(IProgressMonitor progress, ref IProgressStatus progressStatus, string input = null, string output = null )
+        public void ImportSpectralLibrary(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
-            input ??= TransformedOutputSpectraLibFilepath;
-            output ??= LibrarySpec.FilePath;
-            string[] inputFile = { input };
+            string[] inputFile = { TransformedOutputSpectraLibFilepath };
+            string output = LibrarySpec.FilePath;
             string incompleteBlibPath = BiblioSpecLiteSpec.GetRedundantName(output);
             var build = new BlibBuild(incompleteBlibPath, inputFile);
 

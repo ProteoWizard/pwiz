@@ -61,12 +61,13 @@ namespace pwiz.SkylineTest
                 Assert.AreEqual(1, group.Count(), "Duplicate accession {0}", group.Key);
             }
         }
+        
+        private string NeverBuiltBlib => TestContext.GetTestResultsPath("TestAlphaPeptDeepLibrary.blib");
 
         [TestMethod]
         public void TestAlphapeptdeepLibraryBuilder()
         {
             TestContext.EnsureTestResultsDir();
-            string outputPath = TestContext.GetTestResultsPath("TestAlphaPeptDeepLibrary.blib");
 
             var peptides = new[]
             {
@@ -76,33 +77,34 @@ namespace pwiz.SkylineTest
                 new Peptide("LIVER")
             };
          
-            SrmDocument document = CreateTestSimpleDocument(peptides);
+            var document = CreateTestSimpleDocument(peptides);
 
-            TestGetPrecursorTable(document, outputPath, SIMPLE_PRECURSOR_TABLE_ANSWER);
-            TestGetWarningMods(document, outputPath); // No warnings should be generated
+            TestGetPrecursorTable(document, SIMPLE_PRECURSOR_TABLE_ANSWER);
+            TestGetWarningMods(document, 0); // No warnings should be generated
     
             document = CreateTestImportedDoc();
 
-            TestGetPrecursorTable(document, outputPath, MIXED_PRECURSOR_TABLE_ANSWER);
-            TestGetWarningMods(document, outputPath, 1);
-            TestGetWarningMods(document, outputPath, 1);
+            TestGetPrecursorTable(document, MIXED_PRECURSOR_TABLE_ANSWER);
+            TestGetWarningMods(document, 1);
+            TestGetWarningMods(document, 1);
 
-            TestValidateModifications_Supported(outputPath);
-            TestValidateModifications_Unsupported(outputPath);
+            TestValidateModifications_Supported();
+            TestValidateModifications_Unsupported();
 
-            TestTransformPeptDeepOutput(outputPath);
-            TestImportSpectralLibrary(outputPath);
+            TestTransformPeptDeepOutput();
+            TestImportSpectralLibrary();
+            
+            Assert.IsFalse(File.Exists(NeverBuiltBlib));
         }
 
         /// <summary>
         /// Test of <see cref="AlphapeptdeepLibraryBuilder.GetPrecursorTable"/>
         /// </summary>
         /// <param name="document">Input <see cref="SrmDocument"/> from which to build the table.</param>
-        /// <param name="outputPath">Path to an output .blib file that never gets built.</param>
         /// <param name="expectedLines">Expected lines of output.</param>
-        public void TestGetPrecursorTable(SrmDocument document, string outputPath, IEnumerable<string> expectedLines)
+        public void TestGetPrecursorTable(SrmDocument document, IEnumerable<string> expectedLines)
         {
-            var builder = new AlphapeptdeepLibraryBuilder("TestLib", outputPath, document, IrtStandard.BIOGNOSYS_11);
+            var builder = new AlphapeptdeepLibraryBuilder("TestLib", NeverBuiltBlib, document, IrtStandard.BIOGNOSYS_11);
             var precursorTable = builder.GetPrecursorTable(false);
 
             var generatedResult = precursorTable as string[] ?? precursorTable.ToArray();
@@ -122,11 +124,10 @@ namespace pwiz.SkylineTest
         /// Test of <see cref="AlphapeptdeepLibraryBuilder.GetWarningMods"/>
         /// </summary>
         /// <param name="document">Input <see cref="SrmDocument"/> that may generate warnings about modifications.</param>
-        /// <param name="outputPath">Path to an output .blib file that never gets built.</param>
         /// <param name="expectedWarningCount">Expected count of warnings generated.</param>
-        public void TestGetWarningMods(SrmDocument document, string outputPath, int expectedWarningCount = 0)
+        public void TestGetWarningMods(SrmDocument document, int expectedWarningCount)
         {
-            var builder = new AlphapeptdeepLibraryBuilder("TestLib", outputPath, document, IrtStandard.BIOGNOSYS_11);
+            var builder = new AlphapeptdeepLibraryBuilder("TestLib", NeverBuiltBlib, document, IrtStandard.BIOGNOSYS_11);
             var warningList = builder.GetWarningMods();
 
             Assert.AreEqual(expectedWarningCount, warningList.Count);
@@ -135,11 +136,10 @@ namespace pwiz.SkylineTest
         /// <summary>
         /// Tests AlphaPeptDeep supported modifications only, of several types.
         /// </summary>
-        /// <param name="outputPath">Path to an output .blib file that never gets built.</param>
-        public void TestValidateModifications_Supported(string outputPath)
+        public void TestValidateModifications_Supported()
         {
             var document = CreateTestEmptyDocument();
-            var builder = new AlphapeptdeepLibraryBuilder("TestLib", outputPath, document, IrtStandard.BIOGNOSYS_11);
+            var builder = new AlphapeptdeepLibraryBuilder("TestLib", NeverBuiltBlib, document, IrtStandard.BIOGNOSYS_11);
 
             var peptideList = new[]
             {
@@ -215,11 +215,10 @@ namespace pwiz.SkylineTest
         /// <summary>
         /// Tests an AlphaPeptDeep unsupported modification.
         /// </summary>
-        /// <param name="outputPath">Path to an output .blib file that never gets built.</param>
-        public void TestValidateModifications_Unsupported(string outputPath)
+        public void TestValidateModifications_Unsupported()
         {
             var document = CreateTestEmptyDocument();
-            var builder = new AlphapeptdeepLibraryBuilder("TestLib", outputPath, document, IrtStandard.BIOGNOSYS_11);
+            var builder = new AlphapeptdeepLibraryBuilder("TestLib", NeverBuiltBlib, document, IrtStandard.BIOGNOSYS_11);
 
             var peptideList = new[]
             {
@@ -265,19 +264,21 @@ namespace pwiz.SkylineTest
         /// Test of <see cref="AlphapeptdeepLibraryBuilder.TransformPeptdeepOutput"/> the function that
         /// transforms between native AlphaPeptDeep output and BlibBuild input formats.
         /// </summary>
-        /// <param name="outputPath">Path to an output .blib file that never gets built.</param>
-        public void TestTransformPeptDeepOutput(string outputPath)
+        public void TestTransformPeptDeepOutput()
         {
             var document = CreateTestEmptyDocument();
-            var builder = new AlphapeptdeepLibraryBuilder("TestLib", outputPath, document, IrtStandard.BIOGNOSYS_11);
+            const string blibName = "predict.speclib.blib";
+            var builder = new AlphapeptdeepLibraryBuilder("TestLib", blibName, document, IrtStandard.BIOGNOSYS_11);
 
-            var input = ResourceToTestFile("predict.speclib.tsv");
-            var output = TestContext.GetTestResultsPath("predict_transformed.speclib.tsv");
+            // Mimic AlphaPeptDeep succeeding and writing a .speclib.tsv
+            ResourceToTestFile("predict.speclib.tsv", builder.OutputSpectraLibFilepath);
+            const string tsvTransformedName = "predict_transformed.speclib.tsv";
 
             IProgressStatus status = new ProgressStatus();
-            builder.TransformPeptdeepOutput(new SilentProgressMonitor(), ref status, input, output);
+            builder.TransformPeptdeepOutput(new SilentProgressMonitor(), ref status);
 
-            var answer = ResourceToTestFile("predict_transformed.speclib.tsv.answer");
+            string output = builder.TransformedOutputSpectraLibFilepath;
+            var answer = ResourceToTestFile(tsvTransformedName, output + ".answer");
 
             using (var answerReader = new StreamReader(answer))
             using (var productReader = new StreamReader(output))
@@ -290,19 +291,20 @@ namespace pwiz.SkylineTest
         /// Test of <see cref="AlphapeptdeepLibraryBuilder.ImportSpectralLibrary"/> to see if it generates
         /// a .blib file with the expected number of spectrum entries.
         /// </summary>
-        /// <param name="outputPath">Path to an output .blib file that gets built by running BlibBuild and BlibFilter.</param>
-        public void TestImportSpectralLibrary(string outputPath)
+        public void TestImportSpectralLibrary()
         {
             var document = CreateTestEmptyDocument();
-            var builder = new AlphapeptdeepLibraryBuilder("TestLib", outputPath, document, null);
+            const string blibName = "predict.speclib.blib";
+            var output = TestContext.GetTestResultsPath(blibName);
+            var builder = new AlphapeptdeepLibraryBuilder("TestLib", output, document, null);
 
-            var input = ResourceToTestFile("predict_transformed.speclib.tsv");
-            var output = TestContext.GetTestResultsPath("predict_transformed.speclib.blib");
+            // Mimic Transformation succeeding prior to running the library build
+            ResourceToTestFile("predict_transformed.speclib.tsv", builder.TransformedOutputSpectraLibFilepath);
 
             IProgressStatus status = new ProgressStatus();
-            builder.ImportSpectralLibrary(new SilentProgressMonitor(), ref status, input, output);
+            builder.ImportSpectralLibrary(new SilentProgressMonitor(), ref status);
 
-            var answer = ResourceToTestFile("predict_transformed.speclib.blib.answer");
+            var answer = ResourceToTestFile("predict_transformed.speclib.blib", output + ".answer");
             var ansLibrary = LoadLibrary(answer);
             var outLibrary = LoadLibrary(output);
             Assert.AreEqual(ansLibrary.SpectrumCount, outLibrary.SpectrumCount);
@@ -324,15 +326,15 @@ namespace pwiz.SkylineTest
         /// <summary>
         /// Copies an Assembly resource to the TestResultsPath folder for use in file operations.
         /// </summary>
-        /// <param name="input">The name of the output file which also matches the resource name, potentially with ".answer" appended</param>
+        /// <param name="resourceName">The name of the resource to read the file from</param>
+        /// <param name="testFile">The path to copy the file to</param>
         /// <returns>The full path to the output file</returns>
-        private string ResourceToTestFile(string input)
+        private string ResourceToTestFile(string resourceName, string testFile)
         {
-            string testFile = TestContext.GetTestResultsPath(input);
-            string resourceName = input;
-            const string answerExt = ".answer";
-            if (resourceName.EndsWith(answerExt))
-                resourceName = resourceName.Substring(0, input.Length - answerExt.Length);
+            // First make sure the target folder exists
+            string parentDir = Path.GetDirectoryName(testFile);
+            if (parentDir != null)
+                Directory.CreateDirectory(parentDir);
 
             using (var stream = GetType().Assembly.GetManifestResourceStream(GetType().Namespace + "." + resourceName))
             using (var fileStream = new FileStream(testFile, FileMode.Create, FileAccess.Write))
