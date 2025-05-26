@@ -234,7 +234,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
 
             string rootProcessingDir = Path.GetDirectoryName(libOutPath);
-            if (rootProcessingDir == null)
+            if (string.IsNullOrEmpty(rootProcessingDir))
                 throw new ArgumentException($@"AlphapeptdeepLibraryBuilder libOutputPath {libOutPath} must be a full path.");
             rootProcessingDir = Path.Combine(rootProcessingDir, Path.GetFileNameWithoutExtension(libOutPath));
             

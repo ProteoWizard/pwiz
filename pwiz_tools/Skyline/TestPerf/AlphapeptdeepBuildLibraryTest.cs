@@ -367,7 +367,7 @@ namespace TestPerf
                 needAdminDlg.Message);
 
             CancelDialog(needAdminDlg, needAdminDlg.CancelDialog); // Expect the offer to installNvidia
-            installNvidiaDlg = ShowDialog<MessageDlg>(buildLibraryDlg.OkWizardPage, WAIT_TIME);
+            installNvidiaDlg = ShowDialog<MessageDlg>(buildLibraryDlg.OkWizardPage, WAIT_TIME); // 3 minutes 
             AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Install_Nvidia_Library,
                 installNvidiaDlg.Message);
             
@@ -377,7 +377,7 @@ namespace TestPerf
             if (!IsCleanPythonMode)
                 return null;
 
-            var pythonConfirm = WaitForOpenForm<MessageDlg>();
+            var pythonConfirm = WaitForOpenForm<MessageDlg>(WAIT_TIME * 4); // 12 minutes - successful completion message
             if (IsVerboseMode)
                 Console.WriteLine(@"TestAlphaPeptDeepBuildLibrary: Finish TestNvidiaInstallPython() test ... ");
             return pythonConfirm;

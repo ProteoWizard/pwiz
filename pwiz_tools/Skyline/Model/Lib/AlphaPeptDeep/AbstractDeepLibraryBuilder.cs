@@ -73,7 +73,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
         public string TimeStamp => _nowTime.ToString(@"yyyy-MM-dd_HH-mm-ss");
 
-        protected string WorkDir { get; private set; }
+        public string WorkDir { get; private set; }
 
         public void EnsureWorkDir(string path, string tool)
         {

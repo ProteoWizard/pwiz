@@ -52,7 +52,7 @@ namespace pwiz.SkylineTest
         public string LogOutput => TestContext.GetTestResultsPath("TestConsole.log");
 
         [TestMethod]
-        public void TestAlphapeptdeepModificationInfo()
+        public void AlphapeptdeepModificationInfoTest()
         {
             var groupedByAccession = AlphapeptdeepLibraryBuilder.MODIFICATION_NAMES
                 .GroupBy(item => item.Accession);
@@ -62,10 +62,15 @@ namespace pwiz.SkylineTest
             }
         }
         
+        /// <summary>
+        /// This library never gets built, but its work directory does get created and used.
+        /// </summary>
         private string NeverBuiltBlib => TestContext.GetTestResultsPath("TestAlphaPeptDeepLibrary.blib");
 
+        private const string TEST_LIB_NAME = "Test|Lib";    // Use a name that fail if included in a path
+
         [TestMethod]
-        public void TestAlphapeptdeepLibraryBuilder()
+        public void AlphapeptdeepLibraryBuilderUnitTest()
         {
             TestContext.EnsureTestResultsDir();
 
@@ -93,8 +98,6 @@ namespace pwiz.SkylineTest
 
             TestTransformPeptDeepOutput();
             TestImportSpectralLibrary();
-            
-            Assert.IsFalse(File.Exists(NeverBuiltBlib));
         }
 
         /// <summary>
@@ -104,7 +107,7 @@ namespace pwiz.SkylineTest
         /// <param name="expectedLines">Expected lines of output.</param>
         public void TestGetPrecursorTable(SrmDocument document, IEnumerable<string> expectedLines)
         {
-            var builder = new AlphapeptdeepLibraryBuilder("TestLib", NeverBuiltBlib, document, IrtStandard.BIOGNOSYS_11);
+            var builder = new AlphapeptdeepLibraryBuilder(TEST_LIB_NAME, NeverBuiltBlib, document, IrtStandard.BIOGNOSYS_11);
             var precursorTable = builder.GetPrecursorTable(false);
 
             var generatedResult = precursorTable as string[] ?? precursorTable.ToArray();
@@ -118,6 +121,14 @@ namespace pwiz.SkylineTest
             var expectedOutput = TextUtil.LineSeparate(expectedLines);
 
             AssertEx.NoDiff(expectedOutput, generatedOutput);
+            CheckBuilderFiles(builder, false);
+        }
+
+        private void CheckBuilderFiles(AlphapeptdeepLibraryBuilder builder, bool libraryBuilt)
+        {
+            Assert.IsTrue(Directory.Exists(builder.WorkDir));
+            Directory.Delete(builder.WorkDir, true);
+            Assert.AreEqual(libraryBuilt, File.Exists(builder.LibrarySpec.FilePath));
         }
 
         /// <summary>
@@ -127,10 +138,11 @@ namespace pwiz.SkylineTest
         /// <param name="expectedWarningCount">Expected count of warnings generated.</param>
         public void TestGetWarningMods(SrmDocument document, int expectedWarningCount)
         {
-            var builder = new AlphapeptdeepLibraryBuilder("TestLib", NeverBuiltBlib, document, IrtStandard.BIOGNOSYS_11);
+            var builder = new AlphapeptdeepLibraryBuilder(TEST_LIB_NAME, NeverBuiltBlib, document, IrtStandard.BIOGNOSYS_11);
             var warningList = builder.GetWarningMods();
 
             Assert.AreEqual(expectedWarningCount, warningList.Count);
+            CheckBuilderFiles(builder, false);
         }
 
         /// <summary>
@@ -139,7 +151,7 @@ namespace pwiz.SkylineTest
         public void TestValidateModifications_Supported()
         {
             var document = CreateTestEmptyDocument();
-            var builder = new AlphapeptdeepLibraryBuilder("TestLib", NeverBuiltBlib, document, IrtStandard.BIOGNOSYS_11);
+            var builder = new AlphapeptdeepLibraryBuilder(TEST_LIB_NAME, NeverBuiltBlib, document, IrtStandard.BIOGNOSYS_11);
 
             var peptideList = new[]
             {
@@ -210,6 +222,7 @@ namespace pwiz.SkylineTest
                 Assert.AreEqual(answer_mods[i], mods);
                 Assert.AreEqual(answer_modSites[i], modSites);
             }
+            CheckBuilderFiles(builder, false);
         }
 
         /// <summary>
@@ -218,7 +231,7 @@ namespace pwiz.SkylineTest
         public void TestValidateModifications_Unsupported()
         {
             var document = CreateTestEmptyDocument();
-            var builder = new AlphapeptdeepLibraryBuilder("TestLib", NeverBuiltBlib, document, IrtStandard.BIOGNOSYS_11);
+            var builder = new AlphapeptdeepLibraryBuilder(TEST_LIB_NAME, NeverBuiltBlib, document, IrtStandard.BIOGNOSYS_11);
 
             var peptideList = new[]
             {
@@ -258,6 +271,7 @@ namespace pwiz.SkylineTest
                 Assert.AreNotEqual(answer_mods[i], mods);
                 Assert.AreNotEqual(answer_modSites[i], modSites);
             }
+            CheckBuilderFiles(builder, false);
         }
 
         /// <summary>
@@ -269,7 +283,7 @@ namespace pwiz.SkylineTest
             var document = CreateTestEmptyDocument();
             const string blibName = "predict.speclib.blib";
             var blibPath = TestContext.GetTestResultsPath(blibName);
-            var builder = new AlphapeptdeepLibraryBuilder("TestLib", blibPath, document, IrtStandard.BIOGNOSYS_11);
+            var builder = new AlphapeptdeepLibraryBuilder(TEST_LIB_NAME, blibPath, document, IrtStandard.BIOGNOSYS_11);
 
             // Mimic AlphaPeptDeep succeeding and writing a .speclib.tsv
             ResourceToTestFile("predict.speclib.tsv", builder.OutputSpectraLibFilepath);
@@ -286,6 +300,7 @@ namespace pwiz.SkylineTest
             {
                 AssertEx.FieldsEqual(answerReader, productReader, 13, null, true);
             }
+            CheckBuilderFiles(builder, false);
         }
 
         /// <summary>
@@ -296,8 +311,11 @@ namespace pwiz.SkylineTest
         {
             var document = CreateTestEmptyDocument();
             const string blibName = "predict.speclib.blib";
+            // Test that a programming error that went unnoticed now throws an argument exception
+            AssertEx.ThrowsException<ArgumentException>(() => new AlphapeptdeepLibraryBuilder(TEST_LIB_NAME, blibName, document, null));
+
             var output = TestContext.GetTestResultsPath(blibName);
-            var builder = new AlphapeptdeepLibraryBuilder("TestLib", output, document, null);
+            var builder = new AlphapeptdeepLibraryBuilder(TEST_LIB_NAME, output, document, null);
 
             // Mimic Transformation succeeding prior to running the library build
             ResourceToTestFile("predict_transformed.speclib.tsv", builder.TransformedOutputSpectraLibFilepath);
@@ -309,6 +327,7 @@ namespace pwiz.SkylineTest
             var ansLibrary = LoadLibrary(answer);
             var outLibrary = LoadLibrary(output);
             Assert.AreEqual(ansLibrary.SpectrumCount, outLibrary.SpectrumCount);
+            CheckBuilderFiles(builder, true);
         }
 
         /// <summary>
