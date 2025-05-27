@@ -218,7 +218,7 @@ namespace pwiz.Common.SystemUtil
             // If it's a file locking issue, wrap the exception to report the locking process
             if (x is IOException { HResult: ERROR_SHARING_VIOLATION } ioException)
             {
-                var match = Regex.Match(ioException.Message, "'(.*)'");
+                var match = Regex.Match(ioException.Message, "'([^']+)'");
                 if (match.Success)
                 {
                     string lockedFileName = match.Captures[0].Value.Trim('\'');
