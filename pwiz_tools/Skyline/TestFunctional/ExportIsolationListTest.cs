@@ -604,7 +604,7 @@ namespace pwiz.SkylineTestFunctional
             // the predicted retention time is at least AgilentMassListExporter.AGILENT_MIN_START_ACQUISITION_TIME
             foreach (var path in paths)
             {
-                var resReader = new DsvFileReader(path, TextUtil.SEPARATOR_TSV);
+                using var resReader = new DsvFileReader(path, TextUtil.SEPARATOR_TSV);
                 while (resReader.ReadLine() != null)
                 {
                     Assert.IsTrue(float.TryParse(resReader.GetFieldByName("RT Window (min)"),

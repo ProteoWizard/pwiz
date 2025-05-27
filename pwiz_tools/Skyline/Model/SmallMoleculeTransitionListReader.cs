@@ -2344,6 +2344,9 @@ namespace pwiz.Skyline.Model
             var inputs = new MassListInputs(csvText);
             _cultureInfo = inputs.FormatProvider;
             HasHeaders = hasHeaders;
+            // CONSIDER: It is technically not necessary to dispose this DsvFileReader, because it uses a StringReader
+            //           Though, it would not be much work to implement the IDisposable pattern on this class
+            //           Or, the code could be adapted to save the headers instead of the reader.
             _csvReader = new DsvFileReader(new StringListReader(csvText), inputs.Separator, SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms, columnPositions, hasHeaders);
             // Do we recognize all the headers?
             var badHeaders =
