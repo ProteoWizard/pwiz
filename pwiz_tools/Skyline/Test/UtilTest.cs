@@ -493,6 +493,8 @@ namespace pwiz.SkylineTest
 
         private static void VerifyDeleteDirectoryWithFileLockingDetails(string dirPath, string lockedFile)
         {
+            // NB: We really do not want to see the error "was locked but has since been deleted"
+            //     since we know the file is locked and cannot have been deleted.
             AssertEx.ThrowsException<IOException>(() => FileLockingProcessFinder.DeleteDirectoryWithFileLockingDetails(dirPath),
                 x => AssertEx.Contains(x.Message, lockedFile, "this process"));
         }
