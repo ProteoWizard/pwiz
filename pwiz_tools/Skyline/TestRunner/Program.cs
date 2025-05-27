@@ -1138,7 +1138,7 @@ namespace TestRunner
                                     if (testInfo.Pass == 2)
                                         testInfo.IncrementLoopCount();
                                     if (loop == 0)
-                                        testQueue.Enqueue(testInfo);
+                                        (testInfo.TestInfo.DoNotRunInParallel ? nonParallelTestQueue : testQueue).Enqueue(testInfo);
                                 }
                                 finally
                                 {
@@ -1147,7 +1147,7 @@ namespace TestRunner
                                         //if (testInfo.TestMethod.Name == "TestSwathIsolationLists")
                                         //    testRequeue = false;
                                         Console.Error.WriteLine($"No result for test {workerInfo.CurrentTest}; requeuing...");
-                                        testQueue.Enqueue(testInfo);
+                                        (testInfo.TestInfo.DoNotRunInParallel ? nonParallelTestQueue : testQueue).Enqueue(testInfo);
                                     }
                                 }
                             }
