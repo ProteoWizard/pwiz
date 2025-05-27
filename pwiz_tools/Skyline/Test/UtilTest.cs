@@ -494,7 +494,7 @@ namespace pwiz.SkylineTest
         private static void VerifyDeleteDirectoryWithFileLockingDetails(string dirPath, string lockedFile)
         {
             AssertEx.ThrowsException<IOException>(() => FileLockingProcessFinder.DeleteDirectoryWithFileLockingDetails(dirPath),
-                x => AssertEx.Contains(x.Message, lockedFile, "this process"));
+                x => AssertEx.Contains(x.Message, dirPath, Path.GetFileName(lockedFile)));
         }
     }
 }
