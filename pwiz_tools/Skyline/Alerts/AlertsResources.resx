@@ -325,6 +325,8 @@
     <value>Load Login page failed with HTTP status code {0}. It is likely that the Client Registration Code is invalid. A new Client Registration Code was just received from the server so this is probably a bug. Login Page URL: {1}</value>
   </data>
   <data name="MsFraggerDownloadDlg_btnRequestVerificationCode_Click_Check_your_email" xml:space="preserve">
-      <value>Check your email for the verification code and copy it into the box.</value>
+    <value>Check your email for the verification code and copy it into the box.
+
+If you don't get an email, double-check your email address or click "More Info" for troubleshooting.</value>
   </data>
 </root>

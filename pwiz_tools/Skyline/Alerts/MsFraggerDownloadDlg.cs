@@ -40,7 +40,6 @@ namespace pwiz.Skyline.Alerts
     {
         private static readonly string LICENSE_URL = Settings.Default.MsFraggerLicenseUrl;
         private static readonly string VERIFY_URL = Settings.Default.MsFraggerVerifyUrl;
-        private const string VERIFY_SUCCESS = @"download link has been sent";
         private static readonly string DOWNLOAD_URL_WITH_TOKEN = $@"{Settings.Default.MsFraggerDownloadUrl}?token={{0}}&download=Release%20{MsFraggerSearchEngine.MSFRAGGER_VERSION}%24zip";
         private const string VERIFY_METHOD = @"POST";
         private static readonly Uri DOWNLOAD_URL_FOR_FUNCTIONAL_TESTS = new Uri($@"https://ci.skyline.ms/skyline_tool_testing_mirror/MSFragger-{MsFraggerSearchEngine.MSFRAGGER_VERSION}.zip");
@@ -131,10 +130,10 @@ namespace pwiz.Skyline.Alerts
             // now clicking "Accept" button should start download
         }
 
-        private void RequestVerificationCode()
+        private string RequestVerificationCode()
         {
-            if (Program.FunctionalTest)
-                return;
+            if (Program.FunctionalTest && !Program.IsPaused)
+                return string.Empty;
 
             using var downloadProgressDlg = new LongWaitDlg();
             using var client = new WebClient();
@@ -151,6 +150,7 @@ namespace pwiz.Skyline.Alerts
             postData[@"download"] = $@"Release {MsFraggerSearchEngine.MSFRAGGER_VERSION}$zip";
             postData[@"is_fragpipe"] = @"true";
 
+            string resultString = string.Empty;
             downloadProgressDlg.PerformWork(this, 50, broker =>
             {
                 var uploadTask = client.UploadValuesTaskAsync(VERIFY_URL, VERIFY_METHOD, postData);
@@ -159,11 +159,9 @@ namespace pwiz.Skyline.Alerts
                     throw uploadTask.Exception;
 
                 var resultBytes = uploadTask.Result;
-                var resultString = Encoding.UTF8.GetString(resultBytes);
-
-                if (!resultString.Contains(VERIFY_SUCCESS))
-                    throw new InvalidOperationException(resultString);
+                resultString = Encoding.UTF8.GetString(resultBytes);
             });
+            return resultString;
         }
 
         private bool Download()
@@ -171,7 +169,7 @@ namespace pwiz.Skyline.Alerts
             using (var downloadProgressDlg = new LongWaitDlg())
             {
                 downloadProgressDlg.Message = string.Format(AlertsResources.MsFraggerDownloadDlg_Download_Downloading_MSFragger__0_, MsFraggerSearchEngine.MSFRAGGER_VERSION);
-                if (Program.FunctionalTest) // original URLs not possible with "verification code" system
+                if (Program.FunctionalTest && !Program.IsPaused) // original URLs not possible with "verification code" system
                 {
                     var msFraggerDownloadInfo = MsFraggerSearchEngine.MsFraggerDownloadInfo;
                     msFraggerDownloadInfo.DownloadUrl = DOWNLOAD_URL_FOR_FUNCTIONAL_TESTS;
@@ -241,9 +239,10 @@ namespace pwiz.Skyline.Alerts
 
         private void btnRequestVerificationCode_Click(object sender, EventArgs e)
         {
-            RequestVerificationCode();
+            var verificationResultHtml = RequestVerificationCode();
             lblVerificationCode.Enabled = tbVerificationCode.Enabled = true;
-            MessageDlg.Show(this, AlertsResources.MsFraggerDownloadDlg_btnRequestVerificationCode_Click_Check_your_email);
+            new AlertDlg(AlertsResources.MsFraggerDownloadDlg_btnRequestVerificationCode_Click_Check_your_email, MessageBoxButtons.OK)
+                { DetailMessage = verificationResultHtml }.ShowAndDispose(this);
         }
 
         private bool CheckCursorWithinRange(RichTextBox rtb, MouseEventArgs e, LinkInfo linkInfo)

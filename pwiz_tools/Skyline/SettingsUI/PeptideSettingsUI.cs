@@ -757,6 +757,16 @@ namespace pwiz.Skyline.SettingsUI
         {
             IsBuildingLibrary = true;
 
+            var warning = (builder as ILibraryBuildWarning)?.GetWarning();
+            if (!string.IsNullOrEmpty(warning))
+            {
+                if (MultiButtonMsgDlg.Show(this, warning, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+                {
+                    IsBuildingLibrary = false;
+                    return;
+                }
+            }
+
             var buildState = new BuildState(builder.LibrarySpec, _libraryManager.BuildLibraryBackground);
 
             bool retry;
@@ -792,6 +802,12 @@ namespace pwiz.Skyline.SettingsUI
                             MessageDlg.ShowException(this, status.ErrorException);
                         }
                     }
+                    else if (status.IsCanceled)
+                    {
+                        IsBuildingLibrary = false;
+                        return;
+                    }
+
                     retry = false;
                 }
             } while (retry);
