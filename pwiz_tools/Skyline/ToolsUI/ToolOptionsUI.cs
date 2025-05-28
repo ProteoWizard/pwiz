@@ -526,7 +526,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             if (CarafeLibraryBuilder.ModelParameters == null)
                 CarafeLibraryBuilder.CarafeDefaultSettings();
-            KeyValueGridDlg.Show(btnCarafeTrainingDataGenerationSettings.Text,
+            KeyValueGridDlg.Show(btnCarafeModelTrainingSettings.Text,
                 CarafeLibraryBuilder.ModelParameters,
                 setting => setting.Value.ToString(),
                 (value, setting) => setting.Value = value,

@@ -14,13 +14,12 @@
     <FileAlignment>512</FileAlignment>
     <ApplicationIcon>Skyline.ico</ApplicationIcon>
     <IsWebBootstrapper>true</IsWebBootstrapper>
-    <ManifestCertificateThumbprint>586806A1F7B1C85AD63BC46CA599EC4142EBE84A</ManifestCertificateThumbprint>
-    <ManifestKeyFile>
-    </ManifestKeyFile>
-    <GenerateManifests>true</GenerateManifests>
+    <ManifestCertificateThumbprint>FE05A4E5B557E824D58CFC715ADBC1D6EB26B5AE</ManifestCertificateThumbprint>
+    <ManifestKeyFile>Skyline_2_TemporaryKey.pfx</ManifestKeyFile>
+    <GenerateManifests>false</GenerateManifests>
     <TargetZone>LocalIntranet</TargetZone>
     <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
-    <SignManifests>false</SignManifests>
+    <SignManifests>true</SignManifests>
     <SignAssembly>false</SignAssembly>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
@@ -53,8 +52,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>15</ApplicationRevision>
-    <ApplicationVersion>24.1.3.15</ApplicationVersion>
+    <ApplicationRevision>20</ApplicationRevision>
+    <ApplicationVersion>24.1.3.20</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -4961,10 +4960,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\ToolOptionsUI.ja.resx">
       <DependentUpon>ToolOptionsUI.cs</DependentUpon>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\ToolOptionsUI.resx">
       <DependentUpon>ToolOptionsUI.cs</DependentUpon>
       <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
     <Content Include="..\BiblioSpec\src\modifications.xml">
       <Link>modifications.xml</Link>
@@ -4983,6 +4984,7 @@
     <EmbeddedResource Include="ToolsUI\ToolOptionsUI.zh-CHS.resx">
       <DependentUpon>ToolOptionsUI.cs</DependentUpon>
       <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\ToolStoreDlg.ja.resx">
       <DependentUpon>ToolStoreDlg.cs</DependentUpon>
@@ -5086,9 +5088,11 @@
     <Compile Include="ToolsUI\ToolInstallUI.cs" />
     <Compile Include="ToolsUI\ToolOptionsUI.cs">
       <SubType>Form</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Compile>
     <Compile Include="ToolsUI\ToolOptionsUI.Designer.cs">
       <DependentUpon>ToolOptionsUI.cs</DependentUpon>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Compile>
     <Compile Include="ToolsUI\ToolStoreDlg.cs">
       <SubType>Form</SubType>
@@ -6873,6 +6877,8 @@
     <None Include="SkylineLog4Net.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Skyline_1_TemporaryKey.pfx" />
+    <None Include="Skyline_2_TemporaryKey.pfx" />
     <None Include="Skyline_TemporaryKey.pfx" />
     <None Include="Resources\PeptideStandard.bmp" />
     <None Include="Resources\PeptideStandardLib.bmp" />
