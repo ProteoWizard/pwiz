@@ -3523,7 +3523,7 @@ namespace pwiz.Skyline
 
             var ardiaAccounts = Settings.Default.RemoteAccountList.GetAccountsOfType(RemoteAccountType.ARDIA).ToList();
 
-            var fileDlg = new OpenArdiaFileDialogNE(ardiaAccounts);
+            var fileDlg = new ArdiaSelectDirectoryFileDialog(ardiaAccounts);
             fileDlg.Text = @"Select a destination folder";
 
             if (fileDlg.ShowDialog(this) != DialogResult.OK)

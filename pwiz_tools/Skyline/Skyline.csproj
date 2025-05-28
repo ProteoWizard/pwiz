@@ -485,7 +485,7 @@
       <DependentUpon>SynchronizedIntegrationDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="EditUI\ZedGraphClipboard.cs" />
-    <Compile Include="FileUI\OpenArdiaFileDialogNE.cs">
+    <Compile Include="FileUI\ArdiaSelectDirectoryFileDialog.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="FileUI\OpenFileDialogNE.cs">
@@ -596,7 +596,7 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
-    <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaSession.cs" />	
+    <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaSession.cs" />
     <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaStagedDocumentResponse.cs" />
     <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaUrl.cs" />
     <Compile Include="Model\Lib\LibraryFiles.cs" />

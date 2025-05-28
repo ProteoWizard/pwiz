@@ -112,8 +112,9 @@ namespace pwiz.Skyline.FileUI
         internal ListView ListViewControl => listView;
 
         /// <summary>
-        /// On Ardia, some items that are actually directories should appear like files. Especially for mass spec results. This
-        /// flag gives subclasses a way to choose whether to hide those directories. By default, these items are shown.
+        /// Flag used to tell BaseFileDialogNE to only show directories. By default, Thermo RAW
+        /// files (which are directories) are shown as files. This flag gives subclasses a way to
+        /// customize this behavior.
         /// </summary>
         internal bool OnlyShowFolders { get; set; } = false;
 
@@ -475,12 +476,13 @@ namespace pwiz.Skyline.FileUI
                     bool isComplete = _remoteSession.AsyncFetchContents(remoteUrl, out exception);
                     foreach (var item in _remoteSession.ListContents(remoteUrl))
                     {
-                        // Allow subclasses to skip items that folders but should appear as files. Applies
-                        // specifically to Thermo RAW files which should be hidden when a subclasses 
-                        // only want to work with directories.
-                        // CONSIDER: should BaseFileDialogNE offer first-class support for:
-                        //      (1) a mode flag that only shows directories
-                        //      (2) a flag filtering all interactions to a specific RemoteAccountType
+                        // Implement the OnlyShowFolders flag, which allows subclasses to tell BaseFileDialogNE to
+                        // only show folders and to skip items that are actually folders but are displayed as
+                        // files - specifically Thermo RAW files.
+                        //
+                        // CONSIDER: should BaseFileDialogNE offer generalized ways to:
+                        //      (1) set a strongly typed flag for the type(s) of files to show
+                        //      (2) filter interactions to a specific RemoteAccountType
                         // OpenArdiaFileDialogNE sort of does this for Ardia. Those features could be pushed
                         // up to the base class if other remote server integrations could use them.
                         if (OnlyShowFolders && !DataSourceUtil.IsFolderType(item.Type))
