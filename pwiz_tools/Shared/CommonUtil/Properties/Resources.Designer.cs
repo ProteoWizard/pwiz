@@ -61,6 +61,15 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Run command:.
+        /// </summary>
+        internal static string ProcessRunner_Run_Run_command_ {
+            get {
+                return ResourceManager.GetString("ProcessRunner_Run_Run_command_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed reading {0} bytes. Source may be corrupted..
         /// </summary>
         internal static string StreamEx_ReadOrThrow_Failed_reading__0__bytes__Source_may_be_corrupted_ {
@@ -84,14 +93,6 @@ namespace pwiz.Common.Properties {
         internal static string Units_ppm {
             get {
                 return ResourceManager.GetString("Units_ppm", resourceCulture);
-            }
-        }
-        /// <summary>
-        ///   Looks up a localized string similar to Run command:.
-        /// </summary>
-        internal static string ProcessRunner_Run_Run_command_ {
-            get {
-                return ResourceManager.GetString("ProcessRunner_Run_Run_command_", resourceCulture);
             }
         }
     }
