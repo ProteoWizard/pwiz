@@ -80,6 +80,11 @@ namespace pwiz.Skyline.Model
             throw new NotImplementedException();
         }
 
+        public IProgressStatus ChangeSegments(int segment, IList<int> segmentEndPercentages)
+        {
+            throw new NotImplementedException();
+        }
+
         public IProgressStatus NextSegment()
         {
             throw new NotImplementedException();
@@ -96,6 +101,7 @@ namespace pwiz.Skyline.Model
         }
 
         public string Message { get { return string.Empty; } }
+        public IList<int> SegmentPercentEnds => null;
         public string SegmentName { get { return string.Empty; } }
         public ImmutableList<ChromatogramLoadingStatus> ProgressList { get; private set; }
 
@@ -209,6 +215,9 @@ namespace pwiz.Skyline.Model
                 return percent / ProgressList.Count;
             }
         }
+
+        public int PercentZoomStart => 0;
+        public int PercentZoomEnd => 100;
 
         public int ZoomedPercentComplete => PercentComplete;
 
