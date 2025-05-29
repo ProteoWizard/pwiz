@@ -18,6 +18,7 @@
  */
 
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.Skyline.Model.Results.RemoteApi.Ardia;
@@ -32,6 +33,11 @@ namespace pwiz.Skyline.Properties
         public override IEnumerable<RemoteAccount> GetDefaults(int revisionIndex)
         {
             yield break;
+        }
+
+        public IEnumerable<RemoteAccount> GetAccountsOfType(RemoteAccountType type)
+        {
+            return Items.Where(item => item.AccountType == type);
         }
 
         public override string Title { get { return PropertiesResources.RemoteAccountList_Title_Edit_Remote_Accounts; } }

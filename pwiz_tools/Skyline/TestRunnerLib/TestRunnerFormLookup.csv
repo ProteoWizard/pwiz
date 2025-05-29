@@ -16,6 +16,7 @@ AlignmentForm,TestRetentionTimeAlignment
 AllChromatogramsGraph,*
 ArdiaLoginDlg,TestArdia
 ArdiaLogoutDlg,TestArdia
+ArdiaSelectDirectoryFileDialog,TestArdiaFileUpload
 AreaChartPropertyDlg,TestEditDialogs
 AreaCVToolbarProperties,TestAreaCVHistograms
 AreaGraphController,TestEditDialogs
