@@ -199,8 +199,7 @@ namespace TestPerf
                 RunUI(buildLibraryDlg.OkWizardPage);
             }
 
-            var alphaPeptDeepBuilder = buildLibraryDlg.Builder as AlphapeptdeepLibraryBuilder;
-            Assert.IsNotNull(alphaPeptDeepBuilder);
+            var alphaPeptDeepBuilder = (AlphapeptdeepLibraryBuilder) buildLibraryDlg.Builder;
             string builtLibraryPath = alphaPeptDeepBuilder.TransformedOutputSpectraLibFilepath;
 
             if (iRTtype != null)
@@ -565,7 +564,7 @@ namespace TestPerf
         {
             AssertEx.AreComparableStrings(
                 string.Format(ModelResources.NvidiaInstaller_Requesting_Administrator_elevation,
-                    PythonInstaller.GetInstallNvidiaLibrariesBat()),
+                    PythonInstaller.InstallNvidiaLibrariesBat),
                 confirmDlg.Message);
             OkDialog(confirmDlg, confirmDlg.OkDialog);
         }
