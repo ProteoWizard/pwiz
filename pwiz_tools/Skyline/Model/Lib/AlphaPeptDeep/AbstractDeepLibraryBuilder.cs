@@ -30,6 +30,72 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 {
+    public class ArgumentAndValue
+    {
+        private const string DEFAULT_DASH = @"--";
+
+        public ArgumentAndValue(string name, string value, bool quoteValue)
+            : this(name, value, DEFAULT_DASH, quoteValue)
+        { }
+
+        public ArgumentAndValue(string name, string value, string dash = DEFAULT_DASH, bool quoteValue = false)
+        {
+            Name = name;
+            Value = value;
+            if (quoteValue)
+                Value = '"' + Value + '"';
+            Dash = dash;
+        }
+        public string Name { get; private set; }
+        public string Value { get; private set; }
+        public string Dash { get; set; }
+
+        public override string ToString() { return TextUtil.SpaceSeparate(Dash + Name, Value); }
+    }
+
+    public class ModificationType
+    {
+        public ModificationType(string accession, string name, string comment)
+        {
+            Accession = accession;
+            Name = name;
+            Comment = comment;
+        }
+        public string Accession { get; private set; }
+        public string Name { get; private set; }
+        public string Comment { get; private set; }
+
+        public string AlphaNameWithAminoAcid(string unmodifiedSequence, int index)
+        {
+            string modification = Name.Replace(@"(", "").Replace(@")", "").Replace(@" ", @"@").Replace(@"Acetyl@N-term", @"Acetyl@Protein_N-term");
+            char delimiter = '@';
+            string[] name = modification.Split(delimiter);
+            string alphaName = name[0] + @"@" + unmodifiedSequence[index];
+            if (index == 0 && modification.EndsWith(@"term"))
+            {
+                alphaName = modification;
+            }
+            return alphaName;
+        }
+        public override string ToString() { return string.Format(ModelsResources.BuildPrecursorTable_ModificationType, Accession, Name, Comment); }
+    }
+
+    public class ModificationIndex
+    {
+        public ModificationIndex(int index, ModificationType modification)
+        {
+            Index = index;
+            Modification = modification;
+        }
+        public ModificationType Modification { get; private set; }
+        public int Index { get; private set; }
+
+        public override string ToString()
+        {
+            return Index + @":" + Modification;
+        }
+    }
+
     /// <summary>
     /// Abstract base class for AlphaPeptDeep and Carafe library builders so they can share code
     /// </summary>
@@ -86,8 +152,6 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         
         public abstract string InputFilePath { get; }
         
-        public abstract string TrainingFilePath { get; }
-
         public float FractionOfExpectedOutputLinesGenerated => TotalExpectedLinesOfOutput != 0
             ? TotalGeneratedLinesOfOutput / (float) TotalExpectedLinesOfOutput
             : 1.0F;
@@ -104,14 +168,6 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             File.WriteAllLines(InputFilePath, precursorTable);
         }
 
-        public void PrepareTrainingInputFile(IList<ModificationType> modificationNames, IProgressMonitor progress, ref IProgressStatus progressStatus)
-        {
-            progress.UpdateProgress(progressStatus = progressStatus
-                .ChangeMessage(ModelResources.LibraryHelper_PrepareTrainingInputFile_Preparing_training_input_file));
-
-            var trainingTable = GetPrecursorTable(true);
-            File.WriteAllLines(TrainingFilePath, trainingTable);
-        }
 
         protected abstract IEnumerable<string> GetHeaderColumnNames(bool training);
 

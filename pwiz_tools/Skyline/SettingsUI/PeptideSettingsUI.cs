@@ -773,26 +773,7 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             var buildState = new BuildState(builder.LibrarySpec, _libraryManager.BuildLibraryBackground);
-            if (builder.LibraryHelper != null)
-            {
-                var warningMods = builder.LibraryHelper.GetWarningMods(builder.Document, builder.ToolName);
-
-                if (warningMods?.Count > 0)
-                {
-                    string warningModString = string.Join(Environment.NewLine, warningMods);
-                    AlertDlg warnMessageDlg =
-                        new AlertDlg(
-                            string.Format(ModelResources.Alphapeptdeep_Warn_unknown_modification,
-                                warningModString), MessageBoxButtons.OKCancel);
-                    var warnModChoice = warnMessageDlg.ShowDialog();
-
-                    if (warnModChoice == DialogResult.Cancel)
-                    {
-                        return;
-                    }
-                }
-            }
-
+            
             bool retry;
             do
             {

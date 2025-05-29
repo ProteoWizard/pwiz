@@ -61,7 +61,6 @@ namespace TestPerf
                 throw new ToolExecutionException(@"TestData package download failed...", downloadException);
         }
 
-        private PythonTestUtil _pythonTestUtil;
         private PeptideSettingsUI _peptideSettings;
         private BuildLibraryDlg _buildLibraryDlg;
 
@@ -76,7 +75,6 @@ namespace TestPerf
 
             _peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
             _buildLibraryDlg = ShowDialog<BuildLibraryDlg>(_peptideSettings.ShowBuildLibraryDlg);
-            _pythonTestUtil = new PythonTestUtil(BuildLibraryDlg.CARAFE_PYTHON_VERSION, @"Carafe", false);
 
             const string libraryTunedByDiann = @"CarafeLibraryTunedByDiann";
             const string libraryTunedBySky = @"CarafeLibraryTunedBySkyline";
@@ -160,31 +158,12 @@ namespace TestPerf
                 _buildLibraryDlg.LoadTrainingDocument(fineTuneFile);
             // Test the control path where Python needs installation and is
 
-            if (!_pythonTestUtil.HavePythonPrerequisite(_buildLibraryDlg))
-            {
-                //PauseTest();
-
-                // Test the control path where Python is installable
-                if (!_pythonTestUtil.InstallPython(_buildLibraryDlg))
-                {
-                    OkDialog(_buildLibraryDlg, _buildLibraryDlg.OkWizardPage);
-                    AbstractFunctionalTest.WaitForClosedForm<LongWaitDlg>();
-                }
-
-                //PauseTest();
-                //TestResultingLibByHash(storedHash);
-                TestResultingLibByValues(TestFilesDir.GetTestPath(answerFile));
-
-            }
-            else
-            {
                 RunUI(() => { _buildLibraryDlg.OkWizardPage(); });
                 AbstractFunctionalTest.RunLongDlg<LongWaitDlg>(_buildLibraryDlg.OkWizardPage, WaitForClosedForm, dlg => {
                 });
 
                 //TestResultingLibByHash(storedHash);
                 TestResultingLibByValues(TestFilesDir.GetTestPath(answerFile));
-            }
 
         }
         private void TestResultingLibByValues(string answer)

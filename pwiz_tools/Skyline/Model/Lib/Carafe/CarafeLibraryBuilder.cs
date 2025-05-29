@@ -63,6 +63,8 @@ namespace pwiz.Skyline.Model.Lib.Carafe
 
         private const string BIN = @"bin";
         private const string INPUT = @"input";
+        private const string TRAIN = @"train";
+
         private const string CARAFE = @"carafe";
         private const string CARAFE_VERSION = @"0.0.1";
         // private const string CMD_ARG_C = @"/C";
@@ -97,6 +99,24 @@ namespace pwiz.Skyline.Model.Lib.Carafe
 
         public static string PythonVersionSetting => Settings.Default.PythonEmbeddableVersion;
         public static string ScriptsDir => PythonInstallerUtil.GetPythonVirtualEnvironmentScriptsDir(PythonVersionSetting, CARAFE_NAME);
+        private static string AlphapeptdeepDiaRepo = @"https://codeload.github.com/wenbostar/alphapeptdeep_dia/zip/refs/tags/v1.0";
+        public static PythonInstaller CreatePythonInstaller(TextWriter writer)
+        {
+            var packages = new List<PythonPackage>()
+            {
+                new PythonPackage  { Name = AlphapeptdeepDiaRepo, Version = null},
+                //  { Name = PEPTDEEP, Version = AlphapeptdeepDiaRepo },
+                new PythonPackage { Name = @"alphabase", Version = @"1.2.1" },
+                new PythonPackage { Name = @"numpy", Version = @"1.26.4" },
+                new PythonPackage { Name = @"transformers", Version = @"4.36.1" },
+                new PythonPackage { Name = @"torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu118 --upgrade", Version = null },
+                new PythonPackage { Name = @"wheel", Version = null },
+                new PythonPackage { Name = @"huggingface-hub", Version = null}
+            };
+
+            return new PythonInstaller(packages, writer, AlphapeptdeepLibraryBuilder.ALPHAPEPTDEEP);
+        }
+
 
         private static IList<ModificationIndex> MODIFICATION_INDICES =>
             new[]
@@ -166,7 +186,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
         internal string ExperimentDataTuningFilePath { get; set; }
 
         public override string InputFilePath => Path.Combine(RootDir, InputFileName);
-        public override string TrainingFilePath => null;    // Not yet implemented
+        public string TrainingFilePath => Path.Combine(RootDir, TrainingFileName); 
         
         private bool BuildLibraryForCurrentSkylineDocument => ProteinDatabaseFilePath.IsNullOrEmpty();
         private string PythonVirtualEnvironmentActivateScriptPath =>
@@ -195,6 +215,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
 
         private string CarafeJarFileDir => Path.Combine(CarafeDir, CarafeFileBaseName);
         private string CarafeJarFilePath => Path.Combine(CarafeJarFileDir, CarafeJarFileName);
+        private string TrainingFileName => TRAIN + TextUtil.UNDERSCORE + TextUtil.EXT_TSV;
         private string InputFileName => INPUT + TextUtil.UNDERSCORE + Convert.ToBase64String(Encoding.ASCII.GetBytes(Document.DocumentHash)) + TextUtil.EXT_TSV;
         private IList<ArgumentAndValue> CommandArguments =>
             new []

@@ -21,14 +21,15 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using System.Xml.Serialization;
 using pwiz.BiblioSpec;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.AlphaPeptDeep;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
@@ -119,7 +120,7 @@ namespace pwiz.Skyline.SettingsUI
         private string UserDir => Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 
         //        private string AlphapeptdeepDiaRepo => Path.Combine(UserDir, WORKSPACES, ALPHAPEPTDEEP_DIA);
-        private string AlphapeptdeepDiaRepo = @"https://codeload.github.com/wenbostar/alphapeptdeep_dia/zip/refs/tags/v1.0";
+        private string AlphapeptdeepDiaRepo => @"https://codeload.github.com/wenbostar/alphapeptdeep_dia/zip/refs/tags/v1.0";
         private string ProteinDatabaseFilePath => Path.Combine(UserDir, @"Downloads", @"UP000005640_9606.fasta");
         private string ExperimentDataFilePath => Path.Combine(UserDir, @"Downloads", @"LFQ_Orbitrap_AIF_Human_01.mzML");
         private string ExperimentDataSearchResultFilePath => Path.Combine(UserDir, @"Downloads", @"report.tsv");
@@ -138,7 +139,6 @@ namespace pwiz.Skyline.SettingsUI
         // Values used to keep from overwriting user changes to synchronized fields
         private string _lastUpdatedFileName;
         private string _lastUpdatedLibName;
-        public PythonInstaller pythonInstaller { get; private set; }
 
         private void TestAndEnableFinish()
         {
@@ -251,7 +251,7 @@ namespace pwiz.Skyline.SettingsUI
 
         internal SrmDocument _trainingDocument;
 
-        private bool ValidateBuilder(bool validateInputFiles, bool createDlg = false, bool cleanUp = false, bool newBuilder = false)
+        private bool ValidateBuilder(bool validateInputFiles, bool createDlg = false, bool newBuilder = false)
         {
             string name;
             if (!_helper.ValidateNameTextBox(textName, out name))
@@ -320,59 +320,14 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 else if (radioAlphaSource.Checked)
                 {
-		    if (!CreateAlphaBuilder(name, outputPath))
+                    if (!CreateAlphaBuilder(name, outputPath))
                         return false;
 
                 }
                 else if (radioCarafeSource.Checked)
                 {
-
-                    if (tabControlMain.SelectedIndex == (int)Pages.learning &&
-                        (textBoxMsMsData.Text == "" || textBoxTrainingDoc.Text == "" ||
-                         ((BuildLibraryTargetOptions)comboBuildLibraryTarget.SelectedIndex ==
-                             BuildLibraryTargetOptions.fastaFile && textBoxProteinDatabase.Text == "")))
-                    {
-                        MessageDlg.Show(this, SettingsUIResources.BuildLibraryDlg_ValidateBuilder_You_must_fill_out_this_form_to_continue);
+                    if (!CreateCarafeBuilder(name, outputPath, createDlg, newBuilder))
                         return false;
-                    }
-
-                    if (!SetupPythonEnvironmentForCarafe(createDlg))
-                    {
-                        if (cleanUp) pythonInstaller.CleanUpPythonEnvironment(CARAFE);
-                        return false;
-
-                    }
-
-                    if (Builder == null && newBuilder)
-                    {
-                        string msMsDataFilePath = textBoxMsMsData.Text;
-                        if (!File.Exists(msMsDataFilePath))
-                        {
-                            _helper.ShowTextBoxError(textBoxMsMsData, @$"{msMsDataFilePath} does not exist.");
-                            return false;
-                        }
-                        Builder ??= new CarafeLibraryBuilder(name, outputPath, CARAFE_PYTHON_VERSION, CARAFE, CarafePythonVirtualEnvironmentDir,
-                            msMsDataFilePath, textBoxTrainingDoc.Text, textBoxProteinDatabase.Text, DocumentUI, _trainingDocument,
-                            labelDoc.Text == string.Format(SettingsUIResources.BuildLibraryDlg_DIANN_report_document), IrtStandard);
-                        TestLibFilepath = Builder.TestLibraryPath;
-                        BuilderLibFilepath = Builder.BuilderLibraryPath;
-                        btnNext.Enabled = true;
-                    }
-
-                    // handle options for comboBuildLibraryTarget dropdown 
-                    if (comboBuildLibraryTarget.SelectedIndex == (int)BuildLibraryTargetOptions.currentSkylineDocument)
-                    {
-                        //TODO   throw new NotImplementedException(@"Need to implement skyline document support.");
-                    }
-                    else if (comboBuildLibraryTarget.SelectedIndex != (int)BuildLibraryTargetOptions.currentSkylineDocument)
-                    {
-                        //     throw new NotSupportedException(@$"Index {comboBuildLibraryTarget.SelectedIndex} of comboBuildLibraryTarget is not yet supported.");
-                    }
-                    else
-                    {
-                        throw new NotSupportedException(
-                            @$"Index {comboBuildLibraryTarget.SelectedIndex} of comboBuildLibraryTarget is not yet supported.");
-                    }
                 }
                 else
                 {
@@ -401,7 +356,7 @@ namespace pwiz.Skyline.SettingsUI
                         }
                     }
 
-                    if (Builder == null && newBuilder)
+                    Builder = new BiblioSpecLiteBuilder(name, outputPath, InputFileNames.ToArray(), targetPeptidesChosen)
                     {
                         Action = LibraryBuildAction,
                         IncludeAmbiguousMatches = cbIncludeAmbiguousMatches.Checked,
@@ -430,6 +385,54 @@ namespace pwiz.Skyline.SettingsUI
             set => _testLibFilepath = value;
         }
 
+        private bool CreateCarafeBuilder(string name, string outputPath, bool createDlg = false, bool newBuilder = false)
+        {
+            if (tabControlMain.SelectedIndex == (int)Pages.learning &&
+           (textBoxMsMsData.Text == "" || textBoxTrainingDoc.Text == "" ||
+            ((BuildLibraryTargetOptions)comboBuildLibraryTarget.SelectedIndex ==
+                BuildLibraryTargetOptions.fastaFile && textBoxProteinDatabase.Text == "")))
+            {
+                MessageDlg.Show(this, SettingsUIResources.BuildLibraryDlg_ValidateBuilder_You_must_fill_out_this_form_to_continue);
+                return false;
+            }
+
+            if (!SetupPythonEnvironmentForCarafe(createDlg))
+            {
+                return false;
+            }
+
+            if (Builder == null && newBuilder)
+            {
+                string msMsDataFilePath = textBoxMsMsData.Text;
+                if (!File.Exists(msMsDataFilePath))
+                {
+                    _helper.ShowTextBoxError(textBoxMsMsData, @$"{msMsDataFilePath} does not exist.");
+                    return false;
+                }
+                Builder ??= new CarafeLibraryBuilder(name, outputPath, CARAFE_PYTHON_VERSION, CARAFE, CarafePythonVirtualEnvironmentDir,
+                    msMsDataFilePath, textBoxTrainingDoc.Text, textBoxProteinDatabase.Text, DocumentUI, _trainingDocument,
+                    labelDoc.Text == string.Format(SettingsUIResources.BuildLibraryDlg_DIANN_report_document), IrtStandard, out _testLibFilepath, out _libFilepath);
+
+                btnNext.Enabled = true;
+            }
+
+            // handle options for comboBuildLibraryTarget dropdown 
+            if (comboBuildLibraryTarget.SelectedIndex == (int)BuildLibraryTargetOptions.currentSkylineDocument)
+            {
+                //TODO   throw new NotImplementedException(@"Need to implement skyline document support.");
+            }
+            else if (comboBuildLibraryTarget.SelectedIndex != (int)BuildLibraryTargetOptions.currentSkylineDocument)
+            {
+                //     throw new NotSupportedException(@$"Index {comboBuildLibraryTarget.SelectedIndex} of comboBuildLibraryTarget is not yet supported.");
+            }
+            else
+            {
+                throw new NotSupportedException(
+                    @$"Index {comboBuildLibraryTarget.SelectedIndex} of comboBuildLibraryTarget is not yet supported.");
+            }
+
+            return true;
+        }
         private bool CreateAlphaBuilder(string name, string outputPath)
         {
             var doc = _documentUiContainer.DocumentUI;
@@ -488,10 +491,6 @@ namespace pwiz.Skyline.SettingsUI
 
                 Builder = new KoinaLibraryBuilder(doc, name, outputPath, () => true, IrtStandard,
                     peptidesPerPrecursor, precursors, nce);
-                
-                BuilderLibFilepath = Builder.BuilderLibraryPath;
-
-                
 
             }
             catch (Exception ex)
@@ -502,151 +501,28 @@ namespace pwiz.Skyline.SettingsUI
 
             return true;
         }
-       
 
-        private bool SetupPythonEnvironmentForAlpha(bool createDlg = true)
-        {
-            var programPathContainer = new ProgramPathContainer(PYTHON, ALPHAPEPTDEEP_PYTHON_VERSION);
-            var packages = new List<PythonPackage>()
-            {
-               
-
-                new PythonPackage {Name = @"peptdeep", Version = null },
-                
-                // We manually set numpy to the latest version before 2.0 because of a backward incompatibility issue
-                // See details for tracking issue in AlphaPeptDeep repo: https://github.com/MannLabs/alphapeptdeep/issues/190
-                // TODO: delete the following line after the issue above is resolved
-                new PythonPackage {Name = @"numpy", Version = @"1.26.4" }
-            };
-
-            if (pythonInstaller == null)
-                pythonInstaller = new PythonInstaller(programPathContainer, packages, new TextBoxStreamWriterHelper(), new PythonInstallerTaskValidator(), ALPHAPEPTDEEP);
-            else
-                pythonInstaller.ClearPendingTasks();
-
-
-            Cursor = Cursors.WaitCursor;
-            btnNext.Enabled = false;
-
-            if (pythonInstaller.IsPythonVirtualEnvironmentReady() && pythonInstaller.IsNvidiaEnvironmentReady())
-            {
-                Cursor = Cursors.Default;
-                btnNext.Enabled = true;
-                return true;
-            }
-            else if (!createDlg)
-            {
-                Cursor = Cursors.Default;
-                btnNext.Enabled = true;
-                return false;
-            }
-
-            if (!pythonInstaller.IsPythonVirtualEnvironmentReady())
-            {
-
-                PythonDlg = new MultiButtonMsgDlg(
-                    string.Format(
-                        ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required,
-                        ALPHAPEPTDEEP_PYTHON_VERSION, @"AlphaPeptDeep"), string.Format(Resources.OK));
-                if (PythonDlg.ShowDialog(this) == DialogResult.Cancel)
-                {
-                    PythonDlg.Dispose();
-                    Cursor = Cursors.Default;
-                    btnNext.Enabled = true;
-                    return false;
-                }
-                if (DialogResult.Cancel == PythonInstallerUI.InstallPythonVirtualEnvironment(this, pythonInstaller))
-                {
-                    if (!PythonDlg.IsDisposed) 
-                        PythonDlg.Dispose();
-                    Cursor = Cursors.Default;
-                    btnNext.Enabled = true;
-                    return false;
-                }
-
-            }
-            else if (!pythonInstaller.IsNvidiaEnvironmentReady())
-            {
-                if (DialogResult.Cancel == PythonInstallerUI.InstallPythonVirtualEnvironment(this, pythonInstaller))
-                {
-                    Cursor = Cursors.Default;
-                    btnNext.Enabled = true;
-                    return false;  //Install was cancelled, 
-                }
-            }
-            Cursor = Cursors.Default;
-            btnNext.Enabled = true;
-            return true;
-        }
         private bool SetupPythonEnvironmentForCarafe(bool createDlg = true)
         {
-            var programPathContainer = new ProgramPathContainer(PYTHON, CARAFE_PYTHON_VERSION);
-            var packages = new List<PythonPackage>()
-            {
-                new PythonPackage  { Name = AlphapeptdeepDiaRepo, Version = null},
-                  //  { Name = PEPTDEEP, Version = AlphapeptdeepDiaRepo },
-                new PythonPackage { Name = @"alphabase", Version = @"1.2.1" },
-                new PythonPackage { Name = @"numpy", Version = @"1.26.4" },
-                new PythonPackage { Name = @"transformers", Version = @"4.36.1" },
-                new PythonPackage { Name = @"torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu118 --upgrade", Version = null },
-                new PythonPackage { Name = @"wheel", Version = null },
-                new PythonPackage { Name = @"huggingface-hub", Version = null}
-            };
-
-            if (pythonInstaller == null)
-                pythonInstaller = new PythonInstaller(programPathContainer, packages, new TextBoxStreamWriterHelper(), new PythonInstallerTaskValidator(), CARAFE);
-            else
-                pythonInstaller.ClearPendingTasks();
-            Cursor = Cursors.WaitCursor;
+            var pythonInstaller = CarafeLibraryBuilder.CreatePythonInstaller(new TextBoxStreamWriterHelper());
+            
             btnNext.Enabled = false;
-            if (pythonInstaller.IsPythonVirtualEnvironmentReady() && pythonInstaller.IsNvidiaEnvironmentReady())
+            bool setupSuccess = false;
+            try
             {
-                Cursor = Cursors.Default;
-                btnNext.Enabled = true;
-                return true;
+                setupSuccess = SetupPythonEnvironmentInternal(pythonInstaller);
             }
-            else if (!createDlg)
+            finally
             {
-                Cursor = Cursors.Default;
+                // If not a successful installation, try to clean-up before leaving
+                if (!setupSuccess)
+                    pythonInstaller.CleanUpPythonEnvironment(CarafeLibraryBuilder.CARAFE);
+
                 btnNext.Enabled = true;
-                return false;
             }
 
-            if (!pythonInstaller.IsPythonVirtualEnvironmentReady())
-            {
+            return setupSuccess;
 
-                PythonDlg = new MultiButtonMsgDlg(
-                    string.Format(
-                        ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required,
-                        CARAFE_PYTHON_VERSION, @"Carafe"), string.Format(Resources.OK));
-                if (PythonDlg.ShowDialog(this) == DialogResult.Cancel)
-                {
-                    PythonDlg.Dispose();
-                    Cursor = Cursors.Default;
-                    btnNext.Enabled = true;
-                    return false;
-                }
-                if (DialogResult.Cancel == PythonInstallerUI.InstallPythonVirtualEnvironment(this, pythonInstaller))
-                {
-                    if (!PythonDlg.IsDisposed) PythonDlg.Dispose();
-                    Cursor = Cursors.Default;
-                    btnNext.Enabled = true;
-                    return false;
-                }
-            }
-            else if (!pythonInstaller.IsNvidiaEnvironmentReady())
-            {
-                if (DialogResult.Cancel == PythonInstallerUI.InstallPythonVirtualEnvironment(this, pythonInstaller))
-                {
-                    Cursor = Cursors.Default;
-                    btnNext.Enabled = true;
-                    return false;
-                }
-            }
-            if (!PythonDlg.IsDisposed) PythonDlg.Dispose();
-            Cursor = Cursors.Default;
-            btnNext.Enabled = true;
-            return true;
 
         }
 
@@ -782,7 +658,7 @@ namespace pwiz.Skyline.SettingsUI
             Cursor.Current = Cursors.WaitCursor;
             if (tabControlMain.SelectedIndex == (int)Pages.learning && radioCarafeSource.Checked)
             {
-                if (ValidateBuilder(true, true, true, true))
+                if (ValidateBuilder(true, true, true))
                 {
                     Settings.Default.LibraryFilterDocumentPeptides = LibraryFilterPeptides;
                     Settings.Default.LibraryKeepRedundant = LibraryKeepRedundant;
@@ -798,14 +674,14 @@ namespace pwiz.Skyline.SettingsUI
             }
             else if (tabControlMain.SelectedIndex != (int)Pages.properties || radioAlphaSource.Checked || radioKoinaSource.Checked)
             {
-                if (ValidateBuilder(true, true, true, true))
+                if (ValidateBuilder(true, true, true))
                 {
                     Settings.Default.LibraryFilterDocumentPeptides = LibraryFilterPeptides;
                     Settings.Default.LibraryKeepRedundant = LibraryKeepRedundant;
                     DialogResult = DialogResult.OK;
                 }
             }
-            else if ( ValidateBuilder(false, true, false, true))
+            else if ( ValidateBuilder(false, true, true))
             {
                 Settings.Default.LibraryDirectory = Path.GetDirectoryName(LibraryPath);
 
@@ -1147,17 +1023,6 @@ namespace pwiz.Skyline.SettingsUI
             get { return radioKoinaSource.Checked; }
             set { radioKoinaSource.Checked = value; }
         }
-        public bool AlphaPeptDeep
-        {
-            get { return radioAlphaSource.Checked; }
-            set { radioAlphaSource.Checked = value; }
-        }
-        public bool Carafe
-        {
-            get { return radioCarafeSource.Checked; }
-            set { radioCarafeSource.Checked = value; }
-        }
-
         public bool AlphaPeptDeep
         {
             get { return radioAlphaSource.Checked; }

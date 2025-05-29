@@ -27,79 +27,12 @@ using pwiz.BiblioSpec;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Irt;
-using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 {
-    public class ArgumentAndValue
-    {
-        private const string DEFAULT_DASH = @"--";
-
-        public ArgumentAndValue(string name, string value, bool quoteValue)
-            : this(name, value, DEFAULT_DASH, quoteValue)
-        {}
-
-        public ArgumentAndValue(string name, string value, string dash = DEFAULT_DASH, bool quoteValue = false)
-        {
-            Name = name;
-            Value = value;
-            if (quoteValue)
-                Value = '"' + Value + '"';
-            Dash = dash;
-        }
-        public string Name { get; private set; }
-        public string Value { get; private set; }
-        public string Dash { get; set; }
-
-        public override string ToString() { return TextUtil.SpaceSeparate(Dash + Name, Value); }
-    }
-
-    public class ModificationType
-    {
-        public ModificationType(string accession, string name, string comment)
-        {
-            Accession = accession;
-            Name = name;
-            Comment = comment;
-        }
-        public string Accession { get; private set; }
-        public string Name { get; private set; }
-        public string Comment { get; private set; }
-
-        public string AlphaNameWithAminoAcid(string unmodifiedSequence, int index)
-        {
-            string modification = Name.Replace(@"(", "").Replace(@")", "").Replace(@" ", @"@").Replace(@"Acetyl@N-term", @"Acetyl@Protein_N-term");
-            char delimiter = '@';
-            string[] name = modification.Split(delimiter);
-            string alphaName = name[0] + @"@" + unmodifiedSequence[index];
-            if (index == 0 && modification.EndsWith(@"term"))
-            {
-                alphaName = modification;
-            }
-            return alphaName;
-        }
-        public override string ToString() { return string.Format(ModelsResources.BuildPrecursorTable_ModificationType, Accession, Name, Comment); }
-    }
-
-    public class ModificationIndex
-    {
-        public ModificationIndex(int index, ModificationType modification)
-        {
-            Index = index;
-            Modification = modification;
-        }
-        public ModificationType Modification { get; private set; }
-        public int Index { get; private set; }
-
-        public override string ToString()
-        {
-            return Index + @":" + Modification;
-        }
-    }
-
     public class AlphapeptdeepLibraryBuilder : AbstractDeepLibraryBuilder, IiRTCapableLibraryBuilder
     {
         public const string ALPHAPEPTDEEP = @"AlphaPeptDeep";
@@ -178,8 +111,6 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         private string PeptdeepExecutablePath => Path.Combine(ScriptsDir, PEPTDEEP_EXECUTABLE);
 
         public override string InputFilePath => Path.Combine(WorkDir, INPUT_FILE_NAME);
-        public override string TrainingFilePath => null;
-        
         private string SettingsFilePath => Path.Combine(WorkDir, SETTINGS_FILE_NAME);
         private string OutputModelsDir => Path.Combine(WorkDir, OUTPUT_MODELS);
         private string OutputSpectralLibsDir => Path.Combine(WorkDir, OUTPUT_SPECTRAL_LIBS);
@@ -236,9 +167,12 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             string rootProcessingDir = Path.GetDirectoryName(libOutPath);
             if (string.IsNullOrEmpty(rootProcessingDir))
                 throw new ArgumentException($@"AlphapeptdeepLibraryBuilder libOutputPath {libOutPath} must be a full path.");
-            rootProcessingDir = Path.Combine(rootProcessingDir, Path.GetFileNameWithoutExtension(libOutPath));
-            
-            EnsureWorkDir(rootProcessingDir, ALPHAPEPTDEEP);
+            if (rootProcessingDir != null)
+            {
+                rootProcessingDir = Path.Combine(rootProcessingDir, Path.GetFileNameWithoutExtension(libOutPath));
+
+                EnsureWorkDir(rootProcessingDir, ALPHAPEPTDEEP);
+            }
         }
 
         public bool BuildLibrary(IProgressMonitor progress)

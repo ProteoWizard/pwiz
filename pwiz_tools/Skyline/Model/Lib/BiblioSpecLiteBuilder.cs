@@ -101,16 +101,6 @@ namespace pwiz.Skyline.Model.Lib
             set => throw new NotImplementedException();
         }
 
-        string ILibraryBuilder.BuilderLibraryPath
-        {
-            get { return OutputPath; }
-            set { OutputPath = value; }
-        }
-        string ILibraryBuilder.TestLibraryPath
-        {
-            get { return OutputPath; }
-            set { OutputPath = value; }
-        }
         public LibraryBuildAction Action { get; set; }
         public bool KeepRedundant { get; set; }
         public double? CutOffScore { get; set; }

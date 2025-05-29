@@ -45,8 +45,8 @@ using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
-using pwiz.Skyline.Model.AlphaPeptDeep;
 using pwiz.Skyline.Model.Koina.Models;
+using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
 
 namespace pwiz.Skyline.Model.Lib
 {
@@ -1006,19 +1006,12 @@ namespace pwiz.Skyline.Model.Lib
         /// </summary>
         /// <param name="progress">Sink for progress updates, and source of user cancel status</param>
         bool BuildLibrary(IProgressMonitor progress);
-         
-        LibraryHelper LibraryHelper { get; }
 
-        SrmDocument Document { get; }
-
-        string ToolName { get; }
         /// <summary>
         /// A <see cref="LibrarySpec"/> referencing the library to be built.
         /// </summary>
         LibrarySpec LibrarySpec { get; }
 
-        string BuilderLibraryPath { get; set; }
-        string TestLibraryPath { get; set; }
     }
 
     /// <summary>

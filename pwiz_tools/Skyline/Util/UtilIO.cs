@@ -1017,23 +1017,6 @@ namespace pwiz.Skyline.Util
             catch (Exception) { }
 // ReSharper restore EmptyGeneralCatchClause
         }
-        public static void SafeDeleteLongPath(string path)
-        {
-            try
-            {
-                string longPath = $@"\\?\{path}";
-                Helpers.TryTwice(() =>
-                    {
-                        if (path != null && Directory.Exists(path)) // Don't waste time trying to delete something that's already deleted
-                        {
-                            Directory.Delete(longPath, true);
-                        }
-                    }, $@"Directory.Delete({longPath})");
-            }
-            // ReSharper disable EmptyGeneralCatchClause
-            catch (Exception) { }
-            // ReSharper restore EmptyGeneralCatchClause
-        }
         public static string GetUniqueName(string dirName)
         {
             return Directory.Exists(dirName)
@@ -1711,7 +1694,6 @@ namespace pwiz.Skyline.Util
                 try
                 {
                     process.Start();
-                    processID = process.Id;
                 }
                 catch (System.ComponentModel.Win32Exception win32Exception)
                 {

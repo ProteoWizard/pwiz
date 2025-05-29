@@ -43,18 +43,6 @@ namespace pwiz.Skyline.Model.Koina
         private readonly IList<PeptideDocNode> _peptides;
         private readonly IList<TransitionGroupDocNode> _precursors;
         private readonly int _nce;
-        private string _outPath;
-
-        string ILibraryBuilder.BuilderLibraryPath
-        {
-            get { return _outPath; }
-            set { _outPath = value; }
-        }
-        string ILibraryBuilder.TestLibraryPath
-        {
-            get { return _outPath; }
-            set { _outPath = value; }
-        }
 
         public SrmDocument Document { get => _document; }
 
@@ -69,7 +57,6 @@ namespace pwiz.Skyline.Model.Koina
             _peptides = peptides;
             _precursors = precursors;
             _document = doc;
-            _outPath = outPath;
             LibrarySpec = new BiblioSpecLiteSpec(name, outPath); // Needs to be created before building
             _replaceLibrary = replaceLibrary;
             IrtStandard = irtStandard;
