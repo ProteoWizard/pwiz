@@ -29,7 +29,7 @@ namespace pwiz.SkylineTest
     [TestClass]
     [SuppressMessage("ReSharper", "IdentifierTypo")]
     [SuppressMessage("ReSharper", "StringLiteralTypo")]
-    public class RemoteArdiaTest : AbstractUnitTest
+    public class ArdiaMarshalingTest : AbstractUnitTest
     {
         [TestMethod]
         public void TestArdiaJsonUnmarshaling()

@@ -72,6 +72,15 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia {
         /// <summary>
         ///   Looks up a localized string similar to Select.
         /// </summary>
+        public static string Ardia_FileUpload_SelectDestinationButtonLabel {
+            get {
+                return ResourceManager.GetString("Ardia_FileUpload_SelectDestinationButtonLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select a destination folder.
+        /// </summary>
         public static string Ardia_FileUpload_SelectDestinationFolderLabel {
             get {
                 return ResourceManager.GetString("Ardia_FileUpload_SelectDestinationFolderLabel", resourceCulture);

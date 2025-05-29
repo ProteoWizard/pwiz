@@ -3502,13 +3502,8 @@ namespace pwiz.Skyline
             return true;
         }
 
-        private bool HasRegisteredArdiaAccount =>
+        public bool HasRegisteredArdiaAccount =>
             Settings.Default.RemoteAccountList.Any(account => account.AccountType == RemoteAccountType.ARDIA);
-
-        public bool UploadToArdiaMenuVisible()
-        {
-            return ardiaPublishMenuItem.Visible;
-        }
 
         private void ardiaPublishMenuItem_Click(object sender, EventArgs e)
         {
@@ -3517,14 +3512,14 @@ namespace pwiz.Skyline
 
         // BUG: Removing RemoteAccounts using EditRemoteAccountsDlg appears to unexpectedly leave registered Ardia accounts intact
         // CONSIDER: when should an upload be split into multiple pieces?
-        public void PublishToArdia()
+        public void PublishToArdia(bool skipUploadForTests = false)
         {
             Assume.IsTrue(HasRegisteredArdiaAccount, @"Expected Skyline has a registered Ardia account but none found");
 
             var ardiaAccounts = Settings.Default.RemoteAccountList.GetAccountsOfType(RemoteAccountType.ARDIA).ToList();
 
             var fileDlg = new ArdiaSelectDirectoryFileDialog(ardiaAccounts);
-            fileDlg.Text = @"Select a destination folder";
+            fileDlg.Text = ArdiaResources.Ardia_FileUpload_SelectDestinationFolderLabel;
 
             if (fileDlg.ShowDialog(this) != DialogResult.OK)
                 return;
@@ -3547,15 +3542,16 @@ namespace pwiz.Skyline
                 var zipFileAvailable = ShareDocument(localZipFile, ShareType.COMPLETE);
                 if (zipFileAvailable)
                 {
-                    // CONSIDER: improve confirm UX and make it easier to read the message and paths
+                    // CONSIDER: improve confirm UX - make it easier to read the message and paths
                     var confirmMsg = 
                         string.Format(ArdiaResources.Ardia_FileUpload_ConfirmUploadToPath, Path.GetFileName(localZipFile), destinationFolderPath);
-                    if (MessageDlg.Show(this, confirmMsg, false, MessageBoxButtons.OKCancel) != DialogResult.OK)
+                    if(MultiButtonMsgDlg.Show(this, confirmMsg, MessageBoxButtons.YesNo) != DialogResult.Yes)
                         return;
 
                     var isCanceled = false;
-                    using (var waitDlg = new LongWaitDlg())
+                    if (!skipUploadForTests)
                     {
+                        using var waitDlg = new LongWaitDlg();
                         waitDlg.Text = UtilResources.PublishDocumentDlg_UploadSharedZipFile_Uploading_File;
                         waitDlg.PerformWork(this, 1000, longWaitBroker =>
                         {

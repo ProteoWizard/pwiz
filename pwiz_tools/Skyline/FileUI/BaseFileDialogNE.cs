@@ -776,7 +776,12 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        private void listView_ItemActivate( object sender, EventArgs e )
+        private void listView_ItemActivate(object sender, EventArgs e)
+        {
+            ActivateItem();
+        }
+
+        public void ActivateItem() 
         {
             if (listView.SelectedItems.Count == 0)
                 return;
@@ -834,6 +839,7 @@ namespace pwiz.Skyline.FileUI
             DoMainAction();
         }
 
+        // TODO: rename OkDialog for consistency with other Skyline dialogs, especially useful for test readability. Do this after PR3170 merged.
         protected virtual void DoMainAction()
         {
             throw new Exception(@"method DoMainAction() MUST be overridden");

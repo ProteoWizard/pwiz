@@ -34,20 +34,27 @@ namespace pwiz.Skyline.FileUI
     public class ArdiaSelectDirectoryFileDialog : BaseFileDialogNE
     {
         // RFC 3986 specified path separator for URIs
+        // CONSIDER: add UrlBuilder class to Skyline. Related PRs also define this constant and helper methods narrowly scoped to a remote server vendor
         private const string URL_PATH_SEPARATOR = @"/";
 
-        // TODO: hide lookInComboBox items not related to Ardia
         // TODO: include remote folder hierarchy in lookInComboBox (added in PR3170?)
+        // TODO: hide lookInComboBox items not related to Ardia.
+        //       NB: need to update BaseFileDialogNE.populateComboBoxFromDirectory to be resilient when local
+        //           items (ex: My Computer) missing from ComboBox
         // TODO: improve appearance of items on remote account selection screen
         // CONSIDER: customize appearance of "Source name" to show selected path?
         // CONSIDER: support for creating a new folder?
         // CONSIDER: include Recent Documents filtered to Ardia paths
+        // CONSIDER: improve testability of BaseFileDialogNE - ex: SelectPath, OkDialog. See examples in ArdiaFileUploadTest
         // Fyi, BaseFileDialogNE supports choosing a specific account if multiple Ardia accounts registered
         public ArdiaSelectDirectoryFileDialog(IList<RemoteAccount> remoteAccounts) :
             base(new[] { DataSourceUtil.FOLDER_TYPE }, remoteAccounts)
         {
+            // TODO: this causes BaseFileDialogNE to show Ardia instead of the local file system. But when only
+            //       working with 1 remote account, how to show the Ardia server's root directory and skip the
+            //       "pick remote account" screen?
             InitialDirectory = ArdiaUrl.Empty;
-            actionButton.Text = ArdiaResources.Ardia_FileUpload_SelectDestinationFolderLabel;
+            actionButton.Text = ArdiaResources.Ardia_FileUpload_SelectDestinationButtonLabel;
 
             RecentDocumentsButton.Visible = false;
             MyComputerButton.Visible = false;
@@ -57,8 +64,11 @@ namespace pwiz.Skyline.FileUI
             ListViewControl.MultiSelect = false;
 
             OnlyShowFolders = true;
+
+            IsLoaded = true;
         }
 
+        public bool IsLoaded { get; private set; }
         public string DestinationFolder { get; private set; }
         public ArdiaAccount SelectedAccount { get; private set; }
 
@@ -93,6 +103,32 @@ namespace pwiz.Skyline.FileUI
             SelectedAccount = ardiaAccount;
 
             DialogResult = DialogResult.OK;
+        }
+
+        public void SelectItemAndActivate(string label)
+        {
+            SelectFile(label);
+            ActivateItem();
+        }
+
+        public void SelectItemAndActivate(int index)
+        {
+            if (index < 0 || listView.Items.Count < index)
+                return;
+
+            listView.SelectedIndices.Add(index);
+            
+            ActivateItem();
+        }
+
+        public int ListCount()
+        {
+            return listView.Items.Count;
+        }
+
+        public void OkDialog()
+        {
+            DoMainAction();
         }
     }
 }

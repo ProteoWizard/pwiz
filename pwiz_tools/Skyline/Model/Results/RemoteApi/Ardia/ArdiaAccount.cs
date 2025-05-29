@@ -237,7 +237,13 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
         {
             return !string.IsNullOrEmpty(Token);
         }
-        private ArdiaAccount() {}
+
+        #region Implementation of IXmlSerializable
+
+        /// <summary>
+        /// For serialization
+        /// </summary>
+        private ArdiaAccount() { }
 
         private enum ATTR
         {
@@ -273,14 +279,37 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
             return reader.Deserialize(new ArdiaAccount());
         }
 
-        protected bool Equals(ArdiaAccount other)
+        #endregion
+
+        #region object overrides
+
+        protected bool Equals(ArdiaAccount obj)
         {
-            return base.Equals(other) &&
-                   Equals(TestingOnly_NotSerialized_Role, other.TestingOnly_NotSerialized_Role) &&
-                   Equals(TestingOnly_NotSerialized_Username, other.TestingOnly_NotSerialized_Username) &&
-                   Equals(TestingOnly_NotSerialized_Password, other.TestingOnly_NotSerialized_Password) &&
-                   DeleteRawAfterImport == other.DeleteRawAfterImport &&
-                   string.Equals(Token, other.Token);
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+
+            if (!base.Equals(obj))
+                return false;
+            if (!Equals(DeleteRawAfterImport, obj.DeleteRawAfterImport))
+                return false;
+            if(!string.Equals(Token, obj.Token))
+                return false;
+
+            if (!Equals(TestingOnly_NotSerialized_Role, obj.TestingOnly_NotSerialized_Role))
+                return false;
+            if (!Equals(TestingOnly_NotSerialized_Username, obj.TestingOnly_NotSerialized_Username))
+                return false;
+            if (!Equals(TestingOnly_NotSerialized_Password, obj.TestingOnly_NotSerialized_Password))
+                return false;
+
+            return true;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return Equals(obj as ArdiaAccount);
         }
 
         public override int GetHashCode()
@@ -296,5 +325,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
                 return hashCode;
             }
         }
+
+        #endregion
     }
 }
