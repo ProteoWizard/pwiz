@@ -1021,6 +1021,15 @@ namespace pwiz.Skyline.Model.Lib
         string TestLibraryPath { get; set; }
     }
 
+    /// <summary>
+    /// Extra interface that can be added to an <see cref="ILibraryBuilder"/> class to provide
+    /// a warning to the users before the build begins and possibly to decide not to build.
+    /// </summary>
+    public interface ILibraryBuildWarning
+    {
+        string GetWarning();
+    }
+
     public enum LibraryRedundancy { best, all, all_redundant }
 
     public abstract class Library : XmlNamedElement

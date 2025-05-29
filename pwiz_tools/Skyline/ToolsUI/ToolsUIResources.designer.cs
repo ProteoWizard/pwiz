@@ -585,27 +585,27 @@ namespace pwiz.Skyline.ToolsUI {
         /// <summary>
         ///   Looks up a localized string similar to Downloading Nvidia Cuda Toolkit and Deep Neural Network software..
         /// </summary>
-        public static string PythonInstaller_Downloading_Cuda_Library {
+        public static string PythonInstaller_Downloading_Nvidia_Library {
             get {
-                return ResourceManager.GetString("PythonInstaller_Downloading_Cuda_Library", resourceCulture);
+                return ResourceManager.GetString("PythonInstaller_Downloading_Nvidia_Library", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Skyline detected an Nvidia GPU on this computer. Would you like to enable faster AI processing by setting up Nvidia GPU computation? Elevated privileges are required to install this feature..
         /// </summary>
-        public static string PythonInstaller_Install_Cuda_Library {
+        public static string PythonInstaller_Install_Nvidia_Library {
             get {
-                return ResourceManager.GetString("PythonInstaller_Install_Cuda_Library", resourceCulture);
+                return ResourceManager.GetString("PythonInstaller_Install_Nvidia_Library", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Installing Nvidia Cuda Toolkit and Deep Neural Network software..
         /// </summary>
-        public static string PythonInstaller_Installing_Cuda_Library {
+        public static string PythonInstaller_Installing_Nvidia_Library {
             get {
-                return ResourceManager.GetString("PythonInstaller_Installing_Cuda_Library", resourceCulture);
+                return ResourceManager.GetString("PythonInstaller_Installing_Nvidia_Library", resourceCulture);
             }
         }
         

@@ -551,13 +551,11 @@ namespace TestRunnerLib
                 {
                     if (Directory.Exists(tmpTestDir))
                     {
-                        RetryAction(() => { Directory.Delete(tmpTestDir, true); });
+                        FileLockingProcessFinder.DeleteDirectoryWithFileLockingDetails(tmpTestDir);
                     }
                 }
                 catch (Exception deleteException)
                 {
-                    FileChecker.CheckLockedFiles(tmpTestDir.ToString(CultureInfo.InvariantCulture));
-
                     throw new IOException($"Unable to remove temp directory \"{tmpTestDir}\"", deleteException);
                 }
                 // Get rid of the parent directory we created as testdir/"~&TMP ^"

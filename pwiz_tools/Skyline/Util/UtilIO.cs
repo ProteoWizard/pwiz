@@ -1140,6 +1140,52 @@ namespace pwiz.Skyline.Util
                 return false;
             }
         }
+
+        public static void CreateLongPath(string path)
+        {
+            try
+            {
+                string longPath = path.ToLongPath();
+                Helpers.TryTwice(() =>
+                {
+                    if (path != null && !Directory.Exists(longPath)) // Don't waste time trying to create a directory that already exists
+                    {
+                        Directory.CreateDirectory(longPath);
+                    }
+                });
+            }
+            // ReSharper disable EmptyGeneralCatchClause
+            catch (Exception) { }
+            // ReSharper restore EmptyGeneralCatchClause
+        }
+
+        public static void SafeDeleteLongPath(string path)
+        {
+            try
+            {
+                string longPath = path.ToLongPath();
+                Helpers.TryTwice(() =>
+                    {
+                        if (path != null && Directory.Exists(longPath)) // Don't waste time trying to delete something that's already deleted
+                        {
+                            Directory.Delete(longPath, true);
+                        }
+                    }, $@"Directory.Delete({longPath})");
+            }
+            // ReSharper disable EmptyGeneralCatchClause
+            catch (Exception) { }
+            // ReSharper restore EmptyGeneralCatchClause
+        }
+
+        public static bool ExistsLongPath(string path)
+        {
+            return Directory.Exists(path.ToLongPath());
+        }
+
+        private static string ToLongPath(this string path)
+        {
+            return $@"\\?\{path}";
+        }
     }
 
     /// <summary>
@@ -1603,7 +1649,7 @@ namespace pwiz.Skyline.Util
         /// <summary>
         /// Kill a process, and all of its children, grandchildren, etc.
         /// </summary>
-        /// <param name="pid">Process ID.</param>
+        /// <param name="pid">The Process ID of the process to be killed</param>
         private static void KillProcessAndDescendants(int pid)
         {
             // Cannot close 'system idle process'.
@@ -1611,16 +1657,15 @@ namespace pwiz.Skyline.Util
             {
                 return;
             }
-            ManagementObjectSearcher searcher = new ManagementObjectSearcher
-                (@"Select * From Win32_Process Where ParentProcessID=" + pid);
-            ManagementObjectCollection moc = searcher.Get();
-            foreach (ManagementObject mo in moc)
+            var searcher = new ManagementObjectSearcher(@"Select * From Win32_Process Where ParentProcessID=" + pid);
+            var moc = searcher.Get();
+            foreach (var mo in moc)
             {
                 KillProcessAndDescendants(Convert.ToInt32(mo[@"ProcessID"]));
             }
             try
             {
-                Process proc = Process.GetProcessById(pid);
+                var proc = Process.GetProcessById(pid);
                 if (!proc.HasExited)
                     proc.Kill();
             }
@@ -1657,7 +1702,6 @@ namespace pwiz.Skyline.Util
                 startInfo.Verb = @"runas";
 
             var process = new Process {StartInfo = startInfo, EnableRaisingEvents = true};
-            int processID = -1;
             string pipeName = @"SkylineProcessRunnerPipe" + guidSuffix;
 
             using (var pipeStream = new NamedPipeServerStream(pipeName))

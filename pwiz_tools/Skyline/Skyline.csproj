@@ -52,8 +52,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>20</ApplicationRevision>
-    <ApplicationVersion>24.1.3.20</ApplicationVersion>
+    <ApplicationRevision>147</ApplicationRevision>
+    <ApplicationVersion>25.1.1.147</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -519,7 +519,7 @@
     <Compile Include="FileUI\PeptideSearch\HardklorSearchControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Model\AlphaPeptDeep\AlphapeptdeepLibraryBuilder.cs" />
+    <Compile Include="Model\Lib\AlphaPeptDeep\AlphapeptdeepLibraryBuilder.cs" />
     <Compile Include="Model\AuditLog\EnumNames.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -582,6 +582,8 @@
     </Compile>
     <Compile Include="Model\FullScanProperties.cs" />
     <Compile Include="Model\IdPeptideDocNode.cs" />
+    <Compile Include="Model\Lib\AlphaPeptDeep\AbstractDeepLibraryBuilder.cs" />
+    <Compile Include="Model\Lib\Carafe\CarafeLibraryBuilder.cs" />
     <Compile Include="Model\Proteome\AssociateProteinsResults.cs" />
     <Compile Include="Model\Results\OpenMsDataFileParams.cs" />
     <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaAccount.cs" />
@@ -904,12 +906,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>FileUIResources.resx</DependentUpon>
     </Compile>
-    <Compile Include="ToolsUI\PythonInstallerDlg.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="ToolsUI\PythonInstallerDlg.Designer.cs">
-      <DependentUpon>PythonInstallerDlg.cs</DependentUpon>
-    </Compile>
     <Compile Include="ToolsUI\PythonInstallerUI.cs" />
     <Compile Include="ToolsUI\ToolsUIResources.Designer.cs">
       <DesignTime>True</DesignTime>
@@ -1129,6 +1125,11 @@
     <Compile Include="Model\Koina\Config\KoinaConfig.cs" />
     <Compile Include="Model\Koina\Models\KoinaIntensityModel.cs" />
     <Compile Include="Model\Koina\Models\KoinaModel.cs" />
+    <Compile Include="Model\Koina\Models\ModelsResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ModelsResources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Model\Koina\KoinaConstants.cs" />
     <Compile Include="Model\Koina\Communication\KoinaPredictionClient.cs" />
     <Compile Include="Model\Koina\Models\KoinaRetentionTimeModel.cs" />
@@ -4223,6 +4224,7 @@
     <EmbeddedResource Include="Model\Tools\InstallNvidiaLibraries-bat.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
+    <EmbeddedResource Include="Model\Tools\UninstallNvidiaLibraries-bat.txt" />
     <Content Include="percolator\msvcp140.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -4286,6 +4288,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Databinding\PivotReplicateAndIsotopeLabelWidget.resx">
       <DependentUpon>PivotReplicateAndIsotopeLabelWidget.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ChooseSchedulingReplicatesDlg.resx">
       <DependentUpon>ChooseSchedulingReplicatesDlg.cs</DependentUpon>
@@ -4936,9 +4939,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\EditServerDlg.zh-CHS.resx">
       <DependentUpon>EditServerDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="ToolsUI\PythonInstallerDlg.resx">
-      <DependentUpon>PythonInstallerDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\PythonInstallerLegacyDlg.ja.resx">
       <DependentUpon>PythonInstallerLegacyDlg.cs</DependentUpon>
@@ -5866,11 +5866,6 @@
       <DependentUpon>ModelsResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Model\Koina\Models\ModelsResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ModelsResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Controls\Spectra\SpectraResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -7202,6 +7197,10 @@
     <PackageReference Include="Microsoft.Web.WebView2">
       <Version>1.0.2420.47</Version>
     </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Model\AlphaPeptDeep\" />
+    <Folder Include="Model\Carafe\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterPublish">

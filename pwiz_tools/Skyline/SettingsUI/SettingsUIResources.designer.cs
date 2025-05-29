@@ -351,11 +351,21 @@ namespace pwiz.Skyline.SettingsUI {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &amp;DIA-NN report document:.
+        ///   Looks up a localized string similar to &amp;DIA-NN report document.
         /// </summary>
         public static string BuildLibraryDlg_DIANN_report_document {
             get {
                 return ResourceManager.GetString("BuildLibraryDlg_DIANN_report_document", resourceCulture);
+	    }
+	}
+
+	/// <summary>
+        ///   Looks up a localized string similar to Add peptide precursors to the document to build a library from AlphaPeptDeep predictions..
+        /// </summary>
+        public static string BuildLibraryDlg_CreateAlphaBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_AlphaPeptDeep_predictions_ {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_CreateAlphaBuilder_Add_peptide_precursors_to_the_document_to_buil" +
+                        "d_a_library_from_AlphaPeptDeep_predictions_", resourceCulture);
             }
         }
         

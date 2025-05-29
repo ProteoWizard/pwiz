@@ -2048,8 +2048,10 @@ namespace pwiz.Skyline.Model.Lib
                             else
                             {
                                 var collisionalCrossSectionSqA = UtilDB.GetNullableDouble(reader, iCCS);
-                                if (collisionalCrossSectionSqA != 0)
+                                if (collisionalCrossSectionSqA != 0) 
+                                {
                                     ionMobilityInfo = IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(0, ionMobilityType), collisionalCrossSectionSqA, 0);
+                                }
                             }
                         }
                         else if (hasDriftTime) 

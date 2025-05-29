@@ -368,13 +368,13 @@
   <data name="PythonInstaller_Requesting_Administrator_elevation" xml:space="preserve">
     <value>Administrative privileges are required to complete the installation, consult with your system administrator if necessary.  Would you like to continue?</value>
   </data>
-  <data name="PythonInstaller_Install_Cuda_Library" xml:space="preserve">
+  <data name="PythonInstaller_Install_Nvidia_Library" xml:space="preserve">
     <value>Skyline detected an Nvidia GPU on this computer. Would you like to enable faster AI processing by setting up Nvidia GPU computation? Elevated privileges are required to install this feature.</value>
   </data>
-  <data name="PythonInstaller_Downloading_Cuda_Library" xml:space="preserve">
+  <data name="PythonInstaller_Downloading_Nvidia_Library" xml:space="preserve">
     <value>Downloading Nvidia Cuda Toolkit and Deep Neural Network software.</value>
   </data>
-  <data name="PythonInstaller_Installing_Cuda_Library" xml:space="preserve">
+  <data name="PythonInstaller_Installing_Nvidia_Library" xml:space="preserve">
     <value>Installing Nvidia Cuda Toolkit and Deep Neural Network software.</value>
   </data>
   <data name="SkylineProcessRunner_Timeout" xml:space="preserve">
