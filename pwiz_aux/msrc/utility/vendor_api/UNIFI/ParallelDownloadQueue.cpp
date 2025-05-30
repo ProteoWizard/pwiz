@@ -73,6 +73,23 @@ public:
     }
 };
 
+generic<typename T, typename T2, typename T3, typename T4, typename TResult>
+public ref class Bind4
+{
+    initonly T arg1;
+    initonly T2 arg2;
+    initonly T3 arg3;
+    initonly T4 arg4;
+    Func<T, T2, T3, T4, TResult>^ const f;
+    TResult _() { return f(arg1, arg2, arg3, arg4); }
+
+public:
+    initonly Func<TResult>^ binder;
+    Bind4(Func<T, T2, T3, T4, TResult>^ f, T arg1, T2 arg2, T3 arg3, T4 arg4) : f(f), arg1(arg1), arg2(arg2), arg3(arg3), arg4(arg4) {
+        binder = gcnew Func<TResult>(this, &Bind4::_);
+    }
+};
+
 public ref class Binder abstract sealed // static
 {
 public:
@@ -89,6 +106,11 @@ public:
     generic<typename T, typename T2, typename T3, typename TResult>
     static Func<TResult>^ Create(Func<T, T2, T3, TResult>^ f, T arg1, T2 arg2, T3 arg3) {
         return (gcnew Bind3<T, T2, T3, TResult>(f, arg1, arg2, arg3))->binder;
+    }
+
+    generic<typename T, typename T2, typename T3, typename T4, typename TResult>
+    static Func<TResult>^ Create(Func<T, T2, T3, T4, TResult>^ f, T arg1, T2 arg2, T3 arg3, T4 arg4) {
+        return (gcnew Bind4<T, T2, T3, T4, TResult>(f, arg1, arg2, arg3, arg4))->binder;
     }
 };
 
@@ -149,13 +171,9 @@ ParallelDownloadQueue::~ParallelDownloadQueue()
     //    task->Wait();
 }
 
-int ParallelDownloadQueue::getRequestLimitTask(System::Uri^ url, String^ accessToken, String^ acceptHeader)
+int ParallelDownloadQueue::getRequestLimitTask(System::Uri^ url, IHttpClientFactory^ clientFactory, String^ accessToken, String^ acceptHeader)
 {
-    auto webRequestHandler = gcnew System::Net::Http::WebRequestHandler();
-    webRequestHandler->UnsafeAuthenticatedConnectionSharing = true;
-    webRequestHandler->PreAuthenticate = true;
-
-    auto httpClient = gcnew HttpClient(webRequestHandler);
+    auto httpClient = clientFactory->CreateClient("customClient");
     httpClient->BaseAddress = gcnew Uri(url->GetLeftPart(System::UriPartial::Authority));
     httpClient->DefaultRequestHeaders->Authorization = gcnew AuthenticationHeaderValue("Bearer", accessToken);
     httpClient->DefaultRequestHeaders->Accept->Add(gcnew MediaTypeWithQualityHeaderValue(acceptHeader));
@@ -213,15 +231,15 @@ int ParallelDownloadQueue::getRequestLimitTask(System::Uri^ url, String^ accessT
 }
 
 // launch maxConcurrentTasks HTTP requests at the same time and see how many fail with 429; return the number that did not fail
-int ParallelDownloadQueue::GetRequestLimit(System::String^ url, String^ accessToken, String^ acceptHeader, int maxConcurrentTasks)
+int ParallelDownloadQueue::GetRequestLimit(System::String^ url, IHttpClientFactory^ clientFactory, String^ accessToken, String^ acceptHeader, int maxConcurrentTasks)
 {
     DateTime start = DateTime::UtcNow;
     auto tasks = gcnew System::Collections::Generic::List<System::Threading::Tasks::Task<int>^>();
     auto uri = gcnew Uri(url);
     for (int i=0; i < maxConcurrentTasks; ++i)
     {
-        auto f = gcnew Func<Uri^, String^, String^, int>(&ParallelDownloadQueue::getRequestLimitTask);
-        tasks->Add(Task::Factory->StartNew(Binder::Create(f, uri, accessToken, acceptHeader)));
+        auto f = gcnew Func<Uri^, IHttpClientFactory^, String^, String^, int>(&ParallelDownloadQueue::getRequestLimitTask);
+        tasks->Add(Task::Factory->StartNew(Binder::Create(f, uri, clientFactory, accessToken, acceptHeader)));
     }
 
     for each (auto task in tasks)

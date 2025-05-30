@@ -128,10 +128,6 @@ public enum class ScanningMethod
     DDA
 };
 
-namespace
-{
-    gcroot<ConcurrentDictionary<String^, System::String^>^> globalResponseCache = gcnew ConcurrentDictionary<String^, String^>();;
-}
 
 class WatersConnectImpl : public UNIFI::UnifiData::Impl
 {
@@ -191,7 +187,7 @@ public:
                 firstSpectrumDownloadInfo->chunkSize = 1;
                 firstSpectrumDownloadInfo->userdata = gcnew IntPtr(this);
                 spectrumEndpoint(firstSpectrumDownloadInfo);
-                _chunkReadahead = ParallelDownloadQueue::GetRequestLimit(firstSpectrumDownloadInfo->spectrumEndpoint, _accessToken, acceptHeader, _chunkReadahead);
+                _chunkReadahead = ParallelDownloadQueue::GetRequestLimit(firstSpectrumDownloadInfo->spectrumEndpoint, _httpClientFactory, _accessToken, acceptHeader, _chunkReadahead);
             }
             _chunkSize = (double)idealChunkReadahead / _chunkReadahead * _chunkSize;
 
@@ -455,6 +451,21 @@ private:
         return (size_t)floor(logicalIndex / 200.0);
     }
 
+    static String^ getAccessTokenResult(String^ uri, AccessTokenRequest^ request)
+    {
+        auto fields = gcnew System::Collections::Generic::Dictionary<System::String^, System::String^>();
+        fields->Add(IdentityModel::OidcConstants::TokenRequest::GrantType, IdentityModel::OidcConstants::GrantTypes::Password);
+        fields->Add(IdentityModel::OidcConstants::TokenRequest::UserName, request->Username);
+        fields->Add(IdentityModel::OidcConstants::TokenRequest::Password, request->Password);
+        fields->Add(IdentityModel::OidcConstants::TokenRequest::Scope, request->Scope);
+
+        auto tokenClient = gcnew TokenClient(request->Uri, "resourceownerclient_jwt", request->Secret, nullptr);
+        TokenResponse^ response = tokenClient->RequestAsync(fields, System::Threading::CancellationToken::None)->Result;
+        if (response->IsError)
+            throw user_error("authentication error: incorrect hostname, username or password? (" + ToStdString(response->Error) + ")");
+        return response->AccessToken;
+    }
+
     void getAccessToken()
     {
         cli::array<String^>^ userPassPair;
@@ -475,18 +486,16 @@ private:
             password = userPassPair[1];
         }
 
-        auto fields = gcnew System::Collections::Generic::Dictionary<System::String^, System::String^>();
-        fields->Add(IdentityModel::OidcConstants::TokenRequest::GrantType, IdentityModel::OidcConstants::GrantTypes::Password);
-        fields->Add(IdentityModel::OidcConstants::TokenRequest::UserName, username);
-        fields->Add(IdentityModel::OidcConstants::TokenRequest::Password, password);
-        fields->Add(IdentityModel::OidcConstants::TokenRequest::Scope, _clientScope);
+        AccessTokenRequest^ request = gcnew AccessTokenRequest();
+        request->Username = username;
+        request->Password = password;
+        request->Scope = _clientScope;
+        request->Secret = _clientSecret;
+        request->Uri = tokenEndpoint();
 
-        auto tokenClient = gcnew TokenClient(tokenEndpoint(), "resourceownerclient_jwt", _clientSecret, nullptr);
-        TokenResponse^ response = tokenClient->RequestAsync(fields, System::Threading::CancellationToken::None)->Result;
-        if (response->IsError)
-            throw user_error("authentication error: incorrect hostname, username or password? (" + ToStdString(response->Error) + ")");
-
-        _accessToken = response->AccessToken;
+        auto tokenEndpointUrlSerialized = tokenEndpoint() + "/" + username + "/" + password + "/" + _clientScope + "/" + _clientSecret;
+        auto delgt = gcnew Func<String^, AccessTokenRequest^, String^>(getAccessTokenResult);
+        _accessToken = globalResponseCache->GetOrAdd(tokenEndpointUrlSerialized, delgt, request);
         //Console::WriteLine(_accessToken);
     }
 

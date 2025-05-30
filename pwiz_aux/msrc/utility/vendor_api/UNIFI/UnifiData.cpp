@@ -70,6 +70,21 @@ using std::size_t;
 
 namespace pwiz {
 namespace vendor_api {
+
+
+namespace
+{
+    public ref struct AccessTokenRequest
+    {
+        String^ Uri;
+        String^ Username;
+        String^ Password;
+        String^ Scope;
+        String^ Secret;
+    };
+}
+
+
 namespace UNIFI {
 
 [ProtoBuf::ProtoContract]
@@ -222,7 +237,7 @@ class UnifiData::Impl
             firstSpectrumDownloadInfo->userdata = gcnew IntPtr(this);
             spectrumEndpoint(firstSpectrumDownloadInfo);
             String^ acceptHeader = "application/octet-stream";
-            _chunkReadahead = ParallelDownloadQueue::GetRequestLimit(firstSpectrumDownloadInfo->spectrumEndpoint->ToString(), _accessToken, acceptHeader, _chunkReadahead);
+            _chunkReadahead = ParallelDownloadQueue::GetRequestLimit(firstSpectrumDownloadInfo->spectrumEndpoint->ToString(), _httpClientFactory, _accessToken, acceptHeader, _chunkReadahead);
             _chunkSize = (double) idealChunkReadahead / _chunkReadahead * _chunkSize;
 
             if (queryVars[L"chunkSize"] != nullptr) _chunkSize = lexical_cast<int>(ToStdString(queryVars[L"chunkSize"]));
@@ -807,7 +822,7 @@ class UnifiData::Impl
     gcroot<System::String^> _clientScope;
     gcroot<System::String^> _clientSecret;
     gcroot<System::String^> _accessToken;
-    gcroot<IHttpClientFactory^> _httpClientFactory;
+    inline static gcroot<IHttpClientFactory^> _httpClientFactory;
     gcroot<HttpClient^> _httpClient;
     gcroot<ParallelDownloadQueue^> _queue;
     bool _unifiDebug;
@@ -816,6 +831,8 @@ class UnifiData::Impl
     bool _combineIonMobilitySpectra; // do not treat drift bins as separate spectra
     int _numNetworkSpectra; // number of spectra without accounting for drift scans
     int _numLogicalSpectra; // number of spectra with IMS spectra counting as 200 logical spectra
+
+    inline static gcroot<ConcurrentDictionary<String^, System::String^>^> globalResponseCache = gcnew ConcurrentDictionary<String^, String^>();
 
     gcroot<System::Collections::Generic::List<System::String^>^> _chromatogramIds; //  chromatogram GUIDs
     vector<UnifiChromatogramInfo> _chromatogramInfo;
@@ -944,17 +961,21 @@ class UnifiData::Impl
         auto handler = gcnew System::Net::Http::WebRequestHandler();
         handler->UnsafeAuthenticatedConnectionSharing = true;
         handler->PreAuthenticate = true;
+        handler->MaxConnectionsPerServer = 10;
         return handler;
     }
 
     void initHttpClient()
     {
-        auto services = gcnew ServiceCollection();
-        auto builder = HttpClientFactoryServiceCollectionExtensions::AddHttpClient(services, "customClient");
-        Func<HttpMessageHandler^>^ getWebRequestDelegate = gcnew Func<HttpMessageHandler^>(&Impl::getWebRequestHandler);
-        HttpClientBuilderExtensions::ConfigurePrimaryHttpMessageHandler(builder, getWebRequestDelegate);
-        auto provider = ServiceCollectionContainerBuilderExtensions::BuildServiceProvider(services);
-        _httpClientFactory = ServiceProviderServiceExtensions::GetService<IHttpClientFactory^>(provider);
+        if (!_httpClientFactory)
+        {
+            auto services = gcnew ServiceCollection();
+            auto builder = HttpClientFactoryServiceCollectionExtensions::AddHttpClient(services, "customClient");
+            Func<HttpMessageHandler^>^ getWebRequestDelegate = gcnew Func<HttpMessageHandler^>(&Impl::getWebRequestHandler);
+            HttpClientBuilderExtensions::ConfigurePrimaryHttpMessageHandler(builder, getWebRequestDelegate);
+            auto provider = ServiceCollectionContainerBuilderExtensions::BuildServiceProvider(services);
+            _httpClientFactory = ServiceProviderServiceExtensions::GetService<IHttpClientFactory^>(provider);
+        }
         _httpClient = _httpClientFactory->CreateClient("customClient");
     }
 

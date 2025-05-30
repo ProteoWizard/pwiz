@@ -101,13 +101,13 @@ ref class ParallelDownloadQueue
     ~ParallelDownloadQueue();
 
     // launch maxConcurrentTasks HTTP requests at the same time and see how many fail with 429; return the number that did not fail
-    static int GetRequestLimit(System::String^ url, String^ accessToken, String^ acceptHeader, int maxConcurrentTasks);
+    static int GetRequestLimit(System::String^ url, IHttpClientFactory^ clientFactory, String^ accessToken, String^ acceptHeader, int maxConcurrentTasks);
 
     Task^ getChunkTask(size_t taskIndex, bool doCentroid, bool primary, bool waitForStart);
 
     private:
 
-    static int getRequestLimitTask(System::Uri^ url, System::String^ accessToken, String^ acceptHeader);
+    static int getRequestLimitTask(System::Uri^ url, IHttpClientFactory^ clientFactory, System::String^ accessToken, String^ acceptHeader);
     int runChunkTask(size_t taskIndex, bool doCentroid);
 
     String^ _acceptHeader;
