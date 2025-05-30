@@ -99,17 +99,10 @@ namespace pwiz.Skyline.Model.Tools
         // public static string CuDNNDownloadPath => Path.Combine(CuDNNVersionDir, CuDNNInstallerDownloadPath);
 
         public static string InstallNvidiaLibrariesBat =>
-            Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), "InstallNvidiaLibraries.bat");
+            Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), @"InstallNvidiaLibraries.bat");
         public static string UninstallNvidiaLibrariesBat =>
-            Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), "UninstallNvidiaLibraries.bat");
-        public static string GetInstallNvidiaLibrariesBat()
-        {
-            return InstallNvidiaLibrariesBat;
-        }
-        public static string GetUninstallNvidiaLibrariesBat()
-        {
-            return UninstallNvidiaLibrariesBat;
-        }
+            Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), @"UninstallNvidiaLibraries.bat");
+
         public bool? NvidiaGpuAvailable
         {
             get
@@ -265,7 +258,7 @@ namespace pwiz.Skyline.Model.Tools
         {
             FileEx.SafeDelete(InstallNvidiaLibrariesBat);
             var type = typeof(PythonInstaller);
-            using var stream = type.Assembly.GetManifestResourceStream(type, "InstallNvidiaLibraries-bat.txt");
+            using var stream = type.Assembly.GetManifestResourceStream(type, @"InstallNvidiaLibraries-bat.txt");
             if (stream != null)
             {
                 using var reader = new StreamReader(stream);
@@ -285,7 +278,7 @@ namespace pwiz.Skyline.Model.Tools
         {
             FileEx.SafeDelete(UninstallNvidiaLibrariesBat);
             var type = typeof(PythonInstaller);
-            using var stream = type.Assembly.GetManifestResourceStream(type, "UninstallNvidiaLibraries-bat.txt");
+            using var stream = type.Assembly.GetManifestResourceStream(type, @"UninstallNvidiaLibraries-bat.txt");
             if (stream != null)
             {
                 using var reader = new StreamReader(stream);

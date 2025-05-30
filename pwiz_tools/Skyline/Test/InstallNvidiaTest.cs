@@ -32,7 +32,7 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestWriteUninstallNvidiaBat()
         {
-            var uninstallBatFile = PythonInstaller.GetUninstallNvidiaLibrariesBat();
+            var uninstallBatFile = PythonInstaller.UninstallNvidiaLibrariesBat;
             var directory = Path.GetDirectoryName(uninstallBatFile) ?? string.Empty;
             if (!directory.IsNullOrEmpty())
                 Directory.CreateDirectory(directory);
@@ -42,10 +42,11 @@ namespace pwiz.SkylineTest
 
             Console.WriteLine($@"Written Nvidia uninstall script: '{uninstallBatFile}'");
         }
+
         [TestMethod]
         public void TestWriteInstallNvidiaBat()
         {
-            var installBatFile = PythonInstaller.GetInstallNvidiaLibrariesBat();
+            var installBatFile = PythonInstaller.InstallNvidiaLibrariesBat;
             var directory = Path.GetDirectoryName(installBatFile) ?? string.Empty;
             if (!directory.IsNullOrEmpty())
                 Directory.CreateDirectory(directory);
