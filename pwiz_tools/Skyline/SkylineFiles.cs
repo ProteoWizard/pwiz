@@ -3518,26 +3518,26 @@ namespace pwiz.Skyline
 
             var ardiaAccounts = Settings.Default.RemoteAccountList.GetAccountsOfType(RemoteAccountType.ARDIA).ToList();
 
-            var fileDlg = new ArdiaSelectDirectoryFileDialog(ardiaAccounts);
-            fileDlg.Text = ArdiaResources.Ardia_FileUpload_SelectDestinationFolderLabel;
-
-            if (fileDlg.ShowDialog(this) != DialogResult.OK)
-                return;
-
-            var destinationFolderPath = fileDlg.DestinationFolder; // @"/ZZZ-Document-Upload";
-
-            var ardiaAccount = fileDlg.SelectedAccount; 
-
-            // Required for now - if the token is not set, show the prompt to log in to Ardia
-            if (!ardiaAccount.HasToken())
-                ardiaAccount.GetAuthenticatedHttpClient();
-
             var localZipFile = string.Empty;
             try
             {
+                var fileDlg = new ArdiaSelectDirectoryFileDialog(ardiaAccounts);
+                fileDlg.Text = ArdiaResources.Ardia_FileUpload_SelectDestinationFolderLabel;
+            
+                if (fileDlg.ShowDialog(this) != DialogResult.OK)
+                    return;
+            
+                var destinationFolderPath = fileDlg.DestinationFolder; // @"/ZZZ-Document-Upload";
+            
+                var ardiaAccount = fileDlg.SelectedAccount; 
+            
+                // Required for now - if the token is not set, show the prompt to log in to Ardia
+                if (!ardiaAccount.HasToken())
+                    ardiaAccount.GetAuthenticatedHttpClient();
+            
                 // CONSIDER: for now, automatically set the name of the .zip file. Should this be customizable?
                 localZipFile = FileEx.GetTimeStampedFileName(DocumentFilePath);
-
+            
                 // Archive current Skyline document
                 var zipFileAvailable = ShareDocument(localZipFile, ShareType.COMPLETE);
                 if (zipFileAvailable)
@@ -3547,7 +3547,7 @@ namespace pwiz.Skyline
                         string.Format(ArdiaResources.Ardia_FileUpload_ConfirmUploadToPath, Path.GetFileName(localZipFile), destinationFolderPath);
                     if(MultiButtonMsgDlg.Show(this, confirmMsg, MessageBoxButtons.YesNo) != DialogResult.Yes)
                         return;
-
+            
                     var isCanceled = false;
                     if (!skipUploadForTests)
                     {
@@ -3557,12 +3557,12 @@ namespace pwiz.Skyline
                         {
                             var ardiaClient = ArdiaClient.Instance(ardiaAccount);
                             ardiaClient.SendZipFile(destinationFolderPath, localZipFile, longWaitBroker, out _);
-
+            
                             if (longWaitBroker.IsCanceled)
                                 isCanceled = true;
                         });
                     }
-
+            
                     if (!isCanceled)
                     {
                         // CONSIDER: the API could include a URI referring to the new document's location in Ardia's Data Explorer. Skyline
@@ -3712,7 +3712,7 @@ namespace pwiz.Skyline
             var showPublishDocDlg = true;
 
             // if the document has a saved uri prompt user for action, check servers, and permissions, then publish
-            // if something fails in the attempt to publish to the saved uri will bring up the usual PublishDocumentDlg
+            // if something fails in the attempt to publish to the saved uri will bring up the usual PublishDocumentDlgBase
             if (panoramaSavedUri != null && !string.IsNullOrEmpty(panoramaSavedUri.ToString()))
             {
                 showPublishDocDlg = !PublishToSavedUri(publishClient, panoramaSavedUri, fileName, servers);
@@ -3721,7 +3721,7 @@ namespace pwiz.Skyline
             // if no uri was saved to publish to or user chose to view the dialog show the dialog
             if (showPublishDocDlg)
             {
-                using (var publishDocumentDlg = new PublishDocumentDlg(this, servers, fileName, GetFileFormatOnDisk()))
+                using (var publishDocumentDlg = new PublishDocumentDlgPanorama(this, servers, fileName, GetFileFormatOnDisk()))
                 {
                     publishDocumentDlg.PanoramaPublishClient = publishClient;
                     if (publishDocumentDlg.ShowDialog(this) == DialogResult.OK)
@@ -3753,7 +3753,7 @@ namespace pwiz.Skyline
                 return false;
 
             // If we are given a test publish client use that, otherwise create the default client.
-            publishClient ??= PublishDocumentDlg.GetDefaultPublishClient(server);
+            publishClient ??= PublishDocumentDlgPanorama.GetDefaultPublishClient(server);
 
             JToken folders;
             var folderPath = panoramaSavedUri.AbsolutePath;
