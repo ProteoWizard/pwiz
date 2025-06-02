@@ -90,8 +90,13 @@ namespace pwiz.Skyline.FileUI
 
             // TODO: make URL building testable
             var sb = new StringBuilder();
-            sb.Append(URL_PATH_SEPARATOR);
-            sb.Append(ardiaUrl.GetFilePath());
+
+            if (ardiaUrl.EncodedPath != null)
+            {
+                sb.Append(URL_PATH_SEPARATOR);
+                sb.Append(ardiaUrl.GetFilePath());
+            }
+
             if (ListViewControl.SelectedIndices.Count > 0)
             {
                 sb.Append(URL_PATH_SEPARATOR);

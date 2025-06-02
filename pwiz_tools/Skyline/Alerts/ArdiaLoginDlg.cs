@@ -1595,23 +1595,23 @@ namespace pwiz.Skyline.Alerts
 
         private async Task CheckForBffHostCookie()
         {
-            // Get the list of cookies from the webview
-            var cookies = await webView.CoreWebView2.CookieManager.GetCookiesAsync(Account.ServerUrl);
+                // Get the list of cookies from the webview
+                var cookies = await webView.CoreWebView2.CookieManager.GetCookiesAsync(Account.ServerUrl);
 
-            // Find the Bff-Host cookie
-            var bffCookie = cookies.FirstOrDefault(x => x.Name == @"Bff-Host");
-            if (bffCookie != null)
-            {
-                _bffCookie = bffCookie.ToSystemNetCookie();
+                // Find the Bff-Host cookie
+                var bffCookie = cookies.FirstOrDefault(x => x.Name == @"Bff-Host");
+                if (bffCookie != null)
+                {
+                    _bffCookie = bffCookie.ToSystemNetCookie();
 
-                ArdiaAccount.SetSessionCookieString(Account, _bffCookie.Value);
+                    ArdiaAccount.SetSessionCookieString(Account, _bffCookie.Value);
 
-                AuthenticatedHttpClientFactory = GetFactory();
+                    AuthenticatedHttpClientFactory = GetFactory();
 
-                webView.CoreWebView2.Environment.BrowserProcessExited += (s, ea) => DialogResult = DialogResult.OK;
-                webView.Dispose();
-                webView = null;
-            }
+                    webView.CoreWebView2.Environment.BrowserProcessExited += (s, ea) => DialogResult = DialogResult.OK;
+                    webView.Dispose();
+                    webView = null;
+                }
         }
 
         private async void CoreWebView2_NavigationStarting(object sender, CoreWebView2NavigationStartingEventArgs e)
@@ -1642,7 +1642,7 @@ namespace pwiz.Skyline.Alerts
             bool hasRole = Account.TestingOnly_NotSerialized_Role?.Any() ?? false;
 
 
-            if (!hasUsername || !hasPassword)
+                if (!hasUsername || !hasPassword)
             {
                 //  No TestingOnly Username or no TestingOnly Password for Programmatic Login for Testing so exit
                 return;
@@ -1676,6 +1676,7 @@ namespace pwiz.Skyline.Alerts
                 if (buttonText == null)
                     return;
 
+                // Step 1: enter the username. After pressing [Continue], button text changes.
                 if (buttonText == @"Continue")
                 {
                     if (_programmaticLogin_HaveEnteredUsername)
@@ -1691,6 +1692,8 @@ namespace pwiz.Skyline.Alerts
 
                     //if (hasUsername)
                     {
+                        // In the username web page:
+                        //      (1) fill-in the username
                         await ExecuteScriptAsync(usernameSelector + @".value=" + Account.TestingOnly_NotSerialized_Username.Quote());
                         await ExecuteScriptAsync(usernameSelector + triggerInputEvent);
                     }
@@ -1699,8 +1702,10 @@ namespace pwiz.Skyline.Alerts
                     _doAutomatedLogin = true;
 
                     //if (hasUsername)
-                        await ExecuteScriptAsync(signinSelector + @".click()");
+                    //          (2) press the Continue button to submit the username field
+                    await ExecuteScriptAsync(signinSelector + @".click()");
                 }
+                // Step 2: enter the password, pressing [Sign In] at end.
                 else if (buttonText == @"Sign In")
                 {
                     if (_programmaticLogin_HaveEnteredPassword)
@@ -1716,6 +1721,8 @@ namespace pwiz.Skyline.Alerts
 
                     //if (hasPassword)
                     {
+                        // In the password web page:
+                        //      (1) fill-in the password
                         await ExecuteScriptAsync(passwordSelector + @".value=" + Account.TestingOnly_NotSerialized_Password.Quote());
                         await ExecuteScriptAsync(passwordSelector + triggerInputEvent);
                     }
@@ -1726,9 +1733,11 @@ namespace pwiz.Skyline.Alerts
                     // listening for navigation to start
                     webView.CoreWebView2.NavigationStarting += CoreWebView2_NavigationStarting;
 
+                    //          (2) press the Sign-in button to submit the password field
                     //if (hasPassword)
                         await ExecuteScriptAsync(signinSelector + @".click()");
                 }
+                // Step 3 (optional): Select the user's role
                 else if (buttonText == @"Enter") // select role
                 {
 
