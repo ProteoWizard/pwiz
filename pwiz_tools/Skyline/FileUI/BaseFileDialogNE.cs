@@ -781,6 +781,11 @@ namespace pwiz.Skyline.FileUI
             ActivateItem();
         }
 
+        /// <summary>
+        /// Event handler invoked when selecting an item in the File Dialog. May
+        /// cause a folder to open or close. Opening a folder may ask a remote
+        /// server to provide information about its file / folder contents.
+        /// </summary>
         public void ActivateItem() 
         {
             if (listView.SelectedItems.Count == 0)

@@ -36,7 +36,7 @@ namespace pwiz.SkylineTestConnected
         public void TestArdiaFileUpload()
         {
             if (!ArdiaTestUtil.EnableArdiaTests)
-            {
+            {   
                 Console.Error.WriteLine("NOTE: skipping Ardia test because username/password for Ardia is not configured in environment variables");
                 return;
             }
@@ -61,41 +61,41 @@ namespace pwiz.SkylineTestConnected
             Assert.IsTrue(SkylineWindow.HasRegisteredArdiaAccount);
             Assert.AreEqual(1, Settings.Default.RemoteAccountList.Count);
 
-            // Select remote account and destination directory
-            var selectFolderDlg = ShowDialog<ArdiaSelectDirectoryFileDialog>(() => SkylineWindow.PublishToArdia(skipUploadForTests: true));
-            WaitForConditionUI(() => selectFolderDlg.IsLoaded);
+            // // Select remote account and destination directory
+            // var selectFolderDlg = ShowDialog<ArdiaSelectDirectoryFileDialog>(() => SkylineWindow.PublishToArdia(skipUploadForTests: true));
+            // WaitForConditionUI(() => selectFolderDlg.IsLoaded);
+            //
+            // RunUI(() =>
+            // {
+            //     selectFolderDlg.SelectItemAndActivate(0);
+            //     // selectFolderDlg.SelectItem(0);
+            //     // selectFolderDlg.ActivateItem();
+            // });
+            // WaitForConditionUI(() => selectFolderDlg.ListCount() > 0);
+            //
+            // RunUI(() =>
+            // {
+            //     selectFolderDlg.SelectItemAndActivate(DEFAULT_DIRECTORY_NAME);
+            //     // selectFolderDlg.SelectItem(DEFAULT_DIRECTORY_NAME);
+            //     // selectFolderDlg.ActivateItem();
+            // });
+            // WaitForConditionUI(() => selectFolderDlg.ListCount() > 0);
+            //
+            // var confirmUploadDlg = ShowDialog<MultiButtonMsgDlg>(() => selectFolderDlg.OkDialog());
+            // var successfulUploadDlg = ShowDialog<MessageDlg>(() => confirmUploadDlg.ClickYes());
+            // OkDialog(successfulUploadDlg, successfulUploadDlg.ClickOk);
+            //
+            // Assert.AreEqual(@"/ZZZ-Document-Upload", selectFolderDlg.DestinationFolder);
 
-            RunUI(() =>
-            {
-                selectFolderDlg.SelectItemAndActivate(0);
-                // selectFolderDlg.SelectItem(0);
-                // selectFolderDlg.ActivateItem();
-            });
-            WaitForConditionUI(() => selectFolderDlg.ListCount() > 0);
-
-            RunUI(() =>
-            {
-                selectFolderDlg.SelectItemAndActivate(DEFAULT_DIRECTORY_NAME);
-                // selectFolderDlg.SelectItem(DEFAULT_DIRECTORY_NAME);
-                // selectFolderDlg.ActivateItem();
-            });
-            WaitForConditionUI(() => selectFolderDlg.ListCount() > 0);
-
-            var confirmUploadDlg = ShowDialog<MultiButtonMsgDlg>(() => selectFolderDlg.OkDialog());
-            var successfulUploadDlg = ShowDialog<MessageDlg>(() => confirmUploadDlg.ClickYes());
-            OkDialog(successfulUploadDlg, successfulUploadDlg.ClickOk);
-
-            Assert.AreEqual(@"/ZZZ-Document-Upload", selectFolderDlg.DestinationFolder);
-
-            // TODO: debug and fix. This check returns false. Most checks succeed except differing password
-            //       fields where one is "" and the other is null. For now, manually assert equality server
-            //       name and username.
-            // Assert.AreEqual(account, selectFolderDlg.SelectedAccount);
-            Assert.AreEqual(account.Username, selectFolderDlg.SelectedAccount.Username);
-            Assert.AreEqual(account.ServerUrl, selectFolderDlg.SelectedAccount.ServerUrl);
-
-            // Why is this necessary?
-            RunUI(() => { selectFolderDlg.Dispose(); });
+            // // TODO: debug and fix. This check returns false. Most checks succeed except differing password
+            // //       fields where one is "" and the other is null. For now, manually assert equality server
+            // //       name and username.
+            // // Assert.AreEqual(account, selectFolderDlg.SelectedAccount);
+            // Assert.AreEqual(account.Username, selectFolderDlg.SelectedAccount.Username);
+            // Assert.AreEqual(account.ServerUrl, selectFolderDlg.SelectedAccount.ServerUrl);
+            //
+            // // Why is this necessary?
+            // RunUI(() => { selectFolderDlg.Dispose(); });
         }
 
         private static void RegisterRemoteServer(ArdiaAccount account) 

@@ -97,7 +97,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
                         if (folderObject.SequenceKey != null)
                             childUrl = childUrl.ChangeSequenceKey(folderObject.SequenceKey);
                         var baseChildUrl = childUrl.ChangePathParts(ardiaUrl.GetPathParts().Concat(new[] { folderObject.Name }));
-                        yield return new RemoteItem(baseChildUrl, folderObject.Name, DataSourceUtil.FOLDER_TYPE, null, 0);
+                        yield return new RemoteItem(baseChildUrl, folderObject.Name, DataSourceUtil.FOLDER_TYPE, null, 0, folderObject.HasChildren);
                     }
                 }
             }
@@ -127,6 +127,23 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
             var ardiaUrl = (ArdiaUrl) remoteUrl;
             RetryFetch(GetFolderContentsUrl(ardiaUrl), GetFoldersAndSequences);
             RetryFetch(GetFolderContentsUrl(ardiaUrl), GetRawFiles);
+        }
+
+        /// <summary>
+        /// Check whether results for this <see cref="RemoteUrl"/> already exist in the
+        /// cache. Callers can use this to decide whether to skip a network roundtrip
+        /// when recently cached data can be used to update Skyline UI.
+        /// </summary>
+        /// <param name="requestUri">Remote URL whose results may exist in the cache</param>
+        /// <returns>true if results exist in the cache, false if not</returns>
+        public bool HasResultsFor(ArdiaUrl requestUri)
+        {
+            // NB: RemoteSession caches results using a key that includes a type (see below). This
+            //     implementation assumes results are ALWAYS cached using ImmutableList<ArdiaFolderObject>.
+            //     This is a tenuous assumption made to save callers of this method from dealing with that
+            //     implementation detail. This may need to change in the future if ArdiaSession supports
+            //     more return types.
+            return HasResultsFor<ImmutableList<ArdiaFolderObject>>(GetFolderContentsUrl(requestUri));
         }
 
         private Uri GetFolderContentsUrl(ArdiaUrl ardiaUrl)

@@ -37,6 +37,17 @@ namespace pwiz.Skyline.FileUI
 {
     public class PublishDocumentDlgPanorama : PublishDocumentDlgBase
     {
+        /// <summary>
+        /// Enum of images used in the server tree, in index order.
+        /// </summary>
+        private enum ImageId
+        {
+            panorama,
+            labkey,
+            chrom_lib,
+            folder
+        }
+
         private readonly SettingsList<Server> _panoramaServers;
         private readonly List<Server> _anonymousServers;
 
@@ -48,6 +59,11 @@ namespace pwiz.Skyline.FileUI
         {
             _panoramaServers = servers;
             _anonymousServers = new List<Server>(servers.Where(server => !server.HasUserAccount()));
+
+            treeViewFolders.ImageList.Images.Add(Resources.Panorama);   // 24bpp
+            treeViewFolders.ImageList.Images.Add(Resources.LabKey);     // 8bpp
+            treeViewFolders.ImageList.Images.Add(Resources.ChromLib);   // 8bpp
+            treeViewFolders.ImageList.Images.Add(Resources.Folder);     // 32bpp
 
             cbAnonymousServers.Visible = _anonymousServers.Count > 0;
         }

@@ -131,10 +131,10 @@ namespace pwiz.Skyline.FileUI
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnOK;
         private System.Windows.Forms.Label lblFile;
-        private System.Windows.Forms.TextBox tbFilePath;
         private System.Windows.Forms.Button btnBrowse;
         internal System.Windows.Forms.CheckBox cbAnonymousServers;
         private System.Windows.Forms.ToolTip toolTipShowAnonymous;
         internal System.Windows.Forms.Button createRemoteFolder;
+        internal System.Windows.Forms.TextBox tbFilePath;
     }
 }

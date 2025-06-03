@@ -62,7 +62,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
         }
 
         public event Action ContentsAvailable;
-        
+
         public virtual void Dispose()
         {
             _cancellationTokenSource.Cancel();
@@ -170,6 +170,22 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
                 }
             }
             FireContentsAvailable();
+        }
+
+        public bool HasResultsFor<T>(Uri remoteUrl)
+        {
+            if (remoteUrl == null)
+            {
+                return false;
+            }
+            else
+            {
+                lock (_lock)
+                {
+                    var requestKey = new RequestKey(typeof(T), remoteUrl);
+                    return _responses.ContainsKey(requestKey);
+                }
+            }
         }
 
         protected bool TryGetData<T>(Uri requestUri, out T data)

@@ -89,7 +89,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
             var handler = new HttpClientHandler();
             handler.CookieContainer = cookieContainer;
 
-            var client = new HttpClient(handler);
+            var client = new HttpClient(handler, false);
             client.BaseAddress = ServerUri;
             client.DefaultRequestHeaders.Add(HttpRequestHeader.Accept.ToString(), APPLICATION_JSON);
             client.DefaultRequestHeaders.Add(HEADER_APPLICATION_CODE, ApplicationCode);

@@ -32,16 +32,11 @@ namespace pwiz.Skyline.FileUI
     public partial class PublishDocumentDlgBase : FormEx
     {
         /// <summary>
-        /// Enum of images used in the server tree, in index order.
+        /// The <see cref="TreeView"/> is configured to use a 32-bit color depth. Subclasses are responsible for adding images to <see cref="TreeView.ImageList"/>
         /// </summary>
-        public enum ImageId
-        {
-            panorama,
-            labkey,
-            chrom_lib,
-            folder
-        }
-
+        /// <param name="docContainer"></param>
+        /// <param name="fileName"></param>
+        /// <param name="fileFormatOnDisk"></param>
         public PublishDocumentDlgBase(IDocumentUIContainer docContainer, string fileName, DocumentFormat? fileFormatOnDisk)
         {
             IsLoaded = false;
@@ -54,10 +49,6 @@ namespace pwiz.Skyline.FileUI
             tbFilePath.Text = FileEx.GetTimeStampedFileName(fileName);
 
             treeViewFolders.ImageList = new ImageList { ColorDepth = ColorDepth.Depth32Bit };
-            treeViewFolders.ImageList.Images.Add(Resources.Panorama);   // 24bpp
-            treeViewFolders.ImageList.Images.Add(Resources.LabKey);     // 8bpp
-            treeViewFolders.ImageList.Images.Add(Resources.ChromLib);   // 8bpp
-            treeViewFolders.ImageList.Images.Add(Resources.Folder);     // 32bpp
 
             ServerTreeStateRestorer = new TreeViewStateRestorer(treeViewFolders);
         }
@@ -121,7 +112,7 @@ namespace pwiz.Skyline.FileUI
             HandleDialogOk();
         }
 
-        public void Upload(Control parent)
+        public virtual void Upload(Control parent)
         {
             var folderPath = GetFolderPath(treeViewFolders.SelectedNode);
             var zipFilePath = tbFilePath.Text;
@@ -129,7 +120,7 @@ namespace pwiz.Skyline.FileUI
             HandleUpload(parent, folderPath, zipFilePath);
         }
 
-        private string GetFolderPath(TreeNode folderNode)
+        internal string GetFolderPath(TreeNode folderNode)
         {
             string nodePath = folderNode.FullPath;
             // ReSharper disable LocalizableElement

@@ -3510,73 +3510,36 @@ namespace pwiz.Skyline
             PublishToArdia();
         }
 
-        // BUG: Removing RemoteAccounts using EditRemoteAccountsDlg appears to unexpectedly leave registered Ardia accounts intact
+        // BUG: Removing RemoteAccounts using EditRemoteAccountsDlg may unexpectedly leave registered Ardia accounts intact
         // CONSIDER: when should an upload be split into multiple pieces?
         public void PublishToArdia(bool skipUploadForTests = false)
         {
-            Assume.IsTrue(HasRegisteredArdiaAccount, @"Expected Skyline has a registered Ardia account but none found");
+            Assume.IsTrue(HasRegisteredArdiaAccount, @"Expected to find a registered Ardia account but found none");
 
             var ardiaAccounts = Settings.Default.RemoteAccountList.GetAccountsOfType(RemoteAccountType.ARDIA).ToList();
 
-            var localZipFile = string.Empty;
-            try
+            // CONSIDER: bootstrap Ardia account(s) to avoid flashing a "logging in" dialog if Skyline already has a valid API token.
+            // if (!ardiaAccount.HasToken())
+            //     ardiaAccount.GetAuthenticatedHttpClient();
+
+            // CONSIDER: do un-saved Skyline documents need to be saved first?
+            var localFileName = DocumentFilePath;
+            using var publishDlg = new PublishDocumentDlgArdia(this, ardiaAccounts, localFileName, GetFileFormatOnDisk());
+            if (publishDlg.ShowDialog(this) == DialogResult.OK)
             {
-                var fileDlg = new ArdiaSelectDirectoryFileDialog(ardiaAccounts);
-                fileDlg.Text = ArdiaResources.Ardia_FileUpload_SelectDestinationFolderLabel;
+                var fileName = publishDlg.FileName;
+                var shareType = publishDlg.ShareType;
             
-                if (fileDlg.ShowDialog(this) != DialogResult.OK)
-                    return;
+                // CONSIDER: confirm upload before starting to send the .sky.zip file?
+                // var confirmMsg = string.Format(ArdiaResources.Ardia_FileUpload_ConfirmUploadToPath, Path.GetFileName(localZipFile), destinationFolderPath);
+                // if (MultiButtonMsgDlg.Show(this, confirmMsg, MessageBoxButtons.YesNo) != DialogResult.Yes)
+                //     return;
             
-                var destinationFolderPath = fileDlg.DestinationFolder; // @"/ZZZ-Document-Upload";
-            
-                var ardiaAccount = fileDlg.SelectedAccount; 
-            
-                // Required for now - if the token is not set, show the prompt to log in to Ardia
-                if (!ardiaAccount.HasToken())
-                    ardiaAccount.GetAuthenticatedHttpClient();
-            
-                // CONSIDER: for now, automatically set the name of the .zip file. Should this be customizable?
-                localZipFile = FileEx.GetTimeStampedFileName(DocumentFilePath);
-            
-                // Archive current Skyline document
-                var zipFileAvailable = ShareDocument(localZipFile, ShareType.COMPLETE);
-                if (zipFileAvailable)
+                // CONSIDER: remove local .sky.zip file?
+                if (ShareDocument(fileName, shareType))
                 {
-                    // CONSIDER: improve confirm UX - make it easier to read the message and paths
-                    var confirmMsg = 
-                        string.Format(ArdiaResources.Ardia_FileUpload_ConfirmUploadToPath, Path.GetFileName(localZipFile), destinationFolderPath);
-                    if(MultiButtonMsgDlg.Show(this, confirmMsg, MessageBoxButtons.YesNo) != DialogResult.Yes)
-                        return;
-            
-                    var isCanceled = false;
-                    if (!skipUploadForTests)
-                    {
-                        using var waitDlg = new LongWaitDlg();
-                        waitDlg.Text = UtilResources.PublishDocumentDlg_UploadSharedZipFile_Uploading_File;
-                        waitDlg.PerformWork(this, 1000, longWaitBroker =>
-                        {
-                            var ardiaClient = ArdiaClient.Instance(ardiaAccount);
-                            ardiaClient.SendZipFile(destinationFolderPath, localZipFile, longWaitBroker, out _);
-            
-                            if (longWaitBroker.IsCanceled)
-                                isCanceled = true;
-                        });
-                    }
-            
-                    if (!isCanceled)
-                    {
-                        // CONSIDER: the API could include a URI referring to the new document's location in Ardia's Data Explorer. Skyline
-                        //           could offer to open that here, similar to what happens after successful upload to Panorama
-                        MessageDlg.Show(this, ArdiaResources.Ardia_FileUpload_SuccessfulUpload);
-                    }
+                    publishDlg.Upload(this);
                 }
-            }
-            finally
-            {
-                // CONSIDER: should happen off the UI thread?
-                // Remove archive created above
-                if (File.Exists(localZipFile))
-                    File.Delete(localZipFile);
             }
         }
 

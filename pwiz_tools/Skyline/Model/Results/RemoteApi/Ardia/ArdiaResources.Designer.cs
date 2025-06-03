@@ -115,6 +115,16 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap ArdiaIcon {
+            get {
+                object obj = ResourceManager.GetObject("ArdiaIcon", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to cannot open an ArdiaUrl because it is not a RAW file URL with a StorageId.
         /// </summary>
         public static string ArdiaUrl_OpenMsDataFile_cannot_open_an_ArdiaUrl_because_it_is_not_a_RAW_file_URL_with_a_StorageId {
