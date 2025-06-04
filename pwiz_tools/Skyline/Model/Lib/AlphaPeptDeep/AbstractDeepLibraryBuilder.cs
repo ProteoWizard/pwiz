@@ -129,12 +129,12 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             }
 
             // Build precursor table row by row
-            foreach (var peptide in Document.Peptides.Distinct())
+            foreach (var peptide in Document.Peptides)
             {
                 result.AddRange(GetTableRows(peptide, training));
             }
 
-            return result;
+            return result.Distinct();
         }
 
 
