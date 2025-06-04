@@ -167,6 +167,7 @@ namespace pwiz.Common.Collections
             {
                 return SameTypeEquals((ImmutableList<T>)o);
             }
+
             var that = o as ImmutableList<T>;
             if (null == that)
             {
@@ -189,7 +190,7 @@ namespace pwiz.Common.Collections
         /// </summary>
         protected virtual bool SameTypeEquals(ImmutableList<T> list)
         {
-            return this.SequenceEqual(list);
+            return Count == list.Count && this.SequenceEqual(list);
         }
 
         public abstract int Count { get; }

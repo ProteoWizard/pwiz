@@ -566,6 +566,7 @@
     </Compile>
     <Compile Include="Model\Databinding\SurrogateStandardDataGridViewColumn.cs" />
     <Compile Include="Model\DdaSearch\CometSearchEngine.cs" />
+    <Compile Include="Model\DocSettings\ImputationSettings.cs" />
     <Compile Include="Model\DocSettings\RelativeAbundanceFormatting.cs" />
     <Compile Include="Model\DocumentModifier.cs" />
     <Compile Include="Model\FullScanPropertiesRes.Designer.cs">
@@ -582,6 +583,7 @@
     <Compile Include="Model\Lib\AlphaPeptDeep\AbstractDeepLibraryBuilder.cs" />
     <Compile Include="Model\Lib\Carafe\CarafeLibraryBuilder.cs" />
     <Compile Include="Model\Proteome\AssociateProteinsResults.cs" />
+    <Compile Include="Model\ReintegrateResultsHandler.cs" />
     <Compile Include="Model\Results\OpenMsDataFileParams.cs" />
     <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaAccount.cs" />
     <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaFileObject.cs" />
@@ -605,6 +607,15 @@
     <Compile Include="Model\Results\Spectra\SpectrumFilterAutoComplete.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumMetadatas.cs" />
     <Compile Include="Model\RetentionTimes\AlignmentFunction.cs" />
+    <Compile Include="Model\RetentionTimes\Alignments.cs" />
+    <Compile Include="Model\RetentionTimes\AlignmentTarget.cs" />
+    <Compile Include="Model\RetentionTimes\ResultFileAlignments.cs" />
+    <Compile Include="Model\RetentionTimes\LibraryAlignment.cs" />
+    <Compile Include="Model\RetentionTimes\PiecewiseLinearMap.cs" />
+    <Compile Include="Model\RetentionTimes\PeakImputation\ExemplaryPeak.cs" />
+    <Compile Include="Model\RetentionTimes\PeakImputation\ImputedPeak.cs" />
+    <Compile Include="Model\RetentionTimes\PeakImputation\PeakBoundaryImputer.cs" />
+    <Compile Include="Model\RetentionTimes\RTPeptideValue.cs" />
     <Compile Include="Model\SpectrumPropertiesResx.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -1110,7 +1121,6 @@
     <Compile Include="Model\DdaSearch\MsgfPlusSearchEngine.cs" />
     <Compile Include="Model\IsotopeModificationPermuter.cs" />
     <Compile Include="Model\Optimization\OptimizationDictionary.cs" />
-    <Compile Include="Model\ProgressMonitor.cs" />
     <Compile Include="Model\Koina\Config\KoinaConfig.cs" />
     <Compile Include="Model\Koina\Models\KoinaIntensityModel.cs" />
     <Compile Include="Model\Koina\Models\KoinaModel.cs" />
