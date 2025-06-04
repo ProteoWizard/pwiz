@@ -64,7 +64,6 @@ using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using DatabaseOpeningException = pwiz.Skyline.Model.Irt.DatabaseOpeningException;
-using pwiz.Skyline.Model.Results.RemoteApi.Ardia;
 
 namespace pwiz.Skyline
 {

@@ -17,7 +17,6 @@
 using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.Skyline.Model.Results.RemoteApi.Ardia;
 using pwiz.Skyline.Properties;
