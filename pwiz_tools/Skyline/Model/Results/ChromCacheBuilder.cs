@@ -559,8 +559,8 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         private int CompareMaxRetentionTime(PeptideChromDataSets p1, PeptideChromDataSets p2)
         {
-            var time1 = p1.FirstKey.OptionalMaxTime;
-            var time2 = p2.FirstKey.OptionalMaxTime;
+            var time1 = p1.MaxTime;
+            var time2 = p2.MaxTime;
             if (time1.HasValue)
             {
                 if (time2.HasValue)
