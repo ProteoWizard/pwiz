@@ -20,10 +20,13 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Data.SQLite;
 using System.Globalization;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Web.SessionState;
+using pwiz.Common.Database.NHibernate;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.Database
@@ -114,6 +117,22 @@ namespace pwiz.Common.Database
                 yield return LocalizationHelper.CallWithCulture(CultureInfo.InvariantCulture,
                     () => string.Join(columnSeparator, row));
             }
+        }
+
+        public static SQLiteConnection OpenConnection(string path)
+        {
+            DbProviderFactory fact = new SQLiteFactory();
+            SQLiteConnection conn = (SQLiteConnection)fact.CreateConnection();
+            if (conn != null)
+            {
+                var connectionStringBuilder =
+                    SessionFactoryFactory.SQLiteConnectionStringBuilderFromFilePath(path);
+                connectionStringBuilder.Version = 3;
+
+                conn.ConnectionString = connectionStringBuilder.ToString();
+                conn.Open();
+            }
+            return conn;
         }
     }
 }
