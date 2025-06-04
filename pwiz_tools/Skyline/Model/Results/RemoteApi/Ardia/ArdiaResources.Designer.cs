@@ -70,6 +70,15 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error creating the Skyline document.
+        /// </summary>
+        public static string Ardia_FileUpload_CreateDocumentError {
+            get {
+                return ResourceManager.GetString("Ardia_FileUpload_CreateDocumentError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Select.
         /// </summary>
         public static string Ardia_FileUpload_SelectDestinationButtonLabel {
@@ -88,7 +97,16 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Upload Succeeded..
+        ///   Looks up a localized string similar to Error staging the Skyline document.
+        /// </summary>
+        public static string Ardia_FileUpload_StageDocumentError {
+            get {
+                return ResourceManager.GetString("Ardia_FileUpload_StageDocumentError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Successfully uploaded to Ardia..
         /// </summary>
         public static string Ardia_FileUpload_SuccessfulUpload {
             get {
@@ -97,11 +115,11 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error uploading Skyline document.
+        ///   Looks up a localized string similar to Error uploading the Skyline document.
         /// </summary>
-        public static string Ardia_FileUpload_UploadError {
+        public static string Ardia_FileUpload_UploadFileError {
             get {
-                return ResourceManager.GetString("Ardia_FileUpload_UploadError", resourceCulture);
+                return ResourceManager.GetString("Ardia_FileUpload_UploadFileError", resourceCulture);
             }
         }
         

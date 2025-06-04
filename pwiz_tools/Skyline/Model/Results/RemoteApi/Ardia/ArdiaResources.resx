@@ -127,10 +127,16 @@
     <value>Failed to open Ardia connection</value>
   </data>
   <data name="Ardia_FileUpload_SuccessfulUpload" xml:space="preserve">
-    <value>Upload Succeeded.</value>
+    <value>Successfully uploaded to Ardia.</value>
   </data>
-  <data name="Ardia_FileUpload_UploadError" xml:space="preserve">
-    <value>Error uploading Skyline document</value>
+  <data name="Ardia_FileUpload_StageDocumentError" xml:space="preserve">
+    <value>Error staging the Skyline document</value>
+  </data>
+  <data name="Ardia_FileUpload_UploadFileError" xml:space="preserve">
+    <value>Error uploading the Skyline document</value>
+  </data>
+  <data name="Ardia_FileUpload_CreateDocumentError" xml:space="preserve">
+    <value>Error creating the Skyline document</value>
   </data>
   <data name="Ardia_FileUpload_ConfirmUploadToPath" xml:space="preserve">
     <value>Do you want to upload {0} to Ardia at {1}?</value>

@@ -104,20 +104,6 @@ namespace pwiz.Skyline.FileUI
             _specificDataSourceFilter = specificDataSourceFilter;
         }
 
-        // Expose controls to subclasses
-        internal Button RecentDocumentsButton => recentDocumentsButton;
-        internal Button DesktopButton => desktopButton;
-        internal Button MyComputerButton => myComputerButton;
-        internal Button MyDocumentsButton => myDocumentsButton;
-        internal ListView ListViewControl => listView;
-
-        /// <summary>
-        /// Flag used to tell BaseFileDialogNE to only show directories. By default, Thermo RAW
-        /// files (which are directories) are shown as files. This flag gives subclasses a way to
-        /// customize this behavior.
-        /// </summary>
-        internal bool OnlyShowFolders { get; set; } = false;
-
         // private void ExportImages(ImageList imageList, string suffix)
         // {
         //     try
@@ -476,22 +462,9 @@ namespace pwiz.Skyline.FileUI
                     bool isComplete = _remoteSession.AsyncFetchContents(remoteUrl, out exception);
                     foreach (var item in _remoteSession.ListContents(remoteUrl))
                     {
-                        // Implement the OnlyShowFolders flag, which allows subclasses to tell BaseFileDialogNE to
-                        // only show folders and to skip items that are actually folders but are displayed as
-                        // files - specifically Thermo RAW files.
-                        //
-                        // CONSIDER: should BaseFileDialogNE offer generalized ways to:
-                        //      (1) set a strongly typed flag for the type(s) of files to show
-                        //      (2) filter interactions to a specific RemoteAccountType
-                        // OpenArdiaFileDialogNE sort of does this for Ardia. Those features could be pushed
-                        // up to the base class if other remote server integrations could use them.
-                        if (OnlyShowFolders && !DataSourceUtil.IsFolderType(item.Type))
-                            continue;
-
                         var imageIndex = DataSourceUtil.IsFolderType(item.Type)
                             ? ImageIndex.Folder
                             : ImageIndex.MassSpecFile;
-
                         listSourceInfo.Add(new SourceInfo(item.MsDataFileUri)
                         {
                             name = item.Label,
@@ -639,7 +612,7 @@ namespace pwiz.Skyline.FileUI
             // ReSharper restore EmptyGeneralCatchClause
         }
 
-        internal RemoteAccount GetRemoteAccount(RemoteUrl remoteUrl)
+        private RemoteAccount GetRemoteAccount(RemoteUrl remoteUrl)
         {
             return
                 _remoteAccounts.FirstOrDefault(

@@ -17,6 +17,7 @@
 using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.Skyline.Model.Results.RemoteApi.Ardia;
 using pwiz.Skyline.Properties;
@@ -45,10 +46,10 @@ namespace pwiz.SkylineTestConnected
             RunFunctionalTest();
         }
 
-        // TODO: successful upload test
+        // TODO: verify file successfully uploaded
         protected override void DoTest()
         {
-            var account = ArdiaTestUtil.GetTestAccount(ArdiaTestUtil.AccountType.SingleRole);
+            var account = ArdiaTestUtil.GetTestAccount();
 
             Assert.IsFalse(SkylineWindow.HasRegisteredArdiaAccount);
             Assert.AreEqual(0, Settings.Default.RemoteAccountList.Count);
@@ -60,41 +61,27 @@ namespace pwiz.SkylineTestConnected
             Assert.IsTrue(SkylineWindow.HasRegisteredArdiaAccount);
             Assert.AreEqual(1, Settings.Default.RemoteAccountList.Count);
 
-            // // Select remote account and destination directory
-            // var selectFolderDlg = ShowDialog<ArdiaSelectDirectoryFileDialog>(() => SkylineWindow.PublishToArdia(skipUploadForTests: true));
-            // WaitForConditionUI(() => selectFolderDlg.IsLoaded);
-            //
-            // RunUI(() =>
-            // {
-            //     selectFolderDlg.SelectItemAndActivate(0);
-            //     // selectFolderDlg.SelectItem(0);
-            //     // selectFolderDlg.ActivateItem();
-            // });
-            // WaitForConditionUI(() => selectFolderDlg.ListCount() > 0);
-            //
-            // RunUI(() =>
-            // {
-            //     selectFolderDlg.SelectItemAndActivate(DEFAULT_DIRECTORY_NAME);
-            //     // selectFolderDlg.SelectItem(DEFAULT_DIRECTORY_NAME);
-            //     // selectFolderDlg.ActivateItem();
-            // });
-            // WaitForConditionUI(() => selectFolderDlg.ListCount() > 0);
-            //
-            // var confirmUploadDlg = ShowDialog<MultiButtonMsgDlg>(() => selectFolderDlg.OkDialog());
-            // var successfulUploadDlg = ShowDialog<MessageDlg>(() => confirmUploadDlg.ClickYes());
-            // OkDialog(successfulUploadDlg, successfulUploadDlg.ClickOk);
-            //
-            // Assert.AreEqual(@"/ZZZ-Document-Upload", selectFolderDlg.DestinationFolder);
+            account = (ArdiaAccount)Settings.Default.RemoteAccountList[0];
+            AssertEx.IsTrue(!string.IsNullOrEmpty(account.Token));
 
-            // // TODO: debug and fix. This check returns false. Most checks succeed except differing password
-            // //       fields where one is "" and the other is null. For now, manually assert equality server
-            // //       name and username.
-            // // Assert.AreEqual(account, selectFolderDlg.SelectedAccount);
-            // Assert.AreEqual(account.Username, selectFolderDlg.SelectedAccount.Username);
-            // Assert.AreEqual(account.ServerUrl, selectFolderDlg.SelectedAccount.ServerUrl);
-            //
-            // // Why is this necessary?
-            // RunUI(() => { selectFolderDlg.Dispose(); });
+            // Open Ardia publish dialog
+            var publishDlg = ShowDialog<PublishDocumentDlgArdia>(() => SkylineWindow.PublishToArdia());
+
+            // TODO: re-enable upload. Skipping for now. It works if the test account's role is Super Admin
+            //       but tests run as Tester role.
+            publishDlg.SkipUpload = true;
+
+            WaitForConditionUI(() => publishDlg.IsLoaded);
+
+            RunUI(() => publishDlg.FoldersTree.Nodes[0].Expand());
+            WaitForConditionUI(() => !publishDlg.RemoteCallPending );
+
+            RunUI(() => publishDlg.SelectItem(DEFAULT_DIRECTORY_NAME));
+
+            var docUploadedDlg = ShowDialog<MessageDlg>(publishDlg.OkDialog);
+            OkDialog(docUploadedDlg, docUploadedDlg.ClickOk);
+
+            Assert.AreEqual(ArdiaClient.URL_PATH_SEPARATOR + DEFAULT_DIRECTORY_NAME, publishDlg.DestinationPath);
         }
 
         private static void RegisterRemoteServer(ArdiaAccount account) 

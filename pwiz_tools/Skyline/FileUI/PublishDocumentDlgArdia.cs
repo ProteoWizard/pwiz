@@ -17,7 +17,6 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
@@ -34,18 +33,16 @@ namespace pwiz.Skyline.FileUI
 {
     public class PublishDocumentDlgArdia : PublishDocumentDlgBase
     {
-        // RFC 3986 specified path separator for URIs
-        // CONSIDER: add UrlBuilder class to Skyline. Related PRs also define this constant and helper methods narrowly scoped to a remote server vendor
-        private const string URL_PATH_SEPARATOR = @"/";
-
         private enum ImageId { ardia, folder, empty }
 
         private readonly IList<ArdiaAccount> _ardiaAccounts;
         // TODO: support multiple Ardia accounts
         private readonly ArdiaSession _ardiaSession;
 
-        private RemoteUrl _contentsAvailable_RemoteUrl;
-        private TreeNode _contentsAvailable_TreeNode;
+        // These fields are used to communicate state between the request to and response from the Ardia API since 
+        // the ArdiaSession model does not use closures.
+        private RemoteUrl _contentsAvailableRemoteUrl;
+        private TreeNode _contentsAvailableTreeNode;
 
         // TODO: change signature (from RemoteAccount to ArdiaAccount) when old way of choosing directory is removed
         public PublishDocumentDlgArdia(
@@ -58,12 +55,16 @@ namespace pwiz.Skyline.FileUI
             _ardiaSession = (ArdiaSession)_ardiaAccounts[0].CreateSession();
             _ardiaSession.ContentsAvailable += ArdiaSession_ContentsAvailableWrapper;
 
-            // TODO: update icons for Ardia rather than Panorama
             treeViewFolders.ImageList.TransparentColor = Color.Magenta;
             treeViewFolders.ImageList.Images.Add(ArdiaResources.ArdiaIcon); // 32bpp
             treeViewFolders.ImageList.Images.Add(Resources.Folder);         // 32bpp
             treeViewFolders.ImageList.Images.Add(Resources.Blank);          // 32bpp
         }
+
+        public string DestinationPath { get; private set; }
+        public TreeView FoldersTree => treeViewFolders;
+        public bool RemoteCallPending { get; private set; }
+        public bool SkipUpload { get; set; }
 
         internal override void HandleDialogLoad()
         {
@@ -85,11 +86,9 @@ namespace pwiz.Skyline.FileUI
                 // Get the URL for the root (/) directory of the Ardia server
                 var rootUrl = account.GetRootUrl();
 
-                var treeNode = new TreeNode(account.ServerUrl)
+                var treeNode = new TreeNode(account.ServerUrl, (int)ImageId.ardia, (int)ImageId.ardia)
                 {
                     Tag = new ArdiaFolderInfo(rootUrl),
-                    ImageIndex = (int)ImageId.ardia,
-                    SelectedImageIndex = (int)ImageId.ardia
                 };
 
                 // Assume the server has sub-folders and add this node so the TreeView's expand
@@ -112,9 +111,11 @@ namespace pwiz.Skyline.FileUI
                 return;
 
             treeViewFolders.Cursor = Cursors.WaitCursor;
+            parentTreeNode.Nodes.Clear();
 
-            _contentsAvailable_RemoteUrl = parentUrl;
-            _contentsAvailable_TreeNode = parentTreeNode;
+            _contentsAvailableRemoteUrl = parentUrl;
+            _contentsAvailableTreeNode = parentTreeNode;
+            RemoteCallPending = true;
 
             // TODO: improve "waiting for network response" screen. Wrap each call in LongWaitDlg? But 
             //       does LongWaitDlg work with RemoteSession's different callback model?
@@ -122,7 +123,7 @@ namespace pwiz.Skyline.FileUI
             _ardiaSession.AsyncFetchContents(parentUrl, out _);
         }
 
-        // NB: RemoteSession's programming model uses a generic event fired anytime the session returns
+        // NB: RemoteSession's programming model uses a generic event fired whenever the session has
         //     results from a remote API. Callers are responsible for obtaining the correct response
         //     using the requested URL, which means holding onto state often in class-level variables.
         //     This differs from alternative models - for example, providing an Action closed over local
@@ -143,14 +144,12 @@ namespace pwiz.Skyline.FileUI
         //              _ardiaSession.ContentsAvailable -= Action;
         //          }
         // 
-        //     This works but seems strange and error-prone.
-        //
-        // CONSIDER: add a new programming model to RemoteSession
+        //     This works but seems strange / error-prone and isn't used by other callers.
         private void ArdiaSession_ContentsAvailableWrapper()
         {
             CommonActionUtil.SafeBeginInvoke(this, () =>
             {
-                ArdiaSession_ContentsAvailable(_contentsAvailable_RemoteUrl, _contentsAvailable_TreeNode);
+                ArdiaSession_ContentsAvailable(_contentsAvailableRemoteUrl, _contentsAvailableTreeNode);
             });
         }
 
@@ -159,7 +158,6 @@ namespace pwiz.Skyline.FileUI
             try
             {
                 // TODO: does Ardia API include whether the current user has permission to upload to a given directory?
-                // TODO: configure properties of new TreeNode - ForeColor, ImageIndex
                 // CONSIDER: items are sorted lexicographically. Consider adding other / more sort options?
                 // CONSIDER: can Ardia API include whether the current user has permission to upload to a given directory?
                 // CONSIDER: can Ardia API include whether a given directory includes 1+ folders? The current "hasChildren" flag 
@@ -169,8 +167,6 @@ namespace pwiz.Skyline.FileUI
                 remoteItems.Sort((item1, item2) => string.Compare(item1.Label, item2.Label, StringComparison.CurrentCultureIgnoreCase));
 
                 treeViewFolders.BeginUpdate();
-                parentTreeNode.Nodes.Clear();
-
                 foreach (var remoteItem in remoteItems)
                 {
                     if (!DataSourceUtil.IsFolderType(remoteItem.Type))
@@ -181,11 +177,9 @@ namespace pwiz.Skyline.FileUI
                     var folderUrl = remoteItem.MsDataFileUri as ArdiaUrl; 
                     var folderHasChildren = remoteItem.HasChildren;
 
-                    var childTreeNode = new TreeNode(folderName)
+                    var childTreeNode = new TreeNode(folderName, (int)ImageId.folder, (int)ImageId.folder)
                     {
                         Tag = new ArdiaFolderInfo(folderUrl),
-                        ImageIndex = (int)ImageId.folder,
-                        SelectedImageIndex = (int)ImageId.folder
                     };
 
                     // If this node has sub-folders, add a node so the expand icon appears without 
@@ -203,45 +197,41 @@ namespace pwiz.Skyline.FileUI
             {
                 treeViewFolders.EndUpdate();
                 treeViewFolders.Cursor = Cursors.Default;
+                RemoteCallPending = false;
             }
         }
 
         internal override void HandleDialogOk()
         {
-            // CONSIDER: Panorama sets the ShareType using ShareTypeDlg. Do the same here? For now, use the default.
+            var selectedTreeNode = treeViewFolders.SelectedNode;
+
+            // Fixup destination folder path. Ardia expects path starts with '/' and does not have a trailing '/'
+            DestinationPath = ArdiaClient.URL_PATH_SEPARATOR + GetFolderPath(selectedTreeNode)?.TrimEnd('/');
+
+            // TODO: support ShareTypeDlg and refactor PanoramaPublishUtil. For now, set a default.
             ShareType = ShareType.DEFAULT;
+            
             DialogResult = DialogResult.OK;
         }
 
         public override void Upload(Control parent)
         {
-            var selectedTreeNode = treeViewFolders.SelectedNode;
-
             // CONSIDER: support multiple Ardia accounts?
             var ardiaAccount = _ardiaSession.ArdiaAccount;
-            var destinationFolderPath = GetFolderPath(selectedTreeNode);
-            var localZipFilePath = tbFilePath.Text;
-
-            // NB: Fixup destination folder path for Ardia API. Necessary because Ardia API accepts different
-            //     leading / trailing slashes from Panorama.
-            destinationFolderPath = URL_PATH_SEPARATOR + destinationFolderPath;
-            if (destinationFolderPath.EndsWith(@"/"))
-                destinationFolderPath = destinationFolderPath.Substring(0, destinationFolderPath.Length - 1);
-
-            var message = string.Format(ArdiaResources.Ardia_FileUpload_ConfirmUploadToPath, Path.GetFileName(localZipFilePath), destinationFolderPath);
-            MessageDlg.Show(this, message);
 
             var isCanceled = false;
-            using var waitDlg = new LongWaitDlg();
-            waitDlg.Text = UtilResources.PublishDocumentDlg_UploadSharedZipFile_Uploading_File;
-            waitDlg.PerformWork(this, 1000, longWaitBroker =>
+            if (!SkipUpload)
             {
-                var ardiaClient = ArdiaClient.Instance(ardiaAccount);
-                ardiaClient.SendZipFile(destinationFolderPath, localZipFilePath, longWaitBroker, out _);
+                using var waitDlg = new LongWaitDlg();
+                waitDlg.Text = UtilResources.PublishDocumentDlg_UploadSharedZipFile_Uploading_File;
+                waitDlg.PerformWork(this, 1000, longWaitBroker =>
+                {
+                    var ardiaClient = ArdiaClient.Create(ardiaAccount);
+                    ardiaClient.SendZipFile(DestinationPath, FileName, longWaitBroker, out _);
 
-                if (longWaitBroker.IsCanceled)
-                    isCanceled = true;
-            });
+                    isCanceled = longWaitBroker.IsCanceled;
+                });
+            }
 
             if (!isCanceled)
             {
@@ -263,20 +253,17 @@ namespace pwiz.Skyline.FileUI
 
         private static TreeNode CreateEmptyNode()
         {
-            return new TreeNode(@"        ")
-            {
-                ImageIndex = (int)ImageId.empty
-            };
+            return new TreeNode(@"        ", (int)ImageId.empty, (int)ImageId.empty);
         }
-    }
 
-    internal class ArdiaFolderInfo
-    {
-        internal ArdiaFolderInfo(RemoteUrl remoteUrl)
+        private class ArdiaFolderInfo
         {
-            RemoteUrl = remoteUrl;
-        }
+            internal ArdiaFolderInfo(RemoteUrl remoteUrl)
+            {
+                RemoteUrl = remoteUrl;
+            }
 
-        internal RemoteUrl RemoteUrl { get; }
+            internal RemoteUrl RemoteUrl { get; }
+        }
     }
 }

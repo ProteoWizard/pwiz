@@ -3511,7 +3511,7 @@ namespace pwiz.Skyline
 
         // BUG: Removing RemoteAccounts using EditRemoteAccountsDlg may unexpectedly leave registered Ardia accounts intact
         // CONSIDER: when should an upload be split into multiple pieces?
-        public void PublishToArdia(bool skipUploadForTests = false)
+        public void PublishToArdia()
         {
             Assume.IsTrue(HasRegisteredArdiaAccount, @"Expected to find a registered Ardia account but found none");
 

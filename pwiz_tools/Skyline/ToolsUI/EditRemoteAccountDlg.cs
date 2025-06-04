@@ -171,19 +171,13 @@ namespace pwiz.Skyline.ToolsUI
                     && _ardiaAccount_CurrentlyLoggedIn.ServerUrl.Equals(ardiaAccount.ServerUrl))
                 {
                     ardiaAccount.SetAuthenticatedHttpClientFactory(_ardiaAccount_CurrentlyLoggedIn);
+                    ardiaAccount = ardiaAccount.ChangeToken(_ardiaAccount_CurrentlyLoggedIn.Token);
                 }
 
                 //  Ardia Test Only Pass Through
                 ardiaAccount = ardiaAccount.ChangeTestingOnly_NotSerialized_Username(_ardia_TestingOnly_NotSerialized_Username);
                 ardiaAccount = ardiaAccount.ChangeTestingOnly_NotSerialized_Password(_ardia_TestingOnly_NotSerialized_Password);
                 ardiaAccount = ardiaAccount.ChangeTestingOnly_NotSerialized_Role(_ardia_TestingOnly_NotSerialized_Role);
-
-                // Special handling required to set ArdiaAccount's access token. Since the token is not displayed in
-                // this dialog's UI, the token needs to come from somewhere else. The 'originalAccount' variable may not
-                // be type ArdiaAccount (assuming this breaks tests), so if the token is set, get it from the ArdiaAccount
-                // store directly.
-                var sessionString = ArdiaAccount.GetSessionCookieStringForHostname(ardiaAccount);
-                ardiaAccount = ardiaAccount.ChangeToken(sessionString);
 
                 remoteAccount = ardiaAccount;
             }

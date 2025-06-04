@@ -36,6 +36,10 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
     [SuppressMessage("ReSharper", "IdentifierTypo")]
     public class ArdiaClient
     {
+        // RFC 3986 specified path separator for URIs
+        // CONSIDER: add UrlBuilder class to Skyline. Related PRs also define this constant and helper methods narrowly scoped to a remote server vendor
+        public const string URL_PATH_SEPARATOR = @"/";
+
         private const string APPLICATION_JSON = @"application/json";
         private const string COOKIE_BFF_HOST = "Bff-Host";
         private const string HEADER_APPLICATION_CODE = "applicationCode";
@@ -43,7 +47,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
         private const string PATH_STAGE_DOCUMENT = @"/session-management/bff/document/api/v1/stagedDocuments";
         private const string PATH_CREATE_DOCUMENT = @"/session-management/bff/document/api/v1/documents";
 
-        public static ArdiaClient Instance(ArdiaAccount account)
+        public static ArdiaClient Create(ArdiaAccount account)
         {
             var ardiaUrl = account.GetRootArdiaUrl();
 
@@ -161,7 +165,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
             catch (Exception e)
             {
                 var uri = new Uri(ServerUri + PATH_STAGE_DOCUMENT);
-                throw ArdiaServerException.Create(ArdiaResources.Ardia_FileUpload_UploadError, uri, response, e);
+                throw ArdiaServerException.Create(ArdiaResources.Ardia_FileUpload_StageDocumentError, uri, response, e);
             }
         }
 
@@ -187,7 +191,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
             catch (Exception e)
             {
                 var uri = new Uri(presignedUrl);
-                throw ArdiaServerException.Create(ArdiaResources.Ardia_FileUpload_UploadError, uri, response, e);
+                throw ArdiaServerException.Create(ArdiaResources.Ardia_FileUpload_UploadFileError, uri, response, e);
             }
         }
 
@@ -222,7 +226,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
             catch (Exception e)
             {
                 var uri = new Uri(ServerUri + PATH_CREATE_DOCUMENT);
-                throw ArdiaServerException.Create(ArdiaResources.Ardia_FileUpload_UploadError, uri, response, e);
+                throw ArdiaServerException.Create(ArdiaResources.Ardia_FileUpload_CreateDocumentError, uri, response, e);
             }
         }
     }
@@ -232,14 +236,11 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
     // CONSIDER: can more be reused with Panorama's error reporting, including PanoramaServerException?
     public class ArdiaServerException : Exception
     {
-        public static ArdiaServerException Create(string message, Uri uri, HttpResponseMessage response, Exception e, bool disposeResponse = true)
+        public static ArdiaServerException Create(string message, Uri uri, HttpResponseMessage response, Exception e)
         {
             var statusCode = response.StatusCode;
-            var responseBody = response.Content.ReadAsStringAsync().Result;
-
-            if(disposeResponse)
-                response.Dispose();
-
+            // TODO: put the response body in the error message
+            var responseBody = string.Empty; // response.Content.ReadAsStringAsync().Result;
             var errorMessage = new ErrorMessageBuilder(message).ExceptionMessage(e.Message).Uri(uri).Response(responseBody).ToString();
 
             return new ArdiaServerException(statusCode, errorMessage, responseBody, e);

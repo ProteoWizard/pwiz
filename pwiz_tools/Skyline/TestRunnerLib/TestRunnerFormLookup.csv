@@ -16,7 +16,6 @@ AlignmentForm,TestRetentionTimeAlignment
 AllChromatogramsGraph,*
 ArdiaLoginDlg,TestArdia
 ArdiaLogoutDlg,TestArdia
-ArdiaSelectDirectoryFileDialog,TestArdiaFileUpload
 AreaChartPropertyDlg,TestEditDialogs
 AreaCVToolbarProperties,TestAreaCVHistograms
 AreaGraphController,TestEditDialogs
@@ -180,7 +179,7 @@ PeptideSettingsUI.QuantificationTab,TestCalibration
 PermuteIsotopeModificationsDlg,TestModificationPermuter
 PivotEditor,TestPivotEditor
 PopupPickList,TestPrecursorIon
-PublishDocumentDlgArdia,TestAccessServer
+PublishDocumentDlgArdia,TestArdiaFileUpload
 PublishDocumentDlgBase,TestAccessServer
 PublishDocumentDlgPanorama,TestPublishToPanorama
 PythonInstallerLegacyDlg,TestPythonInstallerLegacyDlg
