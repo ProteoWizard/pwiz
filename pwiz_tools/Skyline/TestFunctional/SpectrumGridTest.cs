@@ -36,8 +36,6 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestSpectrumGrid()
         {
-            // TODO
-            return;
             TestFilesZip = @"TestFunctional\SpectrumGridTest.zip";
             RunFunctionalTest();
         }

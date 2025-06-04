@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
 using System.Linq;
+using System.Management;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
@@ -1125,6 +1126,52 @@ namespace pwiz.Skyline.Util
                 return false;
             }
         }
+
+        public static void CreateLongPath(string path)
+        {
+            try
+            {
+                string longPath = path.ToLongPath();
+                Helpers.TryTwice(() =>
+                {
+                    if (path != null && !Directory.Exists(longPath)) // Don't waste time trying to create a directory that already exists
+                    {
+                        Directory.CreateDirectory(longPath);
+                    }
+                });
+            }
+            // ReSharper disable EmptyGeneralCatchClause
+            catch (Exception) { }
+            // ReSharper restore EmptyGeneralCatchClause
+        }
+
+        public static void SafeDeleteLongPath(string path)
+        {
+            try
+            {
+                string longPath = path.ToLongPath();
+                Helpers.TryTwice(() =>
+                    {
+                        if (path != null && Directory.Exists(longPath)) // Don't waste time trying to delete something that's already deleted
+                        {
+                            Directory.Delete(longPath, true);
+                        }
+                    }, $@"Directory.Delete({longPath})");
+            }
+            // ReSharper disable EmptyGeneralCatchClause
+            catch (Exception) { }
+            // ReSharper restore EmptyGeneralCatchClause
+        }
+
+        public static bool ExistsLongPath(string path)
+        {
+            return Directory.Exists(path.ToLongPath());
+        }
+
+        private static string ToLongPath(this string path)
+        {
+            return $@"\\?\{path}";
+        }
     }
 
     /// <summary>
@@ -1586,29 +1633,61 @@ namespace pwiz.Skyline.Util
     public static class SkylineProcessRunner
     {
         /// <summary>
+        /// Kill a process, and all of its children, grandchildren, etc.
+        /// </summary>
+        /// <param name="pid">The Process ID of the process to be killed</param>
+        private static void KillProcessAndDescendants(int pid)
+        {
+            // Cannot close 'system idle process'.
+            if (pid == 0)
+            {
+                return;
+            }
+            var searcher = new ManagementObjectSearcher(@"Select * From Win32_Process Where ParentProcessID=" + pid);
+            var moc = searcher.Get();
+            foreach (var mo in moc)
+            {
+                KillProcessAndDescendants(Convert.ToInt32(mo[@"ProcessID"]));
+            }
+            try
+            {
+                var proc = Process.GetProcessById(pid);
+                if (!proc.HasExited)
+                    proc.Kill();
+            }
+            catch (ArgumentException)
+            {
+                // Process already exited.
+            }
+        }
+
+        /// <summary>
         /// Runs the SkylineProcessRunner executable file with the given arguments. These arguments
         /// are passed to CMD.exe within the NamedPipeProcessRunner
         /// </summary>
         /// <param name="arguments">The arguments to run at the command line</param>
         /// <param name="runAsAdministrator">If true, this process will be run as administrator, which
-        /// allows for the CMD.exe process to be ran with elevated privileges</param>
+        ///     allows for the CMD.exe process to be ran with elevated privileges</param>
         /// <param name="writer">The textwriter to which the command lines output will be written to</param>
+        /// <param name="createNoWindow">Whether or not execution runs in its own window</param>
+        /// <param name="cancellationToken">Allows to Cancel</param>
         /// <returns>The exitcode of the CMD process ran with the specified arguments</returns>
-        public static int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer)
+        public static int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer, bool createNoWindow = false, CancellationToken cancellationToken = default )
         {
             // create GUID
             string guidSuffix = string.Format(@"-{0}", Guid.NewGuid());
             var startInfo = new ProcessStartInfo
-                {
-                    FileName = GetSkylineProcessRunnerExePath(),
-                    Arguments = guidSuffix + @" " + arguments,
-                };
+            {
+                CreateNoWindow = createNoWindow,
+                UseShellExecute = !createNoWindow,
+                FileName = GetSkylineProcessRunnerExePath(),
+                Arguments = guidSuffix + @" " + arguments,
+            };
                 
             if (runAsAdministrator)
                 startInfo.Verb = @"runas";
 
             var process = new Process {StartInfo = startInfo, EnableRaisingEvents = true};
-
             string pipeName = @"SkylineProcessRunnerPipe" + guidSuffix;
 
             using (var pipeStream = new NamedPipeServerStream(pipeName))
@@ -1626,7 +1705,7 @@ namespace pwiz.Skyline.Util
                     // not as administrator
                     if (runAsAdministrator && win32Exception.NativeErrorCode == ERROR_CANCELLED)
                     {
-                        return RunProcess(arguments, false, writer);
+                        return RunProcess(arguments, false, writer, createNoWindow, cancellationToken);
                     }
                     throw;
                 }
@@ -1634,13 +1713,16 @@ namespace pwiz.Skyline.Util
                 var namedPipeServerConnector = new NamedPipeServerConnector();
                 if (namedPipeServerConnector.WaitForConnection(pipeStream, pipeName))
                 {
-                    using (var reader = new StreamReader(pipeStream))
+                    var reader = new StreamReader(pipeStream, new UTF8Encoding(false, true), true, 1024 * 1024);
+
+                    using var registration = cancellationToken.Register(o =>
                     {
-                        string line;
-                        while ((line = reader.ReadLine()) != null)
-                        {
-                            writer.WriteLine(line);
-                        }
+                        KillProcessAndDescendants(process.Id);
+                    }, null);
+
+                    while (reader.ReadLine() is { } line)
+                    {
+                        writer.WriteLine(line);
                     }
 
                     while (!processFinished)

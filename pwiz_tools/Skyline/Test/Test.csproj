@@ -163,6 +163,7 @@
     </Compile>
     <Compile Include="AddTransitionsTest.cs" />
     <Compile Include="AdductTest.cs" />
+    <Compile Include="AlphapeptdeepLibraryBuilderTest.cs" />
     <Compile Include="AnalyticsTest.cs" />
     <Compile Include="AnnotatedDoubleTest.cs" />
     <Compile Include="AnnotationUnitTest.cs" />
@@ -180,9 +181,11 @@
     <Compile Include="ErrorIfPersistentFilesDirModifiedTest.cs" />
     <Compile Include="FastaSequenceTest.cs" />
     <Compile Include="CopyFileWithProgressTest.cs" />
+    <Compile Include="FilteredMessageWriterTest.cs" />
     <Compile Include="ImmutableListTest.cs" />
     <Compile Include="LocalizedHtmlTutorialsTest.cs" />
     <Compile Include="LibraryRankedSpectrumInfoTest.cs" />
+    <Compile Include="LongPathDirectoryTest.cs" />
     <Compile Include="MassListIonsTest.cs" />
     <Compile Include="MatchExpressionTest.cs" />
     <Compile Include="OnDemandFeatureCalculatorTest.cs" />
@@ -190,6 +193,7 @@
     <Compile Include="CommandLinePeakBoundaryTest.cs" />
     <Compile Include="PeptideTest.cs" />
     <Compile Include="PiecewiseLinearMapTest.cs" />
+    <Compile Include="ProgressStatusChangeSegmentsEndPercentageTest.cs" />
     <Compile Include="ProteinAssociationTest.cs" />
     <Compile Include="ProtocolBuffers\GeneratedCode\LegacySkylineDocumentProto.cs" />
     <Compile Include="ProtocolBuffers\LegacyProtocolBufferFormatsTest.cs" />
@@ -290,6 +294,7 @@
     <Compile Include="TypeSafeEnumTest.cs" />
     <Compile Include="UndoManagerTest.cs" />
     <Compile Include="UniModTest.cs" />
+    <Compile Include="InstallNvidiaTest.cs" />
     <Compile Include="UniquePrefixTest.cs" />
     <Compile Include="MassListInputsTest.cs" />
     <Compile Include="EncyclopeDiaHelpersTest.cs" />
@@ -387,6 +392,9 @@
     <None Include="OnDemandFeatureCalculatorTest.zip" />
     <None Include="PeakBoundaryTest.zip" />
     <None Include="PeakGroupIntegratorTest.zip" />
+    <EmbeddedResource Include="predict.speclib.tsv" />
+    <EmbeddedResource Include="predict_transformed.speclib.tsv" />
+    <EmbeddedResource Include="predict_transformed.speclib.blib" />
     <None Include="Proteome\ProteomeDbTest.zip" />
     <EmbeddedResource Include="Reporting\HeavyLabeledLeucine.sky" />
     <EmbeddedResource Include="Reporting\PivotIsotopeLabel.skyr" />
@@ -401,6 +409,7 @@
     <EmbeddedResource Include="SmallMoleculesMzOnly_3-7.sky" />
     <None Include="ProtocolBuffers\generatecode.bat" />
     <None Include="ProtocolBuffers\LegacySkylineDocumentProto.proto" />
+    <EmbeddedResource Include="Test-imported_24-11-short.sky" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">
