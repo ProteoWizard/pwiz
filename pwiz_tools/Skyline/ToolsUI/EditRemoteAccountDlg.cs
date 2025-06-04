@@ -158,8 +158,11 @@ namespace pwiz.Skyline.ToolsUI
             }
             else if (accountType == RemoteAccountType.ARDIA)
             {
-                remoteAccount = remoteAccount.ChangeServerUrl(textArdiaServerURL.Text.Trim().TrimEnd('/'))
-                    .ChangeUsername(textArdiaAlias_Username.Text.Trim());
+                // CONSIDER: does serverUrl need more input validation? For example:
+                //              (1) removing the scheme (ex: https://), if provided
+                //              (2) checking for a valid URL?
+                remoteAccount = remoteAccount.ChangeServerUrl(textArdiaServerURL.Text.Trim().TrimEnd('/'));
+                remoteAccount = remoteAccount.ChangeUsername(textArdiaAlias_Username.Text.Trim());
 
                 var ardiaAccount = (ArdiaAccount) remoteAccount;
                 ardiaAccount = ardiaAccount.ChangeDeleteRawAfterImport(cbArdiaDeleteRawAfterImport.Checked);
@@ -168,6 +171,7 @@ namespace pwiz.Skyline.ToolsUI
                     && _ardiaAccount_CurrentlyLoggedIn.ServerUrl.Equals(ardiaAccount.ServerUrl))
                 {
                     ardiaAccount.SetAuthenticatedHttpClientFactory(_ardiaAccount_CurrentlyLoggedIn);
+                    ardiaAccount = ardiaAccount.ChangeToken(_ardiaAccount_CurrentlyLoggedIn.Token);
                 }
 
                 //  Ardia Test Only Pass Through
@@ -317,6 +321,11 @@ namespace pwiz.Skyline.ToolsUI
             DialogResult = DialogResult.OK;
         }
 
+        /// <summary>
+        /// Button event handler. For Ardia accounts, the label might be [Test] or [Connect].
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void btnTest_Click(object sender, EventArgs e)
         {
             TestSettings();

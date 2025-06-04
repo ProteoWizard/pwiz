@@ -518,6 +518,12 @@
     <Compile Include="FileUI\PeptideSearch\HardklorSearchControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Include="FileUI\PublishDocumentDlgArdia.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\PublishDocumentDlgPanorama.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Model\Lib\AlphaPeptDeep\AlphapeptdeepLibraryBuilder.cs" />
     <Compile Include="Model\AuditLog\EnumNames.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -584,6 +590,7 @@
     <Compile Include="Model\Proteome\AssociateProteinsResults.cs" />
     <Compile Include="Model\Results\OpenMsDataFileParams.cs" />
     <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaAccount.cs" />
+    <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaClient.cs" />
     <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaFileObject.cs" />
     <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaFolderObject.cs" />
     <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaObject.cs" />
@@ -593,6 +600,7 @@
       <DesignTime>True</DesignTime>
     </Compile>
     <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaSession.cs" />
+    <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaStagedDocumentResponse.cs" />
     <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaUrl.cs" />
     <Compile Include="Model\Lib\LibraryFiles.cs" />
     <Compile Include="Model\Results\LcPeakIonMetrics.cs" />
@@ -1734,11 +1742,11 @@
     <Compile Include="FileUI\PeptideSearch\TransitionSettingsControl.Designer.cs">
       <DependentUpon>TransitionSettingsControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="FileUI\PublishDocumentDlg.cs">
+    <Compile Include="FileUI\PublishDocumentDlgBase.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FileUI\PublishDocumentDlg.Designer.cs">
-      <DependentUpon>PublishDocumentDlg.cs</DependentUpon>
+    <Compile Include="FileUI\PublishDocumentDlgBase.Designer.cs">
+      <DependentUpon>PublishDocumentDlgBase.cs</DependentUpon>
     </Compile>
     <Compile Include="FileUI\RenameResultDlg.cs">
       <SubType>Form</SubType>
@@ -3681,11 +3689,11 @@
       <DependentUpon>MatchModificationsControl.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\PublishDocumentDlg.ja.resx">
-      <DependentUpon>PublishDocumentDlg.cs</DependentUpon>
+    <EmbeddedResource Include="FileUI\PublishDocumentDlgBase.ja.resx">
+      <DependentUpon>PublishDocumentDlgBase.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\PublishDocumentDlg.zh-CHS.resx">
-      <DependentUpon>PublishDocumentDlg.cs</DependentUpon>
+    <EmbeddedResource Include="FileUI\PublishDocumentDlgBase.zh-CHS.resx">
+      <DependentUpon>PublishDocumentDlgBase.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\RenameResultDlg.ja.resx">
       <DependentUpon>RenameResultDlg.cs</DependentUpon>
@@ -4791,8 +4799,9 @@
       <DependentUpon>ImportResultsControl.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\PublishDocumentDlg.resx">
-      <DependentUpon>PublishDocumentDlg.cs</DependentUpon>
+    <EmbeddedResource Include="FileUI\PublishDocumentDlgBase.resx">
+      <DependentUpon>PublishDocumentDlgBase.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\RescoreResultsDlg.resx">
       <DependentUpon>RescoreResultsDlg.cs</DependentUpon>
