@@ -176,6 +176,7 @@
     <Compile Include="ChargedLossesLibraryTest.cs" />
     <Compile Include="SkylineWindowEventsTest.cs" />
     <Compile Include="FilesModelTest.cs" />
+    <Compile Include="ChromatogramExtractionRangeTest.cs" />
     <Compile Include="CleavableCrosslinkTest.cs" />
     <Compile Include="ConstrainNormalizationMethodTest.cs" />
     <Compile Include="CopyProteinGroupTest.cs" />
