@@ -55,20 +55,20 @@ namespace pwiz.Skyline.Controls.FilesTree
             ImageList = new ImageList
             {
                 TransparentColor = Color.Magenta,
-                ColorDepth = ColorDepth.Depth24Bit
+                ColorDepth = ColorDepth.Depth32Bit
             };
 
-            ImageList.Images.Add(Resources.Blank);
-            ImageList.Images.Add(Resources.Folder);
-            ImageList.Images.Add(Resources.File);
-            ImageList.Images.Add(Resources.MissingFile);
-            ImageList.Images.Add(Resources.Replicate);
-            ImageList.Images.Add(Resources.DataProcessing);
-            ImageList.Images.Add(Resources.Peptide);
-            ImageList.Images.Add(Resources.Skyline);
-            ImageList.Images.Add(Resources.AuditLog);
-            ImageList.Images.Add(Resources.CacheFile);
-            ImageList.Images.Add(Resources.ViewFile);
+            ImageList.Images.Add(Resources.Blank);              // 1bpp
+            ImageList.Images.Add(Resources.Folder);             // 32bpp
+            ImageList.Images.Add(Resources.File);               // 8bbb
+            ImageList.Images.Add(Resources.MissingFile);        // 32bpp
+            ImageList.Images.Add(Resources.Replicate);          // 24bpp
+            ImageList.Images.Add(Resources.DataProcessing);     // 8bpp
+            ImageList.Images.Add(Resources.PeptideLib);         // 4bpp
+            ImageList.Images.Add(Resources.Skyline_Release);    // 24bpp
+            ImageList.Images.Add(Resources.AuditLog);           // 32bpp
+            ImageList.Images.Add(Resources.CacheFile);          // 32bpp
+            ImageList.Images.Add(Resources.ViewFile);           // 32bpp
         }
 
         [Browsable(false)]

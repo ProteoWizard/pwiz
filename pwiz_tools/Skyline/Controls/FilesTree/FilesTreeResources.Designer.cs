@@ -70,164 +70,182 @@ namespace pwiz.Skyline.Controls.FilesTree {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Drag and drop nodes.
+        ///   Looks up a localized string similar to Drag and drop.
         /// </summary>
-        public static string Drag_and_Drop_Nodes {
+        public static string Drag_and_Drop {
             get {
-                return ResourceManager.GetString("Drag_and_Drop_Nodes", resourceCulture);
+                return ResourceManager.GetString("Drag_and_Drop", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Unable to find file.
         /// </summary>
-        public static string FilesTree_TreeNode_RenderTip_FileMissing {
+        public static string FilesTree_TreeNode_Tooltip_FileMissing {
             get {
-                return ResourceManager.GetString("FilesTree_TreeNode_RenderTip_FileMissing", resourceCulture);
+                return ResourceManager.GetString("FilesTree_TreeNode_Tooltip_FileMissing", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to File Name.
         /// </summary>
-        public static string FilesTree_TreeNode_RenderTip_FileName {
+        public static string FilesTree_TreeNode_Tooltip_FileName {
             get {
-                return ResourceManager.GetString("FilesTree_TreeNode_RenderTip_FileName", resourceCulture);
+                return ResourceManager.GetString("FilesTree_TreeNode_Tooltip_FileName", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to File Path.
         /// </summary>
-        public static string FilesTree_TreeNode_RenderTip_FilePath {
+        public static string FilesTree_TreeNode_Tooltip_FilePath {
             get {
-                return ResourceManager.GetString("FilesTree_TreeNode_RenderTip_FilePath", resourceCulture);
+                return ResourceManager.GetString("FilesTree_TreeNode_Tooltip_FilePath", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Local File Path.
         /// </summary>
-        public static string FilesTree_TreeNode_RenderTip_LocalFilePath {
+        public static string FilesTree_TreeNode_Tooltip_LocalFilePath {
             get {
-                return ResourceManager.GetString("FilesTree_TreeNode_RenderTip_LocalFilePath", resourceCulture);
+                return ResourceManager.GetString("FilesTree_TreeNode_Tooltip_LocalFilePath", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Local Path.
         /// </summary>
-        public static string FilesTree_TreeNode_RenderTip_LocalPath {
+        public static string FilesTree_TreeNode_Tooltip_LocalPath {
             get {
-                return ResourceManager.GetString("FilesTree_TreeNode_RenderTip_LocalPath", resourceCulture);
+                return ResourceManager.GetString("FilesTree_TreeNode_Tooltip_LocalPath", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Name.
         /// </summary>
-        public static string FilesTree_TreeNode_RenderTip_Name {
+        public static string FilesTree_TreeNode_Tooltip_Name {
             get {
-                return ResourceManager.GetString("FilesTree_TreeNode_RenderTip_Name", resourceCulture);
+                return ResourceManager.GetString("FilesTree_TreeNode_Tooltip_Name", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Sample Name.
         /// </summary>
-        public static string FilesTree_TreeNode_RenderTip_SampleName {
+        public static string FilesTree_TreeNode_Tooltip_SampleName {
             get {
-                return ResourceManager.GetString("FilesTree_TreeNode_RenderTip_SampleName", resourceCulture);
+                return ResourceManager.GetString("FilesTree_TreeNode_Tooltip_SampleName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Saved File Path.
+        /// </summary>
+        public static string FilesTree_TreeNode_Tooltip_SavedFilePath {
+            get {
+                return ResourceManager.GetString("FilesTree_TreeNode_Tooltip_SavedFilePath", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Are you sure you want to delete this replicate?.
         /// </summary>
-        public static string FilesTreeForm_ConfirmRemove_Replicate {
+        public static string FilesTreeForm_Confirm_Remove_Replicate {
             get {
-                return ResourceManager.GetString("FilesTreeForm_ConfirmRemove_Replicate", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Are you sure you want to delete this library?.
-        /// </summary>
-        public static string FilesTreeForm_ConfirmRemove_Spectral_Library {
-            get {
-                return ResourceManager.GetString("FilesTreeForm_ConfirmRemove_Spectral_Library", resourceCulture);
+                return ResourceManager.GetString("FilesTreeForm_Confirm_Remove_Replicate", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Are you sure you want to delete these replicates?.
         /// </summary>
-        public static string FilesTreeForm_ConfirmRemoveMany_Replicates {
+        public static string FilesTreeForm_Confirm_Remove_Replicates {
             get {
-                return ResourceManager.GetString("FilesTreeForm_ConfirmRemoveMany_Replicates", resourceCulture);
+                return ResourceManager.GetString("FilesTreeForm_Confirm_Remove_Replicates", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Are you sure you want to delete these libraries?.
         /// </summary>
-        public static string FilesTreeForm_ConfirmRemoveMany_Spectral_Libraries {
+        public static string FilesTreeForm_Confirm_Remove_Spectral_Libraries {
             get {
-                return ResourceManager.GetString("FilesTreeForm_ConfirmRemoveMany_Spectral_Libraries", resourceCulture);
+                return ResourceManager.GetString("FilesTreeForm_Confirm_Remove_Spectral_Libraries", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to delete this library?.
+        /// </summary>
+        public static string FilesTreeForm_Confirm_Remove_Spectral_Library {
+            get {
+                return ResourceManager.GetString("FilesTreeForm_Confirm_Remove_Spectral_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Update background protemoe.
+        /// </summary>
+        public static string FilesTreeForm_Update_BackgroundProteome {
+            get {
+                return ResourceManager.GetString("FilesTreeForm_Update_BackgroundProteome", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Replicates.
         /// </summary>
-        public static string FilesTreeNode_TreeNode_RenderTip_ReplicateCount {
+        public static string FilesTreeNode_TreeNode_Tooltip_ReplicateCount {
             get {
-                return ResourceManager.GetString("FilesTreeNode_TreeNode_RenderTip_ReplicateCount", resourceCulture);
+                return ResourceManager.GetString("FilesTreeNode_TreeNode_Tooltip_ReplicateCount", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Sample files.
         /// </summary>
-        public static string FilesTreeNode_TreeNode_RenderTip_ReplicateSampleFileCount {
+        public static string FilesTreeNode_TreeNode_Tooltip_ReplicateSampleFileCount {
             get {
-                return ResourceManager.GetString("FilesTreeNode_TreeNode_RenderTip_ReplicateSampleFileCount", resourceCulture);
+                return ResourceManager.GetString("FilesTreeNode_TreeNode_Tooltip_ReplicateSampleFileCount", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Remove all replicate nodes.
         /// </summary>
-        public static string Remove_All_Replicate_Nodes {
+        public static string Remove_All_Replicates {
             get {
-                return ResourceManager.GetString("Remove_All_Replicate_Nodes", resourceCulture);
+                return ResourceManager.GetString("Remove_All_Replicates", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Remove all spectral libraries.
         /// </summary>
-        public static string Remove_All_Spectral_Library_Nodes {
+        public static string Remove_All_Spectral_Libraries {
             get {
-                return ResourceManager.GetString("Remove_All_Spectral_Library_Nodes", resourceCulture);
+                return ResourceManager.GetString("Remove_All_Spectral_Libraries", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Remove replicate node.
         /// </summary>
-        public static string Remove_Replicate_Node {
+        public static string Remove_Replicate {
             get {
-                return ResourceManager.GetString("Remove_Replicate_Node", resourceCulture);
+                return ResourceManager.GetString("Remove_Replicate", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Remove spectral library.
         /// </summary>
-        public static string Remove_Spectral_Library_Node {
+        public static string Remove_Spectral_Library {
             get {
-                return ResourceManager.GetString("Remove_Spectral_Library_Node", resourceCulture);
+                return ResourceManager.GetString("Remove_Spectral_Library", resourceCulture);
             }
         }
         

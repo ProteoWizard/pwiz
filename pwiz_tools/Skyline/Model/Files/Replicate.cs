@@ -78,24 +78,24 @@ namespace pwiz.Skyline.Model.Files
             return new ModifiedDocument(newDocument).ChangeAuditLogEntry(entry);
         }
 
-        public ModifiedDocument Rearrange(SrmDocument document, List<FileNode> draggedModels, FileNode dropNodeModel, bool insertFirst, bool insertLast)
+        public ModifiedDocument Rearrange(SrmDocument document, List<FileNode> draggedModels, FileNode dropModel, MoveType moveType)
         {
             var draggedChromSets = draggedModels.Cast<Replicate>().Select(model => model.ChromatogramSet).ToList();
 
             var newChromatograms = document.MeasuredResults.Chromatograms.Except(draggedChromSets).ToList();
-            var insertAt = newChromatograms.IndexOf(((Replicate)dropNodeModel).ChromatogramSet);
 
-            if (insertFirst)
+            switch (moveType)
             {
-                newChromatograms.InsertRange(0, draggedChromSets);
-            }
-            else if (insertLast)
-            {
-                newChromatograms.InsertRange(insertAt + 1, draggedChromSets);
-            }
-            else
-            {
-                newChromatograms.InsertRange(insertAt, draggedChromSets);
+                case MoveType.move_to:
+                {
+                    var insertAt = newChromatograms.IndexOf(((Replicate)dropModel).ChromatogramSet);
+                    newChromatograms.InsertRange(insertAt, draggedChromSets);
+                    break;
+                }
+                case MoveType.move_last:
+                default:
+                    newChromatograms.AddRange(draggedChromSets);
+                    break;
             }
 
             var newMeasuredResults = document.MeasuredResults.ChangeChromatograms(newChromatograms);
@@ -110,14 +110,14 @@ namespace pwiz.Skyline.Model.Files
                 Document.DocumentType, 
                 readableNames,
                 readableNames.Count,
-                str => MessageArgs.Create(str, dropNodeModel.Name),
-                MessageArgs.Create(readableNames.Count, dropNodeModel.Name)
+                str => MessageArgs.Create(str, dropModel.Name),
+                MessageArgs.Create(readableNames.Count, dropModel.Name)
             );
             
             if (readableNames.Count > 1)
             {
                 entry = entry.ChangeAllInfo(readableNames.
-                    Select(node => new MessageInfo(MessageType.files_tree_node_drag_and_drop, newDocument.DocumentType, node, dropNodeModel.Name)).
+                    Select(node => new MessageInfo(MessageType.files_tree_node_drag_and_drop, newDocument.DocumentType, node, dropModel.Name)).
                     ToList());
             }
 

@@ -193,7 +193,8 @@ namespace pwiz.Skyline.Model.AuditLog
         files_tree_replicates_remove_all,
         files_tree_libraries_remove_one,
         files_tree_libraries_remove_several,
-        files_tree_libraries_remove_all
+        files_tree_libraries_remove_all,
+        files_tree_background_proteome_update
     } // N.B. as you add to this, consider whether or not the human-readable message may want to refuse the "peptide"->"molecule" translation for small molecule UI (see ModeUIInvariantMesdsageTypes below)
 
     /// <summary>

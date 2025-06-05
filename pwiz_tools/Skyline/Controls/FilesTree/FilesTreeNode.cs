@@ -166,11 +166,11 @@ namespace pwiz.Skyline.Controls.FilesTree
 
             // draw into table and return calculated dimensions
             var customTable = new TableDesc();
-            customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_RenderTip_Name, Name, rt);
+            customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_Tooltip_Name, Name, rt);
 
-            if (Model.GetType() == typeof(ReplicatesFolder))
+            if (Model is ReplicatesFolder)
             {
-                customTable.AddDetailRow(FilesTreeResources.FilesTreeNode_TreeNode_RenderTip_ReplicateCount, Nodes.Count.ToString(), rt);
+                customTable.AddDetailRow(FilesTreeResources.FilesTreeNode_TreeNode_Tooltip_ReplicateCount, Nodes.Count.ToString(), rt);
 
                 var sampleFileCount = 0;
                 for (var i = 0; i < Nodes.Count; i++)
@@ -178,17 +178,27 @@ namespace pwiz.Skyline.Controls.FilesTree
                     sampleFileCount += Nodes[i].Nodes.Count;
                 }
 
-                customTable.AddDetailRow(FilesTreeResources.FilesTreeNode_TreeNode_RenderTip_ReplicateSampleFileCount, sampleFileCount.ToString(), rt);
+                customTable.AddDetailRow(FilesTreeResources.FilesTreeNode_TreeNode_Tooltip_ReplicateSampleFileCount, sampleFileCount.ToString(), rt);
             }
 
             if (Model.IsBackedByFile)
             {
-                customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_RenderTip_FileName, FileName, rt);
-                customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_RenderTip_FilePath, FilePath, rt);
+                customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_Tooltip_FileName, FileName, rt);
 
-                // CONSIDER: use red font if file missing
-                var text = FileState == FileState.missing ? FilesTreeResources.FilesTree_TreeNode_RenderTip_FileMissing : LocalFilePath;
-                customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_RenderTip_LocalFilePath, text, rt);
+                // if path == localPath: "File Path: <foo/bar>"
+                // else "Saved File Path: <abc/def>, Local File Path: <foo/bar>"
+                if (string.Compare(FilePath, LocalFilePath, StringComparison.Ordinal) == 0)
+                {
+                    customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_Tooltip_FilePath, FilePath, rt);
+                }
+                else
+                {
+                    customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_Tooltip_SavedFilePath, FilePath, rt);
+
+                    // CONSIDER: use red font for missing files?
+                    var localFilePath = FileState == FileState.missing ? FilesTreeResources.FilesTree_TreeNode_Tooltip_FileMissing : LocalFilePath;
+                    customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_Tooltip_LocalFilePath, localFilePath, rt);
+                }
             }
 
             var size = customTable.CalcDimensions(g);

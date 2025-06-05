@@ -55,7 +55,7 @@ namespace pwiz.Skyline.Model.Files
         file_missing,
         replicate,
         replicate_sample_file,
-        peptide,
+        peptide_library,
         skyline,
         audit_log,
         cache_file,
@@ -66,6 +66,8 @@ namespace pwiz.Skyline.Model.Files
 
     public abstract class FileNode
     {
+        public enum MoveType { move_to, move_last }
+
         protected FileNode(IDocumentContainer documentContainer,
                            IdentityPath identityPath,
                            ImageId available = ImageId.file,

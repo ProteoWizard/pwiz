@@ -26,7 +26,7 @@ namespace pwiz.Skyline.Model.Files
     public class SpectralLibrary : FileNode
     {
         public SpectralLibrary(IDocumentContainer documentContainer, Identity libraryId) : 
-            base(documentContainer, new IdentityPath(libraryId), ImageId.peptide)
+            base(documentContainer, new IdentityPath(libraryId), ImageId.peptide_library)
         {
         }
 
@@ -63,24 +63,24 @@ namespace pwiz.Skyline.Model.Files
             return new ModifiedDocument(newDocument).ChangeAuditLogEntry(entry);
         }
 
-        public ModifiedDocument Rearrange(SrmDocument document, List<FileNode> draggedModels, FileNode dropNodeModel, bool insertFirst, bool insertLast)
+        public ModifiedDocument Rearrange(SrmDocument document, List<FileNode> draggedModels, FileNode dropModel, MoveType moveType)
         {
             var draggedLibraries = draggedModels.Cast<SpectralLibrary>().Select(model => model.LibrarySpec).ToList();
 
             var newLibraries = document.Settings.PeptideSettings.Libraries.LibrarySpecs.Except(draggedLibraries).ToList();
 
-            if (insertFirst)
+            switch (moveType)
             {
-                newLibraries.InsertRange(0, draggedLibraries);
-            }
-            else if (insertLast)
-            {
-                newLibraries.AddRange(draggedLibraries);
-            }
-            else
-            {
-                var insertAt = newLibraries.IndexOf(((SpectralLibrary)dropNodeModel).LibrarySpec);
-                newLibraries.InsertRange(insertAt, draggedLibraries);
+                case MoveType.move_to:
+                {
+                    var insertAt = newLibraries.IndexOf(((SpectralLibrary)dropModel).LibrarySpec);
+                    newLibraries.InsertRange(insertAt, draggedLibraries);
+                    break;
+                }
+                case MoveType.move_last:
+                default:
+                    newLibraries.AddRange(draggedLibraries);
+                    break;
             }
 
             var newLibs = new Library[newLibraries.Count]; // Required by PeptideSettings.Validate() 
@@ -97,14 +97,14 @@ namespace pwiz.Skyline.Model.Files
                 Document.DocumentType,
                 readableNames,
                 readableNames.Count,
-                str => MessageArgs.Create(str, dropNodeModel.Name),
-                MessageArgs.Create(readableNames.Count, dropNodeModel.Name)
+                str => MessageArgs.Create(str, dropModel.Name),
+                MessageArgs.Create(readableNames.Count, dropModel.Name)
             );
 
             if (readableNames.Count > 1)
             {
                 entry = entry.ChangeAllInfo(readableNames.
-                    Select(node => new MessageInfo(MessageType.files_tree_node_drag_and_drop, newDocument.DocumentType, node, dropNodeModel.Name)).
+                    Select(node => new MessageInfo(MessageType.files_tree_node_drag_and_drop, newDocument.DocumentType, node, dropModel.Name)).
                     ToList());
             }
 

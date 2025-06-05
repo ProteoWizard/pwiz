@@ -76,7 +76,10 @@ namespace pwiz.Skyline.Model.Files
             // }
 
             FileNode files = new ReplicatesFolder(DocumentContainer);
-            list.Add(files); // Always show the Replicates folder
+            if (files.Files.Count > 0)
+            {
+                list.Add(files);
+            }
 
             files = new SpectralLibrariesFolder(DocumentContainer);
             if (files.Files.Count > 0)

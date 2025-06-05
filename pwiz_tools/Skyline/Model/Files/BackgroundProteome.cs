@@ -15,6 +15,8 @@
  */
 
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.Proteome;
 
 namespace pwiz.Skyline.Model.Files
 {
@@ -24,6 +26,8 @@ namespace pwiz.Skyline.Model.Files
             base(documentContainer, new IdentityPath(backgroundProteomeId))
         {
         }
+
+        private Proteome.BackgroundProteome BgProteome => Document.Settings.PeptideSettings.BackgroundProteome;
 
         public override bool IsBackedByFile => true;
         public override Immutable Immutable => BgProteome;
@@ -39,6 +43,17 @@ namespace pwiz.Skyline.Model.Files
             return ReferenceEquals(BgProteome, library.BgProteome);
         }
 
-        private Proteome.BackgroundProteome BgProteome => Document.Settings.PeptideSettings.BackgroundProteome;
+        public ModifiedDocument Edit(SrmDocument doc, BackgroundProteomeSpec bgProteomeSpec)
+        {
+            var newBgProteome = new Proteome.BackgroundProteome(bgProteomeSpec);
+
+            var newPeptideSettings = doc.Settings.PeptideSettings.ChangeBackgroundProteome(newBgProteome);
+            var newSettings = doc.Settings.ChangePeptideSettings(newPeptideSettings);
+            var newDocument = doc.ChangeSettings(newSettings);
+
+            var entry = AuditLogEntry.CreateSimpleEntry(MessageType.files_tree_background_proteome_update, doc.DocumentType, bgProteomeSpec.Name);
+
+            return new ModifiedDocument(newDocument).ChangeAuditLogEntry(entry);
+        }
     }
 }

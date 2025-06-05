@@ -672,6 +672,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Edited background proteome named {0} from the Files window.
+        /// </summary>
+        public static string files_tree_background_proteome_update {
+            get {
+                return ResourceManager.GetString("files_tree_background_proteome_update", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Removed all spectral libraries in the Files window.
         /// </summary>
         public static string files_tree_libraries_remove_all {

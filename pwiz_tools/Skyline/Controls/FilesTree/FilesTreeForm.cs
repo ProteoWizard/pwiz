@@ -26,6 +26,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Files;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
+using static pwiz.Skyline.Model.Files.FileNode;
 using Process = System.Diagnostics.Process;
 
 // CONSIDER: using IdentityPath (and DocNode.ReplaceChild) to simplify replicate name changes
@@ -146,9 +147,11 @@ namespace pwiz.Skyline.Controls.FilesTree
             }
         }
 
-        // Replicates open using the replicate name, which is pulled from the parent tree node which
-        // avoids adding a pointer to the parent in SrmSettings and adding a new field on the
-        // replicate file's data model
+        /// <summary>
+        /// Activate a replicate by nam. This handler runs when a replicate sample file is clicked, so
+        /// obtain the replicate's name from its parent tree node, which represents the replicate.
+        /// </summary>
+        /// <param name="selectedNode">Replicate sample file</param>
         public void ActivateReplicate(TreeNode selectedNode)
         {
             var filesTreeNode = (FilesTreeNode)selectedNode;
@@ -178,7 +181,23 @@ namespace pwiz.Skyline.Controls.FilesTree
             SkylineWindow.ViewSpectralLibraries();
         }
 
-        // Remove all child nodes contained in this folder.
+        public void OpenEditBackgroundProteomeDialog(FilesTreeNode treeNode)
+        {
+            if (!(treeNode.Model is BackgroundProteome { Immutable: Model.Proteome.BackgroundProteome bgProteome } bgProteomeTreeNode))
+                return;
+
+            using var editBackgroundProteomeDlg = new BuildBackgroundProteomeDlg(new[] {bgProteome});
+            editBackgroundProteomeDlg.BackgroundProteomeSpec = bgProteome;
+            if (editBackgroundProteomeDlg.ShowDialog(this) == DialogResult.OK)
+            {
+                var newBgProteome = editBackgroundProteomeDlg.BackgroundProteomeSpec;
+                var modifier = DocumentModifier.Create(doc => bgProteomeTreeNode.Edit(doc, newBgProteome));
+
+                SkylineWindow.ModifyDocument(FilesTreeResources.FilesTreeForm_Update_BackgroundProteome, modifier);
+            }
+        }
+
+        // Remove all child nodes from this folder.
         public void RemoveAll(FilesTreeNode folderNode)
         {
             if (folderNode == null || !folderNode.SupportsRemoveAllItems())
@@ -186,19 +205,19 @@ namespace pwiz.Skyline.Controls.FilesTree
 
             if (folderNode.Model is ReplicatesFolder replicates)
             {
-                var dialogResult = ConfirmDelete(FilesTreeResources.FilesTreeForm_ConfirmRemoveMany_Replicates);
+                var dialogResult = ConfirmDelete(FilesTreeResources.FilesTreeForm_Confirm_Remove_Replicates);
                 if (dialogResult == DialogResult.No)
                     return;
 
-                SkylineWindow.ModifyDocument(FilesTreeResources.Remove_All_Replicate_Nodes, DocumentModifier.Create(doc => replicates.DeleteAll(doc)));
+                SkylineWindow.ModifyDocument(FilesTreeResources.Remove_All_Replicates, DocumentModifier.Create(doc => replicates.DeleteAll(doc)));
             }
             else if (folderNode.Model is SpectralLibrariesFolder libraries)
             {
-                var dialogResult = ConfirmDelete(FilesTreeResources.FilesTreeForm_ConfirmRemoveMany_Spectral_Libraries);
+                var dialogResult = ConfirmDelete(FilesTreeResources.FilesTreeForm_Confirm_Remove_Spectral_Libraries);
                 if (dialogResult == DialogResult.No)
                     return;
 
-                SkylineWindow.ModifyDocument(FilesTreeResources.Remove_All_Spectral_Library_Nodes, DocumentModifier.Create(doc => libraries.DeleteAll(doc)));
+                SkylineWindow.ModifyDocument(FilesTreeResources.Remove_All_Spectral_Libraries, DocumentModifier.Create(doc => libraries.DeleteAll(doc)));
             }
         }
 
@@ -213,8 +232,8 @@ namespace pwiz.Skyline.Controls.FilesTree
             if (nodes.First().Model is Replicate replicate)
             {
                 var dialogResult = ConfirmDelete(nodes.Count, 
-                        FilesTreeResources.FilesTreeForm_ConfirmRemove_Replicate, 
-                        FilesTreeResources.FilesTreeForm_ConfirmRemoveMany_Replicates);
+                        FilesTreeResources.FilesTreeForm_Confirm_Remove_Replicate, 
+                        FilesTreeResources.FilesTreeForm_Confirm_Remove_Replicates);
 
                 if (dialogResult == DialogResult.No)
                     return;
@@ -223,20 +242,20 @@ namespace pwiz.Skyline.Controls.FilesTree
                 // This makes Audit Log messages more consistent.
                 var deletedModels = nodes.Select(item => item.Model).OfType<Replicate>().Cast<FileNode>().ToList();
 
-                SkylineWindow.ModifyDocument(FilesTreeResources.Remove_Replicate_Node, DocumentModifier.Create(doc => replicate.Delete(doc, deletedModels)));
+                SkylineWindow.ModifyDocument(FilesTreeResources.Remove_Replicate, DocumentModifier.Create(doc => replicate.Delete(doc, deletedModels)));
             }
             else if (nodes.First().Model is SpectralLibrary library)
             {
                 var dialogResult = ConfirmDelete(nodes.Count, 
-                    FilesTreeResources.FilesTreeForm_ConfirmRemove_Spectral_Library, 
-                    FilesTreeResources.FilesTreeForm_ConfirmRemoveMany_Spectral_Libraries);
+                    FilesTreeResources.FilesTreeForm_Confirm_Remove_Spectral_Library, 
+                    FilesTreeResources.FilesTreeForm_Confirm_Remove_Spectral_Libraries);
 
                 if (dialogResult == DialogResult.No)
                     return;
 
                 var deletedModels = nodes.Select(item => item.Model).ToList();
 
-                SkylineWindow.ModifyDocument(FilesTreeResources.Remove_Spectral_Library_Node, DocumentModifier.Create(doc => library.Delete(doc, deletedModels)));
+                SkylineWindow.ModifyDocument(FilesTreeResources.Remove_Spectral_Library, DocumentModifier.Create(doc => library.Delete(doc, deletedModels)));
             }
         }
 
@@ -252,7 +271,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         // CONSIDER: use IdentityPath to save and restore selected nodes? Caveat, all draggable nodes
         //           types must subclass DocNode, which is not true of replicates.
-        public void DropNodes(IList<FilesTreeNode> draggedNodes, FilesTreeNode primaryDraggedNode, FilesTreeNode dropNode, bool dropBelowLastNode, DragDropEffects effect)
+        public void DropNodes(IList<FilesTreeNode> draggedNodes, FilesTreeNode primaryDraggedNode, FilesTreeNode dropNode, MoveType moveType, DragDropEffects effect)
         {
             try
             {
@@ -261,21 +280,30 @@ namespace pwiz.Skyline.Controls.FilesTree
 
                 var draggedModels = draggedNodes.Select(item => item.Model).ToList();
 
-                if (primaryDraggedNode.Model is Replicate replicate)
+                IDocumentModifier modifier;
+                switch (primaryDraggedNode.Model)
                 {
-                    var insertFirst = dropNode.Model is ReplicatesFolder;
+                    case Replicate replicate:
+                    {
+                        if (dropNode.Model is ReplicatesFolder)
+                            moveType = MoveType.move_last;
 
-                    SkylineWindow.ModifyDocument(FilesTreeResources.Drag_and_Drop_Nodes, 
-                        DocumentModifier.Create(doc => replicate.Rearrange(doc, draggedModels, dropNode.Model, insertFirst, insertLast:dropBelowLastNode)));
+                        modifier = DocumentModifier.Create(doc => replicate.Rearrange(doc, draggedModels, dropNode.Model, moveType));
+                        break;
+                    }
+                    case SpectralLibrary library:
+                    {
+                        if (dropNode.Model is SpectralLibrariesFolder)
+                            moveType = MoveType.move_last;
+
+                        modifier = DocumentModifier.Create(doc => library.Rearrange(doc, draggedModels, dropNode.Model, moveType));
+                        break;
+                    }
+                    default:
+                        return;
                 }
-                else if (primaryDraggedNode.Model is SpectralLibrary library)
-                {
-                    var insertFirst = dropNode.Model is SpectralLibrariesFolder;
 
-                    SkylineWindow.ModifyDocument(FilesTreeResources.Drag_and_Drop_Nodes,
-                        DocumentModifier.Create(doc => library.Rearrange(doc, draggedModels, dropNode.Model, insertFirst, insertLast: dropBelowLastNode)));
-
-                }
+                SkylineWindow.ModifyDocument(FilesTreeResources.Drag_and_Drop, modifier);
 
                 // After the drop, re-select the dragged nodes to paint the nodes blue and maintain the user's selection.
                 // This is a tricky process which must be done in a specific order.
@@ -286,11 +314,11 @@ namespace pwiz.Skyline.Controls.FilesTree
                     filesTree.SelectNode(node, true);
                 }
 
-                // DO NOT MOVE
+                // Do not move.
                 //
                 // Set the SelectedNode without clearing already selected items. This trickery is necessary
-                // because the usual way of setting the SelectedNode clears out other selected items and setting SelectedNode prior to
-                // calling SelectNode(...) mis-orders dropped items.
+                // because the usual way of setting SelectedNode on a TreeView clears other selected items and
+                // setting SelectedNode prior to calling SelectNode(...) mis-orders dropped items.
                 filesTree.SelectNodeWithoutResettingSelection(primaryDraggedNode);
 
                 filesTree.Invalidate();
@@ -380,6 +408,9 @@ namespace pwiz.Skyline.Controls.FilesTree
                     break;
                 case ReplicateSampleFile _:
                     ActivateReplicate(filesTreeNode);
+                    break;
+                case BackgroundProteome _:
+                    OpenEditBackgroundProteomeDialog(filesTreeNode);
                     break;
             }
         }
@@ -607,17 +638,18 @@ namespace pwiz.Skyline.Controls.FilesTree
             var primaryDraggedNode = (FilesTreeNode)e.Data.GetData(typeof(PrimarySelectedNode));
             var dragNodeList = (IList<FilesTreeNode>)e.Data.GetData(typeof(FilesTreeNode));
 
-            // Do not move this check.
+            // Do not move.
             //
-            // It reads the location of the mouse when dropping on the last node in a folder.
-            // This happens to decide whether to drop above or below that node.
+            // This check reads the location of the mouse. If dropping on the last node, it
+            // checks whether the drop occurred in the upper half or lower half of that TreeNode
+            // to decide whether to insert nodes above or below the last node.
             //
             // Automated tests will fail unpredictably if this check moves into DropNodes because
-            // the test will read a mouse location that has nothing to do with what's happening
-            // in the test.
-            var dropBelowLastNode = dropNode.IsLastNodeInFolder() && dropNode.IsMouseInLowerHalf();
+            // the test will read a mouse location that has nothing to do with the test.
+            var dropLocation = 
+                dropNode.IsLastNodeInFolder() && dropNode.IsMouseInLowerHalf() ? MoveType.move_last : MoveType.move_to;
 
-            DropNodes(dragNodeList, primaryDraggedNode, dropNode, dropBelowLastNode, e.Effect);
+            DropNodes(dragNodeList, primaryDraggedNode, dropNode, dropLocation, e.Effect);
         }
 
         // CONSIDER: when drag operation canceled, would be nice to re-select the original dragged nodes.
@@ -665,7 +697,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         private void FilesTree_DragLeave(object sender, EventArgs e)
         {
             var mouseLocation = MousePosition;
-            var inside = Utils.IsPointInRectangle(mouseLocation, Bounds);
+            var inside = IsPointInRectangle(mouseLocation, Bounds);
 
             if (!inside)
             {
@@ -743,15 +775,12 @@ namespace pwiz.Skyline.Controls.FilesTree
 
             return dropTarget;
         }
-    }
 
-    internal class Utils
-    {
-        internal static bool IsPointInRectangle(Point point, Rectangle rectangle)
+        private static bool IsPointInRectangle(Point point, Rectangle rectangle)
         {
-            return point.X >= rectangle.X && 
-                   point.X <= rectangle.X + rectangle.Width && 
-                   point.Y >= rectangle.Y && 
+            return point.X >= rectangle.X &&
+                   point.X <= rectangle.X + rectangle.Width &&
+                   point.Y >= rectangle.Y &&
                    point.Y <= rectangle.Y + rectangle.Height;
         }
     }

@@ -30,15 +30,18 @@ using pwiz.Skyline.Model.Files;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.DocSettings;
+using static pwiz.Skyline.Model.Files.FileNode;
 
 // CONSIDER: Replicate => verify right-click menu includes Open Containing Folder
 // CONSIDER: Test Tooltips. See MethodEditTutorialTest.ShowNodeTip
-// CONSIDER: add .sky file with imsdb / irtdb
+// CONSIDER: add .sky file with imsdb, irtdb, protdb
 // CONSIDER: add an Audit Log scenario
 // CONSIDER: drag-and-drop disjoint selection
 // CONSIDER: tree disallows dragging non-draggable nodes
 // CONSIDER: use non-local file paths in SrmSettings (example: replicate sample files where SrmSettings paths point to directories that don't exist locally)
 
+// TODO: test dropping node(s) on parent folder
+// TODO: test double-click on Background Proteome. Need an additional Skyline document with a Background Proteome
 // ReSharper disable WrongIndentSize
 namespace pwiz.SkylineTestFunctional
 {
@@ -89,7 +92,7 @@ namespace pwiz.SkylineTestFunctional
 
             AssertFilesTreeOnlyIncludesFilesTreeNodes(SkylineWindow.FilesTree.Root);
 
-            AssertTopLevelFiles(new[] {typeof(SkylineAuditLog), typeof(ReplicatesFolder)}, SkylineWindow);
+            AssertTopLevelFiles(new[] {typeof(SkylineAuditLog)}, SkylineWindow);
 
             Assert.IsFalse(SkylineWindow.FilesTree.IsMonitoringFileSystem());
             Assert.AreEqual(string.Empty, SkylineWindow.FilesTree.PathMonitoredForFileSystemChanges());
@@ -103,7 +106,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(Path.GetDirectoryName(monitoredPath), SkylineWindow.FilesTree.PathMonitoredForFileSystemChanges());
 
             // After saving, Window Layout (.sky.view) is present
-            AssertTopLevelFiles(new[] { typeof(SkylineAuditLog), typeof(SkylineViewFile), typeof(ReplicatesFolder) }, SkylineWindow);
+            AssertTopLevelFiles(new[] { typeof(SkylineAuditLog), typeof(SkylineViewFile) }, SkylineWindow);
 
             // Skyline File
             Assert.AreEqual(fileName, SkylineWindow.FilesTree.Root.Name);
@@ -145,7 +148,7 @@ namespace pwiz.SkylineTestFunctional
             var tree = SkylineWindow.FilesTree;
             Assert.AreEqual(Path.GetDirectoryName(monitoredPath), tree.PathMonitoredForFileSystemChanges());
 
-            AssertTopLevelFiles(new[] { typeof(SkylineAuditLog), typeof(SkylineViewFile), typeof(ReplicatesFolder) }, SkylineWindow);
+            AssertTopLevelFiles(new[] { typeof(SkylineAuditLog), typeof(SkylineViewFile) }, SkylineWindow);
 
             Assert.AreEqual(saveAsFileName, tree.Root.Name);
             Assert.AreEqual(monitoredPath, tree.Root.FilePath);
@@ -346,7 +349,7 @@ namespace pwiz.SkylineTestFunctional
 
                 var replicatesFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
                 doc = WaitForDocumentChange(doc);
-                Assert.AreEqual(0, replicatesFolder.Nodes.Count);
+                Assert.IsNull(replicatesFolder);
 
                 RunUI(() => SkylineWindow.Undo());
                 WaitForDocumentChange(doc);
@@ -579,7 +582,7 @@ namespace pwiz.SkylineTestFunctional
                 AssertDragAndDropResults<ReplicatesFolder>(dnd);
 
                 // A,B,C,D => Drag A to D => B,C,A,D
-                dnd = DragAndDrop<ReplicatesFolder>(new[] { 0 }, indexOfLastReplicate, DragDirection.down, true);
+                dnd = DragAndDrop<ReplicatesFolder>(new[] { 0 }, indexOfLastReplicate, DragDirection.down, MoveType.move_last);
                 AssertDragAndDropResults<ReplicatesFolder>(dnd);
 
                 // B,C,A,D => Drag D to B => A,B,C,D
@@ -597,14 +600,13 @@ namespace pwiz.SkylineTestFunctional
                 dnd = DragAndDrop<ReplicatesFolder>(new[] { 3, 4, 5 }, indexOfLastReplicate, DragDirection.down);
                 AssertDragAndDropResults<ReplicatesFolder>(dnd);
 
-                dnd = DragAndDrop<ReplicatesFolder>(
-                    new[] { indexOfLastReplicate - 2, indexOfLastReplicate - 1, indexOfLastReplicate }, 0, DragDirection.up);
+                dnd = DragAndDrop<ReplicatesFolder>(new[] { indexOfLastReplicate - 2, indexOfLastReplicate - 1, indexOfLastReplicate }, 0, DragDirection.up);
                 AssertDragAndDropResults<ReplicatesFolder>(dnd);
             }
 
             // Drag-and-drop - spectral libraries
             {
-                var dnd = DragAndDrop<SpectralLibrariesFolder>(new[] { 0 }, 1, DragDirection.down, true);
+                var dnd = DragAndDrop<SpectralLibrariesFolder>(new[] { 0 }, 1, DragDirection.down, MoveType.move_last);
                 AssertDragAndDropResults<SpectralLibrariesFolder>(dnd);
 
                 dnd = DragAndDrop<SpectralLibrariesFolder>(new[] { 1 }, 0, DragDirection.up);
@@ -636,7 +638,7 @@ namespace pwiz.SkylineTestFunctional
         private static DragAndDropParams DragAndDrop<T>(int[] dragNodeIndexes,
                                                         int dropNodeIndex,
                                                         DragDirection direction,
-                                                        bool dropBelowLastNode = false) 
+                                                        MoveType moveType = MoveType.move_to)
             where T : FileNode
         {
             var folder = SkylineWindow.FilesTree.Folder<T>();
@@ -644,12 +646,12 @@ namespace pwiz.SkylineTestFunctional
             var dragNodes = dragNodeIndexes.Select(index => folder.Nodes[index]).Cast<FilesTreeNode>().ToList();
 
             var selectedNode = dragNodes.Last();
-            var dropNode = folder.NodeAt(dropNodeIndex);
+            var dropNode = dropNodeIndex == -1 ? folder : folder.NodeAt(dropNodeIndex);
 
             var oldDoc = SkylineWindow.Document;
             RunUI(() =>
             {
-                SkylineWindow.FilesTreeForm.DropNodes(dragNodes, selectedNode, dropNode, dropBelowLastNode, DragDropEffects.Move);
+                SkylineWindow.FilesTreeForm.DropNodes(dragNodes, selectedNode, dropNode, moveType, DragDropEffects.Move);
             });
             var newDoc = WaitForDocumentChangeLoaded(oldDoc);
 
@@ -664,7 +666,7 @@ namespace pwiz.SkylineTestFunctional
 
                 DropNodeIndex = dropNodeIndex,
                 DropNode = dropNode,
-                DropBelowLastNode = dropBelowLastNode,
+                MoveType = moveType,
 
                 Folder = folder,
 
@@ -687,7 +689,7 @@ namespace pwiz.SkylineTestFunctional
             int dropNodeExpectedIndex;
 
             // Compute the expected index of the drop target
-            if (d.DropBelowLastNode)
+            if (d.MoveType == MoveType.move_last)
             {
                 dropNodeExpectedIndex = d.DropNodeIndex - d.DraggedNodes.Count;
             }
@@ -707,7 +709,7 @@ namespace pwiz.SkylineTestFunctional
             for (var i = 0; i < d.DragNodeIndexes.Length; i++)
             {
                 int expectedIndex;
-                if (d.DropBelowLastNode)
+                if (d.MoveType == MoveType.move_last)
                 {
                     expectedIndex = dropNodeExpectedIndex + 1 + i;
                 }
@@ -814,6 +816,6 @@ namespace pwiz.SkylineTestFunctional
         internal FilesTreeNode Folder;
         internal IList<FilesTreeNode> DraggedNodes;
         internal FilesTreeNode DropNode;
-        internal bool DropBelowLastNode;
+        internal MoveType MoveType;
     }
 }
