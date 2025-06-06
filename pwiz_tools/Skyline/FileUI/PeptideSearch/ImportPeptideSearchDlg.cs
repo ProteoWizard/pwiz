@@ -857,6 +857,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     var scoreType = IsFeatureDetectionWorkflow
                         ? ScoreType.HardklorIdotp
                         : ScoreType.GenericQValue;
+
                     BuildPepSearchLibControl.Grid.Files = ImportPeptideSearch.SearchEngine.SpectrumFileNames.Select(f =>
                         new BuildLibraryGridView.File(ImportPeptideSearch.SearchEngine.GetSearchResultFilepath(f), scoreType, scoreThreshold));
                     BuildPepSearchLibControl.ImportPeptideSearch.SearchFilenames = BuildPepSearchLibControl.Grid.FilePaths.ToArray();

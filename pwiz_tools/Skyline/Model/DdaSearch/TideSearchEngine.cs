@@ -16,15 +16,19 @@
  * limitations under the License.
  */
 
+using MSAmanda.Utils;
+using NHibernate.SqlCommand;
 using pwiz.BiblioSpec;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -35,12 +39,9 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using pwiz.Skyline.Model.AuditLog;
-using pwiz.Skyline.Util.Extensions;
-using MSAmanda.Utils;
-using NHibernate.SqlCommand;
-using Enzyme = pwiz.Skyline.Model.DocSettings.Enzyme;
 using System.Xml.Linq;
+using ZedGraph;
+using Enzyme = pwiz.Skyline.Model.DocSettings.Enzyme;
 
 namespace pwiz.Skyline.Model.DdaSearch
 {
@@ -111,7 +112,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             AddAdditionalSetting(TIDE_SETTINGS, new Setting("sqt-output", false));
             AddAdditionalSetting(TIDE_SETTINGS, new Setting("store-index", ""));
             AddAdditionalSetting(TIDE_SETTINGS, new Setting("store-spectra", ""));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("top-match", 5, 1));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting("top-match", 1, 1));
 //            AddAdditionalSetting(TIDE_SETTINGS, new Setting("txt-output", true));   // Must be true
             AddAdditionalSetting(TIDE_SETTINGS, new Setting("use-z-line", true));
             AddAdditionalSetting(TIDE_SETTINGS, new Setting("verbosity", 30));
@@ -137,7 +138,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             AddAdditionalSetting(TIDE_SETTINGS, new Setting("decoy-format", "shuffle", "none|shuffle|peptide-reverse".Split('|')));
             AddAdditionalSetting(TIDE_SETTINGS, new Setting("num-decoys-per-target", 1, 0));
             AddAdditionalSetting(TIDE_SETTINGS, new Setting("seed", 1, 1));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("digestion", "full-digest", "full-digest|partial-digest|non-specific-digest".Split('|')));
+            //AddAdditionalSetting(TIDE_SETTINGS, new Setting("digestion", "full-digest", "full-digest|partial-digest|non-specific-digest".Split('|')));
             AddAdditionalSetting(TIDE_SETTINGS, new Setting("mass-precision", 4, 0));
             AddAdditionalSetting(TIDE_SETTINGS, new Setting("peptide-list", false));
             AddAdditionalSetting(TIDE_SETTINGS, new Setting("temp-dir", ""));
@@ -156,7 +157,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             @"b,y",  // Tide-search generates only b- and y-ions. No options to change these
         };
 
-        static string CRUX_FILENAME = @"crux-4.2";
+        static string CRUX_FILENAME = @"crux-4.3";
         static Uri CRUX_URL = new Uri($@"https://noble.gs.washington.edu/crux-downloads/{CRUX_FILENAME}/{CRUX_FILENAME}.Windows.AMD64.zip");
         public static string CruxDirectory => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), CRUX_FILENAME);
         public static string CruxBinary => Path.Combine(CruxDirectory, $@"{CRUX_FILENAME}.Windows.AMD64", @"bin", @"crux");
@@ -183,6 +184,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         private CancellationTokenSource _cancelToken;
         private IProgressStatus _progressStatus;
         private bool _success;
+        private string _finalOutputFilepath;
 
         private void DeleteIntermediateFiles()
         {
@@ -238,7 +240,6 @@ namespace pwiz.Skyline.Model.DdaSearch
 
                 SetTideParam(paramsFileText, @"num_threads", 0);
                 SetTideParam(paramsFileText, @"concat", "True");
-                //AddAdditionalSetting(TIDE_SETTINGS, new Setting("concat", false));
 
                 SetTideParam(paramsFileText, @"decoy_prefix", _decoyPrefix);
                 SetTideParam(paramsFileText, @"pepxml-output", "T");
@@ -252,27 +253,29 @@ namespace pwiz.Skyline.Model.DdaSearch
                 SetTideParam(paramsFileText, @"mods-spec", _modParams);
                 SetTideParam(paramsFileText, @"nterm-peptide-mods-spec", _nTermModParams);
                 SetTideParam(paramsFileText, @"cterm-peptide-mods-spec", _cTermModParams);
+                SetTideParam(paramsFileText, @"no-analytics", "T");
+
 
                 foreach (var settingName in TIDE_SETTINGS)
                 {
-                    //if (settingName == "digestion")
+                    //if (settingName == "digestion")  : TDOD non-specific digestions can be handled somwehere here, in the future
                     //    continue;
                     SetTideParam(paramsFileText, settingName, AdditionalSettings[settingName].ValueToString(CultureInfo.InvariantCulture));
                 }
 
-                //if (_enzyme.IsSemiCleaving == true)
-                //{
-                //    SetTideParam(paramsFileText, @"digestion", "partial-digest");
-                //} else
-                //{
-                //    SetTideParam(paramsFileText, "digestion", AdditionalSettings["digestion"].ValueToString(CultureInfo.InvariantCulture));
-                //}
+                if (_enzyme.IsSemiCleaving == true)
+                {
+                    SetTideParam(paramsFileText, @"digestion", "partial-digest");
+                }
+                else
+                {
+                    SetTideParam(paramsFileText, @"digestion", "full-digest");
+                }
 
                 switch (_enzyme.Name)
                     {
                         case "Trypsin (semi)":
                             SetTideParam(paramsFileText, @"enzyme", "trypsin");
-                            SetTideParam(paramsFileText, @"digestion", "partial-digest");
                             break;
                         case "Trypsin":
                             SetTideParam(paramsFileText, @"enzyme", "trypsin");
@@ -427,8 +430,8 @@ namespace pwiz.Skyline.Model.DdaSearch
                 GetPercolatorScores(percolatorDecoyPsmsTsv, qvalueByPsmId);
 
                 // We have only one percolator output file
-                string finalOutputFilepath = Path.Combine(cruxOutputDir, (fileroot.IsNullOrEmpty() ? "" : ".") + @"percolator.pep.xml");
-                FixPercolatorPepXml(TidePepXmlFilepath, finalOutputFilepath, qvalueByPsmId);
+                _finalOutputFilepath = Path.Combine(cruxOutputDir, (fileroot.IsNullOrEmpty() ? "" : ".") + @"percolator.pep.xml");
+                FixPercolatorPepXml(TidePepXmlFilepath, _finalOutputFilepath, qvalueByPsmId);
 
                 DeleteIntermediateFiles();
 
@@ -528,14 +531,16 @@ namespace pwiz.Skyline.Model.DdaSearch
             var percolatorTargetPsmsReader = new DsvFileReader(percolatorTsvFilepath, TextUtil.SEPARATOR_TSV);
             int psmIdColumn = percolatorTargetPsmsReader.GetFieldIndex(@"PSMId");
             int qvalueColumn = percolatorTargetPsmsReader.GetFieldIndex(@"q-value");
-            // Tide-search does not include directory name to the PSMId.
-            //int psmIdStartIndex = Path.GetDirectoryName(Path.GetDirectoryName(percolatorTsvFilepath))?.Length + 1 ?? 0; // trim off the directory name
+            int filenameColumn = percolatorTargetPsmsReader.GetFieldIndex(@"filename");
+
             while (percolatorTargetPsmsReader.ReadLine() != null)
             {
-                var psmId = percolatorTargetPsmsReader.GetFieldByIndex(psmIdColumn);
-                //psmId = psmId.Substring(psmIdStartIndex); // Tide-search does not include directory name to the PSMId.
+                string filename = Path.GetFileNameWithoutExtension(percolatorTargetPsmsReader.GetFieldByIndex(filenameColumn));
+                string[] psmIDs = percolatorTargetPsmsReader.GetFieldByIndex(psmIdColumn).Split('_');
+                //                basename       Scan ID              scanID            Charge            Rank
+                string psmKey = filename + "." + psmIDs[2] + "." + psmIDs[2] + "." + psmIDs[3] + "." + psmIDs[4];
                 var qvalue = Convert.ToDouble(percolatorTargetPsmsReader.GetFieldByIndex(qvalueColumn), CultureInfo.InvariantCulture);
-                qvalueByPsmId[psmId] = qvalue;
+                qvalueByPsmId[psmKey] = qvalue;
             }
         }
 
@@ -552,23 +557,25 @@ namespace pwiz.Skyline.Model.DdaSearch
                 {
                     if (line.Contains(@"<spectrum_query"))
                     {
-                        // We need to convert:
-                        //   DdaSearchTest/Tide.run_2.04610.04610.3
-                        // to:
-                        //   DdaSearchTest/Tide.run_2_4610_3
-                        lastPsmId = Regex.Replace(line, @".* spectrum=""(.+?)\.0*(\d+)\.\d+\.(\d+)"" .*", "$1_$2_$3");
+                        lastPsmId = Regex.Replace(line, @".* spectrum=""([^""]+)"" start_scan.*", "$1");
+
+                        // Remove the leading 0s of the scan ids. E.g. 04614 ==> 4614
+                        string[] psmIdParts = lastPsmId.Split('.');
+                        int.TryParse(psmIdParts[1], out int num);
+                        string numStr = num.ToString();
+                        lastPsmId = psmIdParts[0] + "." + numStr + "." + numStr + "." + psmIdParts[3];
                     }
                     else if (line.Contains(@"<search_hit"))
                     {
                         lastRank = Regex.Replace(line, @".* hit_rank=""(\d+)"" .*", "$1");
                     }
-                    else if (line.Contains(@"<search_score name=""expect"""))
+                    else if (line.Contains(@"</search_hit"))
                     {
-                        string psmIdAndRank = $@"{lastPsmId}_{lastRank}";
+                        string psmIdAndRank = $@"{lastPsmId}.{lastRank}";
                         if (qvalueByPsmId.ContainsKey(psmIdAndRank))
                         {
-                            fixedPepXmlFile.WriteLine(line);
                             fixedPepXmlFile.WriteLine(@"    <search_score name=""percolator_qvalue"" value=""{0}"" />", qvalueByPsmId[psmIdAndRank].ToString(CultureInfo.InvariantCulture));
+                            fixedPepXmlFile.WriteLine(line);
                             continue;
                         }
                         // MCC: This happens when percolator's text tables drops a PSM that is in pepXML; I'm not sure why it happens though.
@@ -617,7 +624,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 }
             }
         }
-            
+           
         public override void SetModifications(IEnumerable<StaticMod> fixedAndVariableModifs, int maxVariableMods_)
         {
             _maxVariableMods = maxVariableMods_;
@@ -755,7 +762,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             }
 
             if (!staticModsByAA.ContainsKey('C'))
-                modParamLines.Add(@"C+0.0"); // disable default cysteine static mod
+                modParamLines.Add(@"C+0"); // disable default cysteine static mod
 
             foreach (var kvp in staticModsByAA)
                 if (AminoAcidFormulas.FullNames.TryGetValue(kvp.Key, out var fullName))
@@ -807,24 +814,10 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         public override string GetSearchResultFilepath(MsDataFileUri searchFilepath)
         {
-            const string extensionToReplace = @".percolator-pepXML";
-            return Path.ChangeExtension(searchFilepath.GetFilePath(), extensionToReplace).Replace(extensionToReplace, @"-percolator.pepXML");
+            return _finalOutputFilepath;
         }
-        private string GetTideSearchResultFilepath(MsDataFileUri searchFilepath, string extension = ".pep.xml")
-        {
-            if (SpectrumFileNames.Length > 1)
-            {
-                return Path.Combine(Path.GetDirectoryName(searchFilepath.GetFilePath()) ?? "",
-                    @"Tide-search." + Path.ChangeExtension(searchFilepath.GetFileName(), extension));
-            }
-            else
-            {
-                return Path.Combine(Path.GetDirectoryName(searchFilepath.GetFilePath()) ?? "",
-                    Path.ChangeExtension(@"tide", extension));
-            }
-        }
-
-        private string[] SupportedExtensions = { @".mzml", @".mzxml", @".raw" };
+       
+        private string[] SupportedExtensions = { @".mzml", @".mzxml", @".ms2", @".mgf", @".raw" };
 
         public override bool GetSearchFileNeedsConversion(MsDataFileUri searchFilepath, out AbstractDdaConverter.MsdataFileFormat requiredFormat)
         {
