@@ -189,7 +189,6 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             {
                 result.AddRange(GetTableRows(peptide, training));
             }
-
             return result.Distinct();
         }
 
@@ -218,19 +217,19 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         protected abstract string ToolName { get; }
         
         protected abstract IList<ModificationType> ModificationTypes { get; }
-        
+        private IList<string> _warningMods;
         protected internal bool ValidateModifications(ModifiedSequence modifiedSequence, out string mods, out string modSites)
         {
             var modsBuilder = new StringBuilder();
             var modSitesBuilder = new StringBuilder();
 
-            var warningMods = GetWarningMods();
+            _warningMods ??= GetWarningMods();
 
             bool unsupportedModification = false;
             for (var i = 0; i < modifiedSequence.ExplicitMods.Count; i++)
             {
                 var mod = modifiedSequence.ExplicitMods[i];
-                var modWarns = warningMods.Where(m => m == mod.Name).ToArray();
+                var modWarns = _warningMods.Where(m => m == mod.Name).ToArray();
                 if (!mod.UnimodId.HasValue && modWarns.Length == 0)
                 {
                     var msg = string.Format(ModelsResources.BuildPrecursorTable_UnsupportedModification, modifiedSequence, mod.Name, ToolName);
@@ -289,7 +288,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             var resultList = new List<string>();
 
             // Build precursor table row by row
-            foreach (var peptide in Document.Peptides)
+            foreach (var peptide in Document.Peptides.Distinct())
             {
                 var modifiedSequence = ModifiedSequence.GetModifiedSequence(Document.Settings, peptide, IsotopeLabelType.light);
 

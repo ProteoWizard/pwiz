@@ -2017,9 +2017,9 @@ namespace pwiz.Skyline.Util
                     {
                         var index = basedir.IndexOf(path, StringComparison.Ordinal);
                         var solutionPath = basedir.Substring(0, index + path.Length);
-                        var skylineSln = Path.Combine(solutionPath, "Skyline.sln");
+                        var skylineSln = Path.Combine(solutionPath, @"Skyline.sln");
                         // Try to give user a hint as to which debugger to pick
-                        var skylineTesterSln = Path.Combine(solutionPath, "USE THIS FOR ASSUME FAIL DEBUGGING.sln");
+                        var skylineTesterSln = Path.Combine(solutionPath, @"USE THIS FOR ASSUME FAIL DEBUGGING.sln");
                         if (File.Exists(skylineTesterSln))
                             File.Delete(skylineTesterSln);
                         File.Copy(skylineSln, skylineTesterSln);

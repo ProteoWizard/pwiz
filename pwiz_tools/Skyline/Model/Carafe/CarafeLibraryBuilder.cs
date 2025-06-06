@@ -19,23 +19,25 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using Ionic.Zip;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
 using pwiz.Skyline.Model.Tools;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
-using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
-using pwiz.Skyline.Model.DocSettings;
-using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Diagnostics;
-using pwiz.Common.Collections;
-using System.ComponentModel;
-using System.Linq;
+using File = System.IO.File;
 
 [assembly: InternalsVisibleTo("TestPerf")]
 
@@ -50,6 +52,7 @@ namespace pwiz.Skyline.Model.Carafe
         private const string INPUT = @"input";
         private const string TRAIN = @"train";
         private const string CARAFE_VERSION = @"1.0.0";
+        private const string CARAFE_URI_NAME = @"carafe-";
         private const string CARAFE_DEV = @"-dev";
         private const string CARAFE_DEV_VERSION = ""; //@"-beta"; //CARAFE_DEV + @"-20250304T224833Z-001";
         private const string CMD_ARG_C = @"/C";
@@ -78,7 +81,8 @@ namespace pwiz.Skyline.Model.Carafe
 
         public LibrarySpec LibrarySpec { get; private set; }
 
-        private string PythonVersion { get; }
+//        public static string PythonVersion { get; private set; }
+        public static string PythonVersion => Settings.Default.PythonEmbeddableVersion;
         private string PythonVirtualEnvironmentName { get; }
 
         private string OutputSpectralLibsDir => Path.Combine(RootDir, OUTPUT_LIBRARY);
@@ -147,13 +151,14 @@ namespace pwiz.Skyline.Model.Carafe
                 
             };
 
-            return new PythonInstaller(packages, writer, AlphapeptdeepLibraryBuilder.ALPHAPEPTDEEP);
+            return new PythonInstaller(packages, writer, CARAFE);
         }
 
+        private static string CARAFE_JAR_URI => @"https://github.com/Noble-Lab/Carafe/releases/download/v1.0.0/";
         private Uri CarafeJarZipDownloadUrl()
         {
-            return new Uri(
-                @$"https://skyline.ms/_webdav/home/support/file%20sharing/%40files/carafe-{CARAFE_VERSION}{CARAFE_DEV_VERSION}{DOT_ZIP}");
+            //return new Uri(@$"https://skyline.ms/_webdav/home/support/file%20sharing/%40files/carafe-{CARAFE_VERSION}{CARAFE_DEV_VERSION}{DOT_ZIP}");
+            return new Uri(@$"{CARAFE_JAR_URI}{CARAFE_URI_NAME}{CARAFE_VERSION}{CARAFE_DEV_VERSION}{DOT_ZIP}");
         }
 
         //Uri(@$"https://github.com/Noble-Lab/Carafe/releases/download/v{CARAFE_VERSION}-dev/{CARAFE}-{CARAFE_VERSION}{DOT_ZIP}");
@@ -219,8 +224,8 @@ namespace pwiz.Skyline.Model.Carafe
         private IList<ArgumentAndValue> CommandArguments =>
             new List<ArgumentAndValue>
             {
-                new ArgumentAndValue(@"jar", CarafeJarFilePath, TextUtil.HYPHEN),
-                new ArgumentAndValue(@"ms", ExperimentDataFilePath, TextUtil.HYPHEN),
+                new ArgumentAndValue(@"jar", TextUtil.Quote(CarafeJarFilePath), TextUtil.HYPHEN),
+                new ArgumentAndValue(@"ms", TextUtil.Quote(ExperimentDataFilePath), TextUtil.HYPHEN),
                 new ArgumentAndValue(@"o", CarafeOutputLibraryDir(), TextUtil.HYPHEN),
                 new ArgumentAndValue(@"c_ion_min", @"2", TextUtil.HYPHEN),
                 new ArgumentAndValue(@"ez", string.Empty, TextUtil.HYPHEN),
@@ -465,7 +470,7 @@ namespace pwiz.Skyline.Model.Carafe
         public CarafeLibraryBuilder(
             string libName,
             string libOutPath,
-            string pythonVersion,
+            //string pythonVersion,
             string pythonVirtualEnvironmentName,
             string pythonVirtualEnvironmentScriptsDir,
             string experimentDataFilePath,
@@ -479,7 +484,7 @@ namespace pwiz.Skyline.Model.Carafe
             Document = document;
             TrainingDocument = trainingDocument;
             DbInputFilePath = dbInputFilePath;
-            PythonVersion = pythonVersion;
+            //PythonVersion = pythonVersion;
             PythonVirtualEnvironmentName = pythonVirtualEnvironmentName;
             PythonVirtualEnvironmentScriptsDir = pythonVirtualEnvironmentScriptsDir;
             ExperimentDataFilePath = experimentDataFilePath;
@@ -525,7 +530,7 @@ namespace pwiz.Skyline.Model.Carafe
         public CarafeLibraryBuilder(
             string libName,
             string libOutPath,
-            string pythonVersion,
+            //string pythonVersion,
             string pythonVirtualEnvironmentName,
             string pythonVirtualEnvironmentScriptsDir,
             string proteinDatabaseFilePath,
@@ -537,7 +542,7 @@ namespace pwiz.Skyline.Model.Carafe
             IrtStandard irtStandard) : base(document, irtStandard)
         {
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
-            PythonVersion = pythonVersion;
+            //PythonVersion = pythonVersion;
             PythonVirtualEnvironmentName = pythonVirtualEnvironmentName;
             PythonVirtualEnvironmentScriptsDir = pythonVirtualEnvironmentScriptsDir;
             //ProteinDatabaseFilePath = proteinDatabaseFilePath;
@@ -757,19 +762,18 @@ namespace pwiz.Skyline.Model.Carafe
                 }
             }
 
-  
             if (TrainingDocument != null)
             {
                 if (!DbInputFilePath.IsNullOrEmpty())
                 {
-                    readyArgs.Add(new ArgumentAndValue(@"db", DbInputFilePath, TextUtil.HYPHEN));
+                    readyArgs.Add(new ArgumentAndValue(@"db", TextUtil.Quote(DbInputFilePath), TextUtil.HYPHEN));
                 }
                 else
                 {
-                    readyArgs.Add(new ArgumentAndValue(@"db", InputFilePath, TextUtil.HYPHEN));
+                    readyArgs.Add(new ArgumentAndValue(@"db", TextUtil.Quote(InputFilePath), TextUtil.HYPHEN));
                 }
 
-                readyArgs.Add(new ArgumentAndValue(@"i", TuningFilePath, TextUtil.HYPHEN));
+                readyArgs.Add(new ArgumentAndValue(@"i", TextUtil.Quote(TuningFilePath), TextUtil.HYPHEN));
                 readyArgs.Add(new ArgumentAndValue(@"se", @"skyline", TextUtil.HYPHEN));
 
                 LibraryHelper.PreparePrecursorInputFile(Document, progress, ref progressStatus, CARAFE, IrtStandard);
@@ -779,23 +783,23 @@ namespace pwiz.Skyline.Model.Carafe
             {
                 if (!DbInputFilePath.IsNullOrEmpty())
                 {
-                    readyArgs.Add(new ArgumentAndValue(@"db", DbInputFilePath, TextUtil.HYPHEN));
-                    readyArgs.Add(new ArgumentAndValue(@"i", TuningFilePath, TextUtil.HYPHEN));
+                    readyArgs.Add(new ArgumentAndValue(@"db", TextUtil.Quote(DbInputFilePath), TextUtil.HYPHEN));
+                    readyArgs.Add(new ArgumentAndValue(@"i", TextUtil.Quote(TuningFilePath), TextUtil.HYPHEN));
                     readyArgs.Add(new ArgumentAndValue(@"se", @"DIA-NN", TextUtil.HYPHEN));
                     LibraryHelper.PreparePrecursorInputFile(Document, progress, ref progressStatus, CARAFE, IrtStandard);
                 }
                 else
                 {
-                    readyArgs.Add(new ArgumentAndValue(@"db", InputFilePath, TextUtil.HYPHEN));
-                    readyArgs.Add(new ArgumentAndValue(@"i", TuningFilePath, TextUtil.HYPHEN));
+                    readyArgs.Add(new ArgumentAndValue(@"db", TextUtil.Quote(InputFilePath), TextUtil.HYPHEN));
+                    readyArgs.Add(new ArgumentAndValue(@"i", TextUtil.Quote(TuningFilePath), TextUtil.HYPHEN));
                     readyArgs.Add(new ArgumentAndValue(@"se", @"DIA-NN", TextUtil.HYPHEN));
                     LibraryHelper.PreparePrecursorInputFile(Document, progress, ref progressStatus, CARAFE, IrtStandard);
                 }
             }
             else
             {
-                readyArgs.Add(new ArgumentAndValue(@"db", DbInputFilePath, TextUtil.HYPHEN));
-                readyArgs.Add(new ArgumentAndValue(@"i", TuningFilePath, TextUtil.HYPHEN));
+                readyArgs.Add(new ArgumentAndValue(@"db", TextUtil .Quote(DbInputFilePath), TextUtil.HYPHEN));
+                readyArgs.Add(new ArgumentAndValue(@"i", TextUtil.Quote(TuningFilePath), TextUtil.HYPHEN));
                 readyArgs.Add(new ArgumentAndValue(@"se", @"skyline", TextUtil.HYPHEN));
                 LibraryHelper.PrepareTrainingInputFile(Document, progress, ref progressStatus, CARAFE);
             }
@@ -932,12 +936,12 @@ namespace pwiz.Skyline.Model.Carafe
 
             args += TextUtil.SpaceSeparate(
                 TextUtil.Quote(JavaExecutablePath)
-                );
+            );
 
             args += SPACE + TextUtil.SpaceSeparate(
                 commandArgs.Select(arg => 
                     arg.ToString())
-                );
+            );
 
             var cmdBuilder = new StringBuilder();
             CancellationToken cancelToken = CancellationToken.None;
@@ -953,14 +957,20 @@ namespace pwiz.Skyline.Model.Carafe
             {
                 FileName = batPath,
                 CreateNoWindow = true,
-                UseShellExecute = false
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                RedirectStandardInput = false
             };
 
             try
             {
+                pr.SilenceStatusMessageUpdates = true;  // Use FilteredUserMessageWriter to write process output instead of ProgressStatus.ChangeMessage()
+                // pr.ExpectedOutputLinesCount = 119;
+                
                 pr.EnableImmediateLog = true;
                 pr.EnableRunningTimeMessage = true;
-                pr.Run(psi, string.Empty, progress, ref progressStatus, ProcessPriorityClass.BelowNormal, true);
+                pr.Run(psi, string.Empty, progress, ref progressStatus, null, ProcessPriorityClass.BelowNormal, true);
             }
             catch (Exception ex)
             {

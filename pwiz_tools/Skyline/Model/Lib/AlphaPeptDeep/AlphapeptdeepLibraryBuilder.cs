@@ -167,12 +167,9 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             string rootProcessingDir = Path.GetDirectoryName(libOutPath);
             if (string.IsNullOrEmpty(rootProcessingDir))
                 throw new ArgumentException($@"AlphapeptdeepLibraryBuilder libOutputPath {libOutPath} must be a full path.");
-            if (rootProcessingDir != null)
-            {
-                rootProcessingDir = Path.Combine(rootProcessingDir, Path.GetFileNameWithoutExtension(libOutPath));
+            rootProcessingDir = Path.Combine(rootProcessingDir, Path.GetFileNameWithoutExtension(libOutPath));
 
-                EnsureWorkDir(rootProcessingDir, ALPHAPEPTDEEP);
-            }
+            EnsureWorkDir(rootProcessingDir, ALPHAPEPTDEEP);
         }
 
         public bool BuildLibrary(IProgressMonitor progress)

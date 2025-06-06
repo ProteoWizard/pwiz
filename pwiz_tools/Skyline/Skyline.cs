@@ -684,7 +684,7 @@ namespace pwiz.Skyline
         {
             // Not allowed to set the document to null.
             Debug.Assert(docNew != null);
-            if (docNew.DeferSettingsChanges)
+            if (docNew != null && docNew.DeferSettingsChanges)
             {
                 throw new InvalidOperationException();
             }
@@ -3258,22 +3258,25 @@ namespace pwiz.Skyline
 
                     if (proteomic && !backgroundProteome.IsNone)
                     {
-                        int ichPeptideSeparator = labelText.IndexOf(FastaSequence.PEPTIDE_SEQUENCE_SEPARATOR,
-                                                                    StringComparison.Ordinal);
-                        string proteinName;
-                        if (ichPeptideSeparator >= 0)
+                        if (labelText != null)
                         {
-                            // TODO(nicksh): If they've selected a single peptide, then see if the protein has already
-                            // been added, and, if so, just add the single peptide to the existing protein.
-                            peptideSequence = new Target(labelText.Substring(0, ichPeptideSeparator));
-                            proteinName = labelText.Substring(ichPeptideSeparator +
-                                                              FastaSequence.PEPTIDE_SEQUENCE_SEPARATOR.Length);
+                            int ichPeptideSeparator = labelText.IndexOf(FastaSequence.PEPTIDE_SEQUENCE_SEPARATOR,
+                                StringComparison.Ordinal);
+                            string proteinName;
+                            if (ichPeptideSeparator >= 0)
+                            {
+                                // TODO(nicksh): If they've selected a single peptide, then see if the protein has already
+                                // been added, and, if so, just add the single peptide to the existing protein.
+                                peptideSequence = new Target(labelText.Substring(0, ichPeptideSeparator));
+                                proteinName = labelText.Substring(ichPeptideSeparator +
+                                                                  FastaSequence.PEPTIDE_SEQUENCE_SEPARATOR.Length);
+                            }
+                            else
+                            {
+                                proteinName = labelText;
+                            }
+                            fastaSequence = backgroundProteome.GetFastaSequence(proteinName);
                         }
-                        else
-                        {
-                            proteinName = labelText;
-                        }
-                        fastaSequence = backgroundProteome.GetFastaSequence(proteinName);
                     }
                     string peptideGroupName = null;
                     string modifyMessage;

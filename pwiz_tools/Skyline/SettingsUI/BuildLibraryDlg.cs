@@ -21,15 +21,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
-using System.Xml.Serialization;
 using pwiz.BiblioSpec;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
-using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
@@ -39,9 +38,13 @@ using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.Skyline.Model.Tools;
-using pwiz.Skyline.Model.Carafe;
-using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
+using System.Runtime.CompilerServices;
 using File = System.IO.File;
+using pwiz.Skyline.Model.Carafe;
+using pwiz.Skyline.EditUI;
+using System.Xml.Serialization;
+
+[assembly: InternalsVisibleTo("TestFunctional")]
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -107,7 +110,6 @@ namespace pwiz.Skyline.SettingsUI
         {
             new PropertiesPage(), new FilesPage(), new LearningPage(),
         };
-
         public enum DataSourcePages { files, alpha, carafe, koina }
         public enum BuildLibraryTargetOptions { fastaFile, currentSkylineDocument }
         public enum LearningOptions { another_doc, this_doc, diann_report }
@@ -136,7 +138,7 @@ namespace pwiz.Skyline.SettingsUI
         private readonly SettingsListComboDriver<IrtStandard> _driverStandards;
         private SettingsListBoxDriver<LibrarySpec> _driverLibrary;
         private LearningOptions _currentLearningOption;
-        // Values used to keep from overwriting user changes to synchronized fields
+
         private string _lastUpdatedFileName;
         private string _lastUpdatedLibName;
 
@@ -266,12 +268,12 @@ namespace pwiz.Skyline.SettingsUI
             if (string.IsNullOrEmpty(outputPath))
             {
                 _helper.ShowTextBoxError(textPath, SettingsUIResources.BuildLibraryDlg_ValidateBuilder_You_must_specify_an_output_file_path, outputPath);
-                return false;                
+                return false;
             }
             if (Directory.Exists(outputPath))
             {
                 _helper.ShowTextBoxError(textPath, SettingsUIResources.BuildLibraryDlg_ValidateBuilder_The_output_path__0__is_a_directory_You_must_specify_a_file_path, outputPath);
-                return false;                
+                return false;
             }
             string outputDir = Path.GetDirectoryName(outputPath);
             if (string.IsNullOrEmpty(outputDir))
@@ -371,7 +373,9 @@ namespace pwiz.Skyline.SettingsUI
             return true;
         }
 
+
         private string _libFilepath;
+
         public string BuilderLibFilepath
         {
             get => _libFilepath;
@@ -409,7 +413,7 @@ namespace pwiz.Skyline.SettingsUI
                     _helper.ShowTextBoxError(textBoxMsMsData, @$"{msMsDataFilePath} does not exist.");
                     return false;
                 }
-                Builder ??= new CarafeLibraryBuilder(name, outputPath, CARAFE_PYTHON_VERSION, CARAFE, CarafePythonVirtualEnvironmentDir,
+                Builder ??= new CarafeLibraryBuilder(name, outputPath, CARAFE, CarafePythonVirtualEnvironmentDir,
                     msMsDataFilePath, textBoxTrainingDoc.Text, textBoxProteinDatabase.Text, DocumentUI, _trainingDocument,
                     labelDoc.Text == string.Format(SettingsUIResources.BuildLibraryDlg_DIANN_report_document), IrtStandard, out _testLibFilepath, out _libFilepath);
 
@@ -457,8 +461,8 @@ namespace pwiz.Skyline.SettingsUI
         {
             // TODO: Need to figure out a better way to do this, use KoinaPeptidePrecursorPair?
             var doc = _documentUiContainer.DocumentUI;
-            var peptides = doc.Peptides.Where(pep=>!pep.IsDecoy).ToArray();
-            var precursorCount = peptides.Sum(pep=>pep.TransitionGroupCount);
+            var peptides = doc.Peptides.Where(pep => !pep.IsDecoy).ToArray();
+            var precursorCount = peptides.Sum(pep => pep.TransitionGroupCount);
             var peptidesPerPrecursor = new PeptideDocNode[precursorCount];
             var precursors = new TransitionGroupDocNode[precursorCount];
             int index = 0;
@@ -505,12 +509,12 @@ namespace pwiz.Skyline.SettingsUI
         private bool SetupPythonEnvironmentForCarafe(bool createDlg = true)
         {
             var pythonInstaller = CarafeLibraryBuilder.CreatePythonInstaller(new TextBoxStreamWriterHelper());
-            
+
             btnNext.Enabled = false;
             bool setupSuccess = false;
             try
             {
-                setupSuccess = SetupPythonEnvironmentInternal(pythonInstaller);
+                setupSuccess = SetupPythonEnvironmentInternal(pythonInstaller, CarafeLibraryBuilder.PythonVersion, CarafeLibraryBuilder.CARAFE);
             }
             finally
             {
@@ -535,7 +539,7 @@ namespace pwiz.Skyline.SettingsUI
             bool setupSuccess = false;
             try
             {
-                setupSuccess = SetupPythonEnvironmentInternal(pythonInstaller);
+                setupSuccess = SetupPythonEnvironmentInternal(pythonInstaller, AlphapeptdeepLibraryBuilder.PythonVersion, AlphapeptdeepLibraryBuilder.ALPHAPEPTDEEP);
             }
             finally
             {
@@ -549,7 +553,7 @@ namespace pwiz.Skyline.SettingsUI
             return setupSuccess;
         }
 
-        private bool SetupPythonEnvironmentInternal(PythonInstaller pythonInstaller)
+        private bool SetupPythonEnvironmentInternal(PythonInstaller pythonInstaller, string version, string environment)
         {
             if (pythonInstaller.IsPythonVirtualEnvironmentReady() && pythonInstaller.IsNvidiaEnvironmentReady())
             {
@@ -559,10 +563,9 @@ namespace pwiz.Skyline.SettingsUI
             if (!pythonInstaller.IsPythonVirtualEnvironmentReady())
             {
                 using var pythonDlg = new MultiButtonMsgDlg(
-                    string.Format(ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required,
-                        AlphapeptdeepLibraryBuilder.PythonVersion, AlphapeptdeepLibraryBuilder.ALPHAPEPTDEEP), 
+                    string.Format(ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required, version, environment),
                     Resources.OK);
-                
+
                 if (pythonDlg.ShowDialog(this) == DialogResult.Cancel)
                 {
                     return false;
@@ -608,6 +611,7 @@ namespace pwiz.Skyline.SettingsUI
                 _lastUpdatedLibName = id;
 
             }
+
         }
 
         private void btnBrowse_Click(object sender, EventArgs e)
@@ -681,7 +685,7 @@ namespace pwiz.Skyline.SettingsUI
                     DialogResult = DialogResult.OK;
                 }
             }
-            else if ( ValidateBuilder(false, true, true))
+            else if (ValidateBuilder(false, true, true))
             {
                 Settings.Default.LibraryDirectory = Path.GetDirectoryName(LibraryPath);
 
@@ -698,7 +702,6 @@ namespace pwiz.Skyline.SettingsUI
                     btnNext.Enabled = true;
             }
         }
-
         private void btnPrevious_Click(object sender, EventArgs e)
         {
             if (tabControlMain.SelectedIndex != (int)Pages.properties)
@@ -1028,7 +1031,6 @@ namespace pwiz.Skyline.SettingsUI
             get { return radioAlphaSource.Checked; }
             set { radioAlphaSource.Checked = value; }
         }
-
         public bool Carafe
         {
             get { return radioCarafeSource.Checked; }

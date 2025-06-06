@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -36,10 +35,10 @@ namespace pwiz.Common.SystemUtil
         void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status,
             ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal, bool forceTempfilesCleanup = false);
         void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status,
-                 TextWriter writer, ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal,
-                 bool forceTempfilesCleanup = false,
-                 Func<string, int, bool> outputAndExitCodeAreGoodFunc = null,
-                 bool updateProgressPercentage = true);
+            TextWriter writer, ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal,
+            bool forceTempfilesCleanup = false,
+            Func<string, int, bool> outputAndExitCodeAreGoodFunc = null,
+            bool updateProgressPercentage = true);
     }
 
     public class ProcessRunner : IProcessRunner
@@ -238,6 +237,8 @@ namespace pwiz.Common.SystemUtil
                             var statusOld = status;
                             if (!SilenceStatusMessageUpdates)
                                 status = status.ChangeMessage(line);
+                            else if (EnableImmediateLog)
+                                writer.WriteLineAsync(line);
 
                             if (updateProgressPercentage && ExpectedOutputLinesCount > 0)
                             {

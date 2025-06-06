@@ -39,9 +39,6 @@
             this.cbKeepRedundant = new System.Windows.Forms.CheckBox();
             this.comboAction = new System.Windows.Forms.ComboBox();
             this.cbIncludeAmbiguousMatches = new System.Windows.Forms.CheckBox();
-            this.btnCancel = new System.Windows.Forms.Button();
-            this.btnNext = new System.Windows.Forms.Button();
-            this.btnPrevious = new System.Windows.Forms.Button();
             this.btnLearningDocBrowse = new System.Windows.Forms.Button();
             this.textLearningDoc = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
@@ -418,10 +415,15 @@
             resources.ApplyResources(this.label2, "label2");
             this.label2.Name = "label2";
             // 
-            // btnLearningDocBrowse
+            // tabControlMain
             // 
-            resources.ApplyResources(this.btnLearningDocBrowse, "btnLearningDocBrowse");
-            this.btnLearningDocBrowse.Name = "btnLearningDocBrowse";
+            resources.ApplyResources(this.tabControlMain, "tabControlMain");
+            this.tabControlMain.Controls.Add(this.tabProperties);
+            this.tabControlMain.Controls.Add(this.tabFiles);
+            this.tabControlMain.Controls.Add(this.tabLearn);
+            this.tabControlMain.Name = "tabControlMain";
+            this.tabControlMain.SelectedIndex = 0;
+            this.tabControlMain.TabStop = false;
             // 
             // tabLearn
             // 
@@ -524,24 +526,24 @@
             resources.ApplyResources(this.label1, "label1");
             this.label1.Name = "label1";
             // 
-            // label2
+            // tabPageLibraries
             // 
-            resources.ApplyResources(this.label2, "label2");
-            this.label2.Name = "label2";
+            this.tabPageLibraries.BackColor = System.Drawing.SystemColors.Control;
+            this.tabPageLibraries.Controls.Add(this.listLibraries);
+            this.tabPageLibraries.Controls.Add(this.label3);
+            resources.ApplyResources(this.tabPageLibraries, "tabPageLibraries");
+            this.tabPageLibraries.Name = "tabPageLibraries";
             // 
-            // textName
+            // listLibraries
             // 
-            resources.ApplyResources(this.textName, "textName");
-            this.textName.Name = "textName";
-            this.helpTip.SetToolTip(this.textName, resources.GetString("textName.ToolTip"));
-            this.textName.TextChanged += new System.EventHandler(this.textName_TextChanged);
+            resources.ApplyResources(this.listLibraries, "listLibraries");
+            this.listLibraries.FormattingEnabled = true;
+            this.listLibraries.Name = "listLibraries";
             // 
-            // btnBrowse
+            // label3
             // 
-            resources.ApplyResources(this.btnBrowse, "btnBrowse");
-            this.btnBrowse.Name = "btnBrowse";
-            this.btnBrowse.UseVisualStyleBackColor = true;
-            this.btnBrowse.Click += new System.EventHandler(this.btnBrowse_Click);
+            resources.ApplyResources(this.label3, "label3");
+            this.label3.Name = "label3";
             // 
             // tabControlBuildLibraryTarget
             // 
@@ -738,63 +740,6 @@
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
-            // tabFilesSource
-            // 
-            this.tabFilesSource.BackColor = System.Drawing.SystemColors.Control;
-            this.tabFilesSource.Controls.Add(this.cbIncludeAmbiguousMatches);
-            this.tabFilesSource.Controls.Add(this.actionLabel);
-            this.tabFilesSource.Controls.Add(this.comboAction);
-            this.tabFilesSource.Controls.Add(this.cbKeepRedundant);
-            this.tabFilesSource.Controls.Add(this.cbFilter);
-            resources.ApplyResources(this.tabFilesSource, "tabFilesSource");
-            this.tabFilesSource.Name = "tabFilesSource";
-            // 
-            // cbFilter
-            // 
-            resources.ApplyResources(this.cbFilter, "cbFilter");
-            this.cbFilter.Name = "cbFilter";
-            this.helpTip.SetToolTip(this.cbFilter, resources.GetString("cbFilter.ToolTip"));
-            this.cbFilter.UseVisualStyleBackColor = true;
-            // 
-            // cbKeepRedundant
-            // 
-            resources.ApplyResources(this.cbKeepRedundant, "cbKeepRedundant");
-            this.cbKeepRedundant.Name = "cbKeepRedundant";
-            this.helpTip.SetToolTip(this.cbKeepRedundant, resources.GetString("cbKeepRedundant.ToolTip"));
-            this.cbKeepRedundant.UseVisualStyleBackColor = true;
-            // 
-            // comboAction
-            // 
-            this.comboAction.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            resources.ApplyResources(this.comboAction, "comboAction");
-            this.comboAction.FormattingEnabled = true;
-            this.comboAction.Items.AddRange(new object[] {
-            resources.GetString("comboAction.Items"),
-            resources.GetString("comboAction.Items1")});
-            this.comboAction.Name = "comboAction";
-            this.helpTip.SetToolTip(this.comboAction, resources.GetString("comboAction.ToolTip"));
-            // 
-            // actionLabel
-            // 
-            resources.ApplyResources(this.actionLabel, "actionLabel");
-            this.actionLabel.Name = "actionLabel";
-            // 
-            // cbIncludeAmbiguousMatches
-            // 
-            resources.ApplyResources(this.cbIncludeAmbiguousMatches, "cbIncludeAmbiguousMatches");
-            this.cbIncludeAmbiguousMatches.Name = "cbIncludeAmbiguousMatches";
-            this.helpTip.SetToolTip(this.cbIncludeAmbiguousMatches, resources.GetString("cbIncludeAmbiguousMatches.ToolTip"));
-            this.cbIncludeAmbiguousMatches.UseVisualStyleBackColor = true;
-            // 
-            // tabControlMain
-            // 
-            resources.ApplyResources(this.tabControlMain, "tabControlMain");
-            this.tabControlMain.Controls.Add(this.tabProperties);
-            this.tabControlMain.Controls.Add(this.tabFiles);
-            this.tabControlMain.Name = "tabControlMain";
-            this.tabControlMain.SelectedIndex = 0;
-            this.tabControlMain.TabStop = false;
-            // 
             // BuildLibraryDlg
             // 
             resources.ApplyResources(this, "$this");
@@ -845,9 +790,6 @@
         }
 
         #endregion
-        private System.Windows.Forms.Button btnCancel;
-        private System.Windows.Forms.Button btnNext;
-        private System.Windows.Forms.Button btnPrevious;
         private System.Windows.Forms.ToolTip helpTip;
         private System.Windows.Forms.Button btnLearningDocBrowse;
         private System.Windows.Forms.TextBox textLearningDoc;
@@ -916,6 +858,9 @@
         private System.Windows.Forms.TabPage tabPage1;
         private System.Windows.Forms.Button btnBrowse;
         private System.Windows.Forms.Button buttonProteinDatabase;
+        private System.Windows.Forms.Button btnPrevious;
+        private System.Windows.Forms.Button btnNext;
+        private System.Windows.Forms.Button btnCancel;
         private Controls.WizardPages tabControlLearning;
         private System.Windows.Forms.TabPage tabWithFiles;
         private System.Windows.Forms.Button buttonTrainingDoc;

@@ -396,15 +396,6 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Build Library.
-        /// </summary>
-        public static string BuildingPrecursorTable_Build_Library {
-            get {
-                return ResourceManager.GetString("BuildingPrecursorTable_Build_Library", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Carafe failed to complete.
         /// </summary>
         public static string Carafe_failed_to_complete {
@@ -1896,6 +1887,24 @@ namespace pwiz.Skyline.Model {
         public static string MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries {
             get {
                 return ResourceManager.GetString("MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Install.
+        /// </summary>
+        public static string NvidiaInstaller_Install {
+            get {
+                return ResourceManager.GetString("NvidiaInstaller_Install", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Missing resource {0}.
+        /// </summary>
+        public static string NvidiaInstaller_Missing_resource_0_ {
+            get {
+                return ResourceManager.GetString("NvidiaInstaller_Missing_resource_0_", resourceCulture);
             }
         }
         

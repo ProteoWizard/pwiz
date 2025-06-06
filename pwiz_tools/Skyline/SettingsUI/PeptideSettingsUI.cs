@@ -779,7 +779,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 using (var longWaitDlg = new LongWaitDlg(_parent))
                 {
-                    longWaitDlg.Text = string.Format(ModelResources.BuildingPrecursorTable_Build_Library);
+                    //longWaitDlg.Text = string.Format(ModelResources.BuildingPrecursorTable_Build_Library);
                     var status = longWaitDlg.PerformWork(_parent, 500, progressMonitor =>
                         _libraryManager.BuildLibraryBackground(_parent, builder, progressMonitor, buildState));
 
