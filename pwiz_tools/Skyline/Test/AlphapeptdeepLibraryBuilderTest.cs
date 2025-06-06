@@ -87,11 +87,13 @@ namespace pwiz.SkylineTest
             TestGetPrecursorTable(document, SIMPLE_PRECURSOR_TABLE_ANSWER);
             TestGetWarningMods(document, 0); // No warnings should be generated
     
-            document = CreateTestImportedDoc();
-
+            document = CreateTestImportedNonUnimodModsDoc();
             TestGetPrecursorTable(document, MIXED_PRECURSOR_TABLE_ANSWER);
-            TestGetWarningMods(document, 1);
-            TestGetWarningMods(document, 1);
+            TestGetWarningMods(document, 1); // 1 warning is generated
+
+            document = CreateTestImportedOnlyUnimodModsDoc();
+            TestGetPrecursorTable(document, MIXED_PRECURSOR_TABLE_ANSWER);
+            TestGetWarningMods(document, 0); // No warnings are generated
 
             TestValidateModifications_Supported();
             TestValidateModifications_Unsupported();
@@ -150,9 +152,6 @@ namespace pwiz.SkylineTest
         /// </summary>
         public void TestValidateModifications_Supported()
         {
-            var document = CreateTestEmptyDocument();
-            var builder = new AlphapeptdeepLibraryBuilder(TEST_LIB_NAME, NeverBuiltBlib, document, IrtStandard.BIOGNOSYS_11);
-
             var peptideList = new[]
             {
                 new Peptide("CELVISK"),
@@ -213,6 +212,8 @@ namespace pwiz.SkylineTest
             };
 
             var peptides = CreatePeptideDocNodes(peptideList, explicitMods).ToArray();
+            var document = CreateTestDocumentInternal(peptides);
+            var builder = new AlphapeptdeepLibraryBuilder(TEST_LIB_NAME, NeverBuiltBlib, document, IrtStandard.BIOGNOSYS_11);
             for (int i = 0; i < peptides.Length; i++)
             {
                 var modifiedSeq = ModifiedSequence.GetModifiedSequence(document.Settings, peptides[i], IsotopeLabelType.light);
@@ -230,9 +231,6 @@ namespace pwiz.SkylineTest
         /// </summary>
         public void TestValidateModifications_Unsupported()
         {
-            var document = CreateTestEmptyDocument();
-            var builder = new AlphapeptdeepLibraryBuilder(TEST_LIB_NAME, NeverBuiltBlib, document, IrtStandard.BIOGNOSYS_11);
-
             var peptideList = new[]
             {
                 new Peptide("MSGSHSNDEDDVVQVPETSSPTK")
@@ -249,7 +247,7 @@ namespace pwiz.SkylineTest
             };
 
             var aceOxMetMod = new StaticMod("Acetyl-Oxidation (N-term-M)", "M",ModTerminus.N, true, "H2C2O2", LabelAtoms.None, RelativeRT.Unknown, null,
-                null, null, -1, "Acetyl-Ox");
+                null, null, null, "Acetyl-Ox");
 
             var explicitMods1 = new[]
             {
@@ -262,6 +260,9 @@ namespace pwiz.SkylineTest
             };
 
             var peptides = CreatePeptideDocNodes(peptideList, explicitMods).ToArray();
+            var document = CreateTestDocumentInternal(peptides);
+            var builder = new AlphapeptdeepLibraryBuilder(TEST_LIB_NAME, NeverBuiltBlib, document, IrtStandard.BIOGNOSYS_11);
+
             for (int i = 0; i < peptides.Length; i++)
             {
                 var modifiedSeq = ModifiedSequence.GetModifiedSequence(document.Settings, peptides[i], IsotopeLabelType.light);
@@ -368,11 +369,21 @@ namespace pwiz.SkylineTest
         }
 
         /// <summary>
-        /// Creates and returns an <see cref="SrmDocument"/> from the embedded resource file "Test-imported_24-11-short.sky"
+        /// Creates and returns an <see cref="SrmDocument"/> from the embedded resource file "Test-imported_24-11-short_onlyUnimodMods.sky"
         /// </summary>
-        private SrmDocument CreateTestImportedDoc()
+        private SrmDocument CreateTestImportedOnlyUnimodModsDoc()
         {
-            var document = ResultsUtil.DeserializeDocument("Test-imported_24-11-short.sky", GetType());
+            var document = ResultsUtil.DeserializeDocument("Test-imported_24-11-short_onlyUnimodMods.sky", GetType());
+            AssertEx.IsDocumentState(document, 0, 1, 8, 24, 291);
+            return document;
+        }
+
+        /// <summary>
+        /// Creates and returns an <see cref="SrmDocument"/> from the embedded resource file "Test-imported_24-11-short_nonUnimodMods.sky"
+        /// </summary>
+        private SrmDocument CreateTestImportedNonUnimodModsDoc()
+        {
+            var document = ResultsUtil.DeserializeDocument("Test-imported_24-11-short_nonUnimodMods.sky", GetType());
             AssertEx.IsDocumentState(document, 0, 1, 9, 27, 327);
             return document;
         }
@@ -433,10 +444,10 @@ namespace pwiz.SkylineTest
         /// <param name="peptideList">List of <see cref="Peptide"/> to place into the document.</param>
         private SrmDocument CreateTestSimpleDocument(IEnumerable<Peptide> peptideList)
         {
-            return CreateTestDocumentInternal(CreatePeptideDocNodes(peptideList).ToArray());
+                return CreateTestDocumentInternal(CreatePeptideDocNodes(peptideList).ToArray());
         }
 
-        private static SrmDocument CreateTestDocumentInternal(PeptideDocNode[] nodePepArray)
+        private SrmDocument CreateTestDocumentInternal(PeptideDocNode[] nodePepArray)
         {
             var doc = new SrmDocument(SrmSettingsList.GetDefault());
 

@@ -162,20 +162,20 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         protected abstract string ToolName { get; }
         
         protected abstract IList<ModificationType> ModificationTypes { get; }
-        
+        private IList<string> _warningMods;
         protected internal bool ValidateModifications(ModifiedSequence modifiedSequence, out string mods, out string modSites)
         {
             var modsBuilder = new StringBuilder();
             var modSitesBuilder = new StringBuilder();
 
-            var warningMods = GetWarningMods();
+            _warningMods ??= GetWarningMods();
 
             bool unsupportedModification = false;
             for (var i = 0; i < modifiedSequence.ExplicitMods.Count; i++)
             {
                 var mod = modifiedSequence.ExplicitMods[i];
-                var modWarns = warningMods.Where(m => m == mod.Name).ToArray();
-                if (!mod.UnimodId.HasValue && modWarns.Length == 0)
+                var modWarns = _warningMods.Where(m => m.Contains(mod.Name)).ToArray();
+                if (mod.UnimodId == null)
                 {
                     var msg = string.Format(ModelsResources.BuildPrecursorTable_UnsupportedModification, modifiedSequence, mod.Name, ToolName);
                     Messages.WriteAsyncUserMessage(msg);
@@ -184,9 +184,9 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 }
 
                 var unimodIdWithName = mod.UnimodIdWithName;
-                var modNames = ModificationTypes.Where(m => m.Accession == unimodIdWithName).ToArray();
+                var modNames = ModificationTypes.Where(m => unimodIdWithName.Contains(m.Accession)).ToArray();
 
-                if (modNames.Length == 0 && modWarns.Length == 0)
+                if (modNames.Length != 0 && modWarns.Length != 0)
                 {
                     var msg = string.Format(ModelsResources.BuildPrecursorTable_Unimod_UnsupportedModification, modifiedSequence, mod.Name, unimodIdWithName, ToolName);
                     Messages.WriteAsyncUserMessage(msg);
@@ -260,12 +260,6 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                         }
                     }
                 }
-            }
-
-            // For better readability
-            for (int i = 0; i < resultList.Count; i++)
-            {
-                resultList[i] = resultList[i].Indent(1);
             }
             return resultList;
         }
