@@ -174,7 +174,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             for (var i = 0; i < modifiedSequence.ExplicitMods.Count; i++)
             {
                 var mod = modifiedSequence.ExplicitMods[i];
-                var modWarns = _warningMods.Where(m => m == mod.Name).ToArray();
+                var modWarns = _warningMods.Where(m => m.Contains(mod.Name)).ToArray();
                 if (!mod.UnimodId.HasValue && modWarns.Length == 0)
                 {
                     var msg = string.Format(ModelsResources.BuildPrecursorTable_UnsupportedModification, modifiedSequence, mod.Name, ToolName);
