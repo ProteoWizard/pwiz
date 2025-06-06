@@ -18,6 +18,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using System.Text;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.Collections;
 
@@ -25,8 +27,13 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
 {
     public class WatersConnectSession : RemoteSession
     {
+        protected HttpClient _httpClient;
+
         public WatersConnectSession(WatersConnectAccount account) : base(account)
         {
+            if (!(account is WatersConnectAccount))
+                throw new ArgumentException(@"WatersConnectSession requires a WatersConnectAccount");
+            _httpClient = account.GetAuthenticatedHttpClient();
         }
 
         public WatersConnectAccount WatersConnectAccount { get { return (WatersConnectAccount) Account; } }
@@ -80,10 +87,21 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
         }
 
         private ImmutableList<WatersConnectFolderObject> GetFolders(Uri requestUri)
+        protected void EnsureSuccess(HttpResponseMessage response)
         {
-            var httpClient = WatersConnectAccount.GetAuthenticatedHttpClient();
-            var response = httpClient.GetAsync(requestUri).Result;
-            response.EnsureSuccessStatusCode();
+            if (response.StatusCode >= System.Net.HttpStatusCode.BadRequest)
+            {
+                var messageBuilder = new StringBuilder(string.Format("Waters Connect server returns an error code: {0}.", response.StatusCode));
+                if (response.Content != null)
+                {
+                    messageBuilder.Append(string.Format("\n {0}", response.Content.ReadAsStringAsync().Result));
+                }
+                throw new RemoteServerException(messageBuilder.ToString());
+            }
+        }
+        {
+            var response = _httpClient.GetAsync(requestUri).Result;
+            EnsureSuccess(response);
             string responseBody = response.Content.ReadAsStringAsync().Result;
             var jsonObject = JObject.Parse(responseBody);
 
@@ -97,9 +115,8 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
 
         private ImmutableList<WatersConnectFolderObject> GetInjections(Uri requestUri)
         {
-            var httpClient = WatersConnectAccount.GetAuthenticatedHttpClient();
-            var response = httpClient.GetAsync(requestUri).Result;
-            response.EnsureSuccessStatusCode();
+            var response = _httpClient.GetAsync(requestUri).Result;
+            EnsureSuccess(response);
             string responseBody = response.Content.ReadAsStringAsync().Result;
             var itemsValue = JArray.Parse(responseBody);
             if (itemsValue == null)
@@ -113,9 +130,8 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
 
         private ImmutableList<WatersConnectFileObject> GetFiles(Uri requestUri)
         {
-            var httpClient = WatersConnectAccount.GetAuthenticatedHttpClient();
-            var response = httpClient.GetAsync(requestUri).Result;
-            response.EnsureSuccessStatusCode();
+            var response = _httpClient.GetAsync(requestUri).Result;
+            EnsureSuccess(response);
             string responseBody = response.Content.ReadAsStringAsync().Result;
             var itemsValue = JArray.Parse(responseBody);
             if (itemsValue == null)

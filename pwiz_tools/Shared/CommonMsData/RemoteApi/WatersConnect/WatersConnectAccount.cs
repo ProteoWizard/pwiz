@@ -21,6 +21,7 @@ using System.Xml.Linq;
 using System.Xml.Serialization;
 using IdentityModel.Client;
 using Microsoft.Extensions.DependencyInjection;
+using pwiz.Common;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.CommonMsData.RemoteApi.WatersConnect
@@ -146,6 +147,13 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             return itemsValue.OfType<JObject>().Select(f => new WatersConnectFileObject(f));
         }*/
 
+        public static HttpMessageHandler GetDefaultMessageHandler()
+        {
+            var handler = new WebRequestHandler();
+            handler.UnsafeAuthenticatedConnectionSharing = true;
+            handler.PreAuthenticate = true;
+            return handler;
+        }
         public HttpClient GetAuthenticatedHttpClient()
         {
             var tokenResponse = Authenticate();
@@ -154,15 +162,13 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             var builder = services.AddHttpClient("customClient");
             builder.ConfigurePrimaryHttpMessageHandler(() =>
             {
-                var handler = new WebRequestHandler();
-                handler.UnsafeAuthenticatedConnectionSharing = true;
-                handler.PreAuthenticate = true;
-                return handler;
+                return CommonApplicationSettings.HttpMessageHandlerFactory.getMessageHandler("wcHandler", GetDefaultMessageHandler()); ;     // NEED TO PASS A FUNCTION, NOT A CONSTANT VALUE.
+                //return GetDefaultMessageHandler();
             });
             var provider = services.BuildServiceProvider();
             var httpClientFactory = provider.GetService<IHttpClientFactory>();
 
-            var httpClient = httpClientFactory.CreateClient();
+            var httpClient = httpClientFactory.CreateClient("customClient" );
             httpClient.SetBearerToken(tokenResponse.AccessToken);
             //httpClient.DefaultRequestHeaders.Remove(@"Accept");
             //httpClient.DefaultRequestHeaders.Add(@"Accept", @"application/json");

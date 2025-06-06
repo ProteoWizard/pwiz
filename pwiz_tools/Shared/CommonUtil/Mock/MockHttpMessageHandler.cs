@@ -79,13 +79,11 @@ namespace pwiz.Common.Mock
         }
     }
 
-    public class HttpClientFactory
+    public class HttpMessageHandlerFactory
     {
-        public static HttpClientFactory Factory = new HttpClientFactory();
-
-        private HttpClientFactory()
+        internal HttpMessageHandlerFactory()
         {
-            var wcHandler = CreateHandler("wcHandler");
+            var wcHandler = CreateHandler("wcHandler1");
             wcHandler.AddMatcher(new RequestMatcherFile(req => req.RequestUri.ToString().IndexOf(@"/waters_connect/v1.0/folders") >= 0,
                 @"C:\Users\RitaCh\Workspaces\ProteoWiz\pwiz1\pwiz_tools\Skyline\MockHttpData\WCFolders.json"));
             wcHandler.AddMatcher(new RequestMatcherFile(req => req.RequestUri.ToString().IndexOf(@"/waters_connect/v2.0/published-methods") >= 0,
@@ -103,12 +101,14 @@ namespace pwiz.Common.Mock
             return handler;
         }
 
-        public HttpClient GetHttpClient(string handlerName)
+        public HttpMessageHandler getMessageHandler(string handlerName, HttpMessageHandler defaultHandler = null)
         {
             if (_handlers.TryGetValue(handlerName, out var handler))
-                return new HttpClient(handler);
+                return handler;
+            else if (defaultHandler != null)
+                return defaultHandler;
             else
-                return new HttpClient();
+                return new HttpClientHandler();
         }
     }
 }
