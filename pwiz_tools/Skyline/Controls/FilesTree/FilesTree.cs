@@ -561,19 +561,15 @@ namespace pwiz.Skyline.Controls.FilesTree
         // slow if the file is on a network drive / etc.
         private void QueueInitLocalFile(FilesTreeNode node)
         {
-            if(!node.Model.IsBackedByFile) 
+            // Short circuit if the file for this node shouldn't be initialized
+            if (!node.Model.ShouldInitializeLocalFile())
                 return;
 
             _fsWorkQueue.Add(() =>
             {
-                // Do nothing if the path to a Skyline document is not set. For example, 
-                // before a new .sky file is saved for the first time.
-                if (!FileNode.IsDocumentSavedToDisk(node.DocumentPath))
-                    return;
-
                 node.InitLocalFile();
 
-                // once initialized, update the FilesTreeNode on the UI thread
+                // after initializing, update the FilesTreeNode on the UI thread
                 RunUI(node.TreeView, node.UpdateState);
             });
         }

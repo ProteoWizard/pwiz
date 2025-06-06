@@ -44,6 +44,7 @@ namespace pwiz.Skyline.Model.Files
         }
 
         public override bool IsBackedByFile => true;
+        public override bool RequiresSavedSkylineDocument => true;
         public override Immutable Immutable => new Immutable();
         public override string Name { get; }
         public override string FilePath { get; }

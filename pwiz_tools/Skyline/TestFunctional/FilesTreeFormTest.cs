@@ -42,6 +42,7 @@ using static pwiz.Skyline.Model.Files.FileNode;
 
 // TODO: test dropping node(s) on parent folder
 // TODO: test double-click on Background Proteome. Need an additional Skyline document with a Background Proteome
+// TODO: test new .sky document, import file backed asset file (ex: .protdb), assert file system watching before document saved for the first time
 // ReSharper disable WrongIndentSize
 namespace pwiz.SkylineTestFunctional
 {
@@ -132,11 +133,17 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => { SkylineWindow.ShowFilesTreeForm(true); });
             WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible);
 
+            // .sky file's local file path should not be initialized yet
+            Assert.AreEqual(FileState.not_initialized, SkylineWindow.FilesTree.Root.NodeAt(0).FileState);
+            Assert.IsNull(SkylineWindow.FilesTree.Root.NodeAt(0).LocalFilePath);
+
             // Save document for the first time
             var monitoredPath = Path.Combine(TestFilesDir.FullPath, origFileName);
             RunUI(() => SkylineWindow.SaveDocument(monitoredPath));
             WaitForCondition(() => File.Exists(monitoredPath) && SkylineWindow.FilesTree.IsMonitoringFileSystem());
 
+            Assert.AreEqual(FileState.available, SkylineWindow.FilesTree.Root.NodeAt(0).FileState);
+            Assert.IsNotNull(SkylineWindow.FilesTree.Root.NodeAt(0).LocalFilePath);
             Assert.AreEqual(Path.GetDirectoryName(monitoredPath), SkylineWindow.FilesTree.PathMonitoredForFileSystemChanges());
 
             // Save As - existing document saved to a new location

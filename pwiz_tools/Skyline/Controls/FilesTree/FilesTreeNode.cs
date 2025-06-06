@@ -76,9 +76,10 @@ namespace pwiz.Skyline.Controls.FilesTree
         public FilesTree FilesTree => (FilesTree)TreeView;
 
         // Try to find the file locally using a file's name / path and the path to a SrmDocument.
-        // This may access the file system 1+ times and should not be called on the UI thread.
+        // This may access the file system multiple times and should not be called on the UI thread.
         public void InitLocalFile()
         {
+            // CONSIDER: assume callers already did this check, making it safe to remove?
             if (Model.IsBackedByFile)
             {
                 LocalFilePath = LookForFileInPotentialLocations(FilePath, FileName, DocumentPath);
@@ -181,7 +182,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 customTable.AddDetailRow(FilesTreeResources.FilesTreeNode_TreeNode_Tooltip_ReplicateSampleFileCount, sampleFileCount.ToString(), rt);
             }
 
-            if (Model.IsBackedByFile)
+            if (Model.IsBackedByFile && FileState != FileState.not_initialized)
             {
                 customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_Tooltip_FileName, FileName, rt);
 

@@ -85,6 +85,7 @@ namespace pwiz.Skyline.Model.Files
 
         public IdentityPath IdentityPath { get; }
         public virtual bool IsBackedByFile => false;
+        public virtual bool RequiresSavedSkylineDocument => false;
 
         public abstract Immutable Immutable { get; }
         public abstract string Name { get; }
@@ -96,8 +97,31 @@ namespace pwiz.Skyline.Model.Files
 
         public virtual IList<FileNode> Files => ImmutableList.Empty<FileNode>();
 
-        // ReSharper disable once LocalizableElement
-        public override string ToString() => "FileNode: " + (Name ?? string.Empty);
+        public override string ToString() => @"FileNode: " + (Name ?? string.Empty);
+
+        /// <summary>
+        /// Use this to decide whether the file represented by this model is ready to be monitored. A model may not be ready if:
+        ///     (1) it does not represent a local file
+        ///     OR
+        ///     (2) it represents a local file but is not ready for initialization. Example: a file may exist in memory, even
+        ///         displayed in UI  (FilesTree) but is not written to disk yet. So attempts to monitor will fail until the
+        ///         file is written to disk. This happens for a newly created Skyline document and associated .skyl/.view
+        ///         files until the Skyline document is saved for the first time.
+        /// </summary>
+        /// <returns>true if ready to initialize the local file, false otherwise</returns>
+        public bool ShouldInitializeLocalFile()
+        {
+            // Nothing to initialize if not backed by a file.
+            if(!IsBackedByFile) 
+                return false;
+
+            // Files like .skyl / .view only exist once a Skyline document is saved.
+            if (RequiresSavedSkylineDocument && !IsDocumentSavedToDisk())
+                return false;
+
+            // This model represents a file expected to be available locally and can be initialized.
+            return true;
+        }
 
         public virtual bool ModelEquals(FileNode nodeDoc)
         {
