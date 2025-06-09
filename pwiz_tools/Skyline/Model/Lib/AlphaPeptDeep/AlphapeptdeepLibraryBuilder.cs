@@ -236,8 +236,8 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             string rootProcessingDir = Path.GetDirectoryName(libOutPath);
             if (string.IsNullOrEmpty(rootProcessingDir))
                 throw new ArgumentException($@"AlphapeptdeepLibraryBuilder libOutputPath {libOutPath} must be a full path.");
+
             rootProcessingDir = Path.Combine(rootProcessingDir, Path.GetFileNameWithoutExtension(libOutPath));
-            
             EnsureWorkDir(rootProcessingDir, ALPHAPEPTDEEP);
         }
 
@@ -412,12 +412,12 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             // Write to new file
             File.WriteAllLines(TransformedOutputSpectraLibFilepath, result);
         }
-
+        
         public void ImportSpectralLibrary(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
-            string[] inputFile = { TransformedOutputSpectraLibFilepath };
-            string output = LibrarySpec.FilePath;
-            string incompleteBlibPath = BiblioSpecLiteSpec.GetRedundantName(output);
+            string[] inputFile = { PathEx.GetFullLongPath(TransformedOutputSpectraLibFilepath) };
+            string output = PathEx.GetFullLongPath(LibrarySpec.FilePath);
+            string incompleteBlibPath = PathEx.GetFullLongPath(BiblioSpecLiteSpec.GetRedundantName(output));
             var build = new BlibBuild(incompleteBlibPath, inputFile);
 
             progress.UpdateProgress(progressStatus = progressStatus

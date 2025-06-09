@@ -85,15 +85,15 @@ namespace pwiz.SkylineTest
             var document = CreateTestSimpleDocument(peptides);
 
             TestGetPrecursorTable(document, SIMPLE_PRECURSOR_TABLE_ANSWER);
-            TestGetWarningMods(document, 0); // No warnings should be generated
+            TestGetWarningMods(document, new List<string>()); // No warnings should be generated
     
             document = CreateTestImportedNonUnimodModsDoc();
             TestGetPrecursorTable(document, MIXED_PRECURSOR_TABLE_ANSWER);
-            TestGetWarningMods(document, 1); // 1 warning is generated
+            TestGetWarningMods(document, new List<string> { "Acetyl-Oxidation (N-term-M)"} ); // 1 warning is generated
 
             document = CreateTestImportedOnlyUnimodModsDoc();
             TestGetPrecursorTable(document, MIXED_PRECURSOR_TABLE_ANSWER);
-            TestGetWarningMods(document, 0); // No warnings are generated
+            TestGetWarningMods(document, new List<string>()); // No warnings are generated
 
             TestValidateModifications_Supported();
             TestValidateModifications_Unsupported();
@@ -137,13 +137,20 @@ namespace pwiz.SkylineTest
         /// Test of <see cref="AlphapeptdeepLibraryBuilder.GetWarningMods"/>
         /// </summary>
         /// <param name="document">Input <see cref="SrmDocument"/> that may generate warnings about modifications.</param>
-        /// <param name="expectedWarningCount">Expected count of warnings generated.</param>
-        public void TestGetWarningMods(SrmDocument document, int expectedWarningCount)
+        /// <param name="expectedWarningMods">List of modifications for which warnings should be generated.</param>
+        public void TestGetWarningMods(SrmDocument document, IList<string> expectedWarningMods)
         {
             var builder = new AlphapeptdeepLibraryBuilder(TEST_LIB_NAME, NeverBuiltBlib, document, IrtStandard.BIOGNOSYS_11);
             var warningList = builder.GetWarningMods();
 
-            Assert.AreEqual(expectedWarningCount, warningList.Count);
+            Assert.AreEqual(expectedWarningMods.Count, warningList.Count);
+
+            var expected = "";
+            expected = string.Join(" ", expectedWarningMods);
+
+            var actual = string.Join(" ", warningList);
+            Assert.AreEqual(expected, actual);
+
             CheckBuilderFiles(builder, false);
         }
 
@@ -268,9 +275,16 @@ namespace pwiz.SkylineTest
                 var modifiedSeq = ModifiedSequence.GetModifiedSequence(document.Settings, peptides[i], IsotopeLabelType.light);
                 string mods;
                 string modSites;
+            
                 Assert.IsFalse(builder.ValidateModifications(modifiedSeq, out mods, out modSites));
                 Assert.AreNotEqual(answer_mods[i], mods);
                 Assert.AreNotEqual(answer_modSites[i], modSites);
+
+                var warningList = builder.GetWarningMods();
+                var expected = "";
+                expected = string.Join(" ", answer_mods);
+                var actual = string.Join(" ", warningList);
+                Assert.AreEqual(expected, actual);
             }
             CheckBuilderFiles(builder, false);
         }
