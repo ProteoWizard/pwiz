@@ -4371,7 +4371,7 @@ namespace pwiz.Skyline
                     // Here we just ignore all the versions attached to packages. 
                     IEnumerable<string> pythonPackages = packages.Select(p => p.Name);
 
-                    using (var dlg = new PythonInstaller(programPathContainer, pythonPackages, _skylineTextBoxStreamWriterHelper))
+                    using (var dlg = new PythonInstallerLegacyDlg(programPathContainer, pythonPackages, _skylineTextBoxStreamWriterHelper))
                     {
                         if (dlg.ShowDialog(this) == DialogResult.Cancel)
                             return null;

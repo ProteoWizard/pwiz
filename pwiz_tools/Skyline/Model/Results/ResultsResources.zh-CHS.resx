@@ -281,9 +281,6 @@
   <data name="OverlapDemultiplexer_InitializeFile_OverlapDemultiplexer_InitializeFile_Improperly_formed_overlap_multiplexing_file" xml:space="preserve">
     <value>重叠多路输出选择器：错误地初始化文件形成了重叠多路复用文件</value>
   </data>
-  <data name="PeptideChromDataSets_AddDataSet_Unable_to_process_chromatograms_for_the_molecule___0___because_one_chromatogram_ends_at_time___1___and_the_other_ends_at_time___2___" xml:space="preserve">
-    <value>由于一个色谱图的结束时间为“{1}”，另一个色谱图的结束时间为“{2}”，所以无法处理分子“{0}”的色谱图。</value>
-  </data>
   <data name="PeptideChromDataSets_MergePeakGroups_Unexpected_null_peak_list" xml:space="preserve">
     <value>意外的无效峰列表</value>
   </data>

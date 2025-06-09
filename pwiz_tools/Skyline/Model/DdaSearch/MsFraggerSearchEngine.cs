@@ -469,7 +469,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         private void GetPercolatorScores(string percolatorTsvFilepath, Dictionary<string, double> qvalueByPsmId)
         {
-            var percolatorTargetPsmsReader = new DsvFileReader(percolatorTsvFilepath, TextUtil.SEPARATOR_TSV);
+            using var percolatorTargetPsmsReader = new DsvFileReader(percolatorTsvFilepath, TextUtil.SEPARATOR_TSV);
             int psmIdColumn = percolatorTargetPsmsReader.GetFieldIndex(@"PSMId");
             int qvalueColumn = percolatorTargetPsmsReader.GetFieldIndex(@"q-value");
             while (percolatorTargetPsmsReader.ReadLine() != null)

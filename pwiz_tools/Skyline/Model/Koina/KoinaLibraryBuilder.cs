@@ -205,7 +205,7 @@ namespace pwiz.Skyline.Model.Koina
 
         public string BuildOutput
         {
-            get { return null; }
+            get { return LibrarySpec.FilePath; }
         }
     }
 }

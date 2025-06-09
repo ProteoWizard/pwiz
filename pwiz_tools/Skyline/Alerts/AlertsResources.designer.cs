@@ -483,7 +483,9 @@ namespace pwiz.Skyline.Alerts {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Check your email for the verification code and copy it into the box..
+        ///   Looks up a localized string similar to Check your email for the verification code and copy it into the box.
+        ///
+        ///If you don&apos;t get an email, double-check your email address or click &quot;More Info&quot; for troubleshooting..
         /// </summary>
         public static string MsFraggerDownloadDlg_btnRequestVerificationCode_Click_Check_your_email {
             get {

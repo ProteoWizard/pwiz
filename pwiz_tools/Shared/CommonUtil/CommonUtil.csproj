@@ -179,6 +179,8 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="SystemUtil\CommonTextUtil.cs" />
+    <Compile Include="SystemUtil\FileLockingProcessFinder.cs" />
+    <Compile Include="SystemUtil\FilteredUserMessageWriter.cs" />
     <Compile Include="SystemUtil\PInvoke\Advapi32.cs" />
     <Compile Include="SystemUtil\PInvoke\Gdi32.cs" />
     <Compile Include="SystemUtil\PInvoke\Kernel32.cs" />

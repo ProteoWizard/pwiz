@@ -546,38 +546,102 @@ namespace pwiz.Skyline.ToolsUI {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Installing Packages.
+        ///   Looks up a localized string similar to Failed to set up Nvidia libraries.
         /// </summary>
-        public static string PythonInstaller_GetPackages_Installing_Packages {
+        public static string NvidiaInstaller_OkDialog_Failed_to_set_up_Nvidia {
             get {
-                return ResourceManager.GetString("PythonInstaller_GetPackages_Installing_Packages", resourceCulture);
+                return ResourceManager.GetString("NvidiaInstaller_OkDialog_Failed_to_set_up_Nvidia", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Installing Pip.
+        ///   Looks up a localized string similar to Successfully set up Nvidia libraries.
         /// </summary>
-        public static string PythonInstaller_GetPip_Installing_Pip {
+        public static string NvidiaInstaller_OkDialog_Successfully_set_up_Nvidia {
             get {
-                return ResourceManager.GetString("PythonInstaller_GetPip_Installing_Pip", resourceCulture);
+                return ResourceManager.GetString("NvidiaInstaller_OkDialog_Successfully_set_up_Nvidia", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Installing Python.
+        ///   Looks up a localized string similar to Setting up Nvidia GPU Computation.
         /// </summary>
-        public static string PythonInstaller_GetPython_Installing_Python {
+        public static string NvidiaInstaller_Setup_Nvidia_Libraries {
             get {
-                return ResourceManager.GetString("PythonInstaller_GetPython_Installing_Python", resourceCulture);
+                return ResourceManager.GetString("NvidiaInstaller_Setup_Nvidia_Libraries", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Install.
+        ///   Looks up a localized string similar to Python {0} set up is required for {1}, click &apos;OK&apos; to proceed..
         /// </summary>
-        public static string PythonInstaller_InstallPackages_Install {
+        public static string PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required {
             get {
-                return ResourceManager.GetString("PythonInstaller_InstallPackages_Install", resourceCulture);
+                return ResourceManager.GetString("PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python {0} set up is required for {1}, please wait for python to install and configure ....
+        /// </summary>
+        public static string PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required_please_wait {
+            get {
+                return ResourceManager.GetString("PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required_please_wait" +
+                        "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Downloading Nvidia Cuda Toolkit and Deep Neural Network software..
+        /// </summary>
+        public static string PythonInstaller_Downloading_Nvidia_Library {
+            get {
+                return ResourceManager.GetString("PythonInstaller_Downloading_Nvidia_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Skyline detected an Nvidia GPU on this computer. Would you like to enable faster AI processing by setting up Nvidia GPU computation? Elevated privileges are required to install this feature..
+        /// </summary>
+        public static string PythonInstaller_Install_Nvidia_Library {
+            get {
+                return ResourceManager.GetString("PythonInstaller_Install_Nvidia_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Installing Nvidia Cuda Toolkit and Deep Neural Network software..
+        /// </summary>
+        public static string PythonInstaller_Installing_Nvidia_Library {
+            get {
+                return ResourceManager.GetString("PythonInstaller_Installing_Nvidia_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to set up Python virtual environment.
+        /// </summary>
+        public static string PythonInstaller_OkDialog_Failed_to_set_up_Python_virtual_environment {
+            get {
+                return ResourceManager.GetString("PythonInstaller_OkDialog_Failed_to_set_up_Python_virtual_environment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Successfully set up Python virtual environment.
+        /// </summary>
+        public static string PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment {
+            get {
+                return ResourceManager.GetString("PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Administrative privileges are required to complete the installation, consult with your system administrator if necessary.  Would you like to continue?.
+        /// </summary>
+        public static string PythonInstaller_Requesting_Administrator_elevation {
+            get {
+                return ResourceManager.GetString("PythonInstaller_Requesting_Administrator_elevation", resourceCulture);
             }
         }
         
@@ -623,6 +687,15 @@ namespace pwiz.Skyline.ToolsUI {
         public static string RInstaller_InstallR_Downloading_R {
             get {
                 return ResourceManager.GetString("RInstaller_InstallR_Downloading_R", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to SkylineProcessRunner timed-out after {0} milliseconds.
+        /// </summary>
+        public static string SkylineProcessRunner_Timeout {
+            get {
+                return ResourceManager.GetString("SkylineProcessRunner_Timeout", resourceCulture);
             }
         }
         

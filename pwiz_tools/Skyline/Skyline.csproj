@@ -53,8 +53,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>237</ApplicationRevision>
-    <ApplicationVersion>24.1.1.237</ApplicationVersion>
+    <ApplicationRevision>147</ApplicationRevision>
+    <ApplicationVersion>25.1.1.147</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -518,6 +518,7 @@
     <Compile Include="FileUI\PeptideSearch\HardklorSearchControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Include="Model\Lib\AlphaPeptDeep\AlphapeptdeepLibraryBuilder.cs" />
     <Compile Include="Model\AuditLog\EnumNames.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -578,6 +579,8 @@
     </Compile>
     <Compile Include="Model\FullScanProperties.cs" />
     <Compile Include="Model\IdPeptideDocNode.cs" />
+    <Compile Include="Model\Lib\AlphaPeptDeep\AbstractDeepLibraryBuilder.cs" />
+    <Compile Include="Model\Lib\Carafe\CarafeLibraryBuilder.cs" />
     <Compile Include="Model\Proteome\AssociateProteinsResults.cs" />
     <Compile Include="Model\Lib\LibraryFiles.cs" />
     <Compile Include="Model\Results\LcPeakIonMetrics.cs" />
@@ -774,6 +777,12 @@
     <Compile Include="Model\Results\Scoring\AutoTrainManager.cs" />
     <Compile Include="Model\Results\Scoring\FeatureScores.cs" />
     <Compile Include="Model\Results\Scoring\ScoreQValueMap.cs" />
+    <Compile Include="Model\Tools\PythonInstaller.cs" />
+    <Compile Include="Model\Tools\ToolsResources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ToolsResources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Model\TransitionLossMap.cs" />
     <Compile Include="Properties\MetadataRuleSetList.cs" />
     <Compile Include="Properties\RemoteAccountList.cs" />
@@ -864,11 +873,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>ListsResources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Model\Tools\ToolsResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ToolsResources.resx</DependentUpon>
-    </Compile>
     <Compile Include="Model\ModelResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -878,6 +882,12 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>FileUIResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="ToolsUI\PythonInstallerUI.cs" />
+    <Compile Include="ToolsUI\ToolsUIResources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ToolsUIResources.resx</DependentUpon>
     </Compile>
     <Compile Include="Util\AnnotatedDouble.cs" />
     <Compile Include="Util\DataGridViewPasteHandler.cs" />
@@ -935,11 +945,6 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>EntitiesResources.resx</DependentUpon>
-    </Compile>
-    <Compile Include="ToolsUI\ToolsUIResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ToolsUIResources.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\Optimization\OptimizationResources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -1087,6 +1092,11 @@
     <Compile Include="Model\Koina\Config\KoinaConfig.cs" />
     <Compile Include="Model\Koina\Models\KoinaIntensityModel.cs" />
     <Compile Include="Model\Koina\Models\KoinaModel.cs" />
+    <Compile Include="Model\Koina\Models\ModelsResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ModelsResources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Model\Koina\KoinaConstants.cs" />
     <Compile Include="Model\Koina\Communication\KoinaPredictionClient.cs" />
     <Compile Include="Model\Koina\Models\KoinaRetentionTimeModel.cs" />
@@ -4164,6 +4174,10 @@
     <Content Include="Method\Thermo\Thermo.TNG.MethodXMLInterface2.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="Model\Tools\InstallNvidiaLibraries-bat.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Tools\UninstallNvidiaLibraries-bat.txt" />
     <Content Include="percolator\msvcp140.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -4227,6 +4241,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Databinding\PivotReplicateAndIsotopeLabelWidget.resx">
       <DependentUpon>PivotReplicateAndIsotopeLabelWidget.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ChooseSchedulingReplicatesDlg.resx">
       <DependentUpon>ChooseSchedulingReplicatesDlg.cs</DependentUpon>
@@ -4872,14 +4887,14 @@
     <EmbeddedResource Include="ToolsUI\EditServerDlg.zh-CHS.resx">
       <DependentUpon>EditServerDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="ToolsUI\PythonInstaller.ja.resx">
-      <DependentUpon>PythonInstaller.cs</DependentUpon>
+    <EmbeddedResource Include="ToolsUI\PythonInstallerLegacyDlg.ja.resx">
+      <DependentUpon>PythonInstallerLegacyDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="ToolsUI\PythonInstaller.resx">
-      <DependentUpon>PythonInstaller.cs</DependentUpon>
+    <EmbeddedResource Include="ToolsUI\PythonInstallerLegacyDlg.resx">
+      <DependentUpon>PythonInstallerLegacyDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="ToolsUI\PythonInstaller.zh-CHS.resx">
-      <DependentUpon>PythonInstaller.cs</DependentUpon>
+    <EmbeddedResource Include="ToolsUI\PythonInstallerLegacyDlg.zh-CHS.resx">
+      <DependentUpon>PythonInstallerLegacyDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\RInstaller.ja.resx">
       <DependentUpon>RInstaller.cs</DependentUpon>
@@ -5002,11 +5017,11 @@
     <Compile Include="ToolsUI\EditServerDlg.Designer.cs">
       <DependentUpon>EditServerDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="ToolsUI\PythonInstaller.cs">
+    <Compile Include="ToolsUI\PythonInstallerLegacyDlg.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="ToolsUI\PythonInstaller.Designer.cs">
-      <DependentUpon>PythonInstaller.cs</DependentUpon>
+    <Compile Include="ToolsUI\PythonInstallerLegacyDlg.Designer.cs">
+      <DependentUpon>PythonInstallerLegacyDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="ToolsUI\RInstaller.cs">
       <SubType>Form</SubType>
@@ -5765,11 +5780,6 @@
       <DependentUpon>ModelsResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Model\Koina\Models\ModelsResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ModelsResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Controls\Spectra\SpectraResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -7150,6 +7160,10 @@
     <PackageReference Include="Microsoft.Web.WebView2">
       <Version>1.0.2420.47</Version>
     </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Model\AlphaPeptDeep\" />
+    <Folder Include="Model\Carafe\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterPublish">
