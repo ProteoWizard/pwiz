@@ -314,6 +314,7 @@ InstrumentFamily TsfDataImpl::getInstrumentFamily() const { return instrumentFam
 int TsfDataImpl::getInstrumentRevision() const { return instrumentRevision_; }
 std::string TsfDataImpl::getInstrumentDescription() const { return ""; }
 std::string TsfDataImpl::getInstrumentSerialNumber() const { return serialNumber_; }
+std::string TsfDataImpl::getDiaFrameMsMsWindowsTable() const { return ""; }
 InstrumentSource TsfDataImpl::getInstrumentSource() const { return instrumentSource_; }
 std::string TsfDataImpl::getAcquisitionSoftware() const { return acquisitionSoftware_; }
 std::string TsfDataImpl::getAcquisitionSoftwareVersion() const { return acquisitionSoftwareVersion_; }

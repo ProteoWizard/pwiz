@@ -112,6 +112,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Collections\ArraySortUtil.cs" />
     <Compile Include="Collections\DisposableCollection.cs" />
     <Compile Include="Collections\Factor.cs" />
     <Compile Include="Collections\ImmutableListFactory.cs" />

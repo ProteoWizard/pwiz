@@ -59,6 +59,7 @@ class PWIZ_API_DECL SpectrumList_Bruker : public SpectrumListIonMobilityBase
     virtual bool hasPASEF() const;
     virtual bool canConvertIonMobilityAndCCS() const;
     virtual bool hasCombinedIonMobility() const;
+    virtual bool isDiagonalPASEF() const;
     virtual double ionMobilityToCCS(double inverseK0, double mz, int charge) const;
     virtual double ccsToIonMobility(double ccs, double mz, int charge) const;
 
