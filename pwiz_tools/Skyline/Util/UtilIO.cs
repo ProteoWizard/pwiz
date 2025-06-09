@@ -984,7 +984,7 @@ namespace pwiz.Skyline.Util
             try
             {
                 string longPath = path.ToLongPath();
-                Helpers.TryTwice(() =>
+                TryHelper.TryTwice(() =>
                 {
                     if (path != null && !Directory.Exists(longPath)) // Don't waste time trying to create a directory that already exists
                     {
@@ -1002,7 +1002,7 @@ namespace pwiz.Skyline.Util
             try
             {
                 string longPath = path.ToLongPath();
-                Helpers.TryTwice(() =>
+                TryHelper.TryTwice(() =>
                     {
                         if (path != null && Directory.Exists(longPath)) // Don't waste time trying to delete something that's already deleted
                         {
