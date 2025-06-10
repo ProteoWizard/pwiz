@@ -375,6 +375,15 @@
   <data name="CarafeLibrary_library_format_long" xml:space="preserve">
     <value>Spectral Library Format for library generation.</value>
   </data>
+  <data name="CarafeLibraryBuilder_Running_Carafe" xml:space="preserve">
+      <value>Running Carafe</value>
+  </data>
+  <data name="CarafeLibraryBuilder_Java_directory__0__has_more_than_one_Java_Software_Development_Kit" xml:space="preserve">
+      <value>Java directory {0} has more than one Java Software Development Kit</value>
+  </data>
+  <data name="CarafeLibraryBuilder_Importing_spectral_library" xml:space="preserve">
+      <value>Importing spectral library</value>
+  </data>
   <data name="ChromatogramExporter_Export_Bad_chromatogram_data_for_charge__0__state_of_peptide__1_" xml:space="preserve">
     <value>Bad chromatogram data for charge {0} state of peptide {1}</value>
   </data>

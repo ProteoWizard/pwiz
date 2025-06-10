@@ -593,8 +593,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
         {
             //progressStatus = progressStatus.ChangeSegments(0, 3);
             progress.UpdateProgress(progressStatus = progressStatus
-                .ChangeMessage(@"Executing carafe")
-                .ChangePercentComplete(0));
+                .ChangeMessage(ModelResources.CarafeLibraryBuilder_Running_Carafe));
 
             SetupJavaEnvironment(progress, ref progressStatus);
 
@@ -802,12 +801,10 @@ namespace pwiz.Skyline.Model.Lib.Carafe
                 readyArgs.Add(new ArgumentAndValue(@"se", @"skyline", TextUtil.HYPHEN));
                 LibraryHelper.PrepareTrainingInputFile(Document, progress, ref progressStatus, CARAFE);
             }
-            // progressStatus = progressStatus.NextSegment();
-
-            //}
+            var segmentEndPercentages = new[] { 95, 99 };
+            progressStatus = progressStatus.ChangeSegments(0, ImmutableList<int>.ValueOf(segmentEndPercentages));
             ExecuteCarafe(progress, ref progressStatus, readyArgs);
-            //progressStatus = progressStatus.NextSegment();
-
+            progressStatus = progressStatus.NextSegment();
             ImportSpectralLibrary(progress, ref progressStatus);
             progress.UpdateProgress(progressStatus = progressStatus
                 .ChangePercentComplete(100));
@@ -913,32 +910,33 @@ namespace pwiz.Skyline.Model.Lib.Carafe
         private void SetJavaExecutablePath()
         {
             var dirs = Directory.GetDirectories(JavaDir);
-            Assume.IsTrue(dirs.Length.Equals(1), @"Java directory has more than one java SDKs");
+            Assume.IsTrue(dirs.Length.Equals(1), string.Format(ModelResources.CarafeLibraryBuilder_Java_directory__0__has_more_than_one_Java_Software_Development_Kit, JavaDir));
             var javaSdkDir = dirs[0];
             JavaExecutablePath = Path.Combine(javaSdkDir, BIN, JAVA_EXECUTABLE);
             PythonInstallerUtil.SignFile(JavaExecutablePath);
         }
 
-        private void ExecuteCarafe(IProgressMonitor progress, ref IProgressStatus progressStatus, IList<ArgumentAndValue> commandArgs)
+        private void ExecuteCarafe(IProgressMonitor progress, ref IProgressStatus progressStatus,
+            IList<ArgumentAndValue> commandArgs)
         {
             progress.UpdateProgress(progressStatus = progressStatus
-                .ChangeMessage(@"Executing carafe")
-                .ChangePercentComplete(-1));
+                .ChangeMessage(ModelResources.CarafeLibraryBuilder_Running_Carafe));
 
-         
+            progressStatus.ChangePercentComplete(0);
+
             // compose carafe cmd command arguments to build library
             var args = TextUtil.SpaceSeparate(
                 TextUtil.Quote(PythonVirtualEnvironmentActivateScriptPath)
-                );
+            );
 
-            args += TextUtil.SpaceSeparate(CONDITIONAL_CMD_PROCEEDING_SYMBOL) + SPACE; 
+            args += TextUtil.SpaceSeparate(CONDITIONAL_CMD_PROCEEDING_SYMBOL) + SPACE;
 
             args += TextUtil.SpaceSeparate(
                 TextUtil.Quote(JavaExecutablePath)
             );
 
             args += SPACE + TextUtil.SpaceSeparate(
-                commandArgs.Select(arg => 
+                commandArgs.Select(arg =>
                     arg.ToString())
             );
 
@@ -946,13 +944,13 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             CancellationToken cancelToken = CancellationToken.None;
 
             cmdBuilder.Append(args).Append(SPACE);
-            
+
             string batPath = Path.Combine(RootDir, @"runCarafe.bat");
             File.WriteAllText(batPath, cmdBuilder.ToString());
 
             // execute command
             var pr = new ProcessRunner();
-            var psi = new ProcessStartInfo() 
+            var psi = new ProcessStartInfo()
             {
                 FileName = batPath,
                 CreateNoWindow = true,
@@ -964,40 +962,31 @@ namespace pwiz.Skyline.Model.Lib.Carafe
 
             try
             {
-                pr.SilenceStatusMessageUpdates = true;  // Use FilteredUserMessageWriter to write process output instead of ProgressStatus.ChangeMessage()
-                // pr.ExpectedOutputLinesCount = 119;
-                
+                pr.SilenceStatusMessageUpdates =
+                    true; // Use SimpleUserMessageWriter to write process output instead of ProgressStatus.ChangeMessage()
+                pr.ExpectedOutputLinesCount = 1000;
+
                 pr.EnableImmediateLog = true;
                 pr.EnableRunningTimeMessage = true;
-                pr.Run(psi, string.Empty, progress, ref progressStatus, 
-                    new SimpleUserMessageWriter(), 
-                    ProcessPriorityClass.BelowNormal, true);
+                pr.Run(psi, string.Empty, progress, ref progressStatus,
+                    new SimpleUserMessageWriter(), ProcessPriorityClass.BelowNormal, true);
             }
             catch (Exception ex)
             {
                 throw new Exception(ModelResources.Carafe_failed_to_complete, ex);
             }
-
-            progress.UpdateProgress(progressStatus = progressStatus
-                .ChangePercentComplete(100));
-
         }
 
         private void ImportSpectralLibrary(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
             progress.UpdateProgress(progressStatus = progressStatus
-                .ChangeMessage(@"Importing spectral library")
-                .ChangePercentComplete(0));
+                .ChangeMessage(ModelResources.CarafeLibraryBuilder_Importing_spectral_library));
 
             var source = CarafeOutputLibraryFilePath();
             var dest = LibrarySpec.FilePath;
  
             File.Copy(source, dest);
-
-            progress.UpdateProgress(progressStatus = progressStatus
-                .ChangePercentComplete(100));
         }
- 
     }
 }
 

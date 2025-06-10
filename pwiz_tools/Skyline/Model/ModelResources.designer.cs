@@ -729,6 +729,34 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Importing spectral library.
+        /// </summary>
+        public static string CarafeLibraryBuilder_Importing_spectral_library {
+            get {
+                return ResourceManager.GetString("CarafeLibraryBuilder_Importing_spectral_library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Java directory {0} has more than one Java Software Development Kit.
+        /// </summary>
+        public static string CarafeLibraryBuilder_Java_directory__0__has_more_than_one_Java_Software_Development_Kit {
+            get {
+                return ResourceManager.GetString("CarafeLibraryBuilder_Java_directory__0__has_more_than_one_Java_Software_Developme" +
+                        "nt_Kit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Running Carafe.
+        /// </summary>
+        public static string CarafeLibraryBuilder_Running_Carafe {
+            get {
+                return ResourceManager.GetString("CarafeLibraryBuilder_Running_Carafe", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Computational Device (cpu or gpu) to use for model training and prediction..
         /// </summary>
         public static string CarafeModel_device_long {
