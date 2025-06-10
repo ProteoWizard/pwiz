@@ -191,6 +191,7 @@
     <Compile Include="SystemUtil\PInvoke\PInvokeCommon.cs" />
     <Compile Include="SystemUtil\ProcessEx.cs" />
     <Compile Include="SystemUtil\ProgressStream.cs" />
+    <Compile Include="SystemUtil\SimpleUserMessageWriter.cs" />
     <Compile Include="SystemUtil\StreamEx.cs" />
     <Compile Include="SystemUtil\StringSearch.cs" />
     <Compile Include="Spectra\SpectrumMetadata.cs" />

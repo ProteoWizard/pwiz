@@ -597,6 +597,7 @@ namespace pwiz.Skyline.Model.Tools
         private const string PYTHON_EXECUTABLE = @"python.exe";
         private const string ACTIVATE_SCRIPT_FILE_NAME = @"activate.bat";
         private const string SIGNATURE_EXTENSION = ".skysign";
+
         /// <summary>
         /// This directory is used to store python executables and virtual environments.
         /// </summary>

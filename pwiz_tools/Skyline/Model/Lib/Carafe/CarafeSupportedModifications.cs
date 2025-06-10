@@ -19,7 +19,7 @@
 
 using System.ComponentModel;
 
-namespace pwiz.Skyline.Model.Carafe
+namespace pwiz.Skyline.Model.Lib.Carafe
 {
     public enum CarafeSupportedModifications
     {

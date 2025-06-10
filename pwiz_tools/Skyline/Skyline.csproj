@@ -550,8 +550,6 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>PropertyNames.resx</DependentUpon>
     </Compile>
-    <Compile Include="Model\Carafe\CarafeLibraryBuilder.cs" />
-    <Compile Include="Model\Carafe\CarafeSupportedModifications.cs" />
     <Compile Include="Model\Databinding\Collections\FixedSkylineObjectList.cs" />
     <Compile Include="Model\Databinding\Entities\CalibrationCurveMetrics.cs" />
     <Compile Include="Model\Databinding\Entities\ColumnCaptions.Designer.cs">
@@ -584,6 +582,7 @@
     <Compile Include="Model\IdPeptideDocNode.cs" />
     <Compile Include="Model\Lib\AlphaPeptDeep\AbstractDeepLibraryBuilder.cs" />
     <Compile Include="Model\Lib\Carafe\CarafeLibraryBuilder.cs" />
+    <Compile Include="Model\Lib\Carafe\CarafeSupportedModifications.cs" />
     <Compile Include="Model\Proteome\AssociateProteinsResults.cs" />
     <Compile Include="Model\Results\OpenMsDataFileParams.cs" />
     <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaAccount.cs" />
@@ -5940,9 +5939,7 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Model\AlphaPeptDeep\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <Content Include="..\Shared\Lib\Microsoft.VC90.CRT\x64\msvcr90.dll">
       <Link>percolator\msvcr90.DLL</Link>

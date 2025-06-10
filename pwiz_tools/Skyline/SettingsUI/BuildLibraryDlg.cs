@@ -40,7 +40,7 @@ using pwiz.Skyline.Util.Extensions;
 using pwiz.Skyline.Model.Tools;
 using System.Runtime.CompilerServices;
 using File = System.IO.File;
-using pwiz.Skyline.Model.Carafe;
+using pwiz.Skyline.Model.Lib.Carafe;
 using pwiz.Skyline.EditUI;
 using System.Xml.Serialization;
 

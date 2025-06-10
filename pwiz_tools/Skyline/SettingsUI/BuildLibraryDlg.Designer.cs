@@ -894,8 +894,8 @@
         }
         internal LearningOptions ComboLearnFrom
         {
-            get => (LearningOptions) comboLearnFrom.SelectedIndex;
-            set => comboLearnFrom.SelectedIndex = (int) value;
+            get => (LearningOptions)comboLearnFrom.SelectedIndex;
+            set => comboLearnFrom.SelectedIndex = (int)value;
         }
     }
 }

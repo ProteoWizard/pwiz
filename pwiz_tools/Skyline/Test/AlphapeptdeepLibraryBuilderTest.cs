@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -62,7 +61,7 @@ namespace pwiz.SkylineTest
                 Assert.AreEqual(1, group.Count(), "Duplicate accession {0}", group.Key);
             }
         }
-        
+
         /// <summary>
         /// This library never gets built, but its work directory does get created and used.
         /// </summary>
@@ -82,17 +81,19 @@ namespace pwiz.SkylineTest
                 new Peptide("KINGPELVISKINK"),
                 new Peptide("LIVER")
             };
-         
+
             var document = CreateTestSimpleDocument(peptides);
 
             TestGetPrecursorTable(document, SIMPLE_PRECURSOR_TABLE_ANSWER);
-            TestGetWarningMods(document, 0); // No warnings should be generated
-    
-            document = CreateTestImportedDoc();
+            TestGetWarningMods(document, new List<string>()); // No warnings should be generated
 
+            document = CreateTestImportedNonUnimodModsDoc();
             TestGetPrecursorTable(document, MIXED_PRECURSOR_TABLE_ANSWER);
-            TestGetWarningMods(document, 1);
-            TestGetWarningMods(document, 1);
+            TestGetWarningMods(document, new List<string> { "Acetyl-Oxidation (N-term-M)" }); // 1 warning is generated
+
+            document = CreateTestImportedOnlyUnimodModsDoc();
+            TestGetPrecursorTable(document, MIXED_PRECURSOR_TABLE_ANSWER);
+            TestGetWarningMods(document, new List<string>()); // No warnings are generated
 
             TestValidateModifications_Supported();
             TestValidateModifications_Unsupported();
@@ -112,7 +113,7 @@ namespace pwiz.SkylineTest
             var precursorTable = builder.GetPrecursorTable(false);
 
             var generatedResult = precursorTable as string[] ?? precursorTable.ToArray();
-           
+
             if (IsRecordMode)
             {
                 File.WriteAllLines(LogOutput, generatedResult);
@@ -136,13 +137,20 @@ namespace pwiz.SkylineTest
         /// Test of <see cref="AlphapeptdeepLibraryBuilder.GetWarningMods"/>
         /// </summary>
         /// <param name="document">Input <see cref="SrmDocument"/> that may generate warnings about modifications.</param>
-        /// <param name="expectedWarningCount">Expected count of warnings generated.</param>
-        public void TestGetWarningMods(SrmDocument document, int expectedWarningCount)
+        /// <param name="expectedWarningMods">List of modifications for which warnings should be generated.</param>
+        public void TestGetWarningMods(SrmDocument document, IList<string> expectedWarningMods)
         {
             var builder = new AlphapeptdeepLibraryBuilder(TEST_LIB_NAME, NeverBuiltBlib, document, IrtStandard.BIOGNOSYS_11);
             var warningList = builder.GetWarningMods();
 
-            Assert.AreEqual(expectedWarningCount, warningList.Count);
+            Assert.AreEqual(expectedWarningMods.Count, warningList.Count);
+
+            var expected = "";
+            expected = string.Join(" ", expectedWarningMods);
+
+            var actual = string.Join(" ", warningList);
+            Assert.AreEqual(expected, actual);
+
             CheckBuilderFiles(builder, false);
         }
 
@@ -151,9 +159,6 @@ namespace pwiz.SkylineTest
         /// </summary>
         public void TestValidateModifications_Supported()
         {
-            var document = CreateTestEmptyDocument();
-            var builder = new AlphapeptdeepLibraryBuilder(TEST_LIB_NAME, NeverBuiltBlib, document, IrtStandard.BIOGNOSYS_11);
-
             var peptideList = new[]
             {
                 new Peptide("CELVISK"),
@@ -214,6 +219,8 @@ namespace pwiz.SkylineTest
             };
 
             var peptides = CreatePeptideDocNodes(peptideList, explicitMods).ToArray();
+            var document = CreateTestDocumentInternal(peptides);
+            var builder = new AlphapeptdeepLibraryBuilder(TEST_LIB_NAME, NeverBuiltBlib, document, IrtStandard.BIOGNOSYS_11);
             for (int i = 0; i < peptides.Length; i++)
             {
                 var modifiedSeq = ModifiedSequence.GetModifiedSequence(document.Settings, peptides[i], IsotopeLabelType.light);
@@ -231,9 +238,6 @@ namespace pwiz.SkylineTest
         /// </summary>
         public void TestValidateModifications_Unsupported()
         {
-            var document = CreateTestEmptyDocument();
-            var builder = new AlphapeptdeepLibraryBuilder(TEST_LIB_NAME, NeverBuiltBlib, document, IrtStandard.BIOGNOSYS_11);
-
             var peptideList = new[]
             {
                 new Peptide("MSGSHSNDEDDVVQVPETSSPTK")
@@ -249,8 +253,8 @@ namespace pwiz.SkylineTest
                 "1" //unsupported
             };
 
-            var aceOxMetMod = new StaticMod("Acetyl-Oxidation (N-term-M)", "M",ModTerminus.N, true, "H2C2O2", LabelAtoms.None, RelativeRT.Unknown, null,
-                null, null, -1, "Acetyl-Ox");
+            var aceOxMetMod = new StaticMod("Acetyl-Oxidation (N-term-M)", "M", ModTerminus.N, true, "H2C2O2", LabelAtoms.None, RelativeRT.Unknown, null,
+                null, null, null, "Acetyl-Ox");
 
             var explicitMods1 = new[]
             {
@@ -263,14 +267,24 @@ namespace pwiz.SkylineTest
             };
 
             var peptides = CreatePeptideDocNodes(peptideList, explicitMods).ToArray();
+            var document = CreateTestDocumentInternal(peptides);
+            var builder = new AlphapeptdeepLibraryBuilder(TEST_LIB_NAME, NeverBuiltBlib, document, IrtStandard.BIOGNOSYS_11);
+
             for (int i = 0; i < peptides.Length; i++)
             {
                 var modifiedSeq = ModifiedSequence.GetModifiedSequence(document.Settings, peptides[i], IsotopeLabelType.light);
                 string mods;
                 string modSites;
+
                 Assert.IsFalse(builder.ValidateModifications(modifiedSeq, out mods, out modSites));
                 Assert.AreNotEqual(answer_mods[i], mods);
                 Assert.AreNotEqual(answer_modSites[i], modSites);
+
+                var warningList = builder.GetWarningMods();
+                var expected = "";
+                expected = string.Join(" ", answer_mods);
+                var actual = string.Join(" ", warningList);
+                Assert.AreEqual(expected, actual);
             }
             CheckBuilderFiles(builder, false);
         }
@@ -362,19 +376,28 @@ namespace pwiz.SkylineTest
             {
                 // Copy the resource stream to the file
                 Assert.IsNotNull(stream, $@"Resource '{resourceName}' not found.");
-                if (stream != null) 
-                    stream.CopyTo(fileStream);
+                stream?.CopyTo(fileStream);
             }
 
             return testFile;
         }
 
         /// <summary>
-        /// Creates and returns an <see cref="SrmDocument"/> from the embedded resource file "Test-imported_24-11-short.sky"
+        /// Creates and returns an <see cref="SrmDocument"/> from the embedded resource file "Test-imported_24-11-short_onlyUnimodMods.sky"
         /// </summary>
-        private SrmDocument CreateTestImportedDoc()
+        private SrmDocument CreateTestImportedOnlyUnimodModsDoc()
         {
-            var document = ResultsUtil.DeserializeDocument("Test-imported_24-11-short.sky", GetType());
+            var document = ResultsUtil.DeserializeDocument("Test-imported_24-11-short_onlyUnimodMods.sky", GetType());
+            AssertEx.IsDocumentState(document, 0, 1, 8, 24, 291);
+            return document;
+        }
+
+        /// <summary>
+        /// Creates and returns an <see cref="SrmDocument"/> from the embedded resource file "Test-imported_24-11-short_nonUnimodMods.sky"
+        /// </summary>
+        private SrmDocument CreateTestImportedNonUnimodModsDoc()
+        {
+            var document = ResultsUtil.DeserializeDocument("Test-imported_24-11-short_nonUnimodMods.sky", GetType());
             AssertEx.IsDocumentState(document, 0, 1, 9, 27, 327);
             return document;
         }
@@ -398,7 +421,7 @@ namespace pwiz.SkylineTest
             for (int i = 0; i < peptideNodes.Length; i++)
             {
                 ExplicitMods mods = null;
-                
+
                 if (expMods != null)
                     mods = expMods[i];
 
@@ -438,7 +461,7 @@ namespace pwiz.SkylineTest
             return CreateTestDocumentInternal(CreatePeptideDocNodes(peptideList).ToArray());
         }
 
-        private static SrmDocument CreateTestDocumentInternal(PeptideDocNode[] nodePepArray)
+        private SrmDocument CreateTestDocumentInternal(PeptideDocNode[] nodePepArray)
         {
             var doc = new SrmDocument(SrmSettingsList.GetDefault());
 
@@ -451,7 +474,7 @@ namespace pwiz.SkylineTest
         }
 
         private readonly IEnumerable<string> SIMPLE_PRECURSOR_TABLE_ANSWER =
-            new [] {
+            new[] {
                 "sequence	mods	mod_sites	charge",
                 "LGGNEQVTR			2",
                 "GAGSSEPVTGLDAK			2",
@@ -471,7 +494,7 @@ namespace pwiz.SkylineTest
             };
         private readonly IEnumerable<string> MIXED_PRECURSOR_TABLE_ANSWER =
             new[] {
-                "sequence	mods	mod_sites	charge",                
+                "sequence	mods	mod_sites	charge",
                 "LGGNEQVTR			2",
                 "GAGSSEPVTGLDAK			2",
                 "VEATFGVDESNAK			2",

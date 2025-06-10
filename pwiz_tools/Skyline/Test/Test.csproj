@@ -403,7 +403,8 @@
     <EmbeddedResource Include="SmallMoleculesMzOnly_3-7.sky" />
     <None Include="ProtocolBuffers\generatecode.bat" />
     <None Include="ProtocolBuffers\LegacySkylineDocumentProto.proto" />
-    <EmbeddedResource Include="Test-imported_24-11-short.sky" />
+    <EmbeddedResource Include="Test-imported_24-11-short_onlyUnimodMods.sky" />
+    <EmbeddedResource Include="Test-imported_24-11-short_nonUnimodMods.sky" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">

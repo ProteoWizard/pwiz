@@ -163,6 +163,25 @@ namespace pwiz.Common.SystemUtil
             }
         }
 
+        /// <summary>
+        /// Wrapper around <see cref="Path.GetFullPath"/> that adds "\\?\", when absent, to make it a long path.  
+        /// If an error occurs, it adds the path to the exception message.
+        /// Eventually, this method might catch the exception and try to return something reasonable,
+        /// but, for now, we are trying to figure out the source of invalid paths.
+        /// </summary>
+        public static String GetFullLongPath(String path)
+        {
+            String longPath = ! Path.GetFullPath(path).StartsWith(@"\\?\") ? @$"\\?\{Path.GetFullPath(path)}" : Path.GetFullPath(path);
+            try
+            {
+                return longPath;
+            }
+            catch (ArgumentException e)
+            {
+                throw AddPathToArgumentException(e, longPath);
+            }
+        }
+
         private static ArgumentException AddPathToArgumentException(ArgumentException argumentException, string path)
         {
             string messageWithPath = string.Join(Environment.NewLine, argumentException.Message, path);

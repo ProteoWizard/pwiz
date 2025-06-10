@@ -19,55 +19,42 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using Ionic.Zip;
-using JetBrains.Annotations;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using File = System.IO.File;
+
+[assembly: InternalsVisibleTo("TestPerf")]
 
 namespace pwiz.Skyline.Model.Lib.Carafe
 {
     public class CarafeLibraryBuilder : AbstractDeepLibraryBuilder, IiRTCapableLibraryBuilder
     {
-        public const string CARAFE_NAME = @"Carafe";
-        
-        private const string PRECURSOR = @"Precursor";
-        private const string PEPTIDE = @"Peptide";
-        private const string PRECURSOR_CHARGE = @"Precursor Charge";
-        private const string ISOTOPE_LABEL_TYPE = @"Isotope Label Type";
-        private const string PRECURSOR_MZ = @"Precursor Mz";
-        private const string MODIFIED_SEQUENCE = @"Modified Sequence";
-        private const string PRECURSOR_EXPLICIT_COLLISION_ENERGY = @"Precursor Explicit Collision Energy";
-        private const string PRECURSOR_NOTE = @"Precursor Note";
-        private const string LIBRARY_NAME = @"Library Name";
-        private const string LIBRARY_TYPE = @"Library Type";
-        private const string LIBRARY_PROBABILITY_SCORE = @"Library Probability Score";
-        private const string PEPTIDE_MODIFIED_SEQUENCE_UNIMOD_IDS = @"Peptide Modified Sequence Unimod Ids";
-        private const string BEST_RT = @"Best Retention Time";
-        private const string MIN_RT = @"Min Start Time";
-        private const string MAX_RT = @"Max End Time";
-        private const string IONMOB_MS1 = @"Ion Mobility MS1";
-        private const string APEX_SPECTRUM_ID = @"Apex Spectrum ID Fragment";
-        private const string FILE_NAME = @"File Name";
-        private const string Q_VALUE = @"Detection Q Value";
+        public const string CARAFE = @"Carafe";
 
+        internal const string ECHO = @"echo";
         private const string BIN = @"bin";
         private const string INPUT = @"input";
         private const string TRAIN = @"train";
-
-        private const string CARAFE = @"carafe";
-        private const string CARAFE_VERSION = @"0.0.1";
-        // private const string CMD_ARG_C = @"/C";
+        private const string CARAFE_VERSION = @"1.0.0";
+        private const string CARAFE_URI_NAME = @"carafe-";
+        private const string CARAFE_DEV = @"-dev";
+        private const string CARAFE_DEV_VERSION = ""; //@"-beta"; //CARAFE_DEV + @"-20250304T224833Z-001";
+        private const string CMD_ARG_C = @"/C";
         private const string CMD_EXECUTABLE = @"cmd.exe";
         private const string CONDITIONAL_CMD_PROCEEDING_SYMBOL = TextUtil.AMPERSAND + TextUtil.AMPERSAND;
         private const string DOT_JAR = @".jar";
@@ -79,30 +66,78 @@ namespace pwiz.Skyline.Model.Lib.Carafe
         private const string JAVA_SDK_DOWNLOAD_URL = @"https://download.oracle.com/java/21/latest/";
         private const string OUTPUT_LIBRARY = @"output_library";
         private const string OUTPUT_LIBRARY_FILE_NAME = "SkylineAI_spectral_library.blib";
-        private const string NA = @"#N/A";
+        private const string OUTPUT_SPECTRAL_LIB_FILE_NAME = @"test_res_fine_tuned.csv";
+        private const string SPACE = TextUtil.SPACE;
+        private const string TAB = @"\t";
+
+        public ISkylineProcessRunnerWrapper SkylineProcessRunner { get; set; }
+
+        private string PythonVirtualEnvironmentScriptsDir { get; }
+
+        public LibraryHelper LibraryHelper { get; private set; }
+
+        
+
+        public LibrarySpec LibrarySpec { get; private set; }
+
+//        public static string PythonVersion { get; private set; }
+        public static string PythonVersion => Settings.Default.PythonEmbeddableVersion;
+        private string PythonVirtualEnvironmentName { get; }
+
+        private string OutputSpectralLibsDir => Path.Combine(RootDir, OUTPUT_LIBRARY);
+        private string OutputSpectraLibFilepath => Path.Combine(OutputSpectralLibsDir, OUTPUT_SPECTRAL_LIB_FILE_NAME);
+        public new SrmDocument Document { get; }
+        private SrmDocument TrainingDocument { get; }
+        public string DbInputFilePath { get; private set; }
+        internal string ExperimentDataFilePath { get; set; }
+        internal string ExperimentDataTuningFilePath { get; set; }
+
+        //internal string ProteinDatabaseFilePath;
+
+        //private bool BuildLibraryForCurrentSkylineDocument => ProteinDatabaseFilePath.IsNullOrEmpty();
+        private string PythonVirtualEnvironmentActivateScriptPath =>
+            PythonInstallerUtil.GetPythonVirtualEnvironmentActivationScriptPath(PythonVersion,
+                PythonVirtualEnvironmentName);
 
 
-        private static readonly IEnumerable<string> TrainingTableColumnNamesCarafe =
-            new[]
+        private string _rootDir;
+        private string RootDir
+        {
+            get => _rootDir;
+            set => _rootDir = value;
+        }
+
+
+        private string JavaDir => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), JAVA);
+
+        private string CarafeDir
+        {
+            get
             {
-                PRECURSOR, PEPTIDE, PRECURSOR_CHARGE, ISOTOPE_LABEL_TYPE, PRECURSOR_MZ, MODIFIED_SEQUENCE, PRECURSOR_EXPLICIT_COLLISION_ENERGY,
-                PRECURSOR_NOTE, LIBRARY_NAME, LIBRARY_TYPE, LIBRARY_PROBABILITY_SCORE, PEPTIDE_MODIFIED_SEQUENCE_UNIMOD_IDS, BEST_RT, MIN_RT,
-                MAX_RT, IONMOB_MS1, APEX_SPECTRUM_ID, FILE_NAME, Q_VALUE
-            };
+                InitializeLibraryHelper(RootDir);
+                return Path.Combine(RootDir, CARAFE);
+            }
+        }
 
-        private static readonly IEnumerable<string> PrecursorTableColumnNamesCarafe =
-            new[]
-            {
-                PRECURSOR, PEPTIDE, PRECURSOR_CHARGE, ISOTOPE_LABEL_TYPE, PRECURSOR_MZ, MODIFIED_SEQUENCE, PRECURSOR_EXPLICIT_COLLISION_ENERGY,
-                PRECURSOR_NOTE, LIBRARY_NAME, LIBRARY_TYPE, LIBRARY_PROBABILITY_SCORE, PEPTIDE_MODIFIED_SEQUENCE_UNIMOD_IDS
-            };
+        private string CarafeJavaDir => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), CARAFE);
+        private string UserDir => Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        private DirectoryInfo JavaDirInfo => new DirectoryInfo(JavaDir);
+        private DirectoryInfo CarafeJavaDirInfo => new DirectoryInfo(CarafeJavaDir);
+        private DirectoryInfo CarafeDirInfo => new DirectoryInfo(CarafeDir);
+        private string JavaSdkDownloadFileName => @"jdk-21_windows-x64_bin.zip";
+        private Uri JavaSdkUri => new Uri(JAVA_SDK_DOWNLOAD_URL + JavaSdkDownloadFileName);
+        private string JavaSdkDownloadPath => Path.Combine(JavaDir, JavaSdkDownloadFileName);
+        private string JavaExecutablePath { get; set; }
+        private string CarafeFileBaseName => @"carafe" + HYPHEN + CARAFE_VERSION;
+        private string CarafeJarZipFileName => CarafeFileBaseName + CARAFE_DEV_VERSION + DOT_ZIP;
+        private string CarafeJarFileName => CarafeFileBaseName + DOT_JAR;
 
-        public static string PythonVersionSetting => Settings.Default.PythonEmbeddableVersion;
-        public static string ScriptsDir => PythonInstallerUtil.GetPythonVirtualEnvironmentScriptsDir(PythonVersionSetting, CARAFE_NAME);
         private static string AlphapeptdeepDiaRepo = @"https://codeload.github.com/wenbostar/alphapeptdeep_dia/zip/refs/tags/v1.0";
+        protected override string ToolName => CARAFE;
+
         public static PythonInstaller CreatePythonInstaller(TextWriter writer)
         {
-            var packages = new List<PythonPackage>()
+            var packages = new[]
             {
                 new PythonPackage  { Name = AlphapeptdeepDiaRepo, Version = null},
                 //  { Name = PEPTDEEP, Version = AlphapeptdeepDiaRepo },
@@ -112,227 +147,672 @@ namespace pwiz.Skyline.Model.Lib.Carafe
                 new PythonPackage { Name = @"torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu118 --upgrade", Version = null },
                 new PythonPackage { Name = @"wheel", Version = null },
                 new PythonPackage { Name = @"huggingface-hub", Version = null}
+                
             };
 
-            return new PythonInstaller(packages, writer, AlphapeptdeepLibraryBuilder.ALPHAPEPTDEEP);
+            return new PythonInstaller(packages, writer, CARAFE);
         }
 
-
-        private static IList<ModificationIndex> MODIFICATION_INDICES =>
-            new[]
-            {
-                new ModificationIndex(4, new ModificationType(@"4", @"Carbamidomethyl", @"H(3) C(2) N O")),
-                new ModificationIndex(21, new ModificationType(@"21", @"Phospho", @"H O(3) P")),
-                new ModificationIndex(35, new ModificationType(@"35", @"Oxidation", @"O"))
-            };
-
-        /// <summary>
-        /// List of UniMod Modifications supported by Carafe/AlphaPeptDeep
-        /// </summary>
-        internal static readonly IList<ModificationType> MODIFICATION_NAMES = PopulateUniModList(MODIFICATION_INDICES);
-
-        protected override IEnumerable<string> GetHeaderColumnNames(bool training)
+        private static string CARAFE_JAR_URI => @"https://github.com/Noble-Lab/Carafe/releases/download/v1.0.0/";
+        private Uri CarafeJarZipDownloadUrl()
         {
-            return training ? TrainingTableColumnNamesCarafe : PrecursorTableColumnNamesCarafe;
+            //return new Uri(@$"https://skyline.ms/_webdav/home/support/file%20sharing/%40files/carafe-{CARAFE_VERSION}{CARAFE_DEV_VERSION}{DOT_ZIP}");
+            return new Uri(@$"{CARAFE_JAR_URI}{CARAFE_URI_NAME}{CARAFE_VERSION}{CARAFE_DEV_VERSION}{DOT_ZIP}");
         }
-        protected override string GetModName(ModificationType mod, string unmodifiedSequence, int modIndexAA)
+
+        //Uri(@$"https://github.com/Noble-Lab/Carafe/releases/download/v{CARAFE_VERSION}-dev/{CARAFE}-{CARAFE_VERSION}{DOT_ZIP}");
+        private Uri CarafeJarZipUri()
         {
-            return mod.Name;
+            return new Uri(CarafeJarZipDownloadUrl() + CarafeJarZipFileName);
         }
 
-        protected override string GetTableRow(PeptideDocNode peptide, ModifiedSequence modifiedSequence,
-            int charge, bool training, string modsBuilder, string modSitesBuilder)
-        {
-            // CONSIDER: For better error checking, existence of the charge could be checked first and
-            // throw if it is missing with a more informative message. The caller is expected to provide a valid charge.
-            var docNode = peptide.TransitionGroups.First(group => group.PrecursorCharge == charge);
-
-            var precursor = LabelPrecursor(docNode.TransitionGroup, docNode.PrecursorMz, string.Empty);
-            var collisionEnergy = docNode.ExplicitValues.CollisionEnergy != null ? docNode.ExplicitValues.CollisionEnergy.ToString() : NA;
-            var note = docNode.Annotations.Note != null ? TextUtil.Quote(docNode.Annotations.Note) : NA;
-            var libraryName = docNode.LibInfo?.LibraryName ?? NA;
-            var libraryType = docNode.LibInfo?.LibraryTypeName ?? NA;
-            var libraryScore = docNode.LibInfo?.Score != null ? docNode.LibInfo.Score.ToString() : NA;
-            var unimodSequence = modifiedSequence.ToString();
-            var best_rt = docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.RetentionTime;
-            var min_rt = docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.StartRetentionTime;
-            var max_rt = docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.EndRetentionTime;
-            string ionmob_ms1 = docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.IonMobilityInfo?.IonMobilityMS1.HasValue == true ?
-                docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.IonMobilityInfo.IonMobilityMS1.ToString() : NA;
-            var apex_psm = @"unknown"; //docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.Identified
-            var filename = Path.GetFileNameWithoutExtension(ExperimentDataFilePath);
-            if (training)
-            {
-                return string.Join(TextUtil.SEPARATOR_TSV_STR, precursor, modifiedSequence.GetUnmodifiedSequence(), charge,
-                    docNode.LabelType, docNode.PrecursorMz, unimodSequence, collisionEnergy, note, libraryName, libraryType,
-                    libraryScore, modifiedSequence.UnimodIds, best_rt, min_rt, max_rt, ionmob_ms1, apex_psm, filename, libraryScore);
-            }
-            else
-            {
-                return string.Join(TextUtil.SEPARATOR_TSV_STR, precursor, modifiedSequence.GetUnmodifiedSequence(), charge,
-                    docNode.LabelType, docNode.PrecursorMz, unimodSequence, collisionEnergy, note, libraryName, libraryType,
-                    libraryScore, modifiedSequence.UnimodIds);
-            }
-        }
-
-        protected override string ToolName => CARAFE;
-        protected override IList<ModificationType> ModificationTypes => MODIFICATION_NAMES;
-
-        public LibrarySpec LibrarySpec { get; private set; }
-        private string PythonVersion { get; }
-        private string PythonVirtualEnvironmentName { get; }
-        [CanBeNull] private string ProteinDatabaseFilePath { get;  }
-        internal string ExperimentDataFilePath { get; set;  }
-        internal string ExperimentDataTuningFilePath { get; set; }
-
-        public override string InputFilePath => Path.Combine(RootDir, InputFileName);
-        public string TrainingFilePath => Path.Combine(RootDir, TrainingFileName); 
-        
-        private bool BuildLibraryForCurrentSkylineDocument => ProteinDatabaseFilePath.IsNullOrEmpty();
-        private string PythonVirtualEnvironmentActivateScriptPath =>
-            PythonInstallerUtil.GetPythonVirtualEnvironmentActivationScriptPath(PythonVersion,
-                PythonVirtualEnvironmentName);
-        private string RootDir => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), CARAFE);
-        private string JavaDir => Path.Combine(RootDir, JAVA);
-        private string CarafeDir => Path.Combine(RootDir, CARAFE);
-        private string UserDir => Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        private DirectoryInfo JavaDirInfo => new DirectoryInfo(JavaDir);
-        private DirectoryInfo CarafeDirInfo => new DirectoryInfo(CarafeDir);
-        private string JavaSdkDownloadFileName => @"jdk-21_windows-x64_bin.zip";
-        private Uri JavaSdkUri => new Uri(JAVA_SDK_DOWNLOAD_URL + JavaSdkDownloadFileName);
-        private string JavaSdkDownloadPath => Path.Combine(JavaDir, JavaSdkDownloadFileName);
-        private string JavaExecutablePath { get; set; }
-        private string CarafeFileBaseName => CARAFE + HYPHEN + CARAFE_VERSION;
-        private string CarafeJarZipFileName => CarafeFileBaseName + DOT_ZIP;
-        private string CarafeJarFileName => CarafeFileBaseName + DOT_JAR;
-        private Uri CarafeJarZipDownloadUrl = new Uri(@$"https://github.com/Noble-Lab/Carafe/releases/download/v{CARAFE_VERSION}/{CARAFE}-{CARAFE_VERSION}{DOT_ZIP}");
-        private Uri CarafeJarZipUri => new Uri(CarafeJarZipDownloadUrl + CarafeJarZipFileName);
         private string CarafeJarZipLocalPath => Path.Combine(UserDir, DOWNLOADS, CarafeJarZipFileName);
         private Uri CarafeJarZipLocalUri => new Uri(@$"file:///{CarafeJarZipLocalPath}");
-        private string CarafeJarZipDownloadPath => Path.Combine(CarafeDir, CarafeJarZipFileName);
-        private string CarafeOutputLibraryDir => Path.Combine(CarafeDir, OUTPUT_LIBRARY);
-        private string CarafeOutputLibraryFilePath => Path.Combine(CarafeOutputLibraryDir, OUTPUT_LIBRARY_FILE_NAME);
+        private string CarafeJarZipDownloadPath => Path.Combine(CarafeJavaDir, CarafeJarZipFileName);
 
-        private string CarafeJarFileDir => Path.Combine(CarafeDir, CarafeFileBaseName);
+        private string CarafeOutputLibraryDir()
+        {
+            return Path.Combine(CarafeDir, OUTPUT_LIBRARY);
+        }
+
+        private string CarafeOutputLibraryFilePath(bool test = false)
+        {
+            if (!test)
+                return Path.Combine(CarafeOutputLibraryDir(), OUTPUT_LIBRARY_FILE_NAME);
+            return Path.Combine(CarafeOutputLibraryDir(), OUTPUT_SPECTRAL_LIB_FILE_NAME);
+        }
+
+        //        public string BuilderLibraryPath;
+
+        private string CarafeJarFileDir => Path.Combine(CarafeJavaDir, CarafeFileBaseName);
         private string CarafeJarFilePath => Path.Combine(CarafeJarFileDir, CarafeJarFileName);
+
+        private string InputFileName =>
+            INPUT + TextUtil.UNDERSCORE +
+            TextUtil.EXT_TSV; //Convert.ToBase64String(Encoding.ASCII.GetBytes(Document.DocumentHash)) + TextUtil.EXT_TSV;
+
         private string TrainingFileName => TRAIN + TextUtil.UNDERSCORE + TextUtil.EXT_TSV;
-        private string InputFileName => INPUT + TextUtil.UNDERSCORE + Convert.ToBase64String(Encoding.ASCII.GetBytes(Document.DocumentHash)) + TextUtil.EXT_TSV;
+
+        public override string InputFilePath
+        {
+            get { return Path.Combine(RootDir, InputFileName); }
+        }
+
+        public string TuningFilePath { get; private set; }
+
+        private bool _diann_training;
+
+        public string BuilderLibraryPath { get; private set; }
+        public string TestLibraryPath { get; private set; }
+
+        public sealed override string TrainingFilePath => Path.Combine(RootDir, TrainingFileName);
+
+        public static IDictionary<string, AbstractDdaSearchEngine.Setting> DataParameters { get; private set; }
+        public static IDictionary<string, AbstractDdaSearchEngine.Setting> ModelParameters { get; private set; }
+        public static IDictionary<string, AbstractDdaSearchEngine.Setting> LibraryParameters { get; private set; }
+
+
+        public new void PrepareTrainingInputFile(IList<ModificationType> modificationNames, IProgressMonitor progress, ref IProgressStatus progressStatus)
+        {
+            progress.UpdateProgress(progressStatus = progressStatus
+                .ChangeMessage(ModelResources.LibraryHelper_PrepareTrainingInputFile_Preparing_training_input_file));
+
+            var trainingTable = GetPrecursorTable(true);
+            File.WriteAllLines(TrainingFilePath, trainingTable);
+        }
         private IList<ArgumentAndValue> CommandArguments =>
-            new []
+            new List<ArgumentAndValue>
             {
-                new ArgumentAndValue(@"jar", CarafeJarFilePath, TextUtil.HYPHEN),
-                new ArgumentAndValue(@"db", InputFilePath , TextUtil.HYPHEN),
-                new ArgumentAndValue(@"i", ExperimentDataTuningFilePath, TextUtil.HYPHEN),
-                new ArgumentAndValue(@"ms", ExperimentDataFilePath, TextUtil.HYPHEN),
-                new ArgumentAndValue(@"o", CarafeOutputLibraryDir, TextUtil.HYPHEN),
+                new ArgumentAndValue(@"jar", TextUtil.Quote(CarafeJarFilePath), TextUtil.HYPHEN),
+                new ArgumentAndValue(@"ms", TextUtil.Quote(ExperimentDataFilePath), TextUtil.HYPHEN),
+                new ArgumentAndValue(@"o", CarafeOutputLibraryDir(), TextUtil.HYPHEN),
                 new ArgumentAndValue(@"c_ion_min", @"2", TextUtil.HYPHEN),
-                new ArgumentAndValue(@"cor", @"0.8", TextUtil.HYPHEN),
-                new ArgumentAndValue(@"device", @"gpu", TextUtil.HYPHEN),
-                new ArgumentAndValue(@"enzyme", @"2", TextUtil.HYPHEN),
                 new ArgumentAndValue(@"ez", string.Empty, TextUtil.HYPHEN),
                 new ArgumentAndValue(@"fast", string.Empty, TextUtil.HYPHEN),
-                new ArgumentAndValue(@"fixMod", @"1", TextUtil.HYPHEN),
-                new ArgumentAndValue(@"itol", @"20", TextUtil.HYPHEN),
-                new ArgumentAndValue(@"itolu", @"ppm", TextUtil.HYPHEN),
                 new ArgumentAndValue(@"lf_frag_n_min", @"2", TextUtil.HYPHEN),
-                new ArgumentAndValue(@"lf_top_n_frag", @"20", TextUtil.HYPHEN),
-                new ArgumentAndValue(@"lf_type", @"skyline", TextUtil.HYPHEN),
-                new ArgumentAndValue(@"max_pep_mz", @"1000", TextUtil.HYPHEN),
-                new ArgumentAndValue(@"maxLength", @"35", TextUtil.HYPHEN),
-                new ArgumentAndValue(@"maxVar", @"1", TextUtil.HYPHEN),
-                new ArgumentAndValue(@"min_mz", @"200", TextUtil.HYPHEN),
-                new ArgumentAndValue(@"min_pep_mz", @"400", TextUtil.HYPHEN),
-                new ArgumentAndValue(@"minLength", @"7", TextUtil.HYPHEN),
-                new ArgumentAndValue(@"miss_c", @"1", TextUtil.HYPHEN),
-                new ArgumentAndValue(@"mode", @"general", TextUtil.HYPHEN),
+                //new ArgumentAndValue(@"lf_type", @"skyline", TextUtil.HYPHEN),
                 new ArgumentAndValue(@"n_ion_min", @"2", TextUtil.HYPHEN),
                 new ArgumentAndValue(@"na", @"0", TextUtil.HYPHEN),
                 new ArgumentAndValue(@"nf", @"4", TextUtil.HYPHEN),
                 new ArgumentAndValue(@"nm", string.Empty, TextUtil.HYPHEN),
-                new ArgumentAndValue(@"rf_rt_win", @"1", TextUtil.HYPHEN),
-                new ArgumentAndValue(@"rf", string.Empty, TextUtil.HYPHEN),
                 new ArgumentAndValue(@"seed", @"2000", TextUtil.HYPHEN),
-                new ArgumentAndValue(@"se", @"DIA-NN", TextUtil.HYPHEN),
                 new ArgumentAndValue(@"skyline", string.Empty, TextUtil.HYPHEN),
                 new ArgumentAndValue(@"tf", @"all", TextUtil.HYPHEN),
-                new ArgumentAndValue(@"valid", string.Empty, TextUtil.HYPHEN),
-                new ArgumentAndValue(@"varMod", @"0", TextUtil.HYPHEN)
+                new ArgumentAndValue(@"valid", string.Empty, TextUtil.HYPHEN)
             };
+
+        public enum ToleranceUnits
+        {
+            ppm,
+            da
+        };
+
+        public enum ModelTypes
+        {
+            general,
+            phosphorylation
+        };
+
+        public enum DeviceTypes
+        {
+            gpu,
+            cpu
+        };
+
+
+        public enum LibraryFormats
+        {
+            [Description("Skyline")] skyline,
+            [Description("DIA-NN")] diann,
+            [Description("EncyclopeDIA")] encyclopedia
+        };
+
+        //Carafe enzymes
+        // 0:Non enzyme, 1:Trypsin (default), 2:Trypsin (no P rule), 3:Arg-C, 4:Arg-C (no P rule), 5:Arg-N, 6:Glu-C, 7:Lys-C.
+        public enum SupportedEnzymeTypes
+        {
+            [Description("0:No enzyme")] NoEnzyme = 0,
+            [Description("1:Trypsin (default)")] TrypsinDefault = 1,
+            [Description("2:Trypsin(no P rule)")] TrypsinNoPRule = 2,
+            [Description("3:Arg-C")] ArgC = 3,
+            [Description("4:Arg-C(no P rule)")] ArgCNoPRule = 4,
+            [Description("5:Arg-N")] ArgN = 5,
+            [Description("6:Glu-C")] GluC = 6,
+            [Description("7:Lys-C")] LysC = 7
+        };
+        public static string GetDescription(Enum value)
+        {
+            var field = value.GetType().GetField(value.ToString());
+            var attribute = field?.GetCustomAttributes(typeof(DescriptionAttribute), false)
+                .FirstOrDefault() as DescriptionAttribute;
+            return attribute?.Description ?? value.ToString();
+        }
+
+        // ReSharper disable LocalizableElement
+        public static readonly ImmutableDictionary<string, AbstractDdaSearchEngine.Setting> DefaultDataParameters =
+            new ImmutableDictionary<string, AbstractDdaSearchEngine.Setting>(
+                new Dictionary<string, AbstractDdaSearchEngine.Setting>
+                {
+                    { ModelResources.CarafeTraining_fdr_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeTraining_fdr_long, 0.01, 0, 1) },
+                    { ModelResources.CarafeTraining_ptm_site_prob_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeTraining_ptm_site_prob_long, 0.75, 0, 1) },
+                    { ModelResources.CarafeTraining_ptm_site_qvalue_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeTraining_ptm_site_qvalue_long, 0.01, 0, 1) },
+                    { ModelResources.CarafeTraining_fragment_ion_mass_tolerance_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeTraining_fragment_ion_mass_tolerance_long, 20, 0) },
+                    { 
+                        ModelResources.CarafeTraining_fragment_ion_mass_tolerance_units_short,
+                        new AbstractDdaSearchEngine.Setting(ModelResources.CarafeTraining_fragment_ion_mass_tolerance_units_long, "ppm", Enum.GetNames(typeof(ToleranceUnits)))
+                    },
+                    { ModelResources.CarafeTraining_refine_peak_detection_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeTraining_refine_peak_detection_long, true) },
+                    { ModelResources.CarafeTraining_RT_window_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeTraining_RT_window_long, 3, 0) },
+                    { ModelResources.CarafeTraining_XIC_correlation_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeTraining_XIC_correlation_long, 0.80, 0, 1) }, 
+                    { ModelResources.CarafeTraining_min_fragment_mz_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeTraining_min_fragment_mz_long, 200.0, 0.0) }
+                });
+
+        public static readonly ImmutableDictionary<string, AbstractDdaSearchEngine.Setting> DefaultModelParameters =
+            new ImmutableDictionary<string, AbstractDdaSearchEngine.Setting>(
+                new Dictionary<string, AbstractDdaSearchEngine.Setting>
+                {
+                    { ModelResources.CarafeModel_model_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeModel_model_long, "general", Enum.GetNames(typeof(ModelTypes))) },
+                    { ModelResources.CarafeModel_nce_short,  new AbstractDdaSearchEngine.Setting(ModelResources.CarafeModel_nce_long) },
+                    { ModelResources.CarafeModel_instrument_short,  new AbstractDdaSearchEngine.Setting(ModelResources.CarafeModel_instrument_long) },
+                    { ModelResources.CarafeModel_device_short,  new AbstractDdaSearchEngine.Setting(ModelResources.CarafeModel_device_long, "gpu", Enum.GetNames(typeof(DeviceTypes))) }
+                });
+
+        public static AbstractDdaSearchEngine.Setting FixedModSetting =
+            new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_fixed_modification_long, @"1");
+
+        public static AbstractDdaSearchEngine.Setting VarModSetting =
+            new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_variable_modification_long, @"0");
+
+        public static readonly ImmutableDictionary<string, AbstractDdaSearchEngine.Setting> DefaultLibraryParameters =
+            new ImmutableDictionary<string, AbstractDdaSearchEngine.Setting>(
+                new Dictionary<string, AbstractDdaSearchEngine.Setting>
+                {
+                    { ModelResources.CarafeLibrary_enzyme_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_enzyme_long, GetDescription( SupportedEnzymeTypes.TrypsinDefault ), Enum.GetValues(typeof(SupportedEnzymeTypes)).
+                        Cast<SupportedEnzymeTypes>().Select(e => GetDescription(e))) },
+                    { ModelResources.CarafeLibrary_missed_cleavage_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_missed_cleavage_long, 1, 0) },
+    
+                    { ModelResources.CarafeLibrary_fixed_modification_types_short, 
+                        new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_fixed_modification_types_long, GetDescription( CarafeSupportedModifications.MODID_1 ), 
+                            Enum.GetValues(typeof(CarafeSupportedModifications)).
+                                Cast<CarafeSupportedModifications>().Select(e => GetDescription(e)), ModelResources.CarafeLibrary_fixed_modification_long, (s1, s2) =>
+                            {
+                                var input = "";
+
+                                s2 = s2.Split(':')[0].Trim();
+
+                                if (s1 == "0" || s2 == "0")
+                                    return s2;
+                                      
+                                input = $"{s1},{s2}";
+
+                                if (string.IsNullOrWhiteSpace(input))
+                                {
+                                    return s1;
+                                }
+                                return string.Join(",",
+                                    input.Split(',')
+                                        .Select(s => s.Trim())
+                                        .Where(s => !string.IsNullOrEmpty(s) && int.TryParse(s, out _))
+                                        .Select(s => int.Parse(s)) // Safe to parse after TryParse check
+                                        .Distinct() // Removes duplicates, preserves order
+                                        .Select(n => n.ToString()));
+                            } )  },
+                
+                    { ModelResources.CarafeLibrary_fixed_modification_short, FixedModSetting },
+                    { ModelResources.CarafeLibrary_variable_modification_types_short, 
+                        new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_variable_modification_types_long, GetDescription( CarafeSupportedModifications.NONE ), 
+                            Enum.GetValues(typeof(CarafeSupportedModifications)).
+                                Cast<CarafeSupportedModifications>().Select(e => GetDescription(e)), ModelResources.CarafeLibrary_variable_modification_long, (s1,s2) =>
+                            {
+                                var input = "";
+
+                                s2 = s2.Split(':')[0].Trim();
+
+                                if (s1 == "0" || s2 == "0")
+                                    return s2;
+
+                                input = $"{s1},{s2}";
+
+                                if (string.IsNullOrWhiteSpace(input))
+                                {
+                                    return s1;
+                                }
+                                return string.Join(",",
+                                    input.Split(',')
+                                        .Select(s => s.Trim())
+                                        .Where(s => !string.IsNullOrEmpty(s) && int.TryParse(s, out _))
+                                        .Select(s => int.Parse(s)) // Safe to parse after TryParse check
+                                        .Distinct() // Removes duplicates, preserves order
+                                        .Select(n => n.ToString()));
+                            } )  },
+
+                    { ModelResources.CarafeLibrary_variable_modification_short, VarModSetting },
+                    { ModelResources.CarafeLibrary_max_variable_modification_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_max_variable_modification_long, 1, 0) },
+                    { ModelResources.CarafeLibrary_clip_nterm_methionine_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_clip_nterm_methionine_long, false ) },
+                    { ModelResources.CarafeLibrary_min_peptide_length_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_min_peptide_length_long, 7, 0 ) },
+                    { ModelResources.CarafeLibrary_max_peptide_length_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_max_peptide_length_long, 35, 0 ) },
+                    { ModelResources.CarafeLibrary_min_peptide_mz_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_min_peptide_mz_long, 400.0, 0.0 ) },
+                    { ModelResources.CarafeLibrary_max_peptide_mz_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_max_peptide_mz_long, 1000.0, 0.0 ) },
+                    { ModelResources.CarafeLibrary_min_peptide_charge_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_min_peptide_charge_long, 2, 1 ) },
+                    { ModelResources.CarafeLibrary_max_peptide_charge_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_max_peptide_charge_long, 4, 1 ) },
+                    { ModelResources.CarafeLibrary_min_fragment_mz_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_min_fragment_mz_long, 200.0, 0.0 ) },
+                    { ModelResources.CarafeLibrary_max_fragment_mz_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_max_fragment_mz_long, 1800.0, 0.0 ) },
+                    { ModelResources.CarafeLibrary_topN_fragments_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_topN_fragments_long, 20, 1 ) },
+                    { ModelResources.CarafeLibrary_library_format_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_library_format_long, GetDescription( LibraryFormats.skyline), Enum.GetValues(typeof(LibraryFormats)).
+                        Cast<LibraryFormats>().Select(e => GetDescription(e))) }
+
+                });
+
+
+
+        // ReSharper restore LocalizableElement
+
+
+        /// <summary>
+        /// List of UniMod Modifications available
+        /// </summary>
+        internal static readonly IList<ModificationType> AlphapeptdeepModificationName = populateUniModList();
+        private static IList<ModificationType> populateUniModList()
+        {
+            IList<ModificationType> modList = new List<ModificationType>();
+            for (int m = 0; m < UniModData.UNI_MOD_DATA.Length; m++)
+            {
+                if (!UniModData.UNI_MOD_DATA[m].ID.HasValue)
+                    continue;
+                var accession = UniModData.UNI_MOD_DATA[m].ID.Value + @":" + UniModData.UNI_MOD_DATA[m].Name;
+                var name = UniModData.UNI_MOD_DATA[m].Name;
+                var formula = UniModData.UNI_MOD_DATA[m].Formula;
+                modList.Add(new ModificationType(accession, name, formula));
+            }
+            return modList;
+        }
+
+        public string ProductLibraryPath()
+        {
+            return CarafeOutputLibraryFilePath();
+        }
+
+        protected override IEnumerable<string> GetHeaderColumnNames(bool training)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override string GetTableRow(PeptideDocNode peptide, ModifiedSequence modifiedSequence, int charge, bool training,
+            string modsBuilder, string modSitesBuilder)
+        {
+            throw new NotImplementedException();
+        }
+
+
+        /// <summary>
+        /// List of UniMod Modifications available
+        /// </summary>
+        public static readonly IList<ModificationType> MODIFICATION_NAMES = PopulateUniModList(null);
+
+        protected override IList<ModificationType> ModificationTypes => MODIFICATION_NAMES;
+
+        public static void CarafeDefaultSettings()
+        {
+            DataParameters = new Dictionary<string, AbstractDdaSearchEngine.Setting>();
+            foreach (var kvp in DefaultDataParameters)
+                DataParameters[kvp.Key] = new AbstractDdaSearchEngine.Setting(kvp.Value);
+
+            ModelParameters = new Dictionary<string, AbstractDdaSearchEngine.Setting>();
+            foreach (var kvp in DefaultModelParameters)
+                ModelParameters[kvp.Key] = new AbstractDdaSearchEngine.Setting(kvp.Value);
+
+            LibraryParameters = new Dictionary<string, AbstractDdaSearchEngine.Setting>();
+            foreach (var kvp in DefaultLibraryParameters)
+                LibraryParameters[kvp.Key] = new AbstractDdaSearchEngine.Setting(kvp.Value);
+        } 
 
         public CarafeLibraryBuilder(
             string libName,
             string libOutPath,
-            string pythonVersion,
+            //string pythonVersion,
             string pythonVirtualEnvironmentName,
+            string pythonVirtualEnvironmentScriptsDir,
             string experimentDataFilePath,
             string experimentDataTuningFilePath,
+            string dbInputFilePath,
             SrmDocument document,
-            IrtStandard irtStandard) : base(document, irtStandard)
+            SrmDocument trainingDocument,
+            bool diann_training, 
+            IrtStandard irtStandard, out string testLibraryOutputPath, out string builderLibraryOutputPath) : base(document, irtStandard)
         {
-            Directory.CreateDirectory(RootDir);
-            Directory.CreateDirectory(JavaDir);
-            Directory.CreateDirectory(CarafeDir);
-            LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
-            PythonVersion = pythonVersion;
+            Document = document;
+            TrainingDocument = trainingDocument;
+            DbInputFilePath = dbInputFilePath;
+            //PythonVersion = pythonVersion;
             PythonVirtualEnvironmentName = pythonVirtualEnvironmentName;
+            PythonVirtualEnvironmentScriptsDir = pythonVirtualEnvironmentScriptsDir;
             ExperimentDataFilePath = experimentDataFilePath;
             ExperimentDataTuningFilePath = experimentDataTuningFilePath;
+            LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
+
+            if (RootDir == null)
+            {
+                RootDir = Path.GetDirectoryName(libOutPath);
+            }
+
+            if (RootDir != null)
+            {
+                RootDir = Path.Combine(RootDir, libName);
+                //Directory.CreateDirectory(RootDir);
+                InitializeLibraryHelper(RootDir);
+            }
+
+            if (Document.DocumentHash != null || DbInputFilePath != null) InitializeLibraryHelper(RootDir);
+
+
+            Directory.CreateDirectory(JavaDir);
+            Directory.CreateDirectory(CarafeDir);
+
+            _diann_training = diann_training;
+            if (_diann_training)
+                TuningFilePath = experimentDataTuningFilePath;
+            else
+                TuningFilePath = TrainingFilePath;
+
+                Document = document;
+            BuilderLibraryPath = CarafeOutputLibraryFilePath();
+            TestLibraryPath = CarafeOutputLibraryFilePath(true);
+            testLibraryOutputPath = TestLibraryPath;
+            builderLibraryOutputPath = BuilderLibraryPath;
+
+            if (CarafeLibraryBuilder.DataParameters == null || 
+                CarafeLibraryBuilder.ModelParameters == null || 
+                CarafeLibraryBuilder.LibraryParameters == null)
+                CarafeLibraryBuilder.CarafeDefaultSettings();
         }
 
         public CarafeLibraryBuilder(
             string libName,
             string libOutPath,
-            string pythonVersion,
+            //string pythonVersion,
             string pythonVirtualEnvironmentName,
+            string pythonVirtualEnvironmentScriptsDir,
             string proteinDatabaseFilePath,
             string experimentDataFilePath,
             string experimentDataTuningFilePath,
-            SrmDocument document,
+            SrmDocument document, 
+            SrmDocument trainingDocument, 
+            IDictionary<string, AbstractDdaSearchEngine.Setting> libraryParameters,
             IrtStandard irtStandard) : base(document, irtStandard)
         {
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
-            PythonVersion = pythonVersion;
+            //PythonVersion = pythonVersion;
             PythonVirtualEnvironmentName = pythonVirtualEnvironmentName;
-            ProteinDatabaseFilePath = proteinDatabaseFilePath;
+            PythonVirtualEnvironmentScriptsDir = pythonVirtualEnvironmentScriptsDir;
+            //ProteinDatabaseFilePath = proteinDatabaseFilePath;
             ExperimentDataFilePath = experimentDataFilePath;
             ExperimentDataTuningFilePath = experimentDataTuningFilePath;
+            Document = document;
+            TrainingDocument = trainingDocument;
+            LibraryParameters = libraryParameters;
             Directory.CreateDirectory(RootDir);
             Directory.CreateDirectory(JavaDir);
-            Directory.CreateDirectory(CarafeDir);
+            Directory.CreateDirectory(CarafeJavaDir);
+
         }
 
+        private void InitializeLibraryHelper(string rootDir)
+        {
+            if (LibraryHelper == null)
+            {
+                LibraryHelper = new LibraryHelper(rootDir, CARAFE);
+                RootDir = LibraryHelper.GetRootDir(rootDir, CARAFE);
+                LibraryHelper.InitializeLibraryHelper(InputFilePath, TuningFilePath, ExperimentDataFilePath);
+            }
+        }
         public bool BuildLibrary(IProgressMonitor progress)
         {
             IProgressStatus progressStatus = new ProgressStatus();
             try
             {
+                InitializeLibraryHelper(RootDir);
+                
+                Directory.CreateDirectory(RootDir);
+                Directory.CreateDirectory(JavaDir);
+                Directory.CreateDirectory(CarafeJavaDir);
+
                 RunCarafe(progress, ref progressStatus);
                 progress.UpdateProgress(progressStatus = progressStatus.Complete());
+                LibraryHelper = null;
                 return true;
             }
             catch (Exception exception)
             {
                 progress.UpdateProgress(progressStatus.ChangeErrorException(exception));
+                LibraryHelper = null;
                 return false;
             }
         }
 
         private void RunCarafe(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
-            progressStatus = progressStatus.ChangeSegments(0, 3);
+            //progressStatus = progressStatus.ChangeSegments(0, 3);
+            progress.UpdateProgress(progressStatus = progressStatus
+                .ChangeMessage(@"Executing carafe")
+                .ChangePercentComplete(0));
 
             SetupJavaEnvironment(progress, ref progressStatus);
-            progressStatus = progressStatus.NextSegment();
-            if (BuildLibraryForCurrentSkylineDocument)
+
+            var args = new StringBuilder();
+  
+
+            var readyArgs = new List<ArgumentAndValue>();
+            foreach (var arg in CommandArguments)
             {
-                //AbstractDeepLibraryBuilder.PrepareInputFile(Document, progress, ref progressStatus, @"carafe");
-                
+               readyArgs.Add(new ArgumentAndValue(arg.Name, arg.Value, TextUtil.HYPHEN));
             }
-            ExecuteCarafe(progress, ref progressStatus);
-            progressStatus = progressStatus.NextSegment();
+
+            foreach (var dataParam in DataParameters)
+            {
+                if (dataParam.Key == ModelResources.CarafeTraining_fdr_short)
+                {
+                    readyArgs.Add(new ArgumentAndValue(@"fdr", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                }
+                else if (dataParam.Key == ModelResources.CarafeTraining_ptm_site_prob_short)
+                {
+                    readyArgs.Add(new ArgumentAndValue(@"ptm_site_prob", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                }
+                else if (dataParam.Key == ModelResources.CarafeTraining_ptm_site_qvalue_short)
+                {
+                    readyArgs.Add(new ArgumentAndValue(@"ptm_site_qvalue", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                }
+                else if (dataParam.Key == ModelResources.CarafeTraining_fragment_ion_mass_tolerance_short)
+                {
+                    readyArgs.Add(new ArgumentAndValue(@"itol", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                }
+                else if (dataParam.Key == ModelResources.CarafeTraining_fragment_ion_mass_tolerance_units_short)
+                {
+                    readyArgs.Add(new ArgumentAndValue(@"itolu", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                }
+                else if (dataParam.Key == ModelResources.CarafeTraining_refine_peak_detection_short)
+                {
+                    if (!dataParam.Value.Value.ToString().IsNullOrEmpty() && (bool)dataParam.Value.Value)
+                        readyArgs.Add(new ArgumentAndValue(@"rf", @"", TextUtil.HYPHEN));
+                }
+                else if (dataParam.Key == ModelResources.CarafeTraining_RT_window_short)
+                {
+                    readyArgs.Add(new ArgumentAndValue(@"rf_rt_win", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                }
+                else if (dataParam.Key == ModelResources.CarafeTraining_XIC_correlation_short)
+                {
+                    readyArgs.Add(new ArgumentAndValue(@"cor", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                }
+                else if (dataParam.Key == ModelResources.CarafeTraining_min_fragment_mz_short)
+                {
+                    readyArgs.Add(new ArgumentAndValue(@"min_mz", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                }
+            }
+
+            foreach (var dataParam in ModelParameters)
+            {
+                if (dataParam.Key == ModelResources.CarafeModel_model_short)
+                {
+                    readyArgs.Add(new ArgumentAndValue(@"mode", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                }
+                else if (dataParam.Key == ModelResources.CarafeModel_nce_short)
+                {
+                    if (!dataParam.Value.Value.ToString().IsNullOrEmpty())
+                        readyArgs.Add(new ArgumentAndValue(@"nce", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                }
+                else if (dataParam.Key == ModelResources.CarafeModel_instrument_short)
+                {
+                    if (!dataParam.Value.Value.ToString().IsNullOrEmpty())
+                        readyArgs.Add(new ArgumentAndValue(@"ms_instrument", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                }
+                else if (dataParam.Key == ModelResources.CarafeModel_device_short)
+                {
+                    readyArgs.Add(new ArgumentAndValue(@"device", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                }
+            }
+
+            foreach (var dataParam in LibraryParameters)
+            {
+                if (dataParam.Key == ModelResources.CarafeLibrary_enzyme_short)
+                {
+                    if (!dataParam.Value.Value.ToString().IsNullOrEmpty())
+                    {
+                        string[] enz_name = dataParam.Value.Value.ToString().Split(':');
+
+                        readyArgs.Add(new ArgumentAndValue(@"enzyme", enz_name[0], TextUtil.HYPHEN));
+                    }
+
+                }
+                else if (dataParam.Key == ModelResources.CarafeLibrary_missed_cleavage_short)
+                {
+                    readyArgs.Add(new ArgumentAndValue(@"miss_c", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                }
+                else if (dataParam.Key == ModelResources.CarafeLibrary_fixed_modification_short)
+                {
+                    if (!dataParam.Value.Value.ToString().IsNullOrEmpty())
+                        readyArgs.Add(new ArgumentAndValue(@"fixMod", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                }
+                else if (dataParam.Key == ModelResources.CarafeLibrary_variable_modification_short)
+                {
+                    if (!dataParam.Value.Value.ToString().IsNullOrEmpty())
+                        readyArgs.Add(new ArgumentAndValue(@"varMod", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                    else
+                        readyArgs.Add(new ArgumentAndValue(@"varMod", @"0", TextUtil.HYPHEN));
+                }
+                else if (dataParam.Key == ModelResources.CarafeLibrary_max_variable_modification_short)
+                {
+                    readyArgs.Add(new ArgumentAndValue(@"maxVar", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                }
+                else if (dataParam.Key == ModelResources.CarafeLibrary_clip_nterm_methionine_short)
+                {
+                    if (!dataParam.Value.Value.ToString().IsNullOrEmpty() && (bool)dataParam.Value.Value)
+                        readyArgs.Add(new ArgumentAndValue(@"clip_n_m", @"", TextUtil.HYPHEN));
+                }
+                else if (dataParam.Key == ModelResources.CarafeLibrary_min_peptide_length_short)
+                {
+                    readyArgs.Add(new ArgumentAndValue(@"minLength", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                }
+                else if (dataParam.Key == ModelResources.CarafeLibrary_max_peptide_length_short)
+                {
+                    readyArgs.Add(new ArgumentAndValue(@"maxLength", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                }
+                else if (dataParam.Key == ModelResources.CarafeLibrary_min_peptide_mz_short)
+                {
+                    readyArgs.Add(new ArgumentAndValue(@"min_pep_mz", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                }
+                else if (dataParam.Key == ModelResources.CarafeLibrary_max_peptide_mz_short)
+                {
+                    readyArgs.Add(new ArgumentAndValue(@"max_pep_mz", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                }
+                else if (dataParam.Key == ModelResources.CarafeLibrary_min_peptide_charge_short)
+                {
+                    readyArgs.Add(new ArgumentAndValue(@"min_pep_charge", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                }
+                else if (dataParam.Key == ModelResources.CarafeLibrary_max_peptide_charge_short)
+                {
+                    readyArgs.Add(new ArgumentAndValue(@"max_pep_charge", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                }
+                else if (dataParam.Key == ModelResources.CarafeLibrary_min_fragment_mz_short)
+                {
+                    readyArgs.Add(new ArgumentAndValue(@"lf_frag_mz_min", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                }
+                else if (dataParam.Key == ModelResources.CarafeLibrary_max_fragment_mz_short)
+                {
+                    readyArgs.Add(new ArgumentAndValue(@"lf_frag_mz_max", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                }
+                else if (dataParam.Key == ModelResources.CarafeLibrary_max_fragment_mz_short)
+                {
+                    readyArgs.Add(new ArgumentAndValue(@"lf_frag_mz_max", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                }
+                else if (dataParam.Key == ModelResources.CarafeLibrary_max_fragment_mz_short)
+                {
+                    readyArgs.Add(new ArgumentAndValue(@"lf_frag_mz_max", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                }
+
+                else if (dataParam.Key == ModelResources.CarafeLibrary_topN_fragments_short)
+                {
+                    readyArgs.Add(new ArgumentAndValue(@"lf_top_n_frag", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                }
+                else if (dataParam.Key == ModelResources.CarafeLibrary_library_format_short)
+                {
+                    var format = GetDescription(LibraryFormats.skyline);
+                    if (format != dataParam.Value.Value.ToString())
+                        format += @$",{dataParam.Value.Value.ToString()}";
+                    readyArgs.Add(new ArgumentAndValue(@"lf_type", format, TextUtil.HYPHEN));
+                }
+            }
+
+            if (TrainingDocument != null)
+            {
+                if (!DbInputFilePath.IsNullOrEmpty())
+                {
+                    readyArgs.Add(new ArgumentAndValue(@"db", TextUtil.Quote(DbInputFilePath), TextUtil.HYPHEN));
+                }
+                else
+                {
+                    readyArgs.Add(new ArgumentAndValue(@"db", TextUtil.Quote(InputFilePath), TextUtil.HYPHEN));
+                }
+
+                readyArgs.Add(new ArgumentAndValue(@"i", TextUtil.Quote(TuningFilePath), TextUtil.HYPHEN));
+                readyArgs.Add(new ArgumentAndValue(@"se", @"skyline", TextUtil.HYPHEN));
+
+                LibraryHelper.PreparePrecursorInputFile(Document, progress, ref progressStatus, CARAFE, IrtStandard);
+                LibraryHelper.PrepareTrainingInputFile(TrainingDocument, progress, ref progressStatus, CARAFE);
+            }
+            else if (_diann_training)
+            {
+                if (!DbInputFilePath.IsNullOrEmpty())
+                {
+                    readyArgs.Add(new ArgumentAndValue(@"db", TextUtil.Quote(DbInputFilePath), TextUtil.HYPHEN));
+                    readyArgs.Add(new ArgumentAndValue(@"i", TextUtil.Quote(TuningFilePath), TextUtil.HYPHEN));
+                    readyArgs.Add(new ArgumentAndValue(@"se", @"DIA-NN", TextUtil.HYPHEN));
+                    LibraryHelper.PreparePrecursorInputFile(Document, progress, ref progressStatus, CARAFE, IrtStandard);
+                }
+                else
+                {
+                    readyArgs.Add(new ArgumentAndValue(@"db", TextUtil.Quote(InputFilePath), TextUtil.HYPHEN));
+                    readyArgs.Add(new ArgumentAndValue(@"i", TextUtil.Quote(TuningFilePath), TextUtil.HYPHEN));
+                    readyArgs.Add(new ArgumentAndValue(@"se", @"DIA-NN", TextUtil.HYPHEN));
+                    LibraryHelper.PreparePrecursorInputFile(Document, progress, ref progressStatus, CARAFE, IrtStandard);
+                }
+            }
+            else
+            {
+                readyArgs.Add(new ArgumentAndValue(@"db", TextUtil .Quote(DbInputFilePath), TextUtil.HYPHEN));
+                readyArgs.Add(new ArgumentAndValue(@"i", TextUtil.Quote(TuningFilePath), TextUtil.HYPHEN));
+                readyArgs.Add(new ArgumentAndValue(@"se", @"skyline", TextUtil.HYPHEN));
+                LibraryHelper.PrepareTrainingInputFile(Document, progress, ref progressStatus, CARAFE);
+            }
+            // progressStatus = progressStatus.NextSegment();
+
+            //}
+            ExecuteCarafe(progress, ref progressStatus, readyArgs);
+            //progressStatus = progressStatus.NextSegment();
 
             ImportSpectralLibrary(progress, ref progressStatus);
+            progress.UpdateProgress(progressStatus = progressStatus
+                .ChangePercentComplete(100));
         }
+
         private void SetupJavaEnvironment(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
             progress.UpdateProgress(progressStatus = progressStatus
@@ -351,6 +831,9 @@ namespace pwiz.Skyline.Model.Lib.Carafe
                 // clean java dir
                 JavaDirInfo.Delete(true);
                 Directory.CreateDirectory(JavaDir);
+                
+                //CarafeJavaDirInfo.Delete(true);
+                //Directory.CreateDirectory(CarafeJavaDir);
 
                 // download java sdk package
                 using var webClient = new MultiFileAsynchronousDownloadClient(progress, 1);
@@ -367,18 +850,21 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             if (!isCarafeValid)
             {
                 // clean carafe dir
-                CarafeDirInfo.Delete(true);
-                Directory.CreateDirectory(CarafeDir);
+                //CarafeJavaDirInfo.Delete(true);
+                Directory.CreateDirectory(RootDir);
+                Directory.CreateDirectory(CarafeJavaDir);
+
 
                 // download carafe jar package
                 using var webClient = new MultiFileAsynchronousDownloadClient(progress, 1);
-                if (!webClient.DownloadFileAsync(CarafeJarZipDownloadUrl, CarafeJarZipDownloadPath, out var exception))
+                if (!webClient.DownloadFileAsync(CarafeJarZipDownloadUrl(), CarafeJarZipDownloadPath, out var exception))
                     throw new Exception(
                         @"Failed to download carafe jar package", exception);
 
                 // unzip carafe jar package
                 using var carafeJarZip = ZipFile.Read(CarafeJarZipDownloadPath);
-                carafeJarZip.ExtractAll(CarafeDir);
+                carafeJarZip.ExtractAll(CarafeJavaDir);
+                PythonInstallerUtil.SignFile(CarafeJarFilePath);
             }
 
 
@@ -400,6 +886,15 @@ namespace pwiz.Skyline.Model.Lib.Carafe
                 return false;
             }
             JavaExecutablePath = javaExecutablePath;
+            if (JavaExecutablePath.Any(char.IsWhiteSpace))
+                JavaExecutablePath = TextUtil.Quote(JavaExecutablePath);
+
+            var signatureValid = PythonInstallerUtil.IsSignatureValid(JavaExecutablePath, PythonInstallerUtil.GetFileHash(JavaExecutablePath));
+            if (signatureValid != true)
+            {
+                return false;
+            }
+
             return true;
         }
 
@@ -409,6 +904,9 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             {
                 return false;
             }
+            var signatureValid = PythonInstallerUtil.IsSignatureValid(CarafeJarFilePath, PythonInstallerUtil.GetFileHash(CarafeJarFilePath));
+            if (signatureValid != true)
+                return false;
             return true;
         }
 
@@ -418,43 +916,71 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             Assume.IsTrue(dirs.Length.Equals(1), @"Java directory has more than one java SDKs");
             var javaSdkDir = dirs[0];
             JavaExecutablePath = Path.Combine(javaSdkDir, BIN, JAVA_EXECUTABLE);
+            PythonInstallerUtil.SignFile(JavaExecutablePath);
         }
 
-        private void ExecuteCarafe(IProgressMonitor progress, ref IProgressStatus progressStatus)
+        private void ExecuteCarafe(IProgressMonitor progress, ref IProgressStatus progressStatus, IList<ArgumentAndValue> commandArgs)
         {
             progress.UpdateProgress(progressStatus = progressStatus
                 .ChangeMessage(@"Executing carafe")
-                .ChangePercentComplete(0));
+                .ChangePercentComplete(-1));
 
          
             // compose carafe cmd command arguments to build library
-            // add activate python virtual env command
-            var commandArgs = TextUtil.SpaceSeparate(CommandArguments.Select(a => a.ToString()));
-            var args = TextUtil.SpaceSeparate(PythonVirtualEnvironmentActivateScriptPath,
-                CONDITIONAL_CMD_PROCEEDING_SYMBOL, JavaExecutablePath, commandArgs);
+            var args = TextUtil.SpaceSeparate(
+                TextUtil.Quote(PythonVirtualEnvironmentActivateScriptPath)
+                );
+
+            args += TextUtil.SpaceSeparate(CONDITIONAL_CMD_PROCEEDING_SYMBOL) + SPACE; 
+
+            args += TextUtil.SpaceSeparate(
+                TextUtil.Quote(JavaExecutablePath)
+            );
+
+            args += SPACE + TextUtil.SpaceSeparate(
+                commandArgs.Select(arg => 
+                    arg.ToString())
+            );
+
+            var cmdBuilder = new StringBuilder();
+            CancellationToken cancelToken = CancellationToken.None;
+
+            cmdBuilder.Append(args).Append(SPACE);
+            
+            string batPath = Path.Combine(RootDir, @"runCarafe.bat");
+            File.WriteAllText(batPath, cmdBuilder.ToString());
 
             // execute command
             var pr = new ProcessRunner();
-            var psi = new ProcessStartInfo(CMD_EXECUTABLE)
+            var psi = new ProcessStartInfo() 
             {
+                FileName = batPath,
                 CreateNoWindow = true,
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
-                RedirectStandardInput = true
+                RedirectStandardInput = false
             };
+
             try
             {
-                pr.Run(psi, args.ToString(), progress, ref progressStatus, ProcessPriorityClass.BelowNormal, true);
+                pr.SilenceStatusMessageUpdates = true;  // Use FilteredUserMessageWriter to write process output instead of ProgressStatus.ChangeMessage()
+                // pr.ExpectedOutputLinesCount = 119;
+                
+                pr.EnableImmediateLog = true;
+                pr.EnableRunningTimeMessage = true;
+                pr.Run(psi, string.Empty, progress, ref progressStatus, 
+                    new SimpleUserMessageWriter(), 
+                    ProcessPriorityClass.BelowNormal, true);
             }
             catch (Exception ex)
             {
-                // TODO(xgwang): update this exception to an Carafe specific one
-                throw new Exception(@"Failed to build library by executing carafe", ex);
+                throw new Exception(ModelResources.Carafe_failed_to_complete, ex);
             }
 
             progress.UpdateProgress(progressStatus = progressStatus
                 .ChangePercentComplete(100));
+
         }
 
         private void ImportSpectralLibrary(IProgressMonitor progress, ref IProgressStatus progressStatus)
@@ -463,38 +989,15 @@ namespace pwiz.Skyline.Model.Lib.Carafe
                 .ChangeMessage(@"Importing spectral library")
                 .ChangePercentComplete(0));
 
-            var source = CarafeOutputLibraryFilePath;
+            var source = CarafeOutputLibraryFilePath();
             var dest = LibrarySpec.FilePath;
-            try
-            {
-                File.Copy(source, dest, true);
-            }
-            catch (Exception ex)
-            {
-                // TODO(xgwang): update this exception to an Carafe specific one
-                throw new Exception(
-                    @$"Failed to copy carafe output library file from {source} to {dest}", ex);
-            }
-            
+ 
+            File.Copy(source, dest);
+
             progress.UpdateProgress(progressStatus = progressStatus
                 .ChangePercentComplete(100));
         }
-
-        private static string LabelPrecursor(TransitionGroup tranGroup, double precursorMz,
-            string resultsText)
-        {
-            return string.Format(@"{0}{1}{2}{3}", LabelMz(tranGroup, precursorMz),
-                Transition.GetChargeIndicator(tranGroup.PrecursorAdduct),
-                tranGroup.LabelTypeText, resultsText);
-        }
-
-        private static string LabelMz(TransitionGroup tranGroup, double precursorMz)
-        {
-            int? massShift = tranGroup.DecoyMassShift;
-            double shift = SequenceMassCalc.GetPeptideInterval(massShift);
-            return string.Format(CultureInfo.InvariantCulture, @"{0:F04}{1}", precursorMz - shift,
-                Transition.GetDecoyText(massShift));
-        }
+ 
     }
 }
 

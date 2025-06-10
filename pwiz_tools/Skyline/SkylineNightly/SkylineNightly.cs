@@ -142,7 +142,7 @@ namespace SkylineNightly
                     // Registry setting LongPathsEnabled here for python to install pip and configure packages required to run AlphaPeptDeep
                     Registry.SetValue(REG_FILESYSTEM_KEY, REG_LONGPATHS_ENABLED, REG_LONGPATH_VALUE);
                 }
-            }
+              }
             }
             catch (UnauthorizedAccessException exception)
             {
