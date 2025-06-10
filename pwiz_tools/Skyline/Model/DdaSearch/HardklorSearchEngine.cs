@@ -19,7 +19,6 @@
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using System;
@@ -40,6 +39,7 @@ using pwiz.Skyline.Model.RetentionTimes;
 using Enzyme = pwiz.Skyline.Model.DocSettings.Enzyme;
 using pwiz.Common.Collections;
 using System.Text.RegularExpressions;
+using pwiz.CommonMsData;
 
 namespace pwiz.Skyline.Model.DdaSearch
 {

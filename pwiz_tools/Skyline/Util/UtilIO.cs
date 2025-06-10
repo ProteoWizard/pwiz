@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
-using System.Linq;
 using System.Management;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -33,9 +32,9 @@ using NHibernate;
 using pwiz.Common.Database.NHibernate;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
-using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util.Extensions;
 
@@ -706,7 +705,7 @@ namespace pwiz.Skyline.Util
                 catch (DirectoryNotFoundException)
                 {
                 }
-                Helpers.TryTwice(() => Directory.Move(pathTemp, pathDestination));
+                TryHelper.TryTwice(() => Directory.Move(pathTemp, pathDestination));
             }
             else
             {
@@ -728,7 +727,7 @@ namespace pwiz.Skyline.Util
                 }
 
                 // Or just move, if it does not.
-                Helpers.TryTwice(() => File.Move(pathTemp, pathDestination));
+                TryHelper.TryTwice(() => File.Move(pathTemp, pathDestination));
             }
         }
 
@@ -780,6 +779,10 @@ namespace pwiz.Skyline.Util
             return GetTempFileName(basePath, prefix, 0);
         }
 
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        static extern uint GetTempFileName(string lpPathName, string lpPrefixString,
+            uint uUnique, [Out] StringBuilder lpTempFileName);
+
         private static string GetTempFileName(string basePath, string prefix, uint unique)
         {
             // 260 is MAX_PATH in Win32 windows.h header
@@ -787,7 +790,7 @@ namespace pwiz.Skyline.Util
             StringBuilder sb = new StringBuilder(260);
 
             Directory.CreateDirectory(basePath);
-            uint result = Kernel32.GetTempFileName(basePath, prefix, unique, sb);
+            uint result = GetTempFileName(basePath, prefix, unique, sb);
             if (result == 0)
             {
                 var lastWin32Error = Marshal.GetLastWin32Error();
@@ -828,127 +831,8 @@ namespace pwiz.Skyline.Util
         }
     }
 
-    public static class FileEx
+    public static class FileTimeEx
     {
-        public static bool IsDirectory(string path)
-        {
-            return (File.GetAttributes(path) & FileAttributes.Directory) == FileAttributes.Directory;
-        }
-
-        public static bool IsFile(string path)
-        {
-            return !IsDirectory(path);
-        }
-
-        public static bool IsWritable(string path)
-        {
-            try
-            {
-                using var fs = new FileStream(path, FileMode.Open, FileAccess.Write, FileShare.None);
-                return true;
-            }
-            catch (IOException)
-            {
-                // An IOException means the file is locked
-                return false;
-            }
-            catch (UnauthorizedAccessException)
-            {
-                // Or we lack permissions can also make it not possible to write to
-                return false;
-            }
-        }
-
-        public static bool AreIdenticalFiles(string pathA, string pathB)
-        {
-            var infoA = new FileInfo(pathA);
-            var infoB = new FileInfo(pathB);
-            if (infoA.Length != infoB.Length)
-                return false;
-            // Credit from here to https://stackoverflow.com/questions/968935/compare-binary-files-in-c-sharp
-            using (var s1 = new FileStream(pathA, FileMode.Open, FileAccess.Read, FileShare.Read))
-            using (var s2 = new FileStream(pathB, FileMode.Open, FileAccess.Read, FileShare.Read))
-            using (var b1 = new BinaryReader(s1))
-            using (var b2 = new BinaryReader(s2))
-            {
-                while (true)
-                {
-                    var data1 = b1.ReadBytes(64 * 1024);
-                    var data2 = b2.ReadBytes(64 * 1024);
-                    if (data1.Length != data2.Length)
-                        return false;
-                    if (data1.Length == 0)
-                        return true;
-                    if (!data1.SequenceEqual(data2))
-                        return false;
-                }
-            }
-        }
-
-        public static void SafeDelete(string path, bool ignoreExceptions = false)
-        {
-            var hint = $@"File.Delete({path})";
-            if (ignoreExceptions)
-            {
-                try
-                {
-                    if (path != null && File.Exists(path))
-                        Helpers.TryTwice(() => File.Delete(path), hint);
-                }
-// ReSharper disable EmptyGeneralCatchClause
-                catch (Exception)
-// ReSharper restore EmptyGeneralCatchClause
-                {
-                }
-
-                return;
-            }
-
-            try
-            {
-                Helpers.TryTwice(() => File.Delete(path), hint);
-            }
-            catch (ArgumentException e)
-            {
-                if (path == null || string.IsNullOrEmpty(path.Trim()))
-                    throw new DeleteException(UtilResources.FileEx_SafeDelete_Path_is_empty, e);
-                throw new DeleteException(string.Format(UtilResources.FileEx_SafeDelete_Path_contains_invalid_characters___0_, path), e);
-            }
-            catch (DirectoryNotFoundException e)
-            {
-                throw new DeleteException(string.Format(UtilResources.FileEx_SafeDelete_Directory_could_not_be_found___0_, path), e);
-            }
-            catch (NotSupportedException e)
-            {
-                throw new DeleteException(string.Format(UtilResources.FileEx_SafeDelete_File_path_is_invalid___0_, path), e);
-            }
-            catch (PathTooLongException e)
-            {
-                throw new DeleteException(string.Format(UtilResources.FileEx_SafeDelete_File_path_is_too_long___0_, path), e);
-            }
-            catch (IOException e)
-            {
-                throw new DeleteException(string.Format(UtilResources.FileEx_SafeDelete_Unable_to_delete_file_which_is_in_use___0_, path), e);
-            }
-            catch (UnauthorizedAccessException e)
-            {
-                var fileInfo = new FileInfo(path);
-                if (fileInfo.IsReadOnly)
-                    throw new DeleteException(string.Format(UtilResources.FileEx_SafeDelete_Unable_to_delete_read_only_file___0_, path), e);
-                if (Directory.Exists(path))
-                    throw new DeleteException(string.Format(UtilResources.FileEx_SafeDelete_Unable_to_delete_directory___0_, path), e);
-                throw new DeleteException(string.Format(UtilResources.FileEx_SafeDelete_Insufficient_permission_to_delete_file___0_, path), e);
-            }
-        }
-
-        public class DeleteException : IOException
-        {
-            public DeleteException(string message, Exception innerException)
-                : base(message, innerException)
-            {
-            }
-        }
-
         /// <summary>
         /// Appends a time stamp value to the given Skyline file name.
         /// </summary>
@@ -966,37 +850,6 @@ namespace pwiz.Skyline.Util
             while (File.Exists(path));
             return path;
         }
-
-        public static string GetElapsedTimeExplanation(DateTime startTime, DateTime endTime)
-        {
-            long deltaTicks = endTime.Ticks - startTime.Ticks;
-            var elapsedSpan = new TimeSpan(deltaTicks);
-            if (elapsedSpan.TotalMinutes > 0)
-                return string.Format(@"{0} minutes, {1} seconds", elapsedSpan.TotalMinutes, elapsedSpan.Seconds);
-            if (elapsedSpan.TotalSeconds > 0)
-                return elapsedSpan.TotalSeconds + @" seconds";
-            if (elapsedSpan.TotalMilliseconds > 0)
-                return elapsedSpan.TotalMilliseconds + @" milliseconds";
-            return deltaTicks + @" ticks";
-        }
-
-        /// <summary>
-        /// Tries to create a hard-link from sourceFilepath to destinationFilepath and returns true if the link was successfully created.
-        /// </summary>
-        public static bool CreateHardLink(string sourceFilepath, string destinationFilepath)
-        {
-            return Kernel32.CreateHardLink(destinationFilepath, sourceFilepath, IntPtr.Zero);
-        }
-
-        /// <summary>
-        /// Tries to create a hard-link from sourceFilepath to destinationFilepath and if that fails, it copies the file instead.
-        /// </summary>
-        public static void HardLinkOrCopyFile(string sourceFilepath, string destinationFilepath, bool overwrite = false)
-        {
-            Directory.CreateDirectory(PathEx.GetDirectoryName(destinationFilepath));
-            if (!CreateHardLink(sourceFilepath, destinationFilepath))
-                File.Copy(sourceFilepath, destinationFilepath, overwrite);
-        }
     }
 
     public static class DirectoryEx
@@ -1005,7 +858,7 @@ namespace pwiz.Skyline.Util
         {
             try
             {
-                Helpers.TryTwice(() =>
+                TryHelper.TryTwice(() =>
                     {
                         if (path != null && Directory.Exists(path)) // Don't waste time trying to delete something that's already deleted
                         {
@@ -1130,7 +983,7 @@ namespace pwiz.Skyline.Util
             try
             {
                 string longPath = path.ToLongPath();
-                Helpers.TryTwice(() =>
+                TryHelper.TryTwice(() =>
                 {
                     if (path != null && !Directory.Exists(longPath)) // Don't waste time trying to create a directory that already exists
                     {
@@ -1148,7 +1001,7 @@ namespace pwiz.Skyline.Util
             try
             {
                 string longPath = path.ToLongPath();
-                Helpers.TryTwice(() =>
+                TryHelper.TryTwice(() =>
                     {
                         if (path != null && Directory.Exists(longPath)) // Don't waste time trying to delete something that's already deleted
                         {
@@ -1218,6 +1071,40 @@ namespace pwiz.Skyline.Util
     }
 
 
+
+    /// <summary>
+    /// Utility class to update progress while reading a Skyline document.
+    /// </summary>
+    public sealed class HashingStreamReaderWithProgress : StreamReader
+    {
+        private readonly IProgressMonitor _progressMonitor;
+        private IProgressStatus _status;
+        private long _totalChars;
+        private long _charsRead;
+
+        public HashingStreamReaderWithProgress(string path, IProgressMonitor progressMonitor)
+            : base(HashingStream.CreateReadStream(path), Encoding.UTF8)
+        {
+            _progressMonitor = progressMonitor;
+            _status = new ProgressStatus(Path.GetFileName(path));
+            _totalChars = new FileInfo(PathEx.SafePath(path)).Length;
+        }
+
+        public HashingStream Stream
+        {
+            get { return (HashingStream) BaseStream; }
+        }
+
+        public override int Read(char[] buffer, int index, int count)
+        {
+            if (_progressMonitor.IsCanceled)
+                throw new OperationCanceledException();
+            var byteCount = base.Read(buffer, index, count);
+            _charsRead += byteCount;
+            _status = _status.UpdatePercentCompleteProgress(_progressMonitor, _charsRead, _totalChars);
+            return byteCount;
+        }
+    }
 
     public sealed class StringListReader : TextReader
     {
@@ -1424,7 +1311,7 @@ namespace pwiz.Skyline.Util
                 DirPath = Path.Combine(Path.GetTempPath(), tempPrefix + PathEx.GetRandomFileName()); // N.B. FileEx.GetRandomFileName adds unusual characters in test mode
             else
                 DirPath = dirPath;
-            Helpers.TryTwice(() => Directory.CreateDirectory(DirPath));
+            TryHelper.TryTwice(() => Directory.CreateDirectory(DirPath));
         }
 
         public string DirPath { get; private set; }
@@ -1743,10 +1630,10 @@ namespace pwiz.Skyline.Util
             return Path.Combine(skylineFolder ?? string.Empty, @"SkylineProcessRunner.exe");
         }
     }
-
+    
     internal static class Kernel32Unsafe
     {
-        [DllImport("kernel32.dll", SetLastError = true)]
+        [DllImport("kernel32", SetLastError = true)]
         internal static extern unsafe bool ReadFile(
             SafeHandle hFile,
             byte* lpBuffer,
