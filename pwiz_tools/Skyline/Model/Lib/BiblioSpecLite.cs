@@ -442,6 +442,28 @@ namespace pwiz.Skyline.Model.Lib
              collisionalCrossSection
         }
 
+        private class RefSpectraRow
+        {
+            public int id { get; set; }
+            public string peptideSeq { get; set; }
+            public double precursorMZ { get; set; }
+            public int precursorCharge { get; set; } 
+            public string moleculeName { get; set; }
+            public string chemicalFormula { get; set; }
+            public string precursorAdduct { get; set; }
+            public string inchiKey { get; set; }
+            public string otherKeys { get; set; }
+            public double ionMobilityValue { get; set; }
+            public IonMobilityType ionMobilityType { get; set; }
+            public string peptideModSeq { get; set; }
+            public int copies { get; set; }
+            public int numPeaks { get; set; }
+            public double? score { get; set; }
+            public int? scoreType { get; set; }
+            public string SpecIDinFile { get; set; }
+            public int? fileId { get; set; } 
+        }
+
         private enum RefSpectra
         {
             id,
@@ -582,19 +604,6 @@ namespace pwiz.Skyline.Model.Lib
         // ReSharper restore InconsistentNaming
         // ReSharper restore UnusedMember.Local
 
-        class RefSpectrum
-        {
-            public int Id { get; set; }
-            public string PeptideModSeq { get; set; }
-            public int PrecursorCharge { get; set; }
-            public int Copies { get; set; }
-            public int NumPeaks { get; set; }
-            public string PrecursorAdduct { get; set; }
-            public string MoleculeName { get; set; }
-            public string ChemicalFormula { get; set; }
-
-        }
-
         private bool ReadFromDatabase(ILoadMonitor loader, IProgressStatus status)
         {
             var sm = loader.StreamManager;
@@ -702,27 +711,8 @@ namespace pwiz.Skyline.Model.Lib
             ParallelEx.For(0, threadCount, threadIndex =>
             {
                 using var connection = SqliteOperations.OpenConnection(FilePath);
-                using var cmd = connection.CreateCommand();
-                cmd.CommandText = "SELECT * FROM RefSpectra WHERE id % " + threadCount + " = " + threadIndex;
-                using var reader = cmd.ExecuteReader();
-
-                int iId = reader.GetOrdinal(RefSpectra.id);
-                //int iSeq = reader.GetOrdinal(RefSpectra.peptideSeq);
-                int iModSeq = reader.GetOrdinal(RefSpectra.peptideModSeq);
-                int iCharge = reader.GetOrdinal(RefSpectra.precursorCharge);
-                int iCopies = reader.GetOrdinal(RefSpectra.copies);
-                int iPeaks = reader.GetOrdinal(RefSpectra.numPeaks);
-                int iAdduct = reader.GetOrdinal(RefSpectra.precursorAdduct);
-                int iMoleculeName = reader.GetOrdinal(RefSpectra.moleculeName);
-                int iChemicalFormula = reader.GetOrdinal(RefSpectra.chemicalFormula);
-                int iInChiKey = reader.GetOrdinal(RefSpectra.inchiKey);
-                int iOtherKeys = reader.GetOrdinal(RefSpectra.otherKeys);
-                int iScore = reader.GetOrdinal(RefSpectra.score);
-                int iScoreType = reader.GetOrdinal(RefSpectra.scoreType);
-                int iPrecursorMZ = reader.GetOrdinal(RefSpectra.precursorMZ);
-                int iFileId = reader.GetOrdinal(RefSpectra.fileId);
-
-                while (reader.Read())
+                string sql = @"SELECT * FROM RefSpectra WHERE id % " + threadCount + @" = " + threadIndex;
+                foreach (var row in connection.Query<RefSpectraRow>(sql, buffered:false))
                 {
                     lock (lockObject)
                     {
@@ -739,24 +729,17 @@ namespace pwiz.Skyline.Model.Lib
                         }
                     }
 
-                    int id = reader.GetInt32(iId);
-                    proteinsBySpectraID.TryGetValue(id, out var protein);
-                    int? fileId = null;
-                    if (iFileId >= 0 && !reader.IsDBNull(iFileId))
-                    {
-                        fileId = reader.GetInt32(iFileId);
-                    }
+                    proteinsBySpectraID.TryGetValue(row.id, out var protein);
+                    int? fileId = row.fileId;
 
-                    string sequence = reader.GetString(iModSeq);
-                    int charge = reader.GetInt16(iCharge);
-                    string adduct = iAdduct >= 0 && !reader.IsDBNull(iAdduct) ? reader.GetString(iAdduct) : null;
-                    int copies = reader.GetInt32(iCopies);
-                    int numPeaks = reader.GetInt32(iPeaks);
-                    double? score = !reader.IsDBNull(iScore) ? reader.GetDouble(iScore) : (double?)null;
-                    int? scoreType = !reader.IsDBNull(iScoreType) ? reader.GetInt32(iScoreType) : (int?)null;
-                    var chemicalFormula = iChemicalFormula >= 0 && !reader.IsDBNull(iChemicalFormula)
-                        ? reader.GetString(iChemicalFormula)
-                        : null;
+                    string sequence = row.peptideModSeq;
+                    int charge = row.precursorCharge;
+                    string adduct = row.precursorAdduct;
+                    int copies = row.copies;
+                    int numPeaks = row.numPeaks;
+                    double? score = row.score;
+                    int? scoreType = row.scoreType;
+                    var chemicalFormula = row.chemicalFormula;
                     bool isProteomic =
                         (string.IsNullOrEmpty(adduct) || Adduct.FromStringAssumeProtonated(adduct).IsProtonated) &&
                         !string.IsNullOrEmpty(sequence); // We may write an adduct like [M+H] for peptides
@@ -767,18 +750,12 @@ namespace pwiz.Skyline.Model.Lib
                     }
                     else
                     {
-                        var moleculeName = iMoleculeName >= 0 && !reader.IsDBNull(iMoleculeName)
-                            ? reader.GetString(iMoleculeName)
-                            : null;
-                        var inChiKey = iInChiKey >= 0 && !reader.IsDBNull(iInChiKey)
-                            ? reader.GetString(iInChiKey)
-                            : null;
-                        var otherKeys = iOtherKeys >= 0 && !reader.IsDBNull(iOtherKeys)
-                            ? reader.GetString(iOtherKeys)
-                            : null;
+                        var moleculeName = row.moleculeName;
+                        var inChiKey = row.inchiKey;
+                        var otherKeys = row.otherKeys;
                         if (string.IsNullOrEmpty(chemicalFormula))
                         {
-                            var precursorMz = reader.GetDouble(iPrecursorMZ);
+                            var precursorMz = row.precursorMZ;
                             Adduct precursorAdduct;
                             if (string.IsNullOrEmpty(adduct))
                             {
@@ -841,7 +818,7 @@ namespace pwiz.Skyline.Model.Lib
                                 scoreTypesById.TryGetValue(scoreType.Value, out scoreName);
                             }
 
-                            libraryEntries.Add(new BiblioLiteSpectrumInfo(key, copies, numPeaks, id, fileId, protein,
+                            libraryEntries.Add(new BiblioLiteSpectrumInfo(key, copies, numPeaks, row.id, fileId, protein,
                                 scoreName == null ? null : score, scoreName));
                         }
                     }
