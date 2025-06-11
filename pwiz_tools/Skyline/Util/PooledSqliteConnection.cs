@@ -20,6 +20,7 @@ using System;
 using System.Data.SQLite;
 using System.IO;
 using pwiz.Common.Database;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Util

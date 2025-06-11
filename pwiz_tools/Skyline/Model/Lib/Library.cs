@@ -31,6 +31,7 @@ using pwiz.BiblioSpec;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
@@ -603,6 +604,15 @@ namespace pwiz.Skyline.Model.Lib
         /// A <see cref="LibrarySpec"/> referencing the library to be built.
         /// </summary>
         LibrarySpec LibrarySpec { get; }
+    }
+
+    /// <summary>
+    /// Extra interface that can be added to an <see cref="ILibraryBuilder"/> class to provide
+    /// a warning to the users before the build begins and possibly to decide not to build.
+    /// </summary>
+    public interface ILibraryBuildWarning
+    {
+        string GetWarning();
     }
 
     public enum LibraryRedundancy { best, all, all_redundant }

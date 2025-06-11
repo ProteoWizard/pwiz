@@ -91,7 +91,7 @@ namespace TestPerf
 
         public List<string> TranscribeAndModifyFile(StreamWriter writer, TextReader reader, List<string> fields, bool first, int currentFileCount)
         {
-            var fileReader = new DsvFileReader(reader, SEPARATOR);
+            using var fileReader = new DsvFileReader(reader, SEPARATOR);
             if (first)
             {
                 fields = fileReader.FieldNames;

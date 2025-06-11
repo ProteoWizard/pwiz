@@ -29,13 +29,18 @@
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/data/msdata/Version.hpp"
 #include <boost/foreach_field.hpp>
+#include <boost/range/algorithm/find_if.hpp>
 
 
 PWIZ_API_DECL std::string pwiz::msdata::Reader_UNIFI::identify(const std::string& filename, const std::string& head) const
 {
     std::string result;
-    if ((bal::istarts_with(filename, "http://") || bal::istarts_with(filename, "https://")) && bal::icontains(filename, "/sampleresults"))
+    if (!bal::istarts_with(filename, "http://") && !bal::istarts_with(filename, "https://"))
+        return result;
+    if (bal::icontains(filename, "/sampleresults"))
         result = getType();
+    else if (bal::icontains(filename, "sampleSetId=") || bal::icontains(filename, "injectionId=")) // both are required but reader will handle the error message
+        result = "waters_connect";
     return result;
 }
 
@@ -73,10 +78,15 @@ void fillInMetadata(const string& sampleResultUrl, MSData& msd, const UnifiDataP
         else
             msd.fileDescription.fileContent.set(MS_SRM_chromatogram);
     }*/
+
+    string apiName = "UNIFI";
+    if (unifiData->getRemoteApiType() == UnifiData::RemoteApi::Waters_Connect)
+        apiName = "waters_connect";
+
     auto queryStrBegin = sampleResultUrl.rfind(")?");
     SourceFilePtr sourceFile(new SourceFile);
     bfs::path p(sampleResultUrl);
-    sourceFile->id = "UNIFI";
+    sourceFile->id = apiName;
     sourceFile->location = sampleResultUrl.substr(0, (queryStrBegin != string::npos ? queryStrBegin + 1 : sampleResultUrl.length()));
     //sourceFile->set(MS_WIFF_nativeID_format);
     //sourceFile->set(MS_UNIFI_WIFF_format);
@@ -97,8 +107,11 @@ void fillInMetadata(const string& sampleResultUrl, MSData& msd, const UnifiDataP
     sourceFile->name = msd.id;
 
     SoftwarePtr acquisitionSoftware(new Software);
-    acquisitionSoftware->id = "UNIFI";
-    acquisitionSoftware->set(MS_UNIFY);
+    if (unifiData->getRemoteApiType() == UnifiData::RemoteApi::Unifi)
+        acquisitionSoftware->set(MS_UNIFY);
+    else
+        acquisitionSoftware->set(MS_waters_connect);
+    acquisitionSoftware->id = apiName;
     acquisitionSoftware->version = "1.0";
     msd.softwarePtrs.push_back(acquisitionSoftware);
 
@@ -120,8 +133,16 @@ void fillInMetadata(const string& sampleResultUrl, MSData& msd, const UnifiDataP
     if (sl) sl->setDataProcessingPtr(dpPwiz);
     if (cl) cl->setDataProcessingPtr(dpPwiz);
 
-    msd.fileDescription.fileContent.set(MS_MS1_spectrum);
-    msd.fileDescription.fileContent.set(MS_MSn_spectrum);
+    if (unifiData->numberOfSpectra() > 0)
+    {
+        msd.fileDescription.fileContent.set(MS_MS1_spectrum);
+        msd.fileDescription.fileContent.set(MS_MSn_spectrum);
+    }
+
+    const auto& ci = unifiData->chromatogramInfo();
+    bool hasMrm = ci.end() != boost::range::find_if(ci, [](const UnifiChromatogramInfo& info) { return info.type == UnifiChromatogramInfo::MRM; });
+    if (hasMrm)
+        msd.fileDescription.fileContent.set(MS_SRM_chromatogram);
 
     InstrumentConfigurationPtr ic(new InstrumentConfiguration("IC1"));
     ic->set(MS_Waters_instrument_model);

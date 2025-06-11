@@ -23,6 +23,8 @@ using System.Linq;
 using System.Reflection;
 using Ionic.Zip;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline;
 using pwiz.Skyline.Util;
 
@@ -143,7 +145,7 @@ namespace pwiz.SkylineTestUtil
             {
                 try
                 {
-                    Helpers.Try<Exception>(() =>
+                    TryHelper.Try<Exception>(() =>
                     {
                         using ZipFile zipFile = ZipFile.Read(pathZip);
                         foreach (ZipEntry zipEntry in zipFile)
