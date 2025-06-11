@@ -283,7 +283,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                     {
                         // ReSharper disable once PossibleNullReferenceException
                         var modString = ParsedMolecule.IsNullOrEmpty(mod.ParsedMolecule) ? null : mod.ParsedMolecule.ToString();
-                        addMod(modString ?? mod.MonoisotopicMass.ToString(), mod.AAs ?? @"*");
+                        addMod(modString ?? mod.MonoisotopicMass.ToString(), mod.AAs?.Replace(@",", "") ?? @"*");
                     }
                 }
             }
