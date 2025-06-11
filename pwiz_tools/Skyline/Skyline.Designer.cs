@@ -1,5 +1,7 @@
 
 using System;
+using pwiz.CommonMsData.RemoteApi;
+using pwiz.CommonMsData.RemoteApi.Ardia;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;

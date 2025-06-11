@@ -20,7 +20,7 @@ using System.IO;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
-using pwiz.Skyline.Model.Results.RemoteApi.Ardia;
+using pwiz.CommonMsData.RemoteApi.Ardia;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 

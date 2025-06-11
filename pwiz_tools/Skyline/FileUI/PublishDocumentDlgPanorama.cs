@@ -32,6 +32,7 @@ using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using System.Linq;
 using System.Drawing;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.FileUI
 {
@@ -58,6 +59,7 @@ namespace pwiz.Skyline.FileUI
             DocumentFormat? fileFormatOnDisk) : base(docContainer, fileName, fileFormatOnDisk)
         {
             _panoramaServers = servers;
+            tbFilePath.Text = FileTimeEx.GetTimeStampedFileName(fileName);
             _anonymousServers = new List<Server>(servers.Where(server => !server.HasUserAccount()));
 
             treeViewFolders.ImageList.Images.Add(Resources.Panorama);   // 24bpp

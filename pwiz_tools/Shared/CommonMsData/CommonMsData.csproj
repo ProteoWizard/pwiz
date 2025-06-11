@@ -1,0 +1,190 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{86F8E7F5-A3ED-4519-9AD9-BF9ABD6DD69F}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>pwiz.CommonMsData</RootNamespace>
+    <AssemblyName>pwiz.CommonMsData</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+    <RuntimeIdentifiers>win;win-x64</RuntimeIdentifiers>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>8.0</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>8.0</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <LangVersion>8.0</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <LangVersion>8.0</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="IdentityModel">
+      <HintPath>..\Lib\IdentityModel.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\pwiz\pwiz_tools\Shared\Lib\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Net.Http.WebRequest" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="DataSourceUtil.cs" />
+    <Compile Include="MsDataFilePath.cs" />
+    <Compile Include="OpenMsDataFileParams.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RemoteApi\Ardia\ArdiaAccount.cs" />
+    <Compile Include="RemoteApi\Ardia\ArdiaClient.cs" />
+    <Compile Include="RemoteApi\Ardia\ArdiaCredentialHelper.cs" />
+    <Compile Include="RemoteApi\Ardia\ArdiaFileObject.cs" />
+    <Compile Include="RemoteApi\Ardia\ArdiaFolderObject.cs" />
+    <Compile Include="RemoteApi\Ardia\ArdiaObject.cs" />
+    <Compile Include="RemoteApi\Ardia\ArdiaResources.Designer.cs">
+      <DependentUpon>ArdiaResources.resx</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="RemoteApi\Ardia\ArdiaSession.cs" />
+    <Compile Include="RemoteApi\Ardia\ArdiaStagedDocumentResponse.cs" />
+    <Compile Include="RemoteApi\Ardia\ArdiaUrl.cs" />
+    <Compile Include="RemoteApi\RemoteAccount.cs" />
+    <Compile Include="RemoteApi\RemoteAccountType.cs" />
+    <Compile Include="RemoteApi\RemoteApiResources.designer.cs">
+      <DependentUpon>RemoteApiResources.resx</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="RemoteApi\RemoteItem.cs" />
+    <Compile Include="RemoteApi\RemoteServerException.cs" />
+    <Compile Include="RemoteApi\RemoteSession.cs" />
+    <Compile Include="RemoteApi\RemoteUrl.cs" />
+    <Compile Include="RemoteApi\Unifi\UnifiAccount.cs" />
+    <Compile Include="RemoteApi\Unifi\UnifiFileObject.cs" />
+    <Compile Include="RemoteApi\Unifi\UnifiFolderObject.cs" />
+    <Compile Include="RemoteApi\Unifi\UnifiObject.cs" />
+    <Compile Include="RemoteApi\Unifi\UnifiResources.designer.cs">
+      <DependentUpon>UnifiResources.resx</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="RemoteApi\Unifi\UnifiSession.cs" />
+    <Compile Include="RemoteApi\Unifi\UnifiUrl.cs" />
+    <Compile Include="RemoteApi\WatersConnect\WatersConnectAccount.cs" />
+    <Compile Include="RemoteApi\WatersConnect\WatersConnectFileObject.cs" />
+    <Compile Include="RemoteApi\WatersConnect\WatersConnectFolderObject.cs" />
+    <Compile Include="RemoteApi\WatersConnect\WatersConnectObject.cs" />
+    <Compile Include="RemoteApi\WatersConnect\WatersConnectResources.Designer.cs">
+      <DependentUpon>WatersConnectResources.resx</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="RemoteApi\WatersConnect\WatersConnectSession.cs" />
+    <Compile Include="RemoteApi\WatersConnect\WatersConnectUrl.cs" />
+    <Compile Include="CommonMsDataResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>CommonMsDataResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="SampleHelp.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CommonUtil\CommonUtil.csproj">
+      <Project>{13bf2ffb-50a1-4ab1-83a4-5733e36905ce}</Project>
+      <Name>CommonUtil</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProteowizardWrapper\ProteowizardWrapper.csproj">
+      <Project>{dacee7d5-5a6a-4001-9602-fab1a9a2de59}</Project>
+      <Name>ProteowizardWrapper</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="RemoteApi\Ardia\ArdiaResources.ja.resx" />
+    <EmbeddedResource Include="RemoteApi\Ardia\ArdiaResources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>ArdiaResources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="RemoteApi\Ardia\ArdiaResources.zh-CHS.resx" />
+    <EmbeddedResource Include="RemoteApi\RemoteApiResources.ja.resx">
+      <DependentUpon>RemoteApiResources.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="RemoteApi\RemoteApiResources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>RemoteApiResources.designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="RemoteApi\RemoteApiResources.zh-CHS.resx">
+      <DependentUpon>RemoteApiResources.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="RemoteApi\Unifi\UnifiResources.ja.resx">
+      <DependentUpon>UnifiResources.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="RemoteApi\Unifi\UnifiResources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>UnifiResources.designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="RemoteApi\Unifi\UnifiResources.zh-CHS.resx">
+      <DependentUpon>UnifiResources.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="RemoteApi\WatersConnect\WatersConnectResources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>WatersConnectResources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CommonMsDataResources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>CommonMsDataResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Http">
+      <Version>9.0.4</Version>
+    </PackageReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

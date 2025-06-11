@@ -32,6 +32,7 @@ using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using JetBrains.Annotations;
 using log4net;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.DataBinding.Documentation;
@@ -71,8 +72,8 @@ using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lists;
 using pwiz.Skyline.Model.Koina.Communication;
 using pwiz.Skyline.Model.Koina.Models;
-using pwiz.Skyline.Model.Results.RemoteApi;
-using pwiz.Skyline.Model.Results.RemoteApi.Ardia;
+using pwiz.CommonMsData.RemoteApi;
+using pwiz.CommonMsData.RemoteApi.Ardia;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.SettingsUI;
@@ -100,7 +101,8 @@ namespace pwiz.Skyline
             IToolMacroProvider,
             IModifyDocumentContainer,
             IRetentionScoreSource,
-            IRemoteAccountUserInteraction
+            IRemoteAccountUserInteraction,
+            IRemoteAccountStorage
     {
         private SequenceTreeForm _sequenceTreeForm;
         private ImmediateWindow _immediateWindow;
@@ -190,6 +192,7 @@ namespace pwiz.Skyline
             _autoTrainManager.Register(this);
             _immediateWindowWarningListener = new ImmediateWindowWarningListener(this);
             RemoteSession.RemoteAccountUserInteraction = this;
+            RemoteUrl.RemoteAccountStorage = this;
 
             // RTScoreCalculatorList.DEFAULTS[2].ScoreProvider
             //    .Attach(this);
@@ -253,6 +256,16 @@ namespace pwiz.Skyline
             else
             {
                 Settings.Default.UIMode = defaultUIMode; // OnShown() will ask user for it
+            }
+
+            // Push settings to an in-memory cache that can be read by ArdiaAccount since it cannot read Skyline settings directly.
+            // CONSIDER: this approach is rudimentary. Revisit and consider:
+            //              (1) moving all RemoteAccount-related config elsewhere
+            //              (2) doing #1 in the background
+            //              (3) the relationship between user.config models (ex: ArdiaRegistrationCodeEntry) and ArdiaAccount/Session
+            foreach (var kvPair in Settings.Default.ArdiaRegistrationCodeEntries)
+            {
+                ArdiaCredentialHelper.SetApplicationCode(kvPair.Key, kvPair.Value.ClientApplicationCode);
             }
         }
 
@@ -4795,6 +4808,24 @@ namespace pwiz.Skyline
             {
                 throw new ApplicationException(@"Crash Skyline Menu Item Clicked");
             }).Start();
+        }
+
+        public IEnumerable<RemoteAccount> GetRemoteAccounts()
+        {
+            return Settings.Default.RemoteAccountList;
+        }
+
+        /// <summary>
+        /// Reset the token for all Ardia-type accounts in <see cref="Settings.RemoteAccountList"/>.
+        /// Used only in tests.
+        /// </summary>
+        // CONSIDER: this should go elsewhere. Maybe when CommonMsData supports RemoteAccountList
+        public void ClearArdiaAccountTokens()
+        {
+            Settings.Default.RemoteAccountList.
+                Where(a => a.AccountType == RemoteAccountType.ARDIA).
+                Cast<ArdiaAccount>().
+                ForEach(ArdiaCredentialHelper.ClearToken);
         }
     }
 }

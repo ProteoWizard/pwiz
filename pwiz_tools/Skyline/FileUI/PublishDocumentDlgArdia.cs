@@ -20,11 +20,12 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
+using pwiz.CommonMsData.RemoteApi;
+using pwiz.CommonMsData.RemoteApi.Ardia;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Results.RemoteApi;
-using pwiz.Skyline.Model.Results.RemoteApi.Ardia;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -56,9 +57,9 @@ namespace pwiz.Skyline.FileUI
             _ardiaSession.ContentsAvailable += ArdiaSession_ContentsAvailableWrapper;
 
             treeViewFolders.ImageList.TransparentColor = Color.Magenta;
-            treeViewFolders.ImageList.Images.Add(ArdiaResources.ArdiaIcon); // 32bpp
-            treeViewFolders.ImageList.Images.Add(Resources.Folder);         // 32bpp
-            treeViewFolders.ImageList.Images.Add(Resources.Blank);          // 32bpp
+            treeViewFolders.ImageList.Images.Add(Resources.ArdiaIcon);  // 32bpp
+            treeViewFolders.ImageList.Images.Add(Resources.Folder);     // 32bpp
+            treeViewFolders.ImageList.Images.Add(Resources.Blank);      // 32bpp
         }
 
         public string DestinationPath { get; private set; }

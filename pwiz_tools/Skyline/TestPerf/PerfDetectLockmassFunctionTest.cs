@@ -20,8 +20,8 @@
 
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
-using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the global RunPerfTests flag is set

@@ -46,7 +46,7 @@ namespace pwiz.Skyline.FileUI
             DocumentUIContainer = docContainer;
             DocumentFormat = fileFormatOnDisk;
 
-            tbFilePath.Text = FileEx.GetTimeStampedFileName(fileName);
+            tbFilePath.Text = FileTimeEx.GetTimeStampedFileName(fileName);
 
             treeViewFolders.ImageList = new ImageList { ColorDepth = ColorDepth.Depth32Bit };
 

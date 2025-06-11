@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-using pwiz.Skyline.Model.Results.RemoteApi.Ardia;
+using pwiz.CommonMsData.RemoteApi.Ardia;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,7 +34,6 @@ using System.Threading;
 using IdentityModel;
 using IdentityModel.Client;
 using Newtonsoft.Json;
-using pwiz.Common.Collections;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Alerts
@@ -292,9 +291,9 @@ namespace pwiz.Skyline.Alerts
         {
             try
             {
-                var sessionCookieString = ArdiaAccount.GetSessionCookieString(Account);
+                var sessionCookieString = ArdiaCredentialHelper.GetToken(Account);
 
-                if (sessionCookieString != null && !sessionCookieString.IsNullOrEmpty())
+                if (!string.IsNullOrEmpty(sessionCookieString))
                 {
                     _bffCookie = new Cookie(@"Bff-Host", sessionCookieString);
                     AuthenticatedHttpClientFactory = GetFactory();
@@ -445,7 +444,7 @@ namespace pwiz.Skyline.Alerts
                 var bffCookie = await LoginIn_UsingSystemDefaultBrowser();
                 if (bffCookie != null)
                 {
-                    ArdiaAccount.SetSessionCookieString(Account, bffCookie.Value );
+                    ArdiaCredentialHelper.SetToken(Account, bffCookie.Value);
 
                     AuthenticatedHttpClientFactory = GetFactory();
                 }
@@ -1587,7 +1586,7 @@ namespace pwiz.Skyline.Alerts
 
                 //  Exception throws does NOT appear to do anything.
 
-                // throw new Exception("Load Client Registraton page failed. if (!eventArgs.IsSuccess) ");
+                // throw new Exception("Load Client Registration page failed. if (!eventArgs.IsSuccess) ");
             }
 
             await CheckForBffHostCookie();
@@ -1604,7 +1603,7 @@ namespace pwiz.Skyline.Alerts
                 {
                     _bffCookie = bffCookie.ToSystemNetCookie();
 
-                    ArdiaAccount.SetSessionCookieString(Account, _bffCookie.Value);
+                    ArdiaCredentialHelper.SetToken(Account, _bffCookie.Value);
 
                     AuthenticatedHttpClientFactory = GetFactory();
 
@@ -1642,7 +1641,7 @@ namespace pwiz.Skyline.Alerts
             bool hasRole = Account.TestingOnly_NotSerialized_Role?.Any() ?? false;
 
 
-                if (!hasUsername || !hasPassword)
+            if (!hasUsername || !hasPassword)
             {
                 //  No TestingOnly Username or no TestingOnly Password for Programmatic Login for Testing so exit
                 return;
