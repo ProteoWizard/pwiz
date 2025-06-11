@@ -910,7 +910,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         _regressionPredict, _regressionRefined, _regressionAll
                     };
-                    return regressions.Where(regression => null != regression.Conversion).Concat(regressions)
+                    return regressions.Where(regression => null != regression?.Conversion).Concat(regressions)
                         .FirstOrDefault(regression => null != regression);
                 }
             }

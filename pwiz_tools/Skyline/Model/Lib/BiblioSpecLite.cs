@@ -37,7 +37,6 @@ using pwiz.CommonMsData;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib.BlibData;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
