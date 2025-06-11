@@ -2833,9 +2833,6 @@ Most peptide transition lists can be imported with the "File|Import|Transition L
   <data name="CommandLine_SaveFile_File__0__saved_" xml:space="preserve">
     <value>File {0} saved.</value>
   </data>
-  <data name="RemoteSession_FetchContents_There_was_an_error_communicating_with_the_server__" xml:space="preserve">
-    <value>There was an error communicating with the server: </value>
-  </data>
   <data name="ImportFastaControl_ImportFasta_Change_digestion_settings" xml:space="preserve">
     <value>Change digestion settings</value>
   </data>

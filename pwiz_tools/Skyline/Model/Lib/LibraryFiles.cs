@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using pwiz.Common.Collections;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 

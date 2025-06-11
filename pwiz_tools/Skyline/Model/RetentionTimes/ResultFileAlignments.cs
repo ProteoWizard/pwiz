@@ -4,8 +4,8 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.RetentionTimes
 {

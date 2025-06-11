@@ -30,6 +30,7 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.PeakFinding;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Crawdad;
@@ -2011,13 +2012,13 @@ namespace pwiz.Skyline.Model.Results
             return MsDataFileImpl.IsSingleIonCurrentId(id); // || id.StartsWith(PREFIX_TOTAL); Skip the TICs, since Skyline calculates these
         }
 
-        public static ChromKey FromId(string idIn, bool parseCE)
+        public static ChromKey FromId(string idIn, bool parseCE, bool? isNegativePolarity = null, double? precursorMz = null, double? productMz = null)
         {
             try
             {
                 double precursor, product;
                 var isNegativeChargeNullable = MsDataFileImpl.IsNegativeChargeIdNullable(idIn);
-                bool isNegativeCharge = isNegativeChargeNullable ?? false;
+                bool isNegativeCharge = isNegativeChargeNullable ?? isNegativePolarity ?? false;
                 var id = isNegativeChargeNullable.HasValue ? idIn.Substring(2) : idIn;
                 var source = ChromSource.fragment;
                 var extractor = ChromExtractor.summed;
@@ -2045,7 +2046,12 @@ namespace pwiz.Skyline.Model.Results
                         // Agilent format e.g. "SIM SIC Q1=215.15 start=5.087066667 end=14.497416667"
                         str = str.Substring(3).Split(' ')[0];
                     }
-                    precursor = double.Parse(str, CultureInfo.InvariantCulture);
+
+                    if (precursorMz == null)
+                        precursor = double.Parse(str, CultureInfo.InvariantCulture);
+                    else if(!double.TryParse(str, NumberStyles.Any, CultureInfo.InvariantCulture, out precursor))
+                        precursor = precursorMz.Value;
+
                     product = precursor;
                 }
                 else if (id.StartsWith(MsDataFileImpl.PREFIX_SINGLE))
@@ -2064,7 +2070,8 @@ namespace pwiz.Skyline.Model.Results
                     else
                     {
                         mzs = mzPart.Split(new[] { ',' });
-                        if (mzs.Length != 2)
+
+                        if (mzs.Length != 2 && (precursorMz == null || productMz == null))
                         {
                             throw new InvalidDataException(
                                 string.Format(ResultsResources.ChromKey_FromId_Invalid_chromatogram_ID__0__found_The_ID_must_include_both_precursor_and_product_mz_values,
@@ -2072,8 +2079,16 @@ namespace pwiz.Skyline.Model.Results
                         }
                     }
 
-                    precursor = double.Parse(mzs[0], CultureInfo.InvariantCulture);
-                    product = double.Parse(mzs[1], CultureInfo.InvariantCulture);
+                    if (mzs.Length == 2)
+                    {
+                        precursor = double.Parse(mzs[0], CultureInfo.InvariantCulture);
+                        product = double.Parse(mzs[1], CultureInfo.InvariantCulture);
+                    }
+                    else
+                    {
+                        precursor = precursorMz.Value;
+                        product = productMz.Value;
+                    }
                 }
                 else
                 {

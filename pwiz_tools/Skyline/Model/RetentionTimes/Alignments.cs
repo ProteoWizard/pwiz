@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using pwiz.Common.Collections;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.RetentionTimes
 {

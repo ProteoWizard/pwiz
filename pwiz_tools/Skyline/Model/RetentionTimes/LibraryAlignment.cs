@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using pwiz.Skyline.Model.Lib;
 
 namespace pwiz.Skyline.Model.RetentionTimes

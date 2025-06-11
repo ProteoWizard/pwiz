@@ -17,10 +17,10 @@
  * limitations under the License.
  */
 using System;
-using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Chemistry;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
@@ -28,7 +28,6 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 using ZedGraph;
 
 namespace pwiz.Skyline.Menus

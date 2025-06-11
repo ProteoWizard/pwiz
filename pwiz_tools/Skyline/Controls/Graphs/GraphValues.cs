@@ -19,9 +19,9 @@
 
 using System.Collections.Generic;
 using System.ComponentModel;
+using pwiz.CommonMsData;
 using ZedGraph;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
