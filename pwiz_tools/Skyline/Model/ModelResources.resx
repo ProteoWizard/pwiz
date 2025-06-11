@@ -381,6 +381,15 @@
   <data name="CarafeLibraryBuilder_Java_directory__0__has_more_than_one_Java_Software_Development_Kit" xml:space="preserve">
       <value>Java directory {0} has more than one Java Software Development Kit</value>
   </data>
+  <data name="CarafeLibraryBuilder_Setting_up_Java_environment" xml:space="preserve">
+      <value>Setting up Java environment</value>
+  </data>
+  <data name="CarafeLibraryBuilder_Failed_to_download_Java_Software_Development_Kit_package" xml:space="preserve">
+      <value>Failed to download Java Software Development Kit package</value>
+  </data>
+  <data name="CarafeLibraryBuilder_Failed_to_download_Carafe_jar_package" xml:space="preserve">
+      <value>Failed to download Carafe jar package</value>
+  </data>
   <data name="CarafeLibraryBuilder_Importing_spectral_library" xml:space="preserve">
       <value>Importing spectral library</value>
   </data>

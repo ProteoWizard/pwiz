@@ -376,7 +376,7 @@ namespace pwiz.SkylineTest
             {
                 // Copy the resource stream to the file
                 Assert.IsNotNull(stream, $@"Resource '{resourceName}' not found.");
-                stream?.CopyTo(fileStream);
+                stream.CopyTo(fileStream);
             }
 
             return testFile;

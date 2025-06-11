@@ -230,7 +230,6 @@ namespace pwiz.Skyline.Model.Lib.Carafe
                 new ArgumentAndValue(@"ez", string.Empty, TextUtil.HYPHEN),
                 new ArgumentAndValue(@"fast", string.Empty, TextUtil.HYPHEN),
                 new ArgumentAndValue(@"lf_frag_n_min", @"2", TextUtil.HYPHEN),
-                //new ArgumentAndValue(@"lf_type", @"skyline", TextUtil.HYPHEN),
                 new ArgumentAndValue(@"n_ion_min", @"2", TextUtil.HYPHEN),
                 new ArgumentAndValue(@"na", @"0", TextUtil.HYPHEN),
                 new ArgumentAndValue(@"nf", @"4", TextUtil.HYPHEN),
@@ -411,7 +410,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
         /// <summary>
         /// List of UniMod Modifications available
         /// </summary>
-        internal static readonly IList<ModificationType> AlphapeptdeepModificationName = populateUniModList();
+        internal static readonly IList<ModificationType> UnimodModificationNames = populateUniModList();
         private static IList<ModificationType> populateUniModList()
         {
             IList<ModificationType> modList = new List<ModificationType>();
@@ -469,7 +468,6 @@ namespace pwiz.Skyline.Model.Lib.Carafe
         public CarafeLibraryBuilder(
             string libName,
             string libOutPath,
-            //string pythonVersion,
             string pythonVirtualEnvironmentName,
             string pythonVirtualEnvironmentScriptsDir,
             string experimentDataFilePath,
@@ -813,7 +811,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
         private void SetupJavaEnvironment(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
             progress.UpdateProgress(progressStatus = progressStatus
-                .ChangeMessage(@"Setting up Java environment")
+                .ChangeMessage(ModelResources.CarafeLibraryBuilder_Setting_up_Java_environment)
                 .ChangePercentComplete(0));
 
             var isJavaValid = ValidateJava();
@@ -828,15 +826,11 @@ namespace pwiz.Skyline.Model.Lib.Carafe
                 // clean java dir
                 JavaDirInfo.Delete(true);
                 Directory.CreateDirectory(JavaDir);
-                
-                //CarafeJavaDirInfo.Delete(true);
-                //Directory.CreateDirectory(CarafeJavaDir);
-
+ 
                 // download java sdk package
                 using var webClient = new MultiFileAsynchronousDownloadClient(progress, 1);
                 if (!webClient.DownloadFileAsync(JavaSdkUri, JavaSdkDownloadPath, out var exception))
-                    throw new Exception(
-                        @"Failed to download java sdk package", exception);
+                    throw new Exception(ModelResources.CarafeLibraryBuilder_Failed_to_download_Java_Software_Development_Kit_package, exception);
 
                 // unzip java sdk package
                 using var javaSdkZip = ZipFile.Read(JavaSdkDownloadPath);
@@ -855,8 +849,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
                 // download carafe jar package
                 using var webClient = new MultiFileAsynchronousDownloadClient(progress, 1);
                 if (!webClient.DownloadFileAsync(CarafeJarZipDownloadUrl(), CarafeJarZipDownloadPath, out var exception))
-                    throw new Exception(
-                        @"Failed to download carafe jar package", exception);
+                    throw new Exception(ModelResources.CarafeLibraryBuilder_Failed_to_download_Carafe_jar_package, exception);
 
                 // unzip carafe jar package
                 using var carafeJarZip = ZipFile.Read(CarafeJarZipDownloadPath);

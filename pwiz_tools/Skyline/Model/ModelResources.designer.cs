@@ -729,6 +729,24 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to download Carafe jar package.
+        /// </summary>
+        public static string CarafeLibraryBuilder_Failed_to_download_Carafe_jar_package {
+            get {
+                return ResourceManager.GetString("CarafeLibraryBuilder_Failed_to_download_Carafe_jar_package", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to download Java Software Development Kit package.
+        /// </summary>
+        public static string CarafeLibraryBuilder_Failed_to_download_Java_Software_Development_Kit_package {
+            get {
+                return ResourceManager.GetString("CarafeLibraryBuilder_Failed_to_download_Java_Software_Development_Kit_package", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Importing spectral library.
         /// </summary>
         public static string CarafeLibraryBuilder_Importing_spectral_library {
@@ -753,6 +771,15 @@ namespace pwiz.Skyline.Model {
         public static string CarafeLibraryBuilder_Running_Carafe {
             get {
                 return ResourceManager.GetString("CarafeLibraryBuilder_Running_Carafe", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Setting up Java environment.
+        /// </summary>
+        public static string CarafeLibraryBuilder_Setting_up_Java_environment {
+            get {
+                return ResourceManager.GetString("CarafeLibraryBuilder_Setting_up_Java_environment", resourceCulture);
             }
         }
         
