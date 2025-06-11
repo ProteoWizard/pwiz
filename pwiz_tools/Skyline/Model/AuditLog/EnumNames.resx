@@ -741,4 +741,7 @@
   <data name="SearchEngine_Comet" xml:space="preserve">
     <value>Comet</value>
   </data>
+  <data name="SearchEngine_Tide" xml:space="preserve">
+    <value>Tide-Search</value>
+  </data>
 </root>
