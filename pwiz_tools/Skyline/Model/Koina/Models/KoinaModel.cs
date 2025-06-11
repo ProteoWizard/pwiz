@@ -28,6 +28,7 @@ using Google.Protobuf.Collections;
 using Grpc.Core;
 using Inference;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.DocSettings;

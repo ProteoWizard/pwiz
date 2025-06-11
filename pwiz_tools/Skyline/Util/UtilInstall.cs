@@ -220,7 +220,7 @@ namespace pwiz.Skyline.Util
 
         private static void LogToConsole(string message)
         {
-            if (Helpers.RunningResharperAnalysis)
+            if (TryHelper.RunningResharperAnalysis)
             {
                 Trace.WriteLine(@"# (ReSharper Analysis Trace) " + message);
             }
@@ -258,7 +258,7 @@ namespace pwiz.Skyline.Util
                         LogToConsole($@"Using cached test data from {downloadUrl} in {downloadFilename} as {destinationFilename}...");
                         if (!requiredFile.Unzip)
                         {
-                            Helpers.TryTwice(() => File.Copy(downloadFilename, destinationFilename));
+                            TryHelper.TryTwice(() => File.Copy(downloadFilename, destinationFilename));
                         }
                         downloadTimer = null;
                     }

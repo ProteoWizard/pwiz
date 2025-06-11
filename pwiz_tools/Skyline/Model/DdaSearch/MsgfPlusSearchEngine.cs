@@ -30,10 +30,10 @@ using System.Linq;
 using System.Text;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.BiblioSpec;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.AuditLog;
 
 namespace pwiz.Skyline.Model.DdaSearch

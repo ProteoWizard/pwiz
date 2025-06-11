@@ -66,7 +66,7 @@ namespace pwiz.Skyline.FileUI
             _fileFormatOnDisk = fileFormatOnDisk;
 
             _panoramaServers = servers;
-            tbFilePath.Text = FileEx.GetTimeStampedFileName(fileName);
+            tbFilePath.Text = FileTimeEx.GetTimeStampedFileName(fileName);
 
             treeViewFolders.ImageList = new ImageList { ColorDepth = ColorDepth.Depth32Bit };
             treeViewFolders.ImageList.Images.Add(Resources.Panorama);   // 24bpp
