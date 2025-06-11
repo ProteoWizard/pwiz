@@ -105,7 +105,9 @@
     </Compile>
     <Compile Include="RemoteApi\Unifi\UnifiSession.cs" />
     <Compile Include="RemoteApi\Unifi\UnifiUrl.cs" />
+    <Compile Include="RemoteApi\WatersConnect\MethodModel.cs" />
     <Compile Include="RemoteApi\WatersConnect\WatersConnectAccount.cs" />
+    <Compile Include="RemoteApi\WatersConnect\WatersConnectAcquisitionMethodUrl.cs" />
     <Compile Include="RemoteApi\WatersConnect\WatersConnectFileObject.cs" />
     <Compile Include="RemoteApi\WatersConnect\WatersConnectFolderObject.cs" />
     <Compile Include="RemoteApi\WatersConnect\WatersConnectObject.cs" />
@@ -115,18 +117,24 @@
       <DesignTime>True</DesignTime>
     </Compile>
     <Compile Include="RemoteApi\WatersConnect\WatersConnectSession.cs" />
+    <Compile Include="RemoteApi\WatersConnect\WatersConnectSessionAcquisitionMethod.cs" />
     <Compile Include="RemoteApi\WatersConnect\WatersConnectUrl.cs" />
     <Compile Include="CommonMsDataResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>CommonMsDataResources.resx</DependentUpon>
     </Compile>
+    <Compile Include="RemoteApi\WatersConnect\WatersConnectWatersConnectAcquisitionMethodObjectMethodObject.cs" />
     <Compile Include="SampleHelp.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CommonUtil\CommonUtil.csproj">
       <Project>{13bf2ffb-50a1-4ab1-83a4-5733e36905ce}</Project>
       <Name>CommonUtil</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Common\Common.csproj">
+      <Project>{a5527be9-4a62-458f-ae47-f0f9204a5cf9}</Project>
+      <Name>Common</Name>
     </ProjectReference>
     <ProjectReference Include="..\ProteowizardWrapper\ProteowizardWrapper.csproj">
       <Project>{dacee7d5-5a6a-4001-9602-fab1a9a2de59}</Project>

@@ -131,6 +131,14 @@ namespace pwiz.Common.Collections
             return null != GetValue(key);
         }
 
+        public IEnumerable<KeyValuePair<string, string>> GetEnumerable()
+        {
+            foreach (var key in _nameValueCollection.AllKeys)
+            {
+                yield return new KeyValuePair<string, string>(key, _nameValueCollection[key]);
+            }
+        }
+
         public override string ToString()
         {
             return string.Join(@"&",

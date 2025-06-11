@@ -622,6 +622,26 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot use a template method from another server..
+        /// </summary>
+        public static string ExportProperties_ExportWatersConnectMethod_Cannot_use_a_template_method_from_another_server_ {
+            get {
+                return ResourceManager.GetString("ExportProperties_ExportWatersConnectMethod_Cannot_use_a_template_method_from_anot" +
+                        "her_server_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No matching Waters Connect account is found for this URL..
+        /// </summary>
+        public static string ExportProperties_ExportWatersConnectMethod_No_matching_Waters_Connect_account_is_found_for_this_URL_ {
+            get {
+                return ResourceManager.GetString("ExportProperties_ExportWatersConnectMethod_No_matching_Waters_Connect_account_is_" +
+                        "found_for_this_URL_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Average.
         /// </summary>
         public static string ExportSchedulingAlgorithmExtension_LOCALIZED_VALUES_Average {
@@ -2260,6 +2280,24 @@ namespace pwiz.Skyline.Model {
         public static string UndoManager_Restore_Attempting_undo_redo_inside_undo_transaction {
             get {
                 return ResourceManager.GetString("UndoManager_Restore_Attempting_undo_redo_inside_undo_transaction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Folder ID is missing. Cannot upload the method..
+        /// </summary>
+        public static string WatersConnectMethodExporter_ExportMethod_Folder_ID_is_missing {
+            get {
+                return ResourceManager.GetString("WatersConnectMethodExporter_ExportMethod_Folder_ID_is_missing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exported from Skyline.
+        /// </summary>
+        public static string WatersConnectMethodExporter_ParseMethod_Exported_from_Skyline {
+            get {
+                return ResourceManager.GetString("WatersConnectMethodExporter_ParseMethod_Exported_from_Skyline", resourceCulture);
             }
         }
         

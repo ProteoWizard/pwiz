@@ -19,15 +19,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Util;
 
-namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
+namespace pwiz.CommonMsData.RemoteApi.WatersConnect
 {
     public class WatersConnectSessionAcquisitionMethod : WatersConnectSession
     {
@@ -40,33 +38,36 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
             if (!(remoteUrl is WatersConnectUrl wcUrl))
                 throw new ArgumentException();
 
+            if (wcUrl.Type == WatersConnectUrl.ItemType.folder_with_methods)
+            {
+                RemoteServerException ex1, ex2 = null;
+                var res1 = AsyncFetch(GetRootContentsUrl(), GetFolders, out ex1);
 
-            if (wcUrl.Type == WatersConnectUrl.ItemType.folder_child_folders_only)
-                return AsyncFetch(GetRootContentsUrl(), GetFolders, out remoteException);
+                ImmutableList<WatersConnectFolderObject> folders;
+                bool canReadMethods = false;
+                if (TryGetData(GetRootContentsUrl(), out folders))
+                {
+                    var currentFolder = folders.FirstOrDefault(f => f.Path.Equals(wcUrl.EncodedPath));
+                    canReadMethods = currentFolder?.CanRead ?? false;
+                }
+                if (canReadMethods)
+                {
+                    var res2 = AsyncFetch(GetAcquisitionMethodsUrl(wcUrl), GetAcquisitionMethods, out ex2);
+                    remoteException = ex1 ?? ex2;
+                    return res1 && res2;
+                }
 
-            //  Also return the next for WatersConnectUrl.ItemType.folder_child_folders_sample_sets since that is the default
-             if (wcUrl.Type == WatersConnectUrl.ItemType.folder_child_folders_acquisition_methods)
-             {
-                 RemoteServerException ex1, ex2 = null;
-                var res = AsyncFetch(GetRootContentsUrl(), GetFolders, out ex1) &&
-                        AsyncFetch(GetAcquisitionMethodsUrl(wcUrl), GetAcquisitionMethods, out ex2);
-                remoteException = ex1 ?? ex2;
-                return res;
+                remoteException = ex1;
+                return res1;
             }
 
-             throw new Exception("Url type mismatch: " + wcUrl.Type);
+            throw new Exception("Url type mismatch: " + wcUrl.Type);
         }
 
         private ImmutableList<WatersConnectAcquisitionMethodObject> GetAcquisitionMethods(Uri requestUri)
         {
-            var httpClient = WatersConnectAccount.GetAuthenticatedHttpClient();
-            var response = httpClient.GetAsync(requestUri).Result;
+            var response = _httpClient.GetAsync(requestUri).Result;
             EnsureSuccess(response);
-
-            if (IsGetAcquisitionMethodsNotAllowed(response))
-            {
-                return ImmutableList<WatersConnectAcquisitionMethodObject>.Singleton(WatersConnectAcquisitionMethodObject.NO_ACCESS_INDICATOR);
-            }
 
             string responseBody = response.Content.ReadAsStringAsync().Result;
             
@@ -79,13 +80,12 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
                 .Select(f => new WatersConnectAcquisitionMethodObject(f)));
         }
 
-        public void UploadMethod(Model.WatersConnect.MethodModel method, IProgressMonitor progressMonitor)
+        public void UploadMethod(MethodModel method, IProgressMonitor progressMonitor)
         {
-            JsonSerializer serializer = new Newtonsoft.Json.JsonSerializer();
+            JsonSerializer serializer = new JsonSerializer();
             var json = JsonConvert.SerializeObject(method,
                 Formatting.Indented,
                 new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
-            var httpClient = WatersConnectAccount.GetAuthenticatedHttpClient();
             var requestUri = GetAquisitionMethodUploadUrl();
             var request = new HttpRequestMessage(HttpMethod.Post, requestUri);
             if (progressMonitor == null)
@@ -100,55 +100,13 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
             }
             request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(@"application/json");
             request.Content.Headers.ContentType.CharSet = @"utf-8";
-            var response = httpClient.SendAsync(request).Result;
+            var response = _httpClient.SendAsync(request).Result;
             EnsureSuccess(response);
-            string responseBody = response.Content.ReadAsStringAsync().Result;
-        }
-        // TODO [RC] Make sure we really need this logic. Access level is read as part of 
-        // the folder JSON
-        private bool IsGetAcquisitionMethodsNotAllowed(HttpResponseMessage response)
-        {
-            try
-            {
-                string responseBody = response.Content.ReadAsStringAsync().Result;
-                var responseParsedRoot = JObject.Parse(responseBody);
-
-                var errorsJToken = responseParsedRoot.GetValue(@"errors");
-
-                if (errorsJToken == null)
-                {
-                    return false;
-                }
-
-                var errorsJArray = (JArray)errorsJToken;
-
-                foreach (var error in errorsJArray)
-                {
-                    var errorCode = error[@"errorCode"];
-
-                    var errorCodeString = errorCode.ToString();
-
-                    if (string.Equals(errorCodeString, @"NoFolderAccess"))
-                    {
-                        return true;
-                    }
-                }
-
-                // "errors\":[{\"errorCode\":\"NoFolderAccess\",\"details\":\"The user does not have access to the given folder.\"}]}"
-
-                return false;
-
-
-            }
-            catch (Exception)
-            {
-                return false;
-            }
         }
         
         public override IEnumerable<RemoteItem> ListContents(MsDataFileUri parentUrl)
         {
-            var watersConnectUrl = (WatersConnectUrl) parentUrl;
+            var watersConnectUrl = SetUrlId((WatersConnectUrl) parentUrl) ?? (WatersConnectUrl)parentUrl;
 
             ImmutableList<WatersConnectFolderObject> folders;
             if (TryGetData(GetRootContentsUrl(), out folders))
@@ -161,43 +119,37 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
                     if (folderObject.ParentId == watersConnectUrl.FolderOrSampleSetId)
                     {
                         var childUrl = watersConnectUrl.ChangeFolderOrSampleSetId(folderObject.Id)
-                            .ChangeType(folderObject.AccessTypeReadTrue
-                                ? WatersConnectUrl.ItemType.folder_child_folders_acquisition_methods
-                                : WatersConnectUrl.ItemType.folder_child_folders_only)
-                            .ChangePathParts(watersConnectUrl.GetPathParts().Concat(new[] { folderObject.Name }));
-                        yield return new RemoteItem(childUrl, folderObject.Name, DataSourceUtil.FOLDER_TYPE, null, 0, folderObject);
+                            .ChangeType(WatersConnectUrl.ItemType.folder_with_methods)
+                            .ChangePathPartsOnly(watersConnectUrl.GetPathParts().Concat(new[] { folderObject.Name }));
+                        var itemType = DataSourceUtil.FOLDER_TYPE;
+
+                        var accessType = folderObject.CanRead ? AccessType.read  : AccessType.no_access;
+                        if (folderObject.CanWrite)
+                            accessType = AccessType.read_write;
+
+                        yield return new RemoteItem(childUrl, folderObject.Name, itemType, null, 0, accessType);
                     }
                 }
             }
-            if (watersConnectUrl.Type == WatersConnectUrl.ItemType.folder_child_folders_acquisition_methods)
+            if (watersConnectUrl.Type == WatersConnectUrl.ItemType.folder_with_methods)
             {
                 ImmutableList<WatersConnectAcquisitionMethodObject> acquisitionMethods;
 
                 if (TryGetData(GetAcquisitionMethodsUrl(watersConnectUrl), out acquisitionMethods))
                 {
-                    if (acquisitionMethods.Any(method =>
-                            method == WatersConnectAcquisitionMethodObject.NO_ACCESS_INDICATOR))
+                    foreach (var acquisitionMethod in acquisitionMethods)
                     {
-                        yield return
-                            new RemoteItem(null, "No access to acquisition methods in this folder.",
-                                DataSourceUtil.NO_ACCESS, DateTime.Now, Int64.MinValue);
-                    }
-                    else
-                    {
-                        foreach (var acquisitionMethod in acquisitionMethods)
+                        if (Guid.TryParse(acquisitionMethod.MethodVersionId, out var versionGuid))
                         {
-                            if (Guid.TryParse(acquisitionMethod.MethodVersionId, out var versionGuid))
-                            {
-                                var methodUrl = new WatersConnectAcquisitionMethodUrl(watersConnectUrl.ToString())
-                                    .ChangeAcquisitionMethodId(acquisitionMethod.Id)
-                                    .ChangeMethodVersionId(versionGuid)
-                                    .ChangePathParts(watersConnectUrl.GetPathParts()
-                                        .Concat(new[] { acquisitionMethod.Name }))
-                                    .ChangeModifiedTime(acquisitionMethod.ModifiedDateTime);
+                            var methodUrl = new WatersConnectAcquisitionMethodUrl(watersConnectUrl.ToString())
+                                .ChangeMethodName(acquisitionMethod.Name)
+                                .ChangeAcquisitionMethodId(acquisitionMethod.Id)
+                                .ChangeMethodVersionId(versionGuid)
+                                .ChangePathParts(watersConnectUrl.GetPathParts())
+                                .ChangeModifiedTime(acquisitionMethod.ModifiedDateTime);
 
-                                yield return new RemoteItem(methodUrl, acquisitionMethod.Name,
-                                    DataSourceUtil.TYPE_WATERS_ACQUISITION_METHOD, null, 0, acquisitionMethod);
-                            }
+                            yield return new RemoteItem(methodUrl, acquisitionMethod.Name,
+                                DataSourceUtil.TYPE_WATERS_ACQUISITION_METHOD, null, 0);
                         }
                     }
                 }
@@ -213,24 +165,26 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
         
         private Uri GetAcquisitionMethodsUrl(WatersConnectUrl watersConnectUrl)
         {
-            if (null == watersConnectUrl?.FolderOrSampleSetId)
-            {
-                //  NO Folder Id passed in.  Assume all Method Templates are in a folder
-                return null;
-            }
-
+ 
             //  Note: The GUID ‘17C19CE93BBA488A975B1E14AAAA0B9B’ is a fixed ID for the Acquisition Method type.
             //  v1.0 uses 'methodTypeId'
             //  v2.0 uses 'methodTypeIds' which is comma delimited entries
 
-            var folderIdWithId = "";
-
-            if (!string.IsNullOrEmpty(watersConnectUrl.FolderOrSampleSetId))
+            string id;
+            if (string.IsNullOrEmpty(watersConnectUrl.FolderOrSampleSetId))
             {
-                folderIdWithId = string.Format(@"&folderId={0}", watersConnectUrl.FolderOrSampleSetId);
+                // Try to retrieve the folder Id from the folder data
+                id = SetUrlId(watersConnectUrl)?.FolderOrSampleSetId ;
+            }
+            else
+            {
+                id = watersConnectUrl.FolderOrSampleSetId;
             }
 
-            string url = @"/waters_connect/v2.0/published-methods?methodTypeIds=17C19CE93BBA488A975B1E14AAAA0B9B" + folderIdWithId;
+            if (string.IsNullOrEmpty(id))
+                return null;
+
+            string url = @"/waters_connect/v2.0/published-methods?methodTypeIds=17C19CE93BBA488A975B1E14AAAA0B9B" + string.Format(@"&folderId={0}", id);
 
 
             //  TODO  [RC] Check if method definition can be downloaded
@@ -248,10 +202,8 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
     class StringStream : Stream
     {
         private readonly MemoryStream _memoryStream;
-        private readonly string _string;
         public StringStream(string str)
         {
-            _string = str;
             _memoryStream = new MemoryStream();
             var writer = new StreamWriter(_memoryStream);
             writer.Write(str);

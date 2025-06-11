@@ -38,7 +38,7 @@ namespace pwiz.CommonMsData.RemoteApi
     public abstract class RemoteUrl : MsDataFileUri
     {
         public static readonly RemoteUrl EMPTY = new Empty();
-        private enum Attr
+        public enum Attr
         {
             centroid_ms1,   // Legacy
             centroid_ms2,   // Legacy
@@ -191,6 +191,12 @@ namespace pwiz.CommonMsData.RemoteApi
             return AccountType.Name + @":" + GetParameters();
         }
 
+        public virtual string FormattedString()
+        {
+            var nameValuePairs = GetParameters();
+            return string.Join("\n", nameValuePairs.GetEnumerable().Select(pair => pair.Key + ":\t" + pair.Value));
+        }
+
         public override int GetSampleIndex()
         {
             return -1;
@@ -214,6 +220,11 @@ namespace pwiz.CommonMsData.RemoteApi
         public string EncodedPath { get; private set; }
 
         public virtual RemoteUrl ChangePathParts(IEnumerable<string> parts)
+        {
+            return ChangeProp(ImClone(this),
+                im => im.EncodedPath = parts == null ? null : string.Join(@"/", parts.Select(Uri.EscapeDataString)));
+        }
+        public RemoteUrl ChangePathPartsOnly(IEnumerable<string> parts)
         {
             return ChangeProp(ImClone(this),
                 im => im.EncodedPath = parts == null ? null : string.Join(@"/", parts.Select(Uri.EscapeDataString)));

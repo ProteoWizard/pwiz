@@ -4,10 +4,10 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using Newtonsoft.Json;
-using NHibernate.Criterion;
 using pwiz.Common.DataBinding;
 
-namespace pwiz.Skyline.Model.WatersConnect
+
+namespace pwiz.CommonMsData.RemoteApi.WatersConnect
 {
     public class MethodModel
     {
@@ -41,7 +41,7 @@ namespace pwiz.Skyline.Model.WatersConnect
                 return;
             foreach (var field in GetType().GetProperties())
             {
-                var columnAttribute = field.GetCustomAttributes(true).ToList().OfType<WatersConnect.ColumnNameAttribute>().FirstOrDefault();
+                var columnAttribute = field.GetCustomAttributes(true).ToList().OfType<ColumnNameAttribute>().FirstOrDefault();
                 if (columnAttribute != null && reader.HasHeader(columnAttribute.ColumnName))
                     field.SetValue(this, reader[columnAttribute.ColumnName]);
             }

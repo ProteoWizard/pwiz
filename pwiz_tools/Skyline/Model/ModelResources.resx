@@ -846,4 +846,16 @@ in the Windows registry key '{0}' from:</value>
   <data name="ThermoMassListExporter_EnsureLibraries_Unknown_Thermo_instrument_type___0___installed_" xml:space="preserve">
     <value>Unknown Thermo instrument type '{0}' installed.</value>
   </data>
+  <data name="WatersConnectMethodExporter_ExportMethod_Folder_ID_is_missing" xml:space="preserve">
+    <value>Folder ID is missing. Cannot upload the method.</value>
+  </data>
+  <data name="WatersConnectMethodExporter_ParseMethod_Exported_from_Skyline" xml:space="preserve">
+    <value>Exported from Skyline</value>
+  </data>
+  <data name="ExportProperties_ExportWatersConnectMethod_Cannot_use_a_template_method_from_another_server_" xml:space="preserve">
+    <value>Cannot use a template method from another server.</value>
+  </data>
+  <data name="ExportProperties_ExportWatersConnectMethod_No_matching_Waters_Connect_account_is_found_for_this_URL_" xml:space="preserve">
+    <value>No matching Waters Connect account is found for this URL.</value>
+  </data>
 </root>

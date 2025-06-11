@@ -31,6 +31,7 @@ using System.Windows.Forms;
 using Microsoft.Win32;
 using pwiz.Common;
 using pwiz.Common.Collections;
+using pwiz.Common.Mock;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -79,6 +80,11 @@ namespace pwiz.Skyline
                 CommonApplicationSettings.FunctionalTest = value;
             }
         }
+
+        public static HttpMessageHandlerFactory HttpMessageHandlerFactory
+        {
+            get { return CommonApplicationSettings.HttpMessageHandlerFactory; }
+        } 
         public static string TestName { get; set; }                 // Set during unit and functional tests
         public static bool ClosingForms { get; set; }               // Set to true during AbstractFunctionalTest.CloseOpenForm (all forms should check this before cancelling a Close request)
         public static string DefaultUiMode { get; set; }            // Set to avoid seeing NoModeUiDlg at the start of a test

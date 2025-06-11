@@ -17,20 +17,12 @@
  * limitations under the License.
  */
 using Newtonsoft.Json.Linq;
-using pwiz.Skyline.FileUI;
 using System;
-using System.IO;
-using NHibernate.Hql.Ast;
 
-namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
+namespace pwiz.CommonMsData.RemoteApi.WatersConnect
 {
     public class WatersConnectAcquisitionMethodObject : WatersConnectObject
     {
-        private bool _noAccess;
-
-        public static readonly WatersConnectAcquisitionMethodObject NO_ACCESS_INDICATOR =
-            new WatersConnectAcquisitionMethodObject(true);
-
         /*
 
         Comment out since in parent class.  Put here for info on min and max length
@@ -144,8 +136,6 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
         /// </summary>
         public bool? Locked { get; private set; }
 
-        public bool NoAccessIndicator => _noAccess;
-
         ///  Included if 'expand' option is on the request
 
 
@@ -171,7 +161,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
             // ReSharper disable LocalizableElement
 
             //  Sub object in JSON
-            var readOnlyPropertiesSubObject = jobject["readOnlyProperties"];
+            var readOnlyPropertiesSubObject = jobject["readOnlyProperties"] as JObject;
 
             MethodId = GetProperty(readOnlyPropertiesSubObject, "methodVersionId");
 
@@ -213,14 +203,10 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
             // ReSharper restore LocalizableElement
         }
 
-        private WatersConnectAcquisitionMethodObject(bool noAccess)
-        {
-            _noAccess = noAccess;
-        }
         public override WatersConnectUrl ToUrl(WatersConnectUrl currentConnectUrl)
         {
-            return (WatersConnectUrl)currentConnectUrl
-                .ChangeType(WatersConnectUrl.ItemType.folder_child_folders_acquisition_methods)
+            return currentConnectUrl
+                .ChangeType(WatersConnectUrl.ItemType.method)
                 .ChangeFolderOrSampleSetId(Id);
         }
     }

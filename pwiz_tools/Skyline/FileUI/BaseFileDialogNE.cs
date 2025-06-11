@@ -453,7 +453,7 @@ namespace pwiz.Skyline.FileUI
                 {
                     foreach (var remoteAccount in _remoteAccounts)
                     {
-                        listSourceInfo.Add(new SourceInfo(remoteAccount.GetRootUrl())
+                        listSourceInfo.Add(new SourceInfo(GetRootUrl(remoteAccount))
                         {
                             name = remoteAccount.GetKey(),
                             type = DataSourceUtil.FOLDER_TYPE,
@@ -478,9 +478,18 @@ namespace pwiz.Skyline.FileUI
                         {
                             DataSourceUtil.FOLDER_TYPE => ImageIndex.Folder,
                             DataSourceUtil.TYPE_WATERS_ACQUISITION_METHOD => ImageIndex.MethodFile,
-                            DataSourceUtil.NO_ACCESS => ImageIndex.NoAccess,    
                             _ => ImageIndex.MassSpecFile
                         };
+                        if (item.Access != AccessType.unknown)
+                        {
+                            imageIndex = item.Access switch
+                            {
+                                AccessType.read => ImageIndex.ReadOnlyFolder,
+                                AccessType.read_write => ImageIndex.ReadWriteFolder,
+                                AccessType.no_access => ImageIndex.NoAccessFolder,
+                                _ => imageIndex
+                            };
+                        }
 
                         listSourceInfo.Add(new SourceInfo(item.MsDataFileUri)
                         {
@@ -599,10 +608,8 @@ namespace pwiz.Skyline.FileUI
                     {
                         Tag = sourceInfo
                     };
-                    item.SubItems[2].Tag = sourceInfo.size;
+                    item.SubItems[2].Tag = sourceInfo.size; // CONSIDER: file size is always 0 for method files
                     item.SubItems[3].Tag = sourceInfo.dateModified;
-                    if (sourceInfo.imageIndex == ImageIndex.NoAccess)
-                        item.Font = new Font(listView.Font, FontStyle.Italic);
                         
                     items.Add(item);
                 }
@@ -615,6 +622,11 @@ namespace pwiz.Skyline.FileUI
             // ReSharper disable EmptyGeneralCatchClause
             try
             {
+                while (!IsHandleCreated)    // Cannot call BeginInvoke until the handle is created
+                {
+                    // Wait for the handle to be created
+                    System.Threading.Thread.Sleep(100);
+                }
                 BeginInvoke(new Action(() =>
                 {
                     try
@@ -689,7 +701,7 @@ namespace pwiz.Skyline.FileUI
                 {
                     dirInfo = new DirectoryInfo(msDataFilePath.FilePath);
                 }
-				else
+                else
                 {
                     lookInComboBox.SelectedIndex = _myComputerIndex;
                 }
@@ -697,7 +709,7 @@ namespace pwiz.Skyline.FileUI
             else if (directory is RemoteUrl remoteUrl)
             {
                 if (string.IsNullOrEmpty(remoteUrl.EncodedPath))
-				{
+                {
                     lookInComboBox.SelectedIndex = _remoteIndex;
                 }
 
@@ -708,7 +720,8 @@ namespace pwiz.Skyline.FileUI
                                                            remoteUrl.ServerUrl,
                                                            (int)ImageIndex.MyNetworkPlaces,
                                                            (int)ImageIndex.MyNetworkPlaces);
-                serverNode.Tag = remoteUrl.ChangePathParts(null);
+                // ReSharper disable once PossibleUnintendedReferenceComparison
+                serverNode.Tag = remoteUrl != RemoteUrl.EMPTY ? remoteUrl.ChangePathParts(null) : remoteUrl;
                 lookInComboBox.Items.Insert(_remoteIndex + driveCount, serverNode);
 
                 var branches = remoteUrl.GetPathParts().ToList();
@@ -830,8 +843,7 @@ namespace pwiz.Skyline.FileUI
 
         protected virtual void SelectItem()
         {
-            var selected = listView.SelectedItems.OfType<ListViewItem>().ToList()
-                .FindAll(item => item.ImageIndex != (int)ImageIndex.NoAccess);
+            var selected = listView.SelectedItems.OfType<ListViewItem>().ToList();
             if (selected.Count == 0)
                 return;
 
@@ -1022,8 +1034,7 @@ namespace pwiz.Skyline.FileUI
 
         private void listView_ItemSelectionChanged( object sender, ListViewItemSelectionChangedEventArgs e )
         {
-            var selected = listView.SelectedItems.OfType<ListViewItem>().ToList()
-                .FindAll(item => item.ImageIndex != (int)ImageIndex.NoAccess);
+            var selected = listView.SelectedItems.OfType<ListViewItem>().ToList();
 
             if (selected.Count > 1 )
             {
@@ -1083,6 +1094,12 @@ namespace pwiz.Skyline.FileUI
                     }
                     break;
             }
+        }
+
+        private void this_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+                DoMainAction();
         }
 
         private void remoteAccountsButton_Click( object sender, EventArgs e )
@@ -1276,8 +1293,10 @@ namespace pwiz.Skyline.FileUI
             Folder,
             MassSpecFile,
             UnknownFile,
-            NoAccess,
-            MethodFile
+            MethodFile,
+            NoAccessFolder,
+            ReadOnlyFolder,
+            ReadWriteFolder
         }
 
         private void EnsureRemoteAccount()

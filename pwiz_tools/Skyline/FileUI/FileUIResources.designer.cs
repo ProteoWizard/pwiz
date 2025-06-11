@@ -517,6 +517,16 @@ namespace pwiz.Skyline.FileUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Instrument Type is Waters Connect but Template file is not selected from Waters Connect.
+        /// </summary>
+        public static string ExportMethodDlg_OkDialog_Instrument_Type_is_Waters_Connect_but_Template_file_is_not {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_OkDialog_Instrument_Type_is_Waters_Connect_but_Template_file_is_n" +
+                        "ot", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Isolation List.
         /// </summary>
         public static string ExportMethodDlg_OkDialog_Isolation_List {
@@ -569,6 +579,16 @@ namespace pwiz.Skyline.FileUI {
                 return ResourceManager.GetString("ExportMethodDlg_OkDialog_Provide_transition_ranking_information_through_imported_" +
                         "results__a_spectral_library__or_choose_only_one_target_transition_per_precursor_" +
                         "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Selected folder is on a different Waters Connect account than the template. Please select a folder under the same account..
+        /// </summary>
+        public static string ExportMethodDlg_OkDialog_Selected_folder_is_on_a_different_Waters_Connect_account_than_the_template {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_OkDialog_Selected_folder_is_on_a_different_Waters_Connect_account" +
+                        "_than_the_template", resourceCulture);
             }
         }
         
@@ -1439,6 +1459,26 @@ namespace pwiz.Skyline.FileUI {
         public static string OpenDataSourceDialog_populateListViewFromDirectory_Retry {
             get {
                 return ResourceManager.GetString("OpenDataSourceDialog_populateListViewFromDirectory_Retry", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to remoteAccount is NOT WatersConnectAccount.
+        /// </summary>
+        public static string OpenFileDialogNEWatersConnectMethod_CreateNewRemoteSession_remoteAccount_is_NOT_WatersConnectAccount {
+            get {
+                return ResourceManager.GetString("OpenFileDialogNEWatersConnectMethod_CreateNewRemoteSession_remoteAccount_is_NOT_W" +
+                        "atersConnectAccount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select Template.
+        /// </summary>
+        public static string OpenFileDialogNEWatersConnectMethod_OpenFileDialogNEWatersConnectMethod_Select_Template {
+            get {
+                return ResourceManager.GetString("OpenFileDialogNEWatersConnectMethod_OpenFileDialogNEWatersConnectMethod_Select_Te" +
+                        "mplate", resourceCulture);
             }
         }
         

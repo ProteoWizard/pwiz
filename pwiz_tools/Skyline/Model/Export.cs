@@ -29,7 +29,6 @@ using System.Reflection;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
-using NHibernate.SqlCommand;
 using pwiz.CLI.Bruker.PrmScheduling;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
@@ -38,11 +37,11 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Model.Results.RemoteApi.WatersConnect;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
+using pwiz.CommonMsData.RemoteApi.WatersConnect;
 using Process = System.Diagnostics.Process;
 using Thread = System.Threading.Thread;
 
@@ -1042,14 +1041,13 @@ namespace pwiz.Skyline.Model
             }
 
             var templateMethodUrl = new WatersConnectAcquisitionMethodUrl(templateMethodUrlString);
-            var exportMethodUrl = new WatersConnectUrl(exportMethodUrlString);
-            var methodPath = exportMethodUrl.GetPathParts().ToList();
-            var targetFolderUrl = (WatersConnectUrl)exportMethodUrl.ChangePathParts(methodPath.Take(methodPath.Count - 1));
-            var methodName = methodPath.Last();
+            var targetFolderUrl = new WatersConnectUrl(exportMethodUrlString);
+            var methodName = targetFolderUrl.InjectionId;       // This is a hack to pass method name to the exporter
+            targetFolderUrl = targetFolderUrl.ChangeInjectionId(null); // Clear the injection ID so that it does not get used in the export
 
             if (templateMethodUrl.ServerUrl != targetFolderUrl.ServerUrl)
             {
-                throw new ApplicationException("Cannot use a template method from another server.");
+                throw new ApplicationException(ModelResources.ExportProperties_ExportWatersConnectMethod_Cannot_use_a_template_method_from_another_server_);
             }
 
             // get the account from the settings
@@ -1067,7 +1065,7 @@ namespace pwiz.Skyline.Model
                 return exporter;
             }
             else
-                throw new ApplicationException("No matching Waters Connect account is found for this URL.");
+                throw new ApplicationException(ModelResources.ExportProperties_ExportWatersConnectMethod_No_matching_Waters_Connect_account_is_found_for_this_URL_);
         }
 
         public abstract void PerformLongExport(Action<IProgressMonitor> performExport);
@@ -5037,6 +5035,11 @@ namespace pwiz.Skyline.Model
             if (!InitExport(fileName, progressMonitor))
                 return;
 
+            targetFolderUrl = _wcSession.SetUrlId(targetFolderUrl);
+            if (targetFolderUrl.FolderOrSampleSetId == null)
+            {
+                throw new IOException(ModelResources.WatersConnectMethodExporter_ExportMethod_Folder_ID_is_missing);
+            }
             foreach (var methodData in MemoryOutput)
             {
                 var method = ParseMethod(methodData.Value.ToString());
@@ -5050,34 +5053,34 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public WatersConnect.MethodModel ParseMethod(string outputLines)
+        public MethodModel ParseMethod(string outputLines)
         {
             var linesReader = new DsvStreamReader(new StringReader(outputLines), ',');
-            var targets = new List<WatersConnect.Target>();
+            var targets = new List<CommonMsData.RemoteApi.WatersConnect.Target>();
             while (!linesReader.EndOfStream)
             {
-                WatersConnect.Target currentTarget;
+                CommonMsData.RemoteApi.WatersConnect.Target currentTarget;
                 linesReader.ReadLine();
                 // we assume that the lines are sorted by target
                 if (targets.Count == 0 || !targets.Last().IsSameTarget(linesReader))
                 {
-                    currentTarget = new WatersConnect.Target();
+                    currentTarget = new CommonMsData.RemoteApi.WatersConnect.Target();
                     targets.Add(currentTarget);
                     currentTarget.ParseObject(linesReader);
-                    currentTarget.Transitions = new List<WatersConnect.Transition>();
+                    currentTarget.Transitions = new List<CommonMsData.RemoteApi.WatersConnect.Transition>();
                 }
                 else
                 {
                     currentTarget = targets.Last();
                 }
-                var currentTransition = new WatersConnect.Transition();
+                var currentTransition = new CommonMsData.RemoteApi.WatersConnect.Transition();
                 currentTarget.Transitions.Add(currentTransition);
                 currentTransition.ParseObject(linesReader);
             }
 
-            var res = new WatersConnect.MethodModel();
+            var res = new MethodModel();
             res.Targets = targets.ToArray();
-            res.Description = "Exported from Skyline";
+            res.Description = ModelResources.WatersConnectMethodExporter_ParseMethod_Exported_from_Skyline;
             res.Name = _methodName;
             return res;
         }

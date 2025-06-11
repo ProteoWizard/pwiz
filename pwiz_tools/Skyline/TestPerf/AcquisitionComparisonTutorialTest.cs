@@ -39,6 +39,7 @@ using pwiz.BiblioSpec;
 using pwiz.Common.Chemistry;
 using pwiz.Skyline.EditUI;
 using System.Windows.Forms;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model;
 
 namespace TestPerf

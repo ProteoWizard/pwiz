@@ -64,7 +64,6 @@ namespace pwiz.CommonMsData
         public const string FOLDER_TYPE = "File Folder";
         public const string UNKNOWN_TYPE = "unknown";
         public const string TYPE_WATERS_ACQUISITION_METHOD = "Waters Acquisition Method";
-        public const string NO_ACCESS = "No Access folder";
         // ReSharper restore LocalizableElement
 
         public static bool IsDataSource(string path)

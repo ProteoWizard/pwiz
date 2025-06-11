@@ -18,47 +18,34 @@
 
 using System;
 using System.Collections.Generic;
-using pwiz.Skyline.Alerts;
-using System.IO;
 using System.Linq;
 using System.Windows.Forms;
-using NHibernate.Util;
-using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Model.Results.RemoteApi;
-using pwiz.Skyline.Model.Results.RemoteApi.WatersConnect;
-using pwiz.Skyline.Util;
+using pwiz.CommonMsData;
+using pwiz.CommonMsData.RemoteApi;
+using pwiz.CommonMsData.RemoteApi.WatersConnect;
 
 
 namespace pwiz.Skyline.FileUI
 {
 
-    // TODO: [RC] Make sure the path combo dropdown is populated with the correct path
-    public class OpenFileDialogNEWatersConnectMethod : OpenFileDialogNE
+    public sealed class OpenFileDialogNEWatersConnectMethod : OpenFileDialogNE
     {
         /// <summary>
         /// File picker which is aware of mass spec "files" that are really directories
         /// </summary>
         /// <param name="remoteAccounts">For UNIFI</param>
         /// <param name="specificDataSourceFilter">Optional list of specific files the user needs to located, ignoring the rest</param>
-        public OpenFileDialogNEWatersConnectMethod(IList<RemoteAccount> remoteAccounts, IList<string> specificDataSourceFilter = null, RemoteUrl templateUrl = null)
+        public OpenFileDialogNEWatersConnectMethod(IList<RemoteAccount> remoteAccounts, IList<string> specificDataSourceFilter = null)
             : base( null /* SOURCE_TYPES */, remoteAccounts, specificDataSourceFilter )
         {
             listView.MultiSelect = false;
-            Text = "Select Template";
+            Text = FileUIResources.OpenFileDialogNEWatersConnectMethod_OpenFileDialogNEWatersConnectMethod_Select_Template;
 
-            if (templateUrl is WatersConnectAcquisitionMethodUrl mehodUrl)
-            {   // if the template is already set, use its path as the initial directory
-                InitialDirectory = mehodUrl.ChangeType(WatersConnectUrl.ItemType.folder_child_folders_acquisition_methods)
-                    .ChangePathParts(UrlPath.GetFilePathParts(templateUrl.EncodedPath)); ;
-            }
+            var acctList = remoteAccounts.OfType<WatersConnectAccount>().ToList();
+            if (acctList.Count == 1)  // if there is only one account, set the initial directory to its root path
+                InitialDirectory = (acctList.First().GetRootUrl() as WatersConnectUrl)?.ChangeType(WatersConnectUrl.ItemType.folder_with_methods);
             else
-            {
-                var acctList = remoteAccounts.OfType<WatersConnectAccount>().ToList();
-                if (acctList.Count() == 1)  // if there is only one account, set the initial directory to its root path
-                    InitialDirectory = (acctList.First().GetRootUrl() as WatersConnectUrl)?.ChangeType(WatersConnectUrl.ItemType.folder_child_folders_acquisition_methods);
-                else
-                    InitialDirectory = RemoteUrl.EMPTY;
-            }
+                InitialDirectory = RemoteUrl.EMPTY;
         }
 
         public WatersConnectAcquisitionMethodUrl MethodUrl { get; private set; }
@@ -71,7 +58,7 @@ namespace pwiz.Skyline.FileUI
                 return;
             }
 
-            throw new Exception("remoteAccount is NOT WatersConnectAccount");
+            throw new Exception(FileUIResources.OpenFileDialogNEWatersConnectMethod_CreateNewRemoteSession_remoteAccount_is_NOT_WatersConnectAccount);
         }
 
         protected override void DoMainAction()
@@ -85,11 +72,11 @@ namespace pwiz.Skyline.FileUI
         }
 
         protected override RemoteUrl GetRootUrl(RemoteAccount account)
-        {   // We need to make sure the root URL has the correct type for method retrieval
-            return (base.GetRootUrl(account) as WatersConnectUrl)?.ChangeType(WatersConnectUrl.ItemType.folder_child_folders_acquisition_methods);
+        {   // Making sure the root URL has the correct type for method retrieval
+            return (base.GetRootUrl(account) as WatersConnectUrl)?.ChangeType(WatersConnectUrl.ItemType.folder_with_methods);
         }
 
-        public void Open()
+        public new void Open()
         {
             if (listView.SelectedItems.Count == 0)
                 return;

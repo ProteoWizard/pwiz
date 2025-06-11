@@ -20,16 +20,23 @@ using System;
 
 namespace pwiz.CommonMsData.RemoteApi
 {
+    public enum AccessType
+    {
+        unknown,
+        no_access,
+        read,
+        read_write
+    }
     public class RemoteItem
     {
-        public RemoteItem(MsDataFileUri msDataFileUri, string label, string type, DateTime? lastModified, long fileSizeBytes, object data = null)
+        public RemoteItem(MsDataFileUri msDataFileUri, string label, string type, DateTime? lastModified, long fileSizeBytes, AccessType access = AccessType.unknown)
         {
             MsDataFileUri = msDataFileUri;
             Label = label;
             Type = type;
             LastModified = lastModified;
             FileSize = (ulong) fileSizeBytes;
-            Data = data;
+            Access = access;
         }
 
         public MsDataFileUri MsDataFileUri { get; private set; }
@@ -38,5 +45,6 @@ namespace pwiz.CommonMsData.RemoteApi
         public DateTime? LastModified { get; private set; }
         public ulong FileSize { get; private set; }
         public object Data { get; private set; }
+        public AccessType Access { get; private set; }
     }
 }

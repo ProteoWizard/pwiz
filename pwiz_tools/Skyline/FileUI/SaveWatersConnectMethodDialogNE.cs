@@ -1,20 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing.Drawing2D;
 using System.IO;
 using System.Linq;
-using System.Security.Policy;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using EnvDTE;
-using NHibernate.Engine;
+using pwiz.CommonMsData;
+using pwiz.CommonMsData.RemoteApi;
+using pwiz.CommonMsData.RemoteApi.WatersConnect;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Results.RemoteApi;
-using pwiz.Skyline.Model.Results.RemoteApi.Ardia;
-using pwiz.Skyline.Model.Results.RemoteApi.WatersConnect;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.FileUI
 {
@@ -65,7 +58,7 @@ namespace pwiz.Skyline.FileUI
     }
 
     // TODO: [RC] Make sure the path combo dropdown is populated with the correct path
-    class SaveWatersConnectMethodDialogNE : BaseFileDialogNE
+    sealed class SaveWatersConnectMethodDialogNE : BaseFileDialogNE
     {
         public string MethodName { get; private set; }
 
@@ -101,7 +94,7 @@ namespace pwiz.Skyline.FileUI
 
         protected override RemoteUrl GetRootUrl(RemoteAccount account)
         {
-            return (base.GetRootUrl(account) as WatersConnectUrl)?.ChangeType(WatersConnectUrl.ItemType.folder_child_folders_acquisition_methods);
+            return (base.GetRootUrl(account) as WatersConnectUrl)?.ChangeType(WatersConnectUrl.ItemType.folder_with_methods);
         }
 
         private void Open()
@@ -171,7 +164,7 @@ namespace pwiz.Skyline.FileUI
                 return;
             }
 
-            throw new Exception("remoteAccount is NOT WatersConnectAccount");
+            throw new Exception(FileUIResources.OpenFileDialogNEWatersConnectMethod_CreateNewRemoteSession_remoteAccount_is_NOT_WatersConnectAccount);
         }
     }
 

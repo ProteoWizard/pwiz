@@ -584,19 +584,6 @@
     <Compile Include="Model\IdPeptideDocNode.cs" />
     <Compile Include="Model\Proteome\AssociateProteinsResults.cs" />
     <Compile Include="Model\Lib\LibraryFiles.cs" />
-    <Compile Include="Model\Results\RemoteApi\WatersConnect\WatersConnectAccount.cs" />
-    <Compile Include="Model\Results\RemoteApi\WatersConnect\WatersConnectFileObject.cs" />
-    <Compile Include="Model\Results\RemoteApi\WatersConnect\WatersConnectSessionAcquisitionMethod.cs" />
-    <Compile Include="Model\Results\RemoteApi\WatersConnect\WatersConnectWatersConnectAcquisitionMethodObjectMethodObject.cs" />
-    <Compile Include="Model\Results\RemoteApi\WatersConnect\WatersConnectFolderObject.cs" />
-    <Compile Include="Model\Results\RemoteApi\WatersConnect\WatersConnectObject.cs" />
-    <Compile Include="Model\Results\RemoteApi\WatersConnect\WatersConnectResources.Designer.cs">
-      <DependentUpon>WatersConnectResources.resx</DependentUpon>
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-    </Compile>
-    <Compile Include="Model\Results\RemoteApi\WatersConnect\WatersConnectSession.cs" />
-    <Compile Include="Model\Results\RemoteApi\WatersConnect\WatersConnectUrl.cs" />
     <Compile Include="Model\Results\LcPeakIonMetrics.cs" />
     <Compile Include="Model\Results\Scoring\ReintegrateDlgSettings.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\BinnedSpectrum.cs" />
@@ -792,7 +779,6 @@
     <Compile Include="Model\Results\Scoring\FeatureScores.cs" />
     <Compile Include="Model\Results\Scoring\ScoreQValueMap.cs" />
     <Compile Include="Model\TransitionLossMap.cs" />
-    <Compile Include="Model\WatersConnect\MethodModel.cs" />
     <Compile Include="Properties\MetadataRuleSetList.cs" />
     <Compile Include="Properties\RemoteAccountList.cs" />
     <Compile Include="Model\Results\Spectra\FileSpectrumInfo.cs" />
