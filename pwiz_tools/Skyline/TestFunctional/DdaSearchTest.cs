@@ -115,7 +115,7 @@ namespace pwiz.SkylineTestFunctional
                 PrecursorTolerance = new MzTolerance(15, MzTolerance.Units.ppm),
                 FragmentTolerance = new MzTolerance(25, MzTolerance.Units.ppm),
                 AdditionalSettings = new Dictionary<string, string>(),
-                ExpectedResultsFinal = new ExpectedResults(133, 332, 393, 1179, 163)
+                ExpectedResultsFinal = new ExpectedResults(133, 334, 395, 1185, 164)
             };
 
             RunFunctionalTest();
@@ -143,7 +143,7 @@ namespace pwiz.SkylineTestFunctional
                 PrecursorTolerance = new MzTolerance(15, MzTolerance.Units.ppm),
                 FragmentTolerance = new MzTolerance(25, MzTolerance.Units.ppm),
                 AdditionalSettings = new Dictionary<string, string>(),
-                ExpectedResultsFinal = new ExpectedResults(103, 255, 315, 945, 124)
+                ExpectedResultsFinal = new ExpectedResults(102, 240, 290, 870, 116)
             };
 
             RunFunctionalTest();
@@ -170,7 +170,7 @@ namespace pwiz.SkylineTestFunctional
                 PrecursorTolerance = new MzTolerance(15, MzTolerance.Units.ppm),
                 FragmentTolerance = new MzTolerance(1.0005),
                 AdditionalSettings = new Dictionary<string, string>(),
-                ExpectedResultsFinal = new ExpectedResults(130, 309, 370, 1110, 150)
+                ExpectedResultsFinal = new ExpectedResults(144, 337, 390, 1170, 165)
             };
 
             RunFunctionalTest();
@@ -287,7 +287,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(IsRecordMode);
         }
 
-        protected override bool IsRecordMode => false;
+        protected override bool IsRecordMode => true;
         private bool RedownloadTools => !IsRecordMode && IsPass0;
 
         private string GetTestPath(string path)
@@ -382,18 +382,30 @@ namespace pwiz.SkylineTestFunctional
                     editModDlg.OkDialog();
                 });
 
-                // Test a C terminal mod with no AA and one with AA - commented out because it changes results a bit to include it
+                // Test a C terminal mod with no AA: commented out because it's buggy with MSAmanda
                 /*RunDlg<EditStaticModDlg>(editListUI.AddItem, editModDlg =>
                 {
-                    editModDlg.Modification = new StaticMod("NotUniModMod (C-term)", null, ModTerminus.C, null, LabelAtoms.None, 0.01, 0.01);
+                    editModDlg.Modification = new StaticMod("NotUniModMod (C-term)", null, ModTerminus.C, null, LabelAtoms.None, 1100.01, 1100.01);
                     editModDlg.Modification = editModDlg.Modification.ChangeVariable(true);
                     editModDlg.OkDialog();
-                }); 
+                }); */
+
+                // Test a mod with multiple AA specificities
                 RunDlg<EditStaticModDlg>(editListUI.AddItem, editModDlg =>
                 {
-                    editModDlg.Modification = new StaticMod("NotUniModMod4 (C-term)", "K,R", null, null, LabelAtoms.None, -1.01, -1.01);
+                    editModDlg.Modification = new StaticMod("MoreNotUniModMod (C-term)", "K,R", null, null, LabelAtoms.None, 1200.000001, 1200.000001);
+                    editModDlg.Modification = editModDlg.Modification.ChangeVariable(true);
                     editModDlg.OkDialog();
-                });*/
+                });
+
+                // Add the combined mod to allow interpreting results; put it at the end to uncheck it so it's not used for searches
+                RunDlg<EditStaticModDlg>(editListUI.AddItem, editModDlg =>
+                {
+                    string combinedFormula = Molecule.Parse(UniMod.GetModification("Oxidation (M)", true).Formula).AdjustElementCount("C", 42).ToString();
+                    editModDlg.Modification = new StaticMod("ZCombinedNotUniModMod", null, ModTerminus.N, combinedFormula, LabelAtoms.None, null, null);
+                    editModDlg.Modification = editModDlg.Modification.ChangeVariable(true);
+                    editModDlg.OkDialog();
+                });
                 OkDialog(editListUI, editListUI.OkDialog);
 
                 // Test back/next buttons
@@ -547,6 +559,7 @@ namespace pwiz.SkylineTestFunctional
                 importPeptideSearchDlg.MatchModificationsControl.ChangeItem(0, false); // uncheck C+57
                 for (int i = 1; i < importPeptideSearchDlg.MatchModificationsControl.MatchedModifications.Count(); ++i)
                     importPeptideSearchDlg.MatchModificationsControl.ChangeItem(i, true); // check everything else
+                importPeptideSearchDlg.MatchModificationsControl.ChangeItem(importPeptideSearchDlg.MatchModificationsControl.MatchedModifications.Count() - 1, false); // uncheck combined mod
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
                 importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new[] { 2, 3, 4 };
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
