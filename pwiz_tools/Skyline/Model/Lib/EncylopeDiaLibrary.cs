@@ -27,7 +27,6 @@ using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using MathNet.Numerics.Statistics;
-using Microsoft.Web.WebView2.Core;
 using pwiz.BiblioSpec;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
