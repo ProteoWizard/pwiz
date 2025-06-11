@@ -376,7 +376,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         {
             List<Modification> mods = new List<Modification>();
             if (mod.AAs != null)
-                foreach (var a in mod.AAs.Replace(@",", ""))
+                foreach (var a in mod.AminoAcids)
                     mods.Add(GenerateNewModification(mod, a));
             else
                 mods.Add(GenerateNewModification(mod, ' '));
