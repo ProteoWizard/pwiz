@@ -287,7 +287,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(IsRecordMode);
         }
 
-        protected override bool IsRecordMode => true;
+        protected override bool IsRecordMode => false;
         private bool RedownloadTools => !IsRecordMode && IsPass0;
 
         private string GetTestPath(string path)
