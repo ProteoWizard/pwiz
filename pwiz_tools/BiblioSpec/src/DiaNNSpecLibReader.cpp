@@ -1202,9 +1202,10 @@ bool DiaNNSpecLibReader::parseFile()
     buildTables(GENERIC_QVALUE);
 
     // update RetentionTimes.RefSpectraID field after filtering
-    blibMaker_.sql_stmt("UPDATE RetentionTimes SET RefSpectraID = newId "
-                        "FROM (SELECT t.[RefSpectraID] as oldId, s.[id] as newId FROM RefSpectra s, RetentionTimes t WHERE s.[SpecIdInFile] = t.[RefSpectraID]) AS IdMapping "
-                        "WHERE RefSpectraID == IdMapping.oldId");
+    Verbosity::status("Updating RetentionTimes table after filtering.");
+    blibMaker_.sql_stmt("WITH IdMapping AS (SELECT t.rowid AS rt_rowid, s.id AS newId FROM RetentionTimes t JOIN RefSpectra s ON s.SpecIdInFile = t.RefSpectraID) "
+                        "UPDATE RetentionTimes SET RefSpectraID = (SELECT newId FROM IdMapping WHERE IdMapping.rt_rowid = RetentionTimes.rowid) "
+                        "WHERE rowid IN(SELECT rt_rowid FROM IdMapping);");
 
     return true;
 }
