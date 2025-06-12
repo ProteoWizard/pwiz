@@ -222,7 +222,7 @@ namespace pwiz.SkylineTestFunctional
             }
             else
             {
-                var publishDocumentDlg = ShowDialog<PublishDocumentDlg>(() => SkylineWindow.ShowPublishDlg(testPublishClient));
+                var publishDocumentDlg = ShowDialog<PublishDocumentDlgPanorama>(() => SkylineWindow.ShowPublishDlg(testPublishClient));
                 WaitForCondition(60 * 1000, () => publishDocumentDlg.IsLoaded);
                 RunUI(() =>
                 {
@@ -253,7 +253,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var testPublishClient = new TestPanoramaPublishClient(panoramaClient);
 
-            var publishDocumentDlg = ShowDialog<PublishDocumentDlg>(() => SkylineWindow.ShowPublishDlg(testPublishClient));
+            var publishDocumentDlg = ShowDialog<PublishDocumentDlgPanorama>(() => SkylineWindow.ShowPublishDlg(testPublishClient));
             WaitForCondition(60 * 1000, () => publishDocumentDlg.IsLoaded);
             RunUI(() =>
             {
@@ -408,22 +408,22 @@ namespace pwiz.SkylineTestFunctional
             });
 
 
-            // 2. PublishDocumentDlg should NOT display the "Show anonymous servers" checkbox
-            var publishDocDlg = ShowDialog<PublishDocumentDlg>(editServerDlg.OkDialog);
+            // 2. PublishDocumentDlgBase should NOT display the "Show anonymous servers" checkbox
+            var publishDocDlg = ShowDialog<PublishDocumentDlgPanorama>(editServerDlg.OkDialog);
             RunUI( () => Assert.IsFalse(publishDocDlg.CbAnonymousServersVisible));
             OkDialog(publishDocDlg, publishDocDlg.CancelDialog);
 
 
 
             // Add another anonymous server
-            // 1. PublishDocumentDlg should display the "Show anonymous servers" checkbox
+            // 1. PublishDocumentDlgBase should display the "Show anonymous servers" checkbox
             // 2. View anonymous servers
             const string pweb = "https://panoramaweb.org/";
             AddAnonymousServer(pweb, 2);
-            publishDocDlg = ShowDialog<PublishDocumentDlg>(() => SkylineWindow.ShowPublishDlg(publishClient));
+            publishDocDlg = ShowDialog<PublishDocumentDlgPanorama>(() => SkylineWindow.ShowPublishDlg(publishClient));
             RunUI(() =>
             {
-                // 1. PublishDocumentDlg should display the "Show anonymous servers" checkbox
+                // 1. PublishDocumentDlgBase should display the "Show anonymous servers" checkbox
                 Assert.IsTrue(publishDocDlg.CbAnonymousServersVisible);
 
                 var servers = publishDocDlg.GetServers();
