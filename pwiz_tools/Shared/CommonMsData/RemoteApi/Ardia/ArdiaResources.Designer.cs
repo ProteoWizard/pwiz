@@ -143,6 +143,60 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error creating folder {0}.
+        /// </summary>
+        public static string CreateFolder_Error {
+            get {
+                return ResourceManager.GetString("CreateFolder_Error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Folder names cannot be blank..
+        /// </summary>
+        public static string CreateFolder_Error_BlankName {
+            get {
+                return ResourceManager.GetString("CreateFolder_Error_BlankName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Folder names cannot include any of these characters {0}..
+        /// </summary>
+        public static string CreateFolder_Error_IllegalCharacter {
+            get {
+                return ResourceManager.GetString("CreateFolder_Error_IllegalCharacter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Successfully created Ardia folder {0}.
+        /// </summary>
+        public static string CreateFolder_Success {
+            get {
+                return ResourceManager.GetString("CreateFolder_Success", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Create Ardia folder.
+        /// </summary>
+        public static string CreateFolder_Title {
+            get {
+                return ResourceManager.GetString("CreateFolder_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to New Folder.
+        /// </summary>
+        public static string FileUpload_DefaultNewFolderName {
+            get {
+                return ResourceManager.GetString("FileUpload_DefaultNewFolderName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cannot find account for username {0} and server {1}..
         /// </summary>
         public static string UnifiUrl_OpenMsDataFile_Cannot_find_account_for_username__0__and_server__1__ {

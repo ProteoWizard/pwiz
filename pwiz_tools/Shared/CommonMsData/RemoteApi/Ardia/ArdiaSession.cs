@@ -145,6 +145,11 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             return HasResultsFor<ImmutableList<ArdiaFolderObject>>(GetFolderContentsUrl(requestUri));
         }
 
+        public bool ClearResultsFor(ArdiaUrl requestUri)
+        {
+            return ClearResultsFor<ImmutableList<ArdiaFolderObject>>(GetFolderContentsUrl(requestUri));
+        }
+
         private Uri GetFolderContentsUrl(ArdiaUrl ardiaUrl)
         {
             return new Uri(ArdiaAccount.GetFolderContentsUrl(ardiaUrl));

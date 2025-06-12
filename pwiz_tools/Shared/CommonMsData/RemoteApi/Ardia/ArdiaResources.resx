@@ -147,4 +147,22 @@
   <data name="Ardia_FileUpload_SelectDestinationFolderLabel" xml:space="preserve">
     <value>Select a destination folder</value>
   </data>
+  <data name="CreateFolder_Title" xml:space="preserve">
+    <value>Create Ardia folder</value>
+  </data>
+  <data name="CreateFolder_Success" xml:space="preserve">
+    <value>Successfully created Ardia folder {0}</value>
+  </data>
+  <data name="FileUpload_DefaultNewFolderName" xml:space="preserve">
+    <value>New Folder</value>
+  </data>
+  <data name="CreateFolder_Error" xml:space="preserve">
+    <value>Error creating folder {0}</value>
+  </data>
+  <data name="CreateFolder_Error_BlankName" xml:space="preserve">
+    <value>Folder names cannot be blank.</value>
+  </data>
+  <data name="CreateFolder_Error_IllegalCharacter" xml:space="preserve">
+    <value>Folder names cannot include any of these characters {0}.</value>
+  </data>
 </root>

@@ -34,6 +34,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.CommonMsData.RemoteApi;
+using pwiz.CommonMsData.RemoteApi.Ardia;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -3516,7 +3517,7 @@ namespace pwiz.Skyline
         {
             Assume.IsTrue(HasRegisteredArdiaAccount, @"Expected to find a registered Ardia account but found none");
 
-            var ardiaAccounts = Settings.Default.RemoteAccountList.GetAccountsOfType(RemoteAccountType.ARDIA).ToList();
+            var ardiaAccounts = Settings.Default.RemoteAccountList.GetAccountsOfType(RemoteAccountType.ARDIA).Cast<ArdiaAccount>().ToList();
 
             // CONSIDER: bootstrap Ardia account(s) to avoid flashing a "logging in" dialog if Skyline already has a valid API token.
             // if (!ardiaAccount.HasToken())

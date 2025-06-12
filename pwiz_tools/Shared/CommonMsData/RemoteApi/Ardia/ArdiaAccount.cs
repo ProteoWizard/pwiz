@@ -36,7 +36,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
     ///     https://skyline.ms/wiki/home/software/Skyline/page.view?name=Ardia%20setup%20and%20importing%20a%20file%20from%20Ardia
     ///
     /// Once added, the account is listed under Tools => Options => Remote Accounts and can be accessed by Skyline developers using
-    /// <see cref="Settings.RemoteAccountList"/>.
+    /// inside Skyline using Settings.RemoteAccountList. RemoteAccountList is not available in the CommonMsData project.
     ///
     /// When Skyline closes, configuration info about the account is stored in Skyline's user.config file whose path
     /// can be found under Tools => Options => Miscellaneous and is stored in a directory like:
@@ -47,40 +47,6 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
     [XmlRoot("ardia_account")]
     public class ArdiaAccount : RemoteAccount
     {
-        // public static string GetSessionCookieString(ArdiaAccount ardiaAccount)
-        // {
-        //     return ardiaAccount.Token;
-        // }
-        //
-        // public static void SetSessionCookieString(ArdiaAccount ardiaAccount, string sessionCookieString)
-        // {
-        //     ardiaAccount.Token = sessionCookieString;
-        // }
-        //
-        // public static string GetSessionCookieStringForHostname(ArdiaAccount ardiaAccount)
-        // {
-        //     var hostname = ardiaAccount.ServerUrl;
-        //     var username = ardiaAccount.Username;
-        //
-        //     var ardiaAccounts = Settings.Default.RemoteAccountList
-        //         .Where(account =>
-        //             string.Equals(hostname, account.ServerUrl, StringComparison.OrdinalIgnoreCase) &&
-        //             string.Equals(username, account.Username, StringComparison.OrdinalIgnoreCase)
-        //         ).Cast<ArdiaAccount>().ToList();
-        //
-        //     return ardiaAccounts.Count == 0 ?
-        //         string.Empty :
-        //         // CONSIDER: is it possible to register > 1 account with the same ServerUrl + Username? If so,
-        //         //           be resilient and just take the first one rather than raising an exception
-        //         ardiaAccounts.First().Token;
-        // }
-        //
-        // // TEST ONLY
-        // public static void ClearSessionCookieStrings()
-        // {
-        //     Settings.Default.RemoteAccountList.Where(a => a.AccountType == RemoteAccountType.ARDIA).Cast<ArdiaAccount>().ForEach(item => { item.Token = null; });
-        // }
-
         // TEST ONLY
         public static readonly ArdiaAccount DEFAULT = new ArdiaAccount(string.Empty, string.Empty, string.Empty, string.Empty);
 

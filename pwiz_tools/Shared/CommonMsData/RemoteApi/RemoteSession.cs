@@ -188,6 +188,24 @@ namespace pwiz.CommonMsData.RemoteApi
             }
         }
 
+        public bool ClearResultsFor<T>(Uri remoteUrl)
+        {
+            if (remoteUrl == null)
+            {
+                return false;
+            }
+            else
+            {
+                lock (_lock)
+                {
+                    var requestKey = new RequestKey(typeof(T), remoteUrl);
+
+                    _fetchRequests.Remove(requestKey);
+                    return _responses.Remove(requestKey);
+                }
+            }
+        }
+
         protected bool TryGetData<T>(Uri requestUri, out T data)
         {
             if (requestUri == null)

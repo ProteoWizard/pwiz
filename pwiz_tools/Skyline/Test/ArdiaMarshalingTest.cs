@@ -35,15 +35,15 @@ namespace pwiz.SkylineTest
         public void TestArdiaJsonUnmarshaling()
         {
             // StagedDocument - Request
-            var stagedDocumentRequest = ArdiaStageDocumentRequest.Create();
+            var stagedDocumentRequest = StageDocumentRequest.Create();
             stagedDocumentRequest.AddSingleDocumentPiece();
 
             Assert.IsNotNull(stagedDocumentRequest.Pieces);
             Assert.AreEqual(1, stagedDocumentRequest.Pieces.Count);
-            Assert.AreEqual(ArdiaStageDocumentPieceRequest.SINGLE_DOCUMENT, stagedDocumentRequest.Pieces[0].PieceName);
+            Assert.AreEqual(StageDocumentRequest.DocumentPieceRequest.SINGLE_DOCUMENT, stagedDocumentRequest.Pieces[0].PieceName);
 
             // StagedDocument - Response
-            var stagedDocumentResponse = JsonConvert.DeserializeObject<ArdiaStagedDocumentResponse>(SimpleStagedDocumentString);
+            var stagedDocumentResponse = JsonConvert.DeserializeObject<StagedDocumentResponse>(SimpleStagedDocumentString);
 
             Assert.AreEqual("97088887-788079", stagedDocumentResponse.UploadId);
 
@@ -51,7 +51,7 @@ namespace pwiz.SkylineTest
             Assert.IsNotNull(stagedDocumentResponse.Pieces);
             Assert.AreEqual(1, stagedDocumentResponse.Pieces.Count);
             Assert.IsNotNull(piece);
-            Assert.AreEqual(ArdiaStageDocumentPieceRequest.SINGLE_DOCUMENT, piece.PieceName);
+            Assert.AreEqual(StageDocumentRequest.DocumentPieceRequest.SINGLE_DOCUMENT, piece.PieceName);
             Assert.AreEqual("/foobar", piece.PiecePath);
 
             var presignedUrls = piece.PresignedUrls;

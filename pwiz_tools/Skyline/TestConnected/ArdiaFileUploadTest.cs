@@ -49,14 +49,14 @@ namespace pwiz.SkylineTestConnected
         // TODO: verify file successfully uploaded
         protected override void DoTest()
         {
-            var account = ArdiaTestUtil.GetTestAccount();
-
             Assert.IsFalse(SkylineWindow.HasRegisteredArdiaAccount);
             Assert.AreEqual(0, Settings.Default.RemoteAccountList.Count);
 
+            // Configure Ardia account
+            var account = ArdiaTestUtil.GetTestAccount();
+
             OpenDocument("Basic.sky");
 
-            // Create Remote Server for an Ardia Account
             RegisterRemoteServer(account);
             Assert.IsTrue(SkylineWindow.HasRegisteredArdiaAccount);
             Assert.AreEqual(1, Settings.Default.RemoteAccountList.Count);
@@ -64,7 +64,24 @@ namespace pwiz.SkylineTestConnected
             account = (ArdiaAccount)Settings.Default.RemoteAccountList[0];
             AssertEx.IsTrue(!string.IsNullOrEmpty(account.Token));
 
-            // Open Ardia publish dialog
+            // Test scenarios 
+            TestCreateFolder(account);
+
+            TestSuccessfulUpload(account);
+        }
+
+        private static void TestCreateFolder(ArdiaAccount account)
+        {
+            var ardiaClient = ArdiaClient.Create(account);
+
+            // ardiaClient.CreateFolder(@"/ZZZ-Document-Upload", @"NewFolder1", null);
+
+            // TODO: fix. DELETE works in Python but not .NET?!
+            // ardiaClient.DeleteFolder(@"/ZZZ-Document-Upload/NewFolder1");
+        }
+
+        private static void TestSuccessfulUpload(ArdiaAccount account) 
+        {
             var publishDlg = ShowDialog<PublishDocumentDlgArdia>(() => SkylineWindow.PublishToArdia());
 
             // TODO: re-enable upload. Skipping for now. It works if the test account's role is Super Admin

@@ -41,9 +41,11 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         private const string APPLICATION_JSON = @"application/json";
         private const string COOKIE_BFF_HOST = "Bff-Host";
         private const string HEADER_APPLICATION_CODE = "applicationCode";
+        private const string HEADER_CONTENT_TYPE_FOLDER = @"application/vnd.thermofisher.luna.folder";
 
-        private const string PATH_STAGE_DOCUMENT = @"/session-management/bff/document/api/v1/stagedDocuments";
+        private const string PATH_STAGE_DOCUMENT  = @"/session-management/bff/document/api/v1/stagedDocuments";
         private const string PATH_CREATE_DOCUMENT = @"/session-management/bff/document/api/v1/documents";
+        private const string PATH_CREATE_FOLDER   = @"/session-management/bff/navigation/api/v1/folders";
 
         public static ArdiaClient Create(ArdiaAccount account)
         {
@@ -82,10 +84,32 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
 
             var client = new HttpClient(handler, false);
             client.BaseAddress = ServerUri;
+            client.DefaultRequestHeaders.Add(HEADER_APPLICATION_CODE, ApplicationCode); 
             client.DefaultRequestHeaders.Add(HttpRequestHeader.Accept.ToString(), APPLICATION_JSON);
-            client.DefaultRequestHeaders.Add(HEADER_APPLICATION_CODE, ApplicationCode);
 
             return client;
+        }
+
+        public void CreateFolder(string parentFolderPath, string newFolderName, IProgressMonitor progressMonitor)
+        {
+            using var httpClient = AuthenticatedHttpClient();
+            HttpResponseMessage response = null;
+            try
+            {
+                var requestModel = CreateFolderRequest.Create(parentFolderPath, newFolderName);
+
+                var jsonString = JsonConvert.SerializeObject(requestModel);
+                using var request = new StringContent(jsonString, Encoding.UTF8, HEADER_CONTENT_TYPE_FOLDER);
+
+                response = httpClient.PostAsync(PATH_CREATE_FOLDER, request).Result;
+                response.EnsureSuccessStatusCode();
+            }
+            catch (Exception e)
+            {
+                var uri = new Uri(ServerUri + PATH_CREATE_FOLDER);
+                var message = string.Format(ArdiaResources.CreateFolder_Error, parentFolderPath);
+                throw ArdiaServerException.Create(message, uri, response, e);
+            }
         }
 
         // TODO: improve and test error handling throughout, incl. authentication, malformed json, file upload failure, invalid destination directory
@@ -133,7 +157,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             HttpResponseMessage response = null;
             try
             {
-                var modelRequest = ArdiaStageDocumentRequest.Create();
+                var modelRequest = StageDocumentRequest.Create();
                 modelRequest.AddSingleDocumentPiece();
 
                 var jsonString = JsonConvert.SerializeObject(modelRequest);
@@ -144,7 +168,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
                 response.EnsureSuccessStatusCode();
 
                 var responseString = response.Content.ReadAsStringAsync().Result;
-                var modelResponse = JsonConvert.DeserializeObject<ArdiaStagedDocumentResponse>(responseString);
+                var modelResponse = JsonConvert.DeserializeObject<StagedDocumentResponse>(responseString);
 
                 presignedUrl = modelResponse.Pieces[0].PresignedUrls[0];
                 uploadId = modelResponse.UploadId;
@@ -185,10 +209,12 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         private void CreateDocument(string destinationFolderPath, string destinationFileName, string uploadId,
             int uploadBytes, out Uri uploadedUri)
         {
+            using var httpClient = AuthenticatedHttpClient();
+
             HttpResponseMessage response = null;
             try
             {
-                var modelRequest = new ArdiaDocumentRequest
+                var modelRequest = new DocumentRequest
                 {
                     UploadId = uploadId,
                     Size = uploadBytes,
@@ -200,19 +226,18 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
                 using var request = new StringContent(jsonString);
                 request.Headers.ContentType = new MediaTypeHeaderValue(APPLICATION_JSON);
 
-                using var ardiaHttpClient = AuthenticatedHttpClient();
-
-                response = ardiaHttpClient.PostAsync(PATH_CREATE_DOCUMENT, request).Result;
+                response = httpClient.PostAsync(PATH_CREATE_DOCUMENT, request).Result;
                 response.EnsureSuccessStatusCode();
 
                 var responseBody = response.Content.ReadAsStringAsync().Result;
-                var ardiaDocumentResponse = JsonConvert.DeserializeObject<ArdiaDocumentResponse>(responseBody);
+                var ardiaDocumentResponse = JsonConvert.DeserializeObject<DocumentResponse>(responseBody);
 
                 uploadedUri = new Uri(ardiaDocumentResponse.PresignedUrls.First());
             }
             catch (Exception e)
             {
                 var uri = new Uri(ServerUri + PATH_CREATE_DOCUMENT);
+
                 throw ArdiaServerException.Create(ArdiaResources.Ardia_FileUpload_CreateDocumentError, uri, response, e);
             }
         }
