@@ -24,6 +24,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.ToolsUI;
 using pwiz.SkylineTestUtil;
+using static pwiz.Skyline.FileUI.PublishDocumentDlgArdia;
 
 namespace pwiz.SkylineTestConnected
 {
@@ -52,7 +53,7 @@ namespace pwiz.SkylineTestConnected
             Assert.IsFalse(SkylineWindow.HasRegisteredArdiaAccount);
             Assert.AreEqual(0, Settings.Default.RemoteAccountList.Count);
 
-            // Configure Ardia account
+            // Test setup - configure Ardia account
             var account = ArdiaTestUtil.GetTestAccount();
 
             OpenDocument("Basic.sky");
@@ -65,9 +66,44 @@ namespace pwiz.SkylineTestConnected
             AssertEx.IsTrue(!string.IsNullOrEmpty(account.Token));
 
             // Test scenarios 
+            TestValidateFolderName();
+
             TestCreateFolder(account);
 
             TestSuccessfulUpload(account);
+        }
+
+        private static void TestValidateFolderName()
+        {
+            var result = ValidateFolderName(@"New Folder");
+            Assert.AreEqual(ValidateInputResult.valid, result);
+
+            result = ValidateFolderName(@"A");
+            Assert.AreEqual(ValidateInputResult.valid, result);
+
+            result = ValidateFolderName(@"ABCDEFGHIJKLMNOPQURSTUVWXYZabcedefhijklmnopqurstuvwxyz0123456789 -_");
+            Assert.AreEqual(ValidateInputResult.valid, result);
+
+            result = ValidateFolderName(@"-----");
+            Assert.AreEqual(ValidateInputResult.valid, result);
+            
+            result = ValidateFolderName(@"_____");
+            Assert.AreEqual(ValidateInputResult.valid, result);
+
+            result = ValidateFolderName(@"    ");
+            Assert.AreEqual(ValidateInputResult.invalid_blank, result);
+
+            result = ValidateFolderName(@" ");
+            Assert.AreEqual(ValidateInputResult.invalid_blank, result);
+
+            result = ValidateFolderName(@"New Folder <");
+            Assert.AreEqual(ValidateInputResult.invalid_character, result);
+
+            result = ValidateFolderName(@"New :: Folder");
+            Assert.AreEqual(ValidateInputResult.invalid_character, result);
+
+            result = ValidateFolderName(@"*New? Folder");
+            Assert.AreEqual(ValidateInputResult.invalid_character, result);
         }
 
         private static void TestCreateFolder(ArdiaAccount account)
