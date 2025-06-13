@@ -110,14 +110,15 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         private const string EXPORT_SETTINGS_COMMAND = @"export-settings";
 
         // Processing folders
+        private const string PREFIX_WORKDIR = "APD";
         private const string OUTPUT_MODELS = @"output_models";
-        private const string OUTPUT_SPECTRAL_LIBS = @"output_spectral_libs";
+        private const string OUTPUT_SPECTRAL_LIBS = @"output_libs";
 
         // Processing intermediate file names
         private const string INPUT_FILE_NAME = @"input.tsv";
         private const string SETTINGS_FILE_NAME = @"settings.yaml";
         private const string OUTPUT_SPECTRAL_LIB_FILE_NAME = @"predict.speclib.tsv";
-        private const string TRANSFORMED_OUTPUT_SPECTRAL_LIB_FILE_NAME = @"predict_transformed.speclib.tsv";
+        private const string TRANSFORMED_OUTPUT_SPECTRAL_LIB_FILE_NAME = @"predict_sky.speclib.tsv";
 
         // Column names for AlphaPeptDeep
         private const string SEQUENCE = @"sequence";
@@ -236,9 +237,9 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             string rootProcessingDir = Path.GetDirectoryName(libOutPath);
             if (string.IsNullOrEmpty(rootProcessingDir))
                 throw new ArgumentException($@"AlphapeptdeepLibraryBuilder libOutputPath {libOutPath} must be a full path.");
+
             rootProcessingDir = Path.Combine(rootProcessingDir, Path.GetFileNameWithoutExtension(libOutPath));
-            
-            EnsureWorkDir(rootProcessingDir, ALPHAPEPTDEEP);
+            EnsureWorkDir(rootProcessingDir, PREFIX_WORKDIR);
         }
 
         public bool BuildLibrary(IProgressMonitor progress)
@@ -415,9 +416,9 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
         public void ImportSpectralLibrary(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
-            string[] inputFile = { TransformedOutputSpectraLibFilepath };
-            string output = LibrarySpec.FilePath;
-            string incompleteBlibPath = BiblioSpecLiteSpec.GetRedundantName(output);
+            string[] inputFile = { TransformedOutputSpectraLibFilepath.ToLongPath() };
+            string output = LibrarySpec.FilePath.ToLongPath();
+            string incompleteBlibPath = BiblioSpecLiteSpec.GetRedundantName(output).ToLongPath();
             var build = new BlibBuild(incompleteBlibPath, inputFile);
 
             progress.UpdateProgress(progressStatus = progressStatus

@@ -20,6 +20,7 @@
 using System;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -72,6 +73,21 @@ namespace pwiz.SkylineTest
                 DirectoryEx.SafeDeleteLongPath(inputPath);
                 Assert.IsFalse(DirectoryEx.ExistsLongPath(inputPath));
                 inputPath = Path.GetDirectoryName(inputPath);
+            }
+            
+            // ToLongPath tests
+            AssertEx.ThrowsException<ArgumentException>(() => @"path\to\file.txt".ToLongPath());
+            AssertEx.ThrowsException<ArgumentException>(() => @"C:\path\to\..\file.txt".ToLongPath());
+            const string validPath = @"C:\path\to\file.txt";
+            AssertEx.NoExceptionThrown<Exception>(() => validPath.ToLongPath());
+            // Make sure calling multiple times does not cause multiple long-path prefixes
+            string testPath = validPath;
+            for (int i = 0; i < 3; i++)
+            {
+                string longPath = testPath.ToLongPath();
+                if (i > 0)
+                    Assert.AreEqual(testPath, longPath);
+                testPath = longPath;
             }
         }
     }

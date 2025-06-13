@@ -1018,11 +1018,6 @@ namespace pwiz.Skyline.Util
         {
             return Directory.Exists(path.ToLongPath());
         }
-
-        private static string ToLongPath(this string path)
-        {
-            return $@"\\?\{path}";
-        }
     }
 
     /// <summary>

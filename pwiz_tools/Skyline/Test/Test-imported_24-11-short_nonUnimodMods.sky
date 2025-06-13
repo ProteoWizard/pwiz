@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="utf-8"?>
+<srm_settings format_version="24.11" software_version="Skyline (64-bit : developer build) 24.1.1.465 (59721d1ac)">
+  <settings_summary name="Default">
+    <peptide_settings>
+      <enzyme name="Trypsin" cut="KR" no_cut="P" sense="C" />
+      <digest_settings max_missed_cleavages="0" />
+      <peptide_prediction use_measured_rts="true" measured_rt_window="2">
+        <predict_retention_time name="Test-imported-assay" time_window="10">
+          <irt_calculator name="Test-imported-assay" database_path="C:\Users\dshte\Documents\data\AlphaPeptDeep_test\Test-imported\Test-imported-assay.blib" />
+        </predict_retention_time>
+      </peptide_prediction>
+      <peptide_filter start="25" min_length="8" max_length="25" auto_select="true">
+        <peptide_exclusions />
+      </peptide_filter>
+      <peptide_libraries pick="library">
+        <bibliospec_lite_library name="APD" file_name_hint="APD_iRT11.blib" lsid="urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:nr:APD_iRT11.blib_Unfiltered.blib" revision="1" />
+      </peptide_libraries>
+      <peptide_modifications max_variable_mods="3" max_neutral_losses="1">
+        <static_modifications>
+          <static_modification name="Carbamidomethyl (C)" aminoacid="C" formula="H3C2NO" unimod_id="4" short_name="CAM" />
+          <static_modification name="Oxidation (M)" aminoacid="M" variable="true" formula="O" unimod_id="35" short_name="Oxi">
+            <potential_loss formula="H4COS" massdiff_monoisotopic="63.998285" massdiff_average="64.10701" />
+          </static_modification>
+          <static_modification name="Acetyl (N-term)" terminus="N" variable="true" formula="C2H2O" unimod_id="1" short_name="1Ac" />
+          <static_modification name="Acetyl-Oxidation (N-term-M)" aminoacid="M" terminus="N" variable="true" formula="C2H2O2" />
+        </static_modifications>
+        <heavy_modifications />
+      </peptide_modifications>
+    </peptide_settings>
+    <transition_settings>
+      <transition_prediction precursor_mass_type="Monoisotopic" fragment_mass_type="Monoisotopic" optimize_by="None" />
+      <transition_filter precursor_charges="2" product_charges="1" precursor_adducts="[M+H]" product_adducts="[M+]" fragment_types="y" small_molecule_fragment_types="f" fragment_range_first="m/z &gt; precursor" fragment_range_last="3 ions" precursor_mz_window="0" auto_select="true">
+        <measured_ion name="N-terminal to Proline" cut="P" sense="N" min_length="3" />
+      </transition_filter>
+      <transition_libraries ion_match_tolerance="0.5" min_ion_count="0" ion_count="3" pick_from="all" />
+      <transition_integration />
+      <transition_instrument min_mz="50" max_mz="2000" mz_match_tolerance="0.055" />
+    </transition_settings>
+    <data_settings document_guid="2cdfe389-9309-4f76-bbc0-9fa5d15b57ea" audit_logging="true" />
+  </settings_summary>
+  <peptide_list label_name="Biognosys standards" websearch_status="X" auto_manage_children="false">
+    <peptide auto_manage_children="false" sequence="MSGSHSNDEDDVVQVPETSSPTK" modified_sequence="M[+58.005479]SGSHSNDEDDVVQVPETSSPTK" calc_neutral_pep_mass="2503.065656" num_missed_cleavages="0" rt_calculator_score="0.377337247133255">
+      <variable_modifications>
+        <variable_modification index_aa="0" modification_name="Acetyl-Oxidation (N-term-M)" mass_diff="+58" />
+      </variable_modifications>
+      <precursor charge="2" calc_neutral_mass="2503.065656" precursor_mz="1252.540104" auto_manage_children="false" collision_energy="0" modified_sequence="M[+58.0]SGSHSNDEDDVVQVPETSSPTK">
+        <transition_data>CiBoFnGmQjwSb06SQHgCgAFWoQHwqZSFdlKSQKoBAMABBQogaBRxTHDqAynCkEB4AoABUaEBeohGdzDGkECqAQDAAQUKIGgScXnOFhDag41AeAKAAVahAVC8DPfoi41AqgEAwAEFCiBoEHGAYfnzTWuKQHgCgAFQoQFkeXDaXHOKQKoBAMABBQogaAxx8n1xqYpag0B4AoABVKEBPT7nj5lig0CqAQDAAQUKIGgIcbEXCtjO83pAeAKAAVOhAXKzBaXsA3tAqgEAwAEFCiBoBnFQ3zKnS4N1QHgCgAFQoQGTJcZ0aZN1QKoBAMABBQogaBZxJH7FGo5Bk0B4AoABRKEBFb85jpVFk0CqAQDAAQIKIGgYcX9QFynUzZRAeAKAAVahAYvgh5zb0ZRAqgEAwAECCiBoGnHZImk3GlqWQHgCgAFWoQEBAtaqIV6WQKoBAMABAgogaBxx6StIM1ZamEB4AoABUaEBUyyWpl1emECqAQDAAQIKIGgecUP+mUGc5plAeAKAAVahAclN5LSj6plAqgEAwAEC</transition_data>
+      </precursor>
+      <precursor charge="3" calc_neutral_mass="2503.065656" precursor_mz="835.362495" auto_manage_children="false" collision_energy="0" modified_sequence="M[+58.0]SGSHSNDEDDVVQVPETSSPTK">
+        <transition_data>CiBoFnGmQjwSb06SQHgCgAFWoQHwqZSFdlKSQKoBAMABBQogaBRxTHDqAynCkEB4AoABUaEBeohGdzDGkECqAQDAAQUKIGgScXnOFhDag41AeAKAAVahAVC8DPfoi41AqgEAwAEFCiBoEHGAYfnzTWuKQHgCgAFQoQFkeXDaXHOKQKoBAMABBQogaAxx8n1xqYpag0B4AoABVKEBPT7nj5lig0CqAQDAAQUKIGgGcVDfMqdLg3VAeAKAAVChAZMlxnRpk3VAqgEAwAEFCiBoEHGAYfnzTWuKQHgEgAFQoQHCqSjBa3t6QKoBAMABBQogaBBxRs7CnlZKi0B4AoABRKEB0r6HhWVSi0CqAQDAAQIKIGgScZV+wtmtUo9AeAKAAUWhAbKNmcC8Wo9AqgEAwAECCiBoFnEkfsUajkGTQHgCgAFEoQEVvzmOlUWTQKoBAMABAgogaBhxf1AXKdTNlEB4AoABVqEBi+CHnNvRlECqAQDAAQIKIGgacdkiaTcaWpZAeAKAAVahAQEC1qohXpZAqgEAwAEC</transition_data>
+      </precursor>
+      <precursor charge="4" calc_neutral_mass="2503.065656" precursor_mz="626.77369" auto_manage_children="false" collision_energy="0" modified_sequence="M[+58.0]SGSHSNDEDDVVQVPETSSPTK">
+        <transition_data>CiBoFHFMcOoDKcKQQHgCgAFRoQF6iEZ3MMaQQKoBAMABBQogaBJxec4WENqDjUB4AoABVqEBULwM9+iLjUCqAQDAAQUKIGgQcYBh+fNNa4pAeAKAAVChAWR5cNpcc4pAqgEAwAEFCiBoDnFBLnHk4WKHQHgCgAFFoQEcDfnK8GqHQKoBAMABBQogaAxx8n1xqYpag0B4AoABVKEBPT7nj5lig0CqAQDAAQUKIGgIcbEXCtjO83pAeAKAAVOhAXKzBaXsA3tAqgEAwAEFCiBoBnFQ3zKnS4N1QHgCgAFQoQGTJcZ0aZN1QKoBAMABBQogaBBxgGH5801rikB4BIABUKEBwqkowWt7ekCqAQDAAQUKIGgWcSR+xRqOQZNAeAKAAUShARW/OY6VRZNAqgEAwAECCiBoGHF/UBcp1M2UQHgCgAFWoQGL4Iec29GUQKoBAMABAgogaBZxJH7FGo5Bk0B4BIABRKEBRNeVAZ1Jg0CqAQDAAQIKIGgYcX9QFynUzZRAeASAAVahAbr44w/j1YRAqgEAwAEC</transition_data>
+      </precursor>
+    </peptide>
+    <peptide auto_manage_children="false" sequence="MSGSHSNDEDDVVQVPETSSPTK" modified_sequence="M[+42.010565]SGSHSNDEDDVVQVPETSSPTK" calc_neutral_pep_mass="2487.070742" num_missed_cleavages="0" rt_calculator_score="0.46566119790077209">
+      <variable_modifications>
+        <variable_modification index_aa="0" modification_name="Acetyl (N-term)" mass_diff="+42" />
+      </variable_modifications>
+      <precursor charge="2" calc_neutral_mass="2487.070742" precursor_mz="1244.542647" auto_manage_children="false" collision_energy="0" modified_sequence="M[+42.0]SGSHSNDEDDVVQVPETSSPTK">
+        <bibliospec_spectrum_info library_name="APD" score="0" score_type="UNKNOWN" count_measured="1" />
+        <transition_data>CipoEnF5zhYQ2oONQHgCgAFWoQFQvAz36IuNQKoBAMABBcoBBwgDFRy6Lz4KKmgQcYBh+fNNa4pAeAKAAVChAWR5cNpcc4pAqgEAwAEFygEHCAEVAACAPwoqaAxx8n1xqYpag0B4AoABVKEBPT7nj5lig0CqAQDAAQXKAQcIBBWp//I9CipoBnFQ3zKnS4N1QHgCgAFQoQGTJcZ0aZN1QKoBAMABBcoBBwgCFSOPYD4KIGgMcdiDSfHRoYNAeAKAAVOhAe2lxtfgqYNAqgEAwAECCiBoEHGdK0oJYcqKQHgCgAFEoQEoHA/wb9KKQKoBAMABAgogaBRxYw0XuXc1kUB4AoABRKEBovGGLH85kUCqAQDAAQIKIGgWcc8sCVCTAZNAeAKAAUShAcBtfcOaBZNAqgEAwAECCiBoGHEq/1pe2Y2UQHgCgAFWoQE2j8vR4JGUQKoBAMABAgogaBpxhdGsbB8alkB4AoABVqEBrLAZ4CYelkCqAQDAAQIKIGgccZTai2hbGphAeAKAAVGhAf7a2dtiHphAqgEAwAECCiBoHnHvrN12oaaZQHgCgAFWoQF0/CfqqKqZQKoBAMABAg==</transition_data>
+      </precursor>
+      <precursor charge="3" calc_neutral_mass="2487.070742" precursor_mz="830.030857" auto_manage_children="false" collision_energy="0" modified_sequence="M[+42.0]SGSHSNDEDDVVQVPETSSPTK">
+        <bibliospec_spectrum_info library_name="APD" score="0" score_type="UNKNOWN" count_measured="1" />
+        <transition_data>CipoFHFMcOoDKcKQQHgCgAFRoQF6iEZ3MMaQQKoBAMABBcoBBwgDFTZULz4KKmgScXnOFhDag41AeAKAAVahAVC8DPfoi41AqgEAwAEFygEHCAIVjQBRPgoqaBBxgGH5801rikB4AoABUKEBZHlw2lxzikCqAQDAAQXKAQcIARUAAIA/CipoDHHyfXGpilqDQHgCgAFUoQE9PuePmWKDQKoBAMABBcoBBwgFFQc41T0KKmgGcVDfMqdLg3VAeAKAAVChAZMlxnRpk3VAqgEAwAEFygEHCAQVfBoEPgogaBBxgGH5801rikB4BIABUKEBwqkowWt7ekCqAQDAAQUKIGgQcZ0rSglhyopAeAKAAUShASgcD/Bv0opAqgEAwAECCiBoEnHs20lEuNKOQHgCgAFFoQEI6yArx9qOQKoBAMABAgogaBRxYw0XuXc1kUB4AoABRKEBovGGLH85kUCqAQDAAQIKIGgWcc8sCVCTAZNAeAKAAUShAcBtfcOaBZNAqgEAwAECCiBoGHEq/1pe2Y2UQHgCgAFWoQE2j8vR4JGUQKoBAMABAgogaBpxhdGsbB8alkB4AoABVqEBrLAZ4CYelkCqAQDAAQI=</transition_data>
+      </precursor>
+      <precursor charge="4" calc_neutral_mass="2487.070742" precursor_mz="622.774962" auto_manage_children="false" collision_energy="0" modified_sequence="M[+42.0]SGSHSNDEDDVVQVPETSSPTK">
+        <bibliospec_spectrum_info library_name="APD" score="0" score_type="UNKNOWN" count_measured="1" />
+        <transition_data>CipoEnF5zhYQ2oONQHgCgAFWoQFQvAz36IuNQKoBAMABBcoBBwgEFetzwD0KKmgQcYBh+fNNa4pAeAKAAVChAWR5cNpcc4pAqgEAwAEFygEHCAEV/P5/PwoqaA5xQS5x5OFih0B4AoABRaEBHA35yvBqh0CqAQDAAQXKAQcIBRVa/b09CipoDHHyfXGpilqDQHgCgAFUoQE9PuePmWKDQKoBAMABBcoBBwgCFczmGz4KKmgGcVDfMqdLg3VAeAKAAVChAZMlxnRpk3VAqgEAwAEFygEHCAMVegr1PQogaBBxgGH5801rikB4BIABUKEBwqkowWt7ekCqAQDAAQUKIGgQcZ0rSglhyopAeAKAAUShASgcD/Bv0opAqgEAwAECCiBoEnHs20lEuNKOQHgCgAFFoQEI6yArx9qOQKoBAMABAgogaBRxYw0XuXc1kUB4AoABRKEBovGGLH85kUCqAQDAAQIKIGgWcc8sCVCTAZNAeAKAAUShAcBtfcOaBZNAqgEAwAECCiBoGHEq/1pe2Y2UQHgCgAFWoQE2j8vR4JGUQKoBAMABAgogaBZxzywJUJMBk0B4BIABRKEB74XZNqIJg0CqAQDAAQI=</transition_data>
+      </precursor>
+    </peptide>
+    <peptide auto_manage_children="false" sequence="YDVSFLKNRNFNVVVYDEGHMLK" modified_sequence="YDVSFLKNRNFNVVVYDEGHM[+15.994915]LK" calc_neutral_pep_mass="2802.379936" num_missed_cleavages="2" rt_calculator_score="0.57336199283599854">
+      <variable_modifications>
+        <variable_modification index_aa="20" modification_name="Oxidation (M)" mass_diff="+16" />
+      </variable_modifications>
+      <precursor charge="2" calc_neutral_mass="2802.379936" precursor_mz="1402.197244" auto_manage_children="false" collision_energy="0" modified_sequence="YDVSFLKNRNFNVVVYDEGHM[+16.0]LK">
+        <bibliospec_spectrum_info library_name="APD" score="0" score_type="UNKNOWN" count_measured="1" />
+        <transition_data>CipoEnGZgjXOBkqRQHgCgAFWoQEEKIBBDk6RQKoBAMABBcoBBwgFFXPZiz4KKmgQcXxgx3+Be49AeAKAAVmhARwNZGaQg49AqgEAwAEFygEHCAQVl1HYPgoqaA5xYeEkzf9iikB4AoABRKEB5Jj6sw5rikCqAQDAAQXKAQcIBhUDOYg+CipoDHGHokCfyMqGQHgCgAFFoQGooA2G19KGQKoBAMABBcoBBwgBFU5yQj8KKmgKcTnyQGRxwoJAeAKAAUehAcjR+0qAyoJAqgEAwAEFygEHCAMVSt/fPgoqaAZxT64pkJljeUB4AoABTaEBBh4IXrdzeUCqAQDAAQXKAQcIAhXUEuk+CiBoKnGo/dZOlLijQHgEgAFWoQGQWEHCm7yTQKoBAMABBQogaBpxVwVqMTjzmEB4AoABVqEB4J3fpD/3mECqAQDAAQIKIGgccbLXuz9+f5pAeAKAAVahAVa/LbOFg5pAqgEAwAECCiBoHnENqg1OxAucQHgCgAFWoQHM4HvByw+cQKoBAMABAgogaChxXHfzVE+4okB4BIABSKEBA/xDyFa8kkCqAQDAAQIKIGgqcfvNxHRh3qNAeASAAU2hASX3Kuho4pNAqgEAwAEC</transition_data>
+      </precursor>
+      <precursor charge="3" calc_neutral_mass="2802.379936" precursor_mz="935.133921" auto_manage_children="false" collision_energy="0" modified_sequence="YDVSFLKNRNFNVVVYDEGHM[+16.0]LK">
+        <bibliospec_spectrum_info library_name="APD" score="0" score_type="UNKNOWN" count_measured="1" />
+        <transition_data>CipoFHHzVIfcTNaSQHgCgAFWoQF6Sc5PVNqSQKoBAMABBcoBBwgDFccHkz4KKmgScZmCNc4GSpFAeAKAAVahAQQogEEOTpFAqgEAwAEFygEHCAIV0pfbPgoqaBBxfGDHf4F7j0B4AoABWaEBHA1kZpCDj0CqAQDAAQXKAQcIARWsjOg+CipoDnFh4STN/2KKQHgCgAFEoQHkmPqzDmuKQKoBAMABBcoBBwgGFbiAgT4KKmgMcYeiQJ/IyoZAeAKAAUWhAaigDYbX0oZAqgEAwAEFygEHCAQVmOuNPgoqaApxOfJAZHHCgkB4AoABR6EByNH7SoDKgkCqAQDAAQXKAQcIBxUSGkg+CipoBnFPrimQmWN5QHgCgAFNoQEGHghet3N5QKoBAMABBcoBBwgFFRvVhT4KIGgEcep7DcFxYXFAeAKAAUShAaI5HY6PcXFAqgEAwAECCiBoBnFUxVT6iZJ3QHgCgAFWoQF6v1XHp6J3QKoBAMABAgogaBhx/TIYI/Jml0B4BIABTqEBmZTtCQFvh0CqAQDAAQIKIGgacVcFajE485hAeASAAVahAQ+2OxhH+4hAqgEAwAECCiBoHHGy17s/fn+aQHgEgAFWoQGF14kmjYeKQKoBAMABAg==</transition_data>
+      </precursor>
+      <precursor charge="4" calc_neutral_mass="2802.379936" precursor_mz="701.60226" auto_manage_children="false" collision_energy="0" modified_sequence="YDVSFLKNRNFNVVVYDEGHM[+16.0]LK">
+        <bibliospec_spectrum_info library_name="APD" score="0" score_type="UNKNOWN" count_measured="1" />
+        <transition_data>CipoEnGZgjXOBkqRQHgCgAFWoQEEKIBBDk6RQKoBAMABBcoBBwgDFSXSsD4KKmgQcXxgx3+Be49AeAKAAVmhARwNZGaQg49AqgEAwAEFygEHCAEVLcEJPwoqaA5xYeEkzf9iikB4AoABRKEB5Jj6sw5rikCqAQDAAQXKAQcIAhUSr+I+CipoDHGHokCfyMqGQHgCgAFFoQGooA2G19KGQKoBAMABBcoBBwgFFVk9gT4KKmgKcTnyQGRxwoJAeAKAAUehAcjR+0qAyoJAqgEAwAEFygEHCAQVBrGLPgoqaAZxT64pkJljeUB4AoABTaEBBh4IXrdzeUCqAQDAAQXKAQcIBhWDwR8+CiBoEHF8YMd/gXuPQHgEgAFZoQF6PRxNn4t/QKoBAMABBQogaARx6nsNwXFhcUB4AoABRKEBojkdjo9xcUCqAQDAAQIKIGgYcf0yGCPyZpdAeASAAU6hAZmU7QkBb4dAqgEAwAECCiBoGnFXBWoxOPOYQHgEgAFWoQEPtjsYR/uIQKoBAMABAgogaBxxste7P35/mkB4BIABVqEBhdeJJo2HikCqAQDAAQIKIGgecQ2qDU7EC5xAeASAAVahAfv41zTTE4xAqgEAwAEC</transition_data>
+      </precursor>
+    </peptide>
+    <peptide auto_manage_children="false" sequence="EDMSYMTDFELHKLCCNFPNTLSK" modified_sequence="EDM[+15.994915]SYMTDFELHKLC[+57.021464]C[+57.021464]NFPNTLSK" calc_neutral_pep_mass="2995.286038" num_missed_cleavages="1" rt_calculator_score="0.70126734177271532">
+      <variable_modifications>
+        <variable_modification index_aa="2" modification_name="Oxidation (M)" mass_diff="+16" />
+      </variable_modifications>
+      <implicit_modifications>
+        <implicit_static_modifications>
+          <implicit_modification index_aa="14" modification_name="Carbamidomethyl (C)" mass_diff="+57" />
+          <implicit_modification index_aa="15" modification_name="Carbamidomethyl (C)" mass_diff="+57" />
+        </implicit_static_modifications>
+        <implicit_heavy_modifications />
+      </implicit_modifications>
+      <precursor charge="2" calc_neutral_mass="2995.286038" precursor_mz="1498.650295" auto_manage_children="false" collision_energy="0" modified_sequence="EDM[+16.0]SYMTDFELHKLC[+57.0]C[+57.0]NFPNTLSK">
+        <bibliospec_spectrum_info library_name="APD" score="0" score_type="UNKNOWN" count_measured="1" />
+        <transition_data>CipoGnFtUzwuGkeZQHgCgAFIoQFBRbShIUuZQKoBAMABBcoBBwgGFXeuRj4KKmgYce4JEtvdIpdAeAKAAUuhAV9DT07lJpdAqgEAwAEFygEHCAQVpPR5PgoqaBZxveDTnHwilUB4AoABTKEBD9tQEIQmlUCqAQDAAQXKAQcIAhV0ZYc+CipoFHGoVfSHJl6TQHgCgAFDoQFHTnD7LWKTQKoBAMABBcoBBwgDFVh+gT4KKmgScejewyUH3pBAeAKAAUOhAbHzHZkO4pBAqgEAwAEFygEHCAgVVRT2PQoqaBBxkZighs+7jEB4AoABTqEBNjKXbd7DjECqAQDAAQXKAQcIChVFQbQ9CipoDnGlL4ScdyuJQHgCgAFGoQE2tDuDhjOJQKoBAMABBcoBBwgFFTciVT4KKmgMcfCK4H/rkoRAeAKAAVChAUpxn2b6moRAqgEAwAEFygEHCAEVAACAPwoqaAhxh913DE/0e0B4AoABVKEBBA6Z2WwEfECqAQDAAQXKAQcIBxXQ4gc+CipoBHHLK9fbZiRtQHgCgAFToQF2Pxt3okRtQKoBAMABBcoBBwgJFZXY7j0KIGggceOkMO/hW59AeASAAUahAR7zx9XwY49AqgEAwAEFCiBoBHGhvI+jOYJuQHgCgAFEoQHi3ds+daJuQKoBAMABAg==</transition_data>
+      </precursor>
+      <precursor charge="3" calc_neutral_mass="2995.286038" precursor_mz="999.435955" auto_manage_children="false" collision_energy="0" modified_sequence="EDM[+16.0]SYMTDFELHKLC[+57.0]C[+57.0]NFPNTLSK">
+        <bibliospec_spectrum_info library_name="APD" score="0" score_type="UNKNOWN" count_measured="1" />
+        <transition_data>CipoGHHuCRLb3SKXQHgCgAFLoQFfQ09O5SaXQKoBAMABBcoBBwgGFXudUj4KKmgWcb3g05x8IpVAeAKAAUyhAQ/bUBCEJpVAqgEAwAEFygEHCAMVVGWqPgoqaBRxqFX0hyZek0B4AoABQ6EBR05w+y1ik0CqAQDAAQXKAQcIBBU5NaQ+CipoDnGlL4ScdyuJQHgCgAFGoQE2tDuDhjOJQKoBAMABBcoBBwgFFXdaXD4KKmgMcfCK4H/rkoRAeAKAAVChAUpxn2b6moRAqgEAwAEFygEHCAEVAACAPwoqaAhxh913DE/0e0B4AoABVKEBBA6Z2WwEfECqAQDAAQXKAQcIBxVAv0M+CiBoBnE7wmnBi6N1QHgCgAFMoQHc0g+PqbN1QKoBAMABBQoqaARxyyvX22YkbUB4AoABU6EBdj8bd6JEbUCqAQDAAQXKAQcIAhXDJsg+CiBoJnGXxcTmK2SiQHgEgAFNoQGKoxdaM2iSQKoBAMABBQogaCRxopdRLBdeoUB4BIABVKEBAl+wnx5ikUCqAQDAAQUKIGggceOkMO/hW59AeASAAUahAR7zx9XwY49AqgEAwAEFCiBoGnFtUzwuGkeZQHgEgAFIoQFwXRAVKU+JQKoBAMABBQogaARxobyPozmCbkB4AoABRKEB4t3bPnWibkCqAQDAAQIKIGgGccUCX9GtcXhAeAKAAU2hAfvHpZ7LgXhAqgEAwAEC</transition_data>
+      </precursor>
+      <precursor charge="4" calc_neutral_mass="2995.286038" precursor_mz="749.828785" auto_manage_children="false" collision_energy="0" modified_sequence="EDM[+16.0]SYMTDFELHKLC[+57.0]C[+57.0]NFPNTLSK">
+        <bibliospec_spectrum_info library_name="APD" score="0" score_type="UNKNOWN" count_measured="1" />
+        <transition_data>CipoFnG94NOcfCKVQHgCgAFMoQEP21AQhCaVQKoBAMABBcoBBwgEFfU1JT4KKmgUcahV9IcmXpNAeAKAAUOhAUdOcPstYpNAqgEAwAEFygEHCAUVR0IePgoqaA5xpS+EnHcriUB4AoABRqEBNrQ7g4YziUCqAQDAAQXKAQcIAxUOH0Y+CipoDHHwiuB/65KEQHgCgAFQoQFKcZ9m+pqEQKoBAMABBcoBBwgBFQAAgD8KKmgEccsr19tmJG1AeAKAAVOhAXY/G3eiRG1AqgEAwAEFygEHCAIVj16zPgogaCRxopdRLBdeoUB4BIABVKEBAl+wnx5ikUCqAQDAAQUKIGgicShiEcP+k6BAeASAAUShAZ03XzYGmJBAqgEAwAEFCiBoIHHjpDDv4VufQHgEgAFGoQEe88fV8GOPQKoBAMABBQogaB5xidLe4JsPnUB4BIABRaEBqNF5x6oXjUCqAQDAAQUKIGgccYPeG0NwC5tAeASAAUyhATjq8Cl/E4tAqgEAwAEFCiBoGnFtUzwuGkeZQHgEgAFIoQFwXRAVKU+JQKoBAMABBQogaBhx7gkS290il0B4BIABS6EBjlurwewqh0CqAQDAAQUKIGgEcaG8j6M5gm5AeAKAAUShAeLd2z51om5AqgEAwAEC</transition_data>
+      </precursor>
+    </peptide>
+    <peptide auto_manage_children="false" sequence="EDMSYMTDFELHKLCCNFPNTLSK" modified_sequence="EDMSYMTDFELHKLC[+57.021464]C[+57.021464]NFPNTLSK" calc_neutral_pep_mass="2979.291123" num_missed_cleavages="1" rt_calculator_score="0.80027419328689575">
+      <implicit_modifications>
+        <implicit_static_modifications>
+          <implicit_modification index_aa="14" modification_name="Carbamidomethyl (C)" mass_diff="+57" />
+          <implicit_modification index_aa="15" modification_name="Carbamidomethyl (C)" mass_diff="+57" />
+        </implicit_static_modifications>
+        <implicit_heavy_modifications />
+      </implicit_modifications>
+      <precursor charge="2" calc_neutral_mass="2979.291123" precursor_mz="1490.652837" auto_manage_children="false" collision_energy="0" modified_sequence="EDMSYMTDFELHKLC[+57.0]C[+57.0]NFPNTLSK">
+        <bibliospec_spectrum_info library_name="APD" score="0" score_type="UNKNOWN" count_measured="1" />
+        <transition_data>CipoGnFtUzwuGkeZQHgCgAFIoQFBRbShIUuZQKoBAMABBcoBBwgGFfWdQT4KKmgYce4JEtvdIpdAeAKAAUuhAV9DT07lJpdAqgEAwAEFygEHCAQVqEZyPgoqaBZxveDTnHwilUB4AoABTKEBD9tQEIQmlUCqAQDAAQXKAQcIAhVn5oQ+CipoFHGoVfSHJl6TQHgCgAFDoQFHTnD7LWKTQKoBAMABBcoBBwgDFdylgT4KKmgScejewyUH3pBAeAKAAUOhAbHzHZkO4pBAqgEAwAEFygEHCAkVQyf2PQoqaA5xpS+EnHcriUB4AoABRqEBNrQ7g4YziUCqAQDAAQXKAQcIBRUEmFM+CipoDHHwiuB/65KEQHgCgAFQoQFKcZ9m+pqEQKoBAMABBcoBBwgBFQAAgD8KKmgIcYfddwxP9HtAeAKAAVShAQQOmdlsBHxAqgEAwAEFygEHCAcVhFMPPgoqaARxyyvX22YkbUB4AoABU6EBdj8bd6JEbUCqAQDAAQXKAQcICBUGVgc+CiBoIHHjpDDv4VufQHgEgAFGoQEe88fV8GOPQKoBAMABBQogaARxobyPozmCbkB4AoABRKEB4t3bPnWibkCqAQDAAQIKIGgYcYbGE0FMapdAeAKAAUihAeeNcrRTbpdAqgEAwAEC</transition_data>
+      </precursor>
+      <precursor charge="3" calc_neutral_mass="2979.291123" precursor_mz="994.104317" auto_manage_children="false" collision_energy="0" modified_sequence="EDMSYMTDFELHKLC[+57.0]C[+57.0]NFPNTLSK">
+        <bibliospec_spectrum_info library_name="APD" score="0" score_type="UNKNOWN" count_measured="1" />
+        <transition_data>CipoGHHuCRLb3SKXQHgCgAFLoQFfQ09O5SaXQKoBAMABBcoBBwgFFeJnTj4KKmgWcb3g05x8IpVAeAKAAUyhAQ/bUBCEJpVAqgEAwAEFygEHCAMVI36gPgoqaBRxqFX0hyZek0B4AoABQ6EBR05w+y1ik0CqAQDAAQXKAQcIBBXN/JY+CipoDnGlL4ScdyuJQHgCgAFGoQE2tDuDhjOJQKoBAMABBcoBBwgGFVucST4KKmgMcfCK4H/rkoRAeAKAAVChAUpxn2b6moRAqgEAwAEFygEHCAEV6ux+PwoqaARxyyvX22YkbUB4AoABU6EBdj8bd6JEbUCqAQDAAQXKAQcIAhXrJ7s+CiBoJnGXxcTmK2SiQHgEgAFNoQGKoxdaM2iSQKoBAMABBQogaCRxopdRLBdeoUB4BIABVKEBAl+wnx5ikUCqAQDAAQUKIGggceOkMO/hW59AeASAAUahAR7zx9XwY49AqgEAwAEFCiBoGnFtUzwuGkeZQHgEgAFIoQFwXRAVKU+JQKoBAMABBQogaARxobyPozmCbkB4AoABRKEB4t3bPnWibkCqAQDAAQIKIGgGcflNYaXCcXdAeAKAAU2hAS8TqHLggXdAqgEAwAEC</transition_data>
+      </precursor>
+      <precursor charge="4" calc_neutral_mass="2979.291123" precursor_mz="745.830057" auto_manage_children="false" collision_energy="0" modified_sequence="EDMSYMTDFELHKLC[+57.0]C[+57.0]NFPNTLSK">
+        <bibliospec_spectrum_info library_name="APD" score="0" score_type="UNKNOWN" count_measured="1" />
+        <transition_data>CipoFnG94NOcfCKVQHgCgAFMoQEP21AQhCaVQKoBAMABBcoBBwgDFVnaWD4KKmgUcahV9IcmXpNAeAKAAUOhAUdOcPstYpNAqgEAwAEFygEHCAUVqR1MPgoqaA5xpS+EnHcriUB4AoABRqEBNrQ7g4YziUCqAQDAAQXKAQcIBBXLV1E+CipoDHHwiuB/65KEQHgCgAFQoQFKcZ9m+pqEQKoBAMABBcoBBwgBFQAAgD8KKmgEccsr19tmJG1AeAKAAVOhAXY/G3eiRG1AqgEAwAEFygEHCAIVk9y6PgogaCRxopdRLBdeoUB4BIABVKEBAl+wnx5ikUCqAQDAAQUKIGgicShiEcP+k6BAeASAAUShAZ03XzYGmJBAqgEAwAEFCiBoIHHjpDDv4VufQHgEgAFGoQEe88fV8GOPQKoBAMABBQogaBxxg94bQ3ALm0B4BIABTKEBOOrwKX8Ti0CqAQDAAQUKIGgacW1TPC4aR5lAeASAAUihAXBdEBUpT4lAqgEAwAEFCiBoGHHuCRLb3SKXQHgEgAFLoQGOW6vB7CqHQKoBAMABBQogaARxobyPozmCbkB4AoABRKEB4t3bPnWibkCqAQDAAQI=</transition_data>
+      </precursor>
+    </peptide>
+    <peptide auto_manage_children="false" sequence="EDMSYMTDFELHKLCCNFPNTLSK" modified_sequence="EDM[+15.994915]SYM[+15.994915]TDFELHKLC[+57.021464]C[+57.021464]NFPNTLSK" calc_neutral_pep_mass="3011.280953" num_missed_cleavages="1" rt_calculator_score="0.64679437875747681">
+      <variable_modifications>
+        <variable_modification index_aa="2" modification_name="Oxidation (M)" mass_diff="+16" />
+        <variable_modification index_aa="5" modification_name="Oxidation (M)" mass_diff="+16" />
+      </variable_modifications>
+      <implicit_modifications>
+        <implicit_static_modifications>
+          <implicit_modification index_aa="14" modification_name="Carbamidomethyl (C)" mass_diff="+57" />
+          <implicit_modification index_aa="15" modification_name="Carbamidomethyl (C)" mass_diff="+57" />
+        </implicit_static_modifications>
+        <implicit_heavy_modifications />
+      </implicit_modifications>
+      <precursor charge="2" calc_neutral_mass="3011.280953" precursor_mz="1506.647752" auto_manage_children="false" collision_energy="0" modified_sequence="EDM[+16.0]SYM[+16.0]TDFELHKLC[+57.0]C[+57.0]NFPNTLSK">
+        <bibliospec_spectrum_info library_name="APD" score="0" score_type="UNKNOWN" count_measured="1" />
+        <transition_data>CipoHHGD3htDcAubQHgCgAFMoQEJ0pS2dw+bQKoBAMABBcoBBwgLFZhRmT0KKmgacW1TPC4aR5lAeAKAAUihAUFFtKEhS5lAqgEAwAEFygEHCAYVzKlDPgoqaBhx7gkS290il0B4AoABS6EBX0NPTuUml0CqAQDAAQXKAQcIBBWOZX0+CipoFnG94NOcfCKVQHgCgAFMoQEP21AQhCaVQKoBAMABBcoBBwgCFeE+ij4KKmgUcahV9IcmXpNAeAKAAUOhAUdOcPstYpNAqgEAwAEFygEHCAMV/1iGPgoqaBJx6N7DJQfekEB4AoABQ6EBsfMdmQ7ikECqAQDAAQXKAQcICBWtjvw9CipoEHGRmKCGz7uMQHgCgAFOoQE2Mpdt3sOMQKoBAMABBcoBBwgKFV+xuD0KKmgOcaUvhJx3K4lAeAKAAUahATa0O4OGM4lAqgEAwAEFygEHCAUVDg1XPgoqaAxx8Irgf+uShEB4AoABUKEBSnGfZvqahECqAQDAAQXKAQcIARUAAIA/CipoCHGH3XcMT/R7QHgCgAFUoQEEDpnZbAR8QKoBAMABBcoBBwgHFSjpAD4KKmgEccsr19tmJG1AeAKAAVOhAXY/G3eiRG1AqgEAwAEFygEHCAkVYC/dPQogaCBx46Qw7+Fbn0B4BIABRqEBHvPH1fBjj0CqAQDAAQU=</transition_data>
+      </precursor>
+      <precursor charge="3" calc_neutral_mass="3011.280953" precursor_mz="1004.767594" auto_manage_children="false" collision_energy="0" modified_sequence="EDM[+16.0]SYM[+16.0]TDFELHKLC[+57.0]C[+57.0]NFPNTLSK">
+        <bibliospec_spectrum_info library_name="APD" score="0" score_type="UNKNOWN" count_measured="1" />
+        <transition_data>CipoFnG94NOcfCKVQHgCgAFMoQEP21AQhCaVQKoBAMABBcoBBwgEFeygrj4KKmgUcahV9IcmXpNAeAKAAUOhAUdOcPstYpNAqgEAwAEFygEHCAMVmyqvPgoqaBJx6N7DJQfekEB4AoABQ6EBsfMdmQ7ikECqAQDAAQXKAQcICBX6azw+CipoDnGlL4ScdyuJQHgCgAFGoQE2tDuDhjOJQKoBAMABBcoBBwgFFe+qYD4KKmgMcfCK4H/rkoRAeAKAAVChAUpxn2b6moRAqgEAwAEFygEHCAEVAACAPwoqaAhxh913DE/0e0B4AoABVKEBBA6Z2WwEfECqAQDAAQXKAQcIBxU2HUI+CipoBnE7wmnBi6N1QHgCgAFMoQHc0g+PqbN1QKoBAMABBcoBBwgGFTeVUT4KKmgEccsr19tmJG1AeAKAAVOhAXY/G3eiRG1AqgEAwAEFygEHCAIV2P7mPgogaCRxopdRLBdeoUB4BIABVKEBAl+wnx5ikUCqAQDAAQUKIGggceOkMO/hW59AeASAAUahAR7zx9XwY49AqgEAwAEFCiBoGnFtUzwuGkeZQHgEgAFIoQFwXRAVKU+JQKoBAMABBQogaAZxxQJf0a1xeEB4AoABTaEB+8elnsuBeECqAQDAAQI=</transition_data>
+      </precursor>
+      <precursor charge="4" calc_neutral_mass="3011.280953" precursor_mz="753.827514" auto_manage_children="false" collision_energy="0" modified_sequence="EDM[+16.0]SYM[+16.0]TDFELHKLC[+57.0]C[+57.0]NFPNTLSK">
+        <bibliospec_spectrum_info library_name="APD" score="0" score_type="UNKNOWN" count_measured="1" />
+        <transition_data>CipoFnG94NOcfCKVQHgCgAFMoQEP21AQhCaVQKoBAMABBcoBBwgEFRYrCD4KKmgUcahV9IcmXpNAeAKAAUOhAUdOcPstYpNAqgEAwAEFygEHCAUVVQgGPgoqaA5xpS+EnHcriUB4AoABRqEBNrQ7g4YziUCqAQDAAQXKAQcIAxVTKUA+CipoDHHwiuB/65KEQHgCgAFQoQFKcZ9m+pqEQKoBAMABBcoBBwgBFQAAgD8KKmgEccsr19tmJG1AeAKAAVOhAXY/G3eiRG1AqgEAwAEFygEHCAIVU6WuPgogaCRxopdRLBdeoUB4BIABVKEBAl+wnx5ikUCqAQDAAQUKIGgicShiEcP+k6BAeASAAUShAZ03XzYGmJBAqgEAwAEFCiBoIHHjpDDv4VufQHgEgAFGoQEe88fV8GOPQKoBAMABBQogaB5xidLe4JsPnUB4BIABRaEBqNF5x6oXjUCqAQDAAQUKIGgccYPeG0NwC5tAeASAAUyhATjq8Cl/E4tAqgEAwAEFCiBoGnFtUzwuGkeZQHgEgAFIoQFwXRAVKU+JQKoBAMABBQogaBhx7gkS290il0B4BIABS6EBjlurwewqh0CqAQDAAQU=</transition_data>
+      </precursor>
+    </peptide>
+    <peptide auto_manage_children="false" sequence="VLIFSLFTQVLDILEMVLSTLDYK" modified_sequence="VLIFSLFTQVLDILEM[+15.994915]VLSTLDYK" calc_neutral_pep_mass="2815.533308" num_missed_cleavages="0" rt_calculator_score="0.9006122350692749">
+      <variable_modifications>
+        <variable_modification index_aa="15" modification_name="Oxidation (M)" mass_diff="+16" />
+      </variable_modifications>
+      <precursor charge="2" calc_neutral_mass="2815.533308" precursor_mz="1408.77393" auto_manage_children="false" collision_energy="0" modified_sequence="VLIFSLFTQVLDILEM[+16.0]VLSTLDYK">
+        <bibliospec_spectrum_info library_name="APD" score="0" score_type="UNKNOWN" count_measured="1" />
+        <transition_data>CipoHHHf+UUJeg+aQHgCgAFMoQEhKK98gROaQKoBAMABBcoBBwgHFVmNuD4KKmgaccpuZvQjS5hAeAKAAUShAVmbzmcrT5hAqgEAwAEFygEHCAgVVfSwPgoqaBZxSMSUSLK6lEB4AoABTKEBc5L3u7m+lECqAQDAAQXKAQcIBhW3wNQ+CipoFHEyObUzXPaSQHgCgAFFoQGrBRenY/qSQKoBAMABBcoBBwgJFXyAsD4KKmgOcSaL+4+MM4pAeAKAAUyhAQUN5HabO4pAqgEAwAEFygEHCAIVS9MiPwoqaAxx+3Q8ZuCqhkB4AoABU6EBdfMiTe+yhkCqAQDAAQXKAQcIARUAAIA/CipoCnGIEFfOnvKDQHgCgAFUoQGFLAO1rfqDQKoBAMABBcoBBwgEFQDU6j4KKmgGcW/ZIf4hg3pAeAKAAUShAcLq+ss/k3pAqgEAwAEFygEHCAUVM0fdPgoqaARxvFtZorNSc0B4AoABWaEBS/ogcNFic0CqAQDAAQXKAQcIAxXsESI/CiBoBHGB64oZ4YRqQHgCgAFMoQFoM1a0HKVqQKoBAMABAgogaAZxFqJD4MhTdEB4AoABSaEB1EytreZjdECqAQDAAQIKIGgKcTTaqiSyeoFAeAKAAVOhAUawkgvBgoFAqgEAwAEC</transition_data>
+      </precursor>
+      <precursor charge="3" calc_neutral_mass="2815.533308" precursor_mz="939.518379" auto_manage_children="false" collision_energy="0" modified_sequence="VLIFSLFTQVLDILEM[+16.0]VLSTLDYK">
+        <bibliospec_spectrum_info library_name="APD" score="0" score_type="UNKNOWN" count_measured="1" />
+        <transition_data>CipoFnFIxJRIsrqUQHgCgAFMoQFzkve7ub6UQKoBAMABBcoBBwgKFV5+hT4KKmgUcTI5tTNc9pJAeAKAAUWhAasFF6dj+pJAqgEAwAEFygEHCAUVK8PQPgoqaBJxC2E1ljDykEB4AoABTaEBOx6OCTj2kECqAQDAAQXKAQcICBWasZ4+CipoEHHcL5+sGEyNQHgCgAFWoQHxT4CTJ1SNQKoBAMABBcoBBwgHFQ6IrT4KKmgOcSaL+4+MM4pAeAKAAUyhAQUN5HabO4pAqgEAwAEFygEHCAIV6mBEPwoqaAxx+3Q8ZuCqhkB4AoABU6EBdfMiTe+yhkCqAQDAAQXKAQcIARUAAIA/CipoCnGIEFfOnvKDQHgCgAFUoQGFLAO1rfqDQKoBAMABBcoBBwgGFYG9zj4KKmgIceIC0Cg9yoBAeAKAAUyhAfGOvg9M0oBAqgEAwAEFygEHCAkV2tuKPgoqaAZxb9kh/iGDekB4AoABRKEBwur6yz+TekCqAQDAAQXKAQcIBBV6Zew+CipoBHG8W1mis1JzQHgCgAFZoQFL+iBw0WJzQKoBAMABBcoBBwgDFZ0xLz8KIGgEcYHrihnhhGpAeAKAAUyhAWgzVrQcpWpAqgEAwAECCiBoBnEWokPgyFN0QHgCgAFJoQHUTK2t5mN0QKoBAMABAg==</transition_data>
+      </precursor>
+      <precursor charge="4" calc_neutral_mass="2815.533308" precursor_mz="704.890603" auto_manage_children="false" collision_energy="0" modified_sequence="VLIFSLFTQVLDILEM[+16.0]VLSTLDYK">
+        <bibliospec_spectrum_info library_name="APD" score="0" score_type="UNKNOWN" count_measured="1" />
+        <transition_data>CipoFHEyObUzXPaSQHgCgAFFoQGrBRenY/qSQKoBAMABBcoBBwgGFRQSSz4KKmgScQthNZYw8pBAeAKAAU2hATsejgk49pBAqgEAwAEFygEHCAcVGDBBPgoqaBBx3C+frBhMjUB4AoABVqEB8U+AkydUjUCqAQDAAQXKAQcIBBUbrpk+CipoDnEmi/uPjDOKQHgCgAFMoQEFDeR2mzuKQKoBAMABBcoBBwgCFYE0XT8KKmgMcft0PGbgqoZAeAKAAVOhAXXzIk3vsoZAqgEAwAEFygEHCAEVAACAPwoqaApxiBBXzp7yg0B4AoABVKEBhSwDta36g0CqAQDAAQXKAQcIBRUKWXA+CipoCHHiAtAoPcqAQHgCgAFMoQHxjr4PTNKAQKoBAMABBcoBBwgJFTXe8j0KKmgGcW/ZIf4hg3pAeAKAAUShAcLq+ss/k3pAqgEAwAEFygEHCAgVc3EtPgoqaARxvFtZorNSc0B4AoABWaEBS/ogcNFic0CqAQDAAQXKAQcIAxWV+78+CiBoBHGB64oZ4YRqQHgCgAFMoQFoM1a0HKVqQKoBAMABAgogaAZxFqJD4MhTdEB4AoABSaEB1EytreZjdECqAQDAAQIKIGgMcV/waU5eA4VAeAKAAUyhAdbJUzVtC4VAqgEAwAEC</transition_data>
+      </precursor>
+    </peptide>
+    <peptide auto_manage_children="false" sequence="LCCNFPNTLSKYQLHNDEWMQSGK" modified_sequence="LC[+57.021464]C[+57.021464]NFPNTLSKYQLHNDEWMQSGK" calc_neutral_pep_mass="2969.325869" num_missed_cleavages="1" rt_calculator_score="0.61342674493789673">
+      <implicit_modifications>
+        <implicit_static_modifications>
+          <implicit_modification index_aa="1" modification_name="Carbamidomethyl (C)" mass_diff="+57" />
+          <implicit_modification index_aa="2" modification_name="Carbamidomethyl (C)" mass_diff="+57" />
+        </implicit_static_modifications>
+        <implicit_heavy_modifications />
+      </implicit_modifications>
+      <precursor charge="2" calc_neutral_mass="2969.325869" precursor_mz="1485.67021" auto_manage_children="false" collision_energy="0" modified_sequence="LC[+57.0]C[+57.0]NFPNTLSKYQLHNDEWMQSGK">
+        <bibliospec_spectrum_info library_name="APD" score="0" score_type="UNKNOWN" count_measured="1" />
+        <transition_data>CipoFnGyYyMQX/6UQHgCgAFMoQEGqWeDZgKVQKoBAMABBcoBBwgIFUZ4yj4KKmgUcZ3YQ/sIOpNAeAKAAUihAT4ch24QPpNAqgEAwAEFygEHCAEVAACAPwoqaBJxP3PWp8wVkUB4AoABTqEBXBoiG9QZkUCqAQDAAQXKAQcIAxVmqzI/CipoDnH7BiY3CgOLQHgCgAFFoQF8vvsdGQuLQKoBAMABBcoBBwgFFWQXGD8KKmgMcaxWJvyy+oZAeAKAAVehAZzv6eLBAodAqgEAwAEFygEHCAQVODQrPwoqaApxfa1LjRAqgUB4AoABTaEBoPURdB8ygUCqAQDAAQXKAQcIAhW77WI/CipoCHFT6/1GeyN6QHgCgAFRoQEDx+kUmTN6QKoBAMABBcoBBwgGFUAUAz8KKmgGcY82jliLInJAeAKAAVOhAbsd6SWpMnJAqgEAwAEFygEHCAcVHrjMPgogaCZx/te5aSPGoUB4BIABUKEBEKEZ3SrKkUCqAQDAAQUKIGgEcdF2TN3VEXFAeAKAAUOhATP+O6rzIXFAqgEAwAECCiBoCHHVkSOdgRmBQHgCgAFOoQFFMh6EkCGBQKoBAMABAgogaApxizbHuQ2yhUB4AoABRqEBMXW6oBy6hUCqAQDAAQI=</transition_data>
+      </precursor>
+      <precursor charge="3" calc_neutral_mass="2969.325869" precursor_mz="990.782566" auto_manage_children="false" collision_energy="0" modified_sequence="LC[+57.0]C[+57.0]NFPNTLSKYQLHNDEWMQSGK">
+        <bibliospec_spectrum_info library_name="APD" score="0" score_type="UNKNOWN" count_measured="1" />
+        <transition_data>CipoFnGyYyMQX/6UQHgCgAFMoQEGqWeDZgKVQKoBAMABBcoBBwgJFd7+cj4KKmgUcZ3YQ/sIOpNAeAKAAUihAT4ch24QPpNAqgEAwAEFygEHCAIVZuoDPwoqaBJxP3PWp8wVkUB4AoABTqEBXBoiG9QZkUCqAQDAAQXKAQcIAxX6+uE+CipoDnH7BiY3CgOLQHgCgAFFoQF8vvsdGQuLQKoBAMABBcoBBwgIFWp/jD4KKmgMcaxWJvyy+oZAeAKAAVehAZzv6eLBAodAqgEAwAEFygEHCAYVNzWZPgoqaApxfa1LjRAqgUB4AoABTaEBoPURdB8ygUCqAQDAAQXKAQcIBBXSONc+CipoCHFT6/1GeyN6QHgCgAFRoQEDx+kUmTN6QKoBAMABBcoBBwgFFTC2qz4KKmgGcY82jliLInJAeAKAAVOhAbsd6SWpMnJAqgEAwAEFygEHCAEVj0o9PwoqaARxXfxtTxBkaUB4AoABR6EBtx9T60uEaUCqAQDAAQXKAQcIBxXU0Y4+CiBoJnH+17lpI8ahQHgEgAFQoQEQoRndKsqRQKoBAMABBQogaARx0XZM3dURcUB4AoABQ6EBM/47qvMhcUCqAQDAAQIKIGgGcdJRDmZTEntAeAKAAUOhAYpohTNxIntAqgEAwAEC</transition_data>
+      </precursor>
+      <precursor charge="4" calc_neutral_mass="2969.325869" precursor_mz="743.338743" auto_manage_children="false" collision_energy="0" modified_sequence="LC[+57.0]C[+57.0]NFPNTLSKYQLHNDEWMQSGK">
+        <bibliospec_spectrum_info library_name="APD" score="0" score_type="UNKNOWN" count_measured="1" />
+        <transition_data>CipoFHGd2EP7CDqTQHgCgAFIoQE+HIduED6TQKoBAMABBcoBBwgDFdRz6j4KKmgScT9z1qfMFZFAeAKAAU6hAVwaIhvUGZFAqgEAwAEFygEHCAIVj9QhPwoqaBBx1EUKZUGbjkB4AoABRKEBuLboS1CjjkCqAQDAAQXKAQcIBhXDj6o+CipoDHGsVib8svqGQHgCgAFXoQGc7+niwQKHQKoBAMABBcoBBwgFFVHKqz4KKmgKcX2tS40QKoFAeAKAAU2hAaD1EXQfMoFAqgEAwAEFygEHCAcV6T2oPgoqaAZxjzaOWIsickB4AoABU6EBux3pJakyckCqAQDAAQXKAQcIARV/yD8/CipoBHFd/G1PEGRpQHgCgAFHoQG3H1PrS4RpQKoBAMABBcoBBwgEFe1ysT4KIGgmcf7XuWkjxqFAeASAAVChARChGd0qypFAqgEAwAEFCiBoIHES290DtKueQHgEgAFMoQEzfqfqwrOOQKoBAMABBQogaB5x/U/+7l3nnEB4BIABU6EBa/HG1WzvjECqAQDAAQUKIGgUcZ3YQ/sIOpNAeASAAUihAW004+EXQoNAqgEAwAEFCiBoBHHRdkzd1RFxQHgCgAFDoQEz/juq8yFxQKoBAMABAg==</transition_data>
+      </precursor>
+    </peptide>
+    <peptide auto_manage_children="false" sequence="YDVIVTTYNLAAGNKYDVSFLKNR" modified_sequence="YDVIVTTYNLAAGNKYDVSFLKNR" calc_neutral_pep_mass="2763.423181" num_missed_cleavages="2" rt_calculator_score="0.7883676290512085">
+      <precursor charge="2" calc_neutral_mass="2763.423181" precursor_mz="1382.718866" auto_manage_children="false" collision_energy="0" modified_sequence="YDVIVTTYNLAAGNKYDVSFLKNR">
+        <bibliospec_spectrum_info library_name="APD" score="0" score_type="UNKNOWN" count_measured="1" />
+        <transition_data>CipoIHHsiEM20EOcQHgCgAFOoQEnyYSp10ecQKoBAMABBcoBBwgHFay7Tj4KKmgccYKtEixOt5hAeAKAAUGhAV99dp9Vu5hAqgEAwAEFygEHCAIVKOvgPgoqaBpxnUzcKiibl0B4AoABQaEBjTJNni+fl0CqAQDAAQXKAQcIBBWcv9I+CipoGHGWB+kpAn+WQHgCgAFHoQG75yOdCYOWQKoBAMABBcoBBwgDFSJC1T4KKmgSccUB9Pte0pFAeAKAAVmhAevgYG9m1pFAqgEAwAEFygEHCAYVZPpZPgoqaBBxLLzLRTyMjkB4AoABRKEBnk1YLEuUjkCqAQDAAQXKAQcICBV4Ujc+CipoDnFSfecXBfSKQHgCgAFWoQFjVWv+E/yKQKoBAMABBcoBBwgBFazFEz8KKmgMcZ3YQ/t424dAeAKAAVOhAXcSz+GH44dAqgEAwAEFygEHCAUVl2mUPgogaARx6nsNwXFhcUB4AoABRKEBojkdjo9xcUCqAQDAAQIKIGgGcVTFVPqJkndAeAKAAVahAXq/VcenondAqgEAwAECCiBoCHGq8dJN4qN+QHgCgAFJoQGa8tcaALR+QKoBAMABAgogaApxih2NQ31qgkB4AoABVqEBOTwIKoxygkCqAQDAAQI=</transition_data>
+      </precursor>
+      <precursor charge="3" calc_neutral_mass="2763.423181" precursor_mz="922.148336" auto_manage_children="false" collision_energy="0" modified_sequence="YDVIVTTYNLAAGNKYDVSFLKNR">
+        <bibliospec_spectrum_info library_name="APD" score="0" score_type="UNKNOWN" count_measured="1" />
+        <transition_data>CipoHHGCrRIsTreYQHgCgAFBoQFffXafVbuYQKoBAMABBcoBBwgEFZxShz4KKmgacZ1M3Coom5dAeAKAAUGhAY0yTZ4vn5dAqgEAwAEFygEHCAMVkr2TPgoqaBhxlgfpKQJ/lkB4AoABR6EBu+cjnQmDlkCqAQDAAQXKAQcIAhXqnpU+CipoEnHFAfT7XtKRQHgCgAFZoQHr4GBvZtaRQKoBAMABBcoBBwgFFWkDgj4KKmgQcSy8y0U8jI5AeAKAAUShAZ5NWCxLlI5AqgEAwAEFygEHCAcVIltGPgoqaA5xUn3nFwX0ikB4AoABVqEBY1Vr/hP8ikCqAQDAAQXKAQcIARUf3ZY+CipoDHGd2EP7eNuHQHgCgAFToQF3Es/hh+OHQKoBAMABBcoBBwgGFSMVTD4KIGgocV+4c2FcwqFAeASAAVahAT0t1NRjxpFAqgEAwAEFCiBoJnExz0paOfygQHgEgAFUoQGCHK3NQACRQKoBAMABBQogaCRxt5kK8SAyoEB4BIABVKEBHfVbZCg2kECqAQDAAQUKIGgEcep7DcFxYXFAeAKAAUShAaI5HY6PcXFAqgEAwAECCiBoBnFUxVT6iZJ3QHgCgAFWoQF6v1XHp6J3QKoBAMABAg==</transition_data>
+      </precursor>
+      <precursor charge="4" calc_neutral_mass="2763.423181" precursor_mz="691.863071" auto_manage_children="false" collision_energy="0" modified_sequence="YDVIVTTYNLAAGNKYDVSFLKNR">
+        <bibliospec_spectrum_info library_name="APD" score="0" score_type="UNKNOWN" count_measured="1" />
+        <transition_data>CipoEnHFAfT7XtKRQHgCgAFZoQHr4GBvZtaRQKoBAMABBcoBBwgCFbbvkD4KKmgOcVJ95xcF9IpAeAKAAVahAWNVa/4T/IpAqgEAwAEFygEHCAMVRch7PgoqaAxxndhD+3jbh0B4AoABU6EBdxLP4Yfjh0CqAQDAAQXKAQcIARWXEJg+CiBoJnExz0paOfygQHgEgAFUoQGCHK3NQACRQKoBAMABBQogaCRxt5kK8SAyoEB4BIABVKEBHfVbZCg2kECqAQDAAQUKIGgicZusUQ8R0J5AeASAAVmhAXKbFfYf2I5AqgEAwAEFCiBoIHHsiEM20EOcQHgEgAFOoQFW4eAc30uMQKoBAMABBQogaB5xlzjyQKR7mkB4BIABTKEBViKzJ7ODikCqAQDAAQUKIGgccYKtEixOt5hAeASAAUGhAY6V0hJdv4hAqgEAwAEFCiBoGnGdTNwqKJuXQHgEgAFBoQG8SqkRN6OHQKoBAMABBQogaARx6nsNwXFhcUB4AoABRKEBojkdjo9xcUCqAQDAAQIKIGgGcVTFVPqJkndAeAKAAVahAXq/VcenondAqgEAwAEC</transition_data>
+      </precursor>
+    </peptide>
+  </peptide_list>
+</srm_settings>
