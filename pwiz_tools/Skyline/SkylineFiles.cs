@@ -32,6 +32,7 @@ using Newtonsoft.Json.Linq;
 using pwiz.PanoramaClient;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -3684,7 +3685,7 @@ namespace pwiz.Skyline
             {
                 if (e is PanoramaServerException || e is WebException) return false;
 
-                MessageDlg.ShowWithException(this, TextUtil.LineSeparate(Resources.RemoteSession_FetchContents_There_was_an_error_communicating_with_the_server__, e.Message), e);
+                MessageDlg.ShowWithException(this, TextUtil.LineSeparate(CommonMsDataResources.RemoteSession_FetchContents_There_was_an_error_communicating_with_the_server__, e.Message), e);
                 return false;
             }
 
@@ -3711,7 +3712,7 @@ namespace pwiz.Skyline
                 return false;
             }
 
-            var zipFilePath = FileEx.GetTimeStampedFileName(fileName);
+            var zipFilePath = FileTimeEx.GetTimeStampedFileName(fileName);
             if (!ShareDocument(zipFilePath, shareType)) 
                 return false;
 
