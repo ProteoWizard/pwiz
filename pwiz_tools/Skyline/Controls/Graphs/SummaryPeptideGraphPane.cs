@@ -21,7 +21,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
@@ -225,11 +227,20 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public abstract class GraphData : Immutable
         {
+            protected Dictionary<ReferenceValue<ChromFileInfoId>, MsDataFileUri> _filePaths;
             // ReSharper disable PossibleMultipleEnumeration
             protected GraphData(SrmDocument document, TransitionGroupDocNode selectedGroup, PeptideGroupDocNode selectedProtein, 
                              int? iResult, DisplayTypeChrom displayType, GraphValues.IRetentionTimeTransformOp retentionTimeTransformOp, 
                              PaneKey paneKey)
             {
+                _filePaths = new Dictionary<ReferenceValue<ChromFileInfoId>, MsDataFileUri>();
+                if (document.MeasuredResults != null)
+                {
+                    foreach (var msDataFileInfo in document.Settings.MeasuredResults.MSDataFileInfos)
+                    {
+                        _filePaths[msDataFileInfo.FileId] = msDataFileInfo.FilePath;
+                    }
+                }
                 RetentionTimeTransformOp = retentionTimeTransformOp;
                 // Determine the shortest possible unique ID for each peptide or molecule
                 var sequences = new List<UniquePrefixGenerator.TargetLabel>();
@@ -581,7 +592,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 return pointPair;
             }
 
-            protected RetentionTimeValues ScaleRetentionTimeValues(ChromFileInfoId chromFileInfoId, RetentionTimeValues retentionTimeValues)
+            protected RetentionTimeValues ScaleRetentionTimeValues(ChromFileInfoId fileId, RetentionTimeValues retentionTimeValues)
             {
                 if (retentionTimeValues == null)
                 {
@@ -591,8 +602,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     return retentionTimeValues;
                 }
+
+                if (!_filePaths.TryGetValue(fileId, out var filePath))
+                {
+                    return null;
+                }
                 AlignmentFunction regressionFunction;
-                if (!RetentionTimeTransformOp.TryGetRegressionFunction(chromFileInfoId, out regressionFunction))
+                if (!RetentionTimeTransformOp.TryGetRegressionFunction(filePath, out regressionFunction))
                 {
                     return null;
                 }

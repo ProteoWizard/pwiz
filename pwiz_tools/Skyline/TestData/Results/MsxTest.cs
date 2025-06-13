@@ -93,7 +93,7 @@ namespace pwiz.SkylineTestData.Results
             // Load the file and check MsDataFileImpl
             using (var file = new MsDataFileImpl(dataPath))
             {
-                var filter = new SpectrumFilter(doc, null, null);
+                var filter = new SpectrumFilter(doc);
                 Assert.IsTrue(filter.EnabledMsMs);
                 var demultiplexer = new OverlapDemultiplexer(file, filter);
                 demultiplexer.ForceInitializeFile();
@@ -143,7 +143,7 @@ namespace pwiz.SkylineTestData.Results
             // Load the file and check MsDataFileImpl
             using (var file = new MsDataFileImpl(dataPath))
             {
-                var filter = new SpectrumFilter(doc, null, null);
+                var filter = new SpectrumFilter(doc);
                 Assert.IsTrue(filter.EnabledMsMs);
                 var demultiplexer = new MsxDemultiplexer(file, filter);
                 demultiplexer.ForceInitializeFile();
