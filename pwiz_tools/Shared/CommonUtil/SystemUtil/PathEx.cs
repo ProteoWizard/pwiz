@@ -163,23 +163,23 @@ namespace pwiz.Common.SystemUtil
             }
         }
 
+        private const string PREFIX_LONG_PATH = @"\\?\";
+
         /// <summary>
-        /// Wrapper around <see cref="Path.GetFullPath"/> that adds "\\?\", when absent, to make it a long path.  
-        /// If an error occurs, it adds the path to the exception message.
-        /// Eventually, this method might catch the exception and try to return something reasonable,
-        /// but, for now, we are trying to figure out the source of invalid paths.
+        /// Returns a path with a long-path prefix. If the passed in path already has
+        /// a long-path prefix it is returned as is. Otherwise, one is prepended.
         /// </summary>
-        public static String GetFullLongPath(String path)
+        /// <param name="path">Path to convert to long-path syntax. This must be a fully qualified path.</param>
+        public static string ToLongPath(this string path)
         {
-            String longPath = ! Path.GetFullPath(path).StartsWith(@"\\?\") ? @$"\\?\{Path.GetFullPath(path)}" : Path.GetFullPath(path);
-            try
-            {
-                return longPath;
-            }
-            catch (ArgumentException e)
-            {
-                throw AddPathToArgumentException(e, longPath);
-            }
+            // Note that Path.GetFullPath() will be equivalent to
+            // Path.Combine(Directory.GetCurrentDirectory(), path) for a relative path,
+            // which is rarely appropriate. So, using this function requires an already
+            // fully qualified path.
+            if (!Equals(path, Path.GetFullPath(path)))
+                throw new ArgumentException($@"Failed attempting to use long-path syntax for the path '{path}' which is not fully qualified.");
+            // Avoid adding the long-path prefix to a path that already has it.
+            return path.StartsWith(PREFIX_LONG_PATH) ? path : PREFIX_LONG_PATH + path;
         }
 
         private static ArgumentException AddPathToArgumentException(ArgumentException argumentException, string path)
@@ -337,7 +337,6 @@ namespace pwiz.Common.SystemUtil
             }
             return fileName;
         }
-
     }
 
     /// <summary>

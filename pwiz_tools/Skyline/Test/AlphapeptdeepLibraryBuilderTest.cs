@@ -85,15 +85,15 @@ namespace pwiz.SkylineTest
             var document = CreateTestSimpleDocument(peptides);
 
             TestGetPrecursorTable(document, SIMPLE_PRECURSOR_TABLE_ANSWER);
-            TestGetWarningMods(document, new List<string>()); // No warnings should be generated
+            TestGetWarningMods(document, Array.Empty<string>()); // No warnings should be generated
     
             document = CreateTestImportedNonUnimodModsDoc();
             TestGetPrecursorTable(document, MIXED_PRECURSOR_TABLE_ANSWER);
-            TestGetWarningMods(document, new List<string> { "Acetyl-Oxidation (N-term-M)"} ); // 1 warning is generated
+            TestGetWarningMods(document, new [] { "Acetyl-Oxidation (N-term-M)"} ); // 1 warning is generated
 
             document = CreateTestImportedOnlyUnimodModsDoc();
             TestGetPrecursorTable(document, MIXED_PRECURSOR_TABLE_ANSWER);
-            TestGetWarningMods(document, new List<string>()); // No warnings are generated
+            TestGetWarningMods(document, Array.Empty<string>()); // No warnings are generated
 
             TestValidateModifications_Supported();
             TestValidateModifications_Unsupported();
@@ -142,15 +142,7 @@ namespace pwiz.SkylineTest
         {
             var builder = new AlphapeptdeepLibraryBuilder(TEST_LIB_NAME, NeverBuiltBlib, document, IrtStandard.BIOGNOSYS_11);
             var warningList = builder.GetWarningMods();
-
-            Assert.AreEqual(expectedWarningMods.Count, warningList.Count);
-
-            var expected = "";
-            expected = string.Join(" ", expectedWarningMods);
-
-            var actual = string.Join(" ", warningList);
-            Assert.AreEqual(expected, actual);
-
+            CollectionAssert.AreEqual(expectedWarningMods.ToList(), warningList.ToList());
             CheckBuilderFiles(builder, false);
         }
 
@@ -281,10 +273,7 @@ namespace pwiz.SkylineTest
                 Assert.AreNotEqual(answer_modSites[i], modSites);
 
                 var warningList = builder.GetWarningMods();
-                var expected = "";
-                expected = string.Join(" ", answer_mods);
-                var actual = string.Join(" ", warningList);
-                Assert.AreEqual(expected, actual);
+                CollectionAssert.AreEqual(answer_mods.ToList(), warningList.ToList());
             }
             CheckBuilderFiles(builder, false);
         }
@@ -458,10 +447,10 @@ namespace pwiz.SkylineTest
         /// <param name="peptideList">List of <see cref="Peptide"/> to place into the document.</param>
         private SrmDocument CreateTestSimpleDocument(IEnumerable<Peptide> peptideList)
         {
-                return CreateTestDocumentInternal(CreatePeptideDocNodes(peptideList).ToArray());
+            return CreateTestDocumentInternal(CreatePeptideDocNodes(peptideList).ToArray());
         }
 
-        private SrmDocument CreateTestDocumentInternal(PeptideDocNode[] nodePepArray)
+        private static SrmDocument CreateTestDocumentInternal(PeptideDocNode[] nodePepArray)
         {
             var doc = new SrmDocument(SrmSettingsList.GetDefault());
 

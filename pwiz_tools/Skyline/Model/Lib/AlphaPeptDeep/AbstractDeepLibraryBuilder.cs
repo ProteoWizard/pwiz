@@ -26,6 +26,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Koina.Models;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
@@ -54,6 +55,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         }
 
         private DateTime _nowTime = DateTime.Now;
+        private IList<string> _warningMods;
 
         protected AbstractDeepLibraryBuilder(SrmDocument document, IrtStandard irtStandard)
         {
@@ -162,19 +164,21 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         protected abstract string ToolName { get; }
         
         protected abstract IList<ModificationType> ModificationTypes { get; }
-        private IList<string> _warningMods;
+
         protected internal bool ValidateModifications(ModifiedSequence modifiedSequence, out string mods, out string modSites)
         {
             var modsBuilder = new StringBuilder();
             var modSitesBuilder = new StringBuilder();
 
-            _warningMods ??= GetWarningMods();
+            // The list returned below is probably always short enough that determining
+            // if it contains a modification would not be greatly improved by caching a set
+            // for use here instead of the list.
+            var warningMods = GetWarningMods();
 
             bool unsupportedModification = false;
             for (var i = 0; i < modifiedSequence.ExplicitMods.Count; i++)
             {
                 var mod = modifiedSequence.ExplicitMods[i];
-                var modWarns = _warningMods.Where(m => m.Contains(mod.Name)).ToArray();
                 if (mod.UnimodId == null)
                 {
                     var msg = string.Format(ModelsResources.BuildPrecursorTable_UnsupportedModification, modifiedSequence, mod.Name, ToolName);
@@ -184,18 +188,16 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 }
 
                 var unimodIdWithName = mod.UnimodIdWithName;
-                var modNames = ModificationTypes.Where(m => unimodIdWithName.Contains(m.Accession)).ToArray();
-
-                if (modNames.Length != 0 && modWarns.Length != 0)
+                if (warningMods.Contains(mod.Name))
                 {
                     var msg = string.Format(ModelsResources.BuildPrecursorTable_Unimod_UnsupportedModification, modifiedSequence, mod.Name, unimodIdWithName, ToolName);
                     Messages.WriteAsyncUserMessage(msg);
                     unsupportedModification = true;
                     continue;
                 }
-                if (modNames.Length == 0)
-                    continue;
 
+                var modNames = ModificationTypes.Where(m => unimodIdWithName.Contains(m.Accession)).ToArray();
+                Assume.IsTrue(modNames.Length != 0);    // The warningMods test above should guarantee the mod is supported
                 string modName = GetModName(modNames.Single(), modifiedSequence.GetUnmodifiedSequence(), mod.IndexAA);
                 modsBuilder.Append(modName);
                 modSitesBuilder.Append((mod.IndexAA + 1).ToString()); // + 1 because alphapeptdeep mod_site number starts from 1 as the first amino acid
@@ -223,13 +225,16 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             if (warningMods.Count == 0)
                 return null;
 
-            var warningModString = string.Join(Environment.NewLine, warningMods);
+            var warningModString = string.Join(Environment.NewLine, warningMods.Select(w => w.Indent(1)));
             return string.Format(ModelResources.Alphapeptdeep_Warn_unknown_modification,
                 warningModString);
         }
         
         public IList<string> GetWarningMods()
         {
+            if (_warningMods != null)
+                return _warningMods;
+
             var resultList = new List<string>();
 
             // Build precursor table row by row
@@ -261,6 +266,8 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                     }
                 }
             }
+
+            _warningMods = resultList;
             return resultList;
         }
     }
