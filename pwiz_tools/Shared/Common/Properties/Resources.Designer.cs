@@ -297,6 +297,24 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Median.
+        /// </summary>
+        internal static string AggregateOperation_Median_Median {
+            get {
+                return ResourceManager.GetString("AggregateOperation_Median_Median", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Median {0}.
+        /// </summary>
+        internal static string AggregateOperation_Median_Median__0_ {
+            get {
+                return ResourceManager.GetString("AggregateOperation_Median_Median__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Min.
         /// </summary>
         internal static string AggregateOperation_Min_Min {
@@ -493,6 +511,24 @@ namespace pwiz.Common.Properties {
         internal static string ColumnLimitExceededColumn_TruncatedColumnCount__0__additional_columns_not_shown_ {
             get {
                 return ResourceManager.GetString("ColumnLimitExceededColumn_TruncatedColumnCount__0__additional_columns_not_shown_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Count Distinct.
+        /// </summary>
+        internal static string CountDistinctImpl_CountDistinctImpl_Count_Distinct {
+            get {
+                return ResourceManager.GetString("CountDistinctImpl_CountDistinctImpl_Count_Distinct", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Count Distinct {0}.
+        /// </summary>
+        internal static string CountDistinctImpl_CountDistinctImpl_Count_Distinct__0_ {
+            get {
+                return ResourceManager.GetString("CountDistinctImpl_CountDistinctImpl_Count_Distinct__0_", resourceCulture);
             }
         }
         
