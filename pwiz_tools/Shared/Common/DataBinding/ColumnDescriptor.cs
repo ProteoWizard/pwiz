@@ -197,15 +197,18 @@ namespace pwiz.Common.DataBinding
             }
         }
 
-        public ColumnDescriptor SetValueIndex(PropertyPath propertyPath, int valueIndex)
+        /// <summary>
+        /// Replace ancestor with a <see cref="Grouped"/> which gets its values 
+        /// </summary>
+        public ColumnDescriptor SetValueIndex(PropertyPath ancestorPropertyPath, int valueIndex)
         {
-            if (Equals(propertyPath, PropertyPath))
+            if (Equals(ancestorPropertyPath, PropertyPath))
             {
                 return new Grouped(this, valueIndex);
             }
 
             ColumnDescriptor clone = (ColumnDescriptor)MemberwiseClone();
-            clone.Parent = Parent.SetValueIndex(propertyPath, valueIndex);
+            clone.Parent = Parent.SetValueIndex(ancestorPropertyPath, valueIndex);
             return clone;
         }
         #endregion
@@ -412,6 +415,10 @@ namespace pwiz.Common.DataBinding
             }
         }
 
+        /// <summary>
+        /// ColumnDescriptor which gets its value from a particular array element in the RowItem.
+        /// This is used in pivoted reports.
+        /// </summary>
         private class Grouped : ColumnDescriptor
         {
             private ColumnDescriptor _originalColumnDescriptor;

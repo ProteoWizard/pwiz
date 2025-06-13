@@ -204,7 +204,6 @@ namespace pwiz.Common.DataBinding
                         // Ignore
                     }
                 }
-
                 return _calculator(doubleValues);
             }
 
