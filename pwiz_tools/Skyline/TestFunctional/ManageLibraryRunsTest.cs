@@ -109,7 +109,7 @@ namespace pwiz.SkylineTestFunctional
             foreach (var file in datafiles)
             {
                 Assert.AreEqual(0, file.BestSpectrum);
-                Assert.AreEqual(0, file.MatchedSpectrum);
+                Assert.AreNotEqual(0, file.MatchedSpectrum);
                 Assert.AreEqual(0, file.ScoreThresholds.Count);
             }
 

@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Model.Lib {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class LibResources {
@@ -229,6 +229,24 @@ namespace pwiz.Skyline.Model.Lib {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Reading entries from {0} library.
+        /// </summary>
+        public static string BiblioSpecLiteLibrary_ReadFromDatabase_Reading_entries_from__0__library {
+            get {
+                return ResourceManager.GetString("BiblioSpecLiteLibrary_ReadFromDatabase_Reading_entries_from__0__library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reading retention times from {0}.
+        /// </summary>
+        public static string BiblioSpecLiteLibrary_ReadFromDatabase_Reading_retention_times_from__0_ {
+            get {
+                return ResourceManager.GetString("BiblioSpecLiteLibrary_ReadFromDatabase_Reading_retention_times_from__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The redundant library {0} does not exist..
         /// </summary>
         public static string BiblioSpecLiteLibrary_ReadRedundantSpectrum_The_redundant_library__0__does_not_exist {
@@ -289,8 +307,7 @@ namespace pwiz.Skyline.Model.Lib {
         /// </summary>
         public static string EncyclopeDiaHelpers_ConvertFastaToKoinaInputCsv_Converting_FASTA_to_Koina_input {
             get {
-                return ResourceManager.GetString("EncyclopeDiaHelpers_ConvertFastaToKoinaInputCsv_Converting_FASTA_to_Koina_input" +
-                        "", resourceCulture);
+                return ResourceManager.GetString("EncyclopeDiaHelpers_ConvertFastaToKoinaInputCsv_Converting_FASTA_to_Koina_input", resourceCulture);
             }
         }
         
@@ -299,8 +316,8 @@ namespace pwiz.Skyline.Model.Lib {
         /// </summary>
         public static string EncyclopeDiaHelpers_ConvertKoinaOutputToDlib_Converting_Koina_output_to_EncyclopeDia_library {
             get {
-                return ResourceManager.GetString("EncyclopeDiaHelpers_ConvertKoinaOutputToDlib_Converting_Koina_output_to_Encyclo" +
-                        "peDia_library", resourceCulture);
+                return ResourceManager.GetString("EncyclopeDiaHelpers_ConvertKoinaOutputToDlib_Converting_Koina_output_to_Encyclope" +
+                        "Dia_library", resourceCulture);
             }
         }
         

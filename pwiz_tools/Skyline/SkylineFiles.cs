@@ -3297,9 +3297,6 @@ namespace pwiz.Skyline
                             string redundantDocLibPath = BiblioSpecLiteSpec.GetRedundantName(docLibPath);
                             FileEx.SafeDelete(redundantDocLibPath);
 
-                            string docLibCachePath = BiblioSpecLiteLibrary.GetLibraryCachePath(docLibPath);
-                            FileEx.SafeDelete(docLibCachePath);
-
                             string midasLibPath = MidasLibSpec.GetLibraryFileName(DocumentFilePath);
                             FileEx.SafeDelete(midasLibPath);
                         }
