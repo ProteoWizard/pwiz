@@ -25,7 +25,6 @@ using System.Data.SQLite;
 using System.Globalization;
 using System.Linq;
 using System.Security.Cryptography;
-using System.Web.SessionState;
 using pwiz.Common.Database.NHibernate;
 using pwiz.Common.SystemUtil;
 

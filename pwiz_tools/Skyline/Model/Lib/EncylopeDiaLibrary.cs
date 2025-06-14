@@ -412,7 +412,6 @@ namespace pwiz.Skyline.Model.Lib
 
             try
             {
-                var start = DateTime.UtcNow;
                 ValueCache valueCache = new ValueCache();
                 using (var stream = loader.StreamManager.CreateStream(CachePath, FileMode.Open, true))
                 {
@@ -438,7 +437,6 @@ namespace pwiz.Skyline.Model.Lib
                         spectrumInfos.Add(ElibSpectrumInfo.Read(valueCache, stream));
                     }
                     SetLibraryEntries(spectrumInfos);
-                    Console.Out.WriteLine("Loaded {0} in {1}", CachePath, DateTime.UtcNow - start);
                     return true;
                 }
             }

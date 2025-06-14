@@ -617,7 +617,7 @@ namespace pwiz.Skyline.Model.Lib
             var librarySourceFiles = new List<BiblioLiteSourceInfo>();
             bool hasRetentionTimesTable = SqliteOperations.TableExists(_sqliteConnection.Connection, @"RetentionTimes");
             int segmentCount = hasRetentionTimesTable ? 2 : 1;
-            status = status.ChangeSegments(0, segmentCount).ChangeMessage(string.Format("Reading entries from {0} library", Path.GetFileName(FilePath)));
+            status = status.ChangeSegments(0, segmentCount).ChangeMessage(string.Format(LibResources.BiblioSpecLiteLibrary_ReadFromDatabase_Reading_entries_from__0__library, Path.GetFileName(FilePath)));
             using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
             {
                 // First get header information
@@ -832,10 +832,9 @@ namespace pwiz.Skyline.Model.Lib
             }
 
             var valueCache = new ValueCache();
-            var startTime = DateTime.UtcNow;
             if (hasRetentionTimesTable) // Only a filtered library will have this table
             {
-                status = status.ChangeSegments(1, segmentCount).ChangeMessage(string.Format("Reading retention times from {0}", Path.GetFileName(FilePath)));
+                status = status.ChangeSegments(1, segmentCount).ChangeMessage(string.Format(LibResources.BiblioSpecLiteLibrary_ReadFromDatabase_Reading_retention_times_from__0_, Path.GetFileName(FilePath)));
                 var retentionTimeReader = new RetentionTimeReader(FilePath, schemaVer);
                 retentionTimeReader.ReadAllRows(loader, ref status, rows);
                 if (loader.IsCanceled)
@@ -868,8 +867,6 @@ namespace pwiz.Skyline.Model.Lib
                     libraryEntries[i] = libraryEntry;
                 }
             }
-            Console.Out.WriteLine("Read retention times in {0}", DateTime.UtcNow.Subtract(startTime));
-
 
             _librarySourceFiles = librarySourceFiles.ToArray();
             _libraryFiles = new LibraryFiles(_librarySourceFiles.Select(file => file.FilePath));
@@ -913,10 +910,7 @@ namespace pwiz.Skyline.Model.Lib
             loader.UpdateProgress(status);
             try
             {
-                var start = DateTime.UtcNow;
-                bool result = ReadFromDatabase(loader, status);
-                Console.Out.WriteLine("Load Library {0} in {1}", FilePath, DateTime.UtcNow.Subtract(start));
-                if (result)
+                if (ReadFromDatabase(loader, status))
                 {
                     return true;
                 }
