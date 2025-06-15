@@ -68,9 +68,24 @@ namespace pwiz.SkylineTestConnected
             // Test scenarios 
             TestValidateFolderName();
 
+            TestAccountHasCredentials(account);
+
             TestCreateFolder(account);
 
             TestSuccessfulUpload(account);
+        }
+
+        private static void TestAccountHasCredentials(ArdiaAccount account)
+        {
+            var ardiaClient = ArdiaClient.Create(account);
+
+            // Verify values needed to authenticate this account are available. These
+            // asserts leak implementation details but are useful to avoid chasing 
+            // test failures.
+            Assert.IsNotNull(ArdiaCredentialHelper.GetApplicationCode(account));
+            Assert.IsNotNull(ArdiaCredentialHelper.GetToken(account));
+
+            Assert.IsTrue(ardiaClient.HasCredentials);
         }
 
         private static void TestValidateFolderName()
@@ -106,22 +121,19 @@ namespace pwiz.SkylineTestConnected
             Assert.AreEqual(ValidateInputResult.invalid_character, result);
         }
 
+        // TODO: enable test. Test passes if the ArdiaAccount has Super Admin role but fails when run as a Tester
         private static void TestCreateFolder(ArdiaAccount account)
         {
             var ardiaClient = ArdiaClient.Create(account);
 
-            // ardiaClient.CreateFolder(@"/ZZZ-Document-Upload", @"NewFolder1", null);
-
-            // TODO: fix. DELETE works in Python but not .NET?!
-            // ardiaClient.DeleteFolder(@"/ZZZ-Document-Upload/NewFolder1");
+            ardiaClient.CreateFolder(@"/ZZZ-Document-Upload", @"NewFolder01", null);
+            ardiaClient.DeleteFolder(@"/ZZZ-Document-Upload/NewFolder01");
         }
 
+        // TODO: enable upload. Skipping for now because Tester cannot delete files so uploads need to be removed manually
         private static void TestSuccessfulUpload(ArdiaAccount account) 
         {
             var publishDlg = ShowDialog<PublishDocumentDlgArdia>(() => SkylineWindow.PublishToArdia());
-
-            // TODO: re-enable upload. Skipping for now. It works if the test account's role is Super Admin
-            //       but tests run as Tester role.
             publishDlg.SkipUpload = true;
 
             WaitForConditionUI(() => publishDlg.IsLoaded);
@@ -131,7 +143,8 @@ namespace pwiz.SkylineTestConnected
 
             RunUI(() => publishDlg.SelectItem(DEFAULT_DIRECTORY_NAME));
 
-            var docUploadedDlg = ShowDialog<MessageDlg>(publishDlg.OkDialog);
+            var shareTypeDlg = ShowDialog<ShareTypeDlg>(publishDlg.OkDialog);
+            var docUploadedDlg = ShowDialog<MessageDlg>(shareTypeDlg.OkDialog);
             OkDialog(docUploadedDlg, docUploadedDlg.ClickOk);
 
             Assert.AreEqual(ArdiaClient.URL_PATH_SEPARATOR + DEFAULT_DIRECTORY_NAME, publishDlg.DestinationPath);

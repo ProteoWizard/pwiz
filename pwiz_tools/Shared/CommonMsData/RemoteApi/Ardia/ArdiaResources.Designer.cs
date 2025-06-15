@@ -188,6 +188,15 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error deleting folder {0}..
+        /// </summary>
+        public static string DeleteFolder_Error {
+            get {
+                return ResourceManager.GetString("DeleteFolder_Error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to New Folder.
         /// </summary>
         public static string FileUpload_DefaultNewFolderName {

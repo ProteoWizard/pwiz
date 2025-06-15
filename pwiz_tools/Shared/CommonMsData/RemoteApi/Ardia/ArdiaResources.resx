@@ -165,4 +165,7 @@
   <data name="CreateFolder_Error_IllegalCharacter" xml:space="preserve">
     <value>Folder names cannot include any of these characters {0}.</value>
   </data>
+  <data name="DeleteFolder_Error" xml:space="preserve">
+    <value>Error deleting folder {0}.</value>
+  </data>
 </root>

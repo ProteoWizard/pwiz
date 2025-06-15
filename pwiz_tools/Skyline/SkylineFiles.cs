@@ -3513,6 +3513,7 @@ namespace pwiz.Skyline
 
         // BUG: Removing RemoteAccounts using EditRemoteAccountsDlg may unexpectedly leave registered Ardia accounts intact
         // CONSIDER: when should an upload be split into multiple pieces?
+        // CONSIDER: do un-saved Skyline documents need to be saved before being published?
         public void PublishToArdia()
         {
             Assume.IsTrue(HasRegisteredArdiaAccount, @"Expected to find a registered Ardia account but found none");
@@ -3523,25 +3524,31 @@ namespace pwiz.Skyline
             // if (!ardiaAccount.HasToken())
             //     ardiaAccount.GetAuthenticatedHttpClient();
 
-            // CONSIDER: do un-saved Skyline documents need to be saved first?
             var localFileName = DocumentFilePath;
+            var documentCacheVersion = SkylineVersion.SupportedForSharing().FirstOrDefault();
+
             using var publishDlg = new PublishDocumentDlgArdia(this, ardiaAccounts, localFileName, GetFileFormatOnDisk());
-            if (publishDlg.ShowDialog(this) == DialogResult.OK)
+            if (publishDlg.ShowDialog(this) == DialogResult.Cancel)
             {
-                var fileName = publishDlg.FileName;
-                var shareType = publishDlg.ShareType;
-            
-                // CONSIDER: confirm upload before starting to send the .sky.zip file?
-                // var confirmMsg = string.Format(ArdiaResources.Ardia_FileUpload_ConfirmUploadToPath, Path.GetFileName(localZipFile), destinationFolderPath);
-                // if (MultiButtonMsgDlg.Show(this, confirmMsg, MessageBoxButtons.YesNo) != DialogResult.Yes)
-                //     return;
-            
-                // CONSIDER: remove local .sky.zip file?
-                if (ShareDocument(fileName, shareType))
-                {
-                    publishDlg.Upload(this);
-                }
+                return;
             }
+
+            using var shareTypeDlg = new ShareTypeDlg(Document, DocumentFilePath, GetFileFormatOnDisk(), documentCacheVersion, true);
+            if (shareTypeDlg.ShowDialog(this) == DialogResult.Cancel)
+            {
+                return;
+            }
+
+            var fileName = publishDlg.FileName;
+            var shareType = shareTypeDlg.ShareType;
+
+            // CONSIDER: remove local .sky.zip file?
+            if (!ShareDocument(fileName, shareType))
+            {
+                return;
+            }
+
+            publishDlg.Upload(this);
         }
 
         private void publishMenuItem_Click(object sender, EventArgs e)

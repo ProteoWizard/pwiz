@@ -248,6 +248,7 @@ namespace pwiz.Skyline.Alerts
         private void SetSavedArdiaRegistrationData(ArdiaRegistrationCodeEntry entry)
         {
             Settings.Default.ArdiaRegistrationCodeEntries[_ardiaServerURL_BaseURL] = entry;
+            ArdiaCredentialHelper.SetApplicationCode(_ardiaServerURL_BaseURL, entry.ClientApplicationCode);
         }
 
         /// <summary>
