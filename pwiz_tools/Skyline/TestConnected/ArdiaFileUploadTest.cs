@@ -70,7 +70,7 @@ namespace pwiz.SkylineTestConnected
 
             TestAccountHasCredentials(account);
 
-            TestCreateFolder(account);
+            // TestCreateFolder(account);
 
             TestSuccessfulUpload(account);
         }
@@ -122,13 +122,20 @@ namespace pwiz.SkylineTestConnected
         }
 
         // TODO: enable test. Test passes if the ArdiaAccount has Super Admin role but fails when run as a Tester
-        private static void TestCreateFolder(ArdiaAccount account)
-        {
-            var ardiaClient = ArdiaClient.Create(account);
-
-            ardiaClient.CreateFolder(@"/ZZZ-Document-Upload", @"NewFolder01", null);
-            ardiaClient.DeleteFolder(@"/ZZZ-Document-Upload/NewFolder01");
-        }
+        // private static void TestCreateFolder(ArdiaAccount account)
+        // {
+        //     var ardiaClient = ArdiaClient.Create(account);
+        //
+        //     ardiaClient.CreateFolder(@"/ZZZ-Document-Upload", @"NewFolder01", null);
+        //     ardiaClient.DeleteFolder(@"/ZZZ-Document-Upload/NewFolder01");
+        // }
+        // private static void TestCreateFolder(ArdiaAccount account)
+        // {
+        //     var ardiaClient = ArdiaClient.Create(account);
+        //
+        //     ardiaClient.CreateFolder(@"/ZZZ-Document-Upload", @"NewFolder01", null);
+        //     ardiaClient.DeleteFolder(@"/ZZZ-Document-Upload/NewFolder01");
+        // }
 
         // TODO: enable upload. Skipping for now because Tester cannot delete files so uploads need to be removed manually
         private static void TestSuccessfulUpload(ArdiaAccount account) 

@@ -33,7 +33,6 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.FileUI
 {
-    // TODO: use ShareTypeDlg a la Panorama uploads
     // CONSIDER: Esc key cancels creating a new folder
     public class PublishDocumentDlgArdia : PublishDocumentDlgBase
     {
@@ -252,9 +251,6 @@ namespace pwiz.Skyline.FileUI
         {
             DestinationPath = DestinationPathFor(treeViewFolders.SelectedNode);
 
-            // TODO: support ShareTypeDlg and refactor PanoramaPublishUtil. For now, set a default.
-            ShareType = ShareType.DEFAULT;
-            
             DialogResult = DialogResult.OK;
         }
 

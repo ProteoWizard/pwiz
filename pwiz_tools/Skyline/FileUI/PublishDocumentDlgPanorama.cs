@@ -71,6 +71,7 @@ namespace pwiz.Skyline.FileUI
         }
 
         public IPanoramaPublishClient PanoramaPublishClient { get; set; }
+        public ShareType ShareType { get; private set; }
         public bool ShowAnonymousServers { get { return cbAnonymousServers.Checked; } set { cbAnonymousServers.Checked = value; } }
         public bool CbAnonymousServersVisible => cbAnonymousServers.Visible;
 
