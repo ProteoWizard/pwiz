@@ -61,6 +61,69 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Do you want to upload {0} to Ardia at {1}?.
+        /// </summary>
+        public static string Ardia_FileUpload_ConfirmUploadToPath {
+            get {
+                return ResourceManager.GetString("Ardia_FileUpload_ConfirmUploadToPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error creating the Skyline document.
+        /// </summary>
+        public static string Ardia_FileUpload_CreateDocumentError {
+            get {
+                return ResourceManager.GetString("Ardia_FileUpload_CreateDocumentError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select.
+        /// </summary>
+        public static string Ardia_FileUpload_SelectDestinationButtonLabel {
+            get {
+                return ResourceManager.GetString("Ardia_FileUpload_SelectDestinationButtonLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select a destination folder.
+        /// </summary>
+        public static string Ardia_FileUpload_SelectDestinationFolderLabel {
+            get {
+                return ResourceManager.GetString("Ardia_FileUpload_SelectDestinationFolderLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error staging the Skyline document.
+        /// </summary>
+        public static string Ardia_FileUpload_StageDocumentError {
+            get {
+                return ResourceManager.GetString("Ardia_FileUpload_StageDocumentError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Successfully uploaded to Ardia..
+        /// </summary>
+        public static string Ardia_FileUpload_SuccessfulUpload {
+            get {
+                return ResourceManager.GetString("Ardia_FileUpload_SuccessfulUpload", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error uploading the Skyline document.
+        /// </summary>
+        public static string Ardia_FileUpload_UploadFileError {
+            get {
+                return ResourceManager.GetString("Ardia_FileUpload_UploadFileError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to open Ardia connection.
         /// </summary>
         public static string ArdiaAccount_GetAuthenticatedHttpClient_Failed_to_open_Ardia_connection {
@@ -76,6 +139,69 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia {
             get {
                 return ResourceManager.GetString("ArdiaUrl_OpenMsDataFile_cannot_open_an_ArdiaUrl_because_it_is_not_a_RAW_file_URL_" +
                         "with_a_StorageId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error creating folder {0}.
+        /// </summary>
+        public static string CreateFolder_Error {
+            get {
+                return ResourceManager.GetString("CreateFolder_Error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Folder names cannot be blank..
+        /// </summary>
+        public static string CreateFolder_Error_BlankName {
+            get {
+                return ResourceManager.GetString("CreateFolder_Error_BlankName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Folder names cannot include any of these characters {0}..
+        /// </summary>
+        public static string CreateFolder_Error_IllegalCharacter {
+            get {
+                return ResourceManager.GetString("CreateFolder_Error_IllegalCharacter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Successfully created Ardia folder {0}.
+        /// </summary>
+        public static string CreateFolder_Success {
+            get {
+                return ResourceManager.GetString("CreateFolder_Success", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Create Ardia folder.
+        /// </summary>
+        public static string CreateFolder_Title {
+            get {
+                return ResourceManager.GetString("CreateFolder_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error deleting folder {0}..
+        /// </summary>
+        public static string DeleteFolder_Error {
+            get {
+                return ResourceManager.GetString("DeleteFolder_Error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to New Folder.
+        /// </summary>
+        public static string FileUpload_DefaultNewFolderName {
+            get {
+                return ResourceManager.GetString("FileUpload_DefaultNewFolderName", resourceCulture);
             }
         }
         

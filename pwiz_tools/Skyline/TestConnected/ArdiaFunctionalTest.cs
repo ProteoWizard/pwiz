@@ -214,7 +214,7 @@ namespace pwiz.SkylineTestConnected
             RemoveResultsAndReimport();
 
             // corrupt the cookie (simulate it being expired) and try reimporting again
-            /*ArdiaAccount.SetSessionCookieString(_account, "foobar" );
+            /*ArdiaAccount.SetToken(_account, "foobar" );
             _account.ResetAuthenticatedHttpClientFactory();
 
             // delete local files
@@ -225,7 +225,7 @@ namespace pwiz.SkylineTestConnected
             Settings.Default.RemoteAccountList.Add(_account);
             RemoveResultsAndReimport();*/
 
-            ArdiaAccount.ClearSessionCookieStrings();
+            SkylineWindow.ClearArdiaAccountTokens();
         }
 
         private void RemoveResultsAndReimport()
