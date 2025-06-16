@@ -321,12 +321,6 @@ you can append more spectra in the future.</value>
   <data name="comboAction.Items1" xml:space="preserve">
     <value>Append</value>
   </data>
-  <data name="comboAction.Items2" xml:space="preserve">
-    <value>Create</value>
-  </data>
-  <data name="comboAction.Items3" xml:space="preserve">
-    <value>Append</value>
-  </data>
   <data name="comboAction.Location" type="System.Drawing.Point, System.Drawing">
     <value>6, 21</value>
   </data>
@@ -465,7 +459,7 @@ of the redundant library data.</value>
     <value>gridInputFiles</value>
   </data>
   <data name="&gt;&gt;gridInputFiles.Type" xml:space="preserve">
-    <value>pwiz.Skyline.FileUI.PeptideSearch.BuildLibraryGridView, Skyline-daily, Version=25.1.1.161, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.FileUI.PeptideSearch.BuildLibraryGridView, Skyline-daily, Version=25.1.1.162, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;gridInputFiles.Parent" xml:space="preserve">
     <value>tabFiles</value>
@@ -789,7 +783,7 @@ of the redundant library data.</value>
     <value>tabControlDataSource</value>
   </data>
   <data name="&gt;&gt;tabControlDataSource.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=25.1.1.161, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=25.1.1.162, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;tabControlDataSource.Parent" xml:space="preserve">
     <value>tabProperties</value>
@@ -818,6 +812,42 @@ of the redundant library data.</value>
   <data name="&gt;&gt;comboStandards.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
+  <data name="alphaPeptDeepSettings.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="alphaPeptDeepSettings.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="alphaPeptDeepSettings.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="alphaPeptDeepSettings.Location" type="System.Drawing.Point, System.Drawing">
+    <value>123, 46</value>
+  </data>
+  <data name="alphaPeptDeepSettings.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 0, 4, 0</value>
+  </data>
+  <data name="alphaPeptDeepSettings.Size" type="System.Drawing.Size, System.Drawing">
+    <value>70, 13</value>
+  </data>
+  <data name="alphaPeptDeepSettings.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="alphaPeptDeepSettings.Text" xml:space="preserve">
+    <value>User Settings</value>
+  </data>
+  <data name="&gt;&gt;alphaPeptDeepSettings.Name" xml:space="preserve">
+    <value>alphaPeptDeepSettings</value>
+  </data>
+  <data name="&gt;&gt;alphaPeptDeepSettings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;alphaPeptDeepSettings.Parent" xml:space="preserve">
+    <value>dataSourceGroupBox</value>
+  </data>
+  <data name="&gt;&gt;alphaPeptDeepSettings.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="carafeSettings.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
@@ -828,7 +858,7 @@ of the redundant library data.</value>
     <value>NoControl</value>
   </data>
   <data name="carafeSettings.Location" type="System.Drawing.Point, System.Drawing">
-    <value>113, 69</value>
+    <value>114, 68</value>
   </data>
   <data name="carafeSettings.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>4, 0, 4, 0</value>
@@ -852,7 +882,7 @@ of the redundant library data.</value>
     <value>dataSourceGroupBox</value>
   </data>
   <data name="&gt;&gt;carafeSettings.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="radioCarafeSource.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -882,7 +912,7 @@ of the redundant library data.</value>
     <value>dataSourceGroupBox</value>
   </data>
   <data name="&gt;&gt;radioCarafeSource.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="radioAlphaSource.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -912,7 +942,7 @@ of the redundant library data.</value>
     <value>dataSourceGroupBox</value>
   </data>
   <data name="&gt;&gt;radioAlphaSource.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="koinaInfoSettingsBtn.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -924,7 +954,7 @@ of the redundant library data.</value>
     <value>NoControl</value>
   </data>
   <data name="koinaInfoSettingsBtn.Location" type="System.Drawing.Point, System.Drawing">
-    <value>126, 90</value>
+    <value>124, 90</value>
   </data>
   <data name="koinaInfoSettingsBtn.Size" type="System.Drawing.Size, System.Drawing">
     <value>68, 13</value>
@@ -945,7 +975,7 @@ of the redundant library data.</value>
     <value>dataSourceGroupBox</value>
   </data>
   <data name="&gt;&gt;koinaInfoSettingsBtn.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="radioKoinaSource.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -975,7 +1005,7 @@ of the redundant library data.</value>
     <value>dataSourceGroupBox</value>
   </data>
   <data name="&gt;&gt;radioKoinaSource.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="radioFilesSource.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1005,7 +1035,7 @@ of the redundant library data.</value>
     <value>dataSourceGroupBox</value>
   </data>
   <data name="&gt;&gt;radioFilesSource.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="dataSourceGroupBox.Location" type="System.Drawing.Point, System.Drawing">
     <value>6, 124</value>
@@ -1150,27 +1180,6 @@ of the redundant library data.</value>
   </data>
   <data name="tabControlMain.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
-  </data>
-  <data name="tabControlMain.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 5</value>
-  </data>
-  <data name="tabControlMain.Size" type="System.Drawing.Size, System.Drawing">
-    <value>575, 341</value>
-  </data>
-  <data name="tabControlMain.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;tabControlMain.Name" xml:space="preserve">
-    <value>tabControlMain</value>
-  </data>
-  <data name="&gt;&gt;tabControlMain.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=25.1.1.161, Culture=neutral, PublicKeyToken=null</value>
-  </data>
-  <data name="&gt;&gt;tabControlMain.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;tabControlMain.ZOrder" xml:space="preserve">
-    <value>3</value>
   </data>
   <data name="labelLearnFrom.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1532,6 +1541,48 @@ of the redundant library data.</value>
   <data name="&gt;&gt;tabPageDocument.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
+  <data name="listLibraries.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="listLibraries.Size" type="System.Drawing.Size, System.Drawing">
+    <value>120, 94</value>
+  </data>
+  <data name="listLibraries.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;listLibraries.Name" xml:space="preserve">
+    <value>listLibraries</value>
+  </data>
+  <data name="&gt;&gt;listLibraries.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckedListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;listLibraries.Parent" xml:space="preserve">
+    <value>tabPageLibraries</value>
+  </data>
+  <data name="&gt;&gt;listLibraries.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 23</value>
+  </data>
+  <data name="label3.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;label3.Name" xml:space="preserve">
+    <value>label3</value>
+  </data>
+  <data name="&gt;&gt;label3.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label3.Parent" xml:space="preserve">
+    <value>tabPageLibraries</value>
+  </data>
+  <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
   <data name="tabPageLibraries.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
   </data>
@@ -1569,7 +1620,7 @@ of the redundant library data.</value>
     <value>tabControlLearning</value>
   </data>
   <data name="&gt;&gt;tabControlLearning.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=25.1.1.161, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=25.1.1.162, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;tabControlLearning.Parent" xml:space="preserve">
     <value>tabLearn</value>
@@ -1776,7 +1827,7 @@ of the redundant library data.</value>
     <value>tabControlBuildLibraryTarget</value>
   </data>
   <data name="&gt;&gt;tabControlBuildLibraryTarget.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=25.1.1.161, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=25.1.1.162, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;tabControlBuildLibraryTarget.Parent" xml:space="preserve">
     <value>tabLearn</value>
@@ -2226,7 +2277,7 @@ of the redundant library data.</value>
     <value>wizardPages1</value>
   </data>
   <data name="&gt;&gt;wizardPages1.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=25.1.1.161, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=25.1.1.162, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;wizardPages1.Parent" xml:space="preserve">
     <value>tabLearn</value>
@@ -2348,35 +2399,32 @@ of the redundant library data.</value>
   <data name="&gt;&gt;tabLearn.Type" xml:space="preserve">
     <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="listLibraries.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
+  <data name="&gt;&gt;tabLearn.Parent" xml:space="preserve">
+    <value>tabControlMain</value>
   </data>
-  <data name="listLibraries.Size" type="System.Drawing.Size, System.Drawing">
-    <value>120, 96</value>
+  <data name="&gt;&gt;tabLearn.ZOrder" xml:space="preserve">
+    <value>2</value>
   </data>
-  <data name="listLibraries.TabIndex" type="System.Int32, mscorlib">
+  <data name="tabControlMain.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 5</value>
+  </data>
+  <data name="tabControlMain.Size" type="System.Drawing.Size, System.Drawing">
+    <value>575, 341</value>
+  </data>
+  <data name="tabControlMain.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name="&gt;&gt;listLibraries.Name" xml:space="preserve">
-    <value>listLibraries</value>
+  <data name="&gt;&gt;tabControlMain.Name" xml:space="preserve">
+    <value>tabControlMain</value>
   </data>
-  <data name="&gt;&gt;listLibraries.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckedListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="&gt;&gt;tabControlMain.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=25.1.1.162, Culture=neutral, PublicKeyToken=null</value>
   </data>
-  <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
+  <data name="&gt;&gt;tabControlMain.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
-  <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 23</value>
-  </data>
-  <data name="label3.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;label3.Name" xml:space="preserve">
-    <value>label3</value>
-  </data>
-  <data name="&gt;&gt;label3.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="&gt;&gt;tabControlMain.ZOrder" xml:space="preserve">
+    <value>3</value>
   </data>
   <data name="btnPrevious.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -2490,7 +2538,7 @@ of the redundant library data.</value>
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=25.1.1.161, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=25.1.1.162, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
@@ -2520,6 +2568,6 @@ of the redundant library data.</value>
     <value>BuildLibraryDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=25.1.1.161, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=25.1.1.162, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

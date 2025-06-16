@@ -36,6 +36,7 @@ using pwiz.Skyline.Model.Koina;
 using pwiz.Skyline.Model.Koina.Communication;
 using pwiz.Skyline.Model.Koina.Config;
 using pwiz.Skyline.Model.Koina.Models;
+using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
 using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Model.Themes;
@@ -56,6 +57,7 @@ namespace pwiz.Skyline.ToolsUI
         // For Koina pinging
         private readonly SrmSettings _settingsNoMod;
         private readonly KoinaIntensityModel.PeptidePrecursorNCE _pingInput;
+
         public ToolOptionsUI(SrmSettings settings)
         {
             InitializeComponent();
@@ -351,7 +353,7 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         // ReSharper disable InconsistentNaming
-        public enum TABS { Panorama, Remote, Carafe, Koina, Language, Miscellaneous, Display }
+        public enum TABS { AlphaPeptDeep, Carafe, Display, Koina, Language, Miscellaneous, Panorama, Remote  }
         // ReSharper restore InconsistentNaming
 
         public class PanoramaTab : IFormView { }
@@ -563,6 +565,20 @@ namespace pwiz.Skyline.ToolsUI
         private void lnkCarafeHelp_Clicked(object sender, EventArgs e)
         {
             ToolsOptionsUI_CarafeHelpButtonClicked(sender, e);
+        }
+
+
+        private void btnAlphaPeptDeepUserSettings_Click(object sender, EventArgs e)
+        {
+            if (AlphapeptdeepLibraryBuilder.UserExposedParameters == null)
+                AlphapeptdeepLibraryBuilder.AlphaPeptDeepDefaultSettings();
+            KeyValueGridDlg.Show(btnAlphaPeptDeepUserSettings.Text,
+                AlphapeptdeepLibraryBuilder.UserExposedParameters,
+                setting => setting.Value.ToString(),
+                (value, setting) => setting.Value = value,
+                (value, setting) => setting.Validate(value),
+                setting => setting.ValidValues,
+                setting => setting.Name);
         }
     }
 }

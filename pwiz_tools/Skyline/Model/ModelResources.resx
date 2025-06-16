@@ -189,6 +189,63 @@
   <data name="BrukerTimsTofMethodExporter_ExportMethod_Template_is_required_for_method_export_" xml:space="preserve">
     <value>Template is required for method export.</value>
   </data>
+  <data name="AlphaPeptDeep_min_peptide_length_short" xml:space="preserve">
+    <value>Minimum Peptide Length</value>
+  </data>
+  <data name="AlphaPeptDeep_min_peptide_length_long" xml:space="preserve">
+    <value>Minimum Peptide Length of predicted spectra in the library.</value>
+  </data>
+  <data name="AlphaPeptDeep_max_peptide_length_short" xml:space="preserve">
+    <value>Maximum Peptide Length</value>
+  </data>
+  <data name="AlphaPeptDeep_max_peptide_length_long" xml:space="preserve">
+    <value>Maximum Peptide Length of predicted spectra in the library.</value>
+  </data>
+  <data name="AlphaPeptDeep_min_fragment_mz_short" xml:space="preserve">
+    <value>Minimum Fragment Mass-to-Charge</value>
+  </data>
+  <data name="AlphaPeptDeep_min_fragment_mz_long" xml:space="preserve">
+    <value>Minimum Fragment Mass-to-Charge Ratio (m/z) of predicted spectra in the library.</value>
+  </data>
+  <data name="AlphaPeptDeep_max_fragment_mz_short" xml:space="preserve">
+    <value>Maximum Fragment Mass-to-Charge</value>
+  </data>
+  <data name="AlphaPeptDeep_max_fragment_mz_long" xml:space="preserve">
+    <value>Maximum Fragment Mass-to-Charge Ratio (m/z) of predicted spectra in the library.</value>
+  </data>
+  <data name="AlphaPeptDeep_min_precursor_charge_short" xml:space="preserve">
+    <value>Minimum Precursor Charge</value>
+  </data>
+  <data name="AlphaPeptDeep_min_precursor_charge_long" xml:space="preserve">
+    <value>Minimum Precursor Charge of the spectra in the predicted library.</value>
+  </data>
+  <data name="AlphaPeptDeep_max_precursor_charge_short" xml:space="preserve">
+    <value>Maximum Precursor Charge</value>
+  </data>
+  <data name="AlphaPeptDeep_max_precursor_charge_long" xml:space="preserve">
+    <value>Maximum Precursor Charge of the spectra in the predicted library.</value>
+  </data>
+  <data name="AlphaPeptDeep_max_fragment_charge_short" xml:space="preserve">
+    <value>Maximum Fragment Charge</value>
+  </data>
+  <data name="AlphaPeptDeep_max_fragment_charge_long" xml:space="preserve">
+    <value>Maximum Fragment Charge of the fragments peaks in the spectra of the predicted library.</value>
+  </data>
+  <data name="AlphaPeptDeep_min_relative_intensity_short" xml:space="preserve">
+    <value>Minimum Fragment Relative Intensity</value>
+  </data>
+  <data name="AlphaPeptDeep_min_relative_intensity_long" xml:space="preserve">
+    <value>Minimum relative intensities of the fragment peaks in the spectra of the predicted library.</value>
+  </data>
+  <data name="AlphaPeptDeep_keep_k_highest_peaks_short" xml:space="preserve">
+    <value>Keep k-Highest Peaks</value>
+  </data>
+  <data name="AlphaPeptDeep_keep_k_highest_peaks_long" xml:space="preserve">
+    <value>Keep k of the highest intensity fragment peaks in the predicted library.</value>
+  </data>
+  <data name="AlphaPeptDeep_Settings" xml:space="preserve">
+  <value>AlphaPeptDeep Settings ...</value>
+  </data>
   <data name="CarafeTraining_fdr_short" xml:space="preserve">
     <value>False Discovery Rate</value>
   </data>

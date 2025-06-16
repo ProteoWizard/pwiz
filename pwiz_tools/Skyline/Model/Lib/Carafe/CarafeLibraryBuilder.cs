@@ -587,21 +587,13 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             }
         }
 
-        private void RunCarafe(IProgressMonitor progress, ref IProgressStatus progressStatus)
+        private List<ArgumentAndValue> getUserSettingArgumentAndValues(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
-            //progressStatus = progressStatus.ChangeSegments(0, 3);
-            progress.UpdateProgress(progressStatus = progressStatus
-                .ChangeMessage(ModelResources.CarafeLibraryBuilder_Running_Carafe));
-
-            SetupJavaEnvironment(progress, ref progressStatus);
-
-            var args = new StringBuilder();
-  
 
             var readyArgs = new List<ArgumentAndValue>();
             foreach (var arg in CommandArguments)
             {
-               readyArgs.Add(new ArgumentAndValue(arg.Name, arg.Value, TextUtil.HYPHEN));
+                readyArgs.Add(new ArgumentAndValue(arg.Name, arg.Value, TextUtil.HYPHEN));
             }
 
             foreach (var dataParam in DataParameters)
@@ -794,14 +786,27 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             }
             else
             {
-                readyArgs.Add(new ArgumentAndValue(@"db", TextUtil .Quote(DbInputFilePath), TextUtil.HYPHEN));
+                readyArgs.Add(new ArgumentAndValue(@"db", TextUtil.Quote(DbInputFilePath), TextUtil.HYPHEN));
                 readyArgs.Add(new ArgumentAndValue(@"i", TextUtil.Quote(TuningFilePath), TextUtil.HYPHEN));
                 readyArgs.Add(new ArgumentAndValue(@"se", @"skyline", TextUtil.HYPHEN));
                 LibraryHelper.PrepareTrainingInputFile(Document, progress, ref progressStatus, CARAFE);
             }
+
+            return readyArgs;
+        }
+
+        private void RunCarafe(IProgressMonitor progress, ref IProgressStatus progressStatus)
+        {
+            //progressStatus = progressStatus.ChangeSegments(0, 3);
+            progress.UpdateProgress(progressStatus = progressStatus
+                .ChangeMessage(ModelResources.CarafeLibraryBuilder_Running_Carafe));
+
+            SetupJavaEnvironment(progress, ref progressStatus);
+
+            var args = new StringBuilder();
             var segmentEndPercentages = new[] { 95, 99 };
             progressStatus = progressStatus.ChangeSegments(0, ImmutableList<int>.ValueOf(segmentEndPercentages));
-            ExecuteCarafe(progress, ref progressStatus, readyArgs);
+            ExecuteCarafe(progress, ref progressStatus, getUserSettingArgumentAndValues(progress, ref progressStatus));
             progressStatus = progressStatus.NextSegment();
             ImportSpectralLibrary(progress, ref progressStatus);
             progress.UpdateProgress(progressStatus = progressStatus

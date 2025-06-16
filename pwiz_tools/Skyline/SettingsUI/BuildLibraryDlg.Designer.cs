@@ -61,6 +61,7 @@
             this.ceCombo = new System.Windows.Forms.ComboBox();
             this.comboStandards = new System.Windows.Forms.ComboBox();
             this.dataSourceGroupBox = new System.Windows.Forms.GroupBox();
+            this.alphaPeptDeepSettings = new System.Windows.Forms.LinkLabel();
             this.carafeSettings = new System.Windows.Forms.LinkLabel();
             this.radioCarafeSource = new System.Windows.Forms.RadioButton();
             this.radioAlphaSource = new System.Windows.Forms.RadioButton();
@@ -342,6 +343,7 @@
             // 
             // dataSourceGroupBox
             // 
+            this.dataSourceGroupBox.Controls.Add(this.alphaPeptDeepSettings);
             this.dataSourceGroupBox.Controls.Add(this.carafeSettings);
             this.dataSourceGroupBox.Controls.Add(this.radioCarafeSource);
             this.dataSourceGroupBox.Controls.Add(this.radioAlphaSource);
@@ -352,6 +354,13 @@
             this.dataSourceGroupBox.Name = "dataSourceGroupBox";
             this.dataSourceGroupBox.TabStop = false;
             this.modeUIHandler.SetUIMode(this.dataSourceGroupBox, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            // 
+            // alphaPeptDeepSettings
+            // 
+            resources.ApplyResources(this.alphaPeptDeepSettings, "alphaPeptDeepSettings");
+            this.alphaPeptDeepSettings.Name = "alphaPeptDeepSettings";
+            this.alphaPeptDeepSettings.TabStop = true;
+            this.alphaPeptDeepSettings.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.alphaPeptDeepSettings_LinkClicked);
             // 
             // carafeSettings
             // 
@@ -536,8 +545,8 @@
             // 
             // listLibraries
             // 
-            resources.ApplyResources(this.listLibraries, "listLibraries");
             this.listLibraries.FormattingEnabled = true;
+            resources.ApplyResources(this.listLibraries, "listLibraries");
             this.listLibraries.Name = "listLibraries";
             // 
             // label3
@@ -774,7 +783,6 @@
             this.tabPageDocument.ResumeLayout(false);
             this.tabPageDocument.PerformLayout();
             this.tabPageLibraries.ResumeLayout(false);
-            this.tabPageLibraries.PerformLayout();
             this.tabControlBuildLibraryTarget.ResumeLayout(false);
             this.tabPage2.ResumeLayout(false);
             this.tabPage2.PerformLayout();
@@ -876,6 +884,7 @@
         private System.Windows.Forms.TabPage tabPageLibraries;
         private System.Windows.Forms.CheckedListBox listLibraries;
         private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.LinkLabel alphaPeptDeepSettings;
 
         internal string TextBoxMsMsDataFile
         {

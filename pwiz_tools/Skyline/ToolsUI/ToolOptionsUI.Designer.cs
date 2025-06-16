@@ -30,14 +30,8 @@ namespace pwiz.Skyline.ToolsUI
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ToolOptionsUI));
             this.tabControl = new System.Windows.Forms.TabControl();
-            this.tabPanorama = new System.Windows.Forms.TabPage();
-            this.listboxServers = new System.Windows.Forms.ListBox();
-            this.lblServers = new System.Windows.Forms.Label();
-            this.btnEditServers = new System.Windows.Forms.Button();
-            this.tabRemote = new System.Windows.Forms.TabPage();
-            this.listBoxRemoteAccounts = new System.Windows.Forms.ListBox();
-            this.lblRemoteAccounts = new System.Windows.Forms.Label();
-            this.btnEditRemoteAccountList = new System.Windows.Forms.Button();
+            this.tabAlphaPeptDeep = new System.Windows.Forms.TabPage();
+            this.btnAlphaPeptDeepUserSettings = new System.Windows.Forms.Button();
             this.tabCarafe = new System.Windows.Forms.TabPage();
             this.lnkCarafeLibraryHelp = new System.Windows.Forms.LinkLabel();
             this.lnkCarafeModelTrainingHelp = new System.Windows.Forms.LinkLabel();
@@ -45,6 +39,10 @@ namespace pwiz.Skyline.ToolsUI
             this.btnCarafeLibraryGenerationSettings = new System.Windows.Forms.Button();
             this.btnCarafeModelTrainingSettings = new System.Windows.Forms.Button();
             this.btnCarafeTrainingDataGenerationSettings = new System.Windows.Forms.Button();
+            this.tabDisplay = new System.Windows.Forms.TabPage();
+            this.comboColorScheme = new System.Windows.Forms.ComboBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this.powerOfTenCheckBox = new System.Windows.Forms.CheckBox();
             this.tabKoina = new System.Windows.Forms.TabPage();
             this.tbxKoinaServer = new System.Windows.Forms.TextBox();
             this.ceLabel = new System.Windows.Forms.Label();
@@ -67,91 +65,55 @@ namespace pwiz.Skyline.ToolsUI
             this.comboCompactFormatOption = new System.Windows.Forms.ComboBox();
             this.lblCompactDocumentFormat = new System.Windows.Forms.Label();
             this.checkBoxShowWizard = new System.Windows.Forms.CheckBox();
-            this.tabDisplay = new System.Windows.Forms.TabPage();
-            this.comboColorScheme = new System.Windows.Forms.ComboBox();
-            this.label1 = new System.Windows.Forms.Label();
-            this.powerOfTenCheckBox = new System.Windows.Forms.CheckBox();
+            this.tabPanorama = new System.Windows.Forms.TabPage();
+            this.listboxServers = new System.Windows.Forms.ListBox();
+            this.lblServers = new System.Windows.Forms.Label();
+            this.btnEditServers = new System.Windows.Forms.Button();
+            this.tabRemote = new System.Windows.Forms.TabPage();
+            this.listBoxRemoteAccounts = new System.Windows.Forms.ListBox();
+            this.lblRemoteAccounts = new System.Windows.Forms.Label();
+            this.btnEditRemoteAccountList = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
             this.tabControl.SuspendLayout();
-            this.tabPanorama.SuspendLayout();
-            this.tabRemote.SuspendLayout();
+            this.tabAlphaPeptDeep.SuspendLayout();
             this.tabCarafe.SuspendLayout();
+            this.tabDisplay.SuspendLayout();
             this.tabKoina.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.tabLanguage.SuspendLayout();
             this.tabMisc.SuspendLayout();
-            this.tabDisplay.SuspendLayout();
+            this.tabPanorama.SuspendLayout();
+            this.tabRemote.SuspendLayout();
             this.SuspendLayout();
             // 
             // tabControl
             // 
             resources.ApplyResources(this.tabControl, "tabControl");
-            this.tabControl.Controls.Add(this.tabPanorama);
-            this.tabControl.Controls.Add(this.tabRemote);
+            this.tabControl.Controls.Add(this.tabAlphaPeptDeep);
             this.tabControl.Controls.Add(this.tabCarafe);
+            this.tabControl.Controls.Add(this.tabDisplay);
             this.tabControl.Controls.Add(this.tabKoina);
             this.tabControl.Controls.Add(this.tabLanguage);
             this.tabControl.Controls.Add(this.tabMisc);
-            this.tabControl.Controls.Add(this.tabDisplay);
+            this.tabControl.Controls.Add(this.tabPanorama);
+            this.tabControl.Controls.Add(this.tabRemote);
             this.tabControl.Name = "tabControl";
             this.tabControl.SelectedIndex = 0;
             // 
-            // tabPanorama
+            // tabAlphaPeptDeep
             // 
-            this.tabPanorama.Controls.Add(this.listboxServers);
-            this.tabPanorama.Controls.Add(this.lblServers);
-            this.tabPanorama.Controls.Add(this.btnEditServers);
-            resources.ApplyResources(this.tabPanorama, "tabPanorama");
-            this.tabPanorama.Name = "tabPanorama";
-            this.tabPanorama.UseVisualStyleBackColor = true;
+            this.tabAlphaPeptDeep.Controls.Add(this.btnAlphaPeptDeepUserSettings);
+            resources.ApplyResources(this.tabAlphaPeptDeep, "tabAlphaPeptDeep");
+            this.tabAlphaPeptDeep.Name = "tabAlphaPeptDeep";
+            this.tabAlphaPeptDeep.UseVisualStyleBackColor = true;
             // 
-            // listboxServers
+            // btnAlphaPeptDeepUserSettings
             // 
-            resources.ApplyResources(this.listboxServers, "listboxServers");
-            this.listboxServers.FormattingEnabled = true;
-            this.listboxServers.Name = "listboxServers";
-            this.listboxServers.SelectionMode = System.Windows.Forms.SelectionMode.None;
-            // 
-            // lblServers
-            // 
-            resources.ApplyResources(this.lblServers, "lblServers");
-            this.lblServers.Name = "lblServers";
-            // 
-            // btnEditServers
-            // 
-            resources.ApplyResources(this.btnEditServers, "btnEditServers");
-            this.btnEditServers.Name = "btnEditServers";
-            this.btnEditServers.UseVisualStyleBackColor = true;
-            this.btnEditServers.Click += new System.EventHandler(this.btnEditServers_Click);
-            // 
-            // tabRemote
-            // 
-            this.tabRemote.Controls.Add(this.listBoxRemoteAccounts);
-            this.tabRemote.Controls.Add(this.lblRemoteAccounts);
-            this.tabRemote.Controls.Add(this.btnEditRemoteAccountList);
-            resources.ApplyResources(this.tabRemote, "tabRemote");
-            this.tabRemote.Name = "tabRemote";
-            this.tabRemote.UseVisualStyleBackColor = true;
-            // 
-            // listBoxRemoteAccounts
-            // 
-            resources.ApplyResources(this.listBoxRemoteAccounts, "listBoxRemoteAccounts");
-            this.listBoxRemoteAccounts.FormattingEnabled = true;
-            this.listBoxRemoteAccounts.Name = "listBoxRemoteAccounts";
-            this.listBoxRemoteAccounts.SelectionMode = System.Windows.Forms.SelectionMode.None;
-            // 
-            // lblRemoteAccounts
-            // 
-            resources.ApplyResources(this.lblRemoteAccounts, "lblRemoteAccounts");
-            this.lblRemoteAccounts.Name = "lblRemoteAccounts";
-            // 
-            // btnEditRemoteAccountList
-            // 
-            resources.ApplyResources(this.btnEditRemoteAccountList, "btnEditRemoteAccountList");
-            this.btnEditRemoteAccountList.Name = "btnEditRemoteAccountList";
-            this.btnEditRemoteAccountList.UseVisualStyleBackColor = true;
-            this.btnEditRemoteAccountList.Click += new System.EventHandler(this.btnEditRemoteAccountList_Click);
+            resources.ApplyResources(this.btnAlphaPeptDeepUserSettings, "btnAlphaPeptDeepUserSettings");
+            this.btnAlphaPeptDeepUserSettings.Name = "btnAlphaPeptDeepUserSettings";
+            this.btnAlphaPeptDeepUserSettings.UseVisualStyleBackColor = true;
+            this.btnAlphaPeptDeepUserSettings.Click += new System.EventHandler(this.btnAlphaPeptDeepUserSettings_Click);
             // 
             // tabCarafe
             // 
@@ -206,6 +168,34 @@ namespace pwiz.Skyline.ToolsUI
             this.btnCarafeTrainingDataGenerationSettings.Name = "btnCarafeTrainingDataGenerationSettings";
             this.btnCarafeTrainingDataGenerationSettings.UseVisualStyleBackColor = true;
             this.btnCarafeTrainingDataGenerationSettings.Click += new System.EventHandler(this.btnCarafeTrainingDataGenerationSettings_Click);
+            // 
+            // tabDisplay
+            // 
+            this.tabDisplay.Controls.Add(this.comboColorScheme);
+            this.tabDisplay.Controls.Add(this.label1);
+            this.tabDisplay.Controls.Add(this.powerOfTenCheckBox);
+            resources.ApplyResources(this.tabDisplay, "tabDisplay");
+            this.tabDisplay.Name = "tabDisplay";
+            this.tabDisplay.UseVisualStyleBackColor = true;
+            // 
+            // comboColorScheme
+            // 
+            this.comboColorScheme.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboColorScheme.FormattingEnabled = true;
+            resources.ApplyResources(this.comboColorScheme, "comboColorScheme");
+            this.comboColorScheme.Name = "comboColorScheme";
+            this.comboColorScheme.SelectedIndexChanged += new System.EventHandler(this.comboColorScheme_SelectedIndexChanged);
+            // 
+            // label1
+            // 
+            resources.ApplyResources(this.label1, "label1");
+            this.label1.Name = "label1";
+            // 
+            // powerOfTenCheckBox
+            // 
+            resources.ApplyResources(this.powerOfTenCheckBox, "powerOfTenCheckBox");
+            this.powerOfTenCheckBox.Name = "powerOfTenCheckBox";
+            this.powerOfTenCheckBox.UseVisualStyleBackColor = true;
             // 
             // tabKoina
             // 
@@ -360,33 +350,61 @@ namespace pwiz.Skyline.ToolsUI
             this.checkBoxShowWizard.Name = "checkBoxShowWizard";
             this.checkBoxShowWizard.UseVisualStyleBackColor = true;
             // 
-            // tabDisplay
+            // tabPanorama
             // 
-            this.tabDisplay.Controls.Add(this.comboColorScheme);
-            this.tabDisplay.Controls.Add(this.label1);
-            this.tabDisplay.Controls.Add(this.powerOfTenCheckBox);
-            resources.ApplyResources(this.tabDisplay, "tabDisplay");
-            this.tabDisplay.Name = "tabDisplay";
-            this.tabDisplay.UseVisualStyleBackColor = true;
+            this.tabPanorama.Controls.Add(this.listboxServers);
+            this.tabPanorama.Controls.Add(this.lblServers);
+            this.tabPanorama.Controls.Add(this.btnEditServers);
+            resources.ApplyResources(this.tabPanorama, "tabPanorama");
+            this.tabPanorama.Name = "tabPanorama";
+            this.tabPanorama.UseVisualStyleBackColor = true;
             // 
-            // comboColorScheme
+            // listboxServers
             // 
-            this.comboColorScheme.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboColorScheme.FormattingEnabled = true;
-            resources.ApplyResources(this.comboColorScheme, "comboColorScheme");
-            this.comboColorScheme.Name = "comboColorScheme";
-            this.comboColorScheme.SelectedIndexChanged += new System.EventHandler(this.comboColorScheme_SelectedIndexChanged);
+            resources.ApplyResources(this.listboxServers, "listboxServers");
+            this.listboxServers.FormattingEnabled = true;
+            this.listboxServers.Name = "listboxServers";
+            this.listboxServers.SelectionMode = System.Windows.Forms.SelectionMode.None;
             // 
-            // label1
+            // lblServers
             // 
-            resources.ApplyResources(this.label1, "label1");
-            this.label1.Name = "label1";
+            resources.ApplyResources(this.lblServers, "lblServers");
+            this.lblServers.Name = "lblServers";
             // 
-            // powerOfTenCheckBox
+            // btnEditServers
             // 
-            resources.ApplyResources(this.powerOfTenCheckBox, "powerOfTenCheckBox");
-            this.powerOfTenCheckBox.Name = "powerOfTenCheckBox";
-            this.powerOfTenCheckBox.UseVisualStyleBackColor = true;
+            resources.ApplyResources(this.btnEditServers, "btnEditServers");
+            this.btnEditServers.Name = "btnEditServers";
+            this.btnEditServers.UseVisualStyleBackColor = true;
+            this.btnEditServers.Click += new System.EventHandler(this.btnEditServers_Click);
+            // 
+            // tabRemote
+            // 
+            this.tabRemote.Controls.Add(this.listBoxRemoteAccounts);
+            this.tabRemote.Controls.Add(this.lblRemoteAccounts);
+            this.tabRemote.Controls.Add(this.btnEditRemoteAccountList);
+            resources.ApplyResources(this.tabRemote, "tabRemote");
+            this.tabRemote.Name = "tabRemote";
+            this.tabRemote.UseVisualStyleBackColor = true;
+            // 
+            // listBoxRemoteAccounts
+            // 
+            resources.ApplyResources(this.listBoxRemoteAccounts, "listBoxRemoteAccounts");
+            this.listBoxRemoteAccounts.FormattingEnabled = true;
+            this.listBoxRemoteAccounts.Name = "listBoxRemoteAccounts";
+            this.listBoxRemoteAccounts.SelectionMode = System.Windows.Forms.SelectionMode.None;
+            // 
+            // lblRemoteAccounts
+            // 
+            resources.ApplyResources(this.lblRemoteAccounts, "lblRemoteAccounts");
+            this.lblRemoteAccounts.Name = "lblRemoteAccounts";
+            // 
+            // btnEditRemoteAccountList
+            // 
+            resources.ApplyResources(this.btnEditRemoteAccountList, "btnEditRemoteAccountList");
+            this.btnEditRemoteAccountList.Name = "btnEditRemoteAccountList";
+            this.btnEditRemoteAccountList.UseVisualStyleBackColor = true;
+            this.btnEditRemoteAccountList.Click += new System.EventHandler(this.btnEditRemoteAccountList_Click);
             // 
             // btnCancel
             // 
@@ -417,22 +435,22 @@ namespace pwiz.Skyline.ToolsUI
             this.ShowInTaskbar = false;
             this.Shown += new System.EventHandler(this.ToolOptionsUI_Shown);
             this.tabControl.ResumeLayout(false);
-            this.tabPanorama.ResumeLayout(false);
-            this.tabPanorama.PerformLayout();
-            this.tabRemote.ResumeLayout(false);
-            this.tabRemote.PerformLayout();
+            this.tabAlphaPeptDeep.ResumeLayout(false);
             this.tabCarafe.ResumeLayout(false);
             this.tabCarafe.PerformLayout();
+            this.tabDisplay.ResumeLayout(false);
+            this.tabDisplay.PerformLayout();
             this.tabKoina.ResumeLayout(false);
             this.tabKoina.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.tabLanguage.ResumeLayout(false);
             this.tabMisc.ResumeLayout(false);
             this.tabMisc.PerformLayout();
-            this.tabDisplay.ResumeLayout(false);
-            this.tabDisplay.PerformLayout();
+            this.tabPanorama.ResumeLayout(false);
+            this.tabPanorama.PerformLayout();
+            this.tabRemote.ResumeLayout(false);
+            this.tabRemote.PerformLayout();
             this.ResumeLayout(false);
-
         }
 
         #endregion
@@ -481,5 +499,7 @@ namespace pwiz.Skyline.ToolsUI
         private System.Windows.Forms.LinkLabel lnkCarafeTrainingDataHelp;
         private System.Windows.Forms.LinkLabel lnkCarafeModelTrainingHelp;
         private System.Windows.Forms.LinkLabel lnkCarafeLibraryHelp;
+        private System.Windows.Forms.TabPage tabAlphaPeptDeep;
+        private System.Windows.Forms.Button btnAlphaPeptDeepUserSettings;
     }
 }

@@ -213,6 +213,177 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Keep k of the highest intensity fragment peaks in the predicted library..
+        /// </summary>
+        public static string AlphaPeptDeep_keep_k_highest_peaks_long {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_keep_k_highest_peaks_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Keep k-Highest Peaks.
+        /// </summary>
+        public static string AlphaPeptDeep_keep_k_highest_peaks_short {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_keep_k_highest_peaks_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum Fragment Charge of the fragments peaks in the spectra of the predicted library..
+        /// </summary>
+        public static string AlphaPeptDeep_max_fragment_charge_long {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_max_fragment_charge_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum Fragment Charge.
+        /// </summary>
+        public static string AlphaPeptDeep_max_fragment_charge_short {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_max_fragment_charge_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum Fragment Mass-to-Charge Ratio (m/z) of predicted spectra in the library..
+        /// </summary>
+        public static string AlphaPeptDeep_max_fragment_mz_long {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_max_fragment_mz_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum Fragment Mass-to-Charge.
+        /// </summary>
+        public static string AlphaPeptDeep_max_fragment_mz_short {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_max_fragment_mz_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum Peptide Length of predicted spectra in the library..
+        /// </summary>
+        public static string AlphaPeptDeep_max_peptide_length_long {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_max_peptide_length_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum Peptide Length.
+        /// </summary>
+        public static string AlphaPeptDeep_max_peptide_length_short {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_max_peptide_length_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum Precursor Charge of the spectra in the predicted library..
+        /// </summary>
+        public static string AlphaPeptDeep_max_precursor_charge_long {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_max_precursor_charge_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum Precursor Charge.
+        /// </summary>
+        public static string AlphaPeptDeep_max_precursor_charge_short {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_max_precursor_charge_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum Fragment Mass-to-Charge Ratio (m/z) of predicted spectra in the library..
+        /// </summary>
+        public static string AlphaPeptDeep_min_fragment_mz_long {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_min_fragment_mz_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum Fragment Mass-to-Charge.
+        /// </summary>
+        public static string AlphaPeptDeep_min_fragment_mz_short {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_min_fragment_mz_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum Peptide Length of predicted spectra in the library..
+        /// </summary>
+        public static string AlphaPeptDeep_min_peptide_length_long {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_min_peptide_length_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum Peptide Length.
+        /// </summary>
+        public static string AlphaPeptDeep_min_peptide_length_short {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_min_peptide_length_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum Precursor Charge of the spectra in the predicted library..
+        /// </summary>
+        public static string AlphaPeptDeep_min_precursor_charge_long {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_min_precursor_charge_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum Precursor Charge.
+        /// </summary>
+        public static string AlphaPeptDeep_min_precursor_charge_short {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_min_precursor_charge_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum relative intensities of the fragment peaks in the spectra of the predicted library..
+        /// </summary>
+        public static string AlphaPeptDeep_min_relative_intensity_long {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_min_relative_intensity_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum Fragment Relative Intensity.
+        /// </summary>
+        public static string AlphaPeptDeep_min_relative_intensity_short {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_min_relative_intensity_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to AlphaPeptDeep Settings ....
+        /// </summary>
+        public static string AlphaPeptDeep_Settings {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_Settings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Warning: The predicted library will be incomplete, due to the following unknown modifications detected: 
         ///
         ///{0}
