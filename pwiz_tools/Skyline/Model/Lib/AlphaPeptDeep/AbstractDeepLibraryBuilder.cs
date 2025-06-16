@@ -176,23 +176,32 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             var warningMods = GetWarningMods();
 
             bool unsupportedModification = false;
+            var setUnsupported = new HashSet<string>();
             for (var i = 0; i < modifiedSequence.ExplicitMods.Count; i++)
             {
                 var mod = modifiedSequence.ExplicitMods[i];
                 if (mod.UnimodId == null)
                 {
-                    var msg = string.Format(ModelsResources.BuildPrecursorTable_UnsupportedModification, modifiedSequence, mod.Name, ToolName);
-                    Messages.WriteAsyncUserMessage(msg);
-                    unsupportedModification = true;
+                    if (!setUnsupported.Contains(mod.Name))
+                    {
+                        var msg = string.Format(ModelsResources.BuildPrecursorTable_UnsupportedModification, modifiedSequence, mod.Name, ToolName);
+                        Messages.WriteAsyncUserMessage(msg);
+                        unsupportedModification = true;
+                        setUnsupported.Add(mod.Name);
+                    }
                     continue;
                 }
 
                 var unimodIdWithName = mod.UnimodIdWithName;
                 if (warningMods.Contains(mod.Name))
                 {
-                    var msg = string.Format(ModelsResources.BuildPrecursorTable_Unimod_UnsupportedModification, modifiedSequence, mod.Name, unimodIdWithName, ToolName);
-                    Messages.WriteAsyncUserMessage(msg);
-                    unsupportedModification = true;
+                    if (!setUnsupported.Contains(mod.Name))
+                    {
+                        var msg = string.Format(ModelsResources.BuildPrecursorTable_Unimod_UnsupportedModification, modifiedSequence, mod.Name, unimodIdWithName, ToolName);
+                        Messages.WriteAsyncUserMessage(msg);
+                        unsupportedModification = true;
+                        setUnsupported.Add(mod.Name);
+                    }
                     continue;
                 }
 
