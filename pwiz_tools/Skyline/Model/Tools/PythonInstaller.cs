@@ -708,7 +708,7 @@ namespace pwiz.Skyline.Model.Tools
         {
             try
             {
-                Helpers.TryTwice(act, maxRetries);
+                TryHelper.TryTwice(act, maxRetries);
             }
             catch (IOException)
             {

@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mzML xmlns="http://psi.hupo.org/ms/mzml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.0.xsd" id="310811_037_1:23_1" version="1.1.0">
+  <cvList count="2">
+    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.1.163" URI="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"/>
+    <cv id="UO" fullName="Unit Ontology" version="09:04:2014" URI="https://raw.githubusercontent.com/bio-ontology-research-group/unit-ontology/master/unit.obo"/>
+  </cvList>
+  <fileDescription>
+    <fileContent>
+      <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
+      <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
+    </fileContent>
+    <sourceFileList count="1">
+      <sourceFile id="UNIFI" name="310811_037_1:23_1" location="https://democonnect.waters.com:48505/unifi/v1/sampleresults(3ed3623b-5ce5-4c12-8e3f-0595ccdec393)">
+        <userParam name="well position" value="1:23" type="xsd:string"/>
+        <userParam name="replicate number" value="1" type="xsd:positiveInteger"/>
+      </sourceFile>
+    </sourceFileList>
+  </fileDescription>
+  <softwareList count="2">
+    <software id="UNIFI" version="1.0">
+      <cvParam cvRef="MS" accession="MS:1001796" name="UNIFY" value=""/>
+    </software>
+    <software id="pwiz_Reader_UNIFI" version="3.0.24263">
+      <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
+    </software>
+  </softwareList>
+  <instrumentConfigurationList count="1">
+    <instrumentConfiguration id="IC1">
+      <cvParam cvRef="MS" accession="MS:1000126" name="Waters instrument model" value=""/>
+      <softwareRef ref="UNIFI"/>
+    </instrumentConfiguration>
+  </instrumentConfigurationList>
+  <dataProcessingList count="1">
+    <dataProcessing id="pwiz_Reader_UNIFI_conversion">
+      <processingMethod order="0" softwareRef="pwiz_Reader_UNIFI">
+        <cvParam cvRef="MS" accession="MS:1000544" name="Conversion to mzML" value=""/>
+      </processingMethod>
+    </dataProcessing>
+  </dataProcessingList>
+  <run id="_x0033_10811_037_1_x003a_23_1" defaultInstrumentConfigurationRef="IC1" startTimeStamp="1400-01-01T00:00:00Z" defaultSourceFileRef="UNIFI">
+    <spectrumList count="2" defaultDataProcessingRef="pwiz_Reader_UNIFI_conversion">
+      <spectrum index="0" id="scan=1" defaultArrayLength="1364">
+        <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
+        <scanList count="1">
+          <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
+          <scan>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.022916667163" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="1"/>
+            <scanWindowList count="1">
+              <scanWindow>
+                <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="50.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000500" name="scan window upper limit" value="1200.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              </scanWindow>
+            </scanWindowList>
+          </scan>
+        </scanList>
+        <binaryDataArrayList count="2">
+          <binaryDataArray encodedLength="6348">
+            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000514" name="m/z array" value="" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+            <binary>eJwN1WdU08nXB3AIUhIICb0IAVSwgBQrjxXvd3bVtcDqogsqi10UwQLoWlaxIwRF7Ag2UBEbawHbuoroX8GyKOiuSpFugARCQiAkPr8Xn3Pn3DNnXty5c+fyzEXEn7WIVoQuol8qFtOdfxeTw5fFpGxZT+sV60mp5GLXehp4Pp4uX4inoZfj6cbVeFJapFOVZTqViNOpwDqdjlWn066v6bS2Lp2+Vh+hd1+PUFHdEZqw9ySNSjpJfsknaYtJFm0yy6KNgixKsMiiKMcsWu6cRUtdsujfR6fpv8en6VPRaaobm0ud43PJKCiXhjfnEpPl0i+tubRUnku/e+XTkUH5dGNIPpX65NOA9nyapMynCFU+be7Kp+Pd+XRHm08ln2+SrPImmdfcJO/am2TRcpdGtt2lCMVd2ttxl2503qX/1Hfphf8DUg97QP1GPqDg0Q/IWPaQRrQ+pMXyh3So/SE9Vj6k6PrHdLbxMVU0Pybzlsc0se0xxSkeU27HY5ILntAA4RMKEz2hA1ZP6FVTEXdGEY1rLaI4eRFdaS+iOmUR9VUX0WxNESX3FFFRbxFp9UW06FsxZbYU04e2YpquLKa9qmJ60lVMuu5i4mtKaEZPCR3sLaF3+hJyMCylcKNSyjQupRrTUhogKKXlFqU02+Q1nTB7TVWC1+QlfE3aujfEGt9QSvMbKpe9oeu8t6Tp85Ymmb6l/fy3dFlQRmqLMpokKiOpVRmVP3pH/Z+8o7VP39G9undk1viO5ja/oxzZOyrtKSdXXTnFfi+nvw0ryOP7J9pk+JneG30mX5PPtCuiimojq2jS4io6vbSK2hurKORbFV1vqSJLeRWtbq+iUmUVraqrodKGGvJtrqEDshpqb62h2YoakjXWcvtr6VZLLTnJa2lrey3VKGvptq6O+hrUUyKvnhr71FNTUz0Fy+rpTms9uSrqaVdHPe3T15PcoIHmGDXQQ+MGejm4gQJ8GuiEbwOFNDbSveZG6t/SSNK2RupSNFKkspFeqhpphKaRsnoa6fScZhKENVPCvGb6uqCZiluaKUDeTJntXL6Ty6ubqVbTTGmVMjKokVFsrYwq62U0o0lGD77JyLtVRiflMhrk2ULHBraQyZAWSvBpoXrfFvoloIWih7RRpU8bhfi10ZOANhJ3yGl3p5y61XI6JVCQWKig3SIFdVspKNNTQdaDFLRniIK0Pgr6T6ak2W1KeqVQ0im5ihw7VHS4U0XiLhX95qCmT05qmuuipvcSNYV4cOufNFQxXUNzgjVU/rOGNAotbVFqyUCtpV0aLZlptZSi05LIoJcm9++lEs9eCh7US++G9FLnhF7aOKmXdOilxB97yVipoxSVjqw1Ojreo6PtfAM8FRiAb2GAGUIDVOsNMdCAhxhDHm7zeOg14gHGPOw34eEfUx4c+Twc7uThs4oHzy4eVmu4fd086Hp4qBlohCGDjbBuiBGKWo1gITdCqMIID8pNwP9ggjkfTXBFZwqt3hRTDcwQLjRDrqUZukRm+NHKDK5OZoh2NsP9vmbgu5oh35UPQzc+fnbn46wHH1vUfLzq4kPSzUdsDx9/a/mw0vGxUM/Hn9/5MDIU4A+RAG/EArhbC7DWRoBl2QIU5ggguCjAvEsCjFMLkNolQLVGgF1aASp6BRisF2DzdwEmdZrjiMocTWpzjNWY42uPOUb2miNJZ47PenP4GVhgp6EFKnhc7LTAB5UFfLossF1jgfJuC6wXC/HcSggXGyHW2grBUwrxa6cQ11RCGHUJEaYR4nq3EMZaIcJ7hbihE8JOZYlotSWKuizh1G2JNT2WeK61hERniXi9JUq/W6K/oQjbTESoMBVhKF+EXQIRPpmLYNYpwkKVCHfVIlhpRIjqFmGtToSXehH6GYixqEGM+41i2DWLEfNNjD0dYlQpxQhUiZGmFoN1i5HZI0aXVowQnRhRTVZ42mwFicwKv7dY4V2rFXzlVtinsEJtuxUira1x38YadnbWWGNvjRIHa3g6WWO7szVkGmv82GONc1pr6HutMZZni+NGtlD1scUsE1s08ezwYx87ZBvbgWdqh4VmdnjEt8P4djuc6rBDr9IO81R2+Nhjh9G9djiqs4Nab4cAU3ukmdlDwbdHsLk9Ppk4YKyZA07xHWBg74CFDg547OiAfs4OYO0OuNDhwNXFAVEqB/CtHLHK2hGvbBzha+eIgWFO2B/uhNZ5TghZ4ITpSifc6HSCrdoJebbOENk7Y72DMz44OuNKlzOsup2R0OOMT1pnBOmckaN3hsCgLwZ3uyCtxwUarQt0PFcs6eOKEmNXDDd1xb9aV5DOFZf1rrAxkGCzoQR1PAmm95HgtrEEFzsksOqUYJOKy6slmKmRoKBbAvdONySr3KBWuyFS44ZRWjec7XWDud4NCd/d4NTrjt06dyj07jhs6QEDsQeirTxwSe0BO40HdnR7QN7jgZliTzyy8oSfjSfO2HripY0Xxtl54Zq9F9KcvMDr64U4Fy/schqILueBWOkyEF9cB+JQ2yCYKgZhS/sgtHcMwlexN8KsvfHWxhuT7byxzNMbX7y8ETrIG6WDvZGj9YarzhtH9d7YY+gDPc8HCX180Gbsgwk2Q1FgOxQB9kNx2WEokiR+6OPuh+0eftD284O3gT8uGvpjgJE/zvTxR7DMH6Ut/vipzR/P5f64bBiAgUYByOkTgAxBAJwsAnBMGABbUQBU7QGIUwagozMAa9UBCDcfjv8shiPckoui4TBoH47EjuEw7ByOHarhmK8agS/qEfhNMwI13SNg6jgSSU4jYd53JLwdRuGa4ygEOI/CTc0ojO4ZhXvaUZigG4WrPaMxrHc0CnSjEXQrEM9uB2J6QSDKCgPxf52BeKQKxA9dgSjRBEKpGIPNHWNg1DmGu8MxsO0ag1OaMRjQMwY3+xFoAKHMk7BoICHz6w/wr/sBT+t/wNzGH7DPZzJcfCcj328yVnhPgd5nCg77TsFg/yl4FDAFocOnQDZiCn4MmIovw6YibsRUmI/ifJmKc5VTMaZ6Kv6pmYrHiumY3zEdauV0qBpnIq15JnxlM7HSPBimwmBkWwYjSByMi5pgsJ5gfNUGY7suGK7fg9Hn1xCcCwtB0LwQVM4PgXnPz8jT/oxpup9R0ToLCfJZcGifhYKOWXhTE4r1taGwrw/FvYZQiKvn4HbNHITVzoG+bg7W24fByTEMfzuFYXnfMAhdw3BLEoZw9zBMcgxHk1M4DvYNR6BrOFb2zoONfh4efp+HZYbzEd03Ag6uEXgiicCc9ghufkbgemcE5qkj8Mw2EnH2kfBwjMRrp0jsco9EQL9IVPaPRIpnJKSyRRjfugitbYuQqViEbYFL4D9mCWrGLsGh8Utwf+xSrB6/FG4Tl6IsaClm9q6AkX4F7n5fgVjDKCyqjYJTfRTeNkRhT1MUKntX4Zh+FYINomHGi8bvxtEYZhqNb2bROC+Ixi8t0bBsi+b6NRqJ7dFYV7MaQ2tXo7FuNc41rIZvbQya62KQ0xCDyKYYHGqNwQx5DPjtMXjaEYMrf63Dqr/XYciTdVj5KR7eX+LRWhmP69Xx6ChMwO17CdjwIAFj/krANfMNWCvcgBGiDegSb8By2SYMbd0EZdsmPJ20DanYhl9/2Ibkhm0IbdoG92/bIJNtQ0fsdnxcsx1/rd2O7HXbkbR+O26cTMSxjET8cSoRd1oTkdmWiF3yRKxSJCI8bQfo0A4MSd8Bq8M78OLoDtw4tgPHj+/A9hM7YLFyJ1ScL6t24ln0TkhS9oAv3YNOTlLMXsTH7sXCNXtR1rEPj5T7cLVzH06q9uHbzSR8vJXEvaEk3LqTBPvOJPRRJaGDU6NOgigpGXpO2/5kVCYn41VKMh5Kk3ElNRmnDiQj+WAyZrUkg1qTMawtGR7yZASZp8DfIgXuwhSILVNgIErB7LgUID4FIxJSMGBDCteDUuQ7S3GurxTpLlLscpUiXiLFiPVSeMZJYR8vhVmCFPcypLhySorMTClSs6S4diUVZ66mIv1aKnZfT8XL9lQ86EjFdWUq5rUcRHDrQaDtIEbLD3Jz5hC6OK2qQ9jSdgTx8iNYrTiCpe1HcDrtKI4fOoq09KNIOnwUF5Ycx5mlx3Fy2XEcWX4c93acwJ2dJ5C/6wSu7D4BzboMqNZnoCMuA/L4DGRLM3A2NQNZBzKQcTAD+/SZ2Ps9E3sMsrDbMAv9o7PQbzUnJgv8Q5z0LJgdzoLpkSyUrjuN0vWcOE78aa7+p/Hvbc4dTsFpNLadwzf5ObQqzkHRfg6hK84jLOo85q88j99WnYddy3k4tZ6Ha9t5iG9kwzY/G05/ZsP1ZjYu1+Xgen0ObjXk4G5jDrb65mK3Xy5S/HNxOCAXJMvFTy25mNWaC92SPJgsy4N4eR6cVuQh7EIeFl/Mw+pLeUjIzcPt2gL8r64An+oL8IeuAGn6AmR/L0ChQSHEtoXob1eIUfaFmONViKiBhdgyqBAHBhfiS8N9KBvvg998H27f7qNC9gCtLQ9g1PYAzvIHuO/5FB+8nkI58ClEg5/Cc2sx6I9i/LatGFu2F+OZ43PUOT3n/sPncHd5jsjW59jW9hyZ8ud4oHiOsb4vEO73Apv8X+BkwAsszCnBzgslyL5YgmeXSnBqSSkeLi1F1bJSGK4oxYn4UtxPKMWXDaXoPvMarudeI+j8ayzJfo2zn//B8y//cO/7H8w3LMMOXhkuGZXhdZ8yNNWVwbKhDCMbyzCvqQzDst8jLOc9Ei+8R+7F9/BdUI45EeXY9ls5LkaW483CcnQtKseoa+WIuF6OvTfKcT2/HI7GFZhkUoGVphWYllSBuP0VyEyuwLOUChhnVsA3qwJzT1dg+5kK3F38EbVLPsJy2UcsOP8J+7M/4U7OJ9Re+IRplVXYXFWFy9VV+K+mCvpB1Rg6pBoLvKsh9alGb04tfC/WIvJSLQ7l1uL20gY0L2uA64oGBFY1ILq6AWdqGvD+awMqeU2w6dOEKcZN2GrShIxPzfjnczNMK5sxoaoZm1Uy/KmW4VuXDB7V7Zhf047jXzmLlXi/RAmrZUpIl2rwapkGwhUabF2lxV/RWhjEaBHF1+GKQIc2cx0ChDogRoc9sTr8b40O5ut0iDutQ8EZHXrO6jD+vA656wzYtPUGrI0zc4wha+ccGWvIAscZsrN8EzZZYMJaOX+NNGFLRpkwwWgTls8ZPdWEfeHs/InL+ZuyfM7cAFPWXypgpZz4VAGTHBAw72Hm7D1n63BzNnCEORvpI2RVnP1DhazztiU7c8eSTSuwZGpO5mURm5onYirOyVgx+3GNmHVwRl8Rs1rOwatiNu6amF18L2azy8XMoELMrnA+XLZhu/Ns2PArNmzLJVs2JNeW/cvZd9mWZeTYsZ8u2LEeTu5FO/Yl2ZGlpjiyiVJHpuD4dDmySs4BjSML6nZkF6e6sHk/uTDLaS7sMScyz5XZXnFlLzhbr7qyfiES9oGT/LOEfe+VsFs6CYvSS5jku4TVXXdjJ264sZn5bsxC7s6ecDYq3Nnkbx5Mz7kl82CrWjzY2/wBbN+fA1jQzQFMwxk71pMpOXnjPNmS8Z5MeMCLPeNsO+jFAtO8mFu9F/uXc6jBi62e4c0Gz/Rm9Zwzwd6sq34ou9UwlK1tHMo+3vJjR2/7sV/u+LEpjf7MtMmfFXN2Nfuz+UMCWF/vAPYf54RPAGOLxzGzJePYK862lPGMScczQep49oYTKZzAvCwnMBknXzSBPRoyke3xnsim+0xkslVB7M/oILZxdRCbGBPEIp6BeT0H48YDK/wf2B+FwWzG3WDmci+YfbMMYXdFIWyfOIRphbPYS8tZ7KRoFuO5hrJ3nBxJKEtwC2VO0lAm4zxIDWWpB0LZ05y57NiFuWzlxblMvyyMlS0PYzkrwtjvUWFseV04G1sfzsQN4SxsXgTzmx/BjBdEsPcti9nV1sVsd9tiFiFfzIRXo1gTp+haFMu6HsViI1ayab+tZF6RKxlv4Upm6LeKfeHc9V/FbObHsnbOmwWx7GpELMs4Fce2ZMax+VlxbNzpOObvu5FZ+21knZxy/42s/sRG9vzkRpabsZEVn9rCcjO3MGnWFrb29BZWOyORzZmZyF5yxgcnskmzdrLbnMGzd7LrLbuZZ+tudpIjatvNDtvuYXy7PewPTien8PIe5pu3h2Vz/kxJYoOlSewMp1uxn61p38+aOKmDkpnx4GS2laPizHyXzJ5xJrxPZlNFKewx5//EKWxrbCpTc2LXpLImzk7Xg0zHSZAcZPExaUzBWRmbxuo4NZvS2LzNaayCE7IljfGlaWwXR88pPpTGgtLT2D3OiMNpbKNZOlNyYvjpbJFfOlfDdParfzr7f0uGack=</binary>
+          </binaryDataArray>
+          <binaryDataArray encodedLength="1272">
+            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+            <binary>eJyVmK9vFEEUx1dgSIBUIBCI+xPWkFSQMLs1CEQ1agUCWcEfcEFdUCsQF1TlyhOIkycQlZXIC6oCUUUqmdfdab/z2ZnpdZJNdnZ+vO/7vu97M3dVZa1uqrum77/9+6X0d258Qjv3731mbe5979espH92wJrrJrZreyxkfOn7L9vxu+5X+fcN5hneo2Z8Vz8G2m5iDF0z2vjrn6/+2cnYatrzrrkRc9/M+TFbnXzbAK+Tvs3V/jNv96d//rUxH3XCH7VBf3cYV4zG4V7mOv9+Cg7V15Qm3MRdD/6WCe5778ubk6r61caxu+VX5tka2/MK/Gjc9vDZcNzYtzbtC/kONmz+qzaeV8FncvDFz1/750jW0VfGpIMv2lftmdYXiJGtv0AeqS3rf/dYnnpuP7fxGHkgThtzLh4/ArYnU8wuM5iN9x9+/IPxId/XB+S7+kWs1nfArvrrRTd1Oz47cE3NUvOKhXq3/jk0F/aysQ3sXIPLbqoBoR17fH/88629x0B9DZNPAVeID3Hbvq/9Pm9Fg9ZPxU8xKhf097ZmQXv99O3TlLOssYqTeaO2zKcBsTR+BnDG/NMYp/ZV/4yTa+TJooCJehvgW+q8s2+m8wF2SnitFj4/GXN0C0zv/bePfuzFyby2UscaK5fAZo35bFh2mbnqQ4e8cYgD6y/ryBnmlvJ2A45SZ1ZOw1Zzl+9gF2vPgUX9WkxnU2pvjbftq/Vd523AFTVray3XL2x9G9eA1Pmi3NwgJmHtAD/tvcc+p8CQwk592FgNTOFM134OL2sIY2k4Q81InT0D+NfxGv6w/lG/yjP9NB+2qotEzKhBvbs+FLerpnxXIk/Gyxr4Q6uhUWqce+Xu5am77zH0WBd8pF2eQeZfx/mJfS8YCzc/50/BxT7BAePDO9YWc4h32dz/JindkaxfqunUpY6V7td9M7/bRfhcOZeo8crFGp3lLMaisxL5RH67Jl8nqW3itLm5ux/PArOrXGtMLwt1iFwQQ+quyLpUqp+8s+8x3yXsq73SnXv5CC6pkcBHSjs5LdBGSc/ch/FZoE+/ee5HnKPebxNn0UPvs9/ugpO1SXOJ54HGsoMPszuBi+em3m1/vRvn4mYtdQ6m5jFHyTWxlPTI2kJNkB/Orw/0TbXhmvl/N8w5xcAcm8X9AJuM1wIcMqd1LHU3Cm2Nelq6o+Zqlt6FQj/nL7nRfVYFfw2//m+Sqs2h2e/F0rlMDGcYK+mPOta5JW3l7hAlPzpwmqsR1MJjaub8/5r/YAPCpQ==</binary>
+          </binaryDataArray>
+        </binaryDataArrayList>
+      </spectrum>
+      <spectrum index="1" id="scan=2" defaultArrayLength="248">
+        <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
+        <scanList count="1">
+          <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
+          <scan>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="0.024150000885" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="2"/>
+            <scanWindowList count="1">
+              <scanWindow>
+                <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="50.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000500" name="scan window upper limit" value="1200.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              </scanWindow>
+            </scanWindowList>
+          </scan>
+        </scanList>
+        <precursorList count="1">
+          <precursor>
+            <isolationWindow>
+              <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="575.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="525.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="625.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+            </isolationWindow>
+            <selectedIonList count="1">
+              <selectedIon>
+                <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="575.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              </selectedIon>
+            </selectedIonList>
+            <activation>
+              <cvParam cvRef="MS" accession="MS:1000422" name="beam-type collision-induced dissociation" value=""/>
+            </activation>
+          </precursor>
+        </precursorList>
+        <binaryDataArrayList count="2">
+          <binaryDataArray encodedLength="1216">
+            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000514" name="m/z array" value="" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+            <binary>eJwNxXlMmwUYB2DlWFnHKKWlZWTdOkZbjsiIDIjyAfr+3rE0GhVmUAk0dGWHGnEJxjGTuQF2hKAlOMIcEZGgEhaQRhf9w5hJrG4oJhtyjbWUjqNUhLJyLaMOvz+ePCe3qsn/uJqqQ86RytlM265m8rmb6W9PM2kVbRQX20YydRtJ9rTR9mg37Z7opvjJbkpydlOCt4cyfD3Eiz306lIPHYiwU47UTsWRdspfHqD3VgaoJzBA5slB6nQO0v2pQUrwDFJJ6BC1hw+RRzJEidIh+iHLQ+pnPFSd46GmRQ89WPLQsRUPXQ946P0NH8089NHLWz5SK8JQrgzDtdgweGMkyFRKUBsrwU5NBF7fF4Fv9kdgXRuBf9akEDaksG1KMf1QiisxSqwplCiMVWJ4ToWnvSp8uqDCqk+Fp+6pYXOqseJSo9CthvCKBl8VahB5TIPvZxJxcC4Rl+cTEbqQiJeidbgh1+GQQocvlTq8E9DDvapH0boejg09/LsNMMsMGIk24GiMAf2TKdA7U9DuSoHSnYJ/x1JRMZEK591UPFKm46wqHWvqdJREZWBSloE35BloiReg2SugWyNAMSvgizkBSV4B3y0IcN8DzriAEDdweRrYlBhh22mEbpcRP0UaURRlhE9mRMFCMRZ9xWhaLMbhpWIc9ZcisFKKzwOlKFgrxcjzJlyECalHTJCVW3DDbMEZiwVwVSHUXYVfp6tQd78K5z+04vQFK4ouWiHUWKGvtUJeZ8WWKERdj2XRZFw9fttTj6nGRvz1cSN+/qQRPNeK3PlWZHlbMdbbgbG+Dox/K+rvwPnTnbjwZidq3upEvrkLdLwLRyxdMFZ04dxMLz6a7UXTXC+uzouX96HN3Ievj/dhV4YDhsMOINOBmBEH0kYdeGHMgVPjDlyb9mPW48e+GT8GRoMIGw+iYCKIhrtB7NfJ+E/RWb2MEwwyvm6Rs7lCzlEn5Dzwu4LfvalgzS0FD4nuZMZzXVY8Z2bHs1f0qFXL9itaPvmZlvde1fKLaUm841AS/yK6eSKZa04ms3AqmTdFqf3ZvCyy27P5g+1czn8ij8OfzONMJ/Nj0S0Xc/MUc+GDMtYHyjgoGl4t45LbJk6/Y+IdwyZef7aSh3Mq2S5UsjZ4iVtFkf9d4lrRH6EN/FxYA/8oSgtv4ECCjd8+aONZ0VSujV/Ls/FtkTHfxgeiW7hdFCdv4f8BCDuhxA==</binary>
+          </binaryDataArray>
+          <binaryDataArray encodedLength="272">
+            <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+            <binary>eJyNUrENAyEMZIAUP8KPkBEgEzDCj8AIlCkZgTJlRvgyY3yZMcKJT2JOGGEJCWP77mxjDOzqzM+Wct/t3/fkp+JbkY/anfze3VIdeCLhfg18ywQm40v/sPX0cnN530jLpuDiPQuc4Fpc5omkPdD8JPZroi/jziNicm7QBo7LrdUBTsnL89HuwDKiDv2vZzxRjP9KUDChV92bbf/FaPeJdqb9n0yYyHsqmJyL/u7Cf7uqsVeLvXgF9zHQCo40sQtP3KMdRtJdYx91BkRz</binary>
+          </binaryDataArray>
+        </binaryDataArrayList>
+      </spectrum>
+    </spectrumList>
+  </run>
+</mzML>
