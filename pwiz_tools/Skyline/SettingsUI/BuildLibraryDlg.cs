@@ -175,7 +175,7 @@ namespace pwiz.Skyline.SettingsUI
                     .ToArray());
             ceCombo.SelectedItem = Settings.Default.KoinaNCE;
             
-            if (_documentUiContainer.DocumentFilePath != null)
+            if (_documentUiContainer.Document.PeptideCount > 0)
                 comboBuildLibraryTarget.SelectedIndex = (int)BuildLibraryTargetOptions.currentSkylineDocument;
             else
                 comboBuildLibraryTarget.SelectedIndex = (int)BuildLibraryTargetOptions.fastaFile;
