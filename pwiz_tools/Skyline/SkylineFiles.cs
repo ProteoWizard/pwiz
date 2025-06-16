@@ -3533,7 +3533,7 @@ namespace pwiz.Skyline
                 return;
             }
 
-            using var shareTypeDlg = new ShareTypeDlg(Document, DocumentFilePath, GetFileFormatOnDisk(), documentCacheVersion, true);
+            using var shareTypeDlg = new ShareTypeDlg(Document, DocumentFilePath, GetFileFormatOnDisk(), documentCacheVersion);
             if (shareTypeDlg.ShowDialog(this) == DialogResult.Cancel)
             {
                 return;

@@ -117,11 +117,17 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             }
         }
 
+        /// <summary>
+        /// Delete the given folder from the Ardia server associated with this <see cref="ArdiaClient"/>.
+        /// This uses .NET's deprecated <see cref="HttpWebRequest"/> API to make the DELETE call. .NET's preferred <see cref="HttpClient"/> 
+        /// unexpectedly specifies the Content-Type header's "charset=utf-8" attribute, which causes the delete API to return an error
+        /// code (400 Bad Request). <see cref="HttpWebRequest"/> does not automatically set charset and works correctly.
+        /// </summary>
+        /// <param name="folderPath">fully qualified path of the folder to delete</param>
         // TODO: report the Content-Type charset issue to Ardia
         // TODO: is there a way to make this "test only" without just moving it into the test?
         public void DeleteFolder(string folderPath)
         {
-            using var httpClient = AuthenticatedHttpClient();
             try
             {
                 var encodedFolderPath = Uri.EscapeDataString(folderPath);
@@ -142,6 +148,9 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
                 httpWebRequest.CookieContainer.Add(cookie);
 
                 var response = (HttpWebResponse)httpWebRequest.GetResponse();
+
+                // Successful delete returns status code 204
+                //      See: https://api.hyperbridge.cmdtest.thermofisher.com/navigation/api/swagger/index.html
                 if (response.StatusCode != HttpStatusCode.NoContent)
                 {
                     var uri = new Uri(ServerUri.Host + PATH_DELETE_FOLDER);
@@ -161,10 +170,8 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             }
         }
 
-        // TODO: improve and test error handling throughout, incl. authentication, malformed json, file upload failure, invalid destination directory
-        // TODO: success tests
-        // TODO: HttpClient encodes destinationFolderPath by default
-        // CONSIDER: destinationFolderPath must be an absolute path starting with "/". Add input validation?
+        // TODO: improve and test error handling throughout, incl. user-facing error messages as appropriate, bad JSON, file upload failure, invalid destination directory
+        // CONSIDER: input validation? DestinationFolderPath must be an absolute path starting with "/".
         /// <summary>
         /// Upload a zip file to the Ardia API. The .zip file must contain Skyline files - including .sky, .sky.view, .skyl, etc.
         /// </summary>
