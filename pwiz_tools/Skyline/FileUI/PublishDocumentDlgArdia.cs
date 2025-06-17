@@ -19,6 +19,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Net;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -111,6 +112,16 @@ namespace pwiz.Skyline.FileUI
             });
         }
 
+        internal override string LoadExpansionAndSelection()
+        {
+            return Settings.Default.ArdiaServerExpansion;
+        }
+
+        internal override void SaveExpansionAndSelection()
+        {
+            Settings.Default.ArdiaServerExpansion = ServerTreeStateRestorer.GetPersistentString();
+        }
+
         private void TreeViewFolders_AfterSelect(object sender, TreeViewEventArgs treeViewEventArgs)
         {
             createRemoteFolder.Enabled = treeViewFolders.SelectedNode != null;
@@ -128,29 +139,34 @@ namespace pwiz.Skyline.FileUI
             }
 
             var ardiaAccount = ArdiaAccountForTreeNode(parentTreeNode);
-            var parentUrl = (ArdiaUrl)(parentTreeNode.Tag as ArdiaFolderInfo)?.RemoteUrl;
+            var parentUrl = (ArdiaUrl)((ArdiaFolderInfo)parentTreeNode.Tag)?.RemoteUrl;
 
-            treeViewFolders.Cursor = Cursors.WaitCursor;
-
-            IList<RemoteItem> remoteItems = new List<RemoteItem>();
-
-            using var waitDlg = new LongWaitDlg();
-            waitDlg.Text = string.Format(ArdiaResources.OpenFolder_Title, parentTreeNode.Text);
-            waitDlg.PerformWork(this, 1000, progressMonitor =>
+            try
             {
-                RemoteCallPending = true;
+                treeViewFolders.Cursor = Cursors.WaitCursor;
 
-                var ardiaClient = ArdiaClient.Create(ardiaAccount);
-                remoteItems = ardiaClient.GetFolders(parentUrl, progressMonitor);
+                IList<RemoteItem> remoteItems = new List<RemoteItem>();
 
-                RemoteCallPending = false;
-            });
+                using var waitDlg = new LongWaitDlg();
+                waitDlg.Text = string.Format(ArdiaResources.OpenFolder_Title, parentTreeNode.Text);
+                waitDlg.PerformWork(this, 1000, progressMonitor =>
+                {
+                    RemoteCallPending = true;
 
-            AddItemsToFolder(remoteItems, parentTreeNode);
+                    var ardiaClient = ArdiaClient.Create(ardiaAccount);
+                    remoteItems = ardiaClient.GetFolders(parentUrl, progressMonitor);
 
-            ((ArdiaFolderInfo)parentTreeNode.Tag)!.RemoteContentsLoaded = true;
+                    RemoteCallPending = false;
+                });
 
-            treeViewFolders.Cursor = Cursors.Default;
+                AddItemsToFolder(remoteItems, parentTreeNode);
+
+                ((ArdiaFolderInfo)parentTreeNode.Tag)!.RemoteContentsLoaded = true;
+            }
+            finally
+            {
+                treeViewFolders.Cursor = Cursors.Default;
+            }
         }
 
         // TODO: does Ardia API include whether the current user has permission to upload to a given directory?
@@ -160,6 +176,10 @@ namespace pwiz.Skyline.FileUI
         //       folder can be expanded even if expanding adds no child nodes. 
         private void AddItemsToFolder(IList<RemoteItem> remoteItems, TreeNode parentTreeNode)
         {
+            // Before expanding, remove the placeholder node to avoid showing a tree node with an empty label.
+            // The placeholder node was added so TreeView displays the '+' for expand / collapse.
+            RemovePlaceholderFrom(parentTreeNode); 
+
             if (remoteItems.Count == 0)
                 return;
 
@@ -168,9 +188,6 @@ namespace pwiz.Skyline.FileUI
 
             UpdateTree(() =>
             {
-                // Before adding more child nodes, remove placeholder node added so TreeView displays the '+' for expand / collapse
-                RemovePlaceholderFrom(parentTreeNode); // parentTreeNode.Nodes[0].Remove());
-
                 foreach (var remoteItem in remoteItems)
                 {
                     var childTreeNode = CreateFolderNode(remoteItem.Label);
@@ -302,16 +319,44 @@ namespace pwiz.Skyline.FileUI
 
             var ardiaAccount = ArdiaAccountForTreeNode(newTreeNode);
             var parentFolderPath = DestinationPathFor(newTreeNode.Parent);
+            ArdiaError serverError = null;
 
             using var waitDlg = new LongWaitDlg();
             waitDlg.Text = ArdiaResources.CreateFolder_Title;
             waitDlg.PerformWork(this, 1000, longWaitBroker =>
             {
                 var ardiaClient = ArdiaClient.Create(ardiaAccount);
-                ardiaClient.CreateFolder(parentFolderPath, newFolderName, longWaitBroker);
+                ardiaClient.CreateFolder(parentFolderPath, newFolderName, longWaitBroker, out serverError);
             });
 
-            treeViewFolders.SelectedNode = newTreeNode; 
+            if (serverError == null)
+            {
+                treeViewFolders.SelectedNode = newTreeNode;
+            }
+            else 
+            {
+                switch (serverError.StatusCode)
+                {
+                    case HttpStatusCode.Unauthorized:
+                        MessageDlg.Show(this, string.Format(ArdiaResources.CreateFolder_Error_NotAuthenticated, newFolderName));
+                        break;
+                    case HttpStatusCode.BadRequest:
+                    case HttpStatusCode.Conflict:
+                        MessageDlg.Show(this, string.Format(ArdiaResources.CreateFolder_Error_FileAlreadyExists, newFolderName));
+                        break;
+                    case HttpStatusCode.Forbidden:
+                        MessageDlg.Show(this, string.Format(ArdiaResources.CreateFolder_Error_Forbidden, parentFolderPath, newFolderName));
+                        break;
+                    default:
+                        // CONSIDER: not sure about this pattern of error handling. URI is useful yet not available in this context. Is it better
+                        //           to throw from ArdiaClient and catch here, optionally deciding whether to handle locally throw up to the caller?
+                        //           With a cavet that LongWaitDlg wraps and re-throws exceptions, which probably isn't what we want here.
+                        throw ArdiaServerException.Create(@"Error creating folder", null, serverError, null);
+                }
+
+                treeViewFolders.SelectedNode = e.Node.Parent;
+                e.Node.Remove();
+            }
         }
 
         private void TreeViewFolders_BeforeExpand(object sender, TreeViewCancelEventArgs e)

@@ -76,6 +76,7 @@
     <Compile Include="RemoteApi\Ardia\ArdiaAccount.cs" />
     <Compile Include="RemoteApi\Ardia\ArdiaClient.cs" />
     <Compile Include="RemoteApi\Ardia\ArdiaCredentialHelper.cs" />
+    <Compile Include="RemoteApi\Ardia\ArdiaError.cs" />
     <Compile Include="RemoteApi\Ardia\ArdiaFileObject.cs" />
     <Compile Include="RemoteApi\Ardia\ArdiaFolderObject.cs" />
     <Compile Include="RemoteApi\Ardia\ArdiaObject.cs" />

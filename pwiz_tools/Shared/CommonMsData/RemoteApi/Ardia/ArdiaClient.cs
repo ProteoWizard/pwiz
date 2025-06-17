@@ -97,7 +97,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             return client;
         }
 
-        public void CreateFolder(string parentFolderPath, string folderName, IProgressMonitor progressMonitor)
+        public bool CreateFolder(string parentFolderPath, string folderName, IProgressMonitor progressMonitor, out ArdiaError serverError)
         {
             HttpStatusCode? statusCode = null;
             var responseBody = string.Empty;
@@ -112,17 +112,30 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
                 using var httpClient = AuthenticatedHttpClient();
 
                 var response = httpClient.PostAsync(PATH_CREATE_FOLDER, request).Result;
+
                 statusCode = response.StatusCode;
                 responseBody = response.Content.ReadAsStringAsync().Result;
-                
-                response.EnsureSuccessStatusCode();
+
+                if (statusCode == HttpStatusCode.Created)
+                {
+                    serverError = null;
+                    return true;
+                }
+                else {
+                    serverError = ArdiaError.CreateFromResponse(statusCode, responseBody);
+                    return false;
+                }
             }
             catch (Exception e)
             {
-                var uri = UriFromParts(ServerUri, PATH_CREATE_FOLDER); 
-                var message = string.Format(ArdiaResources.CreateFolder_Error, parentFolderPath, folderName);
+                var uri = UriFromParts(ServerUri, PATH_CREATE_FOLDER);
+                serverError = ArdiaError.CreateFromResponse(statusCode, responseBody);
 
-                throw ArdiaServerException.Create(message, uri, statusCode, responseBody, e);
+                var message = ErrorMessageBuilder
+                    .Create(string.Format(ArdiaResources.CreateFolder_Error, parentFolderPath, folderName)).Uri(uri)
+                    .ServerError(serverError).ToString();
+
+                throw ArdiaServerException.Create(message, uri, serverError, e);
             }
         }
 
@@ -137,6 +150,9 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         // TODO: is there a way to make this "test only" without just moving it into the test?
         public void DeleteFolder(string folderPath)
         {
+            HttpStatusCode? statusCode = null;
+            var responseBody = string.Empty;
+
             try
             {
                 var encodedFolderPath = Uri.EscapeDataString(folderPath);
@@ -158,9 +174,11 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
 
                 var response = (HttpWebResponse)httpWebRequest.GetResponse();
 
+                statusCode = response.StatusCode;
+
                 // Successful delete returns status code 204
                 //      See: https://api.hyperbridge.cmdtest.thermofisher.com/navigation/api/swagger/index.html
-                if (response.StatusCode != HttpStatusCode.NoContent)
+                if (statusCode != HttpStatusCode.NoContent)
                 {
                     var uri = new Uri(ServerUri.Host + PATH_DELETE_FOLDER);
                     var message = string.Format(ArdiaResources.DeleteFolder_Error, folderPath);
@@ -172,8 +190,6 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             {
                 var message = string.Format(ArdiaResources.DeleteFolder_Error, folderPath);
                 var uri = new Uri(ServerUri + PATH_DELETE_FOLDER);
-                var statusCode = (e.Response as HttpWebResponse)?.StatusCode;
-                var responseBody = string.Empty;
 
                 throw ArdiaServerException.Create(message, uri, statusCode, responseBody, e);
             }
@@ -219,6 +235,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         private void CreateStagedDocument(out string presignedUrl, out string uploadId)
         {
             HttpStatusCode? statusCode = null;
+            var responseBody = string.Empty;
 
             try
             {
@@ -233,17 +250,17 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
                 statusCode = response.StatusCode;
                 response.EnsureSuccessStatusCode();
 
-                var responseString = response.Content.ReadAsStringAsync().Result;
-                var modelResponse = JsonConvert.DeserializeObject<StagedDocumentResponse>(responseString);
+                responseBody = response.Content.ReadAsStringAsync().Result;
 
-                presignedUrl = modelResponse.Pieces[0].PresignedUrls[0];
-                uploadId = modelResponse.UploadId;
+                var responseModel = JsonConvert.DeserializeObject<StagedDocumentResponse>(responseBody);
+
+                presignedUrl = responseModel.Pieces[0].PresignedUrls[0];
+                uploadId = responseModel.UploadId;
             }
             catch (Exception e)
             {
                 var message = ArdiaResources.Ardia_FileUpload_StageDocumentError;
                 var uri = new Uri(ServerUri + PATH_STAGE_DOCUMENT);
-                var responseBody = string.Empty;
 
                 throw ArdiaServerException.Create(message, uri, statusCode, responseBody, e);
             }
@@ -252,6 +269,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         private static void StageFileOnAws(string zipFilePath, string presignedUrl, out int uploadBytes)
         {
             HttpStatusCode? statusCode = null;
+            var responseBody = string.Empty;
 
             try
             {
@@ -268,13 +286,14 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
 
                 var response = awsHttpClient.SendAsync(awsRequest).Result;
                 statusCode = response.StatusCode;
+                responseBody = response.Content.ReadAsStringAsync().Result;
+
                 response.EnsureSuccessStatusCode();
             }
             catch (Exception e)
             {
                 var message = ArdiaResources.Ardia_FileUpload_UploadFileError;
                 var uri = new Uri(presignedUrl);
-                var responseBody = string.Empty;
 
                 throw ArdiaServerException.Create(message, uri, statusCode, responseBody, e);
             }
@@ -283,6 +302,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         private void CreateDocument(string destinationFolderPath, string destinationFileName, string uploadId, int uploadBytes, out Uri uploadedUri)
         {
             HttpStatusCode? statusCode = null;
+            var responseBody = string.Empty;
 
             try
             {
@@ -300,10 +320,12 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
 
                 using var httpClient = AuthenticatedHttpClient();
                 var response = httpClient.PostAsync(PATH_CREATE_DOCUMENT, request).Result;
+
                 statusCode = response.StatusCode;
+                responseBody = response.Content.ReadAsStringAsync().Result;
+                
                 response.EnsureSuccessStatusCode();
 
-                var responseBody = response.Content.ReadAsStringAsync().Result;
                 var ardiaDocumentResponse = JsonConvert.DeserializeObject<DocumentResponse>(responseBody);
 
                 uploadedUri = new Uri(ardiaDocumentResponse.PresignedUrls.First());
@@ -312,7 +334,6 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             {
                 var message = ArdiaResources.Ardia_FileUpload_CreateDocumentError;
                 var uri = new Uri(ServerUri + PATH_CREATE_DOCUMENT);
-                var responseBody = string.Empty;
 
                 throw ArdiaServerException.Create(message, uri, statusCode, responseBody, e);
             }
@@ -378,51 +399,88 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         }
     }
 
-    // TODO: refactor ErrorMessageBuilder out of Panorama and use here?
     // TODO - IMPORTANT: scrub access tokens from URI and responseBody
     // CONSIDER: error message tailored to problems parsing the response as JSON
     // CONSIDER: can more be reused with Panorama's error reporting, including PanoramaServerException?
     public class ArdiaServerException : Exception
     {
-        public static ArdiaServerException Create(string skylineMessage, Uri uri, HttpStatusCode? statusCode, string responseBody, Exception inner)
+        public static ArdiaServerException Create(string message, Uri uri, HttpStatusCode? statusCode, string responseBody, Exception inner)
         {
-            var statusCodeStr = statusCode != null ? statusCode.ToString() : string.Empty;
-            var innerMessage = inner != null ? inner.Message : string.Empty;
-            var serverMessage = GetIfErrorInResponse(responseBody);
+            var ardiaError = ArdiaError.CreateFromResponse(statusCode, responseBody);
 
-            var exceptionMessage = $@"{skylineMessage} {serverMessage} {uri} {statusCodeStr} {responseBody} {innerMessage}";
-
-            return new ArdiaServerException(exceptionMessage, uri, statusCode, responseBody, inner);
+            return Create(message, uri, ardiaError, inner);
         }
 
-        public Uri Uri { get; }
-        public HttpStatusCode? HttpStatus { get; }
-        public string ResponseBody { get; }
+        public static ArdiaServerException Create(string message, Uri uri, ArdiaError serverError, Exception inner)
+        {
+            return new ArdiaServerException(message, uri, serverError, inner);
+        }
 
-        private ArdiaServerException(string message, Uri uri, HttpStatusCode? status, string responseBody, Exception inner) 
+        private ArdiaServerException(string message, Uri uri, ArdiaError serverError, Exception inner) 
             : base(message, inner)
         {
             Uri = uri;
-            HttpStatus = status;
-            ResponseBody = responseBody;
+            ServerError = serverError;
         }
 
-        internal static string GetIfErrorInResponse(string responseBody)
+        public Uri Uri { get; }
+        public ArdiaError ServerError { get; }
+    }
+
+    // CONSIDER: refactor ErrorMessageBuilder out of Panorama and generalize for Ardia? Using a simpler version for now
+    //           while testing out approaches to error handling.
+    internal sealed class ErrorMessageBuilder
+    {
+        private readonly string _error;
+        private string _errorDetail;
+        private ArdiaError _serverError;
+        private Uri _uri;
+
+        public static ErrorMessageBuilder Create(string error)
         {
-            try
+            return new ErrorMessageBuilder(error);
+        }
+
+        private ErrorMessageBuilder(string error)
+        {
+            _error = error;
+        }
+
+        public ErrorMessageBuilder ErrorDetail(string errorDetail)
+        {
+            _errorDetail = errorDetail;
+            return this;
+        }
+
+        public ErrorMessageBuilder Uri(Uri uri)
+        {
+            _uri = uri;
+            return this;
+        }
+
+        public ErrorMessageBuilder ServerError(ArdiaError serverError)
+        {
+            _serverError = serverError;
+            return this;
+        }
+
+        // CONSIDER: Panorama's ErrorMessageBuilder supports setting the entire response body and an
+        //           exception message. Useful here too?
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            if (!string.IsNullOrEmpty(_errorDetail) || _serverError != null)
             {
-                var jsonResponse = JObject.Parse(responseBody);
-                if (jsonResponse?[@"title"] != null)
-                {
-                    return jsonResponse[@"title"].ToString();
-                }
+                sb.Append(ArdiaResources.Error_Prefix);
+                if (!string.IsNullOrEmpty(_errorDetail)) sb.AppendLine(_errorDetail);
+                if (_serverError != null) sb.AppendLine(_serverError.ToString());
             }
-            catch (JsonReaderException e)
+            if (_uri != null)
             {
-                // ignore
+                sb.AppendLine(ArdiaResources.Error_URL);
             }
 
-            return string.Empty;
+            return sb.Length > 0 ? CommonTextUtil.LineSeparate(_error, sb.ToString().TrimEnd()) : _error;
         }
     }
 }

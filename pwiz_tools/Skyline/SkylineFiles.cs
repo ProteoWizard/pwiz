@@ -3508,7 +3508,7 @@ namespace pwiz.Skyline
             PublishToArdia();
         }
 
-        // BUG: Removing RemoteAccounts using EditRemoteAccountsDlg may unexpectedly leave registered Ardia accounts intact
+        // BUG: Removing RemoteAccounts using EditRemoteAccountsDlg may unexpectedly leave registered Ardia accounts intact?
         // CONSIDER: when should an upload be split into multiple pieces?
         // CONSIDER: do un-saved Skyline documents need to be saved before being published?
         public void PublishToArdia()
@@ -3521,31 +3521,36 @@ namespace pwiz.Skyline
             // if (!ardiaAccount.HasToken())
             //     ardiaAccount.GetAuthenticatedHttpClient();
 
-            var localFileName = DocumentFilePath;
-            var documentCacheVersion = SkylineVersion.SupportedForSharing().FirstOrDefault();
-
-            using var publishDlg = new PublishDocumentDlgArdia(this, ardiaAccounts, localFileName, GetFileFormatOnDisk());
-            if (publishDlg.ShowDialog(this) == DialogResult.Cancel)
+            try
             {
-                return;
-            }
+                using var publishDlg = new PublishDocumentDlgArdia(this, ardiaAccounts, DocumentFilePath, GetFileFormatOnDisk());
+                if (publishDlg.ShowDialog(this) == DialogResult.Cancel)
+                {
+                    return;
+                }
 
-            using var shareTypeDlg = new ShareTypeDlg(Document, DocumentFilePath, GetFileFormatOnDisk(), documentCacheVersion);
-            if (shareTypeDlg.ShowDialog(this) == DialogResult.Cancel)
+                var cacheVersion = SkylineVersion.SupportedForSharing().FirstOrDefault();
+                using var shareTypeDlg = new ShareTypeDlg(Document, DocumentFilePath, GetFileFormatOnDisk(), cacheVersion);
+                if (shareTypeDlg.ShowDialog(this) == DialogResult.Cancel)
+                {
+                    return;
+                }
+
+                var fileName = publishDlg.FileName;
+                var shareType = shareTypeDlg.ShareType;
+
+                // CONSIDER: remove local .sky.zip file?
+                if (!ShareDocument(fileName, shareType))
+                {
+                    return;
+                }
+
+                publishDlg.Upload(this);
+            }
+            catch (ArdiaServerException e)
             {
-                return;
+                MessageDlg.ShowWithException(this, e.Message, e);
             }
-
-            var fileName = publishDlg.FileName;
-            var shareType = shareTypeDlg.ShareType;
-
-            // CONSIDER: remove local .sky.zip file?
-            if (!ShareDocument(fileName, shareType))
-            {
-                return;
-            }
-
-            publishDlg.Upload(this);
         }
 
         private void publishMenuItem_Click(object sender, EventArgs e)

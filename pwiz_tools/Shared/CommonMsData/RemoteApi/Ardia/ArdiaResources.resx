@@ -168,7 +168,25 @@
   <data name="CreateFolder_Error_IllegalCharacter" xml:space="preserve">
     <value>Folder names cannot include any of these characters {0}.</value>
   </data>
+  <data name="CreateFolder_Error_FileAlreadyExists" xml:space="preserve">
+    <value>Error creating '{0}'. An item with that name already exists.</value>
+  </data>
+    <data name="CreateFolder_Error_Forbidden" xml:space="preserve">
+    <value>Error creating '{1}'. Do you have permission to create a folder in '{0}'?</value>
+  </data>
+    <data name="CreateFolder_Error_NotAuthenticated" xml:space="preserve">
+    <value>Error creating '{1}'. Could not authenticate user.</value>
+  </data>
   <data name="DeleteFolder_Error" xml:space="preserve">
     <value>Error deleting folder {0}.</value>
+  </data>
+  <data name="Error_Prefix" xml:space="preserve">
+    <value>Error: </value>
+  </data>
+  <data name="Error_ResponseStatus" xml:space="preserve">
+    <value>Response status: {0}</value>
+  </data>
+  <data name="Error_URL" xml:space="preserve">
+    <value>URL: {0}</value>
   </data>
 </root>

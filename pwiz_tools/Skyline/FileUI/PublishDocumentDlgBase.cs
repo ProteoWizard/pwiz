@@ -66,6 +66,8 @@ namespace pwiz.Skyline.FileUI
             ServerTreeStateRestorer.RestoreExpansionAndSelection(LoadExpansionAndSelection());
             ServerTreeStateRestorer.UpdateTopNode();
 
+            treeViewFolders.Select();
+
             IsLoaded = true;
         }
 

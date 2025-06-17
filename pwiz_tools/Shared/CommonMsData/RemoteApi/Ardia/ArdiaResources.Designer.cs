@@ -170,11 +170,38 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error creating &apos;{0}&apos;. An item with that name already exists..
+        /// </summary>
+        public static string CreateFolder_Error_FileAlreadyExists {
+            get {
+                return ResourceManager.GetString("CreateFolder_Error_FileAlreadyExists", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error creating &apos;{1}&apos;. Do you have permission to create a folder in &apos;{0}&apos;?.
+        /// </summary>
+        public static string CreateFolder_Error_Forbidden {
+            get {
+                return ResourceManager.GetString("CreateFolder_Error_Forbidden", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Folder names cannot include any of these characters {0}..
         /// </summary>
         public static string CreateFolder_Error_IllegalCharacter {
             get {
                 return ResourceManager.GetString("CreateFolder_Error_IllegalCharacter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error creating &apos;{1}&apos;. Could not authenticate user..
+        /// </summary>
+        public static string CreateFolder_Error_NotAuthenticated {
+            get {
+                return ResourceManager.GetString("CreateFolder_Error_NotAuthenticated", resourceCulture);
             }
         }
         
@@ -202,6 +229,33 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia {
         public static string DeleteFolder_Error {
             get {
                 return ResourceManager.GetString("DeleteFolder_Error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: .
+        /// </summary>
+        public static string Error_Prefix {
+            get {
+                return ResourceManager.GetString("Error_Prefix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Response status: {0}.
+        /// </summary>
+        public static string Error_ResponseStatus {
+            get {
+                return ResourceManager.GetString("Error_ResponseStatus", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to URL: {0}.
+        /// </summary>
+        public static string Error_URL {
+            get {
+                return ResourceManager.GetString("Error_URL", resourceCulture);
             }
         }
         
