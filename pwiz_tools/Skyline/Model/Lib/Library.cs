@@ -991,6 +991,19 @@ namespace pwiz.Skyline.Model.Lib
             get { return false; }
         }
 
+        public Dictionary<Target, double> GetMedianRetentionTimes()
+        {
+            var allRetentionTimes = GetAllRetentionTimes(null);
+            if (allRetentionTimes == null)
+            {
+                return null;
+            }
+
+
+            return allRetentionTimes.SelectMany(dict => dict).GroupBy(kvp => kvp.Key, kvp => kvp.Value)
+                .ToDictionary(group => group.Key, MathNet.Numerics.Statistics.Statistics.Median);
+        }
+
         public virtual Dictionary<Target, double>[] GetAllRetentionTimes(IEnumerable<string> spectrumSourceFiles)
         {
             return null;
@@ -1432,6 +1445,17 @@ namespace pwiz.Skyline.Model.Lib
                 dict.Add(entry.Key, entry.Value.Item2.Min());
             }
             return dict;
+        }
+
+        public static LibraryRetentionTimes FromRetentionTimes(string path, TimeSource timeSource,
+            IDictionary<Target, double> retentionTimes)
+        {
+            if (retentionTimes == null)
+            {
+                return null;
+            }
+            return new LibraryRetentionTimes(path,
+                retentionTimes.ToDictionary(kvp => kvp.Key, kvp => Tuple.Create(timeSource, new[] { kvp.Value })));
         }
     }
 

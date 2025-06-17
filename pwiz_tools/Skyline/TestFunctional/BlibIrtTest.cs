@@ -36,9 +36,6 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void IrtBlibFunctionalTest()
         {
-            // TODO
-            return;
-
             TestFilesZip = @"TestFunctional\IrtTest.zip";
             RunFunctionalTest();
         }

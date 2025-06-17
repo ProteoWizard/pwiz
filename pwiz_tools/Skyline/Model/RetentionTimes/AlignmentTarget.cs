@@ -358,12 +358,12 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
             private LibraryRetentionTimes GetMedianRetentionTimes()
             {
-                if (Library.TryGetIrts(out var libraryRetentionTimes))
+                var medianRetentionTimes = Library.GetMedianRetentionTimes();
+                if (medianRetentionTimes == null)
                 {
-                    return libraryRetentionTimes;
+                    return null;
                 }
-
-                return null;
+                return LibraryRetentionTimes.FromRetentionTimes(string.Empty, TimeSource.scan, medianRetentionTimes);
             }
 
             public override string GetAxisTitle(RTPeptideValue rtPeptideValue)

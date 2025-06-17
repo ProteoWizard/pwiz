@@ -1029,7 +1029,27 @@ namespace pwiz.Skyline.SettingsUI.Irt
                                 {
                                     return;
                                 }
-                                var irtProvider = library.RetentionTimeProvidersIrt.ToArray();
+
+                                IRetentionTimeProvider[] irtProvider = Array.Empty<IRetentionTimeProvider>();
+
+                                if (StandardPeptideList.Count == 0)
+                                {
+                                    // When adding library retention times to an empty iRT database, just use the median raw retention times
+                                    // from the library without doing any alignment
+                                    var medianRetentionTimes = library.GetMedianRetentionTimes();
+                                    if (medianRetentionTimes != null)
+                                    {
+                                        irtProvider = new IRetentionTimeProvider[]
+                                        {
+                                            LibraryRetentionTimes.FromRetentionTimes(string.Empty, TimeSource.scan, medianRetentionTimes)
+                                        };
+                                    }
+                                }
+                                else
+                                {
+                                    irtProvider = library.RetentionTimeProvidersIrt.ToArray();
+                                }
+
                                 if (irtProvider.Any())
                                 {
                                     irtAverages = ProcessRetentionTimes(monitor, irtProvider, RegressionType);
