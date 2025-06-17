@@ -1817,4 +1817,16 @@
   <data name="TransitionFilterAndLibrariesSettings_SpectrumFilter" xml:space="preserve">
     <value>Spectrum Filter</value>
   </data>
+  <data name="ImputationSettings_ImputeMissingPeaks" xml:space="preserve">
+    <value>Impute Missing Peaks</value>
+  </data>
+  <data name="ImputationSettings_MaxPeakWidthVariation" xml:space="preserve">
+    <value>Max Peak Width Variation</value>
+  </data>
+  <data name="ImputationSettings_MaxRtShift" xml:space="preserve">
+    <value>Max RT Shift</value>
+  </data>
+  <data name="PeptideSettings_Imputation" xml:space="preserve">
+    <value>Imputation</value>
+  </data>
 </root>

@@ -45,8 +45,6 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestAuditLogLocalization()
         {
-            // TODO
-            return;
             // Verify localized string parsing
 
             // Same name but different resource file

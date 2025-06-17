@@ -2041,6 +2041,33 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Impute Missing Peaks.
+        /// </summary>
+        public static string ImputationSettings_ImputeMissingPeaks {
+            get {
+                return ResourceManager.GetString("ImputationSettings_ImputeMissingPeaks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Max Peak Width Variation.
+        /// </summary>
+        public static string ImputationSettings_MaxPeakWidthVariation {
+            get {
+                return ResourceManager.GetString("ImputationSettings_MaxPeakWidthVariation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Max RT Shift.
+        /// </summary>
+        public static string ImputationSettings_MaxRtShift {
+            get {
+                return ResourceManager.GetString("ImputationSettings_MaxRtShift", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to CCS (sqA).
         /// </summary>
         public static string IonMobilityAndCCS_CollisionalCrossSectionSqA {
@@ -3171,6 +3198,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string PeptideSettings_Filter {
             get {
                 return ResourceManager.GetString("PeptideSettings_Filter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Imputation.
+        /// </summary>
+        public static string PeptideSettings_Imputation {
+            get {
+                return ResourceManager.GetString("PeptideSettings_Imputation", resourceCulture);
             }
         }
         
