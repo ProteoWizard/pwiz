@@ -28,7 +28,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
 {
-    public class KeyValueGridDlg
+    public class KeyValueGridDlg : Control
     {
         /// <summary>
         /// Shows a simple dialog with a grid of labels (for keys) and textboxes (for values).
@@ -39,9 +39,9 @@ namespace pwiz.Skyline.Alerts
 
         public static void Show<TValue>(string title, IDictionary<string, TValue> gridValues, Func<TValue, string> valueToString,
             Action<string, TValue> stringToValue, Action<string, TValue> validateValue = null, Func<TValue, IEnumerable<string>> validValuesForValue = null, 
-            Func<TValue, string> keyToName = null)
+            Func<TValue, string> keyToName = null, ControlCollection control = null)
         {
-            Show(null, title, gridValues, valueToString, stringToValue, validateValue, validValuesForValue, keyToName);
+            Show(null, title, gridValues, valueToString, stringToValue, validateValue, validValuesForValue, keyToName, control);
         }
 
         /// <summary>
@@ -51,9 +51,9 @@ namespace pwiz.Skyline.Alerts
         /// the exception message and the invalid textbox value will be returned to its previous value.
         /// </summary>
 
-        public static void Show<TValue>(IWin32Window parent, string title, IDictionary<string, TValue> gridValues, Func<TValue, string> valueToString,
+        public static Dictionary<string, Control> Show<TValue>(IWin32Window parent, string title, IDictionary<string, TValue> gridValues, Func<TValue, string> valueToString,
             Action<string, TValue> stringToValue, Action<string, TValue> validateValue = null, Func<TValue, IEnumerable<string>> validValuesForValue = null, 
-            Func<TValue, string> keyToName = null)
+            Func<TValue, string> keyToName = null, ControlCollection control = null)
         {
             var layout = new TableLayoutPanel
             {
@@ -262,37 +262,48 @@ namespace pwiz.Skyline.Alerts
             var activeScreen = parent == null ? Screen.PrimaryScreen : Screen.FromHandle(parent.Handle); 
             int defaultHeight = Math.Min(3 * activeScreen.Bounds.Height / 4, layout.GetRowHeights().Sum() + 50);
 
-            using (var dlg = new MultiButtonMsgDlg(layout, Resources.OK, ctlTextRepresentation.ToString()))
+            if (control == null) 
             {
-                dlg.Text = title;
-                dlg.ClientSize = new Size(400, defaultHeight);
-                dlg.StartPosition = FormStartPosition.CenterParent;
-                dlg.ShowInTaskbar = false;
-                dlg.MinimumSize = dlg.Size;
-                layout.Size = dlg.ClientSize;
-                layout.Height -= 35;
-
-                var result = parent == null ? dlg.ShowParentlessDialog() : dlg.ShowWithTimeout(parent, title);
-                if (result == DialogResult.Cancel)
-                    return;
-
-                foreach (var kvp in keyToControl)
+                using (var dlg = new MultiButtonMsgDlg(layout, Resources.OK, ctlTextRepresentation.ToString()))
                 {
-                    if (kvp.Value is TextBox tb)
-                        stringToValue(tb.Text, gridValues[kvp.Key]);
-                    else if (kvp.Value is CheckBox cb)
-                        stringToValue(cb.Checked.ToString(), gridValues[kvp.Key]);
-                    else if (kvp.Value is ComboBox cmb)
+                    dlg.Text = title;
+                    dlg.ClientSize = new Size(400, defaultHeight);
+                    dlg.StartPosition = FormStartPosition.CenterParent;
+                    dlg.ShowInTaskbar = false;
+                    dlg.MinimumSize = dlg.Size;
+                    layout.Size = dlg.ClientSize;
+                    layout.Height -= 35;
+
+                    var result = parent == null ? dlg.ShowParentlessDialog() : dlg.ShowWithTimeout(parent, title);
+                    if (result == DialogResult.Cancel)
+                        return null;
+
+                    foreach (var kvp in keyToControl)
                     {
-                        if (cmb.SelectedItem != null)
+                        if (kvp.Value is TextBox tb)
+                            stringToValue(tb.Text, gridValues[kvp.Key]);
+                        else if (kvp.Value is CheckBox cb)
+                            stringToValue(cb.Checked.ToString(), gridValues[kvp.Key]);
+                        else if (kvp.Value is ComboBox cmb)
                         {
-                            stringToValue(cmb.SelectedItem.ToString(), gridValues[kvp.Key]);
+                            if (cmb.SelectedItem != null)
+                            {
+                                stringToValue(cmb.SelectedItem.ToString(), gridValues[kvp.Key]);
+                            }
                         }
+                        else
+                            throw new InvalidOperationException();
                     }
-                    else
-                        throw new InvalidOperationException();
                 }
             }
+            else
+            {
+                layout.Dock = DockStyle.Fill;
+                control.Add(layout);
+                return keyToControl;
+            }
+
+            return null;
         }
     }
 }

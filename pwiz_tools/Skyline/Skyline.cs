@@ -2705,6 +2705,7 @@ namespace pwiz.Skyline
 
         #region Tools Menu
 
+        private ToolOptionsUI _toolOptionsUI;
         private void optionsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ShowToolOptionsUI();
@@ -2712,19 +2713,15 @@ namespace pwiz.Skyline
 
         public void ShowToolOptionsUI()
         {
-            using (var dlg = new ToolOptionsUI(_documentUI.Settings))
-            {
-                dlg.ShowDialog(this);
-            }
+            _toolOptionsUI ??= new ToolOptionsUI(_documentUI.Settings);
+            _toolOptionsUI.ShowDialog(this);
         }
 
         public void ShowToolOptionsUI(IWin32Window owner, ToolOptionsUI.TABS tab)
         {
-            using (var dlg = new ToolOptionsUI(_documentUI.Settings))
-            {
-                dlg.NavigateToTab(tab);
-                dlg.ShowDialog(owner);
-            }
+            _toolOptionsUI ??= new ToolOptionsUI(_documentUI.Settings);
+            _toolOptionsUI.NavigateToTab(tab);
+            _toolOptionsUI.ShowDialog(owner);
         }
 
         public void ShowToolOptionsUI(ToolOptionsUI.TABS tab)
@@ -3260,25 +3257,23 @@ namespace pwiz.Skyline
 
                     if (proteomic && !backgroundProteome.IsNone)
                     {
-                        if (labelText != null)
+                        int ichPeptideSeparator = labelText.IndexOf(FastaSequence.PEPTIDE_SEQUENCE_SEPARATOR,
+                            StringComparison.Ordinal);
+                        string proteinName;
+                        if (ichPeptideSeparator >= 0)
                         {
-                            int ichPeptideSeparator = labelText.IndexOf(FastaSequence.PEPTIDE_SEQUENCE_SEPARATOR,
-                                StringComparison.Ordinal);
-                            string proteinName;
-                            if (ichPeptideSeparator >= 0)
-                            {
-                                // TODO(nicksh): If they've selected a single peptide, then see if the protein has already
-                                // been added, and, if so, just add the single peptide to the existing protein.
-                                peptideSequence = new Target(labelText.Substring(0, ichPeptideSeparator));
-                                proteinName = labelText.Substring(ichPeptideSeparator +
-                                                                  FastaSequence.PEPTIDE_SEQUENCE_SEPARATOR.Length);
-                            }
-                            else
-                            {
-                                proteinName = labelText;
-                            }
-                            fastaSequence = backgroundProteome.GetFastaSequence(proteinName);
+                            // TODO(nicksh): If they've selected a single peptide, then see if the protein has already
+                            // been added, and, if so, just add the single peptide to the existing protein.
+                            peptideSequence = new Target(labelText.Substring(0, ichPeptideSeparator));
+                            proteinName = labelText.Substring(ichPeptideSeparator +
+                                                              FastaSequence.PEPTIDE_SEQUENCE_SEPARATOR.Length);
                         }
+                        else
+                        {
+                            proteinName = labelText;
+                        }
+                        fastaSequence = backgroundProteome.GetFastaSequence(proteinName);
+                        
                     }
                     string peptideGroupName = null;
                     string modifyMessage;

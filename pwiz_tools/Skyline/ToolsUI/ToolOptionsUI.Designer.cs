@@ -419,6 +419,7 @@ namespace pwiz.Skyline.ToolsUI
             this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.btnOK.Name = "btnOK";
             this.btnOK.UseVisualStyleBackColor = true;
+            this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
             // 
             // ToolOptionsUI
             // 
@@ -451,6 +452,7 @@ namespace pwiz.Skyline.ToolsUI
             this.tabRemote.ResumeLayout(false);
             this.tabRemote.PerformLayout();
             this.ResumeLayout(false);
+
         }
 
         #endregion

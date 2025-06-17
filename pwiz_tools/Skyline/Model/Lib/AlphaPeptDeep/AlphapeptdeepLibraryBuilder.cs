@@ -137,12 +137,13 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
         public static string PythonVersion => Settings.Default.PythonEmbeddableVersion;
         public static string ScriptsDir => PythonInstallerUtil.GetPythonVirtualEnvironmentScriptsDir(PythonVersion, ALPHAPEPTDEEP);
+        public static IDictionary<string, AbstractDdaSearchEngine.Setting> UserParameters { get; private set; }
 
         public static void AlphaPeptDeepDefaultSettings()
         {
-            UserExposedParameters = new Dictionary<string, AbstractDdaSearchEngine.Setting>();
+            UserParameters = new Dictionary<string, AbstractDdaSearchEngine.Setting>();
             foreach (var kvp in DefaultUserExposedParameters)
-                UserExposedParameters[kvp.Key] = new AbstractDdaSearchEngine.Setting(kvp.Value);
+                UserParameters[kvp.Key] = new AbstractDdaSearchEngine.Setting(kvp.Value);
         }
 
         public static PythonInstaller CreatePythonInstaller(TextWriter writer)
@@ -263,7 +264,6 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                         new AbstractDdaSearchEngine.Setting(ModelResources.AlphaPeptDeep_keep_k_highest_peaks_long, 12, 1)
                     }
                 });
-        public static IDictionary<string, AbstractDdaSearchEngine.Setting> UserExposedParameters{ get; private set; }
 
         private Dictionary<string, string> OpenSwathAssayLikeColName =>
             new Dictionary<string, string>()
@@ -295,7 +295,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
             rootProcessingDir = Path.Combine(rootProcessingDir, Path.GetFileNameWithoutExtension(libOutPath));
             EnsureWorkDir(rootProcessingDir, PREFIX_WORKDIR);
-            if (AlphapeptdeepLibraryBuilder.UserExposedParameters == null) 
+            if (AlphapeptdeepLibraryBuilder.UserParameters == null) 
                 AlphapeptdeepLibraryBuilder.AlphaPeptDeepDefaultSettings();
         }
 
@@ -316,10 +316,10 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             }
         }
 
-        private List<ArgumentAndValue> getUserSettingArgumentAndValues()
+        private List<ArgumentAndValue> getUserSettingArgumentAndValues(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
             var readyArgs = new List<ArgumentAndValue>();
-            foreach (var arg in UserExposedParameters)
+            foreach (var arg in UserParameters)
             {
                 if (arg.Key == ModelResources.AlphaPeptDeep_min_peptide_length_short)
                 {
@@ -372,7 +372,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             progressStatus = progressStatus.NextSegment();
             PrepareSettingsFile(progress, ref progressStatus);
             progressStatus = progressStatus.NextSegment();
-            ExecutePeptdeep(progress, ref progressStatus, getUserSettingArgumentAndValues());
+            ExecutePeptdeep(progress, ref progressStatus, getUserSettingArgumentAndValues(progress, ref progressStatus));
             progressStatus = progressStatus.NextSegment();
             TransformPeptdeepOutput(progress, ref progressStatus);
             progressStatus = progressStatus.NextSegment();

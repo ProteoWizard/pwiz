@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
@@ -61,20 +62,24 @@ namespace pwiz.Skyline.ToolsUI
         public ToolOptionsUI(SrmSettings settings)
         {
             InitializeComponent();
+            EmbedAlphaPeptDeepUserSettings();
             checkBoxShowWizard.Checked = Settings.Default.ShowStartupForm;
             powerOfTenCheckBox.Checked = Settings.Default.UsePowerOfTen;
             Icon = Resources.Skyline;
 
             _driverServers = new SettingsListBoxDriver<Server>(listboxServers, Settings.Default.ServerList);
             _driverServers.LoadList();
-            _driverRemoteAccounts = new SettingsListBoxDriver<RemoteAccount>(listBoxRemoteAccounts, Settings.Default.RemoteAccountList);
+            _driverRemoteAccounts =
+                new SettingsListBoxDriver<RemoteAccount>(listBoxRemoteAccounts, Settings.Default.RemoteAccountList);
             _driverRemoteAccounts.LoadList();
-            _driverColorSchemes = new SettingsListComboDriver<ColorScheme>(comboColorScheme, Settings.Default.ColorSchemes, true);
+            _driverColorSchemes =
+                new SettingsListComboDriver<ColorScheme>(comboColorScheme, Settings.Default.ColorSchemes, true);
             _driverColorSchemes.LoadList(Settings.Default.CurrentColorScheme);
 
             var pingPep = new Peptide(@"PING");
             var peptide = new PeptideDocNode(pingPep);
-            var precursor = new TransitionGroupDocNode(new TransitionGroup(pingPep, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light),
+            var precursor = new TransitionGroupDocNode(
+                new TransitionGroup(pingPep, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light),
                 new TransitionDocNode[0]);
             _pingInput = new KoinaIntensityModel.PeptidePrecursorNCE(peptide, precursor, IsotopeLabelType.light, 32);
             _settingsNoMod = settings.ChangePeptideModifications(
@@ -91,14 +96,16 @@ namespace pwiz.Skyline.ToolsUI
             {
                 listBoxLanguages.Items.Add(new DisplayLanguageItem(culture.Name, culture.DisplayName));
             }
+
             for (int i = 0; i < listBoxLanguages.Items.Count; i++)
             {
-                var displayLanguageItem = (DisplayLanguageItem) listBoxLanguages.Items[i];
+                var displayLanguageItem = (DisplayLanguageItem)listBoxLanguages.Items[i];
                 if (Equals(displayLanguageItem.Key, Settings.Default.DisplayLanguage))
                 {
                     listBoxLanguages.SelectedIndex = i;
                 }
             }
+
             comboCompactFormatOption.Items.AddRange(CompactFormatOption.ALL_VALUES.ToArray());
             comboCompactFormatOption.SelectedItem = CompactFormatOption.FromSettings();
 
@@ -112,7 +119,7 @@ namespace pwiz.Skyline.ToolsUI
             ComboHelper.AutoSizeDropDown(intensityModelCombo);
             iRTModelCombo.Items.AddRange(rtModels.ToArray());
             ComboHelper.AutoSizeDropDown(iRTModelCombo);
-            
+
             koinaServerStatusLabel.Text = string.Empty;
             if (iModels.Contains(Settings.Default.KoinaIntensityModel))
                 intensityModelCombo.SelectedItem = Settings.Default.KoinaIntensityModel;
@@ -120,7 +127,8 @@ namespace pwiz.Skyline.ToolsUI
                 iRTModelCombo.SelectedItem = Settings.Default.KoinaRetentionTimeModel;
 
             ceCombo.Items.AddRange(
-                Enumerable.Range(KoinaConstants.MIN_NCE, KoinaConstants.MAX_NCE - KoinaConstants.MIN_NCE + 1).Select(c => (object) c)
+                Enumerable.Range(KoinaConstants.MIN_NCE, KoinaConstants.MAX_NCE - KoinaConstants.MIN_NCE + 1)
+                    .Select(c => (object)c)
                     .ToArray());
             ceCombo.SelectedItem = Settings.Default.KoinaNCE;
             tbxSettingsFilePath.Text = System.Configuration.ConfigurationManager
@@ -179,7 +187,7 @@ namespace pwiz.Skyline.ToolsUI
                         if (ex.InnerException is RpcException rpcEx && rpcEx.StatusCode == StatusCode.Cancelled)
                             return;
                     }
-                    
+
                     // Bad timing could cause the ping to finish right when we cancel as the form closes
                     // causing a UI update to be called after the form was destroyed
                     if (!_tokenSource.IsCancellationRequested)
@@ -195,7 +203,11 @@ namespace pwiz.Skyline.ToolsUI
 
         public enum ServerStatus
         {
-            UNAVAILABLE, QUERYING, AVAILABLE, SELECT_SERVER, SELECT_MODEL
+            UNAVAILABLE,
+            QUERYING,
+            AVAILABLE,
+            SELECT_SERVER,
+            SELECT_MODEL
         }
 
         public ServerStatus KoinaServerStatus { get; private set; }
@@ -238,7 +250,8 @@ namespace pwiz.Skyline.ToolsUI
 
             try
             {
-                if (string.IsNullOrEmpty(KoinaIntensityModelCombo) || string.IsNullOrEmpty(KoinaRetentionTimeModelCombo))
+                if (string.IsNullOrEmpty(KoinaIntensityModelCombo) ||
+                    string.IsNullOrEmpty(KoinaRetentionTimeModelCombo))
                 {
                     _pingRequest?.Cancel();
                     SetServerStatus(ServerStatus.SELECT_MODEL);
@@ -247,7 +260,8 @@ namespace pwiz.Skyline.ToolsUI
 
                 var nodePep = new PeptideDocNode(new Peptide(_pingInput.Sequence), _pingInput.ExplicitMods);
                 var nodeGroup = new TransitionGroupDocNode(new TransitionGroup(nodePep.Peptide,
-                    Adduct.FromChargeProtonated(_pingInput.PrecursorCharge), _pingInput.LabelType), Array.Empty<TransitionDocNode>());
+                        Adduct.FromChargeProtonated(_pingInput.PrecursorCharge), _pingInput.LabelType),
+                    Array.Empty<TransitionDocNode>());
                 var pr = new KoinaPingRequest(KoinaIntensityModelCombo,
                     KoinaRetentionTimeModelCombo,
                     _settingsNoMod, nodePep, nodeGroup, _pingInput.NCE.Value,
@@ -255,7 +269,7 @@ namespace pwiz.Skyline.ToolsUI
                 if (_pingRequest == null || !_pingRequest.Equals(pr))
                 {
                     _pingRequest?.Cancel();
-                    _pingRequest = (KoinaPingRequest) pr.Predict();
+                    _pingRequest = (KoinaPingRequest)pr.Predict();
                     koinaServerStatusLabel.Text = KoinaResources.ToolOptionsUI_UpdateServerStatus_Querying_server___;
                     koinaServerStatusLabel.ForeColor = Color.Black;
 
@@ -315,20 +329,23 @@ namespace pwiz.Skyline.ToolsUI
                     Settings.Default.UsePowerOfTen = powerOfTenCheckBox.Checked;
                     Program.MainWindow?.UpdateGraphPanes();
                 }
+
                 CompactFormatOption compactFormatOption = comboCompactFormatOption.SelectedItem as CompactFormatOption;
                 if (null != compactFormatOption)
                 {
                     Settings.Default.CompactFormatOption = compactFormatOption.Name;
                 }
-                Settings.Default.CurrentColorScheme = (string) comboColorScheme.SelectedItem;
+
+                Settings.Default.CurrentColorScheme = (string)comboColorScheme.SelectedItem;
 
                 bool koinaSettingsValidBefore = KoinaHelpers.KoinaSettingsValid;
-                Settings.Default.KoinaIntensityModel = (string) intensityModelCombo.SelectedItem;
-                Settings.Default.KoinaRetentionTimeModel = (string) iRTModelCombo.SelectedItem;
-                Settings.Default.KoinaNCE = (int) ceCombo.SelectedItem;
+                Settings.Default.KoinaIntensityModel = (string)intensityModelCombo.SelectedItem;
+                Settings.Default.KoinaRetentionTimeModel = (string)iRTModelCombo.SelectedItem;
+                Settings.Default.KoinaNCE = (int)ceCombo.SelectedItem;
                 if (koinaSettingsValidBefore != KoinaHelpers.KoinaSettingsValid)
                     Program.MainWindow?.UpdateGraphSpectrumEnabled();
             }
+
             base.OnClosed(e);
         }
 
@@ -344,8 +361,10 @@ namespace pwiz.Skyline.ToolsUI
                 Key = key;
                 DisplayName = displayName;
             }
+
             public string DisplayName { get; private set; }
             public string Key { get; private set; }
+
             public override string ToString()
             {
                 return DisplayName;
@@ -353,21 +372,55 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         // ReSharper disable InconsistentNaming
-        public enum TABS { AlphaPeptDeep, Carafe, Display, Koina, Language, Miscellaneous, Panorama, Remote  }
+        public enum TABS
+        {
+            AlphaPeptDeep,
+            Carafe,
+            Display,
+            Koina,
+            Language,
+            Miscellaneous,
+            Panorama,
+            Remote
+        }
         // ReSharper restore InconsistentNaming
 
-        public class PanoramaTab : IFormView { }
-        public class RemoteTab : IFormView { }
+        public class PanoramaTab : IFormView
+        {
+        }
 
-        public class CarafeTab : IFormView { }
-        public class LanguageTab : IFormView { }
-        public class MiscellaneousTab : IFormView { }
-        public class DisplayTab : IFormView { }
-        public class KoinaTab : IFormView { }
+        public class RemoteTab : IFormView
+        {
+        }
+
+        public class AlphaPeptDeepTab : IFormView
+        {
+        }
+
+        public class CarafeTab : IFormView
+        {
+        }
+
+        public class LanguageTab : IFormView
+        {
+        }
+
+        public class MiscellaneousTab : IFormView
+        {
+        }
+
+        public class DisplayTab : IFormView
+        {
+        }
+
+        public class KoinaTab : IFormView
+        {
+        }
 
         private static readonly IFormView[] TAB_PAGES = // N.B. order must agree with TABS enum above
         {
-            new PanoramaTab(), new RemoteTab(), new CarafeTab(), new KoinaTab(), new LanguageTab(), new MiscellaneousTab(), new DisplayTab()
+            new AlphaPeptDeepTab(), new CarafeTab(), new DisplayTab(), new KoinaTab(),
+            new LanguageTab(), new MiscellaneousTab(), new PanoramaTab(), new RemoteTab()
         };
 
         public void NavigateToTab(TABS tab)
@@ -407,13 +460,13 @@ namespace pwiz.Skyline.ToolsUI
 
         public string KoinaRetentionTimeModelCombo
         {
-            get { return (string) iRTModelCombo.SelectedItem; }
+            get { return (string)iRTModelCombo.SelectedItem; }
             set { iRTModelCombo.SelectedItem = value; }
         }
 
         public int CECombo
         {
-            get { return (int) ceCombo.SelectedItem; }
+            get { return (int)ceCombo.SelectedItem; }
             set { ceCombo.SelectedItem = value; }
         }
 
@@ -427,6 +480,7 @@ namespace pwiz.Skyline.ToolsUI
                 Settings.Default.CurrentColorScheme = newColorScheme.Name;
                 Program.MainWindow?.ChangeColorScheme();
             }
+
             _driverColorSchemes.SelectedIndexChangedEvent(sender, e);
         }
 
@@ -466,15 +520,15 @@ namespace pwiz.Skyline.ToolsUI
 
         private void intensityModelCombo_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (string.IsNullOrEmpty((string) intensityModelCombo.SelectedItem) &&
-                !string.IsNullOrEmpty((string) iRTModelCombo.SelectedItem))
+            if (string.IsNullOrEmpty((string)intensityModelCombo.SelectedItem) &&
+                !string.IsNullOrEmpty((string)iRTModelCombo.SelectedItem))
             {
                 iRTModelCombo.SelectedItem = string.Empty;
             }
-            else if (!string.IsNullOrEmpty((string) intensityModelCombo.SelectedItem) &&
-                     string.IsNullOrEmpty((string) iRTModelCombo.SelectedItem))
+            else if (!string.IsNullOrEmpty((string)intensityModelCombo.SelectedItem) &&
+                     string.IsNullOrEmpty((string)iRTModelCombo.SelectedItem))
             {
-                iRTModelCombo.SelectedIndex = 1;    // First non-empty iRT model
+                iRTModelCombo.SelectedIndex = 1; // First non-empty iRT model
             }
 
             UpdateServerStatus();
@@ -490,7 +544,7 @@ namespace pwiz.Skyline.ToolsUI
             else if (string.IsNullOrEmpty((string)intensityModelCombo.SelectedItem) &&
                      !string.IsNullOrEmpty((string)iRTModelCombo.SelectedItem))
             {
-                intensityModelCombo.SelectedIndex = 1;    // First non-empty intensity model
+                intensityModelCombo.SelectedIndex = 1; // First non-empty intensity model
             }
 
             UpdateServerStatus();
@@ -521,9 +575,10 @@ namespace pwiz.Skyline.ToolsUI
                 setting => setting.Value.ToString(),
                 (value, setting) => setting.Value = value,
                 (value, setting) => setting.Validate(value),
-                setting => setting.ValidValues, 
+                setting => setting.ValidValues,
                 setting => setting.Name);
         }
+
         private void btnCarafeModelTrainingSettings_Click(object sender, EventArgs e)
         {
             if (CarafeLibraryBuilder.ModelParameters == null)
@@ -536,6 +591,7 @@ namespace pwiz.Skyline.ToolsUI
                 setting => setting.ValidValues,
                 setting => setting.Name);
         }
+
         private void btnCarafeLibrarySettings_Click(object sender, EventArgs e)
         {
             if (CarafeLibraryBuilder.LibraryParameters == null)
@@ -551,7 +607,8 @@ namespace pwiz.Skyline.ToolsUI
 
         private void ToolsOptionsUI_CarafeHelpButtonClicked(object sender, EventArgs e)
         {
-            const string proteinAssociationWikiPath = @"/wiki/home/software/Skyline/page.view?name=Carafe%20Options%20Help"; // CONSIDER: get version programatically
+            const string proteinAssociationWikiPath =
+                @"/wiki/home/software/Skyline/page.view?name=Carafe%20Options%20Help"; // CONSIDER: get version programatically
             if (sender == lnkCarafeTrainingDataHelp)
                 WebHelpers.OpenSkylineLink(this, proteinAssociationWikiPath + @"#training-data-generation");
             else if (sender == lnkCarafeModelTrainingHelp)
@@ -570,15 +627,59 @@ namespace pwiz.Skyline.ToolsUI
 
         private void btnAlphaPeptDeepUserSettings_Click(object sender, EventArgs e)
         {
-            if (AlphapeptdeepLibraryBuilder.UserExposedParameters == null)
+            if (AlphapeptdeepLibraryBuilder.UserParameters == null)
                 AlphapeptdeepLibraryBuilder.AlphaPeptDeepDefaultSettings();
             KeyValueGridDlg.Show(btnAlphaPeptDeepUserSettings.Text,
-                AlphapeptdeepLibraryBuilder.UserExposedParameters,
+                AlphapeptdeepLibraryBuilder.UserParameters,
                 setting => setting.Value.ToString(),
                 (value, setting) => setting.Value = value,
                 (value, setting) => setting.Validate(value),
                 setting => setting.ValidValues,
                 setting => setting.Name);
+        }
+
+        private void EmbedAlphaPeptDeepUserSettings()
+        {
+            btnAlphaPeptDeepUserSettings.Visible = false;
+            if (AlphapeptdeepLibraryBuilder.UserParameters == null)
+                AlphapeptdeepLibraryBuilder.AlphaPeptDeepDefaultSettings();
+
+            _alphaPeptDeepParams = KeyValueGridDlg.Show(null, btnAlphaPeptDeepUserSettings.Text,
+                AlphapeptdeepLibraryBuilder.UserParameters,
+                setting => setting.Value.ToString(),
+                (value, setting) => setting.Value = value,
+                (value, setting) => setting.Validate(value),
+                setting => setting.ValidValues,
+                setting => setting.Name, AlphaPeptDeepTabControl);
+        }
+
+        private Dictionary<string, Control> _alphaPeptDeepParams;
+
+        public Control.ControlCollection AlphaPeptDeepTabControl
+        {
+            get => tabControl.TabPages[0].Controls;
+        }
+
+        private void btnOK_Click(object sender, EventArgs e)
+        {
+            var gridValues = AlphapeptdeepLibraryBuilder.UserParameters;
+            foreach (var kvp in _alphaPeptDeepParams)
+            {
+                if (kvp.Value is TextBox tb)
+                    gridValues[kvp.Key].Value = tb.Text;
+                else if (kvp.Value is CheckBox cb)
+                    gridValues [kvp.Key].Value = cb.Checked.ToString();
+                else if (kvp.Value is ComboBox cmb)
+                {
+                    if (cmb.SelectedItem != null)
+                    {
+                        gridValues[kvp.Key].Value = cmb.SelectedItem.ToString();
+                    }
+                }
+                else
+                    throw new InvalidOperationException();
+
+            }
         }
     }
 }

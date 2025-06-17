@@ -228,7 +228,9 @@
     <Compile Include="Alerts\ArdiaLoginDlg.Designer.cs">
       <DependentUpon>ArdiaLoginDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="Alerts\KeyValueGridDlg.cs" />
+    <Compile Include="Alerts\KeyValueGridDlg.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Alerts\MsFraggerDownloadDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -4285,6 +4287,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\BuildLibraryDlg.resx">
       <DependentUpon>BuildLibraryDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\BuildLibraryDlg.zh-CHS.resx">
       <DependentUpon>BuildLibraryDlg.cs</DependentUpon>

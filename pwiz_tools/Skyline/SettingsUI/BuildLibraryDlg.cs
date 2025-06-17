@@ -1387,15 +1387,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private void alphaPeptDeepSettings_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            if (AlphapeptdeepLibraryBuilder.UserExposedParameters == null)
-                AlphapeptdeepLibraryBuilder.AlphaPeptDeepDefaultSettings();
-            KeyValueGridDlg.Show(ModelResources.AlphaPeptDeep_Settings,
-                AlphapeptdeepLibraryBuilder.UserExposedParameters,
-                setting => setting.Value.ToString(),
-                (value, setting) => setting.Value = value,
-                (value, setting) => setting.Validate(value),
-                setting => setting.ValidValues,
-                setting => setting.Name);
+            _skylineWindow.ShowToolOptionsUI(ToolOptionsUI.TABS.AlphaPeptDeep);
         }
     }
 }
