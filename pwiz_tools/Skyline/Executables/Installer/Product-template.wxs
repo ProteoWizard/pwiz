@@ -169,6 +169,9 @@
       <Component Id="BullseyeSharp.exe">
         <File Source="$(var.Skyline.TargetDir)/BullseyeSharp.exe" KeyPath="yes"/>
       </Component>
+      <Component Id="Dapper.dll">
+        <File Source="$(var.Skyline.TargetDir)/Dapper.dll" KeyPath="yes"/>
+      </Component>
       <Component Id="DigitalRune.Windows.Docking.dll">
         <File Source="$(var.Skyline.TargetDir)/DigitalRune.Windows.Docking.dll" KeyPath="yes"/>
       </Component>
