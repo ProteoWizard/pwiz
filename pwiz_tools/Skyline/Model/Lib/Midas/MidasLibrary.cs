@@ -28,6 +28,7 @@ using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.Database.NHibernate;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;

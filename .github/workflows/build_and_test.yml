@@ -17,7 +17,8 @@ on:
     - 'scripts/Topograph/**'
     - 'doc/**'
     - 'clean.*'
-    - '.github/workflows/cherrypick-to-release.yml'
+    - '.github/workflows/cherrypick*release.yml'
+    - '.github/workflows/*on_demand.yml'
   pull_request:
     branches: [ master ]
     paths-ignore:
@@ -28,7 +29,8 @@ on:
     - 'pwiz_tools/Topograph/**'
     - 'doc/**'
     - 'clean.*'
-    - '.github/workflows/cherrypick-to-release.yml'
+    - '.github/workflows/cherrypick*release.yml'
+    - '.github/workflows/*on_demand.yml'
  
 # There is a single job here called "build" (The word "build" is NOT a keyword, you can use anything there)
 jobs:

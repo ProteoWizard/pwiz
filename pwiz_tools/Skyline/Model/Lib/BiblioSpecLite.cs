@@ -33,6 +33,7 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.Database;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
@@ -2018,6 +2019,14 @@ namespace pwiz.Skyline.Model.Lib
                                 var ionMobilityHighEnergyOffset = UtilDB.GetNullableDouble(reader, iIonMobilityHighEnergyOffset);
                                 if (!(ionMobility == 0 && collisionalCrossSectionSqA == 0 && ionMobilityHighEnergyOffset == 0))
                                     ionMobilityInfo = IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(ionMobility, ionMobilityType), collisionalCrossSectionSqA, ionMobilityHighEnergyOffset);
+                            }
+                            else
+                            {
+                                var collisionalCrossSectionSqA = UtilDB.GetNullableDouble(reader, iCCS);
+                                if (collisionalCrossSectionSqA != 0) 
+                                {
+                                    ionMobilityInfo = IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(0, ionMobilityType), collisionalCrossSectionSqA, 0);
+                                }
                             }
                         }
                         else if (hasDriftTime) 

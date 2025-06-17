@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using pwiz.Common.Chemistry;
+using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 

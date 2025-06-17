@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
+using System.Threading;
 using Ionic.Zip;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Tools;
@@ -219,7 +220,7 @@ namespace pwiz.Skyline.Util
 
         private static void LogToConsole(string message)
         {
-            if (Helpers.RunningResharperAnalysis)
+            if (TryHelper.RunningResharperAnalysis)
             {
                 Trace.WriteLine(@"# (ReSharper Analysis Trace) " + message);
             }
@@ -257,7 +258,7 @@ namespace pwiz.Skyline.Util
                         LogToConsole($@"Using cached test data from {downloadUrl} in {downloadFilename} as {destinationFilename}...");
                         if (!requiredFile.Unzip)
                         {
-                            Helpers.TryTwice(() => File.Copy(downloadFilename, destinationFilename));
+                            TryHelper.TryTwice(() => File.Copy(downloadFilename, destinationFilename));
                         }
                         downloadTimer = null;
                     }
@@ -363,14 +364,14 @@ namespace pwiz.Skyline.Util
         /// <summary>
         /// Wrapper interface for the NamedPipeProcessRunner class
         /// </summary>
-        int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer);
+        int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer, bool createNoWindow = false, CancellationToken cancellationToken = default);
     }
 
     public class SkylineProcessRunnerWrapper : ISkylineProcessRunnerWrapper
     {
-        public int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer)
+        public int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer, bool createNoWindow = false, CancellationToken cancellationToken = default)
         {
-            return SkylineProcessRunner.RunProcess(arguments, runAsAdministrator, writer);
+            return SkylineProcessRunner.RunProcess(arguments, runAsAdministrator, writer, createNoWindow, cancellationToken);
         }
     }
 
@@ -384,7 +385,7 @@ namespace pwiz.Skyline.Util
         public int ExitCode { get; set; }
         public string stringToWriteToWriter { get; set; }
         
-        public int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer)
+        public int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer,  bool createNoWindow = false, CancellationToken cancellationToken = default)
         {
             if (!UserOkRunAsAdministrator)
             {

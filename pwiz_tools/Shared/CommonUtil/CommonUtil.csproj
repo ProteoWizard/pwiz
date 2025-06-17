@@ -101,6 +101,8 @@
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Security" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -117,6 +119,8 @@
     <Compile Include="Collections\Factor.cs" />
     <Compile Include="Collections\ImmutableListFactory.cs" />
     <Compile Include="Collections\IntegerList.cs" />
+    <Compile Include="Collections\MappedList.cs" />
+    <Compile Include="Collections\NameValueParameters.cs" />
     <Compile Include="CommonApplicationSettings.cs" />
     <Compile Include="Chemistry\AminoAcidFormulas.cs" />
     <Compile Include="Chemistry\Formula.cs" />
@@ -166,6 +170,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Images.resx</DependentUpon>
     </Compile>
+    <Compile Include="SystemUtil\Assume.cs" />
     <Compile Include="SystemUtil\Caching\ProductionFacility.cs" />
     <Compile Include="SystemUtil\Caching\Production.cs" />
     <Compile Include="SystemUtil\Caching\Receiver.cs" />
@@ -175,6 +180,8 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="SystemUtil\CommonTextUtil.cs" />
+    <Compile Include="SystemUtil\FileLockingProcessFinder.cs" />
+    <Compile Include="SystemUtil\FilteredUserMessageWriter.cs" />
     <Compile Include="SystemUtil\PInvoke\Advapi32.cs" />
     <Compile Include="SystemUtil\PInvoke\Gdi32.cs" />
     <Compile Include="SystemUtil\PInvoke\Kernel32.cs" />
@@ -182,6 +189,7 @@
     <Compile Include="SystemUtil\PInvoke\Shlwapi.cs" />
     <Compile Include="SystemUtil\PInvoke\User32.cs" />
     <Compile Include="SystemUtil\PInvoke\User32Extensions.cs" />
+    <Compile Include="SystemUtil\FileEx.cs" />
     <Compile Include="SystemUtil\Messages.cs" />
     <Compile Include="SystemUtil\FileSize.cs" />
     <Compile Include="SystemUtil\FileSizeFormatProvider.cs" />
@@ -205,6 +213,7 @@
     <Compile Include="SystemUtil\TrackAttribute.cs" />
     <Compile Include="SystemUtil\CommonActionUtil.cs" />
     <Compile Include="SystemUtil\TreeViewStateRestorer.cs" />
+    <Compile Include="SystemUtil\TryHelper.cs" />
     <Compile Include="SystemUtil\ValueCache.cs" />
     <Compile Include="Collections\ValueSet.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

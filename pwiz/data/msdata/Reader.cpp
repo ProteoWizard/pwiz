@@ -81,7 +81,7 @@ Reader::Config::Config(const Config& rhs)
 void Reader::Config::instrumentMetadataError(const std::string& msg) const
 {
     if (unknownInstrumentIsError)
-        throw runtime_error(msg + string("; if want to convert the file anyway, use the ignoreUnknownInstrumentError flag"));
+        throw runtime_error(msg + string("; if you want to convert the file anyway, use the ignoreUnknownInstrumentError flag"));
     cerr << msg << endl;
 }
 

@@ -1193,4 +1193,7 @@ This will provide Skyline with a variety of candidate peaks to evaluate peak qua
   <data name="TransitionSettingsUI_EditSpectrumFilter_MS1_or_MS_MS_filtering_must_be_enabled_on_the_Full_Scan_tab_in_order_to_use_this_feature_" xml:space="preserve">
     <value>MS1 or MS/MS filtering must be enabled on the Full Scan tab in order to use this feature.</value>
   </data>
+  <data name="BuildLibraryDlg_CreateAlphaBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_AlphaPeptDeep_predictions_" xml:space="preserve">
+    <value>Add peptide precursors to the document to build a library from AlphaPeptDeep predictions.</value>
+  </data>
 </root>

@@ -22,6 +22,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using pwiz.Common.Chemistry;
+using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;

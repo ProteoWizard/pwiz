@@ -21,7 +21,6 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -35,6 +34,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Util.Extensions;
 
@@ -469,7 +469,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         private void GetPercolatorScores(string percolatorTsvFilepath, Dictionary<string, double> qvalueByPsmId)
         {
-            var percolatorTargetPsmsReader = new DsvFileReader(percolatorTsvFilepath, TextUtil.SEPARATOR_TSV);
+            using var percolatorTargetPsmsReader = new DsvFileReader(percolatorTsvFilepath, TextUtil.SEPARATOR_TSV);
             int psmIdColumn = percolatorTargetPsmsReader.GetFieldIndex(@"PSMId");
             int qvalueColumn = percolatorTargetPsmsReader.GetFieldIndex(@"q-value");
             while (percolatorTargetPsmsReader.ReadLine() != null)

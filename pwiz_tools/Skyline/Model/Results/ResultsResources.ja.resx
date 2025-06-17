@@ -281,9 +281,6 @@ Skylineがもう一度生データファイルからクロマトグラムを抽�
   <data name="OverlapDemultiplexer_InitializeFile_OverlapDemultiplexer_InitializeFile_Improperly_formed_overlap_multiplexing_file" xml:space="preserve">
     <value>OverlapDemultiplexer：InitializeFileが不適切な形式で多重化ファイルと重複しています</value>
   </data>
-  <data name="PeptideChromDataSets_AddDataSet_Unable_to_process_chromatograms_for_the_molecule___0___because_one_chromatogram_ends_at_time___1___and_the_other_ends_at_time___2___" xml:space="preserve">
-    <value>分子「{0}」のクロマトグラムを処理できません。時間「{1}」で終わるクロマトグラムと時間「{2}」で終わるクロマトグラムがあります。</value>
-  </data>
   <data name="PeptideChromDataSets_MergePeakGroups_Unexpected_null_peak_list" xml:space="preserve">
     <value>予期しない空値のピークリスト</value>
   </data>
