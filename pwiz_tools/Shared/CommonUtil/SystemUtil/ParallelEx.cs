@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using JetBrains.Annotations;
 
 namespace pwiz.Common.SystemUtil
 {
@@ -51,7 +52,7 @@ namespace pwiz.Common.SystemUtil
             return threadCount;
         }
 
-        public static void For(int fromInclusive, int toExclusive, Action<int> body, Action<AggregateException> catchClause = null, int? maxThreads = null, string threadName = null)
+        public static void For(int fromInclusive, int toExclusive, [InstantHandle] Action<int> body, Action<AggregateException> catchClause = null, int? maxThreads = null, string threadName = null)
         {
             int count = toExclusive - fromInclusive;
             if (count <= 0)
