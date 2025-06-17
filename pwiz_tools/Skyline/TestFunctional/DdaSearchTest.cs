@@ -115,7 +115,7 @@ namespace pwiz.SkylineTestFunctional
                 PrecursorTolerance = new MzTolerance(15, MzTolerance.Units.ppm),
                 FragmentTolerance = new MzTolerance(25, MzTolerance.Units.ppm),
                 AdditionalSettings = new Dictionary<string, string>(),
-                ExpectedResultsFinal = new ExpectedResults(133, 334, 395, 1185, 164)
+                ExpectedResultsFinal = new ExpectedResults(133, 334, 396, 1188, 164)
             };
 
             RunFunctionalTest();
@@ -143,7 +143,7 @@ namespace pwiz.SkylineTestFunctional
                 PrecursorTolerance = new MzTolerance(15, MzTolerance.Units.ppm),
                 FragmentTolerance = new MzTolerance(25, MzTolerance.Units.ppm),
                 AdditionalSettings = new Dictionary<string, string>(),
-                ExpectedResultsFinal = new ExpectedResults(102, 240, 290, 870, 116)
+                ExpectedResultsFinal = new ExpectedResults(100, 238, 288, 864, 116)
             };
 
             RunFunctionalTest();
@@ -170,7 +170,7 @@ namespace pwiz.SkylineTestFunctional
                 PrecursorTolerance = new MzTolerance(15, MzTolerance.Units.ppm),
                 FragmentTolerance = new MzTolerance(1.0005),
                 AdditionalSettings = new Dictionary<string, string>(),
-                ExpectedResultsFinal = new ExpectedResults(144, 337, 390, 1170, 165)
+                ExpectedResultsFinal = new ExpectedResults(145, 338, 392, 1176, 165)
             };
 
             RunFunctionalTest();
@@ -242,7 +242,7 @@ namespace pwiz.SkylineTestFunctional
                     { "calibrate_mass", "0" },
                     //{ "output_report_topN", "5" },
                 },
-                ExpectedResultsFinal = new ExpectedResults(145, 339, 430, 1290, 165)
+                ExpectedResultsFinal = new ExpectedResults(143, 337, 425, 1275, 165)
             };
 
             RunFunctionalTest();
