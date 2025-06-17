@@ -136,4 +136,31 @@
   <data name="ProcessRunner_Process_Finished_in_time" xml:space="preserve">
     <value>Process Finished in {0} minutes {1} seconds</value>
   </data>
+  <data name="FileEx_SafeDelete_Path_is_empty" xml:space="preserve">
+    <value>Path is empty</value>
+  </data>
+  <data name="FileEx_SafeDelete_Unable_to_delete_directory___0_" xml:space="preserve">
+    <value>Unable to delete directory: {0}</value>
+  </data>
+  <data name="FileEx_SafeDelete_Path_contains_invalid_characters___0_" xml:space="preserve">
+    <value>Path contains invalid characters: {0}</value>
+  </data>
+  <data name="FileEx_SafeDelete_Unable_to_delete_file_which_is_in_use___0_" xml:space="preserve">
+    <value>Unable to delete file which is in use: {0}</value>
+  </data>
+  <data name="FileEx_SafeDelete_Unable_to_delete_read_only_file___0_" xml:space="preserve">
+    <value>Unable to delete read-only file: {0}</value>
+  </data>
+  <data name="FileEx_SafeDelete_Insufficient_permission_to_delete_file___0_" xml:space="preserve">
+    <value>Insufficient permission to delete file: {0}</value>
+  </data>
+  <data name="FileEx_SafeDelete_File_path_is_too_long___0_" xml:space="preserve">
+    <value>File path is too long: {0}</value>
+  </data>
+  <data name="FileEx_SafeDelete_File_path_is_invalid___0_" xml:space="preserve">
+    <value>File path is invalid: {0}</value>
+  </data>
+  <data name="FileEx_SafeDelete_Directory_could_not_be_found___0_" xml:space="preserve">
+    <value>Directory could not be found: {0}</value>
+  </data>
 </root>

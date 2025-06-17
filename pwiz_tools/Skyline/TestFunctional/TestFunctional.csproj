@@ -184,6 +184,7 @@
     <Compile Include="DetectionsPlotErrorTest.cs" />
     <Compile Include="DocumentGridExportTest.cs" />
     <Compile Include="DocumentGridUndoTest.cs" />
+    <Compile Include="EditablePivotTest.cs" />
     <Compile Include="EditNeutralLossesTest.cs" />
     <Compile Include="EncyclopeDiaLibraryMatchTest.cs" />
     <Compile Include="EncyclopeDiaPeptidesWithNoSignalTest.cs" />
@@ -478,6 +479,10 @@
     <ProjectReference Include="..\..\Shared\BiblioSpec\BiblioSpec.csproj">
       <Project>{32CC9B1A-9442-4B56-AF34-FB47595278A1}</Project>
       <Name>BiblioSpec</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Shared\CommonMsData\CommonMsData.csproj">
+      <Project>{86f8e7f5-a3ed-4519-9ad9-bf9abd6dd69f}</Project>
+      <Name>CommonMsData</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Shared\Common\Common.csproj">
       <Project>{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}</Project>

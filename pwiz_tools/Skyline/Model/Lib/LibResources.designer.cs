@@ -229,6 +229,24 @@ namespace pwiz.Skyline.Model.Lib {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Reading entries from {0} library.
+        /// </summary>
+        public static string BiblioSpecLiteLibrary_ReadFromDatabase_Reading_entries_from__0__library {
+            get {
+                return ResourceManager.GetString("BiblioSpecLiteLibrary_ReadFromDatabase_Reading_entries_from__0__library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reading retention times from {0}.
+        /// </summary>
+        public static string BiblioSpecLiteLibrary_ReadFromDatabase_Reading_retention_times_from__0_ {
+            get {
+                return ResourceManager.GetString("BiblioSpecLiteLibrary_ReadFromDatabase_Reading_retention_times_from__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The redundant library {0} does not exist..
         /// </summary>
         public static string BiblioSpecLiteLibrary_ReadRedundantSpectrum_The_redundant_library__0__does_not_exist {

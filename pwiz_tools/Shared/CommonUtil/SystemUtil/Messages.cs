@@ -19,6 +19,8 @@
 
 using System;
 using System.Diagnostics;
+using System.Reflection;
+using System.Threading;
 
 namespace pwiz.Common.SystemUtil
 {
@@ -56,6 +58,39 @@ namespace pwiz.Common.SystemUtil
             // For Skyline UI, the TraceWarningListener class causes these messages to appear in the
             // Immediate Window, for commandline they appear in the console.
             WriteUserMessage(message, args);
+        }
+    }
+
+    /// <summary>
+    /// Like Trace.WriteLine, but with considerable detail when running a test
+    /// </summary>
+    public class DetailedTrace
+    {
+        public static void WriteLine(string msg, bool showStackTrace = false)
+        {
+            if (!(Assembly.GetEntryAssembly() ?? Assembly.GetCallingAssembly()).Location.Contains(@"TestRunner"))
+            {
+                Trace.WriteLine(msg);
+            }
+            else
+            {
+                // Give more detail - useful in case of parallel test interactions
+                Trace.WriteLine(
+                    $@"{msg} [UTC: {DateTime.UtcNow:s} PID: {Process.GetCurrentProcess().Id} Thread: {Thread.CurrentThread.ManagedThreadId})]");
+                if (showStackTrace)
+                {
+                    // per https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.stacktrace?view=net-6.0
+                    // Create a StackTrace that captures filename, line number and column information.
+                    var st = new StackTrace(true);
+                    var stackIndent = string.Empty;
+                    for (var i = 0; i < st.FrameCount; i++)
+                    {
+                        var sf = st.GetFrame(i);
+                        Trace.WriteLine($@"{stackIndent}{sf.GetMethod()} at {sf.GetFileName()}({sf.GetFileLineNumber()}:{sf.GetFileColumnNumber()})");
+                        stackIndent += @"  ";
+                    }
+                }
+            }
         }
     }
 }

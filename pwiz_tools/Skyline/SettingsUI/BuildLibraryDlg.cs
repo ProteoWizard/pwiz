@@ -43,6 +43,7 @@ using File = System.IO.File;
 using pwiz.Skyline.Model.Lib.Carafe;
 using pwiz.Skyline.EditUI;
 using System.Xml.Serialization;
+using pwiz.CommonMsData;
 
 [assembly: InternalsVisibleTo("TestFunctional")]
 
