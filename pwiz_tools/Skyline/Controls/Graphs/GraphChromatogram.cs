@@ -2400,7 +2400,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (Settings.Default.ShowPeptideIdTimes || Settings.Default.ShowAlignedPeptideIdTimes ||
                         Settings.Default.ShowUnalignedPeptideIdTimes)
                     {
-                        Messages.Add("Libraries are still loading");
+                        Messages.Add(GraphsResources.GraphChromatogram_SetRetentionTimeIdIndicators_Libraries_are_still_loading);
                     }
                     return;
                 }
@@ -2408,7 +2408,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (Settings.Default.ShowAlignedPeptideIdTimes &&
                     !DocumentRetentionTimes.IsLoaded(_documentContainer.DocumentUI))
                 {
-                    Messages.Add("Waiting for retention time alignment");
+                    Messages.Add(GraphsResources.GraphChromatogram_SetRetentionTimeIdIndicators_Waiting_for_retention_time_alignment);
                 }
             }
             // Set any MS/MS IDs on the first graph item also

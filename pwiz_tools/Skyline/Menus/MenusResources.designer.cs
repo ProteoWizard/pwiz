@@ -153,6 +153,34 @@ namespace pwiz.Skyline.Menus {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No imputations options have been chosen for this document.
+        ///Go to the Prediction tab in Peptide Settings to choose some imputation options..
+        /// </summary>
+        public static string EditMenu_ImputePeakBoundaries_ {
+            get {
+                return ResourceManager.GetString("EditMenu_ImputePeakBoundaries_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Imputed peak boundaries.
+        /// </summary>
+        public static string EditMenu_ImputePeakBoundaries_Imputed_peak_boundaries {
+            get {
+                return ResourceManager.GetString("EditMenu_ImputePeakBoundaries_Imputed_peak_boundaries", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Imputing peak boundaries.
+        /// </summary>
+        public static string EditMenu_ImputePeakBoundaries_Imputing_peak_boundaries {
+            get {
+                return ResourceManager.GetString("EditMenu_ImputePeakBoundaries_Imputing_peak_boundaries", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Change synchronized integration to {0}.
         /// </summary>
         public static string EditMenu_SetSynchronizedIntegration_Change_synchronized_integration_to__0_ {

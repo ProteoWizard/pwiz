@@ -219,7 +219,7 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 var cachePath = ChromatogramCache.FinalPathForName(container.DocumentFilePath, null);
-                IProgressStatus progressStatus = new ProgressStatus(string.Format("Loading {0}", Path.GetFileName(cachePath)));
+                IProgressStatus progressStatus = new ProgressStatus(string.Format(ResultsResources.ChromatogramManager_LoadBackground_Loading__0_, Path.GetFileName(cachePath)));
                 var loadMonitor = new LoadMonitor(this, container, measuredResults);
                 try
                 {

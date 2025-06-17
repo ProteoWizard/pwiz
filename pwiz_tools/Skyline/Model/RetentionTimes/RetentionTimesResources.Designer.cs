@@ -70,6 +70,82 @@ namespace pwiz.Skyline.Model.RetentionTimes {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Align to Library &apos;{0}&apos;.
+        /// </summary>
+        internal static string LibraryTarget_GetAlignmentMenuItemText_Align_to_Library___0__ {
+            get {
+                return ResourceManager.GetString("LibraryTarget_GetAlignmentMenuItemText_Align_to_Library___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} aligned to library &apos;{1}&apos;.
+        /// </summary>
+        internal static string LibraryTarget_GetAxisTitle__0__aligned_to_library___1__ {
+            get {
+                return ResourceManager.GetString("LibraryTarget_GetAxisTitle__0__aligned_to_library___1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Retention time aligned to library &apos;{0}&apos;.
+        /// </summary>
+        internal static string LibraryTarget_GetAxisTitle_Retention_time_aligned_to_library___0__ {
+            get {
+                return ResourceManager.GetString("LibraryTarget_GetAxisTitle_Retention_time_aligned_to_library___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Performing alignment between libraries {0} and {1}.
+        /// </summary>
+        internal static string RetentionTimeManager_GetAlignmentDescription_Performing_alignment_between_libraries__0__and__1_ {
+            get {
+                return ResourceManager.GetString("RetentionTimeManager_GetAlignmentDescription_Performing_alignment_between_librari" +
+                        "es__0__and__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Performing alignment between library {0} and calculator {1}.
+        /// </summary>
+        internal static string RetentionTimeManager_GetAlignmentDescription_Performing_alignment_between_library__0__and_calculator__1_ {
+            get {
+                return ResourceManager.GetString("RetentionTimeManager_GetAlignmentDescription_Performing_alignment_between_library" +
+                        "__0__and_calculator__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Performing alignment between library {0} and itself.
+        /// </summary>
+        internal static string RetentionTimeManager_GetAlignmentDescription_Performing_alignment_between_library__0__and_itself {
+            get {
+                return ResourceManager.GetString("RetentionTimeManager_GetAlignmentDescription_Performing_alignment_between_library" +
+                        "__0__and_itself", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Performing alignment on library {0}.
+        /// </summary>
+        internal static string RetentionTimeManager_GetAlignmentDescription_Performing_alignment_on_library__0_ {
+            get {
+                return ResourceManager.GetString("RetentionTimeManager_GetAlignmentDescription_Performing_alignment_on_library__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Performing replicate retention time alignments.
+        /// </summary>
+        internal static string RetentionTimeManager_UpdateResultFileAlignments_Performing_replicate_retention_time_alignments {
+            get {
+                return ResourceManager.GetString("RetentionTimeManager_UpdateResultFileAlignments_Performing_replicate_retention_ti" +
+                        "me_alignments", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to FWB Time.
         /// </summary>
         internal static string RtGraphValue_FWB_Time {

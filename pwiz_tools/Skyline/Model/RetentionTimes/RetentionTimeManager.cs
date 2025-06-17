@@ -165,7 +165,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
         {
             var loadMonitor = new LoadMonitor(this, container, docCurrent);
             var documentRetentionTimes = docCurrent.Settings.DocumentRetentionTimes;
-            IProgressStatus progressStatus = new ProgressStatus("Performing replicate retention time alignments");
+            IProgressStatus progressStatus = new ProgressStatus(RetentionTimesResources.RetentionTimeManager_UpdateResultFileAlignments_Performing_replicate_retention_time_alignments);
             DocumentRetentionTimes result;
             try
             {
@@ -194,20 +194,20 @@ namespace pwiz.Skyline.Model.RetentionTimes
             {
                 if (libraryTarget.Library.Name == libraryName)
                 {
-                    return string.Format("Performing alignment between library {0} and itself",
+                    return string.Format(RetentionTimesResources.RetentionTimeManager_GetAlignmentDescription_Performing_alignment_between_library__0__and_itself,
                         libraryName);
                 }
 
-                return string.Format("Performing alignment between libraries {0} and {1}", libraryName, libraryTarget.Library.Name);
+                return string.Format(RetentionTimesResources.RetentionTimeManager_GetAlignmentDescription_Performing_alignment_between_libraries__0__and__1_, libraryName, libraryTarget.Library.Name);
             }
 
             if (target is AlignmentTarget.Irt irt)
             {
-                return string.Format("Performing alignment between library {0} and calculator {1}",
+                return string.Format(RetentionTimesResources.RetentionTimeManager_GetAlignmentDescription_Performing_alignment_between_library__0__and_calculator__1_,
                     libraryName, irt.Calculator.Name);
             }
 
-            return string.Format("Performing alignment on library {0}", libraryName);
+            return string.Format(RetentionTimesResources.RetentionTimeManager_GetAlignmentDescription_Performing_alignment_on_library__0_, libraryName);
 
         }
     }

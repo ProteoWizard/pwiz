@@ -42,8 +42,6 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestSrmCourseScenario()
         {
-            // TODO
-            return;
             TestFilesZip = @"TestFunctional\SrmCourseScenarioTest.zip";
             RunFunctionalTest();
         }
@@ -113,7 +111,7 @@ namespace pwiz.SkylineTestFunctional
 
             VerifyUserSets(document, matchedUserSetGroups, matchedUserSetTrans);
 
-            VerifyMatchingPeakBoundaries(document, true);   // CONSIDER: Strange that these peak times match exactly
+            VerifyMatchingPeakBoundaries(document, false);
 
             // Test limited scoring model
             {

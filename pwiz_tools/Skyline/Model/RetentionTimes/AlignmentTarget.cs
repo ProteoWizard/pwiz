@@ -119,9 +119,19 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 }
                 case RegressionMethodRT.log:
                 {
-                    // TODO
-                    var x = "TODO";
-                    return null;
+                    double xMin = points.Min(pt => pt.X);
+                    double xMax = points.Max(pt => pt.X);
+                    if (xMin <= xMax)
+                    {
+                        return null;
+                    }
+                    var regressionFunction = new LogRegression(points.Select(pt=>pt.X).ToList(), points.Select(pt=>pt.Y).ToList(), true);
+                    const int pointCount = 1000;
+
+                    var xValues = Enumerable.Range(0, pointCount)
+                        .Select(i => (i * xMax + (pointCount - i - 1) * xMin) / (pointCount - 1)).ToList();
+                    var yValues = xValues.Select(regressionFunction.GetY);
+                    return PiecewiseLinearMap.FromValues(xValues, yValues);
                 }
                 case RegressionMethodRT.loess:
                 {
@@ -370,15 +380,15 @@ namespace pwiz.Skyline.Model.RetentionTimes
             {
                 if (rtPeptideValue == RTPeptideValue.Retention || rtPeptideValue == RTPeptideValue.All)
                 {
-                    return string.Format("Retention time aligned to library '{0}'", Library.Name);
+                    return string.Format(RetentionTimesResources.LibraryTarget_GetAxisTitle_Retention_time_aligned_to_library___0__, Library.Name);
                 }
 
-                return string.Format("{0} aligned to library '{1}'", rtPeptideValue.ToLocalizedString(), Library.Name);
+                return string.Format(RetentionTimesResources.LibraryTarget_GetAxisTitle__0__aligned_to_library___1__, rtPeptideValue.ToLocalizedString(), Library.Name);
             }
 
             public override string GetAlignmentMenuItemText()
             {
-                return string.Format("Align to Library '{0}'", Library.Name);
+                return string.Format(RetentionTimesResources.LibraryTarget_GetAlignmentMenuItemText_Align_to_Library___0__, Library.Name);
             }
 
             protected bool Equals(LibraryTarget other)

@@ -39,8 +39,6 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestCandidatePeaks()
         {
-            // TODO
-            return;
             TestFilesZip = @"TestFunctional\CandidatePeakTest.zip";
             RunFunctionalTest();
         }
@@ -169,6 +167,7 @@ namespace pwiz.SkylineTestFunctional
                         Assert.AreEqual(candidatePeakGroup.PeakGroupEndTime, transitionGroupChromInfo.EndRetentionTime.Value, 1);
                     }
                 });
+                WaitForCondition(() => candidatePeakForm.IsComplete);
             }
         }
 

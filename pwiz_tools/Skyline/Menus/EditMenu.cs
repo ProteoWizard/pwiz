@@ -930,7 +930,7 @@ namespace pwiz.Skyline.Menus
                 if (ImputationSettings.DEFAULT.Equals(imputationSettings))
                 {
                     MessageDlg.Show(SkylineWindow,
-                        "No imputations options have been chosen for this document.\r\nGo to the Prediction tab in Peptide Settings to choose some imputation options.");
+                        MenusResources.EditMenu_ImputePeakBoundaries_);
                     return;
                 }
                 var peptidePaths =
@@ -944,7 +944,7 @@ namespace pwiz.Skyline.Menus
                 var peakImputer = new PeakBoundaryImputer(originalDocument);
                 using var longWait = new LongWaitDlg(SkylineWindow);
                 ModifiedDocument modifiedDocument = null;
-                longWait.Text = "Imputing peak boundaries";
+                longWait.Text = MenusResources.EditMenu_ImputePeakBoundaries_Imputing_peak_boundaries;
                 longWait.PerformWork(SkylineWindow, 100, longWaitBroker =>
                 {
                     var productionMonitor = new ProductionMonitor(longWaitBroker.CancellationToken,
@@ -955,7 +955,7 @@ namespace pwiz.Skyline.Menus
                 {
                     return;
                 }
-                SkylineWindow.ModifyDocument("Imputed peak boundaries", DocumentModifier.FromResult(originalDocument, modifiedDocument));
+                SkylineWindow.ModifyDocument(MenusResources.EditMenu_ImputePeakBoundaries_Imputed_peak_boundaries, DocumentModifier.FromResult(originalDocument, modifiedDocument));
             }
         }
 

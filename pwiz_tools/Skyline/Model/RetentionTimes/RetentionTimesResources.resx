@@ -109,4 +109,28 @@
   <data name="RtGraphValue_Retention_Time" xml:space="preserve">
     <value>Retention Time</value>
   </data>
+  <data name="LibraryTarget_GetAxisTitle_Retention_time_aligned_to_library___0__" xml:space="preserve">
+	  <value>Retention time aligned to library '{0}'</value>
+  </data>
+  <data name="LibraryTarget_GetAxisTitle__0__aligned_to_library___1__" xml:space="preserve">
+	  <value>{0} aligned to library '{1}'</value>
+  </data>
+  <data name="LibraryTarget_GetAlignmentMenuItemText_Align_to_Library___0__" xml:space="preserve">
+	  <value>Align to Library '{0}'</value>
+  </data>
+  <data name="RetentionTimeManager_UpdateResultFileAlignments_Performing_replicate_retention_time_alignments" xml:space="preserve">
+	  <value>Performing replicate retention time alignments</value>
+  </data>
+  <data name="RetentionTimeManager_GetAlignmentDescription_Performing_alignment_between_library__0__and_itself" xml:space="preserve">
+	  <value>Performing alignment between library {0} and itself</value>
+  </data>
+  <data name="RetentionTimeManager_GetAlignmentDescription_Performing_alignment_between_libraries__0__and__1_" xml:space="preserve">
+	  <value>Performing alignment between libraries {0} and {1}</value>
+  </data>
+  <data name="RetentionTimeManager_GetAlignmentDescription_Performing_alignment_between_library__0__and_calculator__1_" xml:space="preserve">
+	  <value>Performing alignment between library {0} and calculator {1}</value>
+  </data>
+  <data name="RetentionTimeManager_GetAlignmentDescription_Performing_alignment_on_library__0_" xml:space="preserve">
+	  <value>Performing alignment on library {0}</value>
+  </data>
 </root>
