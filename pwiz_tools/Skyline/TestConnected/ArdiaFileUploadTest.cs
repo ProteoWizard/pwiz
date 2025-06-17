@@ -70,6 +70,8 @@ namespace pwiz.SkylineTestConnected
 
             TestAccountHasCredentials(account);
 
+            TestGetFolders(account);
+
             // TestCreateFolder(account);
 
             TestSuccessfulUpload(account);
@@ -121,14 +123,15 @@ namespace pwiz.SkylineTestConnected
             Assert.AreEqual(ValidateInputResult.invalid_character, result);
         }
 
+        private static void TestGetFolders(ArdiaAccount account)
+        {
+            var ardiaClient = ArdiaClient.Create(account);
+
+            // Successful if no exception thrown
+            ardiaClient.GetFolders(account.GetRootArdiaUrl(), null);
+        }
+
         // TODO: enable test. Test passes if the ArdiaAccount has Super Admin role but fails when run as a Tester
-        // private static void TestCreateFolder(ArdiaAccount account)
-        // {
-        //     var ardiaClient = ArdiaClient.Create(account);
-        //
-        //     ardiaClient.CreateFolder(@"/ZZZ-Document-Upload", @"NewFolder01", null);
-        //     ardiaClient.DeleteFolder(@"/ZZZ-Document-Upload/NewFolder01");
-        // }
         // private static void TestCreateFolder(ArdiaAccount account)
         // {
         //     var ardiaClient = ArdiaClient.Create(account);

@@ -143,7 +143,16 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error creating folder {0}.
+        ///   Looks up a localized string similar to New Folder.
+        /// </summary>
+        public static string CreateFolder_DefaultFolderName {
+            get {
+                return ResourceManager.GetString("CreateFolder_DefaultFolderName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error creating folder &apos;{1}&apos; in &apos;{0}&apos;..
         /// </summary>
         public static string CreateFolder_Error {
             get {
@@ -197,11 +206,11 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to New Folder.
+        ///   Looks up a localized string similar to Opening folder {0}.
         /// </summary>
-        public static string FileUpload_DefaultNewFolderName {
+        public static string OpenFolder_Title {
             get {
-                return ResourceManager.GetString("FileUpload_DefaultNewFolderName", resourceCulture);
+                return ResourceManager.GetString("OpenFolder_Title", resourceCulture);
             }
         }
         

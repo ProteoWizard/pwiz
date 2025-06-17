@@ -15,13 +15,13 @@
  */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.CommonMsData;
 using pwiz.CommonMsData.RemoteApi;
 using pwiz.CommonMsData.RemoteApi.Ardia;
 using pwiz.Skyline.Alerts;
@@ -33,35 +33,20 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.FileUI
 {
-    // CONSIDER: Esc key cancels creating a new folder
     public class PublishDocumentDlgArdia : PublishDocumentDlgBase
     {
-        private enum ImageId { ardia, folder, empty }
         public enum ValidateInputResult { valid, invalid_blank, invalid_character }
+        private enum ImageId { ardia, folder, empty }
 
         private static readonly char[] ILLEGAL_FOLDER_NAME_CHARS = { ':', '\\', '/', '*', '?', '"', '<', '>', '|' };
+        private static readonly RemoteItemComparer REMOTE_ITEM_COMPARER = new RemoteItemComparer();
 
         private readonly IList<ArdiaAccount> _ardiaAccounts;
-        private readonly IDictionary<ArdiaAccount, ArdiaSession> _ardiaSessions;
-
-        // These fields are communicate state between request / responses made using an ArdiaSession
-        // since it does not use lambdas.
-        private RemoteUrl _contentsAvailableRemoteUrl;
-        private TreeNode _contentsAvailableTreeNode;
-        private string _contentsAvailableFolderToSelect;
 
         public PublishDocumentDlgArdia(IDocumentUIContainer docContainer, IList<ArdiaAccount> accounts, string fileName, DocumentFormat? fileFormatOnDisk) 
             : base(docContainer, fileName, fileFormatOnDisk)
         {
             _ardiaAccounts = accounts;
-            _ardiaSessions = new Dictionary<ArdiaAccount, ArdiaSession>();
-
-            foreach (var account in accounts)
-            {
-                _ardiaSessions[account] = (ArdiaSession)account.CreateSession();
-                _ardiaSessions[account].ContentsAvailable += ArdiaSession_ContentsAvailableWrapper;
-            }
-            _ardiaSessions = new ImmutableDictionary<ArdiaAccount, ArdiaSession>(_ardiaSessions);
 
             treeViewFolders.ImageList.TransparentColor = Color.Magenta;
             treeViewFolders.ImageList.Images.Add(Resources.ArdiaIcon);  // 32bpp
@@ -79,13 +64,20 @@ namespace pwiz.Skyline.FileUI
         /// </summary>
         public TreeView FoldersTree => treeViewFolders;
         /// <summary>
-        /// Used to test UI without uploading the current document.
+        /// Used in tests to exercise the UI without uploading a document.
         /// </summary>
         public bool SkipUpload { get; set; }
 
+        internal override void HandleDialogOk()
+        {
+            DestinationPath = DestinationPathFor(treeViewFolders.SelectedNode);
+
+            DialogResult = DialogResult.OK;
+        }
+
         internal override void HandleDialogLoad()
         {
-            // Do not show - Ardia does not support anon servers
+            // Do not show, Ardia does not support anon servers
             cbAnonymousServers.Visible = false;
             
             createRemoteFolder.Visible = true;
@@ -98,23 +90,25 @@ namespace pwiz.Skyline.FileUI
             treeViewFolders.AfterLabelEdit += TreeViewFolders_AfterLabelEdit;
             treeViewFolders.AfterSelect += TreeViewFolders_AfterSelect;
 
-            treeViewFolders.BeginUpdate();
-            foreach (var account in _ardiaAccounts)
+            UpdateTree(() =>
             {
-                // CONSIDER: add username to label? To distinguish multiple Ardia accounts with the same server.
-                var treeNode = new TreeNode(account.ServerUrl, (int)ImageId.ardia, (int)ImageId.ardia)
+                foreach (var account in _ardiaAccounts)
                 {
-                    Tag = new ArdiaAccountInfo(account, account.GetRootUrl()),
-                };
+                    // CONSIDER: does adding username ot the label improve the UI when choosing between multiple registered Ardia accounts?
+                    var label = $@"{account.Username} @ {new Uri(account.ServerUrl).Host}";
+                    var treeNode = new TreeNode(label, (int)ImageId.ardia, (int)ImageId.ardia)
+                    {
+                        Tag = new ArdiaAccountInfo(account, account.GetRootUrl()),
+                    };
 
-                // Assume the server has sub-folders and add this node so the TreeView's expand
-                // icon appears without having actually called the Ardia API to get the child
-                // nodes. SrmTreeNode does something similar.
-                treeNode.Nodes.Add(CreateEmptyNode());
+                    // Assume the server has sub-folders and add this node so the TreeView's expand
+                    // icon appears without having actually called the Ardia API to get the child
+                    // nodes. SrmTreeNode does something similar.
+                    treeNode.Nodes.Add(CreateEmptyNode());
 
-                treeViewFolders.Nodes.Add(treeNode);
-            }
-            treeViewFolders.EndUpdate();
+                    treeViewFolders.Nodes.Add(treeNode);
+                }
+            });
         }
 
         private void TreeViewFolders_AfterSelect(object sender, TreeViewEventArgs treeViewEventArgs)
@@ -122,141 +116,83 @@ namespace pwiz.Skyline.FileUI
             createRemoteFolder.Enabled = treeViewFolders.SelectedNode != null;
         }
 
+        // TODO: error handling?
+        // TODO: how does LongWaitDlg behave when network takes a long time to respond? How does that affect UI?
         private void ExpandFolder(TreeNode parentTreeNode)
         {
-            var ardiaSession = ArdiaSessionForTreeNode(parentTreeNode);
-            var parentUrl = (ArdiaUrl)(parentTreeNode.Tag as ArdiaFolderInfo)?.RemoteUrl;
-
-            // Reuse results if they were already fetched from the API during this remote session.
-            // Also skip re-rendering TreeView nodes for these files should already exist in the tree.
-            if (ardiaSession.HasResultsFor(parentUrl))
+            // Short-circuit if contents of this folder are already loaded. This means items added on the server
+            // after this Dlg opens will not appear until the Dlg closes and re-opens.
+            if (((ArdiaFolderInfo)parentTreeNode.Tag).RemoteContentsLoaded)
             {
                 return;
             }
 
+            var ardiaAccount = ArdiaAccountForTreeNode(parentTreeNode);
+            var parentUrl = (ArdiaUrl)(parentTreeNode.Tag as ArdiaFolderInfo)?.RemoteUrl;
+
             treeViewFolders.Cursor = Cursors.WaitCursor;
-            parentTreeNode.Nodes.Clear();
 
-            RemoteCallPending = true;
+            IList<RemoteItem> remoteItems = new List<RemoteItem>();
 
-            _contentsAvailableRemoteUrl = parentUrl;
-            _contentsAvailableTreeNode = parentTreeNode;
-
-            // TODO: should this be wrapped in LongWaitDlg? Does that work with RemoteSession's callback model?
-            // TODO: error handling
-            ardiaSession.AsyncFetchContents(parentUrl, out _);
-        }
-
-        private void ArdiaSession_ContentsAvailableWrapper()
-        {
-            CommonActionUtil.SafeBeginInvoke(this, () =>
+            using var waitDlg = new LongWaitDlg();
+            waitDlg.Text = string.Format(ArdiaResources.OpenFolder_Title, parentTreeNode.Text);
+            waitDlg.PerformWork(this, 1000, progressMonitor =>
             {
-                ArdiaSession_ContentsAvailable(_contentsAvailableRemoteUrl, _contentsAvailableTreeNode);
+                RemoteCallPending = true;
+
+                var ardiaClient = ArdiaClient.Create(ardiaAccount);
+                remoteItems = ardiaClient.GetFolders(parentUrl, progressMonitor);
+
+                RemoteCallPending = false;
             });
+
+            AddItemsToFolder(remoteItems, parentTreeNode);
+
+            ((ArdiaFolderInfo)parentTreeNode.Tag)!.RemoteContentsLoaded = true;
+
+            treeViewFolders.Cursor = Cursors.Default;
         }
 
-        private void ArdiaSession_ContentsAvailable(RemoteUrl parentUrl, TreeNode parentTreeNode)
+        // TODO: does Ardia API include whether the current user has permission to upload to a given directory?
+        // TODO: can Ardia API include whether a given directory includes 1+ folders? The "hasChildren" flag
+        //       tells Skyline that a folder has child nodes - but is not enough information to tell whether
+        //       1 or more children are folders without making N additional API calls. So, Skyline every
+        //       folder can be expanded even if expanding adds no child nodes. 
+        private void AddItemsToFolder(IList<RemoteItem> remoteItems, TreeNode parentTreeNode)
         {
-            try
+            if (remoteItems.Count == 0)
+                return;
+
+            // Sort lexicographically
+            remoteItems.Sort(REMOTE_ITEM_COMPARER);
+
+            UpdateTree(() =>
             {
-                // TODO: does Ardia API include whether the current user has permission to upload to a given directory?
-                // CONSIDER: can Ardia API include whether a given directory includes 1+ folders? The current "hasChildren" flag 
-                //           is true when the directory contains only files - but Skyline doesn't know that without making the 
-                //           API call
-                var ardiaSession = ArdiaSessionForTreeNode(parentTreeNode);
-                var remoteItems = ardiaSession.ListContents(parentUrl).ToList();
+                // Before adding more child nodes, remove placeholder node added so TreeView displays the '+' for expand / collapse
+                RemovePlaceholderFrom(parentTreeNode); // parentTreeNode.Nodes[0].Remove());
 
-                // Sort folders lexicographically
-                // CONSIDER: would more sort options be useful?
-                // TODO: folders with new items may be out of order, so re-sort before opening
-                remoteItems.Sort((item1, item2) => string.Compare(item1.Label, item2.Label, StringComparison.CurrentCultureIgnoreCase));
-
-                treeViewFolders.BeginUpdate();
                 foreach (var remoteItem in remoteItems)
                 {
-                    // Skip files and other non-folder items in this folder
-                    if (!DataSourceUtil.IsFolderType(remoteItem.Type))
-                        continue;
+                    var childTreeNode = CreateFolderNode(remoteItem.Label);
 
-                    var folderName = remoteItem.Label;
                     // For more info on this cast, see ArdiaSession @ ListContents
-                    var folderUrl = remoteItem.MsDataFileUri as ArdiaUrl;
-                    var folderHasChildren = remoteItem.HasChildren;
-
-                    var childTreeNode = CreateFolderNode(folderName);
-                    childTreeNode.Tag = new ArdiaFolderInfo(folderUrl);
+                    childTreeNode.Tag = new ArdiaFolderInfo(remoteItem.MsDataFileUri as ArdiaUrl);
 
                     // If this node has sub-folders, add a node so the expand icon appears without 
                     // actually having added child nodes. SrmTreeNode does something similar.
-                    if (folderHasChildren)
+                    if (remoteItem.HasChildren)
                     {
                         childTreeNode.Nodes.Add(CreateEmptyNode());
                     }
 
                     parentTreeNode.Nodes.Add(childTreeNode);
                 }
-
-                parentTreeNode.Expand();
-
-                if (_contentsAvailableFolderToSelect != null)
-                {
-                    foreach (TreeNode node in parentTreeNode.Nodes)
-                    {
-                        if (string.Equals(node.Text, _contentsAvailableFolderToSelect))
-                        {
-                            treeViewFolders.SelectedNode = node;
-                            treeViewFolders.SelectedNode.EnsureVisible();
-                        }
-                    }
-                }
-            }
-            finally
-            {
-                treeViewFolders.EndUpdate();
-                treeViewFolders.Cursor = Cursors.Default;
-                RemoteCallPending = false;
-
-                // Reset local variables used to pass state between making the request and handling the request
-                _contentsAvailableFolderToSelect = null;
-                _contentsAvailableRemoteUrl = null;
-                _contentsAvailableTreeNode = null;
-            }
-        }
-
-        /// <summary>
-        /// Helper that walks up to the root of this tree, which refers to the Ardia server associated with the given <param name="treeNode"></param>
-        /// </summary>
-        /// <param name="treeNode">A node from the tree view</param>
-        /// <returns>the ArdiaSession associated with the given <param name="treeNode"></param></returns>
-        private ArdiaSession ArdiaSessionForTreeNode(TreeNode treeNode)
-        {
-            var root = treeNode;
-            while (root.Parent != null)
-            {
-                root = root.Parent;
-            }
-
-            var account = ((ArdiaAccountInfo)root.Tag).Account;
-            return _ardiaSessions[account];
-        }
-
-        private string DestinationPathFor(TreeNode treeNode)
-        {
-            // Ardia needs a path different from what the baseclass provides with GetFolderPath. So
-            // fixup with (1) leading '/' and (2) remove any trailing '/'
-            return ArdiaClient.URL_PATH_SEPARATOR + GetFolderPath(treeNode)?.TrimEnd('/');
-        }
-
-        internal override void HandleDialogOk()
-        {
-            DestinationPath = DestinationPathFor(treeViewFolders.SelectedNode);
-
-            DialogResult = DialogResult.OK;
+            });
         }
 
         public override void Upload(Control parent)
         {
-            var ardiaAccount = ArdiaSessionForTreeNode(treeViewFolders.SelectedNode).ArdiaAccount;
+            var ardiaAccount = ArdiaAccountForTreeNode(treeViewFolders.SelectedNode);
 
             var isCanceled = false;
             if (!SkipUpload)
@@ -272,35 +208,43 @@ namespace pwiz.Skyline.FileUI
                 });
             }
 
-            if (!isCanceled)
-            {
-                // CONSIDER: Ardia API could respond with the URL of the uploaded file in Ardia Data Explorer and Skyline
-                //           could offer to open that file in the browser. Panorama does similar.
-                MessageDlg.Show(this, ArdiaResources.Ardia_FileUpload_SuccessfulUpload);
-            }
+            if (isCanceled)
+                return;
+
+            // CONSIDER: Ardia API could respond with the URL of the uploaded file in Ardia Data Explorer and Skyline
+            //           could offer to open that file in the browser. Panorama does similar.
+            MessageDlg.Show(this, ArdiaResources.Ardia_FileUpload_SuccessfulUpload);
         }
 
-        // TODO: for now, nodes can only be added to an already expanded folder
         public void CreateFolder()
         {
             var parentNode = treeViewFolders.SelectedNode;
             if (parentNode == null)
                 return;
 
-            var newFolder = CreateFolderNode(ArdiaResources.FileUpload_DefaultNewFolderName);
-
+            // avoid highlighting two tree nodes at the same time by de-selecting this node
             treeViewFolders.SelectedNode = null;
+
+            // temporarily enable editing - will be disabled shortly
             treeViewFolders.LabelEdit = true;
 
-            // NB: order is important - UI is better when parent expands before adding child node
-            // TODO: fetch parentNode's contents and display if not already expanded
-            parentNode.Expand();
-            RemovePlaceholderNode(parentNode);
+            var newFolder = CreateFolderNode(ArdiaResources.CreateFolder_DefaultFolderName);
 
-            // Add new folder at end and leave it there. Windows Explorer does something similar.
-            parentNode.Nodes.Add(newFolder);
+            // If parent has child nodes, UI is better if parent expands before adding a new child
+            if (parentNode.Nodes.Count > 0)
+            {
+                parentNode.Expand();
 
-            parentNode.Expand();
+                // New child goes at the end of the list, similar to what happens in Windows Explorer. If the
+                // parent folder is collapsed and re-expanded, this new child will be sorted lexicographically.
+                parentNode.Nodes.Add(newFolder);
+            }
+            // If parent has no child nodes, child must be added prior to calling expand - otherwise calling Expand() does nothing
+            else
+            {
+                parentNode.Nodes.Add(newFolder);
+                parentNode.Expand();
+            }
 
             newFolder.BeginEdit();
         }
@@ -310,7 +254,6 @@ namespace pwiz.Skyline.FileUI
         /// </summary>
         public void TreeViewFolders_AfterLabelEdit(object sender, NodeLabelEditEventArgs e)
         {
-            // CONSIDER: interaction weirdness after (1) Create Folder and (2) press Esc to cancel
             var newFolderName = e.Label;
             var newTreeNode = e.Node;
 
@@ -332,10 +275,9 @@ namespace pwiz.Skyline.FileUI
             {
                 e.CancelEdit = true;
 
-                var message =
-                    validateResult == ValidateInputResult.invalid_blank
-                        ? ArdiaResources.CreateFolder_Error_BlankName
-                        : string.Format(ArdiaResources.CreateFolder_Error_IllegalCharacter, new string(ILLEGAL_FOLDER_NAME_CHARS));
+                var message = validateResult == ValidateInputResult.invalid_blank ? 
+                    ArdiaResources.CreateFolder_Error_BlankName :
+                    string.Format(ArdiaResources.CreateFolder_Error_IllegalCharacter, new string(ILLEGAL_FOLDER_NAME_CHARS));
 
                 var alertDlg = new AlertDlg(message, MessageBoxButtons.OKCancel);
                 alertDlg.ShowAndDispose(this);
@@ -347,15 +289,18 @@ namespace pwiz.Skyline.FileUI
                 }
                 else
                 {
+                    var parentNode = e.Node.Parent;
+
                     e.Node.EndEdit(true);
                     e.Node.Remove();
                     treeViewFolders.LabelEdit = false;
+                    treeViewFolders.SelectedNode = parentNode;
                 }
 
                 return;
             }
 
-            var ardiaAccount = ArdiaSessionForTreeNode(newTreeNode).ArdiaAccount;
+            var ardiaAccount = ArdiaAccountForTreeNode(newTreeNode);
             var parentFolderPath = DestinationPathFor(newTreeNode.Parent);
 
             using var waitDlg = new LongWaitDlg();
@@ -366,8 +311,7 @@ namespace pwiz.Skyline.FileUI
                 ardiaClient.CreateFolder(parentFolderPath, newFolderName, longWaitBroker);
             });
 
-            treeViewFolders.SelectedNode = newTreeNode;
-            treeViewFolders.LabelEdit = false;
+            treeViewFolders.SelectedNode = newTreeNode; 
         }
 
         private void TreeViewFolders_BeforeExpand(object sender, TreeViewCancelEventArgs e)
@@ -380,13 +324,53 @@ namespace pwiz.Skyline.FileUI
             CreateFolder();
         }
 
-        private static void RemovePlaceholderNode(TreeNode treeNode)
+        // CONSIDER: refactor - make the base class's virtual and move impl to Panorama
+        private string DestinationPathFor(TreeNode treeNode)
+        {
+            // Ardia paths differ from what the baseclass provides with GetFolderPath. Differences:
+            // (1) Add a leading slash ('/')
+            // (2) Remove any trailing slash ('/')
+            return ArdiaClient.URL_PATH_SEPARATOR + GetFolderPath(treeNode)?.TrimEnd('/');
+        }
+
+        private void UpdateTree(Action action)
+        {
+            Assume.IsNotNull(action);
+            try
+            {
+                treeViewFolders.BeginUpdate();
+
+                action.Invoke();
+            }
+            finally
+            {
+                treeViewFolders.EndUpdate();
+            }
+        }
+
+        private static void RemovePlaceholderFrom(TreeNode treeNode)
         {
             if (treeNode.Nodes.Count == 0 || treeNode.Nodes.Count > 1)
                 return;
 
             if (treeNode.Nodes[0] is PlaceholderTreeNode)
                 treeNode.Nodes.RemoveAt(0);
+        }
+
+        /// <summary>
+        /// Helper that walks up to the root of this tree, which refers to the Ardia server associated with the given <param name="treeNode"></param>
+        /// </summary>
+        /// <param name="treeNode">A node from the tree view</param>
+        /// <returns>the <see cref="ArdiaAccount"/> associated with the given <param name="treeNode"></param></returns>
+        private static ArdiaAccount ArdiaAccountForTreeNode(TreeNode treeNode)
+        {
+            var root = treeNode;
+            while (root.Parent != null)
+            {
+                root = root.Parent;
+            }
+
+            return ((ArdiaAccountInfo)root.Tag).Account;
         }
 
         /// <summary>
@@ -399,10 +383,10 @@ namespace pwiz.Skyline.FileUI
         public static ValidateInputResult ValidateFolderName(string folderName)
         {
             if (string.IsNullOrWhiteSpace(folderName))
-                return ValidateInputResult.invalid_blank;
+                return PublishDocumentDlgArdia.ValidateInputResult.invalid_blank;
             else if (folderName.IndexOfAny(ILLEGAL_FOLDER_NAME_CHARS) != -1)
-                return ValidateInputResult.invalid_character;
-            else return ValidateInputResult.valid;
+                return PublishDocumentDlgArdia.ValidateInputResult.invalid_character;
+            else return PublishDocumentDlgArdia.ValidateInputResult.valid;
         }
 
         private static TreeNode CreateEmptyNode()
@@ -420,6 +404,14 @@ namespace pwiz.Skyline.FileUI
             public PlaceholderTreeNode() : base(@"        ", (int)ImageId.empty, (int)ImageId.empty) { }
         }
 
+        private class RemoteItemComparer : IComparer
+        {
+            public int Compare(object x, object y)
+            {
+                return string.Compare(((RemoteItem)x)?.Label, ((RemoteItem)y)?.Label, StringComparison.CurrentCulture);
+            }
+        }
+
         private class ArdiaFolderInfo
         {
             internal ArdiaFolderInfo(RemoteUrl remoteUrl)
@@ -428,6 +420,7 @@ namespace pwiz.Skyline.FileUI
             }
 
             internal RemoteUrl RemoteUrl { get; }
+            internal bool RemoteContentsLoaded { get; set; }
         }
 
         private class ArdiaAccountInfo : ArdiaFolderInfo

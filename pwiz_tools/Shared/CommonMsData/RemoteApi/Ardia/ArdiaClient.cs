@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -23,6 +24,8 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.CommonMsData.RemoteApi.Ardia
@@ -57,20 +60,22 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
 
             var token = ArdiaCredentialHelper.GetToken(account);
 
-            return new ArdiaClient(serverApiUrl, applicationCode, token);
+            return new ArdiaClient(account, serverApiUrl, applicationCode, token);
         }
 
-        private ArdiaClient(string serverUrl, string applicationCode, string token)
+        private ArdiaClient(ArdiaAccount account, string serverUrl, string applicationCode, string token)
         {
+            Account = account;
             ServerUri = new Uri(serverUrl);
             ApplicationCode = applicationCode;
             Token = token;
         }
 
+        public bool HasCredentials => !string.IsNullOrWhiteSpace(ApplicationCode) && !string.IsNullOrWhiteSpace(Token);
+        private ArdiaAccount Account { get; }
         private string ApplicationCode { get; }
         private string Token { get; }
         private Uri ServerUri { get; }
-        public bool HasCredentials => !string.IsNullOrWhiteSpace(ApplicationCode) && !string.IsNullOrWhiteSpace(Token);
 
         /// <summary>
         /// Configure an <see cref="HttpClient"/> callers can use to access the Ardia API.
@@ -94,8 +99,9 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
 
         public void CreateFolder(string parentFolderPath, string folderName, IProgressMonitor progressMonitor)
         {
-            using var httpClient = AuthenticatedHttpClient();
             HttpStatusCode? statusCode = null;
+            var responseBody = string.Empty;
+
             try
             {
                 var requestModel = CreateFolderRequest.Create(parentFolderPath, folderName);
@@ -103,15 +109,18 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
                 var jsonString = JsonConvert.SerializeObject(requestModel);
                 using var request = new StringContent(jsonString, Encoding.UTF8, HEADER_CONTENT_TYPE_FOLDER);
 
+                using var httpClient = AuthenticatedHttpClient();
+
                 var response = httpClient.PostAsync(PATH_CREATE_FOLDER, request).Result;
                 statusCode = response.StatusCode;
+                responseBody = response.Content.ReadAsStringAsync().Result;
+                
                 response.EnsureSuccessStatusCode();
             }
             catch (Exception e)
             {
-                var uri = new Uri(ServerUri + PATH_CREATE_FOLDER);
-                var message = string.Format(ArdiaResources.CreateFolder_Error, parentFolderPath);
-                var responseBody = string.Empty;
+                var uri = UriFromParts(ServerUri, PATH_CREATE_FOLDER); 
+                var message = string.Format(ArdiaResources.CreateFolder_Error, parentFolderPath, folderName);
 
                 throw ArdiaServerException.Create(message, uri, statusCode, responseBody, e);
             }
@@ -308,26 +317,87 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
                 throw ArdiaServerException.Create(message, uri, statusCode, responseBody, e);
             }
         }
+
+        // CONSIDER: marshal JSON directly to RemoteItem. ArdiaSession marshals in two steps -
+        //           JSON to ArdiaFolderObject then to RemoteItem. Can simplify here.
+        public IList<RemoteItem> GetFolders(ArdiaUrl folderUrl, IProgressMonitor progressMonitor)
+        {
+            IList<RemoteItem> items;
+
+            using var httpClient = AuthenticatedHttpClient();
+
+            var requestUrl = GetFolderContentsUrl(folderUrl); 
+
+            var response = httpClient.GetAsync(requestUrl).Result;
+            response.EnsureSuccessStatusCode();
+
+            var responseBody = response.Content.ReadAsStringAsync().Result;
+            var jsonObject = JObject.Parse(responseBody);
+
+            if (!(jsonObject[@"children"] is JArray itemsValue))
+            {
+                items = ImmutableList<RemoteItem>.EMPTY;
+            }
+            else
+            {
+                var parentPath = Account.GetPathFromFolderContentsUrl(requestUrl.AbsoluteUri);
+
+                var foldersEnumerable = itemsValue.OfType<JObject>().
+                    Where(IsArdiaFolderOrSequence).
+                    Select(folder => new ArdiaFolderObject(folder, parentPath));
+
+                items = new List<RemoteItem>();
+                foreach (var folderObject in foldersEnumerable)
+                {
+                    if (folderObject.ParentId == "" || folderObject.ParentId.TrimStart('/') == folderUrl.EncodedPath)
+                    {
+                        var childUrl = folderUrl.ChangeId(folderObject.Id);
+                        var childUrlPathParts = folderUrl.GetPathParts().Concat(new[] { folderObject.Name });
+                        var baseChildUrl = childUrl.ChangePathParts(childUrlPathParts);
+
+                        var item = new RemoteItem(baseChildUrl, folderObject.Name, DataSourceUtil.FOLDER_TYPE, null, 0, folderObject.HasChildren);
+
+                        items.Add(item);
+                    }
+                }
+            }
+
+            return items;
+
+            bool IsArdiaFolderOrSequence(JObject f) => f[@"type"].Value<string>().Contains(@"folder");
+        }
+
+        private Uri GetFolderContentsUrl(ArdiaUrl ardiaUrl)
+        {
+            return new Uri(Account.GetFolderContentsUrl(ardiaUrl));
+        }
+
+        private static Uri UriFromParts(Uri host, string path)
+        {
+            return new Uri(host.ToString().TrimEnd('/') + path);
+        }
     }
 
-    // TODO: refactor ErrorMessageBuilder out of Panorama and use here
-    // TODO: include responseBody
+    // TODO: refactor ErrorMessageBuilder out of Panorama and use here?
     // TODO - IMPORTANT: scrub access tokens from URI and responseBody
     // CONSIDER: error message tailored to problems parsing the response as JSON
     // CONSIDER: can more be reused with Panorama's error reporting, including PanoramaServerException?
     public class ArdiaServerException : Exception
     {
-        public static ArdiaServerException Create(string message, Uri uri, HttpStatusCode? statusCode, string responseBody, Exception inner)
+        public static ArdiaServerException Create(string skylineMessage, Uri uri, HttpStatusCode? statusCode, string responseBody, Exception inner)
         {
             var statusCodeStr = statusCode != null ? statusCode.ToString() : string.Empty;
-            var exceptionMessage = $@"{message} {inner.Message} {uri} {statusCodeStr} {responseBody}";
+            var innerMessage = inner != null ? inner.Message : string.Empty;
+            var serverMessage = GetIfErrorInResponse(responseBody);
+
+            var exceptionMessage = $@"{skylineMessage} {serverMessage} {uri} {statusCodeStr} {responseBody} {innerMessage}";
 
             return new ArdiaServerException(exceptionMessage, uri, statusCode, responseBody, inner);
         }
 
         public Uri Uri { get; }
         public HttpStatusCode? HttpStatus { get; }
-        private string ResponseBody { get; }
+        public string ResponseBody { get; }
 
         private ArdiaServerException(string message, Uri uri, HttpStatusCode? status, string responseBody, Exception inner) 
             : base(message, inner)
@@ -337,18 +407,22 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             ResponseBody = responseBody;
         }
 
-        public string HttpErrorSummary()
+        internal static string GetIfErrorInResponse(string responseBody)
         {
-            var sb = new StringBuilder();
-            if (HttpStatus != null)
+            try
             {
-                sb.Append((int)HttpStatus);
-                sb.Append(HttpStatus.ToString());
+                var jsonResponse = JObject.Parse(responseBody);
+                if (jsonResponse?[@"title"] != null)
+                {
+                    return jsonResponse[@"title"].ToString();
+                }
+            }
+            catch (JsonReaderException e)
+            {
+                // ignore
             }
 
-            sb.Append(ResponseBody);
-
-            return sb.ToString();
+            return string.Empty;
         }
     }
 }
