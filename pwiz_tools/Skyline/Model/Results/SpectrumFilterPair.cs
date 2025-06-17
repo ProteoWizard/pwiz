@@ -68,6 +68,8 @@ namespace pwiz.Skyline.Model.Results
             MaxIonMobilityValue = IonMobilityInfo.IsEmpty ? null : MinIonMobilityValue + (IonMobilityInfo.IonMobilityExtractionWindowWidth ?? 0);
             HighAccQ1 = highAccQ1;
             HighAccQ3 = highAccQ3;
+            _knownWindowGroupsBitField = 0;
+            BestWindowGroup = -1;
 
             Ms1ProductFilters = SimProductFilters = Ms2ProductFilters = EMPTY_FILTERS;
 
@@ -96,17 +98,17 @@ namespace pwiz.Skyline.Model.Results
         }
         public double? MinIonMobilityValue { get; set; }
         public double? MaxIonMobilityValue { get; set; }
-        public int? BestWindowGroup { get; private set; }
-        public double? BestWindowGroupDistance { get; private set; }
-        public IList<int> OtherWindowGroups { get; private set; }
+        public int BestWindowGroup { get; private set; }  // For DIA PASEF
+        public bool HasBestWindowGroup => BestWindowGroup > 0; // For DIA PASEF
+        public float BestWindowGroupMatchArea { get; private set; }  // For DIA PASEF
+        public float BestWindowGroupMatchDistance { get; private set; }  // For DIA PASEF
+        private int _knownWindowGroupsBitField; // For DIA PASEF
         public int? OptStep { get; }
         private double? CollisionEnergy { get; }
         private IonMobilityFilter IonMobilityInfo { get; set; }
-        private bool HasCombinedIonMobility { get; set; } // When true, data was read in 3-array format, which affects spectrum ID format
-        private SpectrumProductFilter[] Ms1ProductFilters { get; set; }
+        public SpectrumProductFilter[] Ms1ProductFilters { get; set; }
         private SpectrumProductFilter[] SimProductFilters { get; set; }
         public SpectrumProductFilter[] Ms2ProductFilters { get; set; }
-        private IIonMobilityFunctionsProvider IonMobilityFunctionsProvider { get; set; }
 
         public string ScanDescriptionFilter { get; set; }
 
@@ -227,8 +229,7 @@ namespace pwiz.Skyline.Model.Results
                     spectrumCount++; // Our flag to process this as zero rather than null
                 }
             }
-//            if (spectra.Length > 1)
-//                Console.Write(string.Empty);
+ 
             for (int specIndex = imRangeHelper.IndexFirst; specIndex < spectra.Length; specIndex++)
             {
                 var spectrum = spectra[specIndex];
@@ -254,7 +255,7 @@ namespace pwiz.Skyline.Model.Results
                 spectrumCount++;
 
                 var mzArray = spectrum.Mzs;
-                if (mzArray == null || mzArray.Length == 0)
+                if (mzArray == null || mzArray.Count == 0)
                     continue;
 
                 // It's not unusual for mzarray and centerArray to have no overlap, esp. with ion mobility data
@@ -294,13 +295,11 @@ namespace pwiz.Skyline.Model.Results
                         double startFilter = targetMz - filterWindow / 2;
                         endFilter = startFilter + filterWindow;
 
-                        if (iPeak < mzArray.Length)
+                        if (iPeak < mzArray.Count)
                         {
-                            iPeak = Array.BinarySearch(mzArray, iPeak, mzArray.Length - iPeak, startFilter);
-                            if (iPeak < 0)
-                                iPeak = ~iPeak;
+                            iPeak = spectrum.FindMzIndex(startFilter, iPeak);
                         }
-                        if (iPeak >= mzArray.Length)
+                        if (iPeak >= mzArray.Count)
                             break; // No further overlap
                     }
 
@@ -311,7 +310,7 @@ namespace pwiz.Skyline.Model.Results
                         MeanMassError = highAcc ? meanErrors[targetIndex] : 0
                     };
 
-                    for (int iNext = iPeak; iNext < mzArray.Length && mzArray[iNext] < endFilter; iNext++)
+                    for (int iNext = iPeak; iNext < mzArray.Count && mzArray[iNext] < endFilter; iNext++)
                     {
                         // Avoid adding points that are not within the allowed ion mobility range
                         if (imsArray != null && !ContainsIonMobilityValue(imsArray[iNext], useIonMobilityHighEnergyOffset
@@ -447,10 +446,14 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public bool IsKnownWindowGroup(int windowGroup)
+        public bool GetIsKnownWindowGroup(int windowGroup)
         {
-            return windowGroup == BestWindowGroup ||
-                   (OtherWindowGroups != null && OtherWindowGroups.Contains(windowGroup));
+            return ((_knownWindowGroupsBitField & (1 << (windowGroup-1))) != 0); // WindowGroup is 1-based
+        }
+
+        public void SetIsKnownWindowGroup(int windowGroup)
+        {
+            _knownWindowGroupsBitField |= (1 << (windowGroup-1)); // WindowGroup is 1-based
         }
 
         public bool IsBestWindowGroup(int windowGroup)
@@ -458,34 +461,45 @@ namespace pwiz.Skyline.Model.Results
             return windowGroup == BestWindowGroup;
         }
 
-        public bool UpdateBestWindowGroup(int windowGroup, double distance)
+        public bool ProposeBestWindowGroup(int proposedBestWindowGroup, double area, double distance)
         {
-            if (BestWindowGroup.HasValue)
+            // We look at how much of the target mz x IM search area overlaps that in the window group
+            // In a tie, we go for the window that is most centered on the target
+            if (BestWindowGroup > 0)
             {
-                // Already have a best value and this is it
-                if (BestWindowGroup.Value == windowGroup)
-                    return true;
-                // Not it and the distance is not closer
-                if (BestWindowGroupDistance.Value <= distance)
-                    return false;
-            }
-            // This becomes the best window group
-            if (BestWindowGroup.HasValue)
-            {
-                // Save any previously seen window groups, providing for most likely cases:
-                // 1. No other possible window groups
-                // 2. 1 other possible window group
-                if (OtherWindowGroups == null)
-                    OtherWindowGroups = new[] {BestWindowGroup.Value};
-                else
+                // We have identified at least one window that hits - update?
+                if (area < BestWindowGroupMatchArea)
                 {
-                    if (OtherWindowGroups.Count == 1)
-                        OtherWindowGroups = new List<int>(OtherWindowGroups);
-                    OtherWindowGroups.Add(BestWindowGroup.Value);
+                    // Proposed window is not better than current winner, but note that we checked this window
+                    SetIsKnownWindowGroup(proposedBestWindowGroup);
+                    return false;
+                }
+                if (area >= BestWindowGroupMatchArea || // Better coverage
+                    distance < BestWindowGroupMatchDistance) // Same coverage, take the one closest to center
+                {
+                    BestWindowGroupMatchArea = (float)area;
+                    BestWindowGroupMatchDistance = (float)distance;
+                    BestWindowGroup = proposedBestWindowGroup;
+                    SetIsKnownWindowGroup(proposedBestWindowGroup);
+//Console.WriteLine($"u{BestWindowGroup} {this.Q1} {distance:F3}");
+                    return true;
+                }
+                // Already have a best window and this is it
+                if (BestWindowGroup == proposedBestWindowGroup)
+                {
+                    return true;
                 }
             }
-            BestWindowGroup = windowGroup;
-            BestWindowGroupDistance = distance;
+            else if (area <= 0)
+            {
+                // No hit on this window, nor any other yet - reserve judgment, don't mark as known
+                return false;
+            }
+            BestWindowGroup = proposedBestWindowGroup;
+            BestWindowGroupMatchArea = (float)area;
+            BestWindowGroupMatchDistance = (float)distance;
+//Console.WriteLine($"{BestWindowGroup} {this.Q1} {distance:F3}");
+            SetIsKnownWindowGroup(BestWindowGroup);
             return true;
         }
 
@@ -619,11 +633,6 @@ namespace pwiz.Skyline.Model.Results
 
     public class SpectrumProductFilter
     {
-        public SpectrumProductFilter(double targetMz, double filterWidth, double highEnergyIonMobilityValueOffset) :
-            this(new SignedMz(targetMz), filterWidth, highEnergyIonMobilityValueOffset)
-        {
-        }
-
         public SpectrumProductFilter(SignedMz targetMz, double filterWidth, double highEnergyIonMobilityValueOffset)
         {
             TargetMz = targetMz;

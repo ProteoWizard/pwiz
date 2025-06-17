@@ -27,7 +27,6 @@ using pwiz.Common.Chemistry;
 using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -237,7 +236,7 @@ namespace pwiz.Skyline.Model.Results
             spectra.Add(currentSpectrum);
             if (currentSpectrum.IonMobilities != null)  // Sort combined IMS spectra by m/z order
             {
-                ArrayUtil.Sort(currentSpectrum.Mzs, currentSpectrum.Intensities, currentSpectrum.IonMobilities);
+                currentSpectrum.SortByMz();
             }
             else if (currentSpectrum.IonMobility.HasValue) // Look ahead for uncombined IMS spectra
             {

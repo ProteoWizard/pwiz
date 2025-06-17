@@ -191,6 +191,7 @@ struct PWIZ_API_DECL TsfDataImpl : public CompassData
     virtual int getInstrumentRevision() const;
     virtual std::string getInstrumentDescription() const;
     virtual std::string getInstrumentSerialNumber() const;
+    virtual std::string getDiaFrameMsMsWindowsTable() const;
     virtual InstrumentSource getInstrumentSource() const;
     virtual std::string getAcquisitionSoftware() const;
     virtual std::string getAcquisitionSoftwareVersion() const;
