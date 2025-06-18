@@ -144,6 +144,7 @@ namespace TestPerf
                 {
                     "DDA_search\\interact.pep.xml"
                 },
+                DesiredIrtPeptideCount = 11,
                 IrtStandard = IrtStandard.BIOGNOSYS_11,
                 HasAmbiguousMatches = true,
                 IsolationSchemeName = "ETH TTOF (64 variable)",
@@ -203,6 +204,7 @@ namespace TestPerf
                     "DDA_search\\interact.pep.xml"
                 },
                 IrtStandard = IrtStandard.BIOGNOSYS_11,
+                DesiredIrtPeptideCount = 11,
                 HasAmbiguousMatches = false,
                 IsolationSchemeName = "ETH QE (18 variable)",
                 IsolationSchemeFile = "QE_DIA_18var.tsv",
@@ -261,6 +263,7 @@ namespace TestPerf
                 },
                 HasRedundantLibrary = false,
                 IrtStandard = IrtStandard.AUTO,
+                DesiredIrtPeptideCount = 11,
                 HasAmbiguousMatches = false,
                 IsolationSchemeName = "ETH QE (18 variable)",
                 IsolationSchemeFile = "QE_DIA_18var.tsv",
@@ -1235,9 +1238,12 @@ namespace TestPerf
                         RunUI(() => Assert.AreEqual(_expectedValues.DiffPeptideCounts[i], volcanoPlot.CurveList[7 - i].Points.Count));
                 }
                 var barGraph = WaitForOpenForm<FoldChangeBarGraph>();
-                int volcanoBarDelta = _instrumentValues.DesiredIrtPeptideCount - 1; // iRTs - selected peptide
+                
                 if (!IsRecordMode)
+                {
+                    int volcanoBarDelta = _expectedValues.ExpectedIrtPeptideCount - 1; // iRTs - selected peptide
                     WaitForBarGraphPoints(barGraph, _expectedValues.DiffPeptideCounts[0] - volcanoBarDelta, _expectedValues.DiffPeptideCounts[0] - volcanoBarDelta * 2);
+                }
 
                 SortByFoldChange(fcGridControl, _resultProperty);
                 PauseForScreenShot<FoldChangeBarGraph>("By Condition:Bar Graph - peptides");
@@ -1265,7 +1271,10 @@ namespace TestPerf
                 else
                 {
                     WaitForBarGraphPoints(barGraph, targetProteinCount, _expectedValues.UnpolishedProteins);
-                    _expectedValues.PolishedProteins = GetBarCount(barGraph);
+                    if (_expectedValues.PolishedProteins.HasValue || GetBarCount(barGraph) != targetProteinCount)
+                    {
+                        _expectedValues.PolishedProteins = GetBarCount(barGraph);
+                    }
                 }
 
                 fcGrid = WaitForOpenForm<FoldChangeGrid>();
