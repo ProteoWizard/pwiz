@@ -15,6 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.Net.Http;
 using System.Xml;
 using System.Xml.Linq;
@@ -29,6 +33,14 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
     [XmlRoot("waters_connect_account")]
     public class WatersConnectAccount : RemoteAccount
     {
+        public class TokenCacheEntry
+        {
+            public TokenResponse TokenResponse { get; set; }
+            public DateTime ExpirationDateTime { get; set; }
+        }
+
+        public static readonly Dictionary<WatersConnectAccount, TokenCacheEntry> _authenticationTokens = new Dictionary<WatersConnectAccount, TokenCacheEntry>();
+
         public static readonly WatersConnectAccount DEFAULT
             = new WatersConnectAccount(@"https://devconnect.waters.com:48444", string.Empty, string.Empty)
             {
@@ -112,9 +124,34 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
 
         public TokenResponse Authenticate()
         {
+            if (_authenticationTokens.TryGetValue(this, out var tokenCacheEntry) && tokenCacheEntry.ExpirationDateTime > DateTime.UtcNow)
+            {
+                    return tokenCacheEntry.TokenResponse;
+            }
             var tokenClient = new TokenClient(IdentityServer + IdentityConnectEndpoint, @"resourceownerclient_jwt",
                 ClientSecret, new HttpClientHandler());
-            return tokenClient.RequestResourceOwnerPasswordAsync(Username, Password, ClientScope).Result;
+            if (_authenticationTokens.TryGetValue(this, out var expiredTokenCacheEntry))
+            {
+                var refreshedToken = tokenClient.RequestRefreshTokenAsync(expiredTokenCacheEntry.TokenResponse.RefreshToken).Result;
+                if (!refreshedToken.IsError)
+                {
+                    // If the refresh token worked, update the cache with the new token
+                    _authenticationTokens[this] = new TokenCacheEntry()
+                        { TokenResponse = refreshedToken, ExpirationDateTime = DateTime.UtcNow.AddSeconds(refreshedToken.ExpiresIn) };
+                    return refreshedToken;
+                }
+            }
+
+            var newToken = tokenClient.RequestResourceOwnerPasswordAsync(Username, Password, ClientScope).Result;
+            if (newToken.IsError)
+            {
+                throw new InvalidOperationException(
+                    string.Format(CultureInfo.CurrentCulture, @"Failed to authenticate Waters Connect account {0} with error: {1}",
+                        Username, newToken.Error));
+            }
+            _authenticationTokens[this] = new TokenCacheEntry()
+                { TokenResponse = newToken, ExpirationDateTime = DateTime.UtcNow.AddSeconds(newToken.ExpiresIn) };
+            return newToken;
         }
 
         /*public IEnumerable<WatersConnectFolderObject> GetFolders()
@@ -162,8 +199,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             var builder = services.AddHttpClient("customClient");
             builder.ConfigurePrimaryHttpMessageHandler(() =>
             {
-                return CommonApplicationSettings.HttpMessageHandlerFactory.getMessageHandler("wcHandler", GetDefaultMessageHandler()); ;     // NEED TO PASS A FUNCTION, NOT A CONSTANT VALUE.
-                //return GetDefaultMessageHandler();
+                return CommonApplicationSettings.HttpMessageHandlerFactory.getMessageHandler(@"wcHandler", GetDefaultMessageHandler());     // NEED TO PASS A FUNCTION, NOT A CONSTANT VALUE.
             });
             var provider = services.BuildServiceProvider();
             var httpClientFactory = provider.GetService<IHttpClientFactory>();
