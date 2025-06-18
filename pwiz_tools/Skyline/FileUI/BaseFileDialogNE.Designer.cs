@@ -120,9 +120,8 @@ namespace pwiz.Skyline.FileUI
             this.sourcePathTextBox.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.Suggest;
             this.sourcePathTextBox.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.FileSystem;
             this.sourcePathTextBox.Name = "sourcePathTextBox";
-            this.sourcePathTextBox.GotFocus += new System.EventHandler(this.sourcePathTextBox_GotFocus);
             this.sourcePathTextBox.KeyUp += new System.Windows.Forms.KeyEventHandler(this.sourcePathTextBox_KeyUp);
-            // 
+            this.sourcePathTextBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.sourcePathTextBox_KeyPress);
             // labelSourcePath
             // 
             resources.ApplyResources(this.labelSourcePath, "labelSourcePath");

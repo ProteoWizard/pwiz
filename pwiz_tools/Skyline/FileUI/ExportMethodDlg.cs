@@ -1238,7 +1238,7 @@ namespace pwiz.Skyline.FileUI
             if (Equals(_instrumentType, ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT))
             {
                 // Select Output Folder and Name
-                using var saveDlg = new SaveWatersConnectMethodDialogNE(
+                using var saveDlg = new WatersConnectSaveMethodFileDialog(
                     Settings.Default.RemoteAccountList.OfType<WatersConnectAccount>()
                         .Select(a => a as RemoteAccount).ToList());
                 var templateUrl = textTemplateFile.Tag as WatersConnectAcquisitionMethodUrl;
@@ -1868,7 +1868,7 @@ namespace pwiz.Skyline.FileUI
                     try
                     {
                         var templateUrl = new WatersConnectAcquisitionMethodUrl(templateFileUrl.FilePath);
-                        textTemplateFile.Text = templateUrl.GetFilePath() + UrlPath.PATH_SEPARATOR + templateUrl.MethodName;
+                        textTemplateFile.Text = templateUrl.GetFilePath() + RemoteUrl.PATH_SEPARATOR + templateUrl.MethodName;
                         textTemplateFile.Tag = templateUrl;
                         helpTip.SetToolTip(textTemplateFile, templateUrl.FormattedString());  // Show full URL string in the tooltip
                     }
@@ -2280,7 +2280,7 @@ namespace pwiz.Skyline.FileUI
         {
             if (Equals(InstrumentType, ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT))
             {
-                using (var dlgOpen = new OpenFileDialogNEWatersConnectMethod(
+                using (var dlgOpen = new WatersConnectSelectMethodFileDialog(
                            Settings.Default.RemoteAccountList.OfType<WatersConnectAccount>().Select(a => a as RemoteAccount).ToList()))
                 {
                     if (textTemplateFile.Tag is WatersConnectAcquisitionMethodUrl templateUrl)
@@ -2296,7 +2296,7 @@ namespace pwiz.Skyline.FileUI
                     
                     var watersConnectUrl = dlgOpen.MethodUrl;
                     textTemplateFile.Tag = watersConnectUrl;
-                    textTemplateFile.Text = watersConnectUrl.GetFilePath() + UrlPath.PATH_SEPARATOR + watersConnectUrl.MethodName;
+                    textTemplateFile.Text = watersConnectUrl.GetFilePath() + RemoteUrl.PATH_SEPARATOR + watersConnectUrl.MethodName;
                     helpTip.SetToolTip(textTemplateFile, watersConnectUrl.ToString());  // Show full URL string in the tooltip
                 }
                 return;

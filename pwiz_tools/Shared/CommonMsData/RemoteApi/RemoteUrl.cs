@@ -50,6 +50,7 @@ namespace pwiz.CommonMsData.RemoteApi
             username,
             modified_time,
         }
+        public const string PATH_SEPARATOR = "/";
 
         public abstract RemoteAccountType AccountType { get; }
 

@@ -186,10 +186,6 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
 
             string url = @"/waters_connect/v2.0/published-methods?methodTypeIds=17C19CE93BBA488A975B1E14AAAA0B9B" + string.Format(@"&folderId={0}", id);
 
-
-            //  TODO  [RC] Check if method definition can be downloaded
-            // url += @"&expand=definition";
-
             return new Uri(WatersConnectAccount.ServerUrl + url);
         }
 

@@ -472,25 +472,8 @@ namespace pwiz.Skyline.FileUI
                     bool isComplete = _remoteSession.AsyncFetchContents(remoteUrl, out exception);
                     foreach (var item in _remoteSession.ListContents(remoteUrl))
                     {
-                        //  TODO  [RC] Read access levels from the server response
-
-                        ImageIndex imageIndex = item.Type switch
-                        {
-                            DataSourceUtil.FOLDER_TYPE => ImageIndex.Folder,
-                            DataSourceUtil.TYPE_WATERS_ACQUISITION_METHOD => ImageIndex.MethodFile,
-                            _ => ImageIndex.MassSpecFile
-                        };
-                        if (item.Access != AccessType.unknown)
-                        {
-                            imageIndex = item.Access switch
-                            {
-                                AccessType.read => ImageIndex.ReadOnlyFolder,
-                                AccessType.read_write => ImageIndex.ReadWriteFolder,
-                                AccessType.no_access => ImageIndex.NoAccessFolder,
-                                _ => imageIndex
-                            };
-                        }
-
+                        var imageIndex = GetRemoteItemImageIndex(item);
+ 
                         listSourceInfo.Add(new SourceInfo(item.MsDataFileUri)
                         {
                             name = item.Label,
@@ -615,6 +598,16 @@ namespace pwiz.Skyline.FileUI
                 }
             }
             listView.Items.AddRange(items.ToArray());
+        }
+
+        protected virtual ImageIndex GetRemoteItemImageIndex(RemoteItem item)
+        {
+            return item.Type switch
+            {
+                DataSourceUtil.FOLDER_TYPE => ImageIndex.Folder,
+                DataSourceUtil.TYPE_WATERS_ACQUISITION_METHOD => ImageIndex.MethodFile,
+                _ => ImageIndex.MassSpecFile
+            };
         }
 
         private void RemoteContentsAvailable()
@@ -831,9 +824,11 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        private void sourcePathTextBox_GotFocus(object sender, EventArgs e)
+        private void sourcePathTextBox_KeyPress(object sender, KeyPressEventArgs e)
         {
+            listView.ItemSelectionChanged -= listView_ItemSelectionChanged;
             listView.SelectedItems.Clear();
+            listView.ItemSelectionChanged += listView_ItemSelectionChanged;
         }
 
         private void listView_ItemActivate( object sender, EventArgs e )
@@ -872,6 +867,7 @@ namespace pwiz.Skyline.FileUI
                 _previousDirectories.Push(_currentDirectory);
             CurrentDirectory = uri;
             _abortPopulateList = true;
+            sourcePathTextBox.Clear();
         }
 
         protected void OpenFolderFromTextBox()

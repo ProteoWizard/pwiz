@@ -1473,12 +1473,11 @@ namespace pwiz.Skyline.FileUI {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Select Template.
+        ///   Looks up a localized string similar to Select Template for {0}.
         /// </summary>
-        public static string OpenFileDialogNEWatersConnectMethod_OpenFileDialogNEWatersConnectMethod_Select_Template {
+        public static string OpenFileDialogNEWatersConnectMethod_Select_Template {
             get {
-                return ResourceManager.GetString("OpenFileDialogNEWatersConnectMethod_OpenFileDialogNEWatersConnectMethod_Select_Te" +
-                        "mplate", resourceCulture);
+                return ResourceManager.GetString("OpenFileDialogNEWatersConnectMethod_Select_Template", resourceCulture);
             }
         }
         
@@ -1800,6 +1799,16 @@ namespace pwiz.Skyline.FileUI {
             get {
                 return ResourceManager.GetString("SkypSupport_ShowDownloadError_There_was_an_error_downloading_the_Skyline_document" +
                         "__0__from__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The method file {0} already exists. Please, select different one..
+        /// </summary>
+        public static string WatersConnectSaveMethodFileDialog_ItemSelected_The_method_file__0__already_exists {
+            get {
+                return ResourceManager.GetString("WatersConnectSaveMethodFileDialog_ItemSelected_The_method_file__0__already_exists" +
+                        "", resourceCulture);
             }
         }
     }
