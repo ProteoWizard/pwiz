@@ -920,16 +920,13 @@ namespace TestPerf
 
         private void ValidateTargets(ref int[] targetCounts, int proteinCount, int peptideCount, int precursorCount, int transitionCount)
         {
+            var targetCountsActual = new[] { proteinCount, peptideCount, precursorCount, transitionCount };
             if (IsRecordMode)
             {
-                targetCounts[0] = proteinCount;
-                targetCounts[1] = peptideCount;
-                targetCounts[2] = precursorCount;
-                targetCounts[3] = transitionCount;
+                targetCounts = targetCountsActual;
                 return;
             }
 
-            var targetCountsActual = new[] {proteinCount, peptideCount, precursorCount, transitionCount};
             if (!ArrayUtil.EqualsDeep(targetCounts, targetCountsActual))
             {
                 Assert.Fail("Expected target counts <{0}> do not match actual <{1}>.",
