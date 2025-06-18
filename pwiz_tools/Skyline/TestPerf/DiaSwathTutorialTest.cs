@@ -410,7 +410,7 @@ namespace TestPerf
             Assert.IsNotNull(_expectedValuesFileName);
             using var streamWriter = new StreamWriter(Path.Combine(GetExpectedValuesFolder(), _expectedValuesFileName));
             using var jsonTextWriter = new JsonTextWriter(streamWriter);
-            JsonSerializer.Create(new JsonSerializerSettings()
+            JsonSerializer.Create(new JsonSerializerSettings
             {
                 Formatting = Formatting.Indented
             }).Serialize(jsonTextWriter, _expectedValues);
@@ -584,7 +584,7 @@ namespace TestPerf
         /// <summary>
         /// Change to true to write coefficient arrays.
         /// </summary>
-        protected override bool IsRecordMode => true;
+        protected override bool IsRecordMode => false;
 
         protected override void DoTest()
         {
