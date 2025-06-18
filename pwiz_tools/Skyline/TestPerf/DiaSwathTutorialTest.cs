@@ -110,11 +110,10 @@ namespace TestPerf
             public double?[] ScoringModelCoefficients;
         }
 
-
         public InstrumentSpecificValues _instrumentValues;
         public AnalysisValues _analysisValues;
         public ExpectedValues _expectedValues;
-        public string _expectedValuesFileName;
+        private string _expectedValuesFilePath;
         public string[] DiaFiles => _instrumentValues.DiaFiles;
         public string InstrumentTypeName => _instrumentValues.InstrumentTypeName;
         public string RootName { get; set; }
@@ -392,12 +391,13 @@ namespace TestPerf
         }
         private void ReadExpectedValues(string variant, bool fullSet)
         {
-            _expectedValuesFileName = variant + (fullSet ? "_full" : "") + ".json";
+            _expectedValuesFilePath = Path.Combine(ExtensionTestContext.GetProjectDirectory(
+                    @"TestPerf\DiaSwathTutorialTest.data"),
+                variant + (fullSet ? "_full" : "") + ".json");
             Assert.IsNull(_expectedValues);
-            var filePath = Path.Combine(GetExpectedValuesFolder(), _expectedValuesFileName);
-            if (File.Exists(filePath))
+            if (File.Exists(_expectedValuesFilePath))
             {
-                using var streamReader = File.OpenText(filePath);
+                using var streamReader = File.OpenText(_expectedValuesFilePath);
                 using var jsonReader = new JsonTextReader(streamReader);
                 _expectedValues = JsonSerializer.Create().Deserialize<ExpectedValues>(jsonReader);
             }
@@ -410,20 +410,14 @@ namespace TestPerf
         public void SaveExpectedValues()
         {
             Assert.IsNotNull(_expectedValues);
-            Assert.IsNotNull(_expectedValuesFileName);
-            using var streamWriter = new StreamWriter(Path.Combine(GetExpectedValuesFolder(), _expectedValuesFileName));
+            Assert.IsNotNull(_expectedValuesFilePath);
+            using var streamWriter = new StreamWriter(_expectedValuesFilePath);
             using var jsonTextWriter = new JsonTextWriter(streamWriter);
             JsonSerializer.Create(new JsonSerializerSettings
             {
                 Formatting = Formatting.Indented
             }).Serialize(jsonTextWriter, _expectedValues);
         }
-
-        private static string GetExpectedValuesFolder()
-        {
-            return ExtensionTestContext.GetProjectDirectory(@"TestPerf\DiaSwathTutorialTest.data");
-        }
-
 
         public bool IsPasef => Equals("PASEF", _instrumentValues.InstrumentTypeName);
         public bool IsDiaNN => !_instrumentValues.HasRedundantLibrary;
@@ -455,9 +449,7 @@ namespace TestPerf
                 expected = targetCountsActual;
                 return;
             }
-
-            CollectionAssert.AreEqual(expected, targetCountsActual, "Expected target counts <{0}> do not match actual <{1}>.",
-                string.Join(", ", _expectedValues.FinalTargetCounts), string.Join(", ", targetCountsActual));
+            AssertEx.AreEqual(string.Join(",", expected), string.Join(",", targetCountsActual));
         }
     }
 
@@ -663,11 +655,14 @@ namespace TestPerf
                 // Check values shown in the tutorial
                 Assert.AreEqual(1, addIrtPeptidesDlg.RunsConvertedCount);
                 var row = addIrtPeptidesDlg.GetRow(0);
+                var regressionRefined = addIrtPeptidesDlg.GetRegressionRefined(0);
+                Assert.IsNotNull(regressionRefined);
+                var slope = Math.Round(regressionRefined.Slope, 3);
+                var intercept = Math.Round(regressionRefined.Intercept, 3);
                 if (IsRecordMode)
                 {
                     _expectedValues.LibraryPeptideCount = addIrtPeptidesDlg.PeptidesCount;
-                    _expectedValues.ExpectedIrtPeptideCount = (int) row.Cells[1].Value;
-                    ParseIrtSlopeAndIntercept((string)row.Cells[2].Value, CultureInfo.CurrentCulture, out var slope, out var intercept);
+                    _expectedValues.ExpectedIrtPeptideCount = (int)row.Cells[1].Value;
                     _expectedValues.IrtSlope = slope;
                     _expectedValues.IrtIntercept = intercept;
                 }
@@ -675,9 +670,8 @@ namespace TestPerf
                 {
                     Assert.AreEqual(_expectedValues.ExpectedIrtPeptideCount, row.Cells[1].Value);
                     Assert.AreEqual(_expectedValues.LibraryPeptideCount, addIrtPeptidesDlg.PeptidesCount);
-                    var regressionLine = new RegressionLine(_expectedValues.IrtSlope, _expectedValues.IrtIntercept);
-                    Assert.AreEqual(regressionLine.DisplayEquation, row.Cells[2].Value);
-                    //Assert.AreEqual(1.0, double.Parse(row.Cells[3].Value.ToString()));
+                    Assert.AreEqual(_expectedValues.IrtSlope, slope);
+                    Assert.AreEqual(_expectedValues.IrtIntercept, intercept);
                 }
 
                 Assert.AreEqual(Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Success, row.Cells[4].Value);
@@ -1471,7 +1465,9 @@ namespace TestPerf
 
         private void ValidateCoefficients(EditPeakScoringModelDlg editDlgFromSrm, ref double?[] expectedCoefficients)
         {
-            var actualCoefficients = GetCoefficients(editDlgFromSrm).ToArray();
+            var actualCoefficients = editDlgFromSrm.PeakCalculatorsGrid.Items
+                .Select(item=> item.Weight.HasValue ? Math.Round(item.Weight.Value, 4) : (double?) null).ToArray();
+
             if (IsRecordMode)
             {
                 expectedCoefficients = actualCoefficients;
@@ -1542,7 +1538,6 @@ namespace TestPerf
         private string ZipFileName => _testInfo._instrumentValues.ZipFileName ?? RootName;
         private DiaSwathTestInfo.AnalysisValues _analysisValues => _testInfo._analysisValues;
         private DiaSwathTestInfo.InstrumentSpecificValues _instrumentValues => _testInfo._instrumentValues;
-        
 
         [TestMethod]
         public void ConsoleTestDiaTtof()
