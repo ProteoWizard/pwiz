@@ -924,6 +924,53 @@ namespace pwiz.Skyline.Util
                     return true;
             return false;
         }
+
+        /// <summary>
+        /// Linear time function for finding the n-th item in a list and placing it at that location in
+        /// the list while putting all values greater than it higher in the list and all values less
+        /// than it lower in the list. That is the values in the list get partitioned by the Nth value
+        /// but do not get fully sorted.
+        /// </summary>
+        public static TItem QNthItem<TItem>(this IList<TItem> list, int elementIndex) where TItem : IComparable<TItem>
+        {
+            if (elementIndex < 0 || list.Count <= elementIndex)
+                throw new IndexOutOfRangeException($@"The element index {elementIndex} is outside the range of the {list.Count} element array.");
+            
+            int left = 0;
+            int right = list.Count - 1;
+            while (left < right)
+            {
+                TItem value = list[elementIndex];
+                int splitLeft = left, splitRight = right;
+                Split(list, value, ref splitLeft, ref splitRight);
+                if (splitRight < elementIndex)
+                    left = splitLeft;
+                if (elementIndex < splitLeft)
+                    right = splitRight;
+            }
+            return list[elementIndex];
+        }
+
+        private static void Split<TItem>(IList<TItem> list, TItem value, ref int left, ref int right) where TItem : IComparable<TItem>
+        {
+            // Left and right scan until the pointers cross
+            do
+            {
+                while (list[left].CompareTo(value) < 0)
+                    left++;
+                while (value.CompareTo(list[right]) < 0)
+                    right--;
+
+                if (left <= right)
+                {
+                    // Swap
+                    (list[left], list[right]) = (list[right], list[left]);
+
+                    left++;
+                    right--;
+                }
+            } while (left <= right);
+        }
     }
 
     /// <summary>

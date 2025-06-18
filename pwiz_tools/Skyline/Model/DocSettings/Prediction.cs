@@ -928,8 +928,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 else if (!outIndexes.Contains(i) && iNextStat < listPredictions.Count)
                 {
                     delta = listHydroScores[iNextStat] != unknownScore
-                                ? Math.Abs(listPredictions[iNextStat] - listTimes[iNextStat])
-                                : double.MaxValue;
+                        ? Math.Abs(listPredictions[iNextStat] - listTimes[iNextStat])
+                        : double.MaxValue;
                     iNextStat++;
                 }
                 else
@@ -949,12 +949,13 @@ namespace pwiz.Skyline.Model.DocSettings
                 listDeltas.Add(new DeltaIndex(delta, i));
             }
 
-            // Sort descending
-            listDeltas.Sort();
+            // Split deltas with values greater than the midpoint below it and less than the midpoint above it.
+            int countOut = variableTargetPeptides.Count - mid - 1;
+            if (countOut >= 0)
+                listDeltas.QNthItem(countOut);
 
             // Remove points with the highest deltas above mid
             outIndexes = new HashSet<int>();
-            int countOut = variableTargetPeptides.Count - mid - 1;
             for (int i = 0; i < countOut; i++)
             {
                 outIndexes.Add(listDeltas[i].Index);
@@ -1036,6 +1037,12 @@ namespace pwiz.Skyline.Model.DocSettings
             public int CompareTo(DeltaIndex other)
             {
                 return -Delta.CompareTo(other.Delta);
+            }
+
+            public override string ToString()
+            {
+                // For debugging
+                return $@"{Delta} - {Index}";
             }
         }
     }
