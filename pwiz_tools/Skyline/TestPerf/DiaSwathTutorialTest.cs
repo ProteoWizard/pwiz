@@ -87,12 +87,7 @@ namespace TestPerf
             public int? MinPeptidesPerProtein;
             public bool RemoveDuplicates;
             //public int[] TargetCounts;
-            public string ScoringModelCoefficients;
             public PointF ChromatogramClickPoint;
-            public double[][] MassErrorStats;
-            public int[] DiffPeptideCounts;
-            public int UnpolishedProteins;
-            public int? PolishedProteins;
             public double? FoldChangeProteinsMax;
             public double? FoldChangeProteinsMin;
 
@@ -108,6 +103,11 @@ namespace TestPerf
             public double IrtSlope;
             public double IrtIntercept;
             public int[] FinalTargetCounts;
+            public double[][] MassErrorStats;
+            public int[] DiffPeptideCounts;
+            public int UnpolishedProteins;
+            public int? PolishedProteins;
+            public double?[] ScoringModelCoefficients;
         }
 
 
@@ -163,20 +163,6 @@ namespace TestPerf
                     RemoveDuplicates = true,
                     ChromatogramClickPoint = new PointF(34.18F, 108.0F),
                     //TargetCounts = new[] { 4700, 36628, 37960, 227760 },
-                    ScoringModelCoefficients = "-0.0842|-0.7447|4.2691|-0.2084|-0.2644|0.7594|0.3124|-0.0659",
-                    MassErrorStats = new[]
-                    {
-                        new[] {2.8, 4.6},
-                        new[] {2.4, 4.3},
-                        new[] {3.9, 4.2},
-                        new[] {5.2, 4.1},
-                        new[] {4.5, 4.2},
-                        new[] {-0.4, 3.9},
-                        new[] {1.0, 4.1},
-                    },
-                    DiffPeptideCounts = new[] { 12808, 7963, 2692, 2142 },
-                    UnpolishedProteins = 2207,
-                    PolishedProteins = 2207,
                 };
             }
             else
@@ -187,19 +173,6 @@ namespace TestPerf
                     IrtFilterText = "standard",
                     ChromatogramClickPoint = new PointF(34.18F, 108.0F),
                     //TargetCounts = new[] { 14, 279, 299, 1793 },
-                    ScoringModelCoefficients = "0.2674|-0.6467|3.4194|-0.0171|-0.4723|0.9270|0.0768|-0.0496",
-                    MassErrorStats = new[]
-                    {
-                        new[] {3.0, 4.4},
-                        new[] {2.8, 4.1},
-                        new[] {3.9, 4.3},
-                        new[] {5.9, 3.6},
-                        new[] {4.7, 4.2},
-                        new[] {-0.1, 3.4},
-                        new[] {1.0, 3.6},
-                    },
-                    DiffPeptideCounts = new[] { 142, 44, 30, 57 },
-                    UnpolishedProteins = 9,
                 };
             }
 
@@ -248,20 +221,6 @@ namespace TestPerf
                     RemoveDuplicates = true,
                     ChromatogramClickPoint = new PointF(32.05F, 268334.7F),
                     //TargetCounts = new[] { 3991, 30916, 33841, 203044 },
-                    ScoringModelCoefficients = "0.3173|-0.8915|3.7829|0.2263|-0.0825|0.7332|0.0012|-0.0606",
-                    MassErrorStats = new[]
-                    {
-                        new[] { 2.0, 4.7 },
-                        new[] { 1.5, 4.6 },
-                        new[] { 2.0, 4.7 },
-                        new[] { 2.1, 4.6 },
-                        new[] { 2.1, 4.8 },
-                        new[] { 2.2, 4.6 },
-                        new[] { 1.9, 4.7 },
-                    },
-                    DiffPeptideCounts = new[] { 10467, 6391, 2242, 1823 },
-                    UnpolishedProteins = 1653,
-                    PolishedProteins = 2031,
                 };
             }
             else
@@ -272,19 +231,6 @@ namespace TestPerf
                     IrtFilterText = "standard",
                     ChromatogramClickPoint = new PointF(31.98F, 285741.3F),
                     //TargetCounts = new[] { 14, 271, 331, 1985 },
-                    ScoringModelCoefficients = "0.3065|-0.7855|4.9580|-0.4976|-0.0812|0.7443|0.0988|-0.0542",
-                    MassErrorStats = new[]
-                    {
-                        new[] { 1.6, 4.2 },
-                        new[] { 1.3, 4.1 },
-                        new[] { 1.6, 4.4 },
-                        new[] { 1.8, 3.7 },
-                        new[] { 1.8, 4.4 },
-                        new[] { 1.8, 4.1 },
-                        new[] { 1.2, 4.3 },
-                    },
-                    DiffPeptideCounts = new[] { 139, 47, 29, 52 },
-                    UnpolishedProteins = 9,
                     FoldChangeProteinsMax = 2,
                 };
             }
@@ -337,19 +283,6 @@ namespace TestPerf
                     RemoveDuplicates = true,
                     ChromatogramClickPoint = new PointF(32.05F, 268334.7F),
                     //TargetCounts = new[] { 3991, 30916, 33841, 203044 },
-                    MassErrorStats = new[]
-                    {
-                        new[] {1.9, 4.3},
-                        new[] {1.4, 4.3},
-                        new[] {2.0, 4.3},
-                        new[] {2.0, 4.2},
-                        new[] {2.1, 4.2},
-                        new[] {2.1, 4.2},
-                        new[] {1.9, 4.2},
-                    },
-                    DiffPeptideCounts = new[] { 14479, 9877, 2828, 1756 },
-                    UnpolishedProteins = 1846,
-                    PolishedProteins = 1846
                 };
             }
             else
@@ -360,20 +293,6 @@ namespace TestPerf
                     IrtFilterText = "iRT",
                     ChromatogramClickPoint = new PointF(31.98F, 285741.3F),
                     //TargetCounts = new[] { 14, 271, 331, 1985 },
-
-                    MassErrorStats = new[]
-                    {
-                        new[] {1.8, 3.2},
-                        new[] {1.2, 3.0},
-                        new[] {1.8, 3.0},
-                        new[] {2.0, 3.2},
-                        new[] {2.1, 3.7},
-                        new[] {1.9, 3.2},
-                        new[] {1.6, 3.4},
-                    },
-                    DiffPeptideCounts = new[] { 125, 41, 28, 45 },
-                    UnpolishedProteins = 3,
-                    PolishedProteins = 11,
                     FoldChangeProteinsMax = 2,
                 };
             }
@@ -396,20 +315,6 @@ namespace TestPerf
                     RemoveDuplicates = true,
                     ChromatogramClickPoint = new PointF(10.79F, 3800.0F),
                     //TargetCounts = new[] { 4937, 37152, 38716, 232296 },
-                    ScoringModelCoefficients = "-0.3356|-0.9056|4.5024|3.5338|-0.1011|0.7388|0.4436|-0.1319",
-                    MassErrorStats = new[]
-                    {
-                        new[] { 3.6, 2.7 },
-                        new[] { 3.6, 2.6 },
-                        new[] { 3.5, 2.7 },
-                        new[] { 3.7, 2.6 },
-                        new[] { 3.6, 2.7 },
-                        new[] { 3.9, 2.6 },
-                        new[] { 3.6, 2.7 },
-                    },
-                    DiffPeptideCounts = new[] { 12621, 8498, 2254, 1854 },
-                    UnpolishedProteins = 2314,
-                    PolishedProteins = 2314,
                 };
 
                 SetInstrumentType(new InstrumentSpecificValues
@@ -447,19 +352,6 @@ namespace TestPerf
                     IrtFilterText = Resources.IrtDb_MakeDocumentXml_iRT_standards,
                     ChromatogramClickPoint = new PointF(10.79F, 3800.0F),
                     //TargetCounts = new[] { 14, 75, 83, 498 },
-                    ScoringModelCoefficients = "-0.5426|-2.3112|7.5216|6.0391|-0.1598|0.6420|0.8686|-0.3133",
-                    MassErrorStats = new[]
-                    {
-                        new[] {3.9, 1.9},
-                        new[] {3.8, 2.3},
-                        new[] {3.8, 1.8},
-                        new[] {3.6, 2.3},
-                        new[] {4.0, 1.7},
-                        new[] {4.4, 1.7},
-                        new[] {3.7, 1.8},
-                    },
-                    DiffPeptideCounts = new[] { 42, 7, 8, 12 },
-                    UnpolishedProteins = 9,
                 };
 
                 SetInstrumentType(new InstrumentSpecificValues
@@ -552,26 +444,17 @@ namespace TestPerf
             TestFilesPersistent = new[] { Path.Combine(ZipFileName, "DDA_search"), Path.Combine(ZipFileName, "DIA") };
         }
 
-        public void ValidateTargets(bool recordMode, int proteinCount, int peptideCount, int precursorCount, int transitionCount, string propName)
+        public void ValidateTargets(bool recordMode, ref int[] expected, int proteinCount, int peptideCount, int precursorCount, int transitionCount)
         {
+            var targetCountsActual = new[] { proteinCount, peptideCount, precursorCount, transitionCount };
             if (recordMode)
             {
-                Console.WriteLine(@"{0} = new[] {{ {1}, {2}, {3}, {4} }},", propName, proteinCount, peptideCount, precursorCount, transitionCount);
+                expected = targetCountsActual;
+                return;
             }
 
-            var targetCountsActual = new[] { proteinCount, peptideCount, precursorCount, transitionCount };
-            if (!ArrayUtil.EqualsDeep(_expectedValues.FinalTargetCounts, targetCountsActual))
-            {
-                if (recordMode)
-                {
-                    _expectedValues.FinalTargetCounts = targetCountsActual;
-                }
-                else
-                {
-                    Assert.Fail("Expected target counts <{0}> do not match actual <{1}>.",
-                        string.Join(", ", _expectedValues.FinalTargetCounts), string.Join(", ", targetCountsActual));
-                }
-            }
+            CollectionAssert.AreEqual(expected, targetCountsActual, "Expected target counts <{0}> do not match actual <{1}>.",
+                string.Join(", ", _expectedValues.FinalTargetCounts), string.Join(", ", targetCountsActual));
         }
     }
 
@@ -591,6 +474,7 @@ namespace TestPerf
         private bool IsDiaNN => _testInfo.IsDiaNN;
         private DiaSwathTestInfo.AnalysisValues _analysisValues => _testInfo._analysisValues;
         private DiaSwathTestInfo.InstrumentSpecificValues _instrumentValues => _testInfo._instrumentValues;
+        private DiaSwathTestInfo.ExpectedValues _expectedValues => _testInfo._expectedValues;
 
         [TestMethod]
         public void TestDiaTtofTutorial()
@@ -778,17 +662,17 @@ namespace TestPerf
                 var row = addIrtPeptidesDlg.GetRow(0);
                 if (IsRecordMode)
                 {
-                    _testInfo._expectedValues.LibraryPeptideCount = addIrtPeptidesDlg.PeptidesCount;
-                    _testInfo._expectedValues.ExpectedIrtPeptideCount = (int) row.Cells[1].Value;
+                    _expectedValues.LibraryPeptideCount = addIrtPeptidesDlg.PeptidesCount;
+                    _expectedValues.ExpectedIrtPeptideCount = (int) row.Cells[1].Value;
                     ParseIrtSlopeAndIntercept((string)row.Cells[2].Value, CultureInfo.CurrentCulture, out var slope, out var intercept);
-                    _testInfo._expectedValues.IrtSlope = slope;
-                    _testInfo._expectedValues.IrtIntercept = intercept;
+                    _expectedValues.IrtSlope = slope;
+                    _expectedValues.IrtIntercept = intercept;
                 }
                 else
                 {
-                    Assert.AreEqual(_testInfo._expectedValues.ExpectedIrtPeptideCount, row.Cells[1].Value);
-                    Assert.AreEqual(_testInfo._expectedValues.LibraryPeptideCount, addIrtPeptidesDlg.PeptidesCount);
-                    var regressionLine = new RegressionLine(_testInfo._expectedValues.IrtSlope, _testInfo._expectedValues.IrtIntercept);
+                    Assert.AreEqual(_expectedValues.ExpectedIrtPeptideCount, row.Cells[1].Value);
+                    Assert.AreEqual(_expectedValues.LibraryPeptideCount, addIrtPeptidesDlg.PeptidesCount);
+                    var regressionLine = new RegressionLine(_expectedValues.IrtSlope, _expectedValues.IrtIntercept);
                     Assert.AreEqual(regressionLine.DisplayEquation, row.Cells[2].Value);
                     //Assert.AreEqual(1.0, double.Parse(row.Cells[3].Value.ToString()));
                 }
@@ -991,13 +875,8 @@ namespace TestPerf
             });
             PauseForScreenShot<ImportPeptideSearchDlg.FastaPage>("Import Peptide Search - Import FASTA page");
 
-            if (IsRecordMode)
-                Console.WriteLine();
-
             var peptidesPerProteinDlg = ShowDialog<AssociateProteinsDlg>(() => importPeptideSearchDlg.ClickNextButton());
             WaitForCondition(() => peptidesPerProteinDlg.DocumentFinalCalculated);
-            if (IsRecordMode)
-                Console.WriteLine();    // Line break after test run information
             RunUI(() =>
             {
                 //int proteinCount, peptideCount, precursorCount, transitionCount;
@@ -1013,7 +892,8 @@ namespace TestPerf
             {
                 int proteinCount, peptideCount, precursorCount, transitionCount;
                 peptidesPerProteinDlg.NewTargetsFinal(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
-                _testInfo.ValidateTargets(IsRecordMode, proteinCount, peptideCount, precursorCount, transitionCount, @"FinalTargetCounts");
+                _testInfo.ValidateTargets(IsRecordMode, ref _expectedValues.FinalTargetCounts, proteinCount,
+                    peptideCount, precursorCount, transitionCount);
             });
             PauseForScreenShot<AssociateProteinsDlg>("Import FASTA summary form");
 
@@ -1030,7 +910,7 @@ namespace TestPerf
             {
                 var peakScoringModelDlg = WaitForOpenForm<EditPeakScoringModelDlg>();
                 PauseForScreenShot<EditPeakScoringModelDlg>("mProphet model form");
-                ValidateCoefficients(peakScoringModelDlg, _analysisValues.ScoringModelCoefficients);
+                ValidateCoefficients(peakScoringModelDlg, ref _expectedValues.ScoringModelCoefficients);
 
                 OkDialog(peakScoringModelDlg, peakScoringModelDlg.OkDialog);
             }
@@ -1040,12 +920,12 @@ namespace TestPerf
             {
                 if (!IsRecordMode)
                 {
-                    Assert.AreEqual(_testInfo._expectedValues.LibraryPeptideCount + _testInfo._expectedValues.ExpectedIrtPeptideCount, docLibrary.LibraryDetails.UniquePeptideCount);
-                    Assert.AreEqual(_testInfo._expectedValues.ExpectedIrtPeptideCount, SkylineWindow.Document.PeptideGroups.First().PeptideCount);
+                    Assert.AreEqual(_expectedValues.LibraryPeptideCount + _expectedValues.ExpectedIrtPeptideCount, docLibrary.LibraryDetails.UniquePeptideCount);
+                    Assert.AreEqual(_expectedValues.ExpectedIrtPeptideCount, SkylineWindow.Document.PeptideGroups.First().PeptideCount);
                 }
                 else
                 {
-                    _testInfo._expectedValues.ExpectedIrtPeptideCount = SkylineWindow.Document.PeptideGroups.First().PeptideCount;
+                    _expectedValues.ExpectedIrtPeptideCount = SkylineWindow.Document.PeptideGroups.First().PeptideCount;
                 }
             });
 
@@ -1216,11 +1096,6 @@ namespace TestPerf
             WaitForGraphs();
             Assert.IsTrue(SkylineWindow.GraphMassError.TryGetGraphPane(out MassErrorHistogramGraphPane massErrorPane));
             int massErrorStatsIndex = 0;
-            if (IsRecordMode)
-            {
-                Console.WriteLine(@"MassErrorStats = new[]");
-                Console.WriteLine(@"{");
-            }
             ValidateMassErrors(massErrorPane, massErrorStatsIndex++);
 
             PauseForScreenShot(SkylineWindow.GraphMassError,"Mass errors histogram graph window");
@@ -1233,11 +1108,6 @@ namespace TestPerf
                 WaitForGraphs();
                 ValidateMassErrors(massErrorPane, massErrorStatsIndex++);
             }
-            if (IsRecordMode)
-            {
-                Console.WriteLine(@"},");
-            }
-
             RunUI(() =>
             {
                 SkylineWindow.ShowPointsTypeMassError(PointsTypeMassError.decoys);
@@ -1306,9 +1176,13 @@ namespace TestPerf
                 {
                     int actualPoints = volcanoPlot.CurveList[4].Points.Count;
                     if (IsRecordMode)
-                        Console.Write(@"DiffPeptideCounts = new[] { " + actualPoints);
+                    {
+                        _expectedValues.DiffPeptideCounts = new[] { actualPoints };
+                    }
                     else
-                        Assert.AreEqual(_analysisValues.DiffPeptideCounts[0], actualPoints);
+                    {
+                        Assert.AreEqual(_expectedValues.DiffPeptideCounts[0], actualPoints);
+                    }
                 });
                 var formattingDlg = ShowDialog<VolcanoPlotFormattingDlg>(volcanoPlot.ShowFormattingDialog);
                 ApplyFormatting(formattingDlg, "ECOLI", "128, 0, 255");
@@ -1330,13 +1204,14 @@ namespace TestPerf
                     {
                         int actualPoints = volcanoPlot.CurveList[7 - i].Points.Count;
                         if (IsRecordMode)
-                            Console.Write(@", " + actualPoints);
+                        {
+                            _expectedValues.DiffPeptideCounts =
+                                _expectedValues.DiffPeptideCounts.Append(actualPoints).ToArray();
+                        }
                         else
-                            Assert.AreEqual(_analysisValues.DiffPeptideCounts[i], actualPoints);
+                            Assert.AreEqual(_expectedValues.DiffPeptideCounts[i], actualPoints);
                     });
                 }
-                if (IsRecordMode)
-                    Console.WriteLine(@" },");
                 PauseForGraphScreenShot("By Condition:Volcano Plot - fully formatted", volcanoPlot);
             }
 
@@ -1357,12 +1232,12 @@ namespace TestPerf
                 if (!IsRecordMode)
                 {
                     for (int i = 1; i < 4; i++)
-                        RunUI(() => Assert.AreEqual(_analysisValues.DiffPeptideCounts[i], volcanoPlot.CurveList[7 - i].Points.Count));
+                        RunUI(() => Assert.AreEqual(_expectedValues.DiffPeptideCounts[i], volcanoPlot.CurveList[7 - i].Points.Count));
                 }
                 var barGraph = WaitForOpenForm<FoldChangeBarGraph>();
                 int volcanoBarDelta = _instrumentValues.DesiredIrtPeptideCount - 1; // iRTs - selected peptide
                 if (!IsRecordMode)
-                    WaitForBarGraphPoints(barGraph, _analysisValues.DiffPeptideCounts[0] - volcanoBarDelta, _analysisValues.DiffPeptideCounts[0] - volcanoBarDelta * 2);
+                    WaitForBarGraphPoints(barGraph, _expectedValues.DiffPeptideCounts[0] - volcanoBarDelta, _expectedValues.DiffPeptideCounts[0] - volcanoBarDelta * 2);
 
                 SortByFoldChange(fcGridControl, _resultProperty);
                 PauseForScreenShot<FoldChangeBarGraph>("By Condition:Bar Graph - peptides");
@@ -1371,14 +1246,12 @@ namespace TestPerf
                 RunUI(() => changeGroupComparisonSettings.RadioScopePerProtein.Checked = true);
 
                 int targetProteinCount = SkylineWindow.Document.MoleculeGroupCount - 2; // minus iRTs and decoys
-                int unpolishedCount = _analysisValues.UnpolishedProteins;
                 if (!IsRecordMode)
-                    WaitForBarGraphPoints(barGraph, unpolishedCount);
+                    WaitForBarGraphPoints(barGraph, _expectedValues.UnpolishedProteins);
                 else
                 {
                     WaitForBarGraphPoints(barGraph, targetProteinCount, 1);
-                    unpolishedCount = GetBarCount(barGraph);
-                    Console.WriteLine(@"UnpolishedProteins = {0},", unpolishedCount);
+                    _expectedValues.UnpolishedProteins = GetBarCount(barGraph);
                 }
 
                 RunUI(() => changeGroupComparisonSettings.ComboSummaryMethod.SelectedItem =
@@ -1388,12 +1261,11 @@ namespace TestPerf
                     return; // fold change bar graphs don't behave the same way for DIA-NN results as for iProphet, so exit early
 
                 if (!IsRecordMode)
-                    WaitForBarGraphPoints(barGraph, _analysisValues.PolishedProteins ?? targetProteinCount);
+                    WaitForBarGraphPoints(barGraph, _expectedValues.PolishedProteins ?? targetProteinCount);
                 else
                 {
-                    WaitForBarGraphPoints(barGraph, targetProteinCount, unpolishedCount);
-                    if (GetBarCount(barGraph) != targetProteinCount)
-                        Console.WriteLine(@"PolishedProteins = {0},", GetBarCount(barGraph));
+                    WaitForBarGraphPoints(barGraph, targetProteinCount, _expectedValues.UnpolishedProteins);
+                    _expectedValues.PolishedProteins = GetBarCount(barGraph);
                 }
 
                 fcGrid = WaitForOpenForm<FoldChangeGrid>();
@@ -1403,9 +1275,9 @@ namespace TestPerf
                 RestoreViewOnScreen(31);
                 barGraph = WaitForOpenForm<FoldChangeBarGraph>();
                 if (!IsRecordMode)
-                    WaitForBarGraphPoints(barGraph, _analysisValues.PolishedProteins ?? targetProteinCount);
+                    WaitForBarGraphPoints(barGraph, _expectedValues.PolishedProteins ?? targetProteinCount);
                 else
-                    WaitForBarGraphPoints(barGraph, targetProteinCount, unpolishedCount);
+                    WaitForBarGraphPoints(barGraph, targetProteinCount, _expectedValues.UnpolishedProteins);
                 RunUIForScreenShot(() =>
                 {
                     var yScale = barGraph.ZedGraphControl.GraphPane.YAxis.Scale;
@@ -1588,22 +1460,16 @@ namespace TestPerf
             });
         }
 
-        private void ValidateCoefficients(EditPeakScoringModelDlg editDlgFromSrm, string expectedCoefficients)
+        private void ValidateCoefficients(EditPeakScoringModelDlg editDlgFromSrm, ref double?[] expectedCoefficients)
         {
-            string coefficients = string.Join(@"|", GetCoefficientStrings(editDlgFromSrm));
-            try
+            var actualCoefficients = GetCoefficients(editDlgFromSrm).ToArray();
+            if (IsRecordMode)
             {
-                AssertEx.AreEqualLines(expectedCoefficients, coefficients);
+                expectedCoefficients = actualCoefficients;
             }
-            catch (AssertFailedException e)
+            else
             {
-                if (IsRecordMode)
-                {
-                    Console.WriteLine(@"ScoringModelCoefficients = ""{0}"",", coefficients); // Not L10N
-                    Console.Error.WriteLine("ScoringModelCoefficients: " + e.Message);
-                }
-                else
-                    throw;
+                AssertEx.AreEqual(string.Join("|", expectedCoefficients), string.Join("|", actualCoefficients));
             }
         }
 
@@ -1611,11 +1477,19 @@ namespace TestPerf
         {
             double mean = massErrorPane.Mean, stdDev = massErrorPane.StdDev;
             if (IsRecordMode)
-                Console.WriteLine(@"new[] {{{0:0.0}, {1:0.0}}},", mean, stdDev);  // Not L10N
+            {
+                _expectedValues.MassErrorStats ??= Array.Empty<double[]>();
+                while (_expectedValues.MassErrorStats.Length <= index)
+                {
+                    _expectedValues.MassErrorStats =
+                        _expectedValues.MassErrorStats.Append(Array.Empty<double>()).ToArray();
+                }
+                _expectedValues.MassErrorStats[index] = new []{ Math.Round(mean, 2), Math.Round(stdDev, 2) };
+            }
             else
             {
-                Assert.AreEqual(_analysisValues.MassErrorStats[index][0], mean, 0.05);
-                Assert.AreEqual(_analysisValues.MassErrorStats[index][1], stdDev, 0.05);
+                Assert.AreEqual(_expectedValues.MassErrorStats[index][0], mean, 0.05);
+                Assert.AreEqual(_expectedValues.MassErrorStats[index][1], stdDev, 0.05);
             }
         }
 
@@ -1861,8 +1735,9 @@ namespace TestPerf
 
                     //Assert.AreEqual(0.95, importPeptideSearchDlg.BuildPepSearchLibControl.Grid.Files.First().ScoreThreshold);
 
-                    _testInfo.ValidateTargets(false, doc.PeptideGroupCount, doc.PeptideCount,
-                        doc.PeptideTransitionGroupCount, doc.PeptideTransitionCount, @"FinalTargetCounts");
+                    _testInfo.ValidateTargets(false, ref _testInfo._expectedValues.FinalTargetCounts,
+                        doc.PeptideGroupCount, doc.PeptideCount, doc.PeptideTransitionGroupCount,
+                        doc.PeptideTransitionCount);
                     //ValidateCoefficients(peakScoringModelDlg, _analysisValues.ScoringModelCoefficients);
                     docContainer.AssertComplete();
                 }
