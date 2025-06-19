@@ -118,7 +118,7 @@ namespace pwiz.Common.Mock
     {
         internal HttpMessageHandlerFactory()
         {
-            var wcHandler = CreateHandler("wcHandler");
+            var wcHandler = CreateHandler("wcHandler1");
             // ReSharper disable StringIndexOfIsCultureSpecific.1
             wcHandler.AddMatcher(new RequestMatcherFile(req => req.RequestUri.ToString().IndexOf(@"/waters_connect/v1.0/folders") >= 0,
                 @"C:\Users\RitaCh\Workspaces\ProteoWiz\pwiz1\pwiz_tools\Skyline\MockHttpData\WCFolders.json"));
