@@ -534,10 +534,8 @@ namespace pwiz.SkylineTestTutorial
 
         private void ValidateCoefficients(EditPeakScoringModelDlg editDlgFromSrm, int coeffIndex)
         {
-            var actualCoefficients = editDlgFromSrm.PeakCalculatorsGrid.Items
-                .Select(item => item.Weight.HasValue ? Math.Round(item.Weight.Value, 4) : (double?)null).ToArray();
-            string coefficients = string.Join(@"|",
-                actualCoefficients.Select(v => v?.ToString(CultureInfo.InvariantCulture) ?? " null "));
+            string coefficients = string.Join(@"|", editDlgFromSrm.PeakCalculatorsGrid.Items
+                .Select(v => v.Weight?.ToString("F04", CultureInfo.InvariantCulture) ?? " null "));
             if (IsRecordMode)
                 Console.WriteLine(@"""{0}"",", coefficients);
             else
