@@ -154,13 +154,23 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         }
 
         /// <summary>
-        /// List of UniMod Modifications available
+        /// List of UniMod Modifications available in https://github.com/MannLabs/alphabase/blob/main/alphabase/constants/const_files/modification.tsv
         /// </summary>
         public static readonly IList<ModificationType> MODIFICATION_NAMES = PopulateUniModList(null);
 
         protected override string ToolName => ALPHAPEPTDEEP;
         
         protected override IList<ModificationType> ModificationTypes => MODIFICATION_NAMES;
+
+        private static IList<ModificationIndex> FULL_SUPPORT_MODIFICATION_INDICES =>
+            new[]
+            {
+                new ModificationIndex(4, new ModificationType(@"4", @"Carbamidomethyl", @"H(3) C(2) N O")),
+                new ModificationIndex(21, new ModificationType(@"21", @"Phospho", @"H O(3) P")),
+                new ModificationIndex(35, new ModificationType(@"35", @"Oxidation", @"O")),
+                new ModificationIndex(121, new ModificationType(@"121", @"GG", @"H(6) C(4) N(2) O(2)"))
+            };
+        protected override IList<ModificationType> FullSupportModificationTypes => PopulateUniModList(FULL_SUPPORT_MODIFICATION_INDICES);
 
         public LibrarySpec LibrarySpec { get; private set; }
 

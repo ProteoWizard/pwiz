@@ -213,6 +213,21 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Warning: The predicted library might be poor quality, due to the following modifications detected with limited support in the predictive model: 
+        ///
+        ///{0}
+        ///
+        ///Please consider using the fine-tuning method provided by Carafe for building this library.
+        ///
+        ///Would you like to continue building this predicted library?.
+        /// </summary>
+        public static string Alphapeptdeep_Warn_limited_modification {
+            get {
+                return ResourceManager.GetString("Alphapeptdeep_Warn_limited_modification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Warning: The predicted library will be incomplete, due to the following unknown modifications detected: 
         ///
         ///{0}

@@ -98,6 +98,8 @@ namespace pwiz.SkylineTest
 
             TestValidateModifications_Supported();
             TestValidateModifications_Unsupported();
+            TestValidateModifications_Limited_Support();
+
 
             TestTransformPeptDeepOutput();
             TestImportSpectralLibrary();
@@ -142,8 +144,8 @@ namespace pwiz.SkylineTest
         public void TestGetWarningMods(SrmDocument document, IList<string> expectedWarningMods)
         {
             var builder = new AlphapeptdeepLibraryBuilder(TEST_LIB_NAME, NeverBuiltBlib, document, IrtStandard.BIOGNOSYS_11);
-            var warningList = builder.GetWarningMods();
-            CollectionAssert.AreEqual(expectedWarningMods.ToList(), warningList.ToList());
+            var (noSupportWarningList, partSupportWarningList) = builder.GetWarningMods();
+            CollectionAssert.AreEqual(expectedWarningMods.ToList(), noSupportWarningList.ToList());
             CheckBuilderFiles(builder, false);
         }
 
@@ -219,9 +221,159 @@ namespace pwiz.SkylineTest
                 var modifiedSeq = ModifiedSequence.GetModifiedSequence(document.Settings, peptides[i], IsotopeLabelType.light);
                 string mods;
                 string modSites;
-                Assert.IsTrue(builder.ValidateModifications(modifiedSeq, out mods, out modSites));
+                var (supportedMod, underSupportedMod) =
+                    builder.ValidateModifications(modifiedSeq, out mods, out modSites);
+                Assert.IsTrue(supportedMod);
                 Assert.AreEqual(answer_mods[i], mods);
                 Assert.AreEqual(answer_modSites[i], modSites);
+            }
+            CheckBuilderFiles(builder, false);
+        }
+
+
+        /// <summary>
+        /// Tests an AlphaPeptDeep partially supported modification.
+        /// </summary>
+        public void TestValidateModifications_Limited_Support()
+        {
+            var peptideList = new[]
+            {
+                new Peptide("MSGSHSNDEDDVVQVPETSSPTK"),
+                new Peptide("MMSGSHSNDEDDVVQVPETSSPTK"),
+                new Peptide("MSGSHSNDVPETSSPTK"),
+            };
+
+            var answer_modstrings = new[]
+            {
+                "Acetyl@Protein_N-term",
+                "Acetyl@Protein_N-term;Oxidation@M",
+                "Acetyl@K"
+            };
+
+            var answer_supported = new[]
+            {
+                true,
+                true,
+                false
+            };
+
+            var answer_undersupported = new[]
+            {
+                true,
+                true,
+                true
+            };
+
+            var answer_modsites = new[]
+            {
+                "1",
+                "1;2",
+                "17"
+            };
+
+            var aceMod = new StaticMod("Acetyl (N-term)", "M", ModTerminus.N, true, "H2C2O", LabelAtoms.None, RelativeRT.Unknown, null,
+                null, null, 1, "1Ac");
+            var aceModK = new StaticMod("Acetyl (K)", "K", ModTerminus.N, true, "H2C2O", LabelAtoms.None, RelativeRT.Unknown, null,
+                null, null, 1, "1Ac");
+            var oxMod = new StaticMod("Oxidation (M)", "M", ModTerminus.N, true, "O", LabelAtoms.None, RelativeRT.Unknown, null,
+                null, null, 35, "Oxi");
+            var aceOxMetMod = new StaticMod("Acetyl-Oxidation (N-term-M)", "M", ModTerminus.N, true, "H2C2O2", LabelAtoms.None, RelativeRT.Unknown, null,
+                null, null, null, "Acetyl-Ox");
+
+            var answer_mods = new[]
+            {
+                aceMod.Name,
+                aceMod.Name,
+                aceModK.Name
+            };
+
+            var answer_warn_counts = new[]
+            {
+                1,
+                1,
+                2
+            };
+
+            var explicitMods = new[]
+            {
+                // Limited Mod
+                new ExplicitMods(peptideList[0], new[] { new ExplicitMod(0, aceMod) }, null, true),
+                // Limited Mod and Supported Mod
+                new ExplicitMods(peptideList[1], new[] { new ExplicitMod(0, aceMod), new ExplicitMod(1, oxMod) }, null, true),
+                // Unsupported Mod and Limited Mod
+                new ExplicitMods(peptideList[2], new[] { new ExplicitMod(0, aceOxMetMod), new ExplicitMod(16, aceModK) }, null, true),
+            };
+
+            var answer_warningList = new[]
+            {
+                aceMod.Name,
+                aceModK.Name,
+                aceOxMetMod.Name
+            };
+
+  
+
+            var peptides = CreatePeptideDocNodes(peptideList, explicitMods).ToArray();
+            var document = CreateTestDocumentInternal(peptides);
+            var builder = new AlphapeptdeepLibraryBuilder(TEST_LIB_NAME, NeverBuiltBlib, document, IrtStandard.BIOGNOSYS_11);
+
+
+            var answer_messages = new[]
+            {
+                new[]
+                {
+                    string.Format(ModelsResources.BuildPrecursorTable_Unimod_limited_Modification,
+                        ModifiedSequence.GetModifiedSequence(document.Settings, peptides[0], IsotopeLabelType.light),
+                        ModifiedSequence.GetModifiedSequence(document.Settings, peptides[0], IsotopeLabelType.light)
+                            .ExplicitMods[0].Name,
+                        ModifiedSequence.GetModifiedSequence(document.Settings, peptides[0], IsotopeLabelType.light)
+                            .ExplicitMods[0].UnimodIdWithName, AlphapeptdeepLibraryBuilder.ALPHAPEPTDEEP)
+                },
+                new[]
+                {
+                    string.Format(ModelsResources.BuildPrecursorTable_Unimod_limited_Modification,
+                        ModifiedSequence.GetModifiedSequence(document.Settings, peptides[1], IsotopeLabelType.light),
+                        ModifiedSequence.GetModifiedSequence(document.Settings, peptides[1], IsotopeLabelType.light)
+                            .ExplicitMods[0].Name,
+                        ModifiedSequence.GetModifiedSequence(document.Settings, peptides[1], IsotopeLabelType.light)
+                            .ExplicitMods[0].UnimodIdWithName, AlphapeptdeepLibraryBuilder.ALPHAPEPTDEEP)
+                },
+                new[] 
+                {
+                    string.Format(ModelsResources.BuildPrecursorTable_UnsupportedModification,
+                        ModifiedSequence.GetModifiedSequence(document.Settings, peptides[2], IsotopeLabelType.light),
+                        ModifiedSequence.GetModifiedSequence(document.Settings, peptides[2], IsotopeLabelType.light).ExplicitMods[0].Name, AlphapeptdeepLibraryBuilder.ALPHAPEPTDEEP),
+                    
+                    string.Format(ModelsResources.BuildPrecursorTable_Unimod_limited_Modification,
+                        ModifiedSequence.GetModifiedSequence(document.Settings, peptides[2], IsotopeLabelType.light),
+                        ModifiedSequence.GetModifiedSequence(document.Settings, peptides[2], IsotopeLabelType.light).ExplicitMods[1].Name,
+                        ModifiedSequence.GetModifiedSequence(document.Settings, peptides[2], IsotopeLabelType.light).ExplicitMods[1].UnimodIdWithName, AlphapeptdeepLibraryBuilder.ALPHAPEPTDEEP)
+
+                }
+            };
+
+            using (var capture = new UserMessageCapture())
+            {
+                for (int i = 0; i < peptides.Length; i++)
+                {
+                    var modifiedSeq = ModifiedSequence.GetModifiedSequence(document.Settings, peptides[i], IsotopeLabelType.light);
+                    string mods;
+                    string modSites;
+                    var (supportedMods, underSupportedMods) = builder.ValidateModifications(modifiedSeq, out mods, out modSites);
+
+                    Assert.IsTrue(supportedMods == answer_supported[i] && underSupportedMods == answer_undersupported[i]);
+                    Assert.AreEqual(answer_modstrings[i], mods);
+                    Assert.AreEqual(answer_modsites[i], modSites);
+                    Assert.AreEqual(answer_warn_counts[i], capture.CapturedMessages.Count);
+
+                    CollectionAssert.AreEquivalent(answer_messages[i].ToList(), capture.CapturedMessages.ToList());
+              
+                    capture.CapturedMessages.Clear();
+
+                    var (noSupportWarningList, partSupportWarningList) = builder.GetWarningMods();
+                    Assert.AreEqual(3, partSupportWarningList.Count);
+                    CollectionAssert.AreEquivalent(answer_warningList.ToList(), partSupportWarningList.ToList());
+                }
             }
             CheckBuilderFiles(builder, false);
         }
@@ -273,7 +425,9 @@ namespace pwiz.SkylineTest
                     string mods;
                     string modSites;
 
-                    Assert.IsFalse(builder.ValidateModifications(modifiedSeq, out mods, out modSites));
+                    var (supportedMods, underSupportedMods) =
+                        builder.ValidateModifications(modifiedSeq, out mods, out modSites);
+                    Assert.IsFalse(supportedMods);
                     
                     Assert.AreEqual(string.Empty, mods);
                     Assert.AreEqual(string.Empty, modSites);
@@ -294,9 +448,9 @@ namespace pwiz.SkylineTest
                     Assert.AreEqual(expectedMsg, capture.CapturedMessages[0]);
                     capture.CapturedMessages.Clear();
 
-                    var warningList = builder.GetWarningMods();
-                    Assert.AreEqual(1, warningList.Count);
-                    Assert.AreEqual(answer_mods[i], warningList[0]);
+                    var (noSupportWarningList, partSupportWarningList) = builder.GetWarningMods();
+                    Assert.AreEqual(1, noSupportWarningList.Count);
+                    Assert.AreEqual(answer_mods[i], noSupportWarningList[0]);
                 }
             }
             CheckBuilderFiles(builder, false);

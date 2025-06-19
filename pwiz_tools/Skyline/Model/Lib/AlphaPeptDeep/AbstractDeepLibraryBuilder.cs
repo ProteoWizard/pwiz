@@ -54,7 +54,6 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         }
 
         private DateTime _nowTime = DateTime.Now;
-        private IList<string> _warningMods;
 
         protected AbstractDeepLibraryBuilder(SrmDocument document, IrtStandard irtStandard)
         {
@@ -145,8 +144,9 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         private IEnumerable<string> GetTableRows(PeptideDocNode peptide, bool training)
         {
             var modifiedSeq = ModifiedSequence.GetModifiedSequence(Document.Settings, peptide, IsotopeLabelType.light);
-
-            if (!ValidateModifications(modifiedSeq, out var mods, out var modSites))
+            var (supportedMod, underSupportedMod) =
+                ValidateModifications(modifiedSeq, out var mods, out var modSites);
+            if (!supportedMod)
                 yield break;
 
             foreach (var charge in peptide.TransitionGroups
@@ -163,8 +163,9 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         protected abstract string ToolName { get; }
         
         protected abstract IList<ModificationType> ModificationTypes { get; }
+        protected abstract IList<ModificationType> FullSupportModificationTypes { get; }
 
-        protected internal bool ValidateModifications(ModifiedSequence modifiedSequence, out string mods, out string modSites)
+        protected internal (bool,bool) ValidateModifications(ModifiedSequence modifiedSequence, out string mods, out string modSites)
         {
             var modsBuilder = new StringBuilder();
             var modSitesBuilder = new StringBuilder();
@@ -172,9 +173,11 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             // The list returned below is probably always short enough that determining
             // if it contains a modification would not be greatly improved by caching a set
             // for use here instead of the list.
-            var warningMods = GetWarningMods();
+            var (noSupportWarningMods, partSupportWarningMods) = GetWarningMods();
 
+            bool underSupportedModification = false;
             bool unsupportedModification = false;
+            var setUnderSupported = new HashSet<string>();
             var setUnsupported = new HashSet<string>();
             for (var i = 0; i < modifiedSequence.ExplicitMods.Count; i++)
             {
@@ -192,7 +195,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 }
 
                 var unimodIdWithName = mod.UnimodIdWithName;
-                if (warningMods.Contains(mod.Name))
+                if (noSupportWarningMods.Contains(mod.Name))
                 {
                     if (!setUnsupported.Contains(mod.Name))
                     {
@@ -202,6 +205,18 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                         setUnsupported.Add(mod.Name);
                     }
                     continue;
+                }
+
+                unimodIdWithName = mod.UnimodIdWithName;
+                if (partSupportWarningMods.Contains(mod.Name))
+                {
+                    if (!setUnderSupported.Contains(mod.Name))
+                    {
+                        var msg = string.Format(ModelsResources.BuildPrecursorTable_Unimod_limited_Modification, modifiedSequence, mod.Name, unimodIdWithName, ToolName);
+                        Messages.WriteAsyncUserMessage(msg);
+                        underSupportedModification = true;
+                        setUnderSupported.Add(mod.Name);
+                    }
                 }
 
                 var modNames = ModificationTypes.Where(m => unimodIdWithName.Contains(m.Accession)).ToArray();
@@ -219,7 +234,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             mods = modsBuilder.ToString();
             modSites = modSitesBuilder.ToString();
             
-            return !unsupportedModification;
+            return (!unsupportedModification, underSupportedModification);
         }
 
         protected virtual string GetModName(ModificationType mod, string unmodifiedSequence, int modIndexAA)
@@ -229,21 +244,30 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
         public string GetWarning()
         {
-            var warningMods = GetWarningMods();
-            if (warningMods.Count == 0)
+            var (noSupportWarningMods, partSupportWarningMods) = GetWarningMods();
+            if (noSupportWarningMods.Count == 0 && partSupportWarningMods.Count == 0)
                 return null;
 
-            var warningModString = string.Join(Environment.NewLine, warningMods.Select(w => w.Indent(1)));
-            return string.Format(ModelResources.Alphapeptdeep_Warn_unknown_modification,
+            string warningModString;
+            if (partSupportWarningMods.Count == 0)
+            {
+                warningModString = string.Join(Environment.NewLine, noSupportWarningMods.Select(w => w.Indent(1)));
+                return string.Format(ModelResources.Alphapeptdeep_Warn_unknown_modification,
+                    warningModString);
+            }
+            
+            warningModString = string.Join(Environment.NewLine, partSupportWarningMods.Select(w => w.Indent(1)));
+            return string.Format(ModelResources.Alphapeptdeep_Warn_limited_modification,
                 warningModString);
+
+
         }
         
-        public IList<string> GetWarningMods()
+        public (IList<string>,IList<string>) GetWarningMods()
         {
-            if (_warningMods != null)
-                return _warningMods;
-
-            var resultList = new List<string>();
+    
+            var noSupportResultList = new List<string>();
+            var partSupportResultList = new List<string>();
 
             // Build precursor table row by row
             foreach (var peptide in Document.Peptides)
@@ -255,10 +279,16 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                     var mod = modifiedSequence.ExplicitMods[i];
                     if (!mod.UnimodId.HasValue)
                     {
-                        var haveMod = resultList.FirstOrDefault(m => m == mod.Name);
+                        var haveMod = noSupportResultList.FirstOrDefault(m => m == mod.Name);
                         if (haveMod == null)
                         {
-                            resultList.Add(mod.Name);
+                            noSupportResultList.Add(mod.Name);
+                        }
+
+                        haveMod = partSupportResultList.FirstOrDefault(m => m == mod.Name);
+                        if (haveMod == null)
+                        {
+                            partSupportResultList.Add(mod.Name);
                         }
                     }
 
@@ -266,17 +296,27 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                     var modNames = ModificationTypes.Where(m => m.Accession == unimodIdWithName).ToArray();
                     if (modNames.Length == 0)
                     {
-                        var haveMod = resultList.FirstOrDefault(m => m == mod.Name);
+                        var haveMod = noSupportResultList.FirstOrDefault(m => m == mod.Name);
                         if (haveMod == null)
                         {
-                            resultList.Add(mod.Name);
+                            noSupportResultList.Add(mod.Name);
+                        }
+                    }
+                    
+                    modNames = FullSupportModificationTypes.Where(m => m.Accession == unimodIdWithName).ToArray();
+                    if (modNames.Length == 0)
+                    {
+                        var haveMod = partSupportResultList.FirstOrDefault(m => m == mod.Name);
+                        if (haveMod == null)
+                        {
+                            partSupportResultList.Add(mod.Name);
                         }
                     }
                 }
             }
 
-            _warningMods = resultList;
-            return resultList;
+            
+            return (noSupportResultList, partSupportResultList);
         }
     }
 }

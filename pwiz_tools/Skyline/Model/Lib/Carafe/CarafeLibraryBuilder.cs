@@ -157,6 +157,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
 
         protected override string ToolName => CARAFE;
         protected override IList<ModificationType> ModificationTypes => MODIFICATION_NAMES;
+        protected override IList<ModificationType> FullSupportModificationTypes { get; }
 
         public LibrarySpec LibrarySpec { get; private set; }
         private string PythonVersion { get; }
