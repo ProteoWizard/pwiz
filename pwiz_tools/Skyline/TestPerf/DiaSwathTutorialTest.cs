@@ -67,8 +67,8 @@ namespace TestPerf
             public string[] DiaFiles;
             public string[] SearchFiles;
             public bool HasRedundantLibrary = true; // only DIA-NN directly creates a non-redundant library
-            public int DesiredIrtPeptideCount;
             public IrtStandard IrtStandard;
+            public int IrtStandardCount;
             public bool HasAmbiguousMatches;
             public string IsolationSchemeName;
             public string IsolationSchemeFile;
@@ -99,7 +99,6 @@ namespace TestPerf
         public class ExpectedValues
         {
             public int LibraryPeptideCount;
-            public int ExpectedIrtPeptideCount;
             public double IrtSlope;
             public double IrtIntercept;
             public int[] FinalTargetCounts;
@@ -143,8 +142,8 @@ namespace TestPerf
                 {
                     "DDA_search\\interact.pep.xml"
                 },
-                DesiredIrtPeptideCount = 11,
                 IrtStandard = IrtStandard.BIOGNOSYS_11,
+                IrtStandardCount = 11,
                 HasAmbiguousMatches = true,
                 IsolationSchemeName = "ETH TTOF (64 variable)",
                 IsolationSchemeFile = "64_variable_windows.csv",
@@ -203,7 +202,7 @@ namespace TestPerf
                     "DDA_search\\interact.pep.xml"
                 },
                 IrtStandard = IrtStandard.BIOGNOSYS_11,
-                DesiredIrtPeptideCount = 11,
+                IrtStandardCount = 11,
                 HasAmbiguousMatches = false,
                 IsolationSchemeName = "ETH QE (18 variable)",
                 IsolationSchemeFile = "QE_DIA_18var.tsv",
@@ -262,7 +261,7 @@ namespace TestPerf
                 },
                 HasRedundantLibrary = false,
                 IrtStandard = IrtStandard.AUTO,
-                DesiredIrtPeptideCount = 11,
+                IrtStandardCount = 11,
                 HasAmbiguousMatches = false,
                 IsolationSchemeName = "ETH QE (18 variable)",
                 IsolationSchemeFile = "QE_DIA_18var.tsv",
@@ -338,7 +337,7 @@ namespace TestPerf
                         "DDA_search\\out\\interact.pep.xml",
                     },
                     IrtStandard = IrtStandard.AUTO,
-                    DesiredIrtPeptideCount = 15,
+                    IrtStandardCount = 15,
                     HasAmbiguousMatches = false,
                     IsolationSchemeName = "diaPASEF (24 fixed)",
                     IsolationSchemeFile = "diaPASEF_24fix.csv",
@@ -377,7 +376,7 @@ namespace TestPerf
                         //"C:\\test\\issues\\skyline-cli-import\\DIA-PASEF-small\\yufe_fragpipe_dda\\interact-A210331_bcc_lfqbB_17min_dda_200ng_1172.pep.xml"
                     },
                     IrtStandard = IrtStandard.AUTO,
-                    DesiredIrtPeptideCount = 15,
+                    IrtStandardCount = 15,
                     HasAmbiguousMatches = false,
                     IsolationSchemeName = "diaPASEF (24 fixed)",
                     IsolationSchemeFile = "diaPASEF_24fix.csv",
@@ -643,7 +642,7 @@ namespace TestPerf
                 _instrumentValues.IrtStandard.Equals(IrtStandard.CIRT))
             {
                 addIrtStandardsDlg = ShowDialog<AddIrtStandardsDlg>(() => importPeptideSearchDlg.ClickNextButton());
-                RunUI(() => addIrtStandardsDlg.StandardCount = _instrumentValues.DesiredIrtPeptideCount);
+                RunUI(() => addIrtStandardsDlg.StandardCount = _instrumentValues.IrtStandardCount);
                 PauseForScreenShot<AddIrtStandardsDlg>("Add Standard Peptides - Select number of CiRT peptides");
                 addIrtPeptidesDlg = ShowDialog<AddIrtPeptidesDlg>(addIrtStandardsDlg.OkDialog);
             }
@@ -659,16 +658,15 @@ namespace TestPerf
                 Assert.IsNotNull(regressionRefined);
                 var slope = Math.Round(regressionRefined.Slope, 3);
                 var intercept = Math.Round(regressionRefined.Intercept, 3);
+                Assert.AreEqual(_instrumentValues.IrtStandardCount, row.Cells[1].Value);
                 if (IsRecordMode)
                 {
                     _expectedValues.LibraryPeptideCount = addIrtPeptidesDlg.PeptidesCount;
-                    _expectedValues.ExpectedIrtPeptideCount = (int)row.Cells[1].Value;
                     _expectedValues.IrtSlope = slope;
                     _expectedValues.IrtIntercept = intercept;
                 }
                 else
                 {
-                    Assert.AreEqual(_expectedValues.ExpectedIrtPeptideCount, row.Cells[1].Value);
                     Assert.AreEqual(_expectedValues.LibraryPeptideCount, addIrtPeptidesDlg.PeptidesCount);
                     Assert.AreEqual(_expectedValues.IrtSlope, slope);
                     Assert.AreEqual(_expectedValues.IrtIntercept, intercept);
@@ -915,14 +913,14 @@ namespace TestPerf
             var docLibrary = SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries[0];
             RunUI(() =>
             {
+                Assert.AreEqual(_instrumentValues.IrtStandardCount, SkylineWindow.Document.PeptideGroups.First().PeptideCount);
                 if (!IsRecordMode)
                 {
-                    Assert.AreEqual(_expectedValues.LibraryPeptideCount + _expectedValues.ExpectedIrtPeptideCount, docLibrary.LibraryDetails.UniquePeptideCount);
-                    Assert.AreEqual(_expectedValues.ExpectedIrtPeptideCount, SkylineWindow.Document.PeptideGroups.First().PeptideCount);
+                    Assert.AreEqual(_expectedValues.LibraryPeptideCount + _instrumentValues.IrtStandardCount, docLibrary.LibraryDetails.UniquePeptideCount);
                 }
                 else
                 {
-                    _expectedValues.ExpectedIrtPeptideCount = SkylineWindow.Document.PeptideGroups.First().PeptideCount;
+                    _expectedValues.LibraryPeptideCount = docLibrary.LibraryDetails.UniquePeptideCount - _instrumentValues.IrtStandardCount;
                 }
             });
 
@@ -1194,7 +1192,7 @@ namespace TestPerf
                 OkDialog(formattingDlg, formattingDlg.OkDialog);
                 //PauseTest();
                 WaitForConditionUI(() => volcanoPlot.CurveList.Count == 8 &&
-                                         volcanoPlot.CurveList[7].Points.Count >= _instrumentValues.DesiredIrtPeptideCount); // iRTs
+                                         volcanoPlot.CurveList[7].Points.Count >= _instrumentValues.IrtStandardCount); // iRTs
                 for (int i = 1; i < 4; i++)
                 {
                     RunUI(() =>
@@ -1235,7 +1233,7 @@ namespace TestPerf
                 
                 if (!IsRecordMode)
                 {
-                    int volcanoBarDelta = _expectedValues.ExpectedIrtPeptideCount - 1; // iRTs - selected peptide
+                    int volcanoBarDelta = _instrumentValues.IrtStandardCount - 1; // iRTs - selected peptide
                     WaitForBarGraphPoints(barGraph, _expectedValues.DiffPeptideCounts[0] - volcanoBarDelta, _expectedValues.DiffPeptideCounts[0] - volcanoBarDelta * 2);
                 }
 
@@ -1685,7 +1683,7 @@ namespace TestPerf
                 Equals(_instrumentValues.IrtStandard, IrtStandard.CIRT) ||
                 Equals(_instrumentValues.IrtStandard, IrtStandard.CIRT_SHORT))
             {
-                settings = settings.Append("--import-search-num-cirts=" + _instrumentValues.DesiredIrtPeptideCount).ToArray();
+                settings = settings.Append("--import-search-num-cirts=" + _instrumentValues.IrtStandardCount).ToArray();
             }
 
             // Verify other values shown in the tutorial
@@ -1725,8 +1723,8 @@ namespace TestPerf
                     var doc = docContainer.Document;
                     var docLibrary = doc.Settings.PeptideSettings.Libraries.Libraries[0];
                     var irtGroup = doc.PeptideGroups.First();
-                    Assert.AreEqual(_instrumentValues.DesiredIrtPeptideCount, irtGroup.PeptideCount);
-                    Assert.AreEqual(_testInfo._expectedValues.LibraryPeptideCount + _testInfo._expectedValues.ExpectedIrtPeptideCount, docLibrary.LibraryDetails.UniquePeptideCount);
+                    Assert.AreEqual(_instrumentValues.IrtStandardCount, irtGroup.PeptideCount);
+                    Assert.AreEqual(_testInfo._expectedValues.LibraryPeptideCount + _testInfo._instrumentValues.IrtStandardCount, docLibrary.LibraryDetails.UniquePeptideCount);
 
                     Assert.AreEqual(50, doc.Settings.TransitionSettings.Instrument.MinMz);
                     Assert.AreEqual(2000, doc.Settings.TransitionSettings.Instrument.MaxMz);
