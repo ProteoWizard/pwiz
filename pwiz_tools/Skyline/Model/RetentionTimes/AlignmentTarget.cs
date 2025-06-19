@@ -131,7 +131,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                     var xValues = Enumerable.Range(0, pointCount)
                         .Select(i => (i * xMax + (pointCount - i - 1) * xMin) / (pointCount - 1)).ToList();
                     var yValues = xValues.Select(regressionFunction.GetY);
-                    return PiecewiseLinearMap.FromValues(xValues, yValues);
+                    return ReducePointCount(PiecewiseLinearMap.FromValues(xValues, yValues));
                 }
                 case RegressionMethodRT.loess:
                 {
@@ -155,19 +155,28 @@ namespace pwiz.Skyline.Model.RetentionTimes
                         weightedPoints.Select(pt => pt.Y).ToArray(), 
                         weightedPoints.Select(pt => pt.Weight).ToArray(),
                         cancellationToken);
-                    var map = CreatePiecewiseLinearMap(xArray, smoothedYValues);
-                    int pointCount = Settings.Default.RtRegressionSegmentCount;
-                    if (pointCount > 0)
-                    {
-                        map = map.ReducePointCount(pointCount);
-                        map = PiecewiseLinearMap.FromValues(map.XValues.Select(v=>(float) v).Select(v=>(double) v), map.YValues.Select(v=>(float) v).Select(v=>(double) v));
-
-                    }
-                    return map;
+                    return ReducePointCount(CreatePiecewiseLinearMap(xArray, smoothedYValues));
                 }
                 default:
                     return null;
             }
+        }
+
+        /// <summary>
+        /// Reduce the number of points in a PiecewiseLinearMap in order to save the amount of space when it is serialized by <see cref="DocumentRetentionTimes.WriteAlignments"/>.
+        /// </summary>
+        private static PiecewiseLinearMap ReducePointCount(PiecewiseLinearMap map)
+        {
+            int pointCount = Settings.Default.RtRegressionSegmentCount;
+            if (pointCount <= 0)
+            {
+                return map;
+            }
+
+            map = map.ReducePointCount(pointCount);
+            // Also, convert everything to floats and back to doubles so that it round-trips to XML
+            map = PiecewiseLinearMap.FromValues(map.XValues.Select(v=>(float) v).Select(v=>(double) v), map.YValues.Select(v=>(float) v).Select(v=>(double) v));
+            return map;
         }
 
         /// <summary>
