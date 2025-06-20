@@ -951,7 +951,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
             // Split deltas with values greater than the midpoint below it and less than the midpoint above it.
             int countOut = variableTargetPeptides.Count - mid - 1;
-            if (countOut >= 0)
+            if (0 <= countOut && countOut < listDeltas.Count)
                 listDeltas.QNthItem(countOut);
 
             // Remove points with the highest deltas above mid
