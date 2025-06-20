@@ -27,6 +27,7 @@ using System.Windows.Forms;
 using pwiz.BiblioSpec;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
@@ -34,7 +35,6 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -1272,8 +1272,23 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 FullScanSettingsControl.PrecursorChargesString = TransitionFilter.AdductListToString(precursorCharges);
                 filter = TransitionSettings.Filter.ChangePeptidePrecursorCharges(precursorCharges);
             }
-            if (IsDdaWorkflow && !filter.PeptideIonTypes.Contains(IonType.precursor))
-                filter = filter.ChangePeptideIonTypes(new[] { IonType.precursor });
+
+            TransitionLibraries libraries = TransitionSettings.Libraries;
+            if (IsDdaWorkflow)
+            {
+                if (FullScanSettingsControl.AcquisitionMethod == FullScanAcquisitionMethod.None)
+                {
+                    filter = filter.ChangePeptideIonTypes(new[] { IonType.precursor });
+                    if (libraries.MinIonCount > 0)
+                        libraries = libraries.ChangeMinIonCount(0); // Avoid filtering due to lack of product ions
+                }
+                else if (!filter.PeptideIonTypes.Contains(IonType.precursor))
+                {
+                    var listIonTypes = filter.PeptideIonTypes.ToList();
+                    listIonTypes.Add(IonType.precursor);
+                    filter = filter.ChangePeptideIonTypes(listIonTypes);
+                }
+            }
             if (!filter.AutoSelect)
                 filter = filter.ChangeAutoSelect(true);
             Helpers.AssignIfEquals(ref filter, TransitionSettings.Filter);
@@ -1329,7 +1344,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             try
             {
                 transitionSettings = new TransitionSettings(prediction, filter,
-                    TransitionSettings.Libraries, TransitionSettings.Integration, TransitionSettings.Instrument, fullScan, ionMobilityFiltering);
+                    libraries, TransitionSettings.Integration, TransitionSettings.Instrument, fullScan, ionMobilityFiltering);
 
                 Helpers.AssignIfEquals(ref transitionSettings, TransitionSettings);
             }
@@ -1516,7 +1531,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private bool CanWizardClose()
         {
             var wizardPageControl = GetPageControl(wizardPagesImportPeptideSearch.SelectedTab) as WizardPageControl;
-            return wizardPageControl == null || wizardPageControl.CanWizardClose();
+            return wizardPageControl == null || Program.ClosingForms || wizardPageControl.CanWizardClose();
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)

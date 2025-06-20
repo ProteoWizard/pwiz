@@ -385,4 +385,10 @@
   <data name="LibraryGridViewDriver_DoPaste_The_peptide__0__is_already_present_in_the__1__table__and_may_not_be_pasted_into_the__2__table" xml:space="preserve">
     <value>ペプチド{0}は既に{1}表にあり、{2}表には貼り付けられません。</value>
   </data>
+  <data name="CalibrationGridViewDriver_PickPeptides__0__CiRT_peptides_were_found__but_a_valid_regression_could_not_be_calculated_" xml:space="preserve">
+    <value>{0} CiRTペプチドが検出されましたが、有効な回帰を計算できませんでした。</value>
+  </data>
+  <data name="CalibrationGridViewDriver_PickPeptides__0__CiRT_peptides_were_found_and_a_regression_was_calculated_using__1__of_them__but_they_did_not_sufficiently_span_the_retention_time_range__2_0____to__3_0____minutes_" xml:space="preserve">
+    <value>{0}個のCiRTペプチドが検出され、そのうち{1}個を使用して回帰が計算されましたが、保持時間範囲{2:0.#}～{3:0.#} 分を十分に網羅していません:</value>
+  </data>
 </root>

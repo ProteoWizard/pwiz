@@ -30,6 +30,8 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Controls.Editor;
+using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -44,7 +46,6 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -311,7 +312,7 @@ namespace TestPerf
                 },
                 SearchFiles = new[]
                 {
-                    "report-lib.parquet.skyline.speclib"
+                    "DIA-QE\\DIA-QE\\DIA\\DIANN\\report-lib.parquet.skyline.speclib"
                 },
                 HasRedundantLibrary = false,
                 IrtStandard = IrtStandard.AUTO,

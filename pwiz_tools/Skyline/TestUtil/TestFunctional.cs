@@ -39,6 +39,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.ProteomeDatabase.Fasta;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline;
@@ -749,7 +750,7 @@ namespace pwiz.SkylineTestUtil
                 // When debugger is attached, some vendor readers are S-L-O-W!
                 waitMultiplier = 10;
             }
-            else if (ExtensionTestContext.IsDebugMode || Helpers.RunningResharperAnalysis)
+            else if (ExtensionTestContext.IsDebugMode || TryHelper.RunningResharperAnalysis)
             {
                 // Wait a little longer for debug build.
                 waitMultiplier = 4;
@@ -1371,7 +1372,7 @@ namespace pwiz.SkylineTestUtil
             get { return TestContext.TestName.Contains("Tutorial"); }
         }
 
-        private string TutorialPath
+        protected string TutorialPath
         {
             get
             {
@@ -1392,6 +1393,11 @@ namespace pwiz.SkylineTestUtil
         }
 
         private int ScreenshotCounter = 1;
+
+        public void SkipScreenshots(int numToSkip)
+        {
+            ScreenshotCounter += numToSkip;
+        }
 
         public virtual bool AuditLogCompareLogs
         {
@@ -2310,7 +2316,7 @@ namespace pwiz.SkylineTestUtil
         {
             var recordedFile = GetLogFilePath(AuditLogDir);
             if (File.Exists(recordedFile))
-                Helpers.TryTwice(() => File.Delete(recordedFile));    // Avoid appending to the same file on multiple runs
+                TryHelper.TryTwice(() => File.Delete(recordedFile));    // Avoid appending to the same file on multiple runs
         }
 
         private string GetLogFilePath(string folderPath)
@@ -2532,7 +2538,7 @@ namespace pwiz.SkylineTestUtil
                 // holds no file handles.
                 var docNew = new SrmDocument(SrmSettingsList.GetDefault());
                 // Try twice, because this operation can fail due to active background processing
-                RunUI(() => Helpers.TryTwice(() => SkylineWindow.SwitchDocument(docNew, null)));
+                RunUI(() => TryHelper.TryTwice(() => SkylineWindow.SwitchDocument(docNew, null)));
 
                 WaitForCondition(1000, () => !FileStreamManager.Default.HasPooledStreams, string.Empty, false);
                 if (FileStreamManager.Default.HasPooledStreams)
@@ -2597,33 +2603,42 @@ namespace pwiz.SkylineTestUtil
 
         private void CloseOpenForm(Form formToClose, List<Form> openForms)
         {
-            openForms.Remove(formToClose);
-            // Close any owned forms, since they may be pushing message loops that would keep this form
-            // from closing.
-            foreach (var ownedForm in formToClose.OwnedForms)
+            try
             {
-                CloseOpenForm(ownedForm, openForms);
-            }
+                Program.ClosingForms = true;
 
-            var messageDlg = formToClose as CommonAlertDlg;
-            // ReSharper disable LocalizableElement
-            if (messageDlg == null)
-                Console.WriteLine("\n\nClosing open form of type {0}\n", formToClose.GetType()); // Not L10N
-            else
+                openForms.Remove(formToClose);
+                // Close any owned forms, since they may be pushing message loops that would keep this form
+                // from closing.
+                foreach (var ownedForm in formToClose.OwnedForms)
+                {
+                    CloseOpenForm(ownedForm, openForms);
+                }
+
+                var messageDlg = formToClose as CommonAlertDlg;
+                // ReSharper disable LocalizableElement
+                if (messageDlg == null)
+                    Console.WriteLine("\n\nClosing open form of type {0}\n", formToClose.GetType()); // Not L10N
+                else
                 Console.WriteLine("\n\nClosing open MessageDlg: {0}\n", TextUtil.LineSeparate(messageDlg.Message, messageDlg.DetailMessage)); // Not L10N
-            // ReSharper restore LocalizableElement
+                // ReSharper restore LocalizableElement
 
-            RunUI(() =>
+                RunUI(() =>
+                {
+                    try
+                    {
+                        formToClose.Close();
+                    }
+                    catch
+                    {
+                        // Ignore exceptions
+                    }
+                });
+            }
+            finally
             {
-                try
-                {
-                    formToClose.Close();
-                }
-                catch
-                {
-                    // Ignore exceptions
-                }
-            });
+                Program.ClosingForms = false;
+            }
         }
 
 

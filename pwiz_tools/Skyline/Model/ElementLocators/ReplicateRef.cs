@@ -18,6 +18,7 @@
  */
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 

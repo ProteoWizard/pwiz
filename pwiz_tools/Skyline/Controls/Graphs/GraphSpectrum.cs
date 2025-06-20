@@ -27,6 +27,7 @@ using System.Windows.Forms;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.MSGraph;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
@@ -203,11 +204,11 @@ namespace pwiz.Skyline.Controls.Graphs
         public bool HasSpectrum { get { return GraphItem != null; }}
 
         /// <summary>
-        /// Normalized collisition energy for Koina
+        /// Normalized collision energy for Koina
         /// </summary>
         public int KoinaNCE
         {
-            get { return (int) comboCE.SelectedItem; }
+            get { return (int) (comboCE.SelectedItem ?? -1); }
             set { comboCE.SelectedItem = value; }
         }
 
@@ -556,6 +557,16 @@ namespace pwiz.Skyline.Controls.Graphs
                     return;
                 }
             }
+        }
+
+        public void SelectSpectrum(string libraryName)
+        {
+            comboSpectrum.SelectedItem = libraryName;
+        }
+
+        public void SelectMirrorSpectrum(string libraryName)
+        {
+            comboMirrorSpectrum.SelectedItem = libraryName;
         }
 
         private bool SpectrumMatches(SpectrumDisplayInfo spectrumDisplayInfo, SpectrumIdentifier spectrumIdentifier)

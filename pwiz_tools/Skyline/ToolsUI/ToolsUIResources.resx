@@ -259,18 +259,6 @@
   <data name="LibrarySpec_CreateFromPath_Unrecognized_library_type_at__0_" xml:space="preserve">
     <value>Unrecognized library type at {0}</value>
   </data>
-  <data name="PythonInstaller_GetPackages_Installing_Packages" xml:space="preserve">
-    <value>Installing Packages</value>
-  </data>
-  <data name="PythonInstaller_GetPip_Installing_Pip" xml:space="preserve">
-    <value>Installing Pip</value>
-  </data>
-  <data name="PythonInstaller_GetPython_Installing_Python" xml:space="preserve">
-    <value>Installing Python</value>
-  </data>
-  <data name="PythonInstaller_InstallPackages_Install" xml:space="preserve">
-    <value>Install</value>
-  </data>
   <data name="RInstaller_GetPAckages_Installing_Packages" xml:space="preserve">
     <value>Installing Packages</value>
   </data>
@@ -356,6 +344,42 @@
   <data name="ToolUpdatesDlg_InstallUpdates_Installing_updates_to__0_" xml:space="preserve">
     <value>Installing updates to {0}</value>
   </data>
+  <data name="NvidiaInstaller_OkDialog_Successfully_set_up_Nvidia" xml:space="preserve">
+    <value>Successfully set up Nvidia libraries</value>
+  </data>
+  <data name="NvidiaInstaller_OkDialog_Failed_to_set_up_Nvidia" xml:space="preserve">
+    <value>Failed to set up Nvidia libraries</value>
+  </data>
+  <data name="NvidiaInstaller_Setup_Nvidia_Libraries" xml:space="preserve">
+    <value>Setting up Nvidia GPU Computation</value>
+  </data>
+  <data name="PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment" xml:space="preserve">
+    <value>Successfully set up Python virtual environment</value>
+  </data>
+  <data name="PythonInstaller_OkDialog_Failed_to_set_up_Python_virtual_environment" xml:space="preserve">
+    <value>Failed to set up Python virtual environment</value>
+  </data>
+  <data name="PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required" xml:space="preserve">
+    <value>Python {0} set up is required for {1}, click 'OK' to proceed.</value>
+  </data>
+  <data name="PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required_please_wait" xml:space="preserve">
+    <value>Python {0} set up is required for {1}, please wait for python to install and configure ...</value>
+  </data>
+  <data name="PythonInstaller_Requesting_Administrator_elevation" xml:space="preserve">
+    <value>Administrative privileges are required to complete the installation, consult with your system administrator if necessary.  Would you like to continue?</value>
+  </data>
+  <data name="PythonInstaller_Install_Nvidia_Library" xml:space="preserve">
+    <value>Skyline detected an Nvidia GPU on this computer. Would you like to enable faster AI processing by setting up Nvidia GPU computation? Elevated privileges are required to install this feature.</value>
+  </data>
+  <data name="PythonInstaller_Downloading_Nvidia_Library" xml:space="preserve">
+    <value>Downloading Nvidia Cuda Toolkit and Deep Neural Network software.</value>
+  </data>
+  <data name="PythonInstaller_Installing_Nvidia_Library" xml:space="preserve">
+    <value>Installing Nvidia Cuda Toolkit and Deep Neural Network software.</value>
+  </data>
+  <data name="SkylineProcessRunner_Timeout" xml:space="preserve">
+    <value>SkylineProcessRunner timed-out after {0} milliseconds</value>
+  </data>
   <data name="EditRemoteAccountDlg_TestConnectButton_AltLabelText_Connect" xml:space="preserve">
     <value>Connect</value>
   </data>
@@ -367,5 +391,8 @@
   </data>
   <data name="EditRemoteAccountDlg_TestArdiaAccount_Login_was_canceled" xml:space="preserve">
     <value>Login was canceled</value>
+  </data>
+  <data name="EditRemoteAccountDlg_TestAccount_Testing_remote_account_connection" xml:space="preserve">
+      <value>Testing remote account connection</value>
   </data>
 </root>

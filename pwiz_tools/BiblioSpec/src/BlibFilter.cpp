@@ -527,12 +527,12 @@ void BlibFilter::buildNonRedundantLib() {
             double ionMobilityValue = ionMobilityValueIndex > 0 ? sqlite3_column_double(pStmt, ionMobilityValueIndex) : 0;
             int ionMobilityType = ionMobilityTypeIndex > 0 ? sqlite3_column_int(pStmt, ionMobilityTypeIndex) : 0;
             tmpRef->setIonMobility(ionMobilityType == 1 ? ionMobilityValue : 0, ionMobilityType == 1 ? IONMOBILITY_DRIFTTIME_MSEC : IONMOBILITY_NONE);
-            tmpRef->setCollisionalCrossSection(ionMobilityType == 2 ? ionMobilityValue : 0);
+            tmpRef->setCollisionalCrossSection(ccsIndex > 0 ? sqlite3_column_double(pStmt, ccsIndex) : 0);
         } else if (ionMobilityIndex > 0) {
             double ionMobilityValue = sqlite3_column_double(pStmt, ionMobilityIndex);
             IONMOBILITY_TYPE ionMobilityType = (ionMobilityTypeIndex > 0) ? (IONMOBILITY_TYPE)sqlite3_column_int(pStmt, ionMobilityTypeIndex) : IONMOBILITY_DRIFTTIME_MSEC;
             tmpRef->setIonMobility(ionMobilityValue, ionMobilityType);
-            tmpRef->setCollisionalCrossSection(sqlite3_column_double(pStmt, ccsIndex));
+            tmpRef->setCollisionalCrossSection(ccsIndex > 0 ? sqlite3_column_double(pStmt, ccsIndex) : 0);
             if (molNameIndex > 0) {
                 // moleculeName, chemicalFormula, precursorAdduct, inchiKey, otherKeys
                 tmpRef->setMoleculeName(reinterpret_cast<const char*>(sqlite3_column_text(pStmt, molNameIndex)));
@@ -543,7 +543,7 @@ void BlibFilter::buildNonRedundantLib() {
             }
         } else {
             tmpRef->setIonMobility(0, IONMOBILITY_NONE);
-            tmpRef->setCollisionalCrossSection(0);
+            tmpRef->setCollisionalCrossSection(ccsIndex > 0 ? sqlite3_column_double(pStmt, ccsIndex) : 0);
         }
 
         if (startTimeIndex > 0 && endTimeIndex > 0) {

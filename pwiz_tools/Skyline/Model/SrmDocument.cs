@@ -54,7 +54,9 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.AuditLog;
@@ -2270,7 +2272,7 @@ namespace pwiz.Skyline.Model
                 auditLog.WriteToFile(auditLogPath, hash, skylineVersion.SrmDocumentVersion);
             }
             else if (File.Exists(auditLogPath))
-                Helpers.TryTwice(() => File.Delete(auditLogPath));
+                TryHelper.TryTwice(() => File.Delete(auditLogPath));
         }
 
         public string Serialize(XmlTextWriter writer, string displayName, SkylineVersion skylineVersion, IProgressMonitor progressMonitor)
@@ -2332,7 +2334,7 @@ namespace pwiz.Skyline.Model
             TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, CollisionEnergyRegression regression, int step)
         {
             var ce = GetExplicitCollisionEnergy(nodeGroup, nodeTran);
-            if (regression != null)
+            if (regression != null && !Equals(regression, CollisionEnergyList.NONE))
             {
                 // If still no explicit CE value found the CE is calculated using the provided regression, if any.
                 if (!ce.HasValue)
