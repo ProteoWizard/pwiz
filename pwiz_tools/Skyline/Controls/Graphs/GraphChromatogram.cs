@@ -3646,14 +3646,38 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private ImputedPeak ProduceImputedPeak(ProductionMonitor productionMonitor, ImputedBoundsParameter imputedBoundsParameter)
         {
-            PeakBoundaryImputer peakBoundaryImputer;
-            lock (this)
+            try
             {
-                peakBoundaryImputer = _peakBoundaryImputer = _peakBoundaryImputer?.ChangeDocument(imputedBoundsParameter.Document) ?? new PeakBoundaryImputer(imputedBoundsParameter.Document);
-            }
+                PeakBoundaryImputer peakBoundaryImputer;
+                lock (this)
+                {
+                    peakBoundaryImputer = _peakBoundaryImputer =
+                        _peakBoundaryImputer?.ChangeDocument(imputedBoundsParameter.Document) ??
+                        new PeakBoundaryImputer(imputedBoundsParameter.Document);
+                }
 
-            return peakBoundaryImputer!.GetImputedPeakBounds(productionMonitor.CancellationToken,
-                imputedBoundsParameter.IdentityPath, imputedBoundsParameter.ChromatogramSet, imputedBoundsParameter.FilePath);
+                return peakBoundaryImputer!.GetImputedPeakBounds(productionMonitor.CancellationToken,
+                    imputedBoundsParameter.IdentityPath, imputedBoundsParameter.ChromatogramSet,
+                    imputedBoundsParameter.FilePath);
+            }
+            finally
+            {
+                var oldMeasuredResults = imputedBoundsParameter.Document.MeasuredResults;
+                var newMeasuredResults = _documentContainer.Document.MeasuredResults;
+                if (oldMeasuredResults != null && !ReferenceEquals(oldMeasuredResults, newMeasuredResults))
+                {
+                    var newStreams = new HashSet<ReferenceValue<IPooledStream>>();
+                    if (newMeasuredResults != null)
+                    {
+                        newStreams.UnionWith(newMeasuredResults.ReadStreams.Select(ReferenceValue.Of));
+                    }
+
+                    foreach (var stream in oldMeasuredResults.ReadStreams)
+                    {
+                        stream.CloseStream();
+                    }
+                }
+            }
         }
 
 

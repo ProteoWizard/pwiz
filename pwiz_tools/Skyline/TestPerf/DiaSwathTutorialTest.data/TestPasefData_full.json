@@ -1,6 +1,5 @@
 {
   "LibraryPeptideCount": 22111,
-  "ExpectedIrtPeptideCount": 15,
   "IrtSlope": 8.621,
   "IrtIntercept": -51.543,
   "FinalTargetCounts": [
