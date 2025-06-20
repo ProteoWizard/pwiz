@@ -705,18 +705,6 @@ namespace pwiz.SkylineTestUtil
             OkDialog(annotationsListDlg, annotationsListDlg.OkDialog);
         }
 
-        protected IEnumerable<string> GetCoefficientStrings(EditPeakScoringModelDlg editDlg)
-        {
-            for (int i = 0; i < editDlg.PeakCalculatorsGrid.Items.Count; i++)
-            {
-                double? weight = editDlg.PeakCalculatorsGrid.Items[i].Weight;
-                if (weight.HasValue)
-                    yield return string.Format(CultureInfo.InvariantCulture, "{0:F04}", weight.Value);
-                else
-                    yield return " null ";  // To help values line up
-            }
-        }
-
         public static int CheckDocumentResultsGridValuesRecordedCount;
         public void CheckDocumentResultsGridFieldByName(DocumentGridForm documentGrid, string name, int row, double? expected, string msg = null, bool recordValues = false)
         {
