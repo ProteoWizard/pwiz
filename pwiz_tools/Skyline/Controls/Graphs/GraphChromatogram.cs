@@ -3674,7 +3674,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     foreach (var stream in oldMeasuredResults.ReadStreams)
                     {
-                        stream.CloseStream();
+                        if (!newStreams.Contains(ReferenceValue.Of(stream)))
+                        {
+                            stream.CloseStream();
+                        }
                     }
                 }
             }
