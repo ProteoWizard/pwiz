@@ -29,8 +29,8 @@ using System.Xml.Serialization;
 using pwiz.BiblioSpec;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -249,6 +249,7 @@ namespace pwiz.Skyline.Model.Lib
             IProgressStatus status = new ProgressStatus(
                 string.Format(Resources.ChromatogramLibrary_LoadLibraryFromDatabase_Reading_precursors_from__0_,
                     Name));
+            DateTime start = DateTime.UtcNow;
             try
             {
                 loader.UpdateProgress(status);
@@ -344,6 +345,7 @@ namespace pwiz.Skyline.Model.Lib
                 _sourceFiles = new LibraryFiles(sourceFiles);
                 // ReSharper restore PossibleMultipleEnumeration
                 loader.UpdateProgress(status.Complete());
+                Console.Out.WriteLine("Loaded {0} in {1}", FilePath, DateTime.UtcNow - start);
                 return true;
             }
             catch (Exception e)
@@ -407,6 +409,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 return false;
             }
+
             try
             {
                 ValueCache valueCache = new ValueCache();

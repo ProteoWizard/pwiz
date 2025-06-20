@@ -671,11 +671,10 @@ namespace pwiz.Skyline.Model.Tools
             using (var sha256 = SHA256.Create())
             {
                 byte[] hash = { };
-                string fullPath = Path.GetFullPath(filePath);
 
                 RetryAction(() =>
                 {
-                    using var stream = File.OpenRead($@"\\?\{fullPath}");
+                    using var stream = File.OpenRead(filePath.ToLongPath());
                     hash = sha256.ComputeHash(stream);
                 });
 
@@ -691,11 +690,10 @@ namespace pwiz.Skyline.Model.Tools
             using (var md5 = MD5.Create())
             {
                 byte[] hash = { };
-                string fullPath = Path.GetFullPath(filePath);
 
                 RetryAction(() =>
                 {
-                    using var stream = File.OpenRead($@"\\?\{fullPath}");
+                    using var stream = File.OpenRead(filePath.ToLongPath());
                     hash = md5.ComputeHash(stream);
                 });
 
@@ -710,7 +708,7 @@ namespace pwiz.Skyline.Model.Tools
         {
             try
             {
-                Helpers.TryTwice(act, maxRetries);
+                TryHelper.TryTwice(act, maxRetries);
             }
             catch (IOException)
             {
@@ -820,7 +818,7 @@ namespace pwiz.Skyline.Model.Tools
                         //Sometimes the file is locked by another process so we retry up to 100 times
                         RetryAction(() =>
                         {
-                            using var fileStream = new FileStream($@"\\?\{filesArray[fileCount]}", FileMode.Open);
+                            using var fileStream = new FileStream(filesArray[fileCount].ToLongPath(), FileMode.Open);
                             // Copy file contents to the combined stream
                             fileStream.CopyTo(combinedStream);
 

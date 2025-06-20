@@ -20,11 +20,11 @@
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.IonMobility;
-using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 //
