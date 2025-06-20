@@ -38,6 +38,11 @@ using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding
 {
+    public class CustomizedViewHelper
+    {
+        public ViewEditor CustomizedViewEditor { get; set; }
+        public string CustomizedViewName { get; set; }
+    }
     /// <summary>
     /// Base implementation of the <see cref="IViewContext"/> interface
     /// </summary>
@@ -47,11 +52,17 @@ namespace pwiz.Common.DataBinding
         public const string DefaultViewName = "default";
         public static readonly Color DefaultReadOnlyCellColor = Color.FromArgb(245, 245, 245);
         private IList<RowSourceInfo> _rowSources;
+        public CustomizedViewHelper CustomizedViewForm { get; private set; }
 
         protected AbstractViewContext(DataSchema dataSchema, IEnumerable<RowSourceInfo> rowSources)
         {
             DataSchema = dataSchema;
             RowSources = rowSources;
+        }
+
+        public string CustomizedViewFormName()
+        {
+            return CustomizedViewForm.CustomizedViewName;
         }
 
         public abstract string GetExportDirectory();
@@ -338,30 +349,84 @@ namespace pwiz.Common.DataBinding
             Clipboard.SetDataObject(dataObject);
         }
 
-        protected virtual ViewEditor CreateViewEditor(ViewGroup viewGroup, ViewSpec viewSpec)
+        protected virtual ViewEditor CreateViewEditor(ViewGroup viewGroup, ViewSpec viewSpec, Control parent = null, bool showApply = false)
         {
-            return new ViewEditor(this, GetViewInfo(viewGroup, viewSpec));
-        }
-        
-        public virtual ViewSpec CustomizeView(Control owner, ViewSpec viewSpec, ViewGroup viewPath)
-        {
-            using (var customizeViewForm = CreateViewEditor(viewPath, viewSpec))
-            {
-                if (FormUtil.ShowDialog(owner, customizeViewForm) == DialogResult.Cancel)
-                {
-                    return null;
-                }
-                // Consider: if save fails, reshow CustomizeViewForm?
-                ViewInfo viewInfo = customizeViewForm.ViewInfo;
-                viewInfo = new ViewInfo(viewInfo.ParentColumn, viewInfo.GetViewSpec().SetName(customizeViewForm.ViewName));
-                SaveView(viewPath.Id, viewInfo.GetViewSpec(), viewSpec.Name);
-                return viewInfo.GetViewSpec();
-            }
+            ViewEditor viewEditor = new ViewEditor(this, GetViewInfo(viewGroup, viewSpec), parent, showApply);
+            return viewEditor;
         }
 
-        public ViewSpec NewView(Control owner, ViewGroup viewPath)
+        public virtual ViewSpec CustomizeView(Control owner, ViewSpec viewSpec, ViewGroup viewPath,
+            bool showApply = false)
         {
-            return CustomizeView(owner, GetBlankView(), viewPath);
+            ViewInfo viewInfo = null;
+            
+            if (CustomizedViewForm == null)
+                CustomizedViewForm = new CustomizedViewHelper();
+
+            if (CustomizedViewForm.CustomizedViewEditor == null || CustomizedViewForm.CustomizedViewEditor.IsDisposed)
+            {
+                CustomizedViewForm.CustomizedViewEditor = CreateViewEditor(viewPath, viewSpec, owner, showApply);
+                if (!showApply) //modal
+                    FormUtil.ShowDialog(owner, CustomizedViewForm.CustomizedViewEditor);
+            }
+
+
+
+            if (showApply && !CustomizedViewForm.CustomizedViewEditor.Visible)
+            {
+                //non-modal 
+                FormUtil.Show(owner, CustomizedViewForm.CustomizedViewEditor);
+
+                viewInfo = CustomizedViewForm.CustomizedViewEditor.ViewInfo;
+                CustomizedViewForm.CustomizedViewEditor.BringToFront();
+            }
+            
+            if (!CustomizedViewForm.CustomizedViewName.IsNullOrEmpty())
+                CustomizedViewForm.CustomizedViewEditor.SavedName = CustomizedViewForm.CustomizedViewName;
+            
+            if (viewInfo == null)
+                viewInfo = CustomizedViewForm.CustomizedViewEditor.ViewInfo;
+
+            if (CustomizedViewForm.CustomizedViewEditor.DialogResult == DialogResult.Cancel)
+            {
+                CustomizedViewForm.CustomizedViewEditor.Dispose();
+                CustomizedViewForm = null;
+                if (owner is NavBar) ((NavBar)owner).EditLock = false;
+                return null;
+            }
+            else if ( CustomizedViewForm.CustomizedViewEditor.DialogResult != DialogResult.OK)
+            {                
+                viewInfo = new ViewInfo(viewInfo.ParentColumn, viewInfo.GetViewSpec().SetName(CustomizedViewForm.CustomizedViewEditor.ViewName));
+                SaveView(viewPath.Id, viewInfo.GetViewSpec(), viewSpec.Name);
+                CustomizedViewForm.CustomizedViewName = viewSpec.Name;
+                var newSpec = viewInfo.GetViewSpec();
+                return viewInfo.GetViewSpec();
+            }
+            else if (!showApply && CustomizedViewForm.CustomizedViewEditor.DialogResult == DialogResult.OK)
+            {
+                viewInfo = new ViewInfo(viewInfo.ParentColumn, viewInfo.GetViewSpec().SetName(CustomizedViewForm.CustomizedViewEditor.ViewName));
+                SaveView(viewPath.Id, viewInfo.GetViewSpec(), viewSpec.Name);
+                var newSpec = viewInfo.GetViewSpec();
+                CustomizedViewForm.CustomizedViewEditor.Close();
+                return viewInfo.GetViewSpec();
+            }
+            // Consider: if save fails, reshow CustomizeViewForm?
+            viewInfo = new ViewInfo(viewInfo.ParentColumn,
+                viewInfo.GetViewSpec().SetName(CustomizedViewForm.CustomizedViewEditor.ViewName));
+            SaveView(viewPath.Id, viewInfo.GetViewSpec(), viewSpec.Name);
+            CustomizedViewForm.CustomizedViewName = viewSpec.Name;
+            CustomizedViewForm.CustomizedViewEditor.Dispose();
+            CustomizedViewForm.CustomizedViewEditor= null;
+
+            if (owner is NavBar) ((NavBar)owner).EditLock = false;
+
+            return viewInfo.GetViewSpec();
+
+        }
+
+        public ViewSpec NewView(Control owner, ViewGroup viewPath, bool showApply = false)
+        {
+            return CustomizeView(owner, GetBlankView(), viewPath, showApply);
         }
 
         protected virtual ViewSpec GetBlankView()
