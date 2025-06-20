@@ -24,7 +24,6 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
-using pwiz.CommonMsData;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results.Scoring
