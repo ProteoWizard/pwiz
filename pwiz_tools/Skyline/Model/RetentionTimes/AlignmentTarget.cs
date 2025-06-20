@@ -95,6 +95,12 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         public static PiecewiseLinearMap PerformAlignment(RegressionMethodRT regressionMethod, ICollection<WeightedPoint> points, CancellationToken cancellationToken)
         {
+            if (!points.Select(pt => pt.Y).Distinct().Skip(1).Any()
+                || !points.Select(pt => pt.X).Distinct().Skip(1).Any())
+            {
+                return null;
+            }
+
             switch (regressionMethod)
             {
                 case RegressionMethodRT.linear:

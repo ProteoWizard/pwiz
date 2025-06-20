@@ -558,7 +558,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             // If the name is already set, and there are no measured results or document library
             // then this instance will do.
-            if (Equals(Name, saveName) && MeasuredResults == null && !PeptideSettings.Libraries.HasDocumentLibrary && DocumentRetentionTimes.IsEmpty)
+            if (Equals(Name, saveName) && MeasuredResults == null && !PeptideSettings.Libraries.HasDocumentLibrary && Equals(DocumentRetentionTimes.EMPTY, DocumentRetentionTimes))
                 return this;
 
             // Change the name, and remove results information which is document specific
@@ -2271,7 +2271,7 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteElement(DataSettings);
             if (MeasuredResults != null)
                 writer.WriteElement(MeasuredResults);
-            if (!DocumentRetentionTimes.IsEmpty)
+            if (DocumentRetentionTimes.AnyAlignments())
                 writer.WriteElement(DocumentRetentionTimes);
         }
 

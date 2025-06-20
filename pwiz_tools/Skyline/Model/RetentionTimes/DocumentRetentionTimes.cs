@@ -49,9 +49,14 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 _libraryAlignments = new Dictionary<string, LibraryAlignmentValue>(),
             };
         public const double REFINEMENT_THRESHOLD = .99;
-        public bool IsEmpty
+
+        public bool AnyAlignments()
         {
-            get { return _libraryAlignments.Count == 0 && ResultFileAlignments.IsEmpty;  }
+            return AnyLibraryAlignments() || ResultFileAlignments.GetAlignmentFunctions().Any(kvp => null == kvp.Value);
+        }
+        public bool AnyLibraryAlignments()
+        {
+            return _libraryAlignments.Values.Any(libraryAlignmentValue=>libraryAlignmentValue.Alignments.GetAllAlignmentFunctions().Any());
         }
 
         private static string IsNotLoadedExplained(SrmSettings srmSettings)

@@ -999,6 +999,11 @@ namespace pwiz.Skyline.Model.Lib
                 return null;
             }
 
+            if (!allRetentionTimes.SelectMany(dict => dict.Values).Distinct().Skip(1).Any())
+            {
+                // If all the retention times are the same, then return null
+                return null;
+            }
 
             return allRetentionTimes.SelectMany(dict => dict).GroupBy(kvp => kvp.Key, kvp => kvp.Value)
                 .ToDictionary(group => group.Key, MathNet.Numerics.Statistics.Statistics.Median);
