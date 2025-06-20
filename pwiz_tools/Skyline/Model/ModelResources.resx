@@ -852,7 +852,7 @@ Would you like to continue building this predicted library?</value>
   </data>
 
   <data name="Alphapeptdeep_Warn_limited_modification" xml:space="preserve">
-    <value>Warning: The predicted library might be poor quality, due to the following modifications detected with limited support in the predictive model: 
+    <value>Warning: The predicted library might be of poor quality, due to the following modifications detected with limited support in the default predictive model: 
 
 {0}
 

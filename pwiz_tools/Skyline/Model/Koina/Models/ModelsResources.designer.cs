@@ -70,7 +70,7 @@ namespace pwiz.Skyline.Model.Koina.Models {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Warning: Peptide {0} has modification {1} with Unimod ID of UNIMOD:{2}, which has limited support by the default model in {2} prediction tool. Please consider using a fine-tuned model for your predictions or the predicted spectrum, retention time or collisional cross-section may not be trust-worthy for this peptide!.
+        ///   Looks up a localized string similar to Warning: Peptide {0} has modification {1} with Unimod ID of UNIMOD:{2}, which has limited support by the default model in {3} prediction tool. Please consider using a fine-tuned model for your predictions or the predicted spectrum, retention time or collisional cross-section may not be trust-worthy for this peptide!.
         /// </summary>
         public static string BuildPrecursorTable_Unimod_limited_Modification {
             get {
@@ -79,7 +79,7 @@ namespace pwiz.Skyline.Model.Koina.Models {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Warning: Peptide {0} has modification {1} with Unimod ID of UNIMOD:{2}, which is not yet supported by the {2} prediction tool. This peptide will be skipped!.
+        ///   Looks up a localized string similar to Warning: Peptide {0} has modification {1} with Unimod ID of UNIMOD:{2}, which is not yet supported by the {3} prediction tool. This peptide will be skipped!.
         /// </summary>
         public static string BuildPrecursorTable_Unimod_UnsupportedModification {
             get {

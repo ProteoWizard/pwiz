@@ -30,11 +30,104 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 {
+    public class LibraryBuilderModificationSupport
+    {
+        private IList<ModificationType> _ms2SupportedMods;
+        private IList<ModificationType> _rtSupportedMods;
+        private IList<ModificationType> _ccsSupportedMods;
+        public LibraryBuilderModificationSupport(IList<ModificationType> ms2SupportedList,
+            IList<ModificationType> rtSupportedList, IList<ModificationType> ccsSupportedList)
+        {
+            _ms2SupportedMods = ms2SupportedList;
+            _rtSupportedMods = rtSupportedList;
+            _ccsSupportedMods = ccsSupportedList;
+        }
+
+
+        public bool IsMs2SupportedMod(ModificationType modification)
+        {
+            return _ms2SupportedMods == null || _ms2SupportedMods.FirstOrDefault(x => x.Accession == modification.Accession) != null;
+        }
+        public bool IsRtSupportedMod(ModificationType modification)
+        {
+            return _rtSupportedMods == null || _rtSupportedMods.FirstOrDefault(x => x.Accession == modification.Accession) != null;
+        }
+        public bool IsCcsSupportedMod(ModificationType modification)
+        {
+            return _ccsSupportedMods == null || _ccsSupportedMods.FirstOrDefault(x => x.Accession == modification.Accession) != null;
+        }
+
+        public bool IsMs2SupportedMod(string accession)
+        {
+            return _ms2SupportedMods == null || _ms2SupportedMods.FirstOrDefault(x => x.Accession == accession) != null;
+        }
+        public bool IsRtSupportedMod(string accession)
+        {
+            return _rtSupportedMods == null || _rtSupportedMods.FirstOrDefault(x => x.Accession == accession) != null;
+        }
+        public bool IsCcsSupportedMod(string accession)
+        {
+            return _ccsSupportedMods == null || _ccsSupportedMods.FirstOrDefault(x => x.Accession == accession) != null;
+        }
+
+
+        public bool PeptideHasOnlyMs2SupportedMod(string modifiedPeptide)
+        {
+            string[] peptideParts = modifiedPeptide.Split(new[]{'[',']',':'});
+            bool supported = true;
+            foreach (string part in peptideParts)
+            {
+                if (int.TryParse(part, out int intResult))
+                {
+                    supported = supported && (_ms2SupportedMods == null || _ms2SupportedMods.FirstOrDefault(x => x.Accession.Split(':')[0] == part) != null);
+                }
+            }
+
+            return supported;
+        }
+        public bool PeptideHasOnlyRtSupportedMod(string modifiedPeptide)
+        {
+            string[] peptideParts = modifiedPeptide.Split(new [] { '[', ']', ':' });
+            bool supported = true;
+            foreach (string part in peptideParts)
+            {
+                if (int.TryParse(part, out int intResult))
+                {
+                    supported = supported && (_rtSupportedMods == null || _rtSupportedMods.FirstOrDefault(x => x.Accession.Split(':')[0] == part) != null);
+                }
+            }
+
+            return supported;
+        }
+        public bool PeptideHasOnlyCcsSupportedMod(string modifiedPeptide)
+        {
+            string[] peptideParts = modifiedPeptide.Split(new [] { '[', ']', ':' });
+            bool supported = true;
+            foreach (string part in peptideParts)
+            {
+                if (int.TryParse(part, out int intResult))
+                {
+                    supported = supported && (_ccsSupportedMods == null || _ccsSupportedMods.FirstOrDefault(x => x.Accession.Split(':')[0] == part) != null);
+                }
+            }
+
+            return supported;
+        }
+    }
+
     /// <summary>
-    /// Abstract base class for AlphaPeptDeep and Carafe library builders so they can share code
+    /// Abstract base class for AlphaPeptDeep and Carafe library builders so they can share code. 
     /// </summary>
     public abstract class AbstractDeepLibraryBuilder : ILibraryBuildWarning
     {
+        /// <summary>
+        /// Populate a list of ModificationTypes from those available in UniModData.
+        /// </summary>
+        /// <param name="supportedList">List of modifications.
+        /// - Empty list means *none* will be returned.
+        /// - Null list means *all* in UniModData will be returned.
+        /// </param>
+        /// <returns></returns>
         public static IList<ModificationType> PopulateUniModList(IList<ModificationIndex> supportedList)
         {
             IList<ModificationType> modList = new List<ModificationType>();
@@ -144,9 +237,10 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         private IEnumerable<string> GetTableRows(PeptideDocNode peptide, bool training)
         {
             var modifiedSeq = ModifiedSequence.GetModifiedSequence(Document.Settings, peptide, IsotopeLabelType.light);
-            var (supportedMod, underSupportedMod) =
+            var (ms2SupportedMod, rtSupportedMod, ccsSupportedMod) =
                 ValidateModifications(modifiedSeq, out var mods, out var modSites);
-            if (!supportedMod)
+
+            if (!ms2SupportedMod && !rtSupportedMod && !ccsSupportedMod)
                 yield break;
 
             foreach (var charge in peptide.TransitionGroups
@@ -163,9 +257,19 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         protected abstract string ToolName { get; }
         
         protected abstract IList<ModificationType> ModificationTypes { get; }
-        protected abstract IList<ModificationType> FullSupportModificationTypes { get; }
+        //protected abstract IList<ModificationType> FullSupportModificationTypes { get; }
 
-        protected internal (bool,bool) ValidateModifications(ModifiedSequence modifiedSequence, out string mods, out string modSites)
+        protected abstract LibraryBuilderModificationSupport libraryBuilderModificationSupport { get; }
+
+        /// <summary>
+        /// Returns three booleans, first one is true if ms2 model supports all the mods, second one is true if rt model supports all the mods,
+        /// third is true if ccs model supports all the mods.
+        /// </summary>
+        /// <param name="modifiedSequence">Modified peptide sequence.</param>
+        /// <param name="mods">String representation of mods contained.</param>
+        /// <param name="modSites">String representation of modification sites.</param>
+        /// <returns></returns>
+        protected internal (bool, bool, bool) ValidateModifications(ModifiedSequence modifiedSequence, out string mods, out string modSites)
         {
             var modsBuilder = new StringBuilder();
             var modSitesBuilder = new StringBuilder();
@@ -173,49 +277,76 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             // The list returned below is probably always short enough that determining
             // if it contains a modification would not be greatly improved by caching a set
             // for use here instead of the list.
-            var (noSupportWarningMods, partSupportWarningMods) = GetWarningMods();
+            var (noMs2SupportWarningMods, noRtSupportWarningMods, noCcsSupportWarningMods) = GetWarningMods();
 
-            bool underSupportedModification = false;
-            bool unsupportedModification = false;
-            var setUnderSupported = new HashSet<string>();
-            var setUnsupported = new HashSet<string>();
+            bool ms2SupportedMod = true;
+            bool rtSupportedMod = true;
+            bool ccsSupportedMod = true;
+
+            //var setUnderSupported = new HashSet<string>();
+            var setMs2Unsupported = new HashSet<string>();
+            var setRtUnsupported = new HashSet<string>();
+            var setCcsUnsupported = new HashSet<string>();
+
             for (var i = 0; i < modifiedSequence.ExplicitMods.Count; i++)
             {
                 var mod = modifiedSequence.ExplicitMods[i];
                 if (mod.UnimodId == null)
                 {
-                    if (!setUnsupported.Contains(mod.Name))
+                    if (!setMs2Unsupported.Contains(mod.Name))
                     {
                         var msg = string.Format(ModelsResources.BuildPrecursorTable_UnsupportedModification, modifiedSequence, mod.Name, ToolName);
                         Messages.WriteAsyncUserMessage(msg);
-                        unsupportedModification = true;
-                        setUnsupported.Add(mod.Name);
+                        ms2SupportedMod = false;
+                        rtSupportedMod = false;
+                        ccsSupportedMod = false;
+                        setMs2Unsupported.Add(mod.Name);
                     }
                     continue;
                 }
 
                 var unimodIdWithName = mod.UnimodIdWithName;
-                if (noSupportWarningMods.Contains(mod.Name))
+                if (noMs2SupportWarningMods.Contains(mod.Name))
                 {
-                    if (!setUnsupported.Contains(mod.Name))
-                    {
-                        var msg = string.Format(ModelsResources.BuildPrecursorTable_Unimod_UnsupportedModification, modifiedSequence, mod.Name, unimodIdWithName, ToolName);
-                        Messages.WriteAsyncUserMessage(msg);
-                        unsupportedModification = true;
-                        setUnsupported.Add(mod.Name);
-                    }
-                    continue;
-                }
-
-                unimodIdWithName = mod.UnimodIdWithName;
-                if (partSupportWarningMods.Contains(mod.Name))
-                {
-                    if (!setUnderSupported.Contains(mod.Name))
+                    if (!setMs2Unsupported.Contains(mod.Name))
                     {
                         var msg = string.Format(ModelsResources.BuildPrecursorTable_Unimod_limited_Modification, modifiedSequence, mod.Name, unimodIdWithName, ToolName);
                         Messages.WriteAsyncUserMessage(msg);
-                        underSupportedModification = true;
-                        setUnderSupported.Add(mod.Name);
+                        ms2SupportedMod = false;
+                        rtSupportedMod = false;
+                        ccsSupportedMod = false;
+                        setMs2Unsupported.Add(mod.Name);
+                    }
+
+                    continue;
+                }
+
+                bool msgGenerated = false;
+                unimodIdWithName = mod.UnimodIdWithName;
+                if (noRtSupportWarningMods.Contains(mod.Name))
+                {
+                    if (!setRtUnsupported.Contains(mod.Name))
+                    {
+                        var msg = string.Format(ModelsResources.BuildPrecursorTable_Unimod_limited_Modification, modifiedSequence, mod.Name, unimodIdWithName, ToolName);
+                        Messages.WriteAsyncUserMessage(msg);
+                        rtSupportedMod = false;
+                        setRtUnsupported.Add(mod.Name);
+                        msgGenerated = true;
+                    }
+                    
+                }
+                
+                if (noCcsSupportWarningMods.Contains(mod.Name))
+                {
+                    if (!setCcsUnsupported.Contains(mod.Name))
+                    {
+                        if (!msgGenerated)
+                        {
+                            var msg = string.Format(ModelsResources.BuildPrecursorTable_Unimod_limited_Modification, modifiedSequence, mod.Name, unimodIdWithName, ToolName);
+                            Messages.WriteAsyncUserMessage(msg);
+                        }
+                        ccsSupportedMod = false;
+                        setCcsUnsupported.Add(mod.Name);
                     }
                 }
 
@@ -234,7 +365,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             mods = modsBuilder.ToString();
             modSites = modSitesBuilder.ToString();
             
-            return (!unsupportedModification, underSupportedModification);
+            return (ms2SupportedMod, rtSupportedMod, ccsSupportedMod);
         }
 
         protected virtual string GetModName(ModificationType mod, string unmodifiedSequence, int modIndexAA)
@@ -244,30 +375,39 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
         public string GetWarning()
         {
-            var (noSupportWarningMods, partSupportWarningMods) = GetWarningMods();
-            if (noSupportWarningMods.Count == 0 && partSupportWarningMods.Count == 0)
+            var (noMs2SupportWarningMods, noRtSupportWarningMods, noCcsSupportWarningMods) = GetWarningMods();
+            if (noMs2SupportWarningMods.Count == 0 && noRtSupportWarningMods.Count == 0 && noCcsSupportWarningMods.Count == 0)
                 return null;
 
             string warningModString;
-            if (partSupportWarningMods.Count == 0)
+            if (noMs2SupportWarningMods.Count > 0)
             {
-                warningModString = string.Join(Environment.NewLine, noSupportWarningMods.Select(w => w.Indent(1)));
+                warningModString = string.Join(Environment.NewLine, noMs2SupportWarningMods.Select(w => w.Indent(1)));
                 return string.Format(ModelResources.Alphapeptdeep_Warn_unknown_modification,
                     warningModString);
             }
-            
-            warningModString = string.Join(Environment.NewLine, partSupportWarningMods.Select(w => w.Indent(1)));
+
+            if (noRtSupportWarningMods.Count > 0)
+            {
+                warningModString = string.Join(Environment.NewLine, noRtSupportWarningMods.Select(w => w.Indent(1)));
+                return string.Format(ModelResources.Alphapeptdeep_Warn_limited_modification,
+                    warningModString);
+            }
+            warningModString = string.Join(Environment.NewLine, noCcsSupportWarningMods.Select(w => w.Indent(1)));
             return string.Format(ModelResources.Alphapeptdeep_Warn_limited_modification,
                 warningModString);
 
 
         }
         
-        public (IList<string>,IList<string>) GetWarningMods()
+        public (IList<string>,IList<string>,IList<string>) GetWarningMods()
         {
     
-            var noSupportResultList = new List<string>();
-            var partSupportResultList = new List<string>();
+            var noMs2SupportResultList = new List<string>();
+            var noRtSupportResultList = new List<string>();
+            var noCcsSupportResultList = new List<string>();
+
+           // var partSupportResultList = new List<string>();
 
             // Build precursor table row by row
             foreach (var peptide in Document.Peptides)
@@ -279,44 +419,59 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                     var mod = modifiedSequence.ExplicitMods[i];
                     if (!mod.UnimodId.HasValue)
                     {
-                        var haveMod = noSupportResultList.FirstOrDefault(m => m == mod.Name);
+                        var haveMod = noMs2SupportResultList.FirstOrDefault(m => m == mod.Name);
                         if (haveMod == null)
                         {
-                            noSupportResultList.Add(mod.Name);
+                            noMs2SupportResultList.Add(mod.Name);
                         }
 
-                        haveMod = partSupportResultList.FirstOrDefault(m => m == mod.Name);
+                        haveMod = noRtSupportResultList.FirstOrDefault(m => m == mod.Name);
                         if (haveMod == null)
                         {
-                            partSupportResultList.Add(mod.Name);
+                            noRtSupportResultList.Add(mod.Name);
+                        }
+
+                        haveMod = noCcsSupportResultList.FirstOrDefault(m => m == mod.Name);
+                        if (haveMod == null)
+                        {
+                            noCcsSupportResultList.Add(mod.Name);
                         }
                     }
 
                     var unimodIdWithName = mod.UnimodIdWithName;
-                    var modNames = ModificationTypes.Where(m => m.Accession == unimodIdWithName).ToArray();
-                    if (modNames.Length == 0)
+
+                    if (!libraryBuilderModificationSupport.IsMs2SupportedMod(unimodIdWithName))
                     {
-                        var haveMod = noSupportResultList.FirstOrDefault(m => m == mod.Name);
+                        var haveMod = noMs2SupportResultList.FirstOrDefault(m => m == mod.Name);
                         if (haveMod == null)
                         {
-                            noSupportResultList.Add(mod.Name);
+                            noMs2SupportResultList.Add(mod.Name);
                         }
                     }
-                    
-                    modNames = FullSupportModificationTypes.Where(m => m.Accession == unimodIdWithName).ToArray();
-                    if (modNames.Length == 0)
+                    if (!libraryBuilderModificationSupport.IsRtSupportedMod(unimodIdWithName))
                     {
-                        var haveMod = partSupportResultList.FirstOrDefault(m => m == mod.Name);
+                        var haveMod = noRtSupportResultList.FirstOrDefault(m => m == mod.Name);
                         if (haveMod == null)
                         {
-                            partSupportResultList.Add(mod.Name);
+                            noRtSupportResultList.Add(mod.Name);
                         }
                     }
+                    if (!libraryBuilderModificationSupport.IsCcsSupportedMod(unimodIdWithName))
+                    {
+                        var haveMod = noCcsSupportResultList.FirstOrDefault(m => m == mod.Name);
+                        if (haveMod == null)
+                        {
+                            noCcsSupportResultList.Add(mod.Name);
+                        }
+                    }
+ 
                 }
             }
 
             
-            return (noSupportResultList, partSupportResultList);
+            return (noMs2SupportResultList, noRtSupportResultList, noCcsSupportResultList);
         }
     }
+
+
 }

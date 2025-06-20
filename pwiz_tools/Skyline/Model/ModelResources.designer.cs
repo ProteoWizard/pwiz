@@ -213,7 +213,7 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Warning: The predicted library might be poor quality, due to the following modifications detected with limited support in the predictive model: 
+        ///   Looks up a localized string similar to Warning: The predicted library might be of poor quality, due to the following modifications detected with limited support in the default predictive model: 
         ///
         ///{0}
         ///
