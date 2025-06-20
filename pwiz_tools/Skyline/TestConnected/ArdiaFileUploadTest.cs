@@ -1,0 +1,226 @@
+﻿/*
+ * Copyright 2025 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
+using System.Net;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CommonMsData.RemoteApi;
+using pwiz.CommonMsData.RemoteApi.Ardia;
+using pwiz.Skyline.Alerts;
+using pwiz.Skyline.FileUI;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.ToolsUI;
+using pwiz.SkylineTestUtil;
+using static pwiz.Skyline.FileUI.PublishDocumentDlgArdia;
+using static pwiz.SkylineTestUtil.ArdiaTestUtil;
+
+namespace pwiz.SkylineTestConnected
+{
+    [TestClass]
+    public class ArdiaFileUploadTest : AbstractFunctionalTestEx
+    {
+        private const string TEST_RESULTS_DIRECTORY_NAME = @"ZZZ-Skyline";
+
+        [TestMethod]
+        public void TestArdiaFileUpload()
+        {
+            if (!EnableArdiaTests)
+            {   
+                Console.Error.WriteLine("NOTE: skipping Ardia test because username/password for Ardia is not configured in environment variables");
+                return;
+            }
+
+            TestFilesZip = @"TestConnected\ArdiaFileUploadTest.zip";
+
+            RunFunctionalTest();
+        }
+
+        // TODO: verify file successfully uploaded
+        // TODO: is there an API to verify Ardia account has permissions required to run test? Ex: upload files, delete files
+        // TODO: put test results in directory with datestamp so tests runs are independent of each other
+        protected override void DoTest()
+        {
+            Assert.IsFalse(SkylineWindow.HasRegisteredArdiaAccount);
+            Assert.AreEqual(0, Settings.Default.RemoteAccountList.Count);
+
+            // Test setup - configure Ardia account
+            var account = GetTestAccount(AccountType.SingleRole);
+
+            OpenDocument("Basic.sky");
+
+            RegisterRemoteServer(account);
+            Assert.IsTrue(SkylineWindow.HasRegisteredArdiaAccount);
+            Assert.AreEqual(1, Settings.Default.RemoteAccountList.Count);
+
+            account = (ArdiaAccount)Settings.Default.RemoteAccountList[0];
+            AssertEx.IsTrue(!string.IsNullOrEmpty(account.Token));
+
+            // Test scenarios 
+            TestGetFolderPath();
+            TestValidateFolderName();
+            TestAccountHasCredentials(account);
+
+            // Test scenarios making remote API calls
+            // TODO: oof. Would be nice to have an abstraction dealing with paths
+            var setupClient = ArdiaClient.Create(account);
+
+            var folderName = $@"TestResults-{DateTime.Now:yyyy-MM-dd_HH-mm-ss}";
+            var parentPath = $@"/{TEST_RESULTS_DIRECTORY_NAME}";
+            var testResultsPath = $@"{parentPath}/{folderName}";
+
+            try
+            {
+                // Create a folder holding results from this test run
+                setupClient.CreateFolder(parentPath, folderName, null, out var error);
+                Assert.IsNull(error);
+
+                Test_ArdiaClient_GetFolders(account);
+                Test_ArdiaClient_CreateFolder(account, testResultsPath);
+
+                TestSuccessfulUpload(account, new [] { TEST_RESULTS_DIRECTORY_NAME, folderName});
+            }
+            finally
+            {
+                // TODO: keep directory if 1+ tests fail
+                // Delete directory for this test run - disabled for now
+                // setupClient.DeleteFolder(testResultsPath);
+            }
+        }
+
+        private static void TestAccountHasCredentials(ArdiaAccount account)
+        {
+            var ardiaClient = ArdiaClient.Create(account);
+
+            // Verify values needed to authenticate this account are available. These
+            // asserts leak implementation details but are useful to avoid chasing 
+            // test failures.
+            Assert.IsNotNull(ArdiaCredentialHelper.GetApplicationCode(account));
+            Assert.IsNotNull(ArdiaCredentialHelper.GetToken(account));
+
+            Assert.IsTrue(ardiaClient.HasCredentials);
+        }
+
+        private static void TestValidateFolderName()
+        {
+            var result = ValidateFolderName(@"New Folder");
+            Assert.AreEqual(ValidateInputResult.valid, result);
+
+            result = ValidateFolderName(@"A");
+            Assert.AreEqual(ValidateInputResult.valid, result);
+
+            result = ValidateFolderName(@"ABCDEFGHIJKLMNOPQURSTUVWXYZabcedefhijklmnopqurstuvwxyz0123456789 -_");
+            Assert.AreEqual(ValidateInputResult.valid, result);
+
+            result = ValidateFolderName(@"-----");
+            Assert.AreEqual(ValidateInputResult.valid, result);
+            
+            result = ValidateFolderName(@"_____");
+            Assert.AreEqual(ValidateInputResult.valid, result);
+
+            result = ValidateFolderName(@"    ");
+            Assert.AreEqual(ValidateInputResult.invalid_blank, result);
+
+            result = ValidateFolderName(@" ");
+            Assert.AreEqual(ValidateInputResult.invalid_blank, result);
+
+            result = ValidateFolderName(@"New Folder <");
+            Assert.AreEqual(ValidateInputResult.invalid_character, result);
+
+            result = ValidateFolderName(@"New :: Folder");
+            Assert.AreEqual(ValidateInputResult.invalid_character, result);
+
+            result = ValidateFolderName(@"*New? Folder");
+            Assert.AreEqual(ValidateInputResult.invalid_character, result);
+        }
+
+        private static void TestGetFolderPath()
+        {
+            var publishDlg = ShowDialog<PublishDocumentDlgArdia>(() => SkylineWindow.PublishToArdia());
+            var pathForTreeNode = publishDlg.GetFolderPath(@"ardia:server\Folder2\Folder3\Folder4\");
+
+            Assert.AreEqual(@"/Folder2/Folder3/Folder4", pathForTreeNode);
+
+            RunUI(() => publishDlg.Close());
+            WaitForClosedForm(publishDlg);
+        }
+
+        private static void Test_ArdiaClient_GetFolders(ArdiaAccount account)
+        {
+            var ardiaClient = ArdiaClient.Create(account);
+
+            // Successful if no exception thrown
+            ardiaClient.GetFolders(account.GetRootArdiaUrl(), null);
+        }
+
+        // TODO: should ArdiaClient return a non-null object when request successful?
+        private static void Test_ArdiaClient_CreateFolder(ArdiaAccount account, string path)
+        {
+            var ardiaClient = ArdiaClient.Create(account);
+
+            ardiaClient.CreateFolder(path, @"NewFolder01", null, out var serverError);
+            Assert.IsNull(serverError);
+
+            // Error - attempt to create folder with same name
+            ardiaClient.CreateFolder(path, @"NewFolder01", null, out serverError);
+            Assert.IsNotNull(serverError);
+            Assert.AreEqual(HttpStatusCode.Conflict, serverError.StatusCode);
+
+            ardiaClient.DeleteFolder(@$"{path}/NewFolder01");
+        }
+
+        private static void TestSuccessfulUpload(ArdiaAccount account, string[] path) 
+        {
+            var publishDlg = ShowDialog<PublishDocumentDlgArdia>(() => SkylineWindow.PublishToArdia());
+
+            WaitForConditionUI(() => publishDlg.IsLoaded);
+
+            RunUI(() => publishDlg.FoldersTree.Nodes[0].Expand());
+
+            RunUI(() =>
+            {
+                var treeNode = publishDlg.FindByName(publishDlg.FoldersTree.Nodes[0].Nodes, path[0]);
+                Assert.IsNotNull(treeNode, @"Did not find TreeNode with text '{path[0]}'.");
+                treeNode.Expand();
+            });
+
+            RunUI(() => publishDlg.SelectItem(path[1]));
+
+            var shareTypeDlg = ShowDialog<ShareTypeDlg>(publishDlg.OkDialog);
+            var docUploadedDlg = ShowDialog<MessageDlg>(shareTypeDlg.OkDialog);
+            OkDialog(docUploadedDlg, docUploadedDlg.ClickOk);
+
+            Assert.AreEqual(@$"/{path[0]}/{path[1]}", publishDlg.DestinationPath);
+        }
+
+        private static void RegisterRemoteServer(ArdiaAccount account) 
+        {
+            Assert.IsNotNull(account);
+
+            var optionsDlg = ShowDialog<ToolOptionsUI>(() => SkylineWindow.ShowToolOptionsUI(ToolOptionsUI.TABS.Remote));
+            var editRemoteAccountListDlg = ShowDialog<EditListDlg<SettingsListBase<RemoteAccount>, RemoteAccount>>(() => optionsDlg.EditRemoteAccounts());
+
+            var addAccountDlg = ShowDialog<EditRemoteAccountDlg>(() => editRemoteAccountListDlg.AddItem());
+            RunUI(() => addAccountDlg.SetRemoteAccount(account));
+
+            var testSuccessfulDlg = ShowDialog<MessageDlg>(() => addAccountDlg.TestSettings());
+            OkDialog(testSuccessfulDlg, testSuccessfulDlg.OkDialog);
+            OkDialog(addAccountDlg, addAccountDlg.OkDialog);
+            OkDialog(editRemoteAccountListDlg, editRemoteAccountListDlg.OkDialog);
+            OkDialog(optionsDlg, optionsDlg.OkDialog);
+        }
+    }
+}

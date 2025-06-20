@@ -33,6 +33,8 @@ using pwiz.PanoramaClient;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
+using pwiz.CommonMsData.RemoteApi;
+using pwiz.CommonMsData.RemoteApi.Ardia;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -79,6 +81,9 @@ namespace pwiz.Skyline
             ToolStripMenuItem menu = fileToolStripMenuItem;
             List<string> mruList = Settings.Default.MruList;
             string curDir = Settings.Default.ActiveDirectory;
+
+            // If an ArdiaAccount is registered, include an "Upload to..." menu item
+            ardiaPublishMenuItem.Visible = HasRegisteredArdiaAccount;
 
             int start = menu.DropDownItems.IndexOf(mruBeforeToolStripSeparator) + 1;
             while (!ReferenceEquals(menu.DropDownItems[start], mruAfterToolStripSeparator))
@@ -3495,6 +3500,61 @@ namespace pwiz.Skyline
             return true;
         }
 
+        public bool HasRegisteredArdiaAccount =>
+            Settings.Default.RemoteAccountList.Any(account => account.AccountType == RemoteAccountType.ARDIA);
+
+        private void ardiaPublishMenuItem_Click(object sender, EventArgs e)
+        {
+            PublishToArdia();
+        }
+
+        // BUG: Removing RemoteAccounts using EditRemoteAccountsDlg may unexpectedly leave registered Ardia accounts intact?
+        // CONSIDER: revisit testing credentials for an Ardia account and prompting for login if needed
+        // CONSIDER: do un-saved Skyline documents need to be saved before being published?
+        public void PublishToArdia()
+        {
+            Assume.IsTrue(HasRegisteredArdiaAccount, @"Expected to find a registered Ardia account but found none");
+
+            var ardiaAccounts = Settings.Default.RemoteAccountList.GetAccountsOfType(RemoteAccountType.ARDIA).Cast<ArdiaAccount>().ToList();
+
+            string fileName = null;
+            try
+            {
+                using var publishDlg = new PublishDocumentDlgArdia(this, ardiaAccounts, DocumentFilePath, GetFileFormatOnDisk());
+                if (publishDlg.ShowDialog(this) == DialogResult.Cancel)
+                {
+                    return;
+                }
+
+                var cacheVersion = SkylineVersion.SupportedForSharing().FirstOrDefault();
+                using var shareTypeDlg = new ShareTypeDlg(Document, DocumentFilePath, GetFileFormatOnDisk(), cacheVersion);
+                if (shareTypeDlg.ShowDialog(this) == DialogResult.Cancel)
+                {
+                    return;
+                }
+
+                fileName = publishDlg.FileName;
+                var shareType = shareTypeDlg.ShareType;
+
+                if (ShareDocument(fileName, shareType))
+                {
+                    publishDlg.Upload(this);
+                }
+            }
+            catch (ArdiaServerException e)
+            {
+                MessageDlg.ShowWithException(this, e.Message, e);
+            }
+            finally
+            {
+                // Cleanup: remove the archive if it exists regardless of whether the upload was successful
+                if (fileName != null && File.Exists(fileName))
+                {
+                    File.Delete(fileName);
+                }
+            }
+        }
+
         private void publishMenuItem_Click(object sender, EventArgs e)
         {
             ShowPublishDlg(null);
@@ -3627,7 +3687,7 @@ namespace pwiz.Skyline
             var showPublishDocDlg = true;
 
             // if the document has a saved uri prompt user for action, check servers, and permissions, then publish
-            // if something fails in the attempt to publish to the saved uri will bring up the usual PublishDocumentDlg
+            // if something fails in the attempt to publish to the saved uri will bring up the usual PublishDocumentDlgBase
             if (panoramaSavedUri != null && !string.IsNullOrEmpty(panoramaSavedUri.ToString()))
             {
                 showPublishDocDlg = !PublishToSavedUri(publishClient, panoramaSavedUri, fileName, servers);
@@ -3636,7 +3696,7 @@ namespace pwiz.Skyline
             // if no uri was saved to publish to or user chose to view the dialog show the dialog
             if (showPublishDocDlg)
             {
-                using (var publishDocumentDlg = new PublishDocumentDlg(this, servers, fileName, GetFileFormatOnDisk()))
+                using (var publishDocumentDlg = new PublishDocumentDlgPanorama(this, servers, fileName, GetFileFormatOnDisk()))
                 {
                     publishDocumentDlg.PanoramaPublishClient = publishClient;
                     if (publishDocumentDlg.ShowDialog(this) == DialogResult.OK)
@@ -3668,7 +3728,7 @@ namespace pwiz.Skyline
                 return false;
 
             // If we are given a test publish client use that, otherwise create the default client.
-            publishClient ??= PublishDocumentDlg.GetDefaultPublishClient(server);
+            publishClient ??= PublishDocumentDlgPanorama.GetDefaultPublishClient(server);
 
             JToken folders;
             var folderPath = panoramaSavedUri.AbsolutePath;
