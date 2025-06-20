@@ -3509,7 +3509,7 @@ namespace pwiz.Skyline
         }
 
         // BUG: Removing RemoteAccounts using EditRemoteAccountsDlg may unexpectedly leave registered Ardia accounts intact?
-        // CONSIDER: when should an upload be split into multiple pieces?
+        // CONSIDER: revisit testing credentials for an Ardia account and prompting for login if needed
         // CONSIDER: do un-saved Skyline documents need to be saved before being published?
         public void PublishToArdia()
         {
@@ -3517,10 +3517,7 @@ namespace pwiz.Skyline
 
             var ardiaAccounts = Settings.Default.RemoteAccountList.GetAccountsOfType(RemoteAccountType.ARDIA).Cast<ArdiaAccount>().ToList();
 
-            // CONSIDER: bootstrap Ardia account(s) to avoid flashing a "logging in" dialog if Skyline already has a valid API token.
-            // if (!ardiaAccount.HasToken())
-            //     ardiaAccount.GetAuthenticatedHttpClient();
-
+            string fileName = null;
             try
             {
                 using var publishDlg = new PublishDocumentDlgArdia(this, ardiaAccounts, DocumentFilePath, GetFileFormatOnDisk());
@@ -3536,20 +3533,25 @@ namespace pwiz.Skyline
                     return;
                 }
 
-                var fileName = publishDlg.FileName;
+                fileName = publishDlg.FileName;
                 var shareType = shareTypeDlg.ShareType;
 
-                // CONSIDER: remove local .sky.zip file?
-                if (!ShareDocument(fileName, shareType))
+                if (ShareDocument(fileName, shareType))
                 {
-                    return;
+                    publishDlg.Upload(this);
                 }
-
-                publishDlg.Upload(this);
             }
             catch (ArdiaServerException e)
             {
                 MessageDlg.ShowWithException(this, e.Message, e);
+            }
+            finally
+            {
+                // Cleanup: remove the archive if it exists regardless of whether the upload was successful
+                if (fileName != null && File.Exists(fileName))
+                {
+                    File.Delete(fileName);
+                }
             }
         }
 

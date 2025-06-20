@@ -23,6 +23,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.Collections;
@@ -121,19 +122,29 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
                     serverError = null;
                     return true;
                 }
-                else {
+                else
+                {
                     serverError = ArdiaError.CreateFromResponse(statusCode, responseBody);
                     return false;
                 }
+            }
+            // Narrowly handle issues related to network, timeout, cert, HTTP
+            catch (Exception e) 
+                when (e is HttpRequestException || 
+                      e is TaskCanceledException { CancellationToken: { IsCancellationRequested: true } })
+            {
+                serverError = ArdiaError.CreateFromResponse(statusCode, responseBody);
+                return false;
             }
             catch (Exception e)
             {
                 var uri = UriFromParts(ServerUri, PATH_CREATE_FOLDER);
                 serverError = ArdiaError.CreateFromResponse(statusCode, responseBody);
 
-                var message = ErrorMessageBuilder
-                    .Create(string.Format(ArdiaResources.CreateFolder_Error, parentFolderPath, folderName)).Uri(uri)
-                    .ServerError(serverError).ToString();
+                var message = ErrorMessageBuilder.
+                    Create(string.Format(ArdiaResources.CreateFolder_Error, parentFolderPath, folderName)).
+                    Uri(uri).
+                    ServerError(serverError).ToString();
 
                 throw ArdiaServerException.Create(message, uri, serverError, e);
             }
@@ -146,7 +157,6 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         /// code (400 Bad Request). <see cref="HttpWebRequest"/> does not automatically set charset and works correctly.
         /// </summary>
         /// <param name="folderPath">fully qualified path of the folder to delete</param>
-        // TODO: report the Content-Type charset issue to Ardia
         // TODO: is there a way to make this "test only" without just moving it into the test?
         public void DeleteFolder(string folderPath)
         {
@@ -266,7 +276,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             }
         }
 
-        private static void StageFileOnAws(string zipFilePath, string presignedUrl, out int uploadBytes)
+        private static void StageFileOnAws(string zipFilePath, string presignedUrl, out long uploadBytes)
         {
             HttpStatusCode? statusCode = null;
             var responseBody = string.Empty;
@@ -275,20 +285,21 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             {
                 var awsUri = new Uri(presignedUrl);
 
-                var awsHttpClient = new HttpClient();
+                using var awsHttpClient = new HttpClient();
                 var awsRequest = new HttpRequestMessage(HttpMethod.Put, awsUri);
 
-                var bytes = File.ReadAllBytes(zipFilePath);
-                uploadBytes = bytes.Length;
-
-                var contentBytes = new ByteArrayContent(bytes);
-                awsRequest.Content = contentBytes;
+                using var fileStream = File.OpenRead(zipFilePath);
+                using var progressStream = new ProgressStream(fileStream);
+                using var fileContent = new StreamContent(progressStream);
+                awsRequest.Content = fileContent;
 
                 var response = awsHttpClient.SendAsync(awsRequest).Result;
                 statusCode = response.StatusCode;
                 responseBody = response.Content.ReadAsStringAsync().Result;
 
                 response.EnsureSuccessStatusCode();
+
+                uploadBytes = progressStream.Position;
             }
             catch (Exception e)
             {
@@ -299,7 +310,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             }
         }
 
-        private void CreateDocument(string destinationFolderPath, string destinationFileName, string uploadId, int uploadBytes, out Uri uploadedUri)
+        private void CreateDocument(string destinationFolderPath, string destinationFileName, string uploadId, long uploadBytes, out Uri uploadedUri)
         {
             HttpStatusCode? statusCode = null;
             var responseBody = string.Empty;

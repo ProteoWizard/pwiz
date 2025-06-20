@@ -27,7 +27,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         public string UploadId { get; set; }
         public string FileName { get; set; }
         public string FilePath { get; set; }
-        public int Size { get; set; }
+        public long Size { get; set; }
     }
 
     public class DocumentResponse

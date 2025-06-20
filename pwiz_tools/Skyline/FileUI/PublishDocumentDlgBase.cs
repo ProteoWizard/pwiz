@@ -123,14 +123,18 @@ namespace pwiz.Skyline.FileUI
 
         internal string GetFolderPath(TreeNode folderNode)
         {
-            string nodePath = folderNode.FullPath;
+            return GetFolderPath(folderNode.FullPath);
+        }
+
+        public virtual string GetFolderPath(string nodePath) 
+        {
             // ReSharper disable LocalizableElement
-            string[] folderPathSegments = nodePath.Split(new[] {"\\"}, StringSplitOptions.RemoveEmptyEntries);
+            var folderPathSegments = nodePath.Split(new[] {"\\"}, StringSplitOptions.RemoveEmptyEntries);
             // ReSharper enable LocalizableElement
 
-            string folderPath = string.Empty;
-            // First segment is server name. 
-            for (int i = 1; i < folderPathSegments.Length; i++)
+            var folderPath = string.Empty;
+            // First segment is server name, so skip it
+            for (var i = 1; i < folderPathSegments.Length; i++)
             {
                 folderPath += folderPathSegments[i] + @"/";
             }

@@ -31,6 +31,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using TreeNode = System.Windows.Forms.TreeNode;
 
 namespace pwiz.Skyline.FileUI
 {
@@ -59,19 +60,26 @@ namespace pwiz.Skyline.FileUI
         /// <summary>
         /// Used in tests.
         /// </summary>
-        public bool RemoteCallPending { get; private set; }
-        /// <summary>
-        /// Used in tests.
-        /// </summary>
         public TreeView FoldersTree => treeViewFolders;
         /// <summary>
         /// Used in tests to exercise the UI without uploading a document.
         /// </summary>
         public bool SkipUpload { get; set; }
 
+        /// <summary>
+        /// Used in tests to find a <see cref="TreeNode"/> by name.
+        /// </summary>
+        /// <param name="nodes">Tree nodes to search</param>
+        /// <param name="name">Name of node to find</param>
+        /// <returns>TreeNode with matching name, null otherwise</returns>
+        public TreeNode FindByName(TreeNodeCollection nodes, string name)
+        {
+            return nodes.Cast<TreeNode>().FirstOrDefault(node => string.Equals(node.Text, name, StringComparison.CurrentCulture));
+        }
+
         internal override void HandleDialogOk()
         {
-            DestinationPath = DestinationPathFor(treeViewFolders.SelectedNode);
+            DestinationPath = GetFolderPath(treeViewFolders.SelectedNode);
 
             DialogResult = DialogResult.OK;
         }
@@ -112,6 +120,9 @@ namespace pwiz.Skyline.FileUI
             });
         }
 
+        // TODO: if previously selected item is unavailable, set focus to top node (better than
+        //       current behavior which picks the topmost visible node). Maybe using a callback
+        //       from TreeViewStateRestorer?
         internal override string LoadExpansionAndSelection()
         {
             return Settings.Default.ArdiaServerExpansion;
@@ -122,17 +133,11 @@ namespace pwiz.Skyline.FileUI
             Settings.Default.ArdiaServerExpansion = ServerTreeStateRestorer.GetPersistentString();
         }
 
-        private void TreeViewFolders_AfterSelect(object sender, TreeViewEventArgs treeViewEventArgs)
-        {
-            createRemoteFolder.Enabled = treeViewFolders.SelectedNode != null;
-        }
-
-        // TODO: error handling?
-        // TODO: how does LongWaitDlg behave when network takes a long time to respond? How does that affect UI?
         private void ExpandFolder(TreeNode parentTreeNode)
         {
-            // Short-circuit if contents of this folder are already loaded. This means items added on the server
-            // after this Dlg opens will not appear until the Dlg closes and re-opens.
+            // Short-circuit if contents of this folder are already loaded in the tree. This saves
+            // making the UI more responsive at the expense of missing any items added on the server
+            // since the dialog opened.
             if (((ArdiaFolderInfo)parentTreeNode.Tag).RemoteContentsLoaded)
             {
                 return;
@@ -141,39 +146,21 @@ namespace pwiz.Skyline.FileUI
             var ardiaAccount = ArdiaAccountForTreeNode(parentTreeNode);
             var parentUrl = (ArdiaUrl)((ArdiaFolderInfo)parentTreeNode.Tag)?.RemoteUrl;
 
-            try
+            IList<RemoteItem> remoteItems = new List<RemoteItem>();
+
+            using var waitDlg = new LongWaitDlg();
+            waitDlg.Text = string.Format(ArdiaResources.OpenFolder_Title, parentTreeNode.Text);
+            waitDlg.PerformWork(this, 1000, progressMonitor =>
             {
-                treeViewFolders.Cursor = Cursors.WaitCursor;
+                var ardiaClient = ArdiaClient.Create(ardiaAccount);
+                remoteItems = ardiaClient.GetFolders(parentUrl, progressMonitor);
+            });
 
-                IList<RemoteItem> remoteItems = new List<RemoteItem>();
+            AddItemsToFolder(remoteItems, parentTreeNode);
 
-                using var waitDlg = new LongWaitDlg();
-                waitDlg.Text = string.Format(ArdiaResources.OpenFolder_Title, parentTreeNode.Text);
-                waitDlg.PerformWork(this, 1000, progressMonitor =>
-                {
-                    RemoteCallPending = true;
-
-                    var ardiaClient = ArdiaClient.Create(ardiaAccount);
-                    remoteItems = ardiaClient.GetFolders(parentUrl, progressMonitor);
-
-                    RemoteCallPending = false;
-                });
-
-                AddItemsToFolder(remoteItems, parentTreeNode);
-
-                ((ArdiaFolderInfo)parentTreeNode.Tag)!.RemoteContentsLoaded = true;
-            }
-            finally
-            {
-                treeViewFolders.Cursor = Cursors.Default;
-            }
+            ((ArdiaFolderInfo)parentTreeNode.Tag)!.RemoteContentsLoaded = true;
         }
 
-        // TODO: does Ardia API include whether the current user has permission to upload to a given directory?
-        // TODO: can Ardia API include whether a given directory includes 1+ folders? The "hasChildren" flag
-        //       tells Skyline that a folder has child nodes - but is not enough information to tell whether
-        //       1 or more children are folders without making N additional API calls. So, Skyline every
-        //       folder can be expanded even if expanding adds no child nodes. 
         private void AddItemsToFolder(IList<RemoteItem> remoteItems, TreeNode parentTreeNode)
         {
             // Before expanding, remove the placeholder node to avoid showing a tree node with an empty label.
@@ -216,7 +203,7 @@ namespace pwiz.Skyline.FileUI
             {
                 using var waitDlg = new LongWaitDlg();
                 waitDlg.Text = UtilResources.PublishDocumentDlg_UploadSharedZipFile_Uploading_File;
-                waitDlg.PerformWork(this, 1000, longWaitBroker =>
+                waitDlg.PerformWork(parent, 1000, longWaitBroker =>
                 {
                     var ardiaClient = ArdiaClient.Create(ardiaAccount);
                     ardiaClient.SendZipFile(DestinationPath, FileName, longWaitBroker, out _);
@@ -228,9 +215,7 @@ namespace pwiz.Skyline.FileUI
             if (isCanceled)
                 return;
 
-            // CONSIDER: Ardia API could respond with the URL of the uploaded file in Ardia Data Explorer and Skyline
-            //           could offer to open that file in the browser. Panorama does similar.
-            MessageDlg.Show(this, ArdiaResources.Ardia_FileUpload_SuccessfulUpload);
+            MessageDlg.Show(parent, ArdiaResources.Ardia_FileUpload_SuccessfulUpload);
         }
 
         public void CreateFolder()
@@ -269,16 +254,16 @@ namespace pwiz.Skyline.FileUI
         /// <summary>
         /// Create a new folder on the remote server.
         /// </summary>
-        public void TreeViewFolders_AfterLabelEdit(object sender, NodeLabelEditEventArgs e)
+        public void TreeViewFolders_AfterLabelEdit(object sender, NodeLabelEditEventArgs args)
         {
-            var newFolderName = e.Label;
-            var newTreeNode = e.Node;
+            var newFolderName = args.Label;
+            var newTreeNode = args.Node;
 
             var validateResult = ValidateFolderName(newFolderName);
 
             if (validateResult == ValidateInputResult.valid)
             {
-                e.Node.EndEdit(false);
+                args.Node.EndEdit(false);
                 treeViewFolders.LabelEdit = false;
 
                 var parentUrl = (ArdiaUrl)((ArdiaFolderInfo)newTreeNode.Parent.Tag).RemoteUrl;
@@ -290,7 +275,7 @@ namespace pwiz.Skyline.FileUI
             }
             else
             {
-                e.CancelEdit = true;
+                args.CancelEdit = true;
 
                 var message = validateResult == ValidateInputResult.invalid_blank ? 
                     ArdiaResources.CreateFolder_Error_BlankName :
@@ -301,15 +286,15 @@ namespace pwiz.Skyline.FileUI
 
                 if (alertDlg.DialogResult == DialogResult.OK)
                 {
-                    e.Node.Text = e.Label;
-                    e.Node.BeginEdit();
+                    args.Node.Text = args.Label;
+                    args.Node.BeginEdit();
                 }
                 else
                 {
-                    var parentNode = e.Node.Parent;
+                    var parentNode = args.Node.Parent;
 
-                    e.Node.EndEdit(true);
-                    e.Node.Remove();
+                    args.Node.EndEdit(true);
+                    args.Node.Remove();
                     treeViewFolders.LabelEdit = false;
                     treeViewFolders.SelectedNode = parentNode;
                 }
@@ -318,15 +303,22 @@ namespace pwiz.Skyline.FileUI
             }
 
             var ardiaAccount = ArdiaAccountForTreeNode(newTreeNode);
-            var parentFolderPath = DestinationPathFor(newTreeNode.Parent);
+            var parentFolderPath = GetFolderPath(newTreeNode.Parent);
             ArdiaError serverError = null;
 
             using var waitDlg = new LongWaitDlg();
             waitDlg.Text = ArdiaResources.CreateFolder_Title;
             waitDlg.PerformWork(this, 1000, longWaitBroker =>
             {
-                var ardiaClient = ArdiaClient.Create(ardiaAccount);
-                ardiaClient.CreateFolder(parentFolderPath, newFolderName, longWaitBroker, out serverError);
+                try
+                {
+                    var ardiaClient = ArdiaClient.Create(ardiaAccount);
+                    ardiaClient.CreateFolder(parentFolderPath, newFolderName, longWaitBroker, out serverError);
+                }
+                catch (ArdiaServerException e)
+                {
+                    ExceptionUtil.DisplayOrReportException(this, e);
+                }
             });
 
             if (serverError == null)
@@ -350,13 +342,18 @@ namespace pwiz.Skyline.FileUI
                     default:
                         // CONSIDER: not sure about this pattern of error handling. URI is useful yet not available in this context. Is it better
                         //           to throw from ArdiaClient and catch here, optionally deciding whether to handle locally throw up to the caller?
-                        //           With a cavet that LongWaitDlg wraps and re-throws exceptions, which probably isn't what we want here.
+                        //           With a caveat that LongWaitDlg wraps and re-throws exceptions, which probably isn't what we want here.
                         throw ArdiaServerException.Create(@"Error creating folder", null, serverError, null);
                 }
 
-                treeViewFolders.SelectedNode = e.Node.Parent;
-                e.Node.Remove();
+                treeViewFolders.SelectedNode = args.Node.Parent;
+                args.Node.Remove();
             }
+        }
+
+        private void TreeViewFolders_AfterSelect(object sender, TreeViewEventArgs treeViewEventArgs)
+        {
+            createRemoteFolder.Enabled = treeViewFolders.SelectedNode != null;
         }
 
         private void TreeViewFolders_BeforeExpand(object sender, TreeViewCancelEventArgs e)
@@ -369,13 +366,14 @@ namespace pwiz.Skyline.FileUI
             CreateFolder();
         }
 
-        // CONSIDER: refactor - make the base class's virtual and move impl to Panorama
-        private string DestinationPathFor(TreeNode treeNode)
+        public override string GetFolderPath(string folderPath)
         {
-            // Ardia paths differ from what the baseclass provides with GetFolderPath. Differences:
-            // (1) Add a leading slash ('/')
-            // (2) Remove any trailing slash ('/')
-            return ArdiaClient.URL_PATH_SEPARATOR + GetFolderPath(treeNode)?.TrimEnd('/');
+            var baseFolderPath = base.GetFolderPath(folderPath);
+
+            // Ardia paths differ from what the baseclass provides with GetFolderPath. 
+            //   (1) Add a leading slash ('/')
+            //   (2) Remove any trailing slash ('/')
+            return ArdiaClient.URL_PATH_SEPARATOR + baseFolderPath?.TrimEnd('/');
         }
 
         private void UpdateTree(Action action)
@@ -419,7 +417,7 @@ namespace pwiz.Skyline.FileUI
         }
 
         /// <summary>
-        /// Test <param name="folderName"></param> meets these criteria for a valid folder name:
+        /// Validate <param name="folderName"></param> meets these criteria for a valid folder name:
         ///     (1) Allowed Chars A-Z, a-z,0-9, space, - and _
         ///     (2) Names and paths are case-insensitive
         ///     (3) As Folder Name should not contain any of the following characters : \ / : * ? " &lt; > |
@@ -428,10 +426,10 @@ namespace pwiz.Skyline.FileUI
         public static ValidateInputResult ValidateFolderName(string folderName)
         {
             if (string.IsNullOrWhiteSpace(folderName))
-                return PublishDocumentDlgArdia.ValidateInputResult.invalid_blank;
+                return ValidateInputResult.invalid_blank;
             else if (folderName.IndexOfAny(ILLEGAL_FOLDER_NAME_CHARS) != -1)
-                return PublishDocumentDlgArdia.ValidateInputResult.invalid_character;
-            else return PublishDocumentDlgArdia.ValidateInputResult.valid;
+                return ValidateInputResult.invalid_character;
+            else return ValidateInputResult.valid;
         }
 
         private static TreeNode CreateEmptyNode()

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Net;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
@@ -29,6 +30,16 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             {
                 StatusCode = statusCode,
                 Message = GetIfErrorInResponse(responseBody)
+            };
+        }
+
+        // CONSIDER: this drops the stack trace. Ok for this scenario?
+        public static ArdiaError CreateFromException(Exception e)
+        {
+            return new ArdiaError
+            {
+                StatusCode = null,
+                Message = e.Message
             };
         }
 
