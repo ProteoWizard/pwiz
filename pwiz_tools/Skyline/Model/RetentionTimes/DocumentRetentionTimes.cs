@@ -59,6 +59,17 @@ namespace pwiz.Skyline.Model.RetentionTimes
             return _libraryAlignments.Values.Any(libraryAlignmentValue=>libraryAlignmentValue.Alignments.GetAllAlignmentFunctions().Any());
         }
 
+        public bool AnyLibraryAlignmentsForFiles(IEnumerable<MsDataFileUri> dataFileUris)
+        {
+            if (!AnyLibraryAlignments() || dataFileUris == null)
+            {
+                return false;
+            }
+
+            return dataFileUris.Any(file => _libraryAlignments.Values.Any(libraryAlignmentValue =>
+                libraryAlignmentValue.Alignments.GetAlignmentFunction(file, true) != null));
+        }
+
         private static string IsNotLoadedExplained(SrmSettings srmSettings)
         {
             if (!AlignmentTarget.TryGetAlignmentTarget(srmSettings, out _))

@@ -24,6 +24,7 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results.Scoring
@@ -107,7 +108,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 {
                     calcs = calcs.Where(calc => !calc.IsMs1Score);
                 }
-                if (!document.Settings.DocumentRetentionTimes.AnyLibraryAlignments())
+                if (!document.Settings.DocumentRetentionTimes.AnyLibraryAlignmentsForFiles(document.Settings.MeasuredResults?.MSDataFilePaths))
                 {
                     calcs = calcs.Where(calc => !(calc is LegacyIdentifiedCountCalc));
                 }
