@@ -410,7 +410,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             SkylineWindow.ModifyDocument(PeptideSearchResources.EncyclopeDiaSearchDlg_ImportEncyclopediaLibrary_Ran_EncyclopeDIA_Search,
                 doc => doc.ChangeSettings(doc.Settings.ChangePeptideSettings(
                     doc.Settings.PeptideSettings.ChangeLibraries(
-                        doc.Settings.PeptideSettings.Libraries.ChangeLibrarySpecs(librarySpecs).ChangeLibraries(libraries)))),
+                        doc.Settings.PeptideSettings.Libraries.ChangeLibraries(librarySpecs, libraries)))),
                 FormSettings.EntryCreator.Create);
 
             using var importPeptideSearchDlg = new ImportPeptideSearchDlg(SkylineWindow, _libraryManager, ImportPeptideSearchDlg.Workflow.dia,
