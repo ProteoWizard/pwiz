@@ -121,9 +121,9 @@ All Info  :
 Peptide Settings -- Prediction > Retention time predictor changed from "None" to "WormUnrefined"
 Settings > Peptide Settings -- Prediction > Retention time predictor changed from "None" to "WormUnrefined"
 Settings > Peptide Settings -- Prediction > Retention time predictor > Calculator is "SSRCalc 3.0 (300A)"
-Settings > Peptide Settings -- Prediction > Retention time predictor > Time window is "15,7484"
-Settings > Peptide Settings -- Prediction > Retention time predictor > Regression > Slope is "1,51682371099475"
-Settings > Peptide Settings -- Prediction > Retention time predictor > Regression > Intercept is "3,20144640067397"
+Settings > Peptide Settings -- Prediction > Retention time predictor > Time window is "15,7657"
+Settings > Peptide Settings -- Prediction > Retention time predictor > Regression > Slope is "1,52874548144558"
+Settings > Peptide Settings -- Prediction > Retention time predictor > Regression > Intercept is "2,49233439879678"
 Settings > Peptide Settings -- Prediction > Retention time predictor > Auto-calculate regression is False
 Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "VLEAGGLDC[+57.021464]DMENANSVVDALK", Retention time = "63,7829666137695" }
 Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "WNTENQLGTVIEVNEQFGR", Retention time = "66,2647323608398" }
@@ -145,6 +145,7 @@ Settings > Peptide Settings -- Prediction > Retention time predictor > Measured 
 Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "IVELEEELR", Retention time = "44,5607681274414" }
 Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "HITIFSPEGR", Retention time = "33,8763313293457" }
 Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "ELYDEVAEALR", Retention time = "59,7736320495605" }
+Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "NFDLSPGVLR", Retention time = "40,0678329467773" }
 Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "QLPQSGLLLVTGPHK", Retention time = "47,2397346496582" }
 Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "IGQAFVIATSLK", Retention time = "53,0170669555664" }
 Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "FLFGYLGTR", Retention time = "61,8225173950195" }
@@ -181,6 +182,7 @@ Settings > Peptide Settings -- Prediction > Retention time predictor > Measured 
 Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "LPDTELGQQIR", Retention time = "38,1228675842285" }
 Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "SPGSDTYIIFGEAK", Retention time = "51,3842658996582" }
 Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "AFASAGDGLVELR", Retention time = "49,168384552002" }
+Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "GVTIVDKDEEFTK", Retention time = "32,4643249511719" }
 Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "TLNPTC[+57.021464]TGTSVIALQYK", Retention time = "49,3599853515625" }
 Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "ALHGYLTSLLYAK", Retention time = "55,1240997314453" }
 Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "VDATEGVVLGK", Retention time = "32,3918838500977" }
@@ -206,7 +208,7 @@ Settings > Peptide Settings -- Prediction > Retention time predictor > Measured 
 Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "TSGTVSGFDYSAANK", Retention time = "31,9997997283936" }
 Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "LALDVEIATYR", Retention time = "57,5575332641602" }
 Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "GSFANFGAVELGTVAAK", Retention time = "58,5487823486328" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "QISLSAGLPVTTQAVTVNK", Retention time = "60,5950660705566" }
+Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "GGAVAIGHPLGMSGLR", Retention time = "42,5939826965332" }
 Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "YLIQETLVDIEK", Retention time = "61,5980339050293" }
 Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "QAGGFVDDVSALVAK", Retention time = "50,9281845092773" }
 Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "LQIITVIEDLK", Retention time = "72,4763031005859" }
@@ -242,7 +244,6 @@ Settings > Peptide Settings -- Prediction > Retention time predictor > Measured 
 Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "VVGLYFSASWC[+57.021464]PPC[+57.021464]R", Retention time = "56,8641014099121" }
 Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "LALVSEFTQETASVIFGGEIK", Retention time = "72,5435638427734" }
 Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "DQTAVFVQAGAQDVEK", Retention time = "43,7355003356934" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "VVDILADVLR", Retention time = "67,5735321044922" }
 Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "LAQIPAGFANFPAGVR", Retention time = "59,3487319946289" }
 Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "VPITDNTIVEQSLGK", Retention time = "48,7998161315918" }
 Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "LGANSLLDLVIFGR", Retention time = "71,9197006225586" }
@@ -256,7 +257,6 @@ Settings > Peptide Settings -- Prediction > Retention time predictor > Measured 
 Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "AVLVDLEPGTMDSVR", Retention time = "54,2030029296875" }
 Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "YDANNIYLAANYGETR", Retention time = "47,7227592468262" }
 Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "VAADWADFQK", Retention time = "42,5640563964844" }
-Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "C[+57.021464]ADDLNC[+57.021464]ATTC[+57.021464]VENYYNR", Retention time = "48,7883987426758" }
 Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "VNQIGSVTESIEAAK", Retention time = "44,4682998657227" }
 Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "DIDDFMMALDGSENK", Retention time = "49,2241516113281" }
 Settings > Peptide Settings -- Prediction > Retention time predictor > Measured peptides : contains { Modified Sequence = "TISEVIAQGK", Retention time = "29,8245010375977" }

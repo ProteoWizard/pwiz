@@ -138,6 +138,9 @@ namespace pwiz.SkylineTestData
             refineSettings.RTRegressionPrecision = 2;   // Backward compatibility
             var docRefinedRT = refineSettings.Refine(document);
             Assert.AreNotEqual(docRefined.PeptideCount, docRefinedRT.PeptideCount);
+            // The RT threshold should have removed all precursors without results
+            Assert.IsFalse(docRefinedRT.PeptideTransitionGroups.Any(nodeGroup =>
+                !nodeGroup.HasResults || nodeGroup.Results[0].IsEmpty));
             // And peak count ratio
             refineSettings.MinPeakFoundRatio = 1.0;
             var docRefinedRatio = refineSettings.Refine(document);

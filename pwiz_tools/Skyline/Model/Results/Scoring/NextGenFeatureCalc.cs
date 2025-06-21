@@ -393,7 +393,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             if (dataList.Count == 0)
                 return double.NaN;
             // and potentially needing to call QNthItem twice.
-            return Statistics.QNthItem(dataList, dataList.Count / 2);
+            return dataList.QNthItem(dataList.Count / 2);
         }
 
         public override bool IsReversedScore { get { return false; } }

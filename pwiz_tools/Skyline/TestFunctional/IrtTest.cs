@@ -143,7 +143,9 @@ namespace pwiz.SkylineTestFunctional
                           {
                               var calibratePeptides = calibrateDlg.Recalculate(SkylineWindow.Document, j);
                               Assert.AreEqual(calibratePeptides.Count, j);
-                              Assert.IsNull(FindOpenForm<MessageDlg>());
+                              var messageDlg = FindOpenForm<MessageDlg>();
+                              if (messageDlg != null)
+                                  Assert.Fail($@"Found open alert with the message '{messageDlg.Message}'");
                           });
             }
 
