@@ -920,14 +920,19 @@ namespace pwiz.Skyline.Model.DocSettings
             var listDeltas = new List<DeltaIndex>();
             int iNextStat = 0;
             double unknownScore = Calculator.UnknownScore;
+            int countMaxValue = 0;
             for (int i = 0; i < variableTargetPeptides.Count; i++)
             {
                 double delta;
-                if (variableTargetPeptides[i].RetentionTime == 0 || (variableOrigPeptides != null && variableOrigPeptides[i].RetentionTime == 0))
-                    delta = double.MaxValue;    // Make sure zero times are always outliers
-                else if (!outIndexes.Contains(i) && iNextStat < listPredictions.Count)
+                // Make sure zero times are always outliers
+                bool zeroRt = variableTargetPeptides[i].RetentionTime == 0 ||
+                              (variableOrigPeptides != null && variableOrigPeptides[i].RetentionTime == 0);
+                if (!outIndexes.Contains(i) && iNextStat < listPredictions.Count)
                 {
-                    delta = listHydroScores[iNextStat] != unknownScore
+                    // This assumes that the values for the current target peptide are already
+                    // cached in the statistics object.
+                    Assume.AreEqual(variableTargetPeptides[i].PeptideSequence.InvariantName, statistics.Peptides[iNextStat].InvariantName);
+                    delta = listHydroScores[iNextStat] != unknownScore && !zeroRt
                         ? Math.Abs(listPredictions[iNextStat] - listTimes[iNextStat])
                         : double.MaxValue;
                     iNextStat++;
@@ -939,18 +944,32 @@ namespace pwiz.Skyline.Model.DocSettings
                     var peptideTime = variableTargetPeptides[i];
                     double score = scoreCache.CalcScore(Calculator, peptideTime.PeptideSequence);
                     delta = double.MaxValue;
-                    if (score != unknownScore)
+                    if (score != unknownScore && !zeroRt)
                     {
                         double? predictedTime = GetRetentionTime(score);
                         if (predictedTime.HasValue)
                             delta = Math.Abs(predictedTime.Value - peptideTime.RetentionTime);
                     }
+
+                    // Sometimes outlier indices get added after statistics are calculated.
+                    // So, if the target peptide matches the current statistic advance the
+                    // statistics index.
+                    if (iNextStat < listPredictions.Count &&
+                        Equals(variableTargetPeptides[i].PeptideSequence.InvariantName,
+                            statistics.Peptides[iNextStat].InvariantName))
+                    {
+                        iNextStat++;
+                    }
                 }
+
+                if (delta == double.MaxValue)
+                    countMaxValue++;
+                
                 listDeltas.Add(new DeltaIndex(delta, i));
             }
 
             // Split deltas with values greater than the midpoint below it and less than the midpoint above it.
-            int countOut = variableTargetPeptides.Count - mid - 1;
+            int countOut = Math.Max(countMaxValue, variableTargetPeptides.Count - mid - 1);
             if (0 <= countOut && countOut < listDeltas.Count)
                 listDeltas.QNthItem(countOut);
 
@@ -970,7 +989,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
             peptidesTimesTry.AddRange(requiredPeptides);
 
-            return CalcSingleRegression(Name, calculator, peptidesTimesTry, scoreCache, true,regressionMethod,
+            return CalcSingleRegression(Name, calculator, peptidesTimesTry, scoreCache, true, regressionMethod,
                                       out statisticsResult, out _, token);
         }
 
