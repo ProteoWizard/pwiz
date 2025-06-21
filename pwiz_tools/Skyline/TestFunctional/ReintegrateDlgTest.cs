@@ -121,6 +121,10 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.ModifyDocument(null,
                     doc => doc.ChangePeak(groupPath, nameSet, filePath,
                         null, startNew, endNew, UserSet.TRUE, null, false)));
+            
+            // Have to wait for retention time alignment after changing peak boundaries
+            WaitForDocumentLoaded();
+
             var reintegrateDlgManual = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
             RunUI(() =>
             {

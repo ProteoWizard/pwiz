@@ -1249,6 +1249,33 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Imputed End Time.
+        /// </summary>
+        public static string ImputedEndTime {
+            get {
+                return ResourceManager.GetString("ImputedEndTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Imputed Peak.
+        /// </summary>
+        public static string ImputedPeak {
+            get {
+                return ResourceManager.GetString("ImputedPeak", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Imputed Start Time.
+        /// </summary>
+        public static string ImputedStartTime {
+            get {
+                return ResourceManager.GetString("ImputedStartTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to InChI.
         /// </summary>
         public static string InChI {

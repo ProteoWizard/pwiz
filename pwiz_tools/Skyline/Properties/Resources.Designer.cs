@@ -7623,15 +7623,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Calculating....
-        /// </summary>
-        public static string PeptidesPerProteinDlg_UpdateRemaining_Calculating___ {
-            get {
-                return ResourceManager.GetString("PeptidesPerProteinDlg_UpdateRemaining_Calculating___", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap PeptideStandard {
@@ -9263,15 +9254,6 @@ namespace pwiz.Skyline.Properties {
         public static string RTLinearRegressionGraphPane_RTLinearRegressionGraphPane_Measured_Time {
             get {
                 return ResourceManager.GetString("RTLinearRegressionGraphPane_RTLinearRegressionGraphPane_Measured_Time", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Calculating....
-        /// </summary>
-        public static string RTLinearRegressionGraphPane_UpdateGraph_Calculating___ {
-            get {
-                return ResourceManager.GetString("RTLinearRegressionGraphPane_UpdateGraph_Calculating___", resourceCulture);
             }
         }
         

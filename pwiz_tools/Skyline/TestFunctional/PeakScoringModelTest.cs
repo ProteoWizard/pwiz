@@ -188,7 +188,7 @@ namespace pwiz.SkylineTestFunctional
         protected void TestModelChangesAndSave()
         {
             LegacyScoringModel peakScoringModelBase = null;
-            
+            WaitForDocumentLoaded();
             // Test legacy model
             var reintegrateDlg = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
             var editDlg = ShowDialog<EditPeakScoringModelDlg>(reintegrateDlg.AddPeakScoringModel);
@@ -421,6 +421,7 @@ namespace pwiz.SkylineTestFunctional
         // Conveniently opens/closes all the intermediate dialogs to open and run a EditPeakScoringModelDlg 
         protected static void RunEditPeakScoringDlg(string editName, Action<EditPeakScoringModelDlg> act)
         {
+            WaitForDocumentLoaded();
             var reintegrateDlg = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
 
             if (editName != null)
@@ -459,7 +460,7 @@ namespace pwiz.SkylineTestFunctional
                 for (int col = 0; col < 4; col++)
                 {
                     if(col != 1)
-                        expectedValue = expectedFields[fieldNum++];
+                        expectedValue = expectedFields.ElementAtOrDefault(fieldNum++);
 
                     // Verify cell value.
                     var actualValue = editDlg.PeakCalculatorsGrid.GetCellValue(col, row);
