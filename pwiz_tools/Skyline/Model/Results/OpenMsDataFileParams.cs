@@ -41,7 +41,8 @@ namespace pwiz.Skyline.Model.Results
         {
             return new MsDataFileImpl(path, sampleIndex: Math.Max(sampleIndex, 0), lockmassParameters: lockMassParameters,
                 simAsSpectra: SimAsSpectra, requireVendorCentroidedMS1: CentroidMs1,
-                requireVendorCentroidedMS2: CentroidMs2, preferOnlyMsLevel: PreferOnlyMs1 ? 1 : 0);
+                requireVendorCentroidedMS2: CentroidMs2, preferOnlyMsLevel: PreferOnlyMs1 ? 1 : 0,
+                ignoreZeroIntensityPoints: IgnoreZeroIntensityPoints);
         }
     }
 }
