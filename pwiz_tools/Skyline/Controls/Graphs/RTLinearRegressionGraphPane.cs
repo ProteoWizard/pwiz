@@ -707,7 +707,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 else
                 {
                     var usableCalculators = RegressionSettings.Calculators.Where(calc => calc.IsUsable).ToList();
-                    if (RegressionSettings.CalculatorName == null)
+                    if (string.IsNullOrEmpty(RegressionSettings.CalculatorName))
                     {
                         var summary = RetentionTimeRegression.CalcBestRegressionBackground(XmlNamedElement.NAME_INTERNAL, usableCalculators, targetTimes, null, true,
                             RegressionSettings.RegressionMethod, token);
@@ -848,7 +848,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                     else if (_regressionIncludesMissingValues)
                     {
-                        validPoints.Add(pt.ChangeY(0));
+                        validPoints.Add(pt.ChangeX(pt.X ?? 0).ChangeY(pt.Y ?? 0));
                     }
                     else
                     {
