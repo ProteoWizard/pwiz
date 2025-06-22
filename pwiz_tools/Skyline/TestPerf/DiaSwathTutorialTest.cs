@@ -578,7 +578,7 @@ namespace TestPerf
         /// <summary>
         /// Change to true to write coefficient arrays.
         /// </summary>
-        protected override bool IsRecordMode => true;
+        protected override bool IsRecordMode => false;
 
         protected override void DoTest()
         {
