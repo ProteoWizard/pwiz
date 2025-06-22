@@ -112,7 +112,7 @@ namespace TestPerf
         public InstrumentSpecificValues _instrumentValues;
         public AnalysisValues _analysisValues;
         public ExpectedValues _expectedValues;
-        private string _expectedValuesFilePath;
+        public string ExpectedValuesFilePath { get; private set; }
         public string[] DiaFiles => _instrumentValues.DiaFiles;
         public string InstrumentTypeName => _instrumentValues.InstrumentTypeName;
         public string RootName { get; set; }
@@ -390,13 +390,13 @@ namespace TestPerf
         }
         private void ReadExpectedValues(string variant, bool fullSet)
         {
-            _expectedValuesFilePath = Path.Combine(ExtensionTestContext.GetProjectDirectory(
+            ExpectedValuesFilePath = Path.Combine(ExtensionTestContext.GetProjectDirectory(
                     @"TestPerf\DiaSwathTutorialTest.data"),
                 variant + (fullSet ? "_full" : "") + ".json");
             Assert.IsNull(_expectedValues);
-            if (File.Exists(_expectedValuesFilePath))
+            if (File.Exists(ExpectedValuesFilePath))
             {
-                using var streamReader = File.OpenText(_expectedValuesFilePath);
+                using var streamReader = File.OpenText(ExpectedValuesFilePath);
                 using var jsonReader = new JsonTextReader(streamReader);
                 _expectedValues = JsonSerializer.Create().Deserialize<ExpectedValues>(jsonReader);
             }
@@ -409,8 +409,8 @@ namespace TestPerf
         public void SaveExpectedValues()
         {
             Assert.IsNotNull(_expectedValues);
-            Assert.IsNotNull(_expectedValuesFilePath);
-            using var streamWriter = new StreamWriter(_expectedValuesFilePath);
+            Assert.IsNotNull(ExpectedValuesFilePath);
+            using var streamWriter = new StreamWriter(ExpectedValuesFilePath);
             using var jsonTextWriter = new JsonTextWriter(streamWriter);
             JsonSerializer.Create(new JsonSerializerSettings
             {
@@ -582,6 +582,8 @@ namespace TestPerf
 
         protected override void DoTest()
         {
+            Assert.IsTrue(IsRecordMode || File.Exists(_testInfo.ExpectedValuesFilePath),
+                "Expected values file {0} does not exist.", _testInfo.ExpectedValuesFilePath);
             // Clean-up before running the test
             RunUI(() => SkylineWindow.ModifyDocument("Set default settings",
                 d => d.ChangeSettings(SrmSettingsList.GetDefault())));
@@ -1256,7 +1258,13 @@ namespace TestPerf
                     SummarizationMethod.MEDIANPOLISH);
 
                 if (IsDiaNN && _analysisValues.IsWholeProteome)
+                {
+                    if (IsRecordMode)
+                    {
+                        _testInfo.SaveExpectedValues();
+                    }
                     return; // fold change bar graphs don't behave the same way for DIA-NN results as for iProphet, so exit early
+                }
 
                 if (!IsRecordMode)
                     WaitForBarGraphPoints(barGraph, _expectedValues.PolishedProteins ?? targetProteinCount);
