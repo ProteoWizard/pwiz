@@ -261,7 +261,7 @@ namespace TestPerf
         private void ReadExpectedValues(string name)
         {
             _expectedValuesFilePath = Path.Combine(ExtensionTestContext.GetProjectDirectory(
-                @"TestPerf\DiaSwathTutorialTest.data"), name + ".json");
+                @"TestPerf\DiaUmpireTutorialTest.data"), name + ".json");
             if (File.Exists(_expectedValuesFilePath))
             {
                 using var streamReader = File.OpenText(_expectedValuesFilePath);
