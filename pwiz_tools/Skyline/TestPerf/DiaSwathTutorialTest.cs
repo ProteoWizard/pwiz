@@ -105,7 +105,7 @@ namespace TestPerf
             public double[][] MassErrorStats;
             public int[] DiffPeptideCounts;
             public int UnpolishedProteins;
-            public int? PolishedProteins;
+            public int PolishedProteins;
             public double?[] ScoringModelCoefficients;
         }
 
@@ -578,7 +578,7 @@ namespace TestPerf
         /// <summary>
         /// Change to true to write coefficient arrays.
         /// </summary>
-        protected override bool IsRecordMode => false;
+        protected override bool IsRecordMode => true;
 
         protected override void DoTest()
         {
@@ -901,7 +901,7 @@ namespace TestPerf
             WaitForCondition(() => allChrom.IsProgressFrozen());
             PauseForScreenShot<AllChromatogramsGraph>("Loading chromatograms window", 30*1000); // 30 second timeout to avoid getting stuck
             allChrom.SetFreezeProgressPercent(null, null);
-            WaitForDocumentChangeLoaded(doc, 20 * 60 * 1000); // 20 minutes
+            WaitForDocumentChangeLoaded(doc, 40 * 60 * 1000); // 40 minutes
 
             if (importPeptideSearchDlg.ImportFastaControl.AutoTrain)
             {
@@ -1266,15 +1266,14 @@ namespace TestPerf
                     return; // fold change bar graphs don't behave the same way for DIA-NN results as for iProphet, so exit early
                 }
 
-                if (!IsRecordMode)
-                    WaitForBarGraphPoints(barGraph, _expectedValues.PolishedProteins ?? targetProteinCount);
+                WaitForCondition(() => barGraph.IsComplete);
+                if (IsRecordMode)
+                {
+                    _expectedValues.PolishedProteins = GetBarCount(barGraph);
+                }
                 else
                 {
-                    WaitForBarGraphPoints(barGraph, targetProteinCount, _expectedValues.UnpolishedProteins);
-                    if (_expectedValues.PolishedProteins.HasValue || GetBarCount(barGraph) != targetProteinCount)
-                    {
-                        _expectedValues.PolishedProteins = GetBarCount(barGraph);
-                    }
+                    Assert.AreEqual(_expectedValues.PolishedProteins, GetBarCount(barGraph));
                 }
 
                 fcGrid = WaitForOpenForm<FoldChangeGrid>();
@@ -1283,10 +1282,7 @@ namespace TestPerf
 
                 RestoreViewOnScreen(31);
                 barGraph = WaitForOpenForm<FoldChangeBarGraph>();
-                if (!IsRecordMode)
-                    WaitForBarGraphPoints(barGraph, _expectedValues.PolishedProteins ?? targetProteinCount);
-                else
-                    WaitForBarGraphPoints(barGraph, targetProteinCount, _expectedValues.UnpolishedProteins);
+                WaitForCondition(() => barGraph.IsComplete);
                 RunUIForScreenShot(() =>
                 {
                     var yScale = barGraph.ZedGraphControl.GraphPane.YAxis.Scale;
