@@ -411,7 +411,6 @@ namespace pwiz.Skyline.Controls.Graphs
                         // Calculate and refine regression on background thread
                         lock (_requestLock)
                         {
-                            // 
                             var ctx = _requestContext;
                             var token = _cancellationTokenSource.Token;
                             var decoyCount = document.Molecules.Count((m) => m.IsDecoy);
@@ -424,15 +423,17 @@ namespace pwiz.Skyline.Controls.Graphs
                             else
                                 maxCount = document.MoleculeCount + (document.MoleculeCount - decoyCount) * calcCount;
 
-                            _progressBar = ProgressMonitor.RegisterProgressBar(token, maxCount
-                                , 1, new PaneProgressBar(this));
+                            // Create progress bar with callback for UI changes
+                            _progressBar = ProgressMonitor.RegisterProgressBar(token, maxCount, 300,
+                                new PaneProgressBar(this, () => {
+                                    Title.Text = Resources.RTLinearRegressionGraphPane_UpdateGraph_Calculating___;
+                                    Legend.IsVisible = false;
+                                }));
 
                             ActionUtil.RunAsync(() => UpdateAndRefine(ctx, token),
                                 @"Update and refine regression data");
                         }
-                        Title.Text = Resources.RTLinearRegressionGraphPane_UpdateGraph_Calculating___;
                         shouldDrawGraph = false;
-                        Legend.IsVisible = false;
                     }
                 }
                 else
