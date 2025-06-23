@@ -100,7 +100,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             {
                 if (double.TryParse(rtWindowString, out var rtWindow) && double.TryParse(RetentionTime, out var rt))
                 {
-                    StartTime = Math.Round(rt - rtWindow/2, 2).ToString(CultureInfo.InvariantCulture);
+                    StartTime = Math.Max(0.0, Math.Round(rt - rtWindow/2, 2)).ToString(CultureInfo.InvariantCulture);
                     EndTime = Math.Round(rt + rtWindow/2, 2).ToString(CultureInfo.InvariantCulture);
                 }
             }
@@ -153,6 +153,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             base.ParseObject(reader);
             if (string.IsNullOrEmpty(IsQuanIon))
                 IsQuanIon = "True";
+            AutoDwell = "True";
         }
     }
 
