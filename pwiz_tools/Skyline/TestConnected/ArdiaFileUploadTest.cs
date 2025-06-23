@@ -82,23 +82,20 @@ namespace pwiz.SkylineTestConnected
             var parentPath = $@"/{TEST_RESULTS_DIRECTORY_NAME}";
             var testResultsPath = $@"{parentPath}/{folderName}";
 
-            try
-            {
-                // Create a folder holding results from this test run
-                setupClient.CreateFolder(parentPath, folderName, null, out var error);
-                Assert.IsNull(error);
+            // Create a folder holding results from this test run
+            setupClient.CreateFolder(parentPath, folderName, null, out var error);
+            Assert.IsNull(error);
 
-                Test_ArdiaClient_GetFolders(account);
-                Test_ArdiaClient_CreateFolder(account, testResultsPath);
+            Test_ArdiaClient_GetFolders(account);
+            Test_ArdiaClient_CreateFolder(account, testResultsPath);
 
-                TestSuccessfulUpload(account, new [] { TEST_RESULTS_DIRECTORY_NAME, folderName});
-            }
-            finally
-            {
-                // TODO: keep directory if 1+ tests fail
-                // Delete directory for this test run - disabled for now
-                // setupClient.DeleteFolder(testResultsPath);
-            }
+            TestSuccessfulUpload(account, new[] { TEST_RESULTS_DIRECTORY_NAME, folderName });
+            // TODO: keep directory if 1+ tests fail
+            // Delete directory for this test run - disabled for now
+            // finally
+            // {
+            //     setupClient.DeleteFolder(testResultsPath);
+            // }
         }
 
         private static void TestAccountHasCredentials(ArdiaAccount account)

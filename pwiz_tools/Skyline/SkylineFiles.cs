@@ -3547,11 +3547,10 @@ namespace pwiz.Skyline
             }
             finally
             {
-                // Cleanup: remove the archive if it exists regardless of whether the upload was successful
-                if (fileName != null && File.Exists(fileName))
-                {
-                    File.Delete(fileName);
-                }
+                // Cleanup: if the archive exists, remove it whether the upload succeeded or not
+                // CONSIDER: handle multipart uploads
+                if(fileName != null) 
+                    FileEx.SafeDelete(fileName);
             }
         }
 
