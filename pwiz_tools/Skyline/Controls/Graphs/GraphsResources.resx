@@ -748,4 +748,7 @@ Here are the last 3 errors:
   <data name="GraphChromatogram_SetRetentionTimeIdIndicators_Waiting_for_retention_time_alignment" xml:space="preserve">
 	  <value>Waiting for retention time alignment</value>
   </data>
+  <data name="RTLinearRegressionGraphPane_UpdateGraph_Calculating___" xml:space="preserve">
+    <value>Calculating...</value>
+  </data>
 </root>

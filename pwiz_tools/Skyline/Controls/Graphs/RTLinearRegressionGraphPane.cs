@@ -115,7 +115,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 int newProgressValue = _graphDataReceiver.GetProgressValue();
                 if (newProgressValue != _progressValue)
                 {
-                    Title.Text = Resources.RTLinearRegressionGraphPane_UpdateGraph_Calculating___;
+                    Title.Text = GraphsResources.RTLinearRegressionGraphPane_UpdateGraph_Calculating___;
                     Legend.IsVisible = false;
                     _progressBar ??= new PaneProgressBar(this);
                     _progressBar?.UpdateProgress(_graphDataReceiver.GetProgressValue());
