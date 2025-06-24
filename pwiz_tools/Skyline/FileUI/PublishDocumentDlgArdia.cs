@@ -18,6 +18,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Windows.Forms;
@@ -57,6 +58,12 @@ namespace pwiz.Skyline.FileUI
         }
 
         public string DestinationPath { get; private set; }
+
+        /// <summary>
+        /// If publishing succeeded, this is a <see cref="DocumentResponse"/> representing the new Ardia document.
+        /// </summary>
+        public DocumentResponse PublishedDocument { get; private set; }
+
         /// <summary>
         /// Used in tests.
         /// </summary>
@@ -198,6 +205,14 @@ namespace pwiz.Skyline.FileUI
         {
             var ardiaAccount = ArdiaAccountForTreeNode(treeViewFolders.SelectedNode);
 
+            // TODO: remove after supporting multipart uploads
+            var fileSizeInBytes = new FileInfo(FileName).Length;
+            if (fileSizeInBytes >= ArdiaClient.MAX_UPLOAD_SIZE)
+            {
+                MessageDlg.Show(parent, string.Format(ArdiaResources.FileUpload_ArchiveTooLarge, ArdiaClient.MAX_UPLOAD_SIZE_GB));
+                return;
+            }
+
             var isCanceled = false;
             if (!SkipUpload)
             {
@@ -206,7 +221,9 @@ namespace pwiz.Skyline.FileUI
                 waitDlg.PerformWork(parent, 1000, longWaitBroker =>
                 {
                     var ardiaClient = ArdiaClient.Create(ardiaAccount);
-                    ardiaClient.SendZipFile(DestinationPath, FileName, longWaitBroker, out _);
+                    ardiaClient.SendZipFile(DestinationPath, FileName, longWaitBroker, out var newDocument);
+
+                    PublishedDocument = newDocument;
 
                     isCanceled = longWaitBroker.IsCanceled;
                 });
@@ -340,10 +357,14 @@ namespace pwiz.Skyline.FileUI
                         MessageDlg.Show(this, string.Format(ArdiaResources.CreateFolder_Error_Forbidden, parentFolderPath, newFolderName));
                         break;
                     default:
+                        var message = ErrorMessageBuilder.Create(@"Error creating folder").
+                            ErrorDetail(serverError.Message).
+                            ServerError(serverError).ToString();
+
                         // CONSIDER: not sure about this pattern of error handling. URI is useful yet not available in this context. Is it better
                         //           to throw from ArdiaClient and catch here, optionally deciding whether to handle locally throw up to the caller?
                         //           With a caveat that LongWaitDlg wraps and re-throws exceptions, which probably isn't what we want here.
-                        throw ArdiaServerException.Create(@"Error creating folder", null, serverError, null);
+                        throw ArdiaServerException.Create(message, null, serverError, null);
                 }
 
                 treeViewFolders.SelectedNode = args.Node.Parent;

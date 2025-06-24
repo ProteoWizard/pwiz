@@ -32,7 +32,7 @@ using pwiz.Common.SystemUtil;
 namespace pwiz.CommonMsData.RemoteApi.Ardia
 {
     /// <summary>
-    /// To enable verbose logging of HTTP request + response in .NET:
+    /// To enable verbose HTTP logging:
     ///     https://mikehadlow.blogspot.com/2012/07/tracing-systemnet-to-debug-http-clients.html
     /// </summary>
     [SuppressMessage("ReSharper", "IdentifierTypo")]
@@ -49,8 +49,12 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
 
         private const string PATH_STAGE_DOCUMENT  = @"/session-management/bff/document/api/v1/stagedDocuments";
         private const string PATH_CREATE_DOCUMENT = @"/session-management/bff/document/api/v1/documents";
+        private const string PATH_GET_DOCUMENT    = @"/session-management/bff/document/api/v1/documents/{0}";
         private const string PATH_CREATE_FOLDER   = @"/session-management/bff/navigation/api/v1/folders";
         private const string PATH_DELETE_FOLDER   = @"/session-management/bff/navigation/api/v1/folders/folderPath";
+
+        public const long MAX_UPLOAD_SIZE = int.MaxValue;
+        public const long MAX_UPLOAD_SIZE_GB = 2;
 
         public static ArdiaClient Create(ArdiaAccount account)
         {
@@ -124,7 +128,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
                 }
                 else
                 {
-                    serverError = ArdiaError.CreateFromResponse(statusCode, responseBody);
+                    serverError = ArdiaError.Create(statusCode, responseBody);
                     return false;
                 }
             }
@@ -133,13 +137,13 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
                 when (e is HttpRequestException || 
                       e is TaskCanceledException { CancellationToken: { IsCancellationRequested: true } })
             {
-                serverError = ArdiaError.CreateFromResponse(statusCode, responseBody);
+                serverError = ArdiaError.Create(statusCode, responseBody);
                 return false;
             }
             catch (Exception e)
             {
                 var uri = UriFromParts(ServerUri, PATH_CREATE_FOLDER);
-                serverError = ArdiaError.CreateFromResponse(statusCode, responseBody);
+                serverError = ArdiaError.Create(statusCode, responseBody);
 
                 var message = ErrorMessageBuilder.
                     Create(string.Format(ArdiaResources.CreateFolder_Error, parentFolderPath, folderName)).
@@ -215,14 +219,15 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         /// <param name="progressMonitor"></param>
         /// <param name="uploadUri">URI referencing the location of the uploaded file</param>
         /// <returns>true if uploaded succeeded, false if upload was canceled. Will throw an exception </returns>
-        public bool SendZipFile(string destinationFolderPath, string localZipFile, IProgressMonitor progressMonitor, out Uri uploadUri)
+        public bool SendZipFile(string destinationFolderPath, string localZipFile, IProgressMonitor progressMonitor, out DocumentResponse newDocument)
         {
+            newDocument = null;
+
             // Step 1 of 3: Ardia API - Create Staged Document
             CreateStagedDocument(out var presignedUrl, out var uploadId);
 
             if (progressMonitor.IsCanceled)
             {
-                uploadUri = null;
                 return false;
             }
 
@@ -231,13 +236,12 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
 
             if (progressMonitor.IsCanceled)
             {
-                uploadUri = null;
                 return false;
             }
 
             // Step 3 of 3: Ardia API - Create Document
             var fileName = Path.GetFileName(localZipFile);
-            CreateDocument(destinationFolderPath, fileName, uploadId, uploadBytes, out uploadUri);
+            CreateDocument(destinationFolderPath, fileName, uploadId, uploadBytes, out newDocument);
 
             return true;
         }
@@ -278,13 +282,13 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
 
         private static void StageFileOnAws(string zipFilePath, string presignedUrl, out long uploadBytes)
         {
+            var awsUri = new Uri(presignedUrl);
+
             HttpStatusCode? statusCode = null;
             var responseBody = string.Empty;
 
             try
             {
-                var awsUri = new Uri(presignedUrl);
-
                 using var awsHttpClient = new HttpClient();
                 var awsRequest = new HttpRequestMessage(HttpMethod.Put, awsUri);
 
@@ -303,14 +307,16 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             }
             catch (Exception e)
             {
-                var message = ArdiaResources.Ardia_FileUpload_UploadFileError;
-                var uri = new Uri(presignedUrl);
+                var serverError = ArdiaError.Create(statusCode, responseBody);
 
-                throw ArdiaServerException.Create(message, uri, statusCode, responseBody, e);
+                var errorMessage = ErrorMessageBuilder.Create(ArdiaResources.Ardia_FileUpload_UploadFileError)
+                    .ServerError(serverError).Uri(awsUri).ToString();
+
+                throw ArdiaServerException.Create(errorMessage, awsUri, serverError, e);
             }
         }
 
-        private void CreateDocument(string destinationFolderPath, string destinationFileName, string uploadId, long uploadBytes, out Uri uploadedUri)
+        private void CreateDocument(string destinationFolderPath, string destinationFileName, string uploadId, long uploadBytes, out DocumentResponse ardiaDocument)
         {
             HttpStatusCode? statusCode = null;
             var responseBody = string.Empty;
@@ -334,12 +340,10 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
 
                 statusCode = response.StatusCode;
                 responseBody = response.Content.ReadAsStringAsync().Result;
-                
+
                 response.EnsureSuccessStatusCode();
 
-                var ardiaDocumentResponse = JsonConvert.DeserializeObject<DocumentResponse>(responseBody);
-
-                uploadedUri = new Uri(ardiaDocumentResponse.PresignedUrls.First());
+                ardiaDocument = JsonConvert.DeserializeObject<DocumentResponse>(responseBody);
             }
             catch (Exception e)
             {
@@ -350,6 +354,21 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             }
         }
 
+        public DocumentResponse GetDocument(string documentId)
+        {
+            var uriString = string.Format(PATH_GET_DOCUMENT, documentId);
+
+            using var httpClient = AuthenticatedHttpClient();
+            var response = httpClient.GetAsync(uriString).Result;
+
+            response.EnsureSuccessStatusCode();
+            var responseBody = response.Content.ReadAsStringAsync().Result;
+
+            var ardiaDocumentResponse = JsonConvert.DeserializeObject<DocumentResponse>(responseBody);
+
+            return ardiaDocumentResponse;
+        }
+
         // CONSIDER: marshal JSON directly to RemoteItem. ArdiaSession marshals in two steps -
         //           JSON to ArdiaFolderObject then to RemoteItem. Can simplify here.
         public IList<RemoteItem> GetFolders(ArdiaUrl folderUrl, IProgressMonitor progressMonitor)
@@ -358,7 +377,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
 
             using var httpClient = AuthenticatedHttpClient();
 
-            var requestUrl = GetFolderContentsUrl(folderUrl); 
+            var requestUrl = GetFolderContentsUrl(folderUrl);
 
             var response = httpClient.GetAsync(requestUrl).Result;
             response.EnsureSuccessStatusCode();
@@ -411,13 +430,12 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
     }
 
     // TODO - IMPORTANT: scrub access tokens from URI and responseBody
-    // CONSIDER: error message tailored to problems parsing the response as JSON
     // CONSIDER: can more be reused with Panorama's error reporting, including PanoramaServerException?
     public class ArdiaServerException : Exception
     {
         public static ArdiaServerException Create(string message, Uri uri, HttpStatusCode? statusCode, string responseBody, Exception inner)
         {
-            var ardiaError = ArdiaError.CreateFromResponse(statusCode, responseBody);
+            var ardiaError = ArdiaError.Create(statusCode, responseBody);
 
             return Create(message, uri, ardiaError, inner);
         }
@@ -440,10 +458,10 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
 
     // CONSIDER: refactor ErrorMessageBuilder out of Panorama and generalize for Ardia? Using a simpler version for now
     //           while testing out approaches to error handling.
-    internal sealed class ErrorMessageBuilder
+    public sealed class ErrorMessageBuilder
     {
-        private readonly string _error;
-        private string _errorDetail;
+        private readonly string _message;
+        private string _messageDetail;
         private ArdiaError _serverError;
         private Uri _uri;
 
@@ -452,14 +470,14 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             return new ErrorMessageBuilder(error);
         }
 
-        private ErrorMessageBuilder(string error)
+        private ErrorMessageBuilder(string message)
         {
-            _error = error;
+            _message = message;
         }
 
-        public ErrorMessageBuilder ErrorDetail(string errorDetail)
+        public ErrorMessageBuilder ErrorDetail(string messageDetail)
         {
-            _errorDetail = errorDetail;
+            _messageDetail = messageDetail;
             return this;
         }
 
@@ -480,18 +498,21 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         public override string ToString()
         {
             var sb = new StringBuilder();
-            if (!string.IsNullOrEmpty(_errorDetail) || _serverError != null)
+            if (!string.IsNullOrEmpty(_messageDetail) || _serverError != null)
             {
                 sb.Append(ArdiaResources.Error_Prefix);
-                if (!string.IsNullOrEmpty(_errorDetail)) sb.AppendLine(_errorDetail);
-                if (_serverError != null) sb.AppendLine(_serverError.ToString());
-            }
-            if (_uri != null)
-            {
-                sb.AppendLine(ArdiaResources.Error_URL);
+
+                if (!string.IsNullOrEmpty(_messageDetail)) 
+                    sb.AppendLine(_messageDetail);
+                
+                if (_serverError != null) 
+                    sb.AppendLine(_serverError.ToString());
             }
 
-            return sb.Length > 0 ? CommonTextUtil.LineSeparate(_error, sb.ToString().TrimEnd()) : _error;
+            if (_uri != null)
+                sb.AppendLine($@"{ArdiaResources.Error_URL} {_uri}");
+
+            return sb.Length > 0 ? CommonTextUtil.LineSeparate(_message, sb.ToString().TrimEnd()) : _message;
         }
     }
 }

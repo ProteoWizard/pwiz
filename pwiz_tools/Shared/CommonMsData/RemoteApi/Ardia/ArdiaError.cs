@@ -19,32 +19,49 @@ using System.Net;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using pwiz.Common.SystemUtil;
+using System.IO;
+using System.Text;
+using System.Xml.Linq;
 
 namespace pwiz.CommonMsData.RemoteApi.Ardia
 {
     public sealed class ArdiaError
     {
-        public static ArdiaError CreateFromResponse(HttpStatusCode? statusCode, string responseBody)
+        public static ArdiaError Create(HttpStatusCode? statusCode, string responseBody)
         {
             return new ArdiaError
             {
                 StatusCode = statusCode,
-                Message = GetIfErrorInResponse(responseBody)
+                ResponseBody = responseBody,
+                Message = ReadErrorFromResponse(responseBody)
             };
         }
 
-        // CONSIDER: this drops the stack trace. Ok for this scenario?
         public static ArdiaError CreateFromException(Exception e)
         {
-            return new ArdiaError
+            if(e is WebException { Response: HttpWebResponse response })
             {
-                StatusCode = null,
-                Message = e.Message
-            };
+                var statusCode = response.StatusCode;
+                var responseBody = string.Empty;
+
+                using var stream = response.GetResponseStream();
+                if (stream != null)
+                {
+                    using var reader = new StreamReader(stream, Encoding.UTF8);
+                    responseBody = reader.ReadToEnd();
+                }
+
+                return Create(statusCode, responseBody);
+            }
+            else
+            {
+                return Create(null, e.Message);
+            }
         }
 
         private ArdiaError() { }
 
+        public string ResponseBody { get; private set; }
         public string Message { get; private set; }
         public HttpStatusCode? StatusCode { get; private set; }
         public int? StatusCodeInt => StatusCode != null ? (int)StatusCode : (int?)null;
@@ -59,8 +76,9 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             return serverError;
         }
 
-        public static string GetIfErrorInResponse(string responseBody)
+        public static string ReadErrorFromResponse(string responseBody)
         {
+            // Response body might be JSON - ex: errors from JSON
             try
             {
                 var jsonResponse = JObject.Parse(responseBody);
@@ -74,8 +92,22 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
                 // ignore
             }
 
-            return string.Empty;
-        }
+            // Response body might be XML - ex: errors from AWS
+            try
+            {
+                var doc = XDocument.Parse(responseBody);
+                var messageElement = doc.Element("Error")?.Element("Message");
+                if (messageElement != null)
+                {
+                    return messageElement.Value;
+                }
+            }
+            catch (Exception)
+            {
+                // ignore
+            }
 
+            return responseBody;
+        }
     }
 }

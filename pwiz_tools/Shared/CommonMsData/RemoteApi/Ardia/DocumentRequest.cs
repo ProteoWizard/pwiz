@@ -33,7 +33,9 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
     public class DocumentResponse
     {
         public string DocumentId { get; set; }
+
         [SuppressMessage("ReSharper", "IdentifierTypo")]
-        public IList<string> PresignedUrls { get; set; } // CONSIDER: URI rather than string
+        public IList<string> PresignedUrls { get; set; } // CONSIDER: URI rather than string?
+        public string RLink { get; set; }
     }
 }

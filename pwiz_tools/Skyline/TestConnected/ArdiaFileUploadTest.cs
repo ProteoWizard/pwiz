@@ -49,9 +49,7 @@ namespace pwiz.SkylineTestConnected
             RunFunctionalTest();
         }
 
-        // TODO: verify file successfully uploaded
         // TODO: is there an API to verify Ardia account has permissions required to run test? Ex: upload files, delete files
-        // TODO: put test results in directory with datestamp so tests runs are independent of each other
         protected override void DoTest()
         {
             Assert.IsFalse(SkylineWindow.HasRegisteredArdiaAccount);
@@ -73,11 +71,12 @@ namespace pwiz.SkylineTestConnected
             TestGetFolderPath();
             TestValidateFolderName();
             TestAccountHasCredentials(account);
+            TestCreateArdiaErrorWithMessageFromResponseBody();
 
             // Test scenarios making remote API calls
-            // TODO: oof. Would be nice to have an abstraction dealing with paths
             var setupClient = ArdiaClient.Create(account);
 
+            // TODO: oof. Would be nice to have an abstraction for dealing with folder paths
             var folderName = $@"TestResults-{DateTime.Now:yyyy-MM-dd_HH-mm-ss}";
             var parentPath = $@"/{TEST_RESULTS_DIRECTORY_NAME}";
             var testResultsPath = $@"{parentPath}/{folderName}";
@@ -90,12 +89,34 @@ namespace pwiz.SkylineTestConnected
             Test_ArdiaClient_CreateFolder(account, testResultsPath);
 
             TestSuccessfulUpload(account, new[] { TEST_RESULTS_DIRECTORY_NAME, folderName });
+
             // TODO: keep directory if 1+ tests fail
             // Delete directory for this test run - disabled for now
             // finally
             // {
             //     setupClient.DeleteFolder(testResultsPath);
             // }
+        }
+
+        private static void TestCreateArdiaErrorWithMessageFromResponseBody()
+        {
+            var message = ArdiaError.ReadErrorFromResponse(ERROR_MESSAGE_JSON);
+            Assert.AreEqual(@"Item is Archived or Path already exists.", message);
+
+            message = ArdiaError.ReadErrorFromResponse(ERROR_MESSAGE_XML);
+            Assert.AreEqual(@"Your proposed upload exceeds the maximum allowed size", message);
+
+            message = ArdiaError.ReadErrorFromResponse(@"Neither XML nor JSON.");
+            Assert.AreEqual(@"Neither XML nor JSON.", message);
+
+            var error = ArdiaError.Create(null, ERROR_MESSAGE_JSON);
+            Assert.AreEqual(@"Item is Archived or Path already exists.", error.Message);
+
+            error = ArdiaError.Create(null, ERROR_MESSAGE_XML);
+            Assert.AreEqual(@"Your proposed upload exceeds the maximum allowed size", error.Message);
+
+            error = ArdiaError.Create(null, @"Neither XML nor JSON.");
+            Assert.AreEqual(@"Neither XML nor JSON.", error.Message);
         }
 
         private static void TestAccountHasCredentials(ArdiaAccount account)
@@ -163,7 +184,6 @@ namespace pwiz.SkylineTestConnected
             ardiaClient.GetFolders(account.GetRootArdiaUrl(), null);
         }
 
-        // TODO: should ArdiaClient return a non-null object when request successful?
         private static void Test_ArdiaClient_CreateFolder(ArdiaAccount account, string path)
         {
             var ardiaClient = ArdiaClient.Create(account);
@@ -179,28 +199,38 @@ namespace pwiz.SkylineTestConnected
             ardiaClient.DeleteFolder(@$"{path}/NewFolder01");
         }
 
-        private static void TestSuccessfulUpload(ArdiaAccount account, string[] path) 
+        private static void TestSuccessfulUpload(ArdiaAccount account, string[] folderPath) 
         {
             var publishDlg = ShowDialog<PublishDocumentDlgArdia>(() => SkylineWindow.PublishToArdia());
 
             WaitForConditionUI(() => publishDlg.IsLoaded);
 
-            RunUI(() => publishDlg.FoldersTree.Nodes[0].Expand());
-
             RunUI(() =>
             {
-                var treeNode = publishDlg.FindByName(publishDlg.FoldersTree.Nodes[0].Nodes, path[0]);
-                Assert.IsNotNull(treeNode, @"Did not find TreeNode with text '{path[0]}'.");
-                treeNode.Expand();
-            });
+                publishDlg.FoldersTree.Nodes[0].Expand();
 
-            RunUI(() => publishDlg.SelectItem(path[1]));
+                var treeNode = publishDlg.FindByName(publishDlg.FoldersTree.Nodes[0].Nodes, folderPath[0]);
+
+                Assert.IsNotNull(treeNode, @$"Did not find TreeNode with text '{folderPath[0]}'.");
+
+                treeNode.Expand();
+
+                publishDlg.SelectItem(folderPath[1]);
+            });
 
             var shareTypeDlg = ShowDialog<ShareTypeDlg>(publishDlg.OkDialog);
             var docUploadedDlg = ShowDialog<MessageDlg>(shareTypeDlg.OkDialog);
             OkDialog(docUploadedDlg, docUploadedDlg.ClickOk);
 
-            Assert.AreEqual(@$"/{path[0]}/{path[1]}", publishDlg.DestinationPath);
+            Assert.AreEqual(@$"/{folderPath[0]}/{folderPath[1]}", publishDlg.DestinationPath);
+
+            // Use new document's ID to make another API call checking document can be read from the server
+            var documentId = publishDlg.PublishedDocument.DocumentId;
+
+            var ardiaClient = ArdiaClient.Create(account);
+            var ardiaDocument = ardiaClient.GetDocument(documentId);
+            Assert.IsNotNull(ardiaDocument);
+            Assert.AreEqual(documentId, ardiaDocument.DocumentId);
         }
 
         private static void RegisterRemoteServer(ArdiaAccount account) 
@@ -219,5 +249,15 @@ namespace pwiz.SkylineTestConnected
             OkDialog(editRemoteAccountListDlg, editRemoteAccountListDlg.OkDialog);
             OkDialog(optionsDlg, optionsDlg.OkDialog);
         }
+
+        /// <summary>
+        /// Example JSON error - returned by Ardia when trying to create a new folder
+        /// </summary>
+        private const string ERROR_MESSAGE_JSON = "{\"title\":\"Item is Archived or Path already exists.\",\"status\":409}\r\n";
+
+        /// <summary>
+        /// Example XML error - return by AWS when upload size exceeds 5GB
+        /// </summary>
+        private const string ERROR_MESSAGE_XML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Error><Code>EntityTooLarge</Code><Message>Your proposed upload exceeds the maximum allowed size</Message><ProposedSize>6451738112</ProposedSize><MaxSizeAllowed>5368709120</MaxSizeAllowed><RequestId>...string...</RequestId><HostId>...string...</HostId></Error>";
     }
 }

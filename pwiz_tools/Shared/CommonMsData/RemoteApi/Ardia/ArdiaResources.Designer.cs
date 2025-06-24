@@ -233,7 +233,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: .
+        ///   Looks up a localized string similar to Error details: .
         /// </summary>
         public static string Error_Prefix {
             get {
@@ -256,6 +256,15 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia {
         public static string Error_URL {
             get {
                 return ResourceManager.GetString("Error_URL", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This document is too large to publish. The maximum archive size is {0}..
+        /// </summary>
+        public static string FileUpload_ArchiveTooLarge {
+            get {
+                return ResourceManager.GetString("FileUpload_ArchiveTooLarge", resourceCulture);
             }
         }
         

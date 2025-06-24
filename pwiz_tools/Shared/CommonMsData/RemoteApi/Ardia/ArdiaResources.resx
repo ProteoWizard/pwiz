@@ -144,6 +144,9 @@
   <data name="Ardia_FileUpload_SelectDestinationButtonLabel" xml:space="preserve">
     <value>Select</value>
   </data>
+  <data name="FileUpload_ArchiveTooLarge" xml:space="preserve">
+    <value>This document is too large to publish. The maximum archive size is {0}.</value>
+  </data>
   <data name="Ardia_FileUpload_SelectDestinationFolderLabel" xml:space="preserve">
     <value>Select a destination folder</value>
   </data>
@@ -181,7 +184,7 @@
     <value>Error deleting folder {0}.</value>
   </data>
   <data name="Error_Prefix" xml:space="preserve">
-    <value>Error: </value>
+    <value>Error details: </value>
   </data>
   <data name="Error_ResponseStatus" xml:space="preserve">
     <value>Response status: {0}</value>

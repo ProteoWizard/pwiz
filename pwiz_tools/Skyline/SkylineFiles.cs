@@ -3510,17 +3510,35 @@ namespace pwiz.Skyline
 
         // BUG: Removing RemoteAccounts using EditRemoteAccountsDlg may unexpectedly leave registered Ardia accounts intact?
         // CONSIDER: revisit testing credentials for an Ardia account and prompting for login if needed
-        // CONSIDER: do un-saved Skyline documents need to be saved before being published?
         public void PublishToArdia()
         {
             Assume.IsTrue(HasRegisteredArdiaAccount, @"Expected to find a registered Ardia account but found none");
 
-            var ardiaAccounts = Settings.Default.RemoteAccountList.GetAccountsOfType(RemoteAccountType.ARDIA).Cast<ArdiaAccount>().ToList();
+            // Document must be fully loaded before it can be published
+            if (!DocumentUI.IsLoaded)
+            {
+                MessageDlg.Show(this, SkylineResources.SkylineWindow_ShowPublishDlg_The_document_must_be_fully_loaded_before_it_can_be_uploaded_);
+                return;
+            }
+
+            // Document must be saved before it can be published
+            if (string.IsNullOrEmpty(DocumentFilePath))
+            {
+                if (MultiButtonMsgDlg.Show(this, SkylineResources.SkylineWindow_ShowPublishDlg_The_document_must_be_saved_before_it_can_be_uploaded_,
+                        MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+                    return;
+
+                if (!SaveDocumentAs())
+                    return;
+            }
 
             string fileName = null;
             try
             {
-                using var publishDlg = new PublishDocumentDlgArdia(this, ardiaAccounts, DocumentFilePath, GetFileFormatOnDisk());
+                var ardiaAccounts = Settings.Default.RemoteAccountList.GetAccountsOfType(RemoteAccountType.ARDIA).Cast<ArdiaAccount>().ToList();
+                var documentFormat = GetFileFormatOnDisk();
+
+                using var publishDlg = new PublishDocumentDlgArdia(this, ardiaAccounts, DocumentFilePath, documentFormat);
                 if (publishDlg.ShowDialog(this) == DialogResult.Cancel)
                 {
                     return;
@@ -3541,9 +3559,9 @@ namespace pwiz.Skyline
                     publishDlg.Upload(this);
                 }
             }
-            catch (ArdiaServerException e)
+            catch (Exception e)
             {
-                MessageDlg.ShowWithException(this, e.Message, e);
+                ExceptionUtil.DisplayOrReportException(this, e);
             }
             finally
             {
