@@ -2126,6 +2126,9 @@ class msvc-linking-generator : linking-generator
                     {
                         local target = [ class.new file-target $(exe-config) exact : CONFIG : $(project) : $(action) ] ;
                         local registered-target = [ virtual-target.register $(target) ] ;
+                        local command = [ $(registered-target).actualize ] ;
+                        local actual-exe = [ $(result[1]).actualize ] ;
+                        DEPENDS $(actual-exe) : $(command) ;
                         if $(target) != $(registered-target)
                         {
                             $(action).replace-targets $(target) : $(registered-target) ;
