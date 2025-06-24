@@ -404,8 +404,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (!IsValidFor(document, targetIndex, originalIndex, bestResult, threshold, refine, pointsType,
                     regressionMethod))
                 {
+                    string calcName = Settings.Default.RTCalculatorName;
                     var requested = new RequestContext(new RegressionSettings(document, targetIndex, originalIndex, bestResult,
-                        threshold, refine, pointsType, regressionMethod, Settings.Default.RTCalculatorName, RunToRun));
+                        threshold, refine, pointsType, regressionMethod, calcName, RunToRun));
                     if (UpdateData(requested))
                     {
                         // Calculate and refine regression on background thread
@@ -413,18 +414,15 @@ namespace pwiz.Skyline.Controls.Graphs
                         {
                             var ctx = _requestContext;
                             var token = _cancellationTokenSource.Token;
-                            var decoyCount = document.Molecules.Count((m) => m.IsDecoy);
-                            var calcCount = Settings.Default.RTCalculatorName.IsNullOrEmpty()
-                                ? Settings.Default.RTScoreCalculatorList.Count
-                                : 1;
-                            var maxCount = 0;
-                            if (calcCount == 1)
-                                maxCount = document.MoleculeCount + (document.MoleculeCount - decoyCount) * 2;
-                            else
-                                maxCount = document.MoleculeCount + (document.MoleculeCount - decoyCount) * calcCount;
+                            var refinementMultiplier = Settings.Default.RTScoreCalculatorList.Count;
+                            if (refinementMultiplier == 1 || !calcName.IsNullOrEmpty()) // Only one calculator or a specific one is chosen
+                                refinementMultiplier = 2;
+                            var maxCount = document.MoleculeCount;  // All molecules once
+                            var targetCount = document.Molecules.Count(m => !m.IsDecoy);
+                            maxCount += targetCount * refinementMultiplier; // Extra for refinement of target molecules
 
                             // Create progress bar with callback for UI changes
-                            _progressBar = ProgressMonitor.RegisterProgressBar(token, maxCount, 300,
+                            _progressBar = ProgressMonitor.RegisterProgressBar(token, maxCount, 400,
                                 new PaneProgressBar(this, () => {
                                     Title.Text = Resources.RTLinearRegressionGraphPane_UpdateGraph_Calculating___;
                                     Legend.IsVisible = false;
