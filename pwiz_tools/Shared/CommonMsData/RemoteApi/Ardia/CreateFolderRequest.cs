@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+using Newtonsoft.Json;
+
 namespace pwiz.CommonMsData.RemoteApi.Ardia
 {
     public class CreateFolderRequest
@@ -35,6 +37,11 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
 
         public string FolderPath { get; private set; }
         public string Name { get; private set; }
+
+        public string ToJson()
+        {
+            return JsonConvert.SerializeObject(this);
+        }
     }
 
     public class CreateFolderResponse

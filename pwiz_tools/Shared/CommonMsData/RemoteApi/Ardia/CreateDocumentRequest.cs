@@ -16,26 +16,38 @@
 
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Newtonsoft.Json;
 
 namespace pwiz.CommonMsData.RemoteApi.Ardia
 {
     // Ardia API StageDocument and Document models
     //     https://api.hyperbridge.cmdtest.thermofisher.com/document/api/swagger/index.html
     //
-    public class DocumentRequest
+    public class CreateDocumentRequest
     {
         public string UploadId { get; set; }
         public string FileName { get; set; }
         public string FilePath { get; set; }
         public long Size { get; set; }
+
+        public string ToJson()
+        {
+            return JsonConvert.SerializeObject(this);
+        }
     }
 
-    public class DocumentResponse
+    public class CreateDocumentResponse
     {
         public string DocumentId { get; set; }
 
         [SuppressMessage("ReSharper", "IdentifierTypo")]
-        public IList<string> PresignedUrls { get; set; } // CONSIDER: URI rather than string?
+        public IList<string> PresignedUrls { get; set; }
+
         public string RLink { get; set; }
+
+        public static CreateDocumentResponse FromJson(string json)
+        {
+            return JsonConvert.DeserializeObject<CreateDocumentResponse>(json);
+        }
     }
 }

@@ -57,12 +57,15 @@ namespace pwiz.Skyline.FileUI
             treeViewFolders.ImageList.Images.Add(Resources.Blank);      // 32bpp
         }
 
+        /// <summary>
+        /// Fully qualified path for where to put the Skyline document on an Ardia server.
+        /// </summary>
         public string DestinationPath { get; private set; }
 
         /// <summary>
-        /// If publishing succeeded, this is a <see cref="DocumentResponse"/> representing the new Ardia document.
+        /// If publishing succeeded, this is a <see cref="CreateDocumentResponse"/> representing the new Ardia document.
         /// </summary>
-        public DocumentResponse PublishedDocument { get; private set; }
+        public CreateDocumentResponse PublishedDocument { get; private set; }
 
         /// <summary>
         /// Used in tests.

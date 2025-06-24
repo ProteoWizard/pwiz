@@ -87,9 +87,11 @@
     </Compile>
     <Compile Include="RemoteApi\Ardia\ArdiaSession.cs" />
     <Compile Include="RemoteApi\Ardia\ArdiaUrl.cs" />
+    <Compile Include="RemoteApi\Ardia\CompleteMultiPartUploadRequest.cs" />
     <Compile Include="RemoteApi\Ardia\CreateFolderRequest.cs" />
-    <Compile Include="RemoteApi\Ardia\DocumentRequest.cs" />
+    <Compile Include="RemoteApi\Ardia\CreateDocumentRequest.cs" />
     <Compile Include="RemoteApi\Ardia\StageDocumentRequest.cs" />
+    <Compile Include="RemoteApi\Ardia\UploadPieceResponse.cs" />
     <Compile Include="RemoteApi\RemoteAccount.cs" />
     <Compile Include="RemoteApi\RemoteAccountType.cs" />
     <Compile Include="RemoteApi\RemoteApiResources.designer.cs">

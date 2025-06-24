@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.CommonMsData.RemoteApi;
@@ -31,6 +32,8 @@ using static pwiz.SkylineTestUtil.ArdiaTestUtil;
 namespace pwiz.SkylineTestConnected
 {
     [TestClass]
+    [SuppressMessage("ReSharper", "IdentifierTypo")]
+    [SuppressMessage("ReSharper", "StringLiteralTypo")]
     public class ArdiaFileUploadTest : AbstractFunctionalTestEx
     {
         private const string TEST_RESULTS_DIRECTORY_NAME = @"ZZZ-Skyline";
@@ -71,7 +74,11 @@ namespace pwiz.SkylineTestConnected
             TestGetFolderPath();
             TestValidateFolderName();
             TestAccountHasCredentials(account);
-            TestCreateArdiaErrorWithMessageFromResponseBody();
+            TestCreateArdiaError();
+
+            Test_StageDocument_Request_SinglePart();
+            Test_StageDocument_Request_MultiPart();
+            Test_StageDocument_Response();
 
             // Test scenarios making remote API calls
             var setupClient = ArdiaClient.Create(account);
@@ -98,7 +105,60 @@ namespace pwiz.SkylineTestConnected
             // }
         }
 
-        private static void TestCreateArdiaErrorWithMessageFromResponseBody()
+        private static void Test_StageDocument_Response()
+        {
+            var stagedDocumentResponse = StagedDocumentResponse.FromJson(RESPONSE_JSON_CREATE_STAGED_DOCUMENT);
+
+            Assert.AreEqual("97088887-788079", stagedDocumentResponse.UploadId);
+
+            var piece = stagedDocumentResponse.Pieces[0];
+            Assert.IsNotNull(stagedDocumentResponse.Pieces);
+            Assert.AreEqual(1, stagedDocumentResponse.Pieces.Count);
+            Assert.IsNotNull(piece);
+            Assert.AreEqual(StageDocumentRequest.SINGLE_DOCUMENT, piece.PieceName);
+            Assert.AreEqual("/foobar", piece.PiecePath);
+
+            var presignedUrls = piece.PresignedUrls;
+            Assert.IsNotNull(presignedUrls);
+            Assert.AreEqual("https://www.example.com/", presignedUrls[0]);
+        }
+
+        private static void Test_StageDocument_Request_MultiPart()
+        {
+            var requestModel = StageDocumentRequest.Create();
+            requestModel.AddPiece(@"foobar.sky.z01", 1024, 1024, true);
+            requestModel.AddPiece(@"foobar.sky.z02", 2048, 3072, true);
+            requestModel.AddPiece(@"foobar.sky.zip", 4096, 7168, true);
+
+            Assert.IsNotNull(requestModel.Pieces);
+            Assert.AreEqual(3, requestModel.Pieces.Count);
+            Assert.AreEqual(@"foobar.sky.z01", requestModel.Pieces[0].PieceName);
+            Assert.AreEqual(1024, requestModel.Pieces[0].PartSize);
+            Assert.AreEqual(1024, requestModel.Pieces[0].Size);
+            Assert.IsTrue(requestModel.Pieces[0].IsMultiPart);
+
+            var json = requestModel.ToJson();
+            Assert.AreEqual(@"{""Pieces"":[{""PieceName"":""foobar.sky.z01"",""PartSize"":1024,""Size"":1024,""IsMultiPart"":true},{""PieceName"":""foobar.sky.z02"",""PartSize"":2048,""Size"":3072,""IsMultiPart"":true},{""PieceName"":""foobar.sky.zip"",""PartSize"":4096,""Size"":7168,""IsMultiPart"":true}]}", json);
+        }
+
+        private static void Test_StageDocument_Request_SinglePart()
+        {
+            // Model used for upload of Skyline documents < 2GB 
+            var requestModel = StageDocumentRequest.CreateSinglePieceDocument();
+
+            Assert.IsNotNull(requestModel);
+            Assert.IsNotNull(requestModel.Pieces);
+            Assert.AreEqual(1, requestModel.Pieces.Count);
+            Assert.AreEqual(StageDocumentRequest.SINGLE_DOCUMENT, requestModel.Pieces[0].PieceName);
+            Assert.IsFalse(requestModel.Pieces[0].IsMultiPart);
+
+            var json = requestModel.ToJson();
+
+            // Properties with default values should not be included in serialized JSON
+            Assert.AreEqual(@"{""Pieces"":[{""PieceName"":""[SingleDocument]""}]}", json);
+        }
+
+        private static void TestCreateArdiaError()
         {
             var message = ArdiaError.ReadErrorFromResponse(ERROR_MESSAGE_JSON);
             Assert.AreEqual(@"Item is Archived or Path already exists.", message);
@@ -259,5 +319,7 @@ namespace pwiz.SkylineTestConnected
         /// Example XML error - return by AWS when upload size exceeds 5GB
         /// </summary>
         private const string ERROR_MESSAGE_XML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Error><Code>EntityTooLarge</Code><Message>Your proposed upload exceeds the maximum allowed size</Message><ProposedSize>6451738112</ProposedSize><MaxSizeAllowed>5368709120</MaxSizeAllowed><RequestId>...string...</RequestId><HostId>...string...</HostId></Error>";
+
+        private const string RESPONSE_JSON_CREATE_STAGED_DOCUMENT = "{pieces: [ { pieceName: \"[SingleDocument]\", piecePath: \"/foobar\", presignedUrls: [\"https://www.example.com/\"]} ], uploadId: \"97088887-788079\" }";
     }
 }

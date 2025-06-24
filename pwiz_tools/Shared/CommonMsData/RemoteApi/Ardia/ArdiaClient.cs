@@ -104,6 +104,8 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
 
         public bool CreateFolder(string parentFolderPath, string folderName, IProgressMonitor progressMonitor, out ArdiaError serverError)
         {
+            serverError = null;
+
             HttpStatusCode? statusCode = null;
             var responseBody = string.Empty;
 
@@ -111,7 +113,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             {
                 var requestModel = CreateFolderRequest.Create(parentFolderPath, folderName);
 
-                var jsonString = JsonConvert.SerializeObject(requestModel);
+                var jsonString = requestModel.ToJson();
                 using var request = new StringContent(jsonString, Encoding.UTF8, HEADER_CONTENT_TYPE_FOLDER);
 
                 using var httpClient = AuthenticatedHttpClient();
@@ -123,7 +125,6 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
 
                 if (statusCode == HttpStatusCode.Created)
                 {
-                    serverError = null;
                     return true;
                 }
                 else
@@ -217,14 +218,17 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         /// <param name="destinationFolderPath">Absolute path to a destination folder on the Ardia Platform</param>
         /// <param name="localZipFile">Absolute path to a local zip file to upload</param>
         /// <param name="progressMonitor"></param>
-        /// <param name="uploadUri">URI referencing the location of the uploaded file</param>
+        /// <param name="newCreateDocument">model for the uploaded file</param>
         /// <returns>true if uploaded succeeded, false if upload was canceled. Will throw an exception </returns>
-        public bool SendZipFile(string destinationFolderPath, string localZipFile, IProgressMonitor progressMonitor, out DocumentResponse newDocument)
+        public bool SendZipFile(string destinationFolderPath, string localZipFile, IProgressMonitor progressMonitor, out CreateDocumentResponse newCreateDocument)
         {
-            newDocument = null;
+            newCreateDocument = null;
 
             // Step 1 of 3: Ardia API - Create Staged Document
-            CreateStagedDocument(out var presignedUrl, out var uploadId);
+            CreateStagedDocument(out var modelResponse);
+
+            var uploadId = modelResponse.UploadId;
+            var presignedUrl = modelResponse.Pieces[0].PresignedUrls[0];
 
             if (progressMonitor.IsCanceled)
             {
@@ -241,22 +245,21 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
 
             // Step 3 of 3: Ardia API - Create Document
             var fileName = Path.GetFileName(localZipFile);
-            CreateDocument(destinationFolderPath, fileName, uploadId, uploadBytes, out newDocument);
+            CreateDocument(destinationFolderPath, fileName, uploadId, uploadBytes, out newCreateDocument);
 
             return true;
         }
 
-        private void CreateStagedDocument(out string presignedUrl, out string uploadId)
+        private void CreateStagedDocument(out StagedDocumentResponse modelResponse)
         {
             HttpStatusCode? statusCode = null;
             var responseBody = string.Empty;
 
             try
             {
-                var modelRequest = StageDocumentRequest.Create();
-                modelRequest.AddSingleDocumentPiece();
+                var modelRequest = StageDocumentRequest.CreateSinglePieceDocument();
+                var jsonString = modelRequest.ToJson();
 
-                var jsonString = JsonConvert.SerializeObject(modelRequest);
                 using var request = new StringContent(jsonString, Encoding.UTF8, APPLICATION_JSON);
 
                 using var ardiaHttpClient = AuthenticatedHttpClient();
@@ -266,10 +269,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
 
                 responseBody = response.Content.ReadAsStringAsync().Result;
 
-                var responseModel = JsonConvert.DeserializeObject<StagedDocumentResponse>(responseBody);
-
-                presignedUrl = responseModel.Pieces[0].PresignedUrls[0];
-                uploadId = responseModel.UploadId;
+                modelResponse = StagedDocumentResponse.FromJson(responseBody);
             }
             catch (Exception e)
             {
@@ -316,14 +316,14 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             }
         }
 
-        private void CreateDocument(string destinationFolderPath, string destinationFileName, string uploadId, long uploadBytes, out DocumentResponse ardiaDocument)
+        private void CreateDocument(string destinationFolderPath, string destinationFileName, string uploadId, long uploadBytes, out CreateDocumentResponse ardiaCreateDocument)
         {
             HttpStatusCode? statusCode = null;
             var responseBody = string.Empty;
 
             try
             {
-                var modelRequest = new DocumentRequest
+                var modelRequest = new CreateDocumentRequest
                 {
                     UploadId = uploadId,
                     Size = uploadBytes,
@@ -331,7 +331,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
                     FilePath = destinationFolderPath
                 };
 
-                var jsonString = JsonConvert.SerializeObject(modelRequest);
+                var jsonString = modelRequest.ToJson();
                 using var request = new StringContent(jsonString);
                 request.Headers.ContentType = new MediaTypeHeaderValue(APPLICATION_JSON);
 
@@ -343,7 +343,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
 
                 response.EnsureSuccessStatusCode();
 
-                ardiaDocument = JsonConvert.DeserializeObject<DocumentResponse>(responseBody);
+                ardiaCreateDocument = CreateDocumentResponse.FromJson(responseBody);
             }
             catch (Exception e)
             {
@@ -354,7 +354,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             }
         }
 
-        public DocumentResponse GetDocument(string documentId)
+        public CreateDocumentResponse GetDocument(string documentId)
         {
             var uriString = string.Format(PATH_GET_DOCUMENT, documentId);
 
@@ -364,9 +364,8 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             response.EnsureSuccessStatusCode();
             var responseBody = response.Content.ReadAsStringAsync().Result;
 
-            var ardiaDocumentResponse = JsonConvert.DeserializeObject<DocumentResponse>(responseBody);
-
-            return ardiaDocumentResponse;
+            var modelResponse = CreateDocumentResponse.FromJson(responseBody);
+            return modelResponse;
         }
 
         // CONSIDER: marshal JSON directly to RemoteItem. ArdiaSession marshals in two steps -
