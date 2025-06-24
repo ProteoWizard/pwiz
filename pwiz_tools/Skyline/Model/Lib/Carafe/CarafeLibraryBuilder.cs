@@ -258,7 +258,6 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             cpu
         };
 
-
         public enum LibraryFormats
         {
             [Description("Skyline")] skyline,
