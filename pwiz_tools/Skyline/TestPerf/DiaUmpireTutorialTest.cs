@@ -25,6 +25,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json;
 using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
@@ -61,6 +62,8 @@ namespace TestPerf
     {
         private InstrumentSpecificValues _instrumentValues;
         private AnalysisValues _analysisValues;
+        private ExpectedValues _expectedValues;
+        private string _expectedValuesFilePath;
 
         private class InstrumentSpecificValues
         {
@@ -87,17 +90,10 @@ namespace TestPerf
             public bool IsWholeProteome;
             public bool KeepPrecursors;
 
-            public int LibraryPeptideCount;
-            public double IrtSlope;
-            public double IrtIntercept;
-
             public string IrtFilterText;
             public int? MinPeptidesPerProtein;
             public bool RemoveDuplicates;
-            public int[] FinalTargetCounts;
-            public string ScoringModelCoefficients;
             public PointF ChromatogramClickPoint;
-            public double[][] MassErrorStats;
 
             public string FastaPathForSearch => "DDA_search\\nodecoys_3mixed_human_yeast_ecoli_20140403_iRT.fasta";
             public string FastaPath =>
@@ -105,6 +101,16 @@ namespace TestPerf
                     ? "DDA_search\\nodecoys_3mixed_human_yeast_ecoli_20140403_iRT.fasta"
                     : "DIA\\target_protein_sequences.fasta";
 
+        }
+
+        private class ExpectedValues
+        {
+            public int LibraryPeptideCount;
+            public double IrtSlope;
+            public double IrtIntercept;
+            public double[][] MassErrorStats;
+            public int[] FinalTargetCounts;
+            public double?[] ScoringModelCoefficients;
         }
 
         private string[] DiaFiles
@@ -132,24 +138,12 @@ namespace TestPerf
             // Not yet translated
             if (IsTranslationRequired)
                 return;
-
+            ReadExpectedValues("TestDiaTtofDiaUmpireTutorial");
             //IsPauseForScreenShots = true;
             _analysisValues = new AnalysisValues
             {
                 KeepPrecursors = false,
                 ChromatogramClickPoint = new PointF(23.02F, 150.0F),
-                LibraryPeptideCount = 20377,
-                IrtSlope = 3.017,
-                IrtIntercept = -67.652,
-
-                FinalTargetCounts = new[] { 11, 215, 279, 1673 },
-                ScoringModelCoefficients = "-0.1511|-0.5825|5.5994|-0.5757|-0.4500|0.7592|0.4174|-0.0851",
-                MassErrorStats = new[]
-                {
-                    new[] {3.3, 3.7},
-                    new[] {3.2, 3.4},
-                    new[] {3.5, 4.1},
-                },
             };
 
             TestTtofData();
@@ -161,6 +155,7 @@ namespace TestPerf
          NoNightlyTesting(TestExclusionReason.EXCESSIVE_TIME)]
         public void TestDiaTtofDiaUmpireTutorialFullFileset()
         {
+            ReadExpectedValues("TestDiaTtofDiaUmpireTutorialFullFileset");
             _analysisValues = new AnalysisValues
             {
                 KeepPrecursors = false,
@@ -169,22 +164,6 @@ namespace TestPerf
                 MinPeptidesPerProtein = 2,
                 RemoveDuplicates = true,
                 ChromatogramClickPoint = new PointF(23.02F, 150.0F),
-                LibraryPeptideCount = 33997,
-                IrtSlope = 3.023,
-                IrtIntercept = -67.902,
-
-                FinalTargetCounts = new[] { 2855, 29310, 32713, 196278 },
-                ScoringModelCoefficients = "0.1985|-0.6148|4.3467|-0.0062|-0.1611|0.5597|0.0893|-0.0411",
-                MassErrorStats = new[]
-                {
-                    new[] {2.6, 5.2},
-                    new[] {2.5, 4.8},
-                    new[] {3.4, 5.1},
-                    new[] {4.7, 4.8},
-                    new[] {3.9, 5.2},
-                    new[] {-0.2, 4.5},
-                    new[] {1.0, 4.9},
-                },
             };
 
             if (!IsCoverShotMode)
@@ -220,23 +199,12 @@ namespace TestPerf
         [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MSFRAGGER_UNICODE_ISSUES)]
         public void TestDiaQeDiaUmpireTutorialExtra()
         {
+            ReadExpectedValues("TestDiaQeDiaUmpireTutorialExtra");
             _analysisValues = new AnalysisValues
             {
                 KeepPrecursors = false,
                 IrtFilterText = "standard",
                 ChromatogramClickPoint = new PointF(18.13f, 5.51e5f),
-                LibraryPeptideCount = 10048,
-                IrtSlope = 2.605,
-                IrtIntercept = -45.890,
-
-                FinalTargetCounts = new[] { 11, 177, 209, 1253 },
-                ScoringModelCoefficients = "0.2358|-0.6932|3.1396|0.6093|-0.0724|0.7662|0.2178|-0.0990",
-                MassErrorStats = new[]
-                {
-                    new[] {1.9, 3.9},
-                    new[] {1.5, 3.8},
-                    new[] {2.4, 3.9},
-                },
             };
 
             if (!IsCoverShotMode)
@@ -249,7 +217,7 @@ namespace TestPerf
          NoNightlyTesting(TestExclusionReason.EXCESSIVE_TIME)] // do not run full filesets for nightly tests
         public void TestDiaQeDiaUmpireTutorialFullFileset()
         {
-
+            ReadExpectedValues("TestDiaQeDiaUmpireTutorialFullFileset");
             _analysisValues = new AnalysisValues
             {
                 KeepPrecursors = false,
@@ -258,22 +226,6 @@ namespace TestPerf
                 MinPeptidesPerProtein = 2,
                 RemoveDuplicates = true,
                 ChromatogramClickPoint = new PointF(18.13f, 5.51e5f),
-                LibraryPeptideCount = 15770,
-                IrtSlope = 2.598,
-                IrtIntercept = -45.600,
-
-                FinalTargetCounts = new[] { 1642, 16242, 17798, 106788 },
-                ScoringModelCoefficients = "0.2335|-0.7919|2.8837|1.3237|-0.0724|0.7121|0.0970|-0.0746",
-                MassErrorStats = new[]
-                {
-                    new[] {1.6, 4.6},
-                    new[] {1.1, 4.4},
-                    new[] {1.6, 4.8},
-                    new[] {1.8, 4.4},
-                    new[] {1.7, 4.8},
-                    new[] {1.8, 4.4},
-                    new[] {1.5, 4.8},
-                },
             };
 
             if (!IsCoverShotMode)
@@ -304,6 +256,23 @@ namespace TestPerf
             });
 
             RunTest();
+        }
+
+        private void ReadExpectedValues(string name)
+        {
+            _expectedValuesFilePath = Path.Combine(ExtensionTestContext.GetProjectDirectory(
+                @"TestPerf\DiaUmpireTutorialTest.data"), name + ".json");
+            if (File.Exists(_expectedValuesFilePath))
+            {
+                using var streamReader = File.OpenText(_expectedValuesFilePath);
+                using var jsonReader = new JsonTextReader(streamReader);
+                _expectedValues = JsonSerializer.Create().Deserialize<ExpectedValues>(jsonReader);
+            }
+            else
+            {
+                Assert.IsTrue(IsRecordMode, "Expected values file {0} does not exist", _expectedValuesFilePath);
+                _expectedValues = new ExpectedValues();
+            }
         }
 
         // disable audit log comparison for FullFileset tests
@@ -354,9 +323,7 @@ namespace TestPerf
 
         protected override void DoTest()
         {
-            Assert.AreEqual("IrtSlope = 3.005,\r\nIrtIntercept = -67.173,\r\n", ParseIrtProperties("iRT = 3.005 * Measured RT - 67.173", CultureInfo.InvariantCulture));
-            if (IsRecordMode)
-                Console.WriteLine();
+            Assert.IsNotNull(_expectedValues);
 
             // Clean-up before running the test
             RunUI(() => SkylineWindow.ModifyDocument("Set default settings",
@@ -639,17 +606,21 @@ namespace TestPerf
                 var row = addIrtDlg.GetRow(0);
                 Assert.AreEqual(11, row.Cells[1].Value);
 
-                var regressionLine = new RegressionLine(_analysisValues.IrtSlope, _analysisValues.IrtIntercept);
+                var regressionLine = addIrtDlg.GetRegressionRefined(0);
+                Assert.IsNotNull(regressionLine);
+                var actualSlope = Math.Round(regressionLine.Slope, 3);
+                var actualIntercept = Math.Round(regressionLine.Intercept, 3);
                 if (!IsRecordMode)
                 {
-                    Assert.AreEqual(_analysisValues.LibraryPeptideCount, addIrtDlg.PeptidesCount);
-                    Assert.AreEqual(regressionLine.DisplayEquation, row.Cells[2].Value);
+                    Assert.AreEqual(_expectedValues.LibraryPeptideCount, addIrtDlg.PeptidesCount);
+                    Assert.AreEqual(_expectedValues.IrtSlope, actualSlope);
+                    Assert.AreEqual(_expectedValues.IrtIntercept, actualIntercept);
                 }
                 else
                 {
-                    _analysisValues.LibraryPeptideCount = addIrtDlg.PeptidesCount;
-                    Console.WriteLine($@"LibraryPeptideCount = {addIrtDlg.PeptidesCount},");
-                    Console.WriteLine(ParseIrtProperties(row.Cells[2].Value.ToString()));
+                    _expectedValues.LibraryPeptideCount = addIrtDlg.PeptidesCount;
+                    _expectedValues.IrtSlope = actualSlope;
+                    _expectedValues.IrtIntercept = actualIntercept;
                 }
 
                 Assert.AreEqual(1.0, double.Parse(row.Cells[3].Value.ToString()));
@@ -695,7 +666,7 @@ namespace TestPerf
             {
                 int proteinCount, peptideCount, precursorCount, transitionCount;
                 peptidesPerProteinDlg.NewTargetsFinal(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
-                ValidateTargets(ref _analysisValues.FinalTargetCounts, proteinCount, peptideCount, precursorCount, transitionCount, @"FinalTargetCounts");
+                ValidateTargets(ref _expectedValues.FinalTargetCounts, proteinCount, peptideCount, precursorCount, transitionCount);
             });
             PauseForScreenShot<AssociateProteinsDlg>("Import FASTA summary form");
             OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
@@ -708,7 +679,7 @@ namespace TestPerf
             WaitForDocumentChangeLoaded(doc, 15 * 60 * 1000); // 15 minutes
 
             var peakScoringModelDlg = WaitForOpenForm<EditPeakScoringModelDlg>();
-            ValidateCoefficients(peakScoringModelDlg, _analysisValues.ScoringModelCoefficients);
+            ValidateCoefficients(peakScoringModelDlg, ref _expectedValues.ScoringModelCoefficients);
             PauseForScreenShot<EditPeakScoringModelDlg>("mProphet model form");
 
             OkDialog(peakScoringModelDlg, peakScoringModelDlg.OkDialog);
@@ -803,11 +774,6 @@ namespace TestPerf
             WaitForGraphs();
             Assert.IsTrue(SkylineWindow.GraphMassError.TryGetGraphPane(out MassErrorHistogramGraphPane massErrorPane));
             int massErrorStatsIndex = 0;
-            if (IsRecordMode)
-            {
-                Console.WriteLine(@"MassErrorStats = new[]");
-                Console.WriteLine(@"{");
-            }
             ValidateMassErrors(massErrorPane, massErrorStatsIndex++);
 
             // CONSIDER: No way to specify mass error graph window in PauseForScreenShot or ShowDialog
@@ -824,7 +790,6 @@ namespace TestPerf
 
             if (IsRecordMode)
             {
-                Console.WriteLine(@"},");
                 PrintAnalysisSettingsAndResultSummary(diaUmpireParameters, searchSettings, _analysisValues);
             }
 
@@ -885,6 +850,18 @@ namespace TestPerf
                 foreach (var file in Directory.GetFiles(diaDir, "*-diaumpire.*"))
                     FileEx.SafeDelete(file);
             }
+
+            if (IsRecordMode)
+            {
+                Assert.IsNotNull(_expectedValues);
+                Assert.IsNotNull(_expectedValuesFilePath);
+                using var streamWriter = new StreamWriter(_expectedValuesFilePath);
+                using var jsonTextWriter = new JsonTextWriter(streamWriter);
+                JsonSerializer.Create(new JsonSerializerSettings
+                {
+                    Formatting = Formatting.Indented
+                }).Serialize(jsonTextWriter, _expectedValues);
+            }
         }
 
         private static Bitmap ClipDockingRect(Bitmap bmp, Rectangle rectFrame)
@@ -905,9 +882,9 @@ namespace TestPerf
                 interestingParameters.Add(diaUmpireParameters[key].ToString());
             interestingParameters.Add(searchSettings.PrecursorTolerance.Value.ToString(CultureInfo.InvariantCulture));
             interestingParameters.Add(searchSettings.FragmentTolerance.Value.ToString(CultureInfo.InvariantCulture));
-            interestingParameters.Add(analysisValues.LibraryPeptideCount.ToString());
+            interestingParameters.Add(_expectedValues.LibraryPeptideCount.ToString());
             for (int i = 0; i < 4; ++i)
-                interestingParameters.Add(analysisValues.FinalTargetCounts[i].ToString());
+                interestingParameters.Add(_expectedValues.FinalTargetCounts[i].ToString());
             Console.WriteLine(string.Join("\t", interestingParameters));
         }
 
@@ -940,19 +917,15 @@ namespace TestPerf
             }
         }
 
-        private void ValidateTargets(ref int[] targetCounts, int proteinCount, int peptideCount, int precursorCount, int transitionCount, string propName)
+        private void ValidateTargets(ref int[] targetCounts, int proteinCount, int peptideCount, int precursorCount, int transitionCount)
         {
+            var targetCountsActual = new[] { proteinCount, peptideCount, precursorCount, transitionCount };
             if (IsRecordMode)
             {
-                targetCounts[0] = proteinCount;
-                targetCounts[1] = peptideCount;
-                targetCounts[2] = precursorCount;
-                targetCounts[3] = transitionCount;
-                Console.WriteLine(@"{0} = new[] {{ {1}, {2}, {3}, {4} }},", propName, proteinCount, peptideCount, precursorCount, transitionCount);
+                targetCounts = targetCountsActual;
                 return;
             }
 
-            var targetCountsActual = new[] {proteinCount, peptideCount, precursorCount, transitionCount};
             if (!ArrayUtil.EqualsDeep(targetCounts, targetCountsActual))
             {
                 Assert.Fail("Expected target counts <{0}> do not match actual <{1}>.",
@@ -961,24 +934,34 @@ namespace TestPerf
             }
         }
 
-        private void ValidateCoefficients(EditPeakScoringModelDlg editDlgFromSrm, string expectedCoefficients)
+        private void ValidateCoefficients(EditPeakScoringModelDlg editDlgFromSrm, ref double?[] expectedCoefficients)
         {
-            string coefficients = string.Join(@"|", GetCoefficientStrings(editDlgFromSrm));
+            var actualCoefficients = editDlgFromSrm.PeakCalculatorsGrid.Items
+                .Select(item => item.Weight.HasValue ? Math.Round(item.Weight.Value, 4) : (double?)null).ToArray();
             if (IsRecordMode)
-                Console.WriteLine(@"ScoringModelCoefficients = ""{0}"",", coefficients);  // Not L10N
+                expectedCoefficients = actualCoefficients;
             else
-                AssertEx.AreEqualLines(expectedCoefficients, coefficients);
+                AssertEx.AreEqual(string.Join("|", expectedCoefficients), string.Join("|", actualCoefficients));
         }
 
         private void ValidateMassErrors(MassErrorHistogramGraphPane massErrorPane, int index)
         {
             double mean = massErrorPane.Mean, stdDev = massErrorPane.StdDev;
             if (IsRecordMode)
-                Console.WriteLine(@"new[] {{{0:0.0}, {1:0.0}}},", mean, stdDev);  // Not L10N
+            {
+                _expectedValues.MassErrorStats ??= Array.Empty<double[]>();
+                while (_expectedValues.MassErrorStats.Length <= index)
+                {
+                    _expectedValues.MassErrorStats =
+                        _expectedValues.MassErrorStats.Append(Array.Empty<double>()).ToArray();
+                }
+
+                _expectedValues.MassErrorStats[index] = new[] { mean, stdDev };
+            }
             else
             {
-                Assert.AreEqual(_analysisValues.MassErrorStats[index][0], mean, 0.05);
-                Assert.AreEqual(_analysisValues.MassErrorStats[index][1], stdDev, 0.05);
+                Assert.AreEqual(_expectedValues.MassErrorStats[index][0], mean, 0.05);
+                Assert.AreEqual(_expectedValues.MassErrorStats[index][1], stdDev, 0.05);
             }
         }
 
