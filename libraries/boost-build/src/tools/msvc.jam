@@ -2120,7 +2120,7 @@ class msvc-linking-generator : linking-generator
 
                     echo [ SHELL "$(cmd:J= )" : strip-eol ] ;
                     #SHELL "$(cmd:J= )" ;
-                    RESCAN ;
+                    #RESCAN ;
 
                     if [ path.exists $(exe-config) ]
                     {
