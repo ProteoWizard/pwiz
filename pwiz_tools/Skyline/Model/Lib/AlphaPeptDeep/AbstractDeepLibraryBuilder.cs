@@ -30,44 +30,101 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 {
+
     public class LibraryBuilderModificationSupport
     {
-        private IList<ModificationType> _ms2SupportedMods;
-        private IList<ModificationType> _rtSupportedMods;
-        private IList<ModificationType> _ccsSupportedMods;
+        public class PredictionSupport
+        {
+            public bool IsFragmentationPredictionSupported { get; set; }
+            public bool IsRetentionTimePredictionSupported { get; set; }
+            public bool IsCcsPredictionSupported { get; set; }
+        };
+       
+        internal Dictionary<string, PredictionSupport> _predictionSupport; //key is ModificationType.Accession
+
+        public enum SupportType
+        {
+            Fragmentation,
+            RetentionTime,
+            Ccs
+        }
+/// <summary>
+/// Helper function to populate the list of supported modifications
+/// </summary>
+/// <param name="supportList">List of ModificationTypes supported</param>
+/// <param name="type">Type of support: MS2 fragmentation, Retention Time, Collisional Cross Section</param>
+        private void PopulatePredictionModificationSupport(IList<ModificationType> supportList, SupportType type)
+        {
+            if (supportList == null)
+                return;
+
+            foreach (ModificationType mod in supportList)
+            {
+                var key = mod.Accession.Split(':')[0];
+
+                if (!_predictionSupport.ContainsKey(key))
+                    _predictionSupport.Add(key, new PredictionSupport());
+
+                switch (type)
+                {
+                    case SupportType.Fragmentation:
+                        _predictionSupport[key].IsFragmentationPredictionSupported = true;
+                        break;
+                    case SupportType.RetentionTime:
+                        _predictionSupport[key].IsRetentionTimePredictionSupported = true;
+                        break;
+                    case SupportType.Ccs:
+                        _predictionSupport[key].IsCcsPredictionSupported = true;
+                        break;
+                }
+            }
+        }
+
         public LibraryBuilderModificationSupport(IList<ModificationType> ms2SupportedList,
             IList<ModificationType> rtSupportedList, IList<ModificationType> ccsSupportedList)
         {
-            _ms2SupportedMods = ms2SupportedList;
-            _rtSupportedMods = rtSupportedList;
-            _ccsSupportedMods = ccsSupportedList;
+            _predictionSupport = new Dictionary<string, PredictionSupport>();
+            
+            PopulatePredictionModificationSupport(ms2SupportedList, SupportType.Fragmentation);
+            PopulatePredictionModificationSupport(rtSupportedList, SupportType.RetentionTime);
+            PopulatePredictionModificationSupport(ccsSupportedList, SupportType.Ccs);
+
         }
 
-
-        public bool IsMs2SupportedMod(ModificationType modification)
+        public bool AreAllModelsSupported(string accession)
         {
-            return _ms2SupportedMods == null || _ms2SupportedMods.FirstOrDefault(x => x.Accession == modification.Accession) != null;
-        }
-        public bool IsRtSupportedMod(ModificationType modification)
-        {
-            return _rtSupportedMods == null || _rtSupportedMods.FirstOrDefault(x => x.Accession == modification.Accession) != null;
-        }
-        public bool IsCcsSupportedMod(ModificationType modification)
-        {
-            return _ccsSupportedMods == null || _ccsSupportedMods.FirstOrDefault(x => x.Accession == modification.Accession) != null;
+            return IsMs2SupportedMod(accession) && IsRtSupportedMod(accession) && IsCcsSupportedMod(accession);
         }
 
         public bool IsMs2SupportedMod(string accession)
         {
-            return _ms2SupportedMods == null || _ms2SupportedMods.FirstOrDefault(x => x.Accession == accession) != null;
+            var key = accession.Split(':')[0];
+            if (!_predictionSupport.ContainsKey(key))
+            {
+                return false;
+            }
+
+            return _predictionSupport[key].IsFragmentationPredictionSupported;
         }
         public bool IsRtSupportedMod(string accession)
         {
-            return _rtSupportedMods == null || _rtSupportedMods.FirstOrDefault(x => x.Accession == accession) != null;
+            var key = accession.Split(':')[0];
+            if (!_predictionSupport.ContainsKey(key))
+            {
+                return false;
+            }
+
+            return _predictionSupport[key].IsRetentionTimePredictionSupported;
         }
         public bool IsCcsSupportedMod(string accession)
         {
-            return _ccsSupportedMods == null || _ccsSupportedMods.FirstOrDefault(x => x.Accession == accession) != null;
+            var key = accession.Split(':')[0];
+            if (!_predictionSupport.ContainsKey(key))
+            {
+                return false;
+            }
+
+            return _predictionSupport[key].IsCcsPredictionSupported;
         }
 
 
@@ -79,7 +136,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             {
                 if (int.TryParse(part, out int intResult))
                 {
-                    supported = supported && (_ms2SupportedMods == null || _ms2SupportedMods.FirstOrDefault(x => x.Accession.Split(':')[0] == part) != null);
+                    supported = supported && IsMs2SupportedMod(part);
                 }
             }
 
@@ -93,7 +150,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             {
                 if (int.TryParse(part, out int intResult))
                 {
-                    supported = supported && (_rtSupportedMods == null || _rtSupportedMods.FirstOrDefault(x => x.Accession.Split(':')[0] == part) != null);
+                    supported = supported && IsRtSupportedMod(part);
                 }
             }
 
@@ -107,7 +164,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             {
                 if (int.TryParse(part, out int intResult))
                 {
-                    supported = supported && (_ccsSupportedMods == null || _ccsSupportedMods.FirstOrDefault(x => x.Accession.Split(':')[0] == part) != null);
+                    supported = supported && IsCcsSupportedMod(part);
                 }
             }
 
