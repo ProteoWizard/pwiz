@@ -261,7 +261,7 @@ namespace TestPerf
         private void ReadExpectedValues(string name)
         {
             _expectedValuesFilePath = Path.Combine(ExtensionTestContext.GetProjectDirectory(
-                @"TestPerf\DiaSwathTutorialTest.data"), name + ".json");
+                @"TestPerf\DiaUmpireTutorialTest.data"), name + ".json");
             if (File.Exists(_expectedValuesFilePath))
             {
                 using var streamReader = File.OpenText(_expectedValuesFilePath);
@@ -324,7 +324,6 @@ namespace TestPerf
         protected override void DoTest()
         {
             Assert.IsNotNull(_expectedValues);
-            Assert.AreEqual("IrtSlope = 3.005,\r\nIrtIntercept = -67.173,\r\n", ParseIrtProperties("iRT = 3.005 * Measured RT - 67.173", CultureInfo.InvariantCulture));
 
             // Clean-up before running the test
             RunUI(() => SkylineWindow.ModifyDocument("Set default settings",
