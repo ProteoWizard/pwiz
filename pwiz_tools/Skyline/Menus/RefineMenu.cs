@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Alerts;
@@ -29,6 +30,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Menus
@@ -61,10 +63,28 @@ namespace pwiz.Skyline.Menus
                 MessageDlg.Show(SkylineWindow, Resources.SkylineWindow_ShowReintegrateDialog_The_document_must_have_targets_in_order_to_reintegrate_chromatograms_);
                 return;
             }
+
             if (!documentOrig.IsLoaded)
             {
-                MessageDlg.Show(SkylineWindow, MenusResources.SkylineWindow_ShowReintegrateDialog_The_document_must_be_fully_loaded_before_it_can_be_re_integrated_);
-                return;
+                using var longWaitDlg = new LongWaitDlg();
+                longWaitDlg.Message = MenusResources.RefineMenu_ShowReintegrateDialog_Waiting_for_document_to_finish_loading;
+                longWaitDlg.PerformWork(SkylineWindow, 1000, (ILongWaitBroker broker) =>
+                {
+                    while (!broker.IsCanceled)
+                    {
+                        SrmDocument documentUi = null;
+                        SkylineWindow.Invoke(new Action(() => { documentUi = SkylineWindow.DocumentUI; }));
+                        if (true == documentUi?.IsLoaded)
+                        {
+                            break;
+                        }
+                    }
+                });
+                documentOrig = SkylineWindow.DocumentUI;
+                if (!documentOrig.IsLoaded)
+                {
+                    return;
+                }
             }
             using (var dlg = new ReintegrateDlg(documentOrig))
             {

@@ -216,6 +216,15 @@ namespace pwiz.Skyline.Menus {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Waiting for document to finish loading.
+        /// </summary>
+        public static string RefineMenu_ShowReintegrateDialog_Waiting_for_document_to_finish_loading {
+            get {
+                return ResourceManager.GetString("RefineMenu_ShowReintegrateDialog_Waiting_for_document_to_finish_loading", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Accept peptides.
         /// </summary>
         public static string SkylineWindow_acceptPeptidesMenuItem_Click_Accept_peptides {

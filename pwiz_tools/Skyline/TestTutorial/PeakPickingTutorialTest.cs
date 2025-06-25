@@ -299,7 +299,6 @@ namespace pwiz.SkylineTestTutorial
                 return;
             }
 
-            WaitForDocumentLoaded();
             var reintegrateDlgNew = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
             var editListLibrary = ShowDialog<EditListDlg<SettingsListBase<PeakScoringModelSpec>, PeakScoringModelSpec>>(
                 reintegrateDlgNew.EditPeakScoringModel);

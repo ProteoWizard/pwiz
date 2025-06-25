@@ -342,4 +342,7 @@ Go to the Prediction tab in Peptide Settings to choose some imputation options.<
   <data name="EditMenu_ImputePeakBoundaries_Imputed_peak_boundaries" xml:space="preserve">
 	  <value>Imputed peak boundaries</value>
   </data>
+  <data name="RefineMenu_ShowReintegrateDialog_Waiting_for_document_to_finish_loading" xml:space="preserve">
+	  <value>Waiting for document to finish loading</value>
+  </data>
 </root>

@@ -62,7 +62,6 @@ namespace pwiz.SkylineTestFunctional
                 peptideSettingsUi.MaxRtShift = 1;
             }, peptideSettingsUi=>peptideSettingsUi.OkDialog());
             Assert.AreEqual(1.0, SkylineWindow.Document.Settings.PeptideSettings.Imputation.MaxRtShift);
-            WaitForDocumentLoaded();
             RunDlg<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog, reintegrateDlg=>{
                 reintegrateDlg.OverwriteManual = true;
                 reintegrateDlg.OkDialog();
