@@ -241,7 +241,8 @@ namespace pwiz.SkylineTestConnected
             var ardiaClient = ArdiaClient.Create(account);
 
             // Successful if no exception thrown
-            ardiaClient.GetFolders(account.GetRootArdiaUrl(), null);
+            ardiaClient.GetFolders(account.GetRootArdiaUrl(), null, out var ardiaError);
+            Assert.IsNull(ardiaError);
         }
 
         private static void Test_ArdiaClient_CreateFolder(ArdiaAccount account, string path)

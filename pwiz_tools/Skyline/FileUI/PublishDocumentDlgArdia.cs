@@ -130,9 +130,9 @@ namespace pwiz.Skyline.FileUI
             });
         }
 
-        // TODO: if previously selected item is unavailable, set focus to top node (better than
-        //       current behavior which picks the topmost visible node). Maybe using a callback
-        //       from TreeViewStateRestorer?
+        // CONSIDER: if the previously selected item is unavailable, set focus to top node (better than
+        //           current behavior which selects the topmost visible node). Maybe add a callback
+        //           from TreeViewStateRestorer?
         internal override string LoadExpansionAndSelection()
         {
             return Settings.Default.ArdiaServerExpansion;
@@ -158,17 +158,30 @@ namespace pwiz.Skyline.FileUI
 
             IList<RemoteItem> remoteItems = new List<RemoteItem>();
 
-            using var waitDlg = new LongWaitDlg();
-            waitDlg.Text = string.Format(ArdiaResources.OpenFolder_Title, parentTreeNode.Text);
-            waitDlg.PerformWork(this, 1000, progressMonitor =>
+            try
             {
-                var ardiaClient = ArdiaClient.Create(ardiaAccount);
-                remoteItems = ardiaClient.GetFolders(parentUrl, progressMonitor);
-            });
+                ArdiaError ardiaError = null;
 
-            AddItemsToFolder(remoteItems, parentTreeNode);
+                using var waitDlg = new LongWaitDlg();
+                waitDlg.Text = string.Format(ArdiaResources.OpenFolder_Title, parentTreeNode.Text);
+                waitDlg.PerformWork(this, 1000, progressMonitor =>
+                {
+                    var ardiaClient = ArdiaClient.Create(ardiaAccount);
+                    remoteItems = ardiaClient.GetFolders(parentUrl, progressMonitor, out ardiaError);
+                });
 
-            ((ArdiaFolderInfo)parentTreeNode.Tag)!.RemoteContentsLoaded = true;
+                AddItemsToFolder(remoteItems, parentTreeNode);
+
+                ((ArdiaFolderInfo)parentTreeNode.Tag)!.RemoteContentsLoaded = true;
+            }
+            catch (IOException e)
+            {
+                MessageDlg.Show(this, e.Message);
+            }
+            catch (Exception e)
+            {
+                ExceptionUtil.DisplayOrReportException(this, e);
+            }
         }
 
         private void AddItemsToFolder(IList<RemoteItem> remoteItems, TreeNode parentTreeNode)
@@ -322,53 +335,65 @@ namespace pwiz.Skyline.FileUI
                 return;
             }
 
-            var ardiaAccount = ArdiaAccountForTreeNode(newTreeNode);
-            var parentFolderPath = GetFolderPath(newTreeNode.Parent);
-            ArdiaError serverError = null;
-
-            using var waitDlg = new LongWaitDlg();
-            waitDlg.Text = ArdiaResources.CreateFolder_Title;
-            waitDlg.PerformWork(this, 1000, longWaitBroker =>
+            try
             {
-                try
+                var ardiaAccount = ArdiaAccountForTreeNode(newTreeNode);
+                var parentFolderPath = GetFolderPath(newTreeNode.Parent);
+
+                ArdiaError serverError = null;
+
+                using var waitDlg = new LongWaitDlg();
+                waitDlg.Text = ArdiaResources.CreateFolder_Title;
+                waitDlg.PerformWork(this, 1000, longWaitBroker =>
                 {
                     var ardiaClient = ArdiaClient.Create(ardiaAccount);
                     ardiaClient.CreateFolder(parentFolderPath, newFolderName, longWaitBroker, out serverError);
-                }
-                catch (ArdiaServerException e)
-                {
-                    ExceptionUtil.DisplayOrReportException(this, e);
-                }
-            });
+                });
 
-            if (serverError == null)
-            {
-                treeViewFolders.SelectedNode = newTreeNode;
+                // Success - accept new name
+                if (serverError == null)
+                {
+                    treeViewFolders.SelectedNode = newTreeNode;
+                }
+                else
+                {
+                    string message;
+                    if (serverError.StatusCode == HttpStatusCode.Unauthorized)
+                    {
+                        message = string.Format(ArdiaResources.CreateFolder_Error_NotAuthenticated, newFolderName);
+                    }
+                    else if (serverError.StatusCode == HttpStatusCode.BadRequest || serverError.StatusCode == HttpStatusCode.Conflict)
+                    {
+                        message = string.Format(ArdiaResources.CreateFolder_Error_FileAlreadyExists, newFolderName);
+                    }
+                    else if (serverError.StatusCode == HttpStatusCode.Forbidden)
+                    {
+                        message = string.Format(ArdiaResources.CreateFolder_Error_Forbidden, parentFolderPath, newFolderName);
+                    }
+                    else
+                    {
+                        message = ErrorMessageBuilder.Create(@"Unexpected error creating folder")
+                            .ErrorDetail(serverError.Message).ServerError(serverError).ToString();
+
+                        throw new Exception(message);
+                    }
+
+                    MessageDlg.Show(this, message);
+
+                    treeViewFolders.SelectedNode = args.Node.Parent;
+                    args.Node.Remove();
+                }
             }
-            else 
+            catch (IOException e)
             {
-                switch (serverError.StatusCode)
-                {
-                    case HttpStatusCode.Unauthorized:
-                        MessageDlg.Show(this, string.Format(ArdiaResources.CreateFolder_Error_NotAuthenticated, newFolderName));
-                        break;
-                    case HttpStatusCode.BadRequest:
-                    case HttpStatusCode.Conflict:
-                        MessageDlg.Show(this, string.Format(ArdiaResources.CreateFolder_Error_FileAlreadyExists, newFolderName));
-                        break;
-                    case HttpStatusCode.Forbidden:
-                        MessageDlg.Show(this, string.Format(ArdiaResources.CreateFolder_Error_Forbidden, parentFolderPath, newFolderName));
-                        break;
-                    default:
-                        var message = ErrorMessageBuilder.Create(@"Error creating folder").
-                            ErrorDetail(serverError.Message).
-                            ServerError(serverError).ToString();
+                MessageDlg.Show(this, e.Message);
 
-                        // CONSIDER: not sure about this pattern of error handling. URI is useful yet not available in this context. Is it better
-                        //           to throw from ArdiaClient and catch here, optionally deciding whether to handle locally throw up to the caller?
-                        //           With a caveat that LongWaitDlg wraps and re-throws exceptions, which probably isn't what we want here.
-                        throw ArdiaServerException.Create(message, null, serverError, null);
-                }
+                treeViewFolders.SelectedNode = args.Node.Parent;
+                args.Node.Remove();
+            }
+            catch (Exception e)
+            {
+                ExceptionUtil.DisplayOrReportException(this, e);
 
                 treeViewFolders.SelectedNode = args.Node.Parent;
                 args.Node.Remove();

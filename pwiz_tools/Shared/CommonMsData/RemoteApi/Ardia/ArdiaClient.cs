@@ -105,19 +105,19 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         {
             serverError = null;
 
+            var uri = UriFromParts(ServerUri, PATH_CREATE_FOLDER);
             HttpStatusCode? statusCode = null;
             var responseBody = string.Empty;
 
             try
             {
                 var requestModel = CreateFolderRequest.Create(parentFolderPath, folderName);
-
                 var jsonString = requestModel.ToJson();
-                using var request = new StringContent(jsonString, Encoding.UTF8, HEADER_CONTENT_TYPE_FOLDER);
 
+                using var request = new StringContent(jsonString, Encoding.UTF8, HEADER_CONTENT_TYPE_FOLDER);
                 using var httpClient = AuthenticatedHttpClient();
 
-                var response = httpClient.PostAsync(PATH_CREATE_FOLDER, request).Result;
+                var response = httpClient.PostAsync(uri.AbsolutePath, request).Result;
 
                 statusCode = response.StatusCode;
                 responseBody = response.Content.ReadAsStringAsync().Result;
@@ -132,25 +132,45 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
                     return false;
                 }
             }
-            // Narrowly handle issues related to network, timeout, cert, HTTP
-            catch (Exception e) 
-                when (e is HttpRequestException || 
-                      e is TaskCanceledException { CancellationToken: { IsCancellationRequested: true } })
+            catch (Exception e) when (e is HttpRequestException || 
+                                      e is WebException || 
+                                      e is TaskCanceledException { CancellationToken: { IsCancellationRequested: false } })
             {
                 serverError = ArdiaError.Create(statusCode, responseBody);
-                return false;
+
+                // throw ArdiaServerException.Create(e.Message, uri, serverError, e);
+                throw new IOException(e.Message, e);
+            }
+            catch (AggregateException e) when (e.InnerException is WebException ||
+                                               e.InnerException is HttpRequestException ||
+                                               e.InnerException is TaskCanceledException { CancellationToken: { IsCancellationRequested: false } })
+            {
+                serverError = ArdiaError.Create(statusCode, responseBody);
+
+                var innermostException = e.InnerException;
+                while (innermostException.InnerException != null)
+                {
+                    innermostException = innermostException.InnerException;
+                }
+
+                var sb = new StringBuilder();
+                sb.Append(e.InnerException.Message);
+                sb.Append(@" - ");
+                sb.Append(innermostException.Message);
+
+                // throw ArdiaServerException.Create(sb.ToString(), uri, serverError, e.InnerException);
+                throw new IOException(e.Message, e);
             }
             catch (Exception e)
             {
-                var uri = UriFromParts(ServerUri, PATH_CREATE_FOLDER);
-                serverError = ArdiaError.Create(statusCode, responseBody);
+                // serverError = ArdiaError.Create(statusCode, responseBody);
+                //
+                // var message = ErrorMessageBuilder
+                //     .Create(string.Format(ArdiaResources.CreateFolder_Error, parentFolderPath, folderName)).Uri(uri)
+                //     .ServerError(serverError).ToString();
 
-                var message = ErrorMessageBuilder.
-                    Create(string.Format(ArdiaResources.CreateFolder_Error, parentFolderPath, folderName)).
-                    Uri(uri).
-                    ServerError(serverError).ToString();
-
-                throw ArdiaServerException.Create(message, uri, serverError, e);
+                // TODO: set detailed info about remote API call - uri, status code, response body
+                throw new Exception(@"Unexpected error", e.InnerException);
             }
         }
 
@@ -367,51 +387,102 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             return modelResponse;
         }
 
-        // CONSIDER: marshal JSON directly to RemoteItem. ArdiaSession marshals in two steps -
-        //           JSON to ArdiaFolderObject then to RemoteItem. Can simplify here.
-        public IList<RemoteItem> GetFolders(ArdiaUrl folderUrl, IProgressMonitor progressMonitor)
+        public IList<RemoteItem> GetFolders(ArdiaUrl folderUrl, IProgressMonitor progressMonitor, out ArdiaError serverError)
         {
-            IList<RemoteItem> items;
+            serverError = null;
+            Uri uri = null;
+            HttpStatusCode? statusCode = null;
+            var responseBody = string.Empty;
 
-            using var httpClient = AuthenticatedHttpClient();
-
-            var requestUrl = GetFolderContentsUrl(folderUrl);
-
-            var response = httpClient.GetAsync(requestUrl).Result;
-            response.EnsureSuccessStatusCode();
-
-            var responseBody = response.Content.ReadAsStringAsync().Result;
-            var jsonObject = JObject.Parse(responseBody);
-
-            if (!(jsonObject[@"children"] is JArray itemsValue))
+            try
             {
-                items = ImmutableList<RemoteItem>.EMPTY;
-            }
-            else
-            {
-                var parentPath = Account.GetPathFromFolderContentsUrl(requestUrl.AbsoluteUri);
+                IList<RemoteItem> items;
 
-                var foldersEnumerable = itemsValue.OfType<JObject>().
-                    Where(IsArdiaFolderOrSequence).
-                    Select(folder => new ArdiaFolderObject(folder, parentPath));
+                using var httpClient = AuthenticatedHttpClient();
 
-                items = new List<RemoteItem>();
-                foreach (var folderObject in foldersEnumerable)
+                uri = GetFolderContentsUrl(folderUrl);
+
+                var response = httpClient.GetAsync(uri).Result;
+
+                statusCode = response.StatusCode;
+                responseBody = response.Content.ReadAsStringAsync().Result;
+
+                response.EnsureSuccessStatusCode();
+
+                var jsonObject = JObject.Parse(responseBody);
+
+                if (!(jsonObject[@"children"] is JArray itemsValue))
                 {
-                    if (folderObject.ParentId == "" || folderObject.ParentId.TrimStart('/') == folderUrl.EncodedPath)
+                    items = ImmutableList<RemoteItem>.EMPTY;
+                }
+                else
+                {
+                    var parentPath = Account.GetPathFromFolderContentsUrl(uri.AbsoluteUri);
+
+                    var foldersEnumerable = itemsValue.OfType<JObject>().
+                        Where(IsArdiaFolderOrSequence).
+                        Select(folder => new ArdiaFolderObject(folder, parentPath));
+
+                    items = new List<RemoteItem>();
+                    foreach (var folderObject in foldersEnumerable)
                     {
-                        var childUrl = folderUrl.ChangeId(folderObject.Id);
-                        var childUrlPathParts = folderUrl.GetPathParts().Concat(new[] { folderObject.Name });
-                        var baseChildUrl = childUrl.ChangePathParts(childUrlPathParts);
+                        if (folderObject.ParentId == "" || folderObject.ParentId.TrimStart('/') == folderUrl.EncodedPath)
+                        {
+                            var childUrl = folderUrl.ChangeId(folderObject.Id);
+                            var childUrlPathParts = folderUrl.GetPathParts().Concat(new[] { folderObject.Name });
+                            var baseChildUrl = childUrl.ChangePathParts(childUrlPathParts);
 
-                        var item = new RemoteItem(baseChildUrl, folderObject.Name, DataSourceUtil.FOLDER_TYPE, null, 0, folderObject.HasChildren);
+                            // CONSIDER: marshal JSON directly to RemoteItem. ArdiaSession marshals in two steps -
+                            //           JSON to ArdiaFolderObject then to RemoteItem. Can simplify here.
+                            var item = new RemoteItem(baseChildUrl, folderObject.Name, DataSourceUtil.FOLDER_TYPE, null, 0, folderObject.HasChildren);
 
-                        items.Add(item);
+                            items.Add(item);
+                        }
                     }
                 }
-            }
 
-            return items;
+                return items;
+            }
+            catch (Exception e) when (e is HttpRequestException ||
+                                      e is WebException ||
+                                      e is TaskCanceledException { CancellationToken: { IsCancellationRequested: false } })
+            {
+                serverError = ArdiaError.Create(statusCode, responseBody);
+
+                // throw ArdiaServerException.Create(e.Message, uri, serverError, e);
+                throw new IOException(e.Message, e);
+            }
+            catch (AggregateException e) when (e.InnerException is WebException ||
+                                               e.InnerException is HttpRequestException ||
+                                               e.InnerException is TaskCanceledException { CancellationToken: { IsCancellationRequested: false } })
+            {
+                serverError = ArdiaError.Create(statusCode, responseBody);
+
+                var innermostException = e.InnerException;
+                while (innermostException.InnerException != null)
+                {
+                    innermostException = innermostException.InnerException;
+                }
+
+                var sb = new StringBuilder();
+                sb.Append(e.InnerException.Message);
+                sb.Append(@" - ");
+                sb.Append(innermostException.Message);
+
+                // throw ArdiaServerException.Create(sb.ToString(), uri, serverError, e.InnerException);
+                throw new IOException(sb.ToString(), e.InnerException);
+            }
+            catch (Exception e)
+            {
+                // serverError = ArdiaError.Create(statusCode, responseBody);
+                //
+                // var message = ErrorMessageBuilder
+                //     .Create(string.Format(ArdiaResources.CreateFolder_Error, parentFolderPath, folderName)).Uri(uri)
+                //     .ServerError(serverError).ToString();
+
+                // TODO: set detailed info about remote API call - uri, status code, response body
+                throw new Exception(@"Unexpected error", e);
+            }
 
             bool IsArdiaFolderOrSequence(JObject f) => f[@"type"].Value<string>().Contains(@"folder");
         }
@@ -454,8 +525,6 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         public ArdiaError ServerError { get; }
     }
 
-    // CONSIDER: refactor ErrorMessageBuilder out of Panorama and generalize for Ardia? Using a simpler version for now
-    //           while testing out approaches to error handling.
     public sealed class ErrorMessageBuilder
     {
         private readonly string _message;
