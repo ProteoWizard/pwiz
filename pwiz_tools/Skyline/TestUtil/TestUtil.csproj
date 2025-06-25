@@ -169,7 +169,6 @@
     <Compile Include="DllFinderTestUtil.cs" />
     <Compile Include="ExampleText.cs" />
     <Compile Include="ExtensionTestContext.cs" />
-    <Compile Include="FileLockingProcessFinder.cs" />
     <Compile Include="GitFileHelper.cs" />
     <Compile Include="KoinaTestUtil.cs" />
     <Compile Include="MultiFormActivator.cs" />

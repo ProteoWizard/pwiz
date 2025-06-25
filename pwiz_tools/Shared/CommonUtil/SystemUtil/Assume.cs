@@ -82,19 +82,31 @@ namespace pwiz.Common.SystemUtil
         public static void AreEqual(object left, object right, string error = "")
         {
             if (!Equals(left, right))
+            {
+                if (string.IsNullOrEmpty(error))
+                    error = $@"Expected <{left}> to equal <{right}>";
                 Fail(error);
+            }
         }
 
         public static void AreNotEqual(object left, object right, string error = "")
         {
             if (Equals(left, right))
+            {
+                if (string.IsNullOrEmpty(error))
+                    error = $@"Expected <{left}> not to equal <{right}>";
                 Fail(error);
+            }
         }
 
         public static void AreEqual(double expected, double actual, double delta, string error = "")
         {
-            if (Math.Abs(expected-actual) > delta)
+            if (Math.Abs(expected - actual) > delta)
+            {
+                if (string.IsNullOrEmpty(error))
+                    error = $@"Expected {expected} to be within {delta} of actual value {actual}.";
                 Fail(error);
+            }
         }
 
         public static void Fail(string error = "")

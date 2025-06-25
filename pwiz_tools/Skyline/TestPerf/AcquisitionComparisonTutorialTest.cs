@@ -32,7 +32,6 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.ToolsUI;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.BiblioSpec;

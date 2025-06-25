@@ -199,7 +199,8 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             var builder = services.AddHttpClient("customClient");
             builder.ConfigurePrimaryHttpMessageHandler(() =>
             {
-                return CommonApplicationSettings.HttpMessageHandlerFactory.getMessageHandler(@"wcHandler", GetDefaultMessageHandler());     // NEED TO PASS A FUNCTION, NOT A CONSTANT VALUE.
+                var handler = CommonApplicationSettings.HttpMessageHandlerFactory.getMessageHandler(@"wcHandler1", GetDefaultMessageHandler());
+                return handler;
             });
             var provider = services.BuildServiceProvider();
             var httpClientFactory = provider.GetService<IHttpClientFactory>();

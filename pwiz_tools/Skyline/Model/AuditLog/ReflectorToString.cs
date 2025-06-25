@@ -21,8 +21,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.AuditLog
 {
@@ -61,7 +61,6 @@ namespace pwiz.Skyline.Model.AuditLog
     public static partial class Reflector
     {
         private const int MAX_STACK_DEPTH = 64;
-        private const int TAB_SIZE = 4;
 
         /// <summary>
         /// Checks whether the given object can safely be converted to a string by simply calling ToString
@@ -75,22 +74,9 @@ namespace pwiz.Skyline.Model.AuditLog
                    (obj.GetType().Namespace == @"System" && !IsCollectionType(obj.GetType()));
         }
 
-        private static string GetIndentation(int indentLevel)
-        {
-            if (indentLevel <= 0)
-                return string.Empty;
-
-            return new StringBuilder(TAB_SIZE * indentLevel).Insert(0, new string(' ', TAB_SIZE), indentLevel)
-                .ToString();
-        }
-
         private static string Indent(bool indent, string s, int indentLevel)
         {
-            if (!indent || s == null || indentLevel <= 0)
-                return s;
-
-            s = GetIndentation(indentLevel) + s;
-            return s;
+            return indent ? s.Indent(indentLevel) : s;
         }
 
         public static string ToString(ObjectPair<object> rootPair, SrmDocument.DOCUMENT_TYPE docType, DiffNode node, DiffNode parentNode, ToStringState state)
@@ -183,7 +169,7 @@ namespace pwiz.Skyline.Model.AuditLog
             if (state.WrapProperties && (!state.FormatWhitespace || state.IndentLevel != 0))
             {
                 var prepend = parentNode is CollectionPropertyDiffNode ? string.Empty : Environment.NewLine;
-                var indentation = GetIndentation(state.IndentLevel - 1);
+                var indentation = TextUtil.GetIndentation(state.IndentLevel - 1);
                 var openingIndent = auditLogObj.IsName ? string.Empty : indentation;
                 format = state.FormatWhitespace
                     ? string.Format(@"{0}{3}{1}{5}{{0}}{5}{4}{2}", prepend, start, end, openingIndent, indentation, Environment.NewLine)

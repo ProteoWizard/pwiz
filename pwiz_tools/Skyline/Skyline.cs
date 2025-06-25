@@ -3675,8 +3675,9 @@ namespace pwiz.Skyline
             SequenceTree.SelectedPaths = sourcePaths;
 
             var targetNode = Document.FindNode(pathTarget);
-            var pepGroup = (targetNode as PeptideGroupDocNode) ??
-                           (PeptideGroupDocNode) Document.FindNode(nodeDrop.SrmParent.Path);
+            string dropName = (targetNode is SrmDocument)
+                ? PropertyNames.DocumentNodeCounts
+                : AuditLogEntry.GetNodeName(Document, targetNode).ToString();
 
             ModifyDocument(SkylineResources.SkylineWindow_sequenceTree_DragDrop_Drag_and_drop, doc =>
                                                 {
@@ -3692,14 +3693,14 @@ namespace pwiz.Skyline
                 var entry = AuditLogEntry.CreateCountChangeEntry(MessageType.drag_and_dropped_node, MessageType.drag_and_dropped_nodes, docPair.NewDocumentType,
                     nodeSources.Select(node =>
                         AuditLogEntry.GetNodeName(docPair.OldDoc, node.Model).ToString()), nodeSources.Count,
-                    str => MessageArgs.Create(str, pepGroup.Name),
-                    MessageArgs.Create(nodeSources.Count, pepGroup.Name));
+                    str => MessageArgs.Create(str, dropName),
+                    MessageArgs.Create(nodeSources.Count, dropName));
 
                 if (nodeSources.Count > 1)
                 {
                     entry = entry.ChangeAllInfo(nodeSources.Select(node => new MessageInfo(MessageType.drag_and_dropped_node,
                         docPair.NewDocumentType,
-                        AuditLogEntry.GetNodeName(docPair.OldDoc, node.Model), pepGroup.Name)).ToList());
+                        AuditLogEntry.GetNodeName(docPair.OldDoc, node.Model), dropName)).ToList());
                 }
 
                 return entry;
@@ -4371,7 +4372,7 @@ namespace pwiz.Skyline
                     // Here we just ignore all the versions attached to packages. 
                     IEnumerable<string> pythonPackages = packages.Select(p => p.Name);
 
-                    using (var dlg = new PythonInstaller(programPathContainer, pythonPackages, _skylineTextBoxStreamWriterHelper))
+                    using (var dlg = new PythonInstallerLegacyDlg(programPathContainer, pythonPackages, _skylineTextBoxStreamWriterHelper))
                     {
                         if (dlg.ShowDialog(this) == DialogResult.Cancel)
                             return null;

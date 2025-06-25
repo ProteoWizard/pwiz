@@ -63,7 +63,6 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                 // if sampleSetsUrl is null, last path segment may be a sample_set misclassified as a folder
             }
 
-            // wcUrl.Type == WatersConnectUrl.ItemType.sample_set
             var injectionsUrl = GetInjectionsUrl(wcUrl);
             if (injectionsUrl == null)
             {

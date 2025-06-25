@@ -714,7 +714,7 @@ namespace pwiz.Skyline.FileUI
                                                            (int)ImageIndex.MyNetworkPlaces,
                                                            (int)ImageIndex.MyNetworkPlaces);
                 // ReSharper disable once PossibleUnintendedReferenceComparison
-                serverNode.Tag = remoteUrl != RemoteUrl.EMPTY ? remoteUrl.ChangePathParts(null) : remoteUrl;
+                serverNode.Tag = (remoteUrl != RemoteUrl.EMPTY) ? remoteUrl.ChangePathParts(null) : remoteUrl;
                 lookInComboBox.Items.Insert(_remoteIndex + driveCount, serverNode);
 
                 var branches = remoteUrl.GetPathParts().ToList();

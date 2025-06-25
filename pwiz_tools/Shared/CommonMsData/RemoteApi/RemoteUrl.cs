@@ -225,6 +225,7 @@ namespace pwiz.CommonMsData.RemoteApi
             return ChangeProp(ImClone(this),
                 im => im.EncodedPath = parts == null ? null : string.Join(@"/", parts.Select(Uri.EscapeDataString)));
         }
+
         public RemoteUrl ChangePathPartsOnly(IEnumerable<string> parts)
         {
             return ChangeProp(ImClone(this),

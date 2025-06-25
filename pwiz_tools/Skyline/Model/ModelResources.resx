@@ -858,4 +858,49 @@ in the Windows registry key '{0}' from:</value>
   <data name="ExportProperties_ExportWatersConnectMethod_No_matching_Waters_Connect_account_is_found_for_this_URL_" xml:space="preserve">
     <value>No matching Waters Connect account is found for this URL.</value>
   </data>
+  <data name="Alphapeptdeep_Warn_unknown_modification" xml:space="preserve">
+    <value>Warning: The predicted library will be incomplete, due to the following unknown modifications detected: 
+
+{0}
+
+Would you like to continue building this predicted library?</value>
+  </data>
+  <data name="NvidiaInstaller_Requesting_Administrator_elevation" xml:space="preserve">
+    <value>Administrative privileges are required to install Nvidia Cuda tools the first time. Consult with your system administrator if you don&apos;t have the necessary permissions and ask them to run the following script:
+
+{0}
+
+Would you like to continue?
+    </value>
+  </data>
+  <data name="AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Failed_to_generate_settings_yaml_file_by_executing_the_peptdeep_export_settings_command_" xml:space="preserve">
+      <value>Failed to generate settings.yaml file by running the AlphaPeptDeep export-settings command.</value>
+  </data>
+  <data name="AlphapeptdeepLibraryBuilder_ExecutePeptdeep_Failed_to_build_library_by_executing_the_peptdeep_cmd_flow_command_" xml:space="preserve">
+      <value>Failed to build library by running the AlphaPeptDeep cmd-flow command.</value>
+  </data>
+  <data name="LibraryHelper_PreparePrecursorInputFile_Preparing_prediction_input_file" xml:space="preserve">
+      <value>Preparing prediction input file</value>
+  </data>
+  <data name="LibraryHelper_PrepareTrainingInputFile_Preparing_training_input_file" xml:space="preserve">
+      <value>Preparing training input file</value>
+  </data>
+  <data name="AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Preparing_settings_file" xml:space="preserve">
+      <value>Preparing settings file</value>
+  </data>
+  <data name="AlphapeptdeepLibraryBuilder_Running_AlphaPeptDeep" xml:space="preserve">
+      <value>Running AlphaPeptDeep</value>
+  </data>
+  <data name="AlphapeptdeepLibraryBuilder_Importing_spectral_library" xml:space="preserve">
+      <value>Importing spectral library</value>
+  </data>
+  <data name="AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_BlibBuild_completed_successfully_" xml:space="preserve">
+      <value>BlibBuild completed successfully.</value>
+  </data>
+  <data name="AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_BlibBuild_failed_to_complete_" xml:space="preserve">
+      <value>BlibBuild failed to complete.</value>
+  </data>
+  <data name="AlphapeptdeepLibraryBuilder_ExecutePeptdeep_AlphaPeptDeep_finished_in__0__minutes__1__seconds_" xml:space="preserve">
+      <value>AlphaPeptDeep finished in {0} minutes {1} seconds.</value>
+  </data>
 </root>
