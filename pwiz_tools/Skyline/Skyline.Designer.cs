@@ -1871,6 +1871,7 @@ namespace pwiz.Skyline
             // 
             // ardiaPublishMenuItem
             // 
+            this.ardiaPublishMenuItem.Image = global::pwiz.Skyline.Properties.Resources.ArdiaIcon;
             resources.ApplyResources(this.ardiaPublishMenuItem, "ardiaPublishMenuItem");
             this.ardiaPublishMenuItem.Name = "ardiaPublishMenuItem";
             this.ardiaPublishMenuItem.Click += new System.EventHandler(this.ardiaPublishMenuItem_Click);
