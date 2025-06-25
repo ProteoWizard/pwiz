@@ -118,25 +118,7 @@ namespace pwiz.Common.Mock
     {
         internal HttpMessageHandlerFactory()
         {
-            var wcHandler = CreateHandler("wcHandler1");
-            // ReSharper disable StringIndexOfIsCultureSpecific.1
-            wcHandler.AddMatcher(new RequestMatcherFile(req => req.RequestUri.ToString().IndexOf(@"/waters_connect/v1.0/folders") >= 0,
-                @"C:\Users\RitaCh\Workspaces\ProteoWiz\pwiz1\pwiz_tools\Skyline\MockHttpData\WCFolders.json"));
-            wcHandler.AddMatcher(new RequestMatcherFile(req => req.RequestUri.ToString().IndexOf(@"/waters_connect/v2.0/published-methods") >= 0,
-                @"C:\Users\RitaCh\Workspaces\ProteoWiz\pwiz1\pwiz_tools\Skyline\MockHttpData\WCMethods.json"));
-            wcHandler.AddMatcher(new RequestMatcherFunction(req => req.RequestUri.ToString().IndexOf(@"/waters_connect/v1.0/acq-method-versions") >= 0,
-                req =>
-                {
-                    var format = "{{\"methods\" : [ {{\"id\" : {0}, \"name\" : {1}, \"description\" : {2} }} ]}}";
-                    var requestContent = req.Content.ReadAsStringAsync().Result;
-                    Trace.WriteLine(requestContent);
-                    var jObject = JObject.Parse(requestContent);
-                    var id = jObject["templateMethodVersionId"]?.ToString();
-                    var name = jObject["name"]?.ToString() ?? string.Empty;
-                    var description = jObject["description"]?.ToString() ?? string.Empty;
-                    return string.Format(format, id, name, description);
-                }));
-            // ReSharper enable StringIndexOfIsCultureSpecific.1
+            // Can create a handler here for quick testing. Otherwise, they should be created by the test code.
         }
 
         private readonly Dictionary<string, MockHttpMessageHandler> _handlers = new Dictionary<string, MockHttpMessageHandler>();

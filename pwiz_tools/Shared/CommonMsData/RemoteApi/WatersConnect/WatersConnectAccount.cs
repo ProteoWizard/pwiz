@@ -33,6 +33,8 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
     [XmlRoot("waters_connect_account")]
     public class WatersConnectAccount : RemoteAccount
     {
+        public static readonly string HANDLER_NAME = "WatersConnectHandler";
+
         public class TokenCacheEntry
         {
             public TokenResponse TokenResponse { get; set; }
@@ -199,7 +201,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             var builder = services.AddHttpClient("customClient");
             builder.ConfigurePrimaryHttpMessageHandler(() =>
             {
-                var handler = CommonApplicationSettings.HttpMessageHandlerFactory.getMessageHandler(@"wcHandler1", GetDefaultMessageHandler());
+                var handler = CommonApplicationSettings.HttpMessageHandlerFactory.getMessageHandler(HANDLER_NAME, GetDefaultMessageHandler());
                 return handler;
             });
             var provider = services.BuildServiceProvider();
