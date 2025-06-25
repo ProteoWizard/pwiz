@@ -533,7 +533,7 @@ void FrameImpl::getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz
         }
 
         if (!ignoreZeroIntensityPoints)
-            expectedNonZeroPoints = 3 * expectedNonZeroPoints + 2; // handle worst case scenario for preserving zeros adjacent to nonzeros ie 0,1,0,0,1,0,0,1,0,0,1,0
+            expectedNonZeroPoints = 3 * expectedNonZeroPoints + driftBinsFiltered.size(); // handle worst case scenario for preserving zeros adjacent to nonzeros ie 0,1,0,0,1,0,0,1,0,0,1,0
 
         auto mzArray = gcnew cli::array<double>(expectedNonZeroPoints); 
         auto intensityArray = gcnew cli::array<double>(expectedNonZeroPoints);
