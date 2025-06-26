@@ -113,7 +113,7 @@ namespace pwiz.Skyline.FileUI
             {
                 foreach (var account in _ardiaAccounts)
                 {
-                    // CONSIDER: does adding username ot the label improve the UI when choosing between multiple registered Ardia accounts?
+                    // CONSIDER: do not need to support multiple accounts for now - so revisit the root node label
                     var label = $@"{account.Username} @ {new Uri(account.ServerUrl).Host}";
                     var treeNode = new TreeNode(label, (int)ImageId.ardia, (int)ImageId.ardia)
                     {
@@ -156,31 +156,39 @@ namespace pwiz.Skyline.FileUI
             var ardiaAccount = ArdiaAccountForTreeNode(parentTreeNode);
             var parentUrl = (ArdiaUrl)((ArdiaFolderInfo)parentTreeNode.Tag)?.RemoteUrl;
 
-            IList<RemoteItem> remoteItems = new List<RemoteItem>();
+            var result = ArdiaResult<IList<RemoteItem>>.Default;
 
-            try
+            using var waitDlg = new LongWaitDlg();
+            waitDlg.Text = string.Format(ArdiaResources.OpenFolder_Title, parentTreeNode.Text);
+            waitDlg.PerformWork(this, 1000, progressMonitor =>
             {
-                ArdiaError ardiaError = null;
+                var ardiaClient = ArdiaClient.Create(ardiaAccount);
+                result = ardiaClient.GetFolders(parentUrl, progressMonitor);
+            });
 
-                using var waitDlg = new LongWaitDlg();
-                waitDlg.Text = string.Format(ArdiaResources.OpenFolder_Title, parentTreeNode.Text);
-                waitDlg.PerformWork(this, 1000, progressMonitor =>
-                {
-                    var ardiaClient = ArdiaClient.Create(ardiaAccount);
-                    remoteItems = ardiaClient.GetFolders(parentUrl, progressMonitor, out ardiaError);
-                });
-
-                AddItemsToFolder(remoteItems, parentTreeNode);
+            if (result.IsSuccess)
+            {
+                AddItemsToFolder(result.Value, parentTreeNode);
 
                 ((ArdiaFolderInfo)parentTreeNode.Tag)!.RemoteContentsLoaded = true;
             }
-            catch (IOException e)
+            else
             {
-                MessageDlg.Show(this, e.Message);
-            }
-            catch (Exception e)
-            {
-                ExceptionUtil.DisplayOrReportException(this, e);
+                string message;
+
+                // Special case for issues loading the root node
+                if (parentTreeNode.Parent == null)
+                {
+                    message = string.Format(ArdiaResources.OpenFolder_ErrorOpeningDialog, ((ArdiaAccountInfo)parentTreeNode.Tag)?.Account.ServerUrl);
+                }
+                else
+                {
+                    message = CommonTextUtil.LineSeparate(string.Format(ArdiaResources.OpenFolder_Error, parentTreeNode.Text), ArdiaResources.Error_Prefix, result.ErrorMessage);
+                }
+
+                MessageDlg.ShowWithException(this, message, result.ErrorException);
+
+                Close();
             }
         }
 
@@ -221,7 +229,7 @@ namespace pwiz.Skyline.FileUI
         {
             var ardiaAccount = ArdiaAccountForTreeNode(treeViewFolders.SelectedNode);
 
-            // TODO: remove after supporting multipart uploads
+            // TODO: remove after adding support for multipart uploads
             var fileSizeInBytes = new FileInfo(FileName).Length;
             if (fileSizeInBytes >= ArdiaClient.MAX_UPLOAD_SIZE)
             {
@@ -229,26 +237,35 @@ namespace pwiz.Skyline.FileUI
                 return;
             }
 
+            var result = ArdiaResult<CreateDocumentResponse>.Default;
+
             var isCanceled = false;
-            if (!SkipUpload)
+
+            using var waitDlg = new LongWaitDlg();
+            waitDlg.Text = UtilResources.PublishDocumentDlg_UploadSharedZipFile_Uploading_File;
+            waitDlg.PerformWork(parent, 1000, longWaitBroker =>
             {
-                using var waitDlg = new LongWaitDlg();
-                waitDlg.Text = UtilResources.PublishDocumentDlg_UploadSharedZipFile_Uploading_File;
-                waitDlg.PerformWork(parent, 1000, longWaitBroker =>
-                {
-                    var ardiaClient = ArdiaClient.Create(ardiaAccount);
-                    ardiaClient.SendZipFile(DestinationPath, FileName, longWaitBroker, out var newDocument);
+                var ardiaClient = ArdiaClient.Create(ardiaAccount);
+                result = ardiaClient.PublishDocument(DestinationPath, FileName, longWaitBroker);
 
-                    PublishedDocument = newDocument;
-
-                    isCanceled = longWaitBroker.IsCanceled;
-                });
-            }
+                isCanceled = longWaitBroker.IsCanceled;
+            });
 
             if (isCanceled)
                 return;
 
-            MessageDlg.Show(parent, ArdiaResources.Ardia_FileUpload_SuccessfulUpload);
+            if (result.IsSuccess)
+            {
+                PublishedDocument = result.Value;
+
+                MessageDlg.Show(parent, ArdiaResources.FileUpload_Success);
+            }
+            else
+            {
+                var message = CommonTextUtil.LineSeparate(string.Format(ArdiaResources.FileUpload_Error), ArdiaResources.Error_Prefix, result.ErrorMessage);
+
+                MessageDlg.ShowWithException(this, message, result.ErrorException);
+            }
         }
 
         public void CreateFolder()
@@ -310,11 +327,11 @@ namespace pwiz.Skyline.FileUI
             {
                 args.CancelEdit = true;
 
-                var message = validateResult == ValidateInputResult.invalid_blank ? 
+                var alertMsg = validateResult == ValidateInputResult.invalid_blank ? 
                     ArdiaResources.CreateFolder_Error_BlankName :
                     string.Format(ArdiaResources.CreateFolder_Error_IllegalCharacter, new string(ILLEGAL_FOLDER_NAME_CHARS));
 
-                var alertDlg = new AlertDlg(message, MessageBoxButtons.OKCancel);
+                var alertDlg = new AlertDlg(alertMsg, MessageBoxButtons.OKCancel);
                 alertDlg.ShowAndDispose(this);
 
                 if (alertDlg.DialogResult == DialogResult.OK)
@@ -335,68 +352,46 @@ namespace pwiz.Skyline.FileUI
                 return;
             }
 
-            try
+            var ardiaAccount = ArdiaAccountForTreeNode(newTreeNode);
+            var parentFolderPath = GetFolderPath(newTreeNode.Parent);
+
+            var result = ArdiaResult.Default;
+
+            using var waitDlg = new LongWaitDlg();
+            waitDlg.Text = ArdiaResources.CreateFolder_Title;
+            waitDlg.PerformWork(this, 1000, longWaitBroker =>
             {
-                var ardiaAccount = ArdiaAccountForTreeNode(newTreeNode);
-                var parentFolderPath = GetFolderPath(newTreeNode.Parent);
+                var ardiaClient = ArdiaClient.Create(ardiaAccount);
+                result = ardiaClient.CreateFolder(parentFolderPath, newFolderName, longWaitBroker);
+            });
 
-                ArdiaError serverError = null;
-
-                using var waitDlg = new LongWaitDlg();
-                waitDlg.Text = ArdiaResources.CreateFolder_Title;
-                waitDlg.PerformWork(this, 1000, longWaitBroker =>
+            if (result.IsSuccess)
+            {
+                treeViewFolders.SelectedNode = newTreeNode;
+            }
+            else {
+                string message;
+                switch (result.ErrorStatusCode)
                 {
-                    var ardiaClient = ArdiaClient.Create(ardiaAccount);
-                    ardiaClient.CreateFolder(parentFolderPath, newFolderName, longWaitBroker, out serverError);
-                });
-
-                // Success - accept new name
-                if (serverError == null)
-                {
-                    treeViewFolders.SelectedNode = newTreeNode;
-                }
-                else
-                {
-                    string message;
-                    if (serverError.StatusCode == HttpStatusCode.Unauthorized)
-                    {
+                    case HttpStatusCode.Unauthorized:
                         message = string.Format(ArdiaResources.CreateFolder_Error_NotAuthenticated, newFolderName);
-                    }
-                    else if (serverError.StatusCode == HttpStatusCode.BadRequest || serverError.StatusCode == HttpStatusCode.Conflict)
-                    {
+                        break;
+                    case HttpStatusCode.BadRequest:
+                    case HttpStatusCode.Conflict:
                         message = string.Format(ArdiaResources.CreateFolder_Error_FileAlreadyExists, newFolderName);
-                    }
-                    else if (serverError.StatusCode == HttpStatusCode.Forbidden)
-                    {
-                        message = string.Format(ArdiaResources.CreateFolder_Error_Forbidden, parentFolderPath, newFolderName);
-                    }
-                    else
-                    {
-                        message = ErrorMessageBuilder.Create(@"Unexpected error creating folder")
-                            .ErrorDetail(serverError.Message).ServerError(serverError).ToString();
-
-                        throw new Exception(message);
-                    }
-
-                    MessageDlg.Show(this, message);
-
-                    treeViewFolders.SelectedNode = args.Node.Parent;
-                    args.Node.Remove();
+                        break;
+                    case HttpStatusCode.Forbidden:
+                        message = string.Format(ArdiaResources.CreateFolder_Error_Forbidden, newFolderName, parentFolderPath);
+                        break;
+                    default:
+                        message = CommonTextUtil.LineSeparate(string.Format(ArdiaResources.CreateFolder_Error, newFolderName), ArdiaResources.Error_Prefix, result.ErrorMessage);
+                        break;
                 }
-            }
-            catch (IOException e)
-            {
-                MessageDlg.Show(this, e.Message);
 
                 treeViewFolders.SelectedNode = args.Node.Parent;
                 args.Node.Remove();
-            }
-            catch (Exception e)
-            {
-                ExceptionUtil.DisplayOrReportException(this, e);
 
-                treeViewFolders.SelectedNode = args.Node.Parent;
-                args.Node.Remove();
+                MessageDlg.ShowWithException(this, message, result.ErrorException);
             }
         }
 

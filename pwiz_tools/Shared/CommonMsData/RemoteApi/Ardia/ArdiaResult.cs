@@ -14,19 +14,34 @@
  * limitations under the License.
  */
 
+using System;
+using System.Net;
+
 namespace pwiz.CommonMsData.RemoteApi.Ardia
 {
-    public sealed class ArdiaResult<T> : ArdiaResult
+    public class ArdiaResult<T> : ArdiaResult
     {
+        public new static ArdiaResult<T> Default = Failure(null, null, null);
+        public static ArdiaResult<T> Canceled = Failure(null, null, null);
+
         public static ArdiaResult<T> Success(T value)
         {
-            return new ArdiaResult<T>(true, value, ArdiaError2.None);
+            return new ArdiaResult<T>(value);
         }
 
-        private ArdiaResult(bool success, T value, ArdiaError2 error) : 
-            base(success, error)
+        public new static ArdiaResult<T> Failure(string message, HttpStatusCode? statusCode, Exception exception)
+        {
+            return new ArdiaResult<T>(default, message, statusCode, exception);
+        }
+
+        private ArdiaResult(T value) : base(true, null, null, null)
         {
             Value = value;
+        }
+
+        private ArdiaResult(T value, string message, HttpStatusCode? statusCode, Exception exception) : base(false, message, statusCode, exception)
+        {
+            Value = default;
         }
 
         public T Value { get; }
@@ -34,38 +49,31 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
 
     public class ArdiaResult
     {
+        public static ArdiaResult Default = Failure(null, null, null);
+
         public static ArdiaResult Success()
         {
-            return new ArdiaResult(true, ArdiaError2.None);
+            return new ArdiaResult(true, null, null, null);
         }
 
-        public static ArdiaResult Failure(ArdiaError2 error)
+        public static ArdiaResult Failure(string message, HttpStatusCode? statusCode, Exception exception)
         {
-            return new ArdiaResult(false, error);
+            return new ArdiaResult(false, message, statusCode, exception);
         }
 
-        internal ArdiaResult(bool success, ArdiaError2 error)
+        internal ArdiaResult(bool success, string message, HttpStatusCode? statusCode, Exception exception)
         {
-            IsSuccess = true;
-            Error = error;
+            IsSuccess = success;
+            ErrorMessage = message;
+            ErrorStatusCode = statusCode;
+            ErrorException = exception;
         }
 
-        public ArdiaError2 Error { get; }
         public bool IsSuccess { get; }
         public bool IsFailure => !IsSuccess;
-    }
 
-    public sealed class ArdiaError2
-    {
-        public static readonly ArdiaError2 None = new ArdiaError2(string.Empty, string.Empty);
-
-        private ArdiaError2(string code, string message)
-        {
-            Code = code;
-            Message = message;
-        }
-
-        public string Code { get; }
-        public string Message { get; }
+        public HttpStatusCode? ErrorStatusCode { get; }
+        public string ErrorMessage { get; }
+        public Exception ErrorException { get; }
     }
 }

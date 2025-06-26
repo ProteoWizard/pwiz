@@ -52,6 +52,7 @@ namespace pwiz.SkylineTestConnected
             RunFunctionalTest();
         }
 
+        // TODO: check network is available before running test
         // TODO: is there an API to verify Ardia account has permissions required to run test? Ex: upload files, delete files
         protected override void DoTest()
         {
@@ -89,8 +90,8 @@ namespace pwiz.SkylineTestConnected
             var testResultsPath = $@"{parentPath}/{folderName}";
 
             // Create a folder holding results from this test run
-            setupClient.CreateFolder(parentPath, folderName, null, out var error);
-            Assert.IsNull(error);
+            var result = setupClient.CreateFolder(parentPath, folderName, null);
+            Assert.IsTrue(result.IsSuccess);
 
             Test_ArdiaClient_GetFolders(account);
             Test_ArdiaClient_CreateFolder(account, testResultsPath);
@@ -160,23 +161,14 @@ namespace pwiz.SkylineTestConnected
 
         private static void TestCreateArdiaError()
         {
-            var message = ArdiaError.ReadErrorFromResponse(ERROR_MESSAGE_JSON);
+            var message = ArdiaClient.ReadErrorMessageFromResponse(ERROR_MESSAGE_JSON);
             Assert.AreEqual(@"Item is Archived or Path already exists.", message);
 
-            message = ArdiaError.ReadErrorFromResponse(ERROR_MESSAGE_XML);
+            message = ArdiaClient.ReadErrorMessageFromResponse(ERROR_MESSAGE_XML);
             Assert.AreEqual(@"Your proposed upload exceeds the maximum allowed size", message);
 
-            message = ArdiaError.ReadErrorFromResponse(@"Neither XML nor JSON.");
-            Assert.AreEqual(@"Neither XML nor JSON.", message);
-
-            var error = ArdiaError.Create(null, ERROR_MESSAGE_JSON);
-            Assert.AreEqual(@"Item is Archived or Path already exists.", error.Message);
-
-            error = ArdiaError.Create(null, ERROR_MESSAGE_XML);
-            Assert.AreEqual(@"Your proposed upload exceeds the maximum allowed size", error.Message);
-
-            error = ArdiaError.Create(null, @"Neither XML nor JSON.");
-            Assert.AreEqual(@"Neither XML nor JSON.", error.Message);
+            message = ArdiaClient.ReadErrorMessageFromResponse(@"Neither XML nor JSON.");
+            Assert.AreEqual(string.Empty, message);
         }
 
         private static void TestAccountHasCredentials(ArdiaAccount account)
@@ -240,24 +232,25 @@ namespace pwiz.SkylineTestConnected
         {
             var ardiaClient = ArdiaClient.Create(account);
 
-            // Successful if no exception thrown
-            ardiaClient.GetFolders(account.GetRootArdiaUrl(), null, out var ardiaError);
-            Assert.IsNull(ardiaError);
+            var result = ardiaClient.GetFolders(account.GetRootArdiaUrl(), null);
+            Assert.IsTrue(result.IsSuccess);
+            Assert.IsNotNull(result.Value);
         }
 
         private static void Test_ArdiaClient_CreateFolder(ArdiaAccount account, string path)
         {
             var ardiaClient = ArdiaClient.Create(account);
 
-            ardiaClient.CreateFolder(path, @"NewFolder01", null, out var serverError);
-            Assert.IsNull(serverError);
+            var result = ardiaClient.CreateFolder(path, @"NewFolder01", null);
+            Assert.IsTrue(result.IsSuccess);
 
             // Error - attempt to create folder with same name
-            ardiaClient.CreateFolder(path, @"NewFolder01", null, out serverError);
-            Assert.IsNotNull(serverError);
-            Assert.AreEqual(HttpStatusCode.Conflict, serverError.StatusCode);
+            result = ardiaClient.CreateFolder(path, @"NewFolder01", null);
+            Assert.IsTrue(result.IsFailure);
+            Assert.AreEqual(HttpStatusCode.Conflict, result.ErrorStatusCode);
 
-            ardiaClient.DeleteFolder(@$"{path}/NewFolder01");
+            result = ardiaClient.DeleteFolder(@$"{path}/NewFolder01");
+            Assert.IsTrue(result.IsSuccess);
         }
 
         private static void TestSuccessfulUpload(ArdiaAccount account, string[] folderPath) 
@@ -289,9 +282,10 @@ namespace pwiz.SkylineTestConnected
             var documentId = publishDlg.PublishedDocument.DocumentId;
 
             var ardiaClient = ArdiaClient.Create(account);
-            var ardiaDocument = ardiaClient.GetDocument(documentId);
-            Assert.IsNotNull(ardiaDocument);
-            Assert.AreEqual(documentId, ardiaDocument.DocumentId);
+            var result = ardiaClient.GetDocument(documentId);
+            Assert.IsTrue(result.IsSuccess);
+            Assert.IsNotNull(result.Value);
+            Assert.AreEqual(documentId, result.Value.DocumentId);
         }
 
         private static void RegisterRemoteServer(ArdiaAccount account) 

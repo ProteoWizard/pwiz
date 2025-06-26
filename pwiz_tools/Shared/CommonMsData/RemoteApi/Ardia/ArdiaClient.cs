@@ -24,10 +24,16 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 
+// TODO: error handling - consider adding more information about the remote API call to exceptions (esp. unexpected ones) including uri, status code, and response body
+// TODO: error handling - what can be reused with Panorama? Ex: PanoramaServerException, ErrorMessageBuilder?
+// TODO: error handling - check strings (esp. responseBody) for tokens and scrub if present
+// TODO: is there a way to make GetDocument and DeleteFolder test-only without just moving them into the test?
 namespace pwiz.CommonMsData.RemoteApi.Ardia
 {
     /// <summary>
@@ -101,13 +107,12 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             return client;
         }
 
-        public bool CreateFolder(string parentFolderPath, string folderName, IProgressMonitor progressMonitor, out ArdiaError serverError)
+        // API documentation: https://api.hyperbridge.cmdtest.thermofisher.com/navigation/api/swagger/index.html
+        public ArdiaResult CreateFolder(string parentFolderPath, string folderName, IProgressMonitor progressMonitor)
         {
-            serverError = null;
-
             var uri = UriFromParts(ServerUri, PATH_CREATE_FOLDER);
+            
             HttpStatusCode? statusCode = null;
-            var responseBody = string.Empty;
 
             try
             {
@@ -116,61 +121,28 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
 
                 using var request = new StringContent(jsonString, Encoding.UTF8, HEADER_CONTENT_TYPE_FOLDER);
                 using var httpClient = AuthenticatedHttpClient();
-
-                var response = httpClient.PostAsync(uri.AbsolutePath, request).Result;
+                using var response = httpClient.PostAsync(uri.AbsolutePath, request).Result;
 
                 statusCode = response.StatusCode;
-                responseBody = response.Content.ReadAsStringAsync().Result;
+                var responseBody = response.Content.ReadAsStringAsync().Result;
 
                 if (statusCode == HttpStatusCode.Created)
                 {
-                    return true;
+                    return ArdiaResult.Success();
                 }
                 else
                 {
-                    serverError = ArdiaError.Create(statusCode, responseBody);
-                    return false;
+                    var responseBodyMessage = ReadErrorMessageFromResponse(responseBody);
+                    var message = string.Format(ArdiaResources.Error_Unexpected_StatusCode, statusCode, (int)statusCode, responseBodyMessage);
+
+                    return ArdiaResult.Failure(message, statusCode, null);
                 }
             }
-            catch (Exception e) when (e is HttpRequestException || 
-                                      e is WebException || 
-                                      e is TaskCanceledException { CancellationToken: { IsCancellationRequested: false } })
+            catch (Exception e) when (ShouldHandleException(e))
             {
-                serverError = ArdiaError.Create(statusCode, responseBody);
+                var message = ErrorMessageBuilder.Create(ArdiaResources.Error_PossibleNetworkProblem).ErrorDetail(e.InnerException?.Message).Uri(uri);
 
-                // throw ArdiaServerException.Create(e.Message, uri, serverError, e);
-                throw new IOException(e.Message, e);
-            }
-            catch (AggregateException e) when (e.InnerException is WebException ||
-                                               e.InnerException is HttpRequestException ||
-                                               e.InnerException is TaskCanceledException { CancellationToken: { IsCancellationRequested: false } })
-            {
-                serverError = ArdiaError.Create(statusCode, responseBody);
-
-                var innermostException = e.InnerException;
-                while (innermostException.InnerException != null)
-                {
-                    innermostException = innermostException.InnerException;
-                }
-
-                var sb = new StringBuilder();
-                sb.Append(e.InnerException.Message);
-                sb.Append(@" - ");
-                sb.Append(innermostException.Message);
-
-                // throw ArdiaServerException.Create(sb.ToString(), uri, serverError, e.InnerException);
-                throw new IOException(e.Message, e);
-            }
-            catch (Exception e)
-            {
-                // serverError = ArdiaError.Create(statusCode, responseBody);
-                //
-                // var message = ErrorMessageBuilder
-                //     .Create(string.Format(ArdiaResources.CreateFolder_Error, parentFolderPath, folderName)).Uri(uri)
-                //     .ServerError(serverError).ToString();
-
-                // TODO: set detailed info about remote API call - uri, status code, response body
-                throw new Exception(@"Unexpected error", e.InnerException);
+                return ArdiaResult.Failure(message.ToString(), statusCode, e);
             }
         }
 
@@ -179,20 +151,20 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         /// This uses .NET's deprecated <see cref="HttpWebRequest"/> API to make the DELETE call. .NET's preferred <see cref="HttpClient"/> 
         /// unexpectedly specifies the Content-Type header's "charset=utf-8" attribute, which causes the delete API to return an error
         /// code (400 Bad Request). <see cref="HttpWebRequest"/> does not automatically set charset and works correctly.
+        ///
+        /// API documentation: https://api.hyperbridge.cmdtest.thermofisher.com/navigation/api/swagger/index.html
         /// </summary>
         /// <param name="folderPath">fully qualified path of the folder to delete</param>
-        // TODO: is there a way to make this "test only" without just moving it into the test?
-        public void DeleteFolder(string folderPath)
+        public ArdiaResult DeleteFolder(string folderPath)
         {
+            var encodedFolderPath = Uri.EscapeDataString(folderPath);
+            var uri = UriFromParts(ServerUri, string.Format($"{PATH_DELETE_FOLDER}?folder={encodedFolderPath}"));
+
             HttpStatusCode? statusCode = null;
-            var responseBody = string.Empty;
 
             try
             {
-                var encodedFolderPath = Uri.EscapeDataString(folderPath);
-                var deleteUrl = string.Format($@"{ServerUri.ToString().TrimEnd('/')}{PATH_DELETE_FOLDER}?folder={encodedFolderPath}");
-
-                var httpWebRequest = (HttpWebRequest)WebRequest.Create(deleteUrl);
+                var httpWebRequest = (HttpWebRequest)WebRequest.Create(uri);
                 httpWebRequest.Method = HttpMethod.Delete.ToString();
                 httpWebRequest.ContentType = HEADER_CONTENT_TYPE_FOLDER;
                 httpWebRequest.ContentLength = 0;
@@ -206,331 +178,382 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
 
                 httpWebRequest.CookieContainer.Add(cookie);
 
-                var response = (HttpWebResponse)httpWebRequest.GetResponse();
+                using var response = (HttpWebResponse)httpWebRequest.GetResponse();
 
                 statusCode = response.StatusCode;
+                var responseBody = ReadAsString(response.GetResponseStream());
 
-                // Successful delete returns status code 204
-                //      See: https://api.hyperbridge.cmdtest.thermofisher.com/navigation/api/swagger/index.html
-                if (statusCode != HttpStatusCode.NoContent)
+                if (statusCode == HttpStatusCode.NoContent)
                 {
-                    var uri = new Uri(ServerUri.Host + PATH_DELETE_FOLDER);
-                    var message = string.Format(ArdiaResources.DeleteFolder_Error, folderPath);
+                    return ArdiaResult.Success();
+                }
+                else
+                {
+                    var responseBodyMessage = ReadErrorMessageFromResponse(responseBody);
+                    var message = string.Format(ArdiaResources.Error_Unexpected_StatusCode, statusCode, (int)statusCode, responseBodyMessage);
 
-                    throw ArdiaServerException.Create(message, uri, response.StatusCode, string.Empty, null);
+                    return ArdiaResult.Failure(message, statusCode, null);
                 }
             }
-            catch (WebException e)
+            // WebRequest doesn't usually throw AggregateException, so just do basic exception handling
+            catch (Exception e) when (ShouldHandleException(e))
             {
                 var message = string.Format(ArdiaResources.DeleteFolder_Error, folderPath);
-                var uri = new Uri(ServerUri + PATH_DELETE_FOLDER);
-
-                throw ArdiaServerException.Create(message, uri, statusCode, responseBody, e);
+                return ArdiaResult.Failure(message, statusCode, e);
             }
         }
 
-        // TODO: improve and test error handling throughout, incl. user-facing error messages as appropriate, bad JSON, file upload failure, invalid destination directory
-        // CONSIDER: input validation? DestinationFolderPath must be an absolute path starting with "/".
         /// <summary>
         /// Upload a zip file to the Ardia API. The .zip file must contain Skyline files - including .sky, .sky.view, .skyl, etc.
         /// </summary>
         /// <param name="destinationFolderPath">Absolute path to a destination folder on the Ardia Platform</param>
         /// <param name="localZipFile">Absolute path to a local zip file to upload</param>
         /// <param name="progressMonitor"></param>
-        /// <param name="newCreateDocument">model for the uploaded file</param>
-        /// <returns>true if uploaded succeeded, false if upload was canceled. Will throw an exception </returns>
-        public bool SendZipFile(string destinationFolderPath, string localZipFile, IProgressMonitor progressMonitor, out CreateDocumentResponse newCreateDocument)
+        /// <returns>an <see cref="ArdiaResult"/>. If successful, the value is a <see cref="CreateDocumentResponse"/>. If failure, the value is null and the result includes info about the error.</returns>
+        public ArdiaResult<CreateDocumentResponse> PublishDocument(string destinationFolderPath, string localZipFile, IProgressMonitor progressMonitor)
         {
-            newCreateDocument = null;
+            Assume.IsTrue(destinationFolderPath.StartsWith("/"));
 
             // Step 1 of 3: Ardia API - Create Staged Document
-            CreateStagedDocument(out var modelResponse);
-
-            var uploadId = modelResponse.UploadId;
-            var presignedUrl = modelResponse.Pieces[0].PresignedUrls[0];
+            var document = StageDocumentRequest.CreateSinglePieceDocument();
+            var resultStaging = CreateStagedDocument(document);
 
             if (progressMonitor.IsCanceled)
             {
-                return false;
+                return ArdiaResult<CreateDocumentResponse>.Canceled;
             }
 
             // Step 2 of 3: AWS - Upload File
-            StageFileOnAws(localZipFile, presignedUrl, out var uploadBytes);
+            var presignedUrl = resultStaging.Value.Pieces[0].PresignedUrls[0];
+            var resultUpload = UploadFile(localZipFile, presignedUrl);
 
             if (progressMonitor.IsCanceled)
             {
-                return false;
+                return ArdiaResult<CreateDocumentResponse>.Canceled;
             }
 
             // Step 3 of 3: Ardia API - Create Document
-            var fileName = Path.GetFileName(localZipFile);
-            CreateDocument(destinationFolderPath, fileName, uploadId, uploadBytes, out newCreateDocument);
+            var requestDocument = new CreateDocumentRequest
+            {
+                UploadId = resultStaging.Value.UploadId,
+                Size = resultUpload.Value,
+                FileName = Path.GetFileName(localZipFile),
+                FilePath = destinationFolderPath
+            };
 
-            return true;
+            var resultDocument = CreateDocument(requestDocument);
+
+            return ArdiaResult<CreateDocumentResponse>.Success(resultDocument.Value);
         }
 
-        private void CreateStagedDocument(out StagedDocumentResponse modelResponse)
+        // API documentation: https://api.hyperbridge.cmdtest.thermofisher.com/document/api/swagger/index.html
+        private ArdiaResult<StagedDocumentResponse> CreateStagedDocument(StageDocumentRequest document)
         {
+            var uri = UriFromParts(ServerUri, PATH_STAGE_DOCUMENT);
+
             HttpStatusCode? statusCode = null;
-            var responseBody = string.Empty;
 
             try
             {
-                var modelRequest = StageDocumentRequest.CreateSinglePieceDocument();
-                var jsonString = modelRequest.ToJson();
+                var jsonString = document.ToJson();
 
                 using var request = new StringContent(jsonString, Encoding.UTF8, APPLICATION_JSON);
+                using var httpClient = AuthenticatedHttpClient();
+                using var response = httpClient.PostAsync(uri.AbsolutePath, request).Result;
 
-                using var ardiaHttpClient = AuthenticatedHttpClient();
-                var response = ardiaHttpClient.PostAsync(PATH_STAGE_DOCUMENT, request).Result;
                 statusCode = response.StatusCode;
-                response.EnsureSuccessStatusCode();
+                var responseBody = response.Content.ReadAsStringAsync().Result;
 
-                responseBody = response.Content.ReadAsStringAsync().Result;
+                if (statusCode == HttpStatusCode.OK)
+                {
+                    var model = StagedDocumentResponse.FromJson(responseBody);
+                    return ArdiaResult<StagedDocumentResponse>.Success(model);
+                }
+                else
+                {
+                    var responseBodyMessage = ReadErrorMessageFromResponse(responseBody);
+                    var message = string.Format(ArdiaResources.Error_Unexpected_StatusCode, statusCode, (int)statusCode, responseBodyMessage);
 
-                modelResponse = StagedDocumentResponse.FromJson(responseBody);
+                    return ArdiaResult<StagedDocumentResponse>.Failure(message, statusCode, null);
+                }
             }
-            catch (Exception e)
+            catch (Exception e) when (ShouldHandleException(e))
             {
-                var message = ArdiaResources.Ardia_FileUpload_StageDocumentError;
-                var uri = new Uri(ServerUri + PATH_STAGE_DOCUMENT);
+                var message = ErrorMessageBuilder.Create(ArdiaResources.Error_PossibleNetworkProblem).ErrorDetail(e.InnerException?.Message).Uri(uri);
 
-                throw ArdiaServerException.Create(message, uri, statusCode, responseBody, e);
+                return ArdiaResult<StagedDocumentResponse>.Failure(message.ToString(), statusCode, e);
             }
         }
 
-        private static void StageFileOnAws(string zipFilePath, string presignedUrl, out long uploadBytes)
+        /// <summary>
+        /// Upload a local archive to AWS.
+        /// </summary>
+        /// <param name="zipFilePath">Path to the local archive</param>
+        /// <param name="presignedUrl">URL for where to put the archive</param>
+        /// <returns>the size of the upload in bytes</returns>
+        private static ArdiaResult<long> UploadFile(string zipFilePath, string presignedUrl)
         {
-            var awsUri = new Uri(presignedUrl);
+            var uri = new Uri(presignedUrl);
 
             HttpStatusCode? statusCode = null;
-            var responseBody = string.Empty;
 
             try
             {
                 using var awsHttpClient = new HttpClient();
-                var awsRequest = new HttpRequestMessage(HttpMethod.Put, awsUri);
+                using var awsRequest = new HttpRequestMessage(HttpMethod.Put, uri);
 
                 using var fileStream = File.OpenRead(zipFilePath);
                 using var progressStream = new ProgressStream(fileStream);
                 using var fileContent = new StreamContent(progressStream);
+
                 awsRequest.Content = fileContent;
 
                 var response = awsHttpClient.SendAsync(awsRequest).Result;
+
                 statusCode = response.StatusCode;
-                responseBody = response.Content.ReadAsStringAsync().Result;
+                var responseBody = response.Content.ReadAsStringAsync().Result;
 
-                response.EnsureSuccessStatusCode();
+                if (statusCode == HttpStatusCode.OK)
+                {
+                    return ArdiaResult<long>.Success(progressStream.Position);
+                }
+                else
+                {
+                    var responseBodyMessage = ReadErrorMessageFromResponse(responseBody);
+                    var message = string.Format(ArdiaResources.Error_Unexpected_StatusCode, statusCode, (int)statusCode, responseBodyMessage);
 
-                uploadBytes = progressStream.Position;
+                    return ArdiaResult<long>.Failure(message, statusCode, null);
+                }
             }
-            catch (Exception e)
+            catch (Exception e) when (ShouldHandleException(e))
             {
-                var serverError = ArdiaError.Create(statusCode, responseBody);
+                var message = ErrorMessageBuilder.Create(ArdiaResources.Error_PossibleNetworkProblem).ErrorDetail(e.InnerException?.Message).Uri(uri);
 
-                var errorMessage = ErrorMessageBuilder.Create(ArdiaResources.Ardia_FileUpload_UploadFileError)
-                    .ServerError(serverError).Uri(awsUri).ToString();
-
-                throw ArdiaServerException.Create(errorMessage, awsUri, serverError, e);
+                return ArdiaResult<long>.Failure(message.ToString(), statusCode, e);
             }
         }
 
-        private void CreateDocument(string destinationFolderPath, string destinationFileName, string uploadId, long uploadBytes, out CreateDocumentResponse ardiaCreateDocument)
+        // API documentation: https://api.hyperbridge.cmdtest.thermofisher.com/document/api/swagger/index.html
+        private ArdiaResult<CreateDocumentResponse> CreateDocument(CreateDocumentRequest modelRequest) 
         {
+            var uri = UriFromParts(ServerUri, PATH_CREATE_DOCUMENT);
+
             HttpStatusCode? statusCode = null;
-            var responseBody = string.Empty;
 
             try
             {
-                var modelRequest = new CreateDocumentRequest
-                {
-                    UploadId = uploadId,
-                    Size = uploadBytes,
-                    FileName = destinationFileName,
-                    FilePath = destinationFolderPath
-                };
-
                 var jsonString = modelRequest.ToJson();
+
                 using var request = new StringContent(jsonString);
                 request.Headers.ContentType = new MediaTypeHeaderValue(APPLICATION_JSON);
 
                 using var httpClient = AuthenticatedHttpClient();
-                var response = httpClient.PostAsync(PATH_CREATE_DOCUMENT, request).Result;
+                using var response = httpClient.PostAsync(uri.AbsolutePath, request).Result;
 
                 statusCode = response.StatusCode;
-                responseBody = response.Content.ReadAsStringAsync().Result;
+                var responseBody = response.Content.ReadAsStringAsync().Result;
 
-                response.EnsureSuccessStatusCode();
-
-                ardiaCreateDocument = CreateDocumentResponse.FromJson(responseBody);
-            }
-            catch (Exception e)
-            {
-                var message = ArdiaResources.Ardia_FileUpload_CreateDocumentError;
-                var uri = new Uri(ServerUri + PATH_CREATE_DOCUMENT);
-
-                throw ArdiaServerException.Create(message, uri, statusCode, responseBody, e);
-            }
-        }
-
-        public CreateDocumentResponse GetDocument(string documentId)
-        {
-            var uriString = string.Format(PATH_GET_DOCUMENT, documentId);
-
-            using var httpClient = AuthenticatedHttpClient();
-            var response = httpClient.GetAsync(uriString).Result;
-
-            response.EnsureSuccessStatusCode();
-            var responseBody = response.Content.ReadAsStringAsync().Result;
-
-            var modelResponse = CreateDocumentResponse.FromJson(responseBody);
-            return modelResponse;
-        }
-
-        public IList<RemoteItem> GetFolders(ArdiaUrl folderUrl, IProgressMonitor progressMonitor, out ArdiaError serverError)
-        {
-            serverError = null;
-            Uri uri = null;
-            HttpStatusCode? statusCode = null;
-            var responseBody = string.Empty;
-
-            try
-            {
-                IList<RemoteItem> items;
-
-                using var httpClient = AuthenticatedHttpClient();
-
-                uri = GetFolderContentsUrl(folderUrl);
-
-                var response = httpClient.GetAsync(uri).Result;
-
-                statusCode = response.StatusCode;
-                responseBody = response.Content.ReadAsStringAsync().Result;
-
-                response.EnsureSuccessStatusCode();
-
-                var jsonObject = JObject.Parse(responseBody);
-
-                if (!(jsonObject[@"children"] is JArray itemsValue))
+                if (statusCode == HttpStatusCode.Created)
                 {
-                    items = ImmutableList<RemoteItem>.EMPTY;
+                    var modelResponse = CreateDocumentResponse.FromJson(responseBody);
+                    return ArdiaResult<CreateDocumentResponse>.Success(modelResponse);
                 }
                 else
                 {
-                    var parentPath = Account.GetPathFromFolderContentsUrl(uri.AbsoluteUri);
+                    var responseBodyMessage = ReadErrorMessageFromResponse(responseBody);
+                    var message = string.Format(ArdiaResources.Error_Unexpected_StatusCode, statusCode, (int)statusCode, responseBodyMessage);
 
-                    var foldersEnumerable = itemsValue.OfType<JObject>().
-                        Where(IsArdiaFolderOrSequence).
-                        Select(folder => new ArdiaFolderObject(folder, parentPath));
-
-                    items = new List<RemoteItem>();
-                    foreach (var folderObject in foldersEnumerable)
-                    {
-                        if (folderObject.ParentId == "" || folderObject.ParentId.TrimStart('/') == folderUrl.EncodedPath)
-                        {
-                            var childUrl = folderUrl.ChangeId(folderObject.Id);
-                            var childUrlPathParts = folderUrl.GetPathParts().Concat(new[] { folderObject.Name });
-                            var baseChildUrl = childUrl.ChangePathParts(childUrlPathParts);
-
-                            // CONSIDER: marshal JSON directly to RemoteItem. ArdiaSession marshals in two steps -
-                            //           JSON to ArdiaFolderObject then to RemoteItem. Can simplify here.
-                            var item = new RemoteItem(baseChildUrl, folderObject.Name, DataSourceUtil.FOLDER_TYPE, null, 0, folderObject.HasChildren);
-
-                            items.Add(item);
-                        }
-                    }
+                    return ArdiaResult<CreateDocumentResponse>.Failure(message, statusCode, null);
                 }
-
-                return items;
             }
-            catch (Exception e) when (e is HttpRequestException ||
-                                      e is WebException ||
-                                      e is TaskCanceledException { CancellationToken: { IsCancellationRequested: false } })
+            catch (Exception e) when (ShouldHandleException(e))
             {
-                serverError = ArdiaError.Create(statusCode, responseBody);
+                var message = ErrorMessageBuilder.Create(ArdiaResources.Error_PossibleNetworkProblem).ErrorDetail(e.InnerException?.Message).Uri(uri);
 
-                // throw ArdiaServerException.Create(e.Message, uri, serverError, e);
-                throw new IOException(e.Message, e);
+                return ArdiaResult<CreateDocumentResponse>.Failure(message.ToString(), statusCode, e);
             }
-            catch (AggregateException e) when (e.InnerException is WebException ||
-                                               e.InnerException is HttpRequestException ||
-                                               e.InnerException is TaskCanceledException { CancellationToken: { IsCancellationRequested: false } })
-            {
-                serverError = ArdiaError.Create(statusCode, responseBody);
-
-                var innermostException = e.InnerException;
-                while (innermostException.InnerException != null)
-                {
-                    innermostException = innermostException.InnerException;
-                }
-
-                var sb = new StringBuilder();
-                sb.Append(e.InnerException.Message);
-                sb.Append(@" - ");
-                sb.Append(innermostException.Message);
-
-                // throw ArdiaServerException.Create(sb.ToString(), uri, serverError, e.InnerException);
-                throw new IOException(sb.ToString(), e.InnerException);
-            }
-            catch (Exception e)
-            {
-                // serverError = ArdiaError.Create(statusCode, responseBody);
-                //
-                // var message = ErrorMessageBuilder
-                //     .Create(string.Format(ArdiaResources.CreateFolder_Error, parentFolderPath, folderName)).Uri(uri)
-                //     .ServerError(serverError).ToString();
-
-                // TODO: set detailed info about remote API call - uri, status code, response body
-                throw new Exception(@"Unexpected error", e);
-            }
-
-            bool IsArdiaFolderOrSequence(JObject f) => f[@"type"].Value<string>().Contains(@"folder");
         }
 
-        private Uri GetFolderContentsUrl(ArdiaUrl ardiaUrl)
+        // API documentation: https://api.hyperbridge.cmdtest.thermofisher.com/document/api/swagger/index.html
+        public ArdiaResult<CreateDocumentResponse> GetDocument(string documentId)
         {
-            return new Uri(Account.GetFolderContentsUrl(ardiaUrl));
+            var uri = UriFromParts(ServerUri, string.Format(PATH_GET_DOCUMENT, documentId));
+
+            HttpStatusCode? statusCode = null;
+
+            try
+            {
+                using var httpClient = AuthenticatedHttpClient();
+                using var response = httpClient.GetAsync(uri.AbsolutePath).Result;
+
+                statusCode = response.StatusCode;
+                var responseBody = response.Content.ReadAsStringAsync().Result;
+
+                if (statusCode == HttpStatusCode.OK)
+                {
+                    var model = CreateDocumentResponse.FromJson(responseBody);
+                    return ArdiaResult<CreateDocumentResponse>.Success(model);
+                }
+                else
+                {
+                    var responseBodyMessage = ReadErrorMessageFromResponse(responseBody);
+                    var message = string.Format(ArdiaResources.Error_Unexpected_StatusCode, statusCode, (int)statusCode, responseBodyMessage);
+
+                    return ArdiaResult<CreateDocumentResponse>.Failure(message, statusCode, null);
+                }
+            }
+            catch (Exception e) when (ShouldHandleException(e))
+            {
+                var message = ErrorMessageBuilder.Create(ArdiaResources.Error_PossibleNetworkProblem).ErrorDetail(e.InnerException?.Message).Uri(uri);
+
+                return ArdiaResult<CreateDocumentResponse>.Failure(message.ToString(), statusCode, e);
+            }
+        }
+
+        // API documentation: https://api.hyperbridge.cmdtest.thermofisher.com/navigation/api/swagger/index.html
+        public ArdiaResult<IList<RemoteItem>> GetFolders(ArdiaUrl folderUrl, IProgressMonitor progressMonitor)
+        {
+            var uri = GetFolderContentsUrl(Account, folderUrl);
+
+            HttpStatusCode? statusCode = null;
+
+            try
+            {
+                using var httpClient = AuthenticatedHttpClient();
+                using var response = httpClient.GetAsync(uri).Result;
+
+                statusCode = response.StatusCode;
+                var responseBody = response.Content.ReadAsStringAsync().Result;
+
+                if (statusCode == HttpStatusCode.OK)
+                {
+                    var jsonObject = JObject.Parse(responseBody);
+
+                    IList<RemoteItem> items;
+                    if (!(jsonObject[@"children"] is JArray itemsValue))
+                    {
+                        items = ImmutableList<RemoteItem>.EMPTY;
+                    }
+                    else
+                    {
+                        var parentPath = Account.GetPathFromFolderContentsUrl(uri.AbsoluteUri);
+
+                        var foldersEnumerable = itemsValue.OfType<JObject>().
+                            Where(f => f[@"type"].Value<string>().Contains(@"folder")).
+                            Select(folder => new ArdiaFolderObject(folder, parentPath));
+
+                        items = new List<RemoteItem>();
+                        foreach (var folderObject in foldersEnumerable)
+                        {
+                            if (folderObject.ParentId == "" || folderObject.ParentId.TrimStart('/') == folderUrl.EncodedPath)
+                            {
+                                var childUrl = folderUrl.ChangeId(folderObject.Id);
+                                var childUrlPathParts = folderUrl.GetPathParts().Concat(new[] { folderObject.Name });
+                                var baseChildUrl = childUrl.ChangePathParts(childUrlPathParts);
+
+                                // CONSIDER: marshal JSON directly to RemoteItem. ArdiaSession marshals in two steps -
+                                //           JSON to ArdiaFolderObject then to RemoteItem. Can simplify here.
+                                var item = new RemoteItem(baseChildUrl, folderObject.Name, DataSourceUtil.FOLDER_TYPE, null, 0, folderObject.HasChildren);
+
+                                items.Add(item);
+                            }
+                        }
+                    }
+
+                    return ArdiaResult<IList<RemoteItem>>.Success(items);
+                }
+                else
+                {
+                    var responseBodyMessage = ReadErrorMessageFromResponse(responseBody);
+                    var message = string.Format(ArdiaResources.Error_Unexpected_StatusCode, statusCode, (int)statusCode, responseBodyMessage);
+
+                    return ArdiaResult<IList<RemoteItem>>.Failure(message, statusCode, null);
+                }
+            }
+            catch (Exception e) when (ShouldHandleException(e))
+            {
+                var message = ErrorMessageBuilder.Create(ArdiaResources.Error_PossibleNetworkProblem).ErrorDetail(e.InnerException?.Message).Uri(uri);
+
+                return ArdiaResult<IList<RemoteItem>>.Failure(message.ToString(), statusCode, e);
+            }
+        }
+
+        private static Uri GetFolderContentsUrl(ArdiaAccount account, ArdiaUrl ardiaUrl)
+        {
+            return new Uri(account.GetFolderContentsUrl(ardiaUrl));
         }
 
         private static Uri UriFromParts(Uri host, string path)
         {
             return new Uri(host.ToString().TrimEnd('/') + path);
         }
-    }
 
-    // TODO - IMPORTANT: scrub access tokens from URI and responseBody
-    // CONSIDER: can more be reused with Panorama's error reporting, including PanoramaServerException?
-    public class ArdiaServerException : Exception
-    {
-        public static ArdiaServerException Create(string message, Uri uri, HttpStatusCode? statusCode, string responseBody, Exception inner)
+        private static bool ShouldHandleException(Exception exception)
         {
-            var ardiaError = ArdiaError.Create(statusCode, responseBody);
+            // In this case, look at the wrapped exception
+            if (exception is AggregateException)
+            {
+                exception = exception.InnerException;
+            }
 
-            return Create(message, uri, ardiaError, inner);
+            return exception is HttpRequestException || 
+                   exception is WebException || 
+                   // apparently, this is how to detect network timeout when using HttpClient
+                   exception is TaskCanceledException { CancellationToken: { IsCancellationRequested: false } };
         }
 
-        public static ArdiaServerException Create(string message, Uri uri, ArdiaError serverError, Exception inner)
+        public static string ReadErrorMessageFromResponse(string responseBody)
         {
-            return new ArdiaServerException(message, uri, serverError, inner);
+            // Response body might be JSON - ex: errors from JSON
+            try
+            {
+                var jsonResponse = JObject.Parse(responseBody);
+                if (jsonResponse?[@"title"] != null)
+                {
+                    return jsonResponse[@"title"].ToString();
+                }
+            }
+            catch (JsonReaderException)
+            {
+                // ignore
+            }
+
+            // Response body might be XML - ex: errors from AWS
+            try
+            {
+                var doc = XDocument.Parse(responseBody);
+                var messageElement = doc.Element("Error")?.Element("Message");
+                if (messageElement != null)
+                {
+                    return messageElement.Value;
+                }
+            }
+            catch (Exception)
+            {
+                // ignore
+            }
+
+            return string.Empty;
         }
 
-        private ArdiaServerException(string message, Uri uri, ArdiaError serverError, Exception inner) 
-            : base(message, inner)
+        private static string ReadAsString(Stream stream, Encoding encoding = null)
         {
-            Uri = uri;
-            ServerError = serverError;
+            if (stream != null)
+            {
+                encoding ??= Encoding.UTF8;
+                using var reader = new StreamReader(stream, encoding);
+                return reader.ReadToEnd();
+            }
+            else return string.Empty;
         }
-
-        public Uri Uri { get; }
-        public ArdiaError ServerError { get; }
     }
 
     public sealed class ErrorMessageBuilder
     {
         private readonly string _message;
         private string _messageDetail;
-        private ArdiaError _serverError;
         private Uri _uri;
+        private HttpStatusCode? _statusCode;
 
         public static ErrorMessageBuilder Create(string error)
         {
@@ -554,30 +577,31 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             return this;
         }
 
-        public ErrorMessageBuilder ServerError(ArdiaError serverError)
+        public ErrorMessageBuilder StatusCode(HttpStatusCode statusCode)
         {
-            _serverError = serverError;
+            _statusCode = statusCode;
             return this;
         }
 
-        // CONSIDER: Panorama's ErrorMessageBuilder supports setting the entire response body and an
-        //           exception message. Useful here too?
         public override string ToString()
         {
             var sb = new StringBuilder();
-            if (!string.IsNullOrEmpty(_messageDetail) || _serverError != null)
+            if (!string.IsNullOrEmpty(_messageDetail) || _uri != null || _statusCode != null)
             {
-                sb.Append(ArdiaResources.Error_Prefix);
-
                 if (!string.IsNullOrEmpty(_messageDetail)) 
                     sb.AppendLine(_messageDetail);
-                
-                if (_serverError != null) 
-                    sb.AppendLine(_serverError.ToString());
-            }
 
-            if (_uri != null)
-                sb.AppendLine($@"{ArdiaResources.Error_URL} {_uri}");
+                if (_uri != null)
+                {
+                    sb.AppendLine(string.Format(ArdiaResources.Error_Host, _uri.Host));
+                    sb.AppendLine(string.Format(ArdiaResources.Error_Path, _uri.AbsolutePath));
+                }
+
+                if (_statusCode != null)
+                {
+                    sb.AppendLine(string.Format(ArdiaResources.Error_Code, _statusCode.ToString(), (int)_statusCode));
+                }
+            }
 
             return sb.Length > 0 ? CommonTextUtil.LineSeparate(_message, sb.ToString().TrimEnd()) : _message;
         }

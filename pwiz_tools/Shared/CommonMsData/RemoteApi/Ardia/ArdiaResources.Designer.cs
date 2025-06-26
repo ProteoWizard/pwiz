@@ -61,69 +61,6 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Do you want to upload {0} to Ardia at {1}?.
-        /// </summary>
-        public static string Ardia_FileUpload_ConfirmUploadToPath {
-            get {
-                return ResourceManager.GetString("Ardia_FileUpload_ConfirmUploadToPath", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Error creating the Skyline document.
-        /// </summary>
-        public static string Ardia_FileUpload_CreateDocumentError {
-            get {
-                return ResourceManager.GetString("Ardia_FileUpload_CreateDocumentError", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Select.
-        /// </summary>
-        public static string Ardia_FileUpload_SelectDestinationButtonLabel {
-            get {
-                return ResourceManager.GetString("Ardia_FileUpload_SelectDestinationButtonLabel", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Select a destination folder.
-        /// </summary>
-        public static string Ardia_FileUpload_SelectDestinationFolderLabel {
-            get {
-                return ResourceManager.GetString("Ardia_FileUpload_SelectDestinationFolderLabel", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Error staging the Skyline document.
-        /// </summary>
-        public static string Ardia_FileUpload_StageDocumentError {
-            get {
-                return ResourceManager.GetString("Ardia_FileUpload_StageDocumentError", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Successfully uploaded to Ardia..
-        /// </summary>
-        public static string Ardia_FileUpload_SuccessfulUpload {
-            get {
-                return ResourceManager.GetString("Ardia_FileUpload_SuccessfulUpload", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Error uploading the Skyline document.
-        /// </summary>
-        public static string Ardia_FileUpload_UploadFileError {
-            get {
-                return ResourceManager.GetString("Ardia_FileUpload_UploadFileError", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Failed to open Ardia connection.
         /// </summary>
         public static string ArdiaAccount_GetAuthenticatedHttpClient_Failed_to_open_Ardia_connection {
@@ -152,7 +89,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error creating folder &apos;{1}&apos; in &apos;{0}&apos;..
+        ///   Looks up a localized string similar to Error creating folder &apos;{0}&apos;..
         /// </summary>
         public static string CreateFolder_Error {
             get {
@@ -179,7 +116,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error creating &apos;{1}&apos;. Do you have permission to create a folder in &apos;{0}&apos;?.
+        ///   Looks up a localized string similar to Error creating &apos;{0}&apos;. Do you have permission to create a folder in &apos;{1}&apos;?.
         /// </summary>
         public static string CreateFolder_Error_Forbidden {
             get {
@@ -197,7 +134,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error creating &apos;{1}&apos;. Could not authenticate user..
+        ///   Looks up a localized string similar to Error creating &apos;{0}&apos;. Could not authenticate user..
         /// </summary>
         public static string CreateFolder_Error_NotAuthenticated {
             get {
@@ -233,6 +170,42 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Code: {0} ({1}).
+        /// </summary>
+        public static string Error_Code {
+            get {
+                return ResourceManager.GetString("Error_Code", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Host: {0}.
+        /// </summary>
+        public static string Error_Host {
+            get {
+                return ResourceManager.GetString("Error_Host", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Path: {0}.
+        /// </summary>
+        public static string Error_Path {
+            get {
+                return ResourceManager.GetString("Error_Path", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Is there a network problem?.
+        /// </summary>
+        public static string Error_PossibleNetworkProblem {
+            get {
+                return ResourceManager.GetString("Error_PossibleNetworkProblem", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error details: .
         /// </summary>
         public static string Error_Prefix {
@@ -251,6 +224,15 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unexpected error code {0} ({1}). {2}.
+        /// </summary>
+        public static string Error_Unexpected_StatusCode {
+            get {
+                return ResourceManager.GetString("Error_Unexpected_StatusCode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to URL: {0}.
         /// </summary>
         public static string Error_URL {
@@ -260,11 +242,56 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to This document is too large to publish. The maximum archive size is {0}..
+        ///   Looks up a localized string similar to Error publishing the Skyline document. The file is too large. Maximum file size is {0}GB..
         /// </summary>
         public static string FileUpload_ArchiveTooLarge {
             get {
                 return ResourceManager.GetString("FileUpload_ArchiveTooLarge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error publishing the Skyline document to Ardia.
+        /// </summary>
+        public static string FileUpload_Error {
+            get {
+                return ResourceManager.GetString("FileUpload_Error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Successfully published the Skyline document to Ardia..
+        /// </summary>
+        public static string FileUpload_Success {
+            get {
+                return ResourceManager.GetString("FileUpload_Success", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error getting document {0}.
+        /// </summary>
+        public static string GetDocument_Error {
+            get {
+                return ResourceManager.GetString("GetDocument_Error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error expanding folder &apos;{0}&apos;.
+        /// </summary>
+        public static string OpenFolder_Error {
+            get {
+                return ResourceManager.GetString("OpenFolder_Error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error reaching Ardia server {0}. Try again later..
+        /// </summary>
+        public static string OpenFolder_ErrorOpeningDialog {
+            get {
+                return ResourceManager.GetString("OpenFolder_ErrorOpeningDialog", resourceCulture);
             }
         }
         

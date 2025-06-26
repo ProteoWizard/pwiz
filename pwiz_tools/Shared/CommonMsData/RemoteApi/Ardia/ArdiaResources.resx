@@ -126,32 +126,26 @@
   <data name="ArdiaAccount_GetAuthenticatedHttpClient_Failed_to_open_Ardia_connection" xml:space="preserve">
     <value>Failed to open Ardia connection</value>
   </data>
-  <data name="Ardia_FileUpload_SuccessfulUpload" xml:space="preserve">
-    <value>Successfully uploaded to Ardia.</value>
+  <data name="FileUpload_Success" xml:space="preserve">
+    <value>Successfully published the Skyline document to Ardia.</value>
   </data>
-  <data name="Ardia_FileUpload_StageDocumentError" xml:space="preserve">
-    <value>Error staging the Skyline document</value>
-  </data>
-  <data name="Ardia_FileUpload_UploadFileError" xml:space="preserve">
-    <value>Error uploading the Skyline document</value>
-  </data>
-  <data name="Ardia_FileUpload_CreateDocumentError" xml:space="preserve">
-    <value>Error creating the Skyline document</value>
-  </data>
-  <data name="Ardia_FileUpload_ConfirmUploadToPath" xml:space="preserve">
-    <value>Do you want to upload {0} to Ardia at {1}?</value>
-  </data>
-  <data name="Ardia_FileUpload_SelectDestinationButtonLabel" xml:space="preserve">
-    <value>Select</value>
+  <data name="FileUpload_Error" xml:space="preserve">
+    <value>Error publishing the Skyline document to Ardia</value>
   </data>
   <data name="FileUpload_ArchiveTooLarge" xml:space="preserve">
-    <value>This document is too large to publish. The maximum archive size is {0}.</value>
-  </data>
-  <data name="Ardia_FileUpload_SelectDestinationFolderLabel" xml:space="preserve">
-    <value>Select a destination folder</value>
+    <value>Error publishing the Skyline document. The file is too large. Maximum file size is {0}GB.</value>
   </data>
   <data name="OpenFolder_Title" xml:space="preserve">
     <value>Opening folder {0}</value>
+  </data>
+  <data name="OpenFolder_Error" xml:space="preserve">
+    <value>Error expanding folder '{0}'</value>
+  </data>
+  <data name="OpenFolder_ErrorOpeningDialog" xml:space="preserve">
+    <value>Error reaching Ardia server {0}. Try again later.</value>
+  </data>
+  <data name="GetDocument_Error" xml:space="preserve">
+    <value>Error getting document {0}</value>
   </data>
   <data name="CreateFolder_DefaultFolderName" xml:space="preserve">
     <value>New Folder</value>
@@ -163,7 +157,7 @@
     <value>Successfully created Ardia folder {0}</value>
   </data>
   <data name="CreateFolder_Error" xml:space="preserve">
-    <value>Error creating folder '{1}' in '{0}'.</value>
+    <value>Error creating folder '{0}'.</value>
   </data>
   <data name="CreateFolder_Error_BlankName" xml:space="preserve">
     <value>Folder names cannot be blank.</value>
@@ -174,11 +168,11 @@
   <data name="CreateFolder_Error_FileAlreadyExists" xml:space="preserve">
     <value>Error creating '{0}'. An item with that name already exists.</value>
   </data>
-    <data name="CreateFolder_Error_Forbidden" xml:space="preserve">
-    <value>Error creating '{1}'. Do you have permission to create a folder in '{0}'?</value>
+  <data name="CreateFolder_Error_Forbidden" xml:space="preserve">
+    <value>Error creating '{0}'. Do you have permission to create a folder in '{1}'?</value>
   </data>
-    <data name="CreateFolder_Error_NotAuthenticated" xml:space="preserve">
-    <value>Error creating '{1}'. Could not authenticate user.</value>
+  <data name="CreateFolder_Error_NotAuthenticated" xml:space="preserve">
+    <value>Error creating '{0}'. Could not authenticate user.</value>
   </data>
   <data name="DeleteFolder_Error" xml:space="preserve">
     <value>Error deleting folder {0}.</value>
@@ -191,5 +185,20 @@
   </data>
   <data name="Error_URL" xml:space="preserve">
     <value>URL: {0}</value>
+  </data>
+    <data name="Error_Host" xml:space="preserve">
+    <value>Host: {0}</value>
+  </data>
+  <data name="Error_Path" xml:space="preserve">
+    <value>Path: {0}</value>
+  </data>
+  <data name="Error_Code" xml:space="preserve">
+    <value>Code: {0} ({1})</value>
+  </data>
+  <data name="Error_Unexpected_StatusCode" xml:space="preserve">
+    <value>Unexpected error code {0} ({1}). {2}</value>
+  </data>
+  <data name="Error_PossibleNetworkProblem" xml:space="preserve">
+    <value>Is there a network problem?</value>
   </data>
 </root>
