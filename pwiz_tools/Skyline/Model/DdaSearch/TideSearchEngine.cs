@@ -817,7 +817,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             return _finalOutputFilepath;
         }
        
-        private string[] SupportedExtensions = { @".mzml", @".mzxml", @".ms2", @".mgf", @".raw" };
+        private string[] SupportedExtensions = { @".mzml", @".mzxml", @".raw" };
 
         public override bool GetSearchFileNeedsConversion(MsDataFileUri searchFilepath, out AbstractDdaConverter.MsdataFileFormat requiredFormat)
         {
