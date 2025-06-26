@@ -54,12 +54,11 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         }
 
         private DateTime _nowTime = DateTime.Now;
-        private IList<string> _warningMods;
-
         protected AbstractDeepLibraryBuilder(SrmDocument document, IrtStandard irtStandard)
         {
             Document = document;
             IrtStandard = irtStandard;
+            _warningMods = GetWarningMods();
         }
 
         public SrmDocument Document { get; private set; }
@@ -75,7 +74,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         public string TimeStamp => _nowTime.ToString(@"yyyy-MM-dd_HH-mm-ss");
 
         public string WorkDir { get; private set; }
-
+        
         public void EnsureWorkDir(string path, string tool)
         {
             if (WorkDir == null)
@@ -96,7 +95,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         public int TotalExpectedLinesOfOutput { get; private protected set; }
         public int TotalGeneratedLinesOfOutput { get; private protected set; }
 
-        public void PreparePrecursorInputFile(IList<ModificationType> modificationNames, IProgressMonitor progress, ref IProgressStatus progressStatus)
+        public void PreparePrecursorInputFile(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
             progress.UpdateProgress(progressStatus = progressStatus
                 .ChangeMessage(ModelResources.LibraryHelper_PreparePrecursorInputFile_Preparing_prediction_input_file));
@@ -105,7 +104,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             File.WriteAllLines(InputFilePath, precursorTable);
         }
 
-        public void PrepareTrainingInputFile(IList<ModificationType> modificationNames, IProgressMonitor progress, ref IProgressStatus progressStatus)
+        public void PrepareTrainingInputFile(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
             progress.UpdateProgress(progressStatus = progressStatus
                 .ChangeMessage(ModelResources.LibraryHelper_PrepareTrainingInputFile_Preparing_training_input_file));
@@ -163,15 +162,12 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         protected abstract string ToolName { get; }
 
         protected abstract IList<ModificationType> ModificationTypes { get; }
+
+        private IList<string> _warningMods;
         protected internal bool ValidateModifications(ModifiedSequence modifiedSequence, out string mods, out string modSites)
         {
             var modsBuilder = new StringBuilder();
             var modSitesBuilder = new StringBuilder();
-
-            // The list returned below is probably always short enough that determining
-            // if it contains a modification would not be greatly improved by caching a set
-            // for use here instead of the list.
-            var warningMods = GetWarningMods();
 
             bool unsupportedModification = false;
             var setUnsupported = new HashSet<string>();
@@ -191,7 +187,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 }
 
                 var unimodIdWithName = mod.UnimodIdWithName;
-                if (warningMods.Contains(mod.Name))
+                if (_warningMods.Contains(mod.Name))
                 {
                     if (!setUnsupported.Contains(mod.Name))
                     {
@@ -239,9 +235,6 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
         public IList<string> GetWarningMods()
         {
-            if (_warningMods != null)
-                return _warningMods;
-
             var resultList = new List<string>();
 
             // Build precursor table row by row

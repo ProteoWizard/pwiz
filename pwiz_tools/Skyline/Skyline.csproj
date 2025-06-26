@@ -16,9 +16,8 @@
     <IsWebBootstrapper>true</IsWebBootstrapper>
     <ManifestCertificateThumbprint>FE05A4E5B557E824D58CFC715ADBC1D6EB26B5AE</ManifestCertificateThumbprint>
     <ManifestKeyFile>Skyline_2_TemporaryKey.pfx</ManifestKeyFile>
-    <GenerateManifests>false</GenerateManifests>
+    <GenerateManifests>true</GenerateManifests>
     <TargetZone>LocalIntranet</TargetZone>
-    <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
     <SignManifests>true</SignManifests>
     <SignAssembly>false</SignAssembly>
     <FileUpgradeFlags>
@@ -52,8 +51,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>147</ApplicationRevision>
-    <ApplicationVersion>25.1.1.147</ApplicationVersion>
+    <ApplicationRevision>177</ApplicationRevision>
+    <ApplicationVersion>25.1.1.177</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -103,6 +102,8 @@
     <Prefer32Bit>false</Prefer32Bit>
     <WarningLevel>3</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup />
+  <PropertyGroup />
   <ItemGroup>
     <Reference Include="Dapper">
       <HintPath>..\Shared\Lib\Dapper.dll</HintPath>

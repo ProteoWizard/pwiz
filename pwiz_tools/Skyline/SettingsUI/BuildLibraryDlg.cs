@@ -401,6 +401,7 @@ namespace pwiz.Skyline.SettingsUI
                 return false;
             }
 
+
             if (!SetupPythonEnvironmentForCarafe(createDlg))
             {
                 return false;
@@ -421,20 +422,6 @@ namespace pwiz.Skyline.SettingsUI
                 btnNext.Enabled = true;
             }
 
-            // handle options for comboBuildLibraryTarget dropdown 
-            if (comboBuildLibraryTarget.SelectedIndex == (int)BuildLibraryTargetOptions.currentSkylineDocument)
-            {
-                //TODO   throw new NotImplementedException(@"Need to implement skyline document support.");
-            }
-            else if (comboBuildLibraryTarget.SelectedIndex != (int)BuildLibraryTargetOptions.currentSkylineDocument)
-            {
-                //     throw new NotSupportedException(@$"Index {comboBuildLibraryTarget.SelectedIndex} of comboBuildLibraryTarget is not yet supported.");
-            }
-            else
-            {
-                throw new NotSupportedException(
-                    @$"Index {comboBuildLibraryTarget.SelectedIndex} of comboBuildLibraryTarget is not yet supported.");
-            }
 
             return true;
         }
@@ -821,7 +808,7 @@ namespace pwiz.Skyline.SettingsUI
             ILongWaitBroker broker, double start, double stop)
         {
             broker.Message = TextUtil.LineSeparate(SettingsUIResources.BuildLibraryDlg_FindInputFiles_Finding_library_input_files_in,
-                                                   PathEx.ShortenPathForDisplay(dir));
+                PathEx.ShortenPathForDisplay(dir));
 
             string[] fileNames = Directory.GetFiles(dir);
             Array.Sort(fileNames);
@@ -898,8 +885,8 @@ namespace pwiz.Skyline.SettingsUI
                     if (filesLib.Length == 1)
                     {
                         using (var dlg = new MultiButtonMsgDlg(
-                            string.Format(SettingsUIResources.BuildLibraryDlg_AddInputFiles_The_file__0__is_a_library_file_and_does_not_need_to_be_built__Would_you_like_to_add_this_library_to_the_document_,
-                                filesLib[0]), MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false))
+                                   string.Format(SettingsUIResources.BuildLibraryDlg_AddInputFiles_The_file__0__is_a_library_file_and_does_not_need_to_be_built__Would_you_like_to_add_this_library_to_the_document_,
+                                       filesLib[0]), MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false))
                         {
                             if (dlg.ShowDialog(parent) == DialogResult.Yes)
                             {
@@ -920,9 +907,9 @@ namespace pwiz.Skyline.SettingsUI
                 else
                 {
                     var message = TextUtil.SpaceSeparate(SettingsUIResources.BuildLibraryDlg_AddInputFiles_The_following_files_are_not_valid_library_input_files,
-                                  string.Empty,
-                                  // ReSharper disable LocalizableElement
-                                  "\t" + string.Join("\n\t", filesError.ToArray()));
+                        string.Empty,
+                        // ReSharper disable LocalizableElement
+                        "\t" + string.Join("\n\t", filesError.ToArray()));
                                   // ReSharper restore LocalizableElement
                     MessageDlg.Show(parent, message);
                 }

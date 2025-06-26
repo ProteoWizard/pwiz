@@ -50,7 +50,6 @@ namespace pwiz.Skyline.Model.Lib.Midas
         {
             _doc = doc;
             _library = library;
-            LibraryHelper = null;
             _libSpec = new BiblioSpecLiteSpec(libName, blibPath);
             ToolName = @"midas";
         }
@@ -103,8 +102,6 @@ namespace pwiz.Skyline.Model.Lib.Midas
                 return blibDb.CreateLibraryFromSpectra(new BiblioSpecLiteSpec(BLIB_NAME_INTERNAL, _libSpec.FilePath), bestSpectra, BLIB_NAME_INTERNAL, progress) != null;
             }
         }
-
-        public LibraryHelper LibraryHelper { get; }
 
         public string ProductLibraryPath()
         {

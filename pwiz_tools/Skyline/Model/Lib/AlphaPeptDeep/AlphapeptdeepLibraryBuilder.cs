@@ -368,7 +368,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             var segmentEndPercentages = new[] { 5, 10, 15, 95 };
 
             progressStatus = progressStatus.ChangeSegments(0, ImmutableList<int>.ValueOf(segmentEndPercentages));
-            PreparePrecursorInputFile(MODIFICATION_NAMES, progress, ref progressStatus);
+            PreparePrecursorInputFile(progress, ref progressStatus);
             progressStatus = progressStatus.NextSegment();
             PrepareSettingsFile(progress, ref progressStatus);
             progressStatus = progressStatus.NextSegment();

@@ -65,27 +65,62 @@ namespace pwiz.Skyline.Model.Lib.Carafe
         private const string JAVA_EXECUTABLE = @"java.exe";
         private const string JAVA_SDK_DOWNLOAD_URL = @"https://download.oracle.com/java/21/latest/";
         private const string OUTPUT_LIBRARY = @"output_library";
-        private const string OUTPUT_LIBRARY_FILE_NAME = "SkylineAI_spectral_library.blib";
-        private const string OUTPUT_SPECTRAL_LIB_FILE_NAME = @"test_res_fine_tuned.csv";
+
+        // Processing file names
+        private const string OUTPUT_LIBRARY_FILE_NAME_BLIB = "SkylineAI_spectral_library.blib";
+        private const string OUTPUT_LIBRARY_FILE_NAME_CSV = @"test_res_fine_tuned.csv";
+
         private const string SPACE = TextUtil.SPACE;
         private const string TAB = @"\t";
 
+        //Processing folders
+        private const string PREFIX_WORKDIR = "Carafe";
+        private const string OUTPUT_SPECTRAL_LIBS = @"output_libs";
+
+        // Column names for Carafe
+        private const string PRECURSOR = @"Precursor";
+        private const string PEPTIDE = @"Peptide";
+        private const string PRECURSOR_CHARGE = @"Precursor Charge";
+        private const string ISOTOPE_LABEL_TYPE = @"Isotope Label Type";
+        private const string PRECURSOR_MZ = @"Precursor Mz";
+        private const string MODIFIED_SEQUENCE = @"Modified Sequence";
+        private const string PRECURSOR_EXPLICIT_COLLISION_ENERGY = @"Precursor Explicit Collision Energy";
+        private const string PRECURSOR_NOTE = @"Precursor Note";
+        private const string LIBRARY_NAME = @"Library Name";
+        private const string LIBRARY_TYPE = @"Library Type";
+        private const string LIBRARY_PROBABILITY_SCORE = @"Library Probability Score";
+        private const string PEPTIDE_MODIFIED_SEQUENCE_UNIMOD_IDS = @"Peptide Modified Sequence Unimod Ids";
+        private const string BEST_RT = @"Best Retention Time";
+        private const string MIN_RT = @"Min Start Time";
+        private const string MAX_RT = @"Max End Time";
+        private const string IONMOB_MS1 = @"Ion Mobility MS1";
+        private const string APEX_SPECTRUM_ID = @"Apex Spectrum ID Fragment";
+        private const string FILE_NAME = @"File Name";
+        private const string Q_VALUE = @"Detection Q Value";
+
+        private static readonly IEnumerable<string> PrecursorTableColumnNames = 
+            new[]
+            {
+                PRECURSOR, PEPTIDE, PRECURSOR_CHARGE, ISOTOPE_LABEL_TYPE, PRECURSOR_MZ, MODIFIED_SEQUENCE, PRECURSOR_EXPLICIT_COLLISION_ENERGY, 
+                PRECURSOR_NOTE, LIBRARY_NAME, LIBRARY_TYPE, LIBRARY_PROBABILITY_SCORE, PEPTIDE_MODIFIED_SEQUENCE_UNIMOD_IDS
+            };
+
+
+        private static readonly IEnumerable<string> TrainingTableColumnNames =
+            new[]
+            {
+                PRECURSOR, PEPTIDE, PRECURSOR_CHARGE, ISOTOPE_LABEL_TYPE, PRECURSOR_MZ, MODIFIED_SEQUENCE, PRECURSOR_EXPLICIT_COLLISION_ENERGY,
+                PRECURSOR_NOTE, LIBRARY_NAME, LIBRARY_TYPE, LIBRARY_PROBABILITY_SCORE, PEPTIDE_MODIFIED_SEQUENCE_UNIMOD_IDS, 
+                BEST_RT, MIN_RT, MAX_RT, IONMOB_MS1, APEX_SPECTRUM_ID, FILE_NAME, Q_VALUE
+            };
         public ISkylineProcessRunnerWrapper SkylineProcessRunner { get; set; }
 
         private string PythonVirtualEnvironmentScriptsDir { get; }
 
-        public LibraryHelper LibraryHelper { get; private set; }
-
-        
-
         public LibrarySpec LibrarySpec { get; private set; }
 
-//        public static string PythonVersion { get; private set; }
         public static string PythonVersion => Settings.Default.PythonEmbeddableVersion;
         private string PythonVirtualEnvironmentName { get; }
-
-        private string OutputSpectralLibsDir => Path.Combine(RootDir, OUTPUT_LIBRARY);
-        private string OutputSpectraLibFilepath => Path.Combine(OutputSpectralLibsDir, OUTPUT_SPECTRAL_LIB_FILE_NAME);
         public new SrmDocument Document { get; }
         private SrmDocument TrainingDocument { get; }
         public string DbInputFilePath { get; private set; }
@@ -100,30 +135,15 @@ namespace pwiz.Skyline.Model.Lib.Carafe
                 PythonVirtualEnvironmentName);
 
 
-        private string _rootDir;
-        private string RootDir
-        {
-            get => _rootDir;
-            set => _rootDir = value;
-        }
-
 
         private string JavaDir => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), JAVA);
 
-        private string CarafeDir
-        {
-            get
-            {
-                InitializeLibraryHelper(RootDir);
-                return Path.Combine(RootDir, CARAFE);
-            }
-        }
+
 
         private string CarafeJavaDir => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), CARAFE);
         private string UserDir => Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         private DirectoryInfo JavaDirInfo => new DirectoryInfo(JavaDir);
         private DirectoryInfo CarafeJavaDirInfo => new DirectoryInfo(CarafeJavaDir);
-        private DirectoryInfo CarafeDirInfo => new DirectoryInfo(CarafeDir);
         private string JavaSdkDownloadFileName => @"jdk-21_windows-x64_bin.zip";
         private Uri JavaSdkUri => new Uri(JAVA_SDK_DOWNLOAD_URL + JavaSdkDownloadFileName);
         private string JavaSdkDownloadPath => Path.Combine(JavaDir, JavaSdkDownloadFileName);
@@ -170,18 +190,11 @@ namespace pwiz.Skyline.Model.Lib.Carafe
         private Uri CarafeJarZipLocalUri => new Uri(@$"file:///{CarafeJarZipLocalPath}");
         private string CarafeJarZipDownloadPath => Path.Combine(CarafeJavaDir, CarafeJarZipFileName);
 
-        private string CarafeOutputLibraryDir()
-        {
-            return Path.Combine(CarafeDir, OUTPUT_LIBRARY);
-        }
+        private string CarafeOutputLibraryDir => Path.Combine(WorkDir, OUTPUT_LIBRARY);
 
-        private string CarafeOutputLibraryFilePath(bool test = false)
-        {
-            if (!test)
-                return Path.Combine(CarafeOutputLibraryDir(), OUTPUT_LIBRARY_FILE_NAME);
-            return Path.Combine(CarafeOutputLibraryDir(), OUTPUT_SPECTRAL_LIB_FILE_NAME);
-        }
+        private string CarafeOutputLibraryFilePath => Path.Combine(CarafeOutputLibraryDir, OUTPUT_LIBRARY_FILE_NAME_BLIB);
 
+        internal string CarafeOutputLibraryCsvFilePath => Path.Combine(CarafeOutputLibraryDir, OUTPUT_LIBRARY_FILE_NAME_CSV);
         //        public string BuilderLibraryPath;
 
         private string CarafeJarFileDir => Path.Combine(CarafeJavaDir, CarafeFileBaseName);
@@ -193,10 +206,8 @@ namespace pwiz.Skyline.Model.Lib.Carafe
 
         private string TrainingFileName => TRAIN + TextUtil.UNDERSCORE + TextUtil.EXT_TSV;
 
-        public override string InputFilePath
-        {
-            get { return Path.Combine(RootDir, InputFileName); }
-        }
+        public override string InputFilePath => Path.Combine(WorkDir, InputFileName);
+  
 
         public string TuningFilePath { get; private set; }
 
@@ -205,27 +216,20 @@ namespace pwiz.Skyline.Model.Lib.Carafe
         public string BuilderLibraryPath { get; private set; }
         public string TestLibraryPath { get; private set; }
 
-        public sealed override string TrainingFilePath => Path.Combine(RootDir, TrainingFileName);
+        public sealed override string TrainingFilePath => Path.Combine(WorkDir, TrainingFileName);
 
         public static IDictionary<string, AbstractDdaSearchEngine.Setting> DataParameters { get; private set; }
         public static IDictionary<string, AbstractDdaSearchEngine.Setting> ModelParameters { get; private set; }
         public static IDictionary<string, AbstractDdaSearchEngine.Setting> LibraryParameters { get; private set; }
 
 
-        public new void PrepareTrainingInputFile(IList<ModificationType> modificationNames, IProgressMonitor progress, ref IProgressStatus progressStatus)
-        {
-            progress.UpdateProgress(progressStatus = progressStatus
-                .ChangeMessage(ModelResources.LibraryHelper_PrepareTrainingInputFile_Preparing_training_input_file));
 
-            var trainingTable = GetPrecursorTable(true);
-            File.WriteAllLines(TrainingFilePath, trainingTable);
-        }
         private IList<ArgumentAndValue> CommandArguments =>
             new List<ArgumentAndValue>
             {
                 new ArgumentAndValue(@"jar", TextUtil.Quote(CarafeJarFilePath), TextUtil.HYPHEN),
                 new ArgumentAndValue(@"ms", TextUtil.Quote(ExperimentDataFilePath), TextUtil.HYPHEN),
-                new ArgumentAndValue(@"o", CarafeOutputLibraryDir(), TextUtil.HYPHEN),
+                new ArgumentAndValue(@"o", TextUtil.Quote(CarafeOutputLibraryDir), TextUtil.HYPHEN),
                 new ArgumentAndValue(@"c_ion_min", @"2", TextUtil.HYPHEN),
                 new ArgumentAndValue(@"ez", string.Empty, TextUtil.HYPHEN),
                 new ArgumentAndValue(@"fast", string.Empty, TextUtil.HYPHEN),
@@ -427,18 +431,72 @@ namespace pwiz.Skyline.Model.Lib.Carafe
 
         public string ProductLibraryPath()
         {
-            return CarafeOutputLibraryFilePath();
+            return CarafeOutputLibraryFilePath;
         }
 
+        public string GetDataFileName()
+        {
+            if (ExperimentDataFilePath.IsNullOrEmpty())
+                return string.Empty;
+            return Path.GetFileName(ExperimentDataFilePath);
+        }
         protected override IEnumerable<string> GetHeaderColumnNames(bool training)
         {
-            throw new NotImplementedException();
+            if (!training)
+                return PrecursorTableColumnNames;
+            return TrainingTableColumnNames;
+        }
+        private static string LabelMz(TransitionGroup tranGroup, double precursorMz)
+        {
+            int? massShift = tranGroup.DecoyMassShift;
+            double shift = SequenceMassCalc.GetPeptideInterval(massShift);
+            return string.Format(@"{0:F04}{1}", precursorMz - shift,
+                Transition.GetDecoyText(massShift));
+        }
+        private static string LabelPrecursor(TransitionGroup tranGroup, double precursorMz,
+            string resultsText)
+        {
+            return string.Format(@"{0}{1}{2}{3}", LabelMz(tranGroup, precursorMz),
+                Transition.GetChargeIndicator(tranGroup.PrecursorAdduct),
+                tranGroup.LabelTypeText, resultsText);
         }
 
         protected override string GetTableRow(PeptideDocNode peptide, ModifiedSequence modifiedSequence, int charge, bool training,
             string modsBuilder, string modSitesBuilder)
         {
-            throw new NotImplementedException();
+            var docNode = peptide.TransitionGroups.FirstOrDefault(group => group.PrecursorCharge == charge);
+            if (docNode == null)
+            {
+                return "";
+            }
+            var precursor = LabelPrecursor(docNode.TransitionGroup, docNode.PrecursorMz, string.Empty);
+            var collisionEnergy = docNode.ExplicitValues.CollisionEnergy != null ? docNode.ExplicitValues.CollisionEnergy.ToString() : @"#N/A";
+            var note = docNode.Annotations.Note != null ? docNode.Annotations.Note : @"#N/A";
+            var libraryName = docNode.LibInfo != null && docNode.LibInfo.LibraryName != null ? docNode.LibInfo.LibraryName : @"#N/A";
+            var libraryType = docNode.LibInfo != null && docNode.LibInfo.LibraryTypeName != null ? docNode.LibInfo.LibraryTypeName : @"#N/A";
+            var libraryScore = docNode.LibInfo != null && docNode.LibInfo.Score != null ? docNode.LibInfo.Score.ToString() : @"#N/A";
+            var unimodSequence = modifiedSequence.ToString();
+            var best_rt = docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.RetentionTime.ToString();
+            var min_rt = docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.StartRetentionTime.ToString();
+            var max_rt = docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.EndRetentionTime.ToString();
+            string ionmob_ms1 = docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.IonMobilityInfo?.IonMobilityMS1.HasValue == true ?
+                docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.IonMobilityInfo.IonMobilityMS1.ToString() : @"#N/A";
+            var apex_psm = @"unknown"; //docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.Identified
+            var filename = GetDataFileName();
+
+            if (!training)
+                return new [] { 
+                    precursor, modifiedSequence.GetUnmodifiedSequence(), charge.ToString(), docNode.LabelType.ToString(),
+                    docNode.PrecursorMz.ToString(), unimodSequence, collisionEnergy, note, libraryName, libraryType, libraryScore, modifiedSequence.UnimodIds
+                }.ToDsvLine(TextUtil.SEPARATOR_TSV);
+
+            return new []
+            {
+                precursor, modifiedSequence.GetUnmodifiedSequence(), charge.ToString(), docNode.LabelType.ToString(),
+                docNode.PrecursorMz.ToString(), unimodSequence, collisionEnergy,
+                note, libraryName, libraryType, libraryScore, modifiedSequence.UnimodIds,
+                best_rt, min_rt, max_rt, ionmob_ms1, apex_psm, filename, libraryScore
+            }.ToDsvLine(TextUtil.SEPARATOR_TSV);
         }
 
 
@@ -477,33 +535,25 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             bool diann_training, 
             IrtStandard irtStandard, out string testLibraryOutputPath, out string builderLibraryOutputPath) : base(document, irtStandard)
         {
+            string rootProcessingDir = Path.GetDirectoryName(libOutPath);
+            if (string.IsNullOrEmpty(rootProcessingDir))
+                throw new ArgumentException($@"CarafeLibraryBuilder libOutputPath {libOutPath} must be a full path.");
+
+            rootProcessingDir = Path.Combine(rootProcessingDir, Path.GetFileNameWithoutExtension(libOutPath));
+
+            EnsureWorkDir(rootProcessingDir, PREFIX_WORKDIR);
+
             Document = document;
             TrainingDocument = trainingDocument;
             DbInputFilePath = dbInputFilePath;
-            //PythonVersion = pythonVersion;
             PythonVirtualEnvironmentName = pythonVirtualEnvironmentName;
             PythonVirtualEnvironmentScriptsDir = pythonVirtualEnvironmentScriptsDir;
             ExperimentDataFilePath = experimentDataFilePath;
             ExperimentDataTuningFilePath = experimentDataTuningFilePath;
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
 
-            if (RootDir == null)
-            {
-                RootDir = Path.GetDirectoryName(libOutPath);
-            }
-
-            if (RootDir != null)
-            {
-                RootDir = Path.Combine(RootDir, libName);
-                //Directory.CreateDirectory(RootDir);
-                InitializeLibraryHelper(RootDir);
-            }
-
-            if (Document.DocumentHash != null || DbInputFilePath != null) InitializeLibraryHelper(RootDir);
-
-
             Directory.CreateDirectory(JavaDir);
-            Directory.CreateDirectory(CarafeDir);
+            Directory.CreateDirectory(WorkDir);
 
             _diann_training = diann_training;
             if (_diann_training)
@@ -511,9 +561,11 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             else
                 TuningFilePath = TrainingFilePath;
 
-                Document = document;
-            BuilderLibraryPath = CarafeOutputLibraryFilePath();
-            TestLibraryPath = CarafeOutputLibraryFilePath(true);
+            Document = document;
+
+
+            BuilderLibraryPath = CarafeOutputLibraryFilePath;
+            TestLibraryPath = CarafeOutputLibraryCsvFilePath;
             testLibraryOutputPath = TestLibraryPath;
             builderLibraryOutputPath = BuilderLibraryPath;
 
@@ -547,41 +599,29 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             Document = document;
             TrainingDocument = trainingDocument;
             LibraryParameters = libraryParameters;
-            Directory.CreateDirectory(RootDir);
+            Directory.CreateDirectory(WorkDir);
             Directory.CreateDirectory(JavaDir);
             Directory.CreateDirectory(CarafeJavaDir);
 
         }
 
-        private void InitializeLibraryHelper(string rootDir)
-        {
-            if (LibraryHelper == null)
-            {
-                LibraryHelper = new LibraryHelper(rootDir, CARAFE);
-                RootDir = LibraryHelper.GetRootDir(rootDir, CARAFE);
-                LibraryHelper.InitializeLibraryHelper(InputFilePath, TuningFilePath, ExperimentDataFilePath);
-            }
-        }
         public bool BuildLibrary(IProgressMonitor progress)
         {
             IProgressStatus progressStatus = new ProgressStatus();
             try
             {
-                InitializeLibraryHelper(RootDir);
-                
-                Directory.CreateDirectory(RootDir);
+               
+                Directory.CreateDirectory(WorkDir);
                 Directory.CreateDirectory(JavaDir);
                 Directory.CreateDirectory(CarafeJavaDir);
 
                 RunCarafe(progress, ref progressStatus);
                 progress.UpdateProgress(progressStatus = progressStatus.Complete());
-                LibraryHelper = null;
                 return true;
             }
             catch (Exception exception)
             {
                 progress.UpdateProgress(progressStatus.ChangeErrorException(exception));
-                LibraryHelper = null;
                 return false;
             }
         }
@@ -763,8 +803,8 @@ namespace pwiz.Skyline.Model.Lib.Carafe
                 readyArgs.Add(new ArgumentAndValue(@"i", TextUtil.Quote(TuningFilePath), TextUtil.HYPHEN));
                 readyArgs.Add(new ArgumentAndValue(@"se", @"skyline", TextUtil.HYPHEN));
 
-                LibraryHelper.PreparePrecursorInputFile(Document, progress, ref progressStatus, CARAFE, IrtStandard);
-                LibraryHelper.PrepareTrainingInputFile(TrainingDocument, progress, ref progressStatus, CARAFE);
+                PreparePrecursorInputFile(progress, ref progressStatus);
+                PrepareTrainingInputFile(progress, ref progressStatus);
             }
             else if (_diann_training)
             {
@@ -773,14 +813,14 @@ namespace pwiz.Skyline.Model.Lib.Carafe
                     readyArgs.Add(new ArgumentAndValue(@"db", TextUtil.Quote(DbInputFilePath), TextUtil.HYPHEN));
                     readyArgs.Add(new ArgumentAndValue(@"i", TextUtil.Quote(TuningFilePath), TextUtil.HYPHEN));
                     readyArgs.Add(new ArgumentAndValue(@"se", @"DIA-NN", TextUtil.HYPHEN));
-                    LibraryHelper.PreparePrecursorInputFile(Document, progress, ref progressStatus, CARAFE, IrtStandard);
+                    PreparePrecursorInputFile(progress, ref progressStatus);
                 }
                 else
                 {
                     readyArgs.Add(new ArgumentAndValue(@"db", TextUtil.Quote(InputFilePath), TextUtil.HYPHEN));
                     readyArgs.Add(new ArgumentAndValue(@"i", TextUtil.Quote(TuningFilePath), TextUtil.HYPHEN));
                     readyArgs.Add(new ArgumentAndValue(@"se", @"DIA-NN", TextUtil.HYPHEN));
-                    LibraryHelper.PreparePrecursorInputFile(Document, progress, ref progressStatus, CARAFE, IrtStandard);
+                    PreparePrecursorInputFile(progress, ref progressStatus);
                 }
             }
             else
@@ -788,7 +828,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
                 readyArgs.Add(new ArgumentAndValue(@"db", TextUtil.Quote(DbInputFilePath), TextUtil.HYPHEN));
                 readyArgs.Add(new ArgumentAndValue(@"i", TextUtil.Quote(TuningFilePath), TextUtil.HYPHEN));
                 readyArgs.Add(new ArgumentAndValue(@"se", @"skyline", TextUtil.HYPHEN));
-                LibraryHelper.PrepareTrainingInputFile(Document, progress, ref progressStatus, CARAFE);
+                PrepareTrainingInputFile(progress, ref progressStatus);
             }
 
             return readyArgs;
@@ -846,7 +886,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             {
                 // clean carafe dir
                 //CarafeJavaDirInfo.Delete(true);
-                Directory.CreateDirectory(RootDir);
+                Directory.CreateDirectory(WorkDir);
                 Directory.CreateDirectory(CarafeJavaDir);
 
 
@@ -922,7 +962,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             progressStatus.ChangePercentComplete(0);
 
             // compose carafe cmd command arguments to build library
-            var args = TextUtil.SpaceSeparate(
+            var args = @$"cd {WorkDir} && echo %PATH% > myPath && " + TextUtil.SpaceSeparate(
                 TextUtil.Quote(PythonVirtualEnvironmentActivateScriptPath)
             );
 
@@ -942,7 +982,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
 
             cmdBuilder.Append(args).Append(SPACE);
 
-            string batPath = Path.Combine(RootDir, @"runCarafe.bat");
+            string batPath = Path.Combine(WorkDir, @"runCarafe.bat");
             File.WriteAllText(batPath, cmdBuilder.ToString());
 
             // execute command
@@ -963,7 +1003,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
                     true; // Use SimpleUserMessageWriter to write process output instead of ProgressStatus.ChangeMessage()
                 pr.ExpectedOutputLinesCount = 1000;
 
-                pr.EnableImmediateLog = true;
+                pr.EnableImmediateLog = false;
                 pr.EnableRunningTimeMessage = true;
                 pr.Run(psi, string.Empty, progress, ref progressStatus,
                     new SimpleUserMessageWriter(), ProcessPriorityClass.BelowNormal, true);
@@ -979,7 +1019,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             progress.UpdateProgress(progressStatus = progressStatus
                 .ChangeMessage(ModelResources.CarafeLibraryBuilder_Importing_spectral_library));
 
-            var source = CarafeOutputLibraryFilePath();
+            var source = CarafeOutputLibraryFilePath;
             var dest = LibrarySpec.FilePath;
  
             File.Copy(source, dest);

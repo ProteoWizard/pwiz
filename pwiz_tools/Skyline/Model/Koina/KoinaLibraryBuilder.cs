@@ -62,8 +62,6 @@ namespace pwiz.Skyline.Model.Koina
             _nce = nce;
             //Name of the tool presented to the user for Warning messages
             ToolName = @"Koina";
-            LibraryHelper = new LibraryHelper(ToolName);
-
         }
 
         public bool BuildLibrary(IProgressMonitor progress)
@@ -182,7 +180,6 @@ namespace pwiz.Skyline.Model.Koina
             return true;
         }
 
-        public LibraryHelper LibraryHelper { get; }
         public string ProductLibraryPath()
         {
             return LibrarySpec.FilePath;
