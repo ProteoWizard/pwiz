@@ -33,6 +33,7 @@ using pwiz.Common.SystemUtil;
 // TODO: error handling - consider adding more information about the remote API call to exceptions (esp. unexpected ones) including uri, status code, and response body
 // TODO: error handling - what can be reused with Panorama? Ex: PanoramaServerException, ErrorMessageBuilder?
 // TODO: error handling - check strings (esp. responseBody) for tokens and scrub if present
+// TODO: error handling - what happens if there's a problem reading or writing JSON? Handle JSONException?
 // TODO: is there a way to make GetDocument and DeleteFolder test-only without just moving them into the test?
 namespace pwiz.CommonMsData.RemoteApi.Ardia
 {
@@ -132,16 +133,13 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
                 }
                 else
                 {
-                    var responseBodyMessage = ReadErrorMessageFromResponse(responseBody);
-                    var message = string.Format(ArdiaResources.Error_Unexpected_StatusCode, statusCode, (int)statusCode, responseBodyMessage);
-
-                    return ArdiaResult.Failure(message, statusCode, null);
+                    var message = ErrorMessageBuilder.Create(ArdiaResources.Error_StatusCode_Unexpected).ErrorDetailFromResponseBody(responseBody).Uri(uri).StatusCode(statusCode);
+                    return ArdiaResult.Failure(message.ToString(), statusCode, null);
                 }
             }
             catch (Exception e) when (ShouldHandleException(e))
             {
-                var message = ErrorMessageBuilder.Create(ArdiaResources.Error_PossibleNetworkProblem).ErrorDetail(e.InnerException?.Message).Uri(uri);
-
+                var message = ErrorMessageBuilder.Create(ArdiaResources.Error_ProblemCommunicatingWithServer).ErrorDetailFromException(e).Uri(uri).StatusCode(statusCode);
                 return ArdiaResult.Failure(message.ToString(), statusCode, e);
             }
         }
@@ -189,17 +187,14 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
                 }
                 else
                 {
-                    var responseBodyMessage = ReadErrorMessageFromResponse(responseBody);
-                    var message = string.Format(ArdiaResources.Error_Unexpected_StatusCode, statusCode, (int)statusCode, responseBodyMessage);
-
-                    return ArdiaResult.Failure(message, statusCode, null);
+                    var message = ErrorMessageBuilder.Create(ArdiaResources.Error_StatusCode_Unexpected).ErrorDetailFromResponseBody(responseBody).Uri(uri).StatusCode(statusCode);
+                    return ArdiaResult.Failure(message.ToString(), statusCode, null);
                 }
             }
-            // WebRequest doesn't usually throw AggregateException, so just do basic exception handling
             catch (Exception e) when (ShouldHandleException(e))
             {
-                var message = string.Format(ArdiaResources.DeleteFolder_Error, folderPath);
-                return ArdiaResult.Failure(message, statusCode, e);
+                var message = ErrorMessageBuilder.Create(ArdiaResources.Error_ProblemCommunicatingWithServer).ErrorDetailFromException(e).Uri(uri).StatusCode(statusCode);
+                return ArdiaResult.Failure(message.ToString(), statusCode, e);
             }
         }
 
@@ -247,7 +242,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         }
 
         // API documentation: https://api.hyperbridge.cmdtest.thermofisher.com/document/api/swagger/index.html
-        private ArdiaResult<StagedDocumentResponse> CreateStagedDocument(StageDocumentRequest document)
+        private ArdiaResult<StagedDocumentResponse> CreateStagedDocument(StageDocumentRequest modelRequest)
         {
             var uri = UriFromParts(ServerUri, PATH_STAGE_DOCUMENT);
 
@@ -255,7 +250,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
 
             try
             {
-                var jsonString = document.ToJson();
+                var jsonString = modelRequest.ToJson();
 
                 using var request = new StringContent(jsonString, Encoding.UTF8, APPLICATION_JSON);
                 using var httpClient = AuthenticatedHttpClient();
@@ -271,16 +266,13 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
                 }
                 else
                 {
-                    var responseBodyMessage = ReadErrorMessageFromResponse(responseBody);
-                    var message = string.Format(ArdiaResources.Error_Unexpected_StatusCode, statusCode, (int)statusCode, responseBodyMessage);
-
-                    return ArdiaResult<StagedDocumentResponse>.Failure(message, statusCode, null);
+                    var message = ErrorMessageBuilder.Create(ArdiaResources.Error_StatusCode_Unexpected).ErrorDetailFromResponseBody(responseBody).Uri(uri).StatusCode(statusCode);
+                    return ArdiaResult<StagedDocumentResponse>.Failure(message.ToString(), statusCode, null);
                 }
             }
             catch (Exception e) when (ShouldHandleException(e))
             {
-                var message = ErrorMessageBuilder.Create(ArdiaResources.Error_PossibleNetworkProblem).ErrorDetail(e.InnerException?.Message).Uri(uri);
-
+                var message = ErrorMessageBuilder.Create(ArdiaResources.Error_ProblemCommunicatingWithServer).ErrorDetailFromException(e).Uri(uri).StatusCode(statusCode);
                 return ArdiaResult<StagedDocumentResponse>.Failure(message.ToString(), statusCode, e);
             }
         }
@@ -319,16 +311,13 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
                 }
                 else
                 {
-                    var responseBodyMessage = ReadErrorMessageFromResponse(responseBody);
-                    var message = string.Format(ArdiaResources.Error_Unexpected_StatusCode, statusCode, (int)statusCode, responseBodyMessage);
-
-                    return ArdiaResult<long>.Failure(message, statusCode, null);
+                    var message = ErrorMessageBuilder.Create(ArdiaResources.Error_StatusCode_Unexpected).ErrorDetailFromResponseBody(responseBody).Uri(uri).StatusCode(statusCode);
+                    return ArdiaResult<long>.Failure(message.ToString(), statusCode, null);
                 }
             }
             catch (Exception e) when (ShouldHandleException(e))
             {
-                var message = ErrorMessageBuilder.Create(ArdiaResources.Error_PossibleNetworkProblem).ErrorDetail(e.InnerException?.Message).Uri(uri);
-
+                var message = ErrorMessageBuilder.Create(ArdiaResources.Error_ProblemCommunicatingWithServer).ErrorDetailFromException(e).Uri(uri).StatusCode(statusCode);
                 return ArdiaResult<long>.Failure(message.ToString(), statusCode, e);
             }
         }
@@ -360,16 +349,13 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
                 }
                 else
                 {
-                    var responseBodyMessage = ReadErrorMessageFromResponse(responseBody);
-                    var message = string.Format(ArdiaResources.Error_Unexpected_StatusCode, statusCode, (int)statusCode, responseBodyMessage);
-
-                    return ArdiaResult<CreateDocumentResponse>.Failure(message, statusCode, null);
+                    var message = ErrorMessageBuilder.Create(ArdiaResources.Error_StatusCode_Unexpected).ErrorDetailFromResponseBody(responseBody).Uri(uri).StatusCode(statusCode);
+                    return ArdiaResult<CreateDocumentResponse>.Failure(message.ToString(), statusCode, null);
                 }
             }
             catch (Exception e) when (ShouldHandleException(e))
             {
-                var message = ErrorMessageBuilder.Create(ArdiaResources.Error_PossibleNetworkProblem).ErrorDetail(e.InnerException?.Message).Uri(uri);
-
+                var message = ErrorMessageBuilder.Create(ArdiaResources.Error_ProblemCommunicatingWithServer).ErrorDetailFromException(e).Uri(uri).StatusCode(statusCode);
                 return ArdiaResult<CreateDocumentResponse>.Failure(message.ToString(), statusCode, e);
             }
         }
@@ -396,16 +382,13 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
                 }
                 else
                 {
-                    var responseBodyMessage = ReadErrorMessageFromResponse(responseBody);
-                    var message = string.Format(ArdiaResources.Error_Unexpected_StatusCode, statusCode, (int)statusCode, responseBodyMessage);
-
-                    return ArdiaResult<CreateDocumentResponse>.Failure(message, statusCode, null);
+                    var message = ErrorMessageBuilder.Create(ArdiaResources.Error_StatusCode_Unexpected).ErrorDetailFromResponseBody(responseBody).Uri(uri).StatusCode(statusCode);
+                    return ArdiaResult<CreateDocumentResponse>.Failure(message.ToString(), statusCode, null);
                 }
             }
             catch (Exception e) when (ShouldHandleException(e))
             {
-                var message = ErrorMessageBuilder.Create(ArdiaResources.Error_PossibleNetworkProblem).ErrorDetail(e.InnerException?.Message).Uri(uri);
-
+                var message = ErrorMessageBuilder.Create(ArdiaResources.Error_ProblemCommunicatingWithServer).ErrorDetailFromException(e).Uri(uri).StatusCode(statusCode);
                 return ArdiaResult<CreateDocumentResponse>.Failure(message.ToString(), statusCode, e);
             }
         }
@@ -464,16 +447,13 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
                 }
                 else
                 {
-                    var responseBodyMessage = ReadErrorMessageFromResponse(responseBody);
-                    var message = string.Format(ArdiaResources.Error_Unexpected_StatusCode, statusCode, (int)statusCode, responseBodyMessage);
-
-                    return ArdiaResult<IList<RemoteItem>>.Failure(message, statusCode, null);
+                    var message = ErrorMessageBuilder.Create(ArdiaResources.Error_StatusCode_Unexpected).ErrorDetailFromResponseBody(responseBody).Uri(uri).StatusCode(statusCode);
+                    return ArdiaResult<IList<RemoteItem>>.Failure(message.ToString(), statusCode, null);
                 }
             }
             catch (Exception e) when (ShouldHandleException(e))
             {
-                var message = ErrorMessageBuilder.Create(ArdiaResources.Error_PossibleNetworkProblem).ErrorDetail(e.InnerException?.Message).Uri(uri);
-
+                var message = ErrorMessageBuilder.Create(ArdiaResources.Error_ProblemCommunicatingWithServer).ErrorDetailFromException(e).Uri(uri).StatusCode(statusCode);
                 return ArdiaResult<IList<RemoteItem>>.Failure(message.ToString(), statusCode, e);
             }
         }
@@ -500,6 +480,109 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
                    exception is WebException || 
                    // apparently, this is how to detect network timeout when using HttpClient
                    exception is TaskCanceledException { CancellationToken: { IsCancellationRequested: false } };
+        }
+
+        private static string ReadAsString(Stream stream, Encoding encoding = null)
+        {
+            if (stream != null)
+            {
+                encoding ??= Encoding.UTF8;
+                using var reader = new StreamReader(stream, encoding);
+                return reader.ReadToEnd();
+            }
+            else return string.Empty;
+        }
+    }
+    
+    public sealed class ErrorMessageBuilder
+    {
+        private const string INDENT = "  "; // tab is too much, no space is too little
+
+        private readonly string _message;
+        private string _messageDetail;
+        private Uri _uri;
+        private HttpStatusCode? _statusCode;
+
+        public static ErrorMessageBuilder Create(string error)
+        {
+            return new ErrorMessageBuilder(error);
+        }
+
+        private ErrorMessageBuilder(string message)
+        {
+            _message = message;
+        }
+
+        public ErrorMessageBuilder ErrorDetail(string messageDetail)
+        {
+            _messageDetail = messageDetail;
+            return this;
+        }
+
+        public ErrorMessageBuilder ErrorDetailFromException(Exception e)
+        {
+            var exception = e is AggregateException ? e.InnerException : e;
+
+            var strings = new List<string>();
+            while (exception != null)
+            {
+                strings.Add(exception.Message);
+                exception = exception.InnerException;
+            }
+
+            return ErrorDetail(string.Join(@" - ", strings));
+        }
+
+        public ErrorMessageBuilder ErrorDetailFromResponseBody(string responseBody)
+        {
+            return ErrorDetail(ReadErrorMessageFromResponse(responseBody));
+        }
+
+        public ErrorMessageBuilder Uri(Uri uri)
+        {
+            _uri = uri;
+            return this;
+        }
+
+        public ErrorMessageBuilder StatusCode(HttpStatusCode? statusCode)
+        {
+            _statusCode = statusCode;
+            return this;
+        }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+
+            sb.AppendLine(_message);
+
+            if (!string.IsNullOrEmpty(_messageDetail))
+            {
+                sb.Append(INDENT);
+                sb.Append(ArdiaResources.Error_Detail);
+                sb.Append(_messageDetail);
+                sb.Append(Environment.NewLine);
+            }
+
+            if (_uri != null)
+            {
+                sb.Append(INDENT);
+                sb.AppendFormat(ArdiaResources.Error_Host, _uri.Host);
+                sb.Append(Environment.NewLine);
+
+                sb.Append(INDENT);
+                sb.AppendFormat(ArdiaResources.Error_Path, _uri.AbsolutePath);
+                sb.Append(Environment.NewLine);
+            }
+
+            if (_statusCode != null)
+            {
+                sb.Append(INDENT);
+                sb.AppendFormat(ArdiaResources.Error_StatusCode, _statusCode.ToString(), (int)_statusCode);
+                sb.Append(Environment.NewLine);
+            }
+
+            return sb.ToString();
         }
 
         public static string ReadErrorMessageFromResponse(string responseBody)
@@ -534,76 +617,6 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             }
 
             return string.Empty;
-        }
-
-        private static string ReadAsString(Stream stream, Encoding encoding = null)
-        {
-            if (stream != null)
-            {
-                encoding ??= Encoding.UTF8;
-                using var reader = new StreamReader(stream, encoding);
-                return reader.ReadToEnd();
-            }
-            else return string.Empty;
-        }
-    }
-
-    public sealed class ErrorMessageBuilder
-    {
-        private readonly string _message;
-        private string _messageDetail;
-        private Uri _uri;
-        private HttpStatusCode? _statusCode;
-
-        public static ErrorMessageBuilder Create(string error)
-        {
-            return new ErrorMessageBuilder(error);
-        }
-
-        private ErrorMessageBuilder(string message)
-        {
-            _message = message;
-        }
-
-        public ErrorMessageBuilder ErrorDetail(string messageDetail)
-        {
-            _messageDetail = messageDetail;
-            return this;
-        }
-
-        public ErrorMessageBuilder Uri(Uri uri)
-        {
-            _uri = uri;
-            return this;
-        }
-
-        public ErrorMessageBuilder StatusCode(HttpStatusCode statusCode)
-        {
-            _statusCode = statusCode;
-            return this;
-        }
-
-        public override string ToString()
-        {
-            var sb = new StringBuilder();
-            if (!string.IsNullOrEmpty(_messageDetail) || _uri != null || _statusCode != null)
-            {
-                if (!string.IsNullOrEmpty(_messageDetail)) 
-                    sb.AppendLine(_messageDetail);
-
-                if (_uri != null)
-                {
-                    sb.AppendLine(string.Format(ArdiaResources.Error_Host, _uri.Host));
-                    sb.AppendLine(string.Format(ArdiaResources.Error_Path, _uri.AbsolutePath));
-                }
-
-                if (_statusCode != null)
-                {
-                    sb.AppendLine(string.Format(ArdiaResources.Error_Code, _statusCode.ToString(), (int)_statusCode));
-                }
-            }
-
-            return sb.Length > 0 ? CommonTextUtil.LineSeparate(_message, sb.ToString().TrimEnd()) : _message;
         }
     }
 }

@@ -71,11 +71,7 @@ namespace pwiz.Skyline.FileUI
         /// Used in tests.
         /// </summary>
         public TreeView FoldersTree => treeViewFolders;
-        /// <summary>
-        /// Used in tests to exercise the UI without uploading a document.
-        /// </summary>
-        public bool SkipUpload { get; set; }
-
+        
         /// <summary>
         /// Used in tests to find a <see cref="TreeNode"/> by name.
         /// </summary>
@@ -174,19 +170,11 @@ namespace pwiz.Skyline.FileUI
             }
             else
             {
-                string message;
+                // Special case for the root node
+                var folderText = parentTreeNode.Parent == null ? ((ArdiaAccountInfo)parentTreeNode.Tag)?.Account.ServerUrl : parentTreeNode.Text;
+                var message = string.Format(ArdiaResources.OpenFolder_Error, folderText);
 
-                // Special case for issues loading the root node
-                if (parentTreeNode.Parent == null)
-                {
-                    message = string.Format(ArdiaResources.OpenFolder_ErrorOpeningDialog, ((ArdiaAccountInfo)parentTreeNode.Tag)?.Account.ServerUrl);
-                }
-                else
-                {
-                    message = CommonTextUtil.LineSeparate(string.Format(ArdiaResources.OpenFolder_Error, parentTreeNode.Text), ArdiaResources.Error_Prefix, result.ErrorMessage);
-                }
-
-                MessageDlg.ShowWithException(this, message, result.ErrorException);
+                MessageDlg.ShowWithExceptionAndNetworkDetail( this, message, result.ErrorMessage, result.ErrorException);
 
                 Close();
             }
@@ -262,9 +250,7 @@ namespace pwiz.Skyline.FileUI
             }
             else
             {
-                var message = CommonTextUtil.LineSeparate(string.Format(ArdiaResources.FileUpload_Error), ArdiaResources.Error_Prefix, result.ErrorMessage);
-
-                MessageDlg.ShowWithException(this, message, result.ErrorException);
+                MessageDlg.ShowWithExceptionAndNetworkDetail(this, ArdiaResources.FileUpload_Error, result.ErrorMessage, result.ErrorException);
             }
         }
 
@@ -328,8 +314,8 @@ namespace pwiz.Skyline.FileUI
                 args.CancelEdit = true;
 
                 var alertMsg = validateResult == ValidateInputResult.invalid_blank ? 
-                    ArdiaResources.CreateFolder_Error_BlankName :
-                    string.Format(ArdiaResources.CreateFolder_Error_IllegalCharacter, new string(ILLEGAL_FOLDER_NAME_CHARS));
+                    ArdiaResources.CreateFolder_InputValidationError_BlankName :
+                    string.Format(ArdiaResources.CreateFolder_InputValidationError_IllegalCharacter, new string(ILLEGAL_FOLDER_NAME_CHARS));
 
                 var alertDlg = new AlertDlg(alertMsg, MessageBoxButtons.OKCancel);
                 alertDlg.ShowAndDispose(this);
@@ -369,7 +355,8 @@ namespace pwiz.Skyline.FileUI
             {
                 treeViewFolders.SelectedNode = newTreeNode;
             }
-            else {
+            else
+            {
                 string message;
                 switch (result.ErrorStatusCode)
                 {
@@ -378,20 +365,20 @@ namespace pwiz.Skyline.FileUI
                         break;
                     case HttpStatusCode.BadRequest:
                     case HttpStatusCode.Conflict:
-                        message = string.Format(ArdiaResources.CreateFolder_Error_FileAlreadyExists, newFolderName);
+                        message = string.Format(ArdiaResources.CreateFolder_InputValidationError_FileAlreadyExists, newFolderName);
                         break;
                     case HttpStatusCode.Forbidden:
                         message = string.Format(ArdiaResources.CreateFolder_Error_Forbidden, newFolderName, parentFolderPath);
                         break;
                     default:
-                        message = CommonTextUtil.LineSeparate(string.Format(ArdiaResources.CreateFolder_Error, newFolderName), ArdiaResources.Error_Prefix, result.ErrorMessage);
+                        message = string.Format(ArdiaResources.CreateFolder_Error, newFolderName);
                         break;
                 }
 
                 treeViewFolders.SelectedNode = args.Node.Parent;
                 args.Node.Remove();
 
-                MessageDlg.ShowWithException(this, message, result.ErrorException);
+                MessageDlg.ShowWithExceptionAndNetworkDetail( this, message, result.ErrorMessage, result.ErrorException);
             }
         }
 

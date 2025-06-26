@@ -127,78 +127,69 @@
     <value>Failed to open Ardia connection</value>
   </data>
   <data name="FileUpload_Success" xml:space="preserve">
-    <value>Successfully published the Skyline document to Ardia.</value>
+    <value>Successfully published the document to Ardia.</value>
   </data>
   <data name="FileUpload_Error" xml:space="preserve">
-    <value>Error publishing the Skyline document to Ardia</value>
+    <value>Error publishing the document. A problem occurred communicating with the server.</value>
   </data>
   <data name="FileUpload_ArchiveTooLarge" xml:space="preserve">
-    <value>Error publishing the Skyline document. The file is too large. Maximum file size is {0}GB.</value>
+    <value>Error publishing the document. The file is too large. Maximum file size is {0}GB.</value>
   </data>
   <data name="OpenFolder_Title" xml:space="preserve">
     <value>Opening folder {0}</value>
   </data>
   <data name="OpenFolder_Error" xml:space="preserve">
-    <value>Error expanding folder '{0}'</value>
-  </data>
-  <data name="OpenFolder_ErrorOpeningDialog" xml:space="preserve">
-    <value>Error reaching Ardia server {0}. Try again later.</value>
+    <value>Error opening folder '{0}'. A problem occurred communicating with the server.</value>
   </data>
   <data name="GetDocument_Error" xml:space="preserve">
-    <value>Error getting document {0}</value>
+    <value>Error getting document '{0}'. A problem occurred communicating with the server.</value>
   </data>
   <data name="CreateFolder_DefaultFolderName" xml:space="preserve">
     <value>New Folder</value>
   </data>
   <data name="CreateFolder_Title" xml:space="preserve">
-    <value>Create Ardia folder</value>
+    <value>Create folder</value>
   </data>
   <data name="CreateFolder_Success" xml:space="preserve">
-    <value>Successfully created Ardia folder {0}</value>
+    <value>Successfully created folder '{0}'.</value>
   </data>
   <data name="CreateFolder_Error" xml:space="preserve">
-    <value>Error creating folder '{0}'.</value>
+    <value>Error creating folder '{0}'. A problem occurred communicating with the server.</value>
   </data>
-  <data name="CreateFolder_Error_BlankName" xml:space="preserve">
+  <data name="CreateFolder_InputValidationError_BlankName" xml:space="preserve">
     <value>Folder names cannot be blank.</value>
   </data>
-  <data name="CreateFolder_Error_IllegalCharacter" xml:space="preserve">
+  <data name="CreateFolder_InputValidationError_IllegalCharacter" xml:space="preserve">
     <value>Folder names cannot include any of these characters {0}.</value>
   </data>
-  <data name="CreateFolder_Error_FileAlreadyExists" xml:space="preserve">
-    <value>Error creating '{0}'. An item with that name already exists.</value>
+  <data name="CreateFolder_InputValidationError_FileAlreadyExists" xml:space="preserve">
+    <value>Error creating folder '{0}'. An item with that name already exists.</value>
   </data>
   <data name="CreateFolder_Error_Forbidden" xml:space="preserve">
-    <value>Error creating '{0}'. Do you have permission to create a folder in '{1}'?</value>
+    <value>Error creating folder '{0}'. Do you have permission to create a folder in '{1}'?</value>
   </data>
   <data name="CreateFolder_Error_NotAuthenticated" xml:space="preserve">
-    <value>Error creating '{0}'. Could not authenticate user.</value>
+    <value>Error creating folder '{0}'. Unable to authenticate user.</value>
   </data>
   <data name="DeleteFolder_Error" xml:space="preserve">
-    <value>Error deleting folder {0}.</value>
+    <value>Error deleting folder '{0}'. A problem occurred communicating with the server.</value>
   </data>
-  <data name="Error_Prefix" xml:space="preserve">
-    <value>Error details: </value>
+  <data name="Error_Detail" xml:space="preserve">
+    <value>Error detail: </value>
   </data>
-  <data name="Error_ResponseStatus" xml:space="preserve">
-    <value>Response status: {0}</value>
-  </data>
-  <data name="Error_URL" xml:space="preserve">
-    <value>URL: {0}</value>
-  </data>
-    <data name="Error_Host" xml:space="preserve">
+  <data name="Error_Host" xml:space="preserve">
     <value>Host: {0}</value>
   </data>
   <data name="Error_Path" xml:space="preserve">
     <value>Path: {0}</value>
   </data>
-  <data name="Error_Code" xml:space="preserve">
+  <data name="Error_StatusCode_Unexpected" xml:space="preserve">
+    <value>Unexpected error code.</value>
+  </data>
+  <data name="Error_StatusCode" xml:space="preserve">
     <value>Code: {0} ({1})</value>
   </data>
-  <data name="Error_Unexpected_StatusCode" xml:space="preserve">
-    <value>Unexpected error code {0} ({1}). {2}</value>
-  </data>
-  <data name="Error_PossibleNetworkProblem" xml:space="preserve">
-    <value>Is there a network problem?</value>
+  <data name="Error_ProblemCommunicatingWithServer" xml:space="preserve">
+    <value>A problem occurred communicating with the server. Check the network connection.</value>
   </data>
 </root>

@@ -17,6 +17,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
+using System.Net.NetworkInformation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.CommonMsData.RemoteApi;
 using pwiz.CommonMsData.RemoteApi.Ardia;
@@ -47,12 +48,19 @@ namespace pwiz.SkylineTestConnected
                 return;
             }
 
+            // Make sure Ardia server is available
+            if (!IsRemoteHostAvailable(BASE_URL))
+            {
+                Console.Error.WriteLine("NOTE: skipping Ardia test because the server {0} is unavailable", BASE_URL);
+                Assert.Fail(@"Ardia server {0} is unavailable. Failing the test.", BASE_URL);
+                return;
+            }
+
             TestFilesZip = @"TestConnected\ArdiaFileUploadTest.zip";
 
             RunFunctionalTest();
         }
 
-        // TODO: check network is available before running test
         // TODO: is there an API to verify Ardia account has permissions required to run test? Ex: upload files, delete files
         protected override void DoTest()
         {
@@ -84,7 +92,7 @@ namespace pwiz.SkylineTestConnected
             // Test scenarios making remote API calls
             var setupClient = ArdiaClient.Create(account);
 
-            // TODO: oof. Would be nice to have an abstraction for dealing with folder paths
+            // TODO: an abstraction for folder paths would be nice...
             var folderName = $@"TestResults-{DateTime.Now:yyyy-MM-dd_HH-mm-ss}";
             var parentPath = $@"/{TEST_RESULTS_DIRECTORY_NAME}";
             var testResultsPath = $@"{parentPath}/{folderName}";
@@ -161,13 +169,13 @@ namespace pwiz.SkylineTestConnected
 
         private static void TestCreateArdiaError()
         {
-            var message = ArdiaClient.ReadErrorMessageFromResponse(ERROR_MESSAGE_JSON);
+            var message = ErrorMessageBuilder.ReadErrorMessageFromResponse(ERROR_MESSAGE_JSON);
             Assert.AreEqual(@"Item is Archived or Path already exists.", message);
 
-            message = ArdiaClient.ReadErrorMessageFromResponse(ERROR_MESSAGE_XML);
+            message = ErrorMessageBuilder.ReadErrorMessageFromResponse(ERROR_MESSAGE_XML);
             Assert.AreEqual(@"Your proposed upload exceeds the maximum allowed size", message);
 
-            message = ArdiaClient.ReadErrorMessageFromResponse(@"Neither XML nor JSON.");
+            message = ErrorMessageBuilder.ReadErrorMessageFromResponse(@"Neither XML nor JSON.");
             Assert.AreEqual(string.Empty, message);
         }
 
@@ -303,6 +311,21 @@ namespace pwiz.SkylineTestConnected
             OkDialog(addAccountDlg, addAccountDlg.OkDialog);
             OkDialog(editRemoteAccountListDlg, editRemoteAccountListDlg.OkDialog);
             OkDialog(optionsDlg, optionsDlg.OkDialog);
+        }
+
+        private static bool IsRemoteHostAvailable(string hostname)
+        {
+            using var ping = new Ping();
+            try
+            {
+                var pingReply = ping.Send(hostname);
+                return pingReply?.Status == IPStatus.Success;
+            }
+            catch (PingException)
+            {
+                // Ignore exceptions from ping operation
+                return false;
+            }
         }
 
         /// <summary>
