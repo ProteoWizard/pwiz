@@ -783,7 +783,17 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        private void listView_ItemActivate( object sender, EventArgs e )
+        private void listView_ItemActivate(object sender, EventArgs e)
+        {
+            ActivateItem();
+        }
+
+        /// <summary>
+        /// Event handler invoked when selecting an item in the File Dialog. May
+        /// cause a folder to open or close. Opening a folder may ask a remote
+        /// server to provide information about its file / folder contents.
+        /// </summary>
+        public void ActivateItem() 
         {
             if (listView.SelectedItems.Count == 0)
                 return;
@@ -841,6 +851,7 @@ namespace pwiz.Skyline.FileUI
             DoMainAction();
         }
 
+        // TODO: rename OkDialog for consistency with other Skyline dialogs, especially useful for test readability. Do this after PR3170 merged.
         protected virtual void DoMainAction()
         {
             throw new Exception(@"method DoMainAction() MUST be overridden");
