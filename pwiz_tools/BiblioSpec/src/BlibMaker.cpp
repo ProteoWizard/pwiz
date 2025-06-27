@@ -141,7 +141,7 @@ int BlibMaker::parseNextSwitch(int i, int argc, char* argv[])
                 z = boost::lexical_cast<int>(result[c]);
                 precursorCharges_.insert(z);
             }
-            catch (bad_lexical_cast) {
+            catch (bad_lexical_cast&) {
                 throw BlibException(true, "the -z argument '%s' was not understood, expected a list of charges like \"2,3\" or \"1,2,4\" etc", charges.c_str());
             }
         }

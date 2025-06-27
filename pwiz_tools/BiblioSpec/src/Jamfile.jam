@@ -31,7 +31,6 @@ searched-lib arrow
         <name>arrow
         <search>$(PWIZ_LIBRARIES_PATH)/arrow
         <include>$(PWIZ_LIBRARIES_PATH)/arrow/include
-        <conditional>@msvc-requirement
         #<runtime-debugging>on:<build>no
     : # default-build
     : # usage-requirements
@@ -45,7 +44,6 @@ searched-lib parquet
         <search>$(PWIZ_LIBRARIES_PATH)/arrow
         <include>$(PWIZ_LIBRARIES_PATH)/arrow/include
         <library>arrow
-        <conditional>@msvc-requirement
         #<runtime-debugging>on:<build>no
     : # default-build
     : # usage-requirements
@@ -140,12 +138,16 @@ rule parquet-api-requirements ( properties * )
 
     if <toolset>msvc in $(properties) && <runtime-debugging>off in $(properties)
     {
+        # include parquet even for debug builds because it will compile, it just won't run
         result += <define>USE_PARQUET_READER ;
+        result += <library>parquet ;
         result += <dependency>install-parquet ;
     }
-
-    # include parquet even for Linux and debug builds because it will compile, it just won't run
-    result += <library>parquet ;
+    else
+    {
+        # do not include parquet for Linux because it will compile but won't link (can't find library)
+        result += <include>$(PWIZ_LIBRARIES_PATH)/arrow/include ;
+    }
 
     return $(result) ;
 }
