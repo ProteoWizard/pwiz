@@ -2084,41 +2084,39 @@ namespace pwiz.Skyline.Model
         public IEnumerable<ChromatogramSet> GetSynchronizeIntegrationChromatogramSets()
         {
             if (!Settings.HasResults)
-                yield break;
+                return Array.Empty<ChromatogramSet>();
 
             if (Settings.TransitionSettings.Integration.SynchronizedIntegrationAll)
             {
-                // Synchronize all
-                foreach (var chromSet in MeasuredResults.Chromatograms)
-                    yield return chromSet;
-                yield break;
+                return MeasuredResults.Chromatograms;
             }
 
             var targets = Settings.TransitionSettings.Integration.SynchronizedIntegrationTargets?.ToHashSet();
             if (targets == null || targets.Count == 0)
             {
                 // Synchronize none
-                yield break;
+                return Array.Empty<ChromatogramSet>();
             }
 
             var groupBy = Settings.TransitionSettings.Integration.SynchronizedIntegrationGroupBy;
             if (string.IsNullOrEmpty(groupBy))
             {
                 // Synchronize individual replicates
-                foreach (var chromSet in MeasuredResults.Chromatograms.Where(chromSet => targets.Contains(chromSet.Name)))
-                    yield return chromSet;
-                yield break;
+                return MeasuredResults.Chromatograms.Where(chromSet => targets.Contains(chromSet.Name));
+            }
+            ReplicateValue replicateValue = ReplicateValue.FromPersistedString(Settings, Settings.TransitionSettings.Integration.SynchronizedIntegrationGroupBy);
+            if (replicateValue == null)
+            {
+                // Annotation no longer exists
+                return Array.Empty<ChromatogramSet>();
             }
 
             // Synchronize by annotation
-            var replicateValue = ReplicateValue.FromPersistedString(Settings, groupBy);
             var annotationCalculator = new AnnotationCalculator(this);
-            foreach (var chromSet in MeasuredResults.Chromatograms)
-            {
-                var value = replicateValue.GetValue(annotationCalculator, chromSet);
-                if (targets.Contains(Convert.ToString(value ?? string.Empty, CultureInfo.InvariantCulture)))
-                    yield return chromSet;
-            }
+            return MeasuredResults.Chromatograms.Where(chromatogramSet =>
+                targets.Contains(Convert.ToString(
+                    replicateValue.GetValue(annotationCalculator, chromatogramSet) ?? string.Empty,
+                    CultureInfo.InvariantCulture)));
         }
 
         private object _referenceId = new object();
