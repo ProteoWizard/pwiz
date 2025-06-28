@@ -120,7 +120,9 @@ namespace pwiz.Skyline.Model.Serialization
         public static readonly DocumentFormat VERSION_24_1 = new DocumentFormat(24.1); // Release format
         public static readonly DocumentFormat VERSION_24_11 = new DocumentFormat(24.11); // Global spectrum filters
         public static readonly DocumentFormat VERSION_25_1 = new DocumentFormat(25.1); // Release format
-        public static readonly DocumentFormat CURRENT = VERSION_25_1;
+        public static readonly DocumentFormat VERSION_25_11 = new DocumentFormat(25.11); // Peak Imputation
+        public static readonly DocumentFormat CURRENT = VERSION_25_11;
+        public static readonly DocumentFormat PEAK_IMPUTATION = VERSION_25_11;
 
         private readonly double _versionNumber;
         public DocumentFormat(double versionNumber)
