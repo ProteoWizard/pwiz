@@ -172,11 +172,9 @@ namespace pwiz.Common.SystemUtil
         /// <param name="path">Path to convert to long-path syntax. This must be a fully qualified path.</param>
         public static string ToLongPath(this string path)
         {
-            // Note that Path.GetFullPath() will be equivalent to
-            // Path.Combine(Directory.GetCurrentDirectory(), path) for a relative path,
-            // which is rarely appropriate. So, using this function requires an already
+            // Note: Using this function requires an already
             // fully qualified path.
-            if (!Equals(path, Path.GetFullPath(path)))
+            if (!Path.IsPathRooted(path))
                 throw new ArgumentException($@"Failed attempting to use long-path syntax for the path '{path}' which is not fully qualified.");
             // Avoid adding the long-path prefix to a path that already has it.
             return path.StartsWith(PREFIX_LONG_PATH) ? path : PREFIX_LONG_PATH + path;
