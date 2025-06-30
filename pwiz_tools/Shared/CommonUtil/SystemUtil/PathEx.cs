@@ -172,12 +172,50 @@ namespace pwiz.Common.SystemUtil
         /// <param name="path">Path to convert to long-path syntax. This must be a fully qualified path.</param>
         public static string ToLongPath(this string path)
         {
+            if (path.StartsWith(PREFIX_LONG_PATH))
+                return path;
+
             // Note: Using this function requires an already
             // fully qualified path.
-            if (!Path.IsPathRooted(path))
+            if (!IsPathFullyQualified(path))
                 throw new ArgumentException($@"Failed attempting to use long-path syntax for the path '{path}' which is not fully qualified.");
+
             // Avoid adding the long-path prefix to a path that already has it.
-            return path.StartsWith(PREFIX_LONG_PATH) ? path : PREFIX_LONG_PATH + path;
+            return PREFIX_LONG_PATH + path;
+        }
+
+        /// <summary>
+        /// Returns a true if the path is fully qualified
+        /// </summary>
+        /// <param name="path">Path to convert to long-path syntax. This must be a fully qualified path.</param>
+        public static bool IsPathFullyQualified(string path)
+        {
+            if (string.IsNullOrEmpty(path) || path.Length < 2)
+                return false;
+
+            // Check for UNC paths (e.g., \\server\share)
+            if (path[0] == '\\' && path[1] == '\\')
+            {
+                // Ensure it's not \\?\ or \\.\, which are not standard UNC paths
+                return !(path.Length >= 3 && (path[2] == '?' || path[2] == '.'));
+            }
+
+            // Check for drive letter paths (e.g., C:\)
+            if (path.Length >= 3 &&
+                path[1] == Path.VolumeSeparatorChar && // ':'
+                (path[2] == Path.DirectorySeparatorChar || // '\'
+                 path[2] == Path.AltDirectorySeparatorChar) && // '/'
+                IsValidDriveChar(path[0]))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool IsValidDriveChar(char value)
+        {
+            return (value >= 'A' && value <= 'Z') || (value >= 'a' && value <= 'z');
         }
 
         private static ArgumentException AddPathToArgumentException(ArgumentException argumentException, string path)
