@@ -122,6 +122,11 @@ PWIZ_API_DECL int expand_pathmask(const bfs::path& pathmask,
 /// - if "ec" is NULL, a boost::filesystem_error is thrown
 PWIZ_API_DECL void copy_directory(const bfs::path& from, const bfs::path& to, bool recursive = true, boost::system::error_code* ec = 0);
 
+
+/// wrapper for std::filesystem::canonical because boost::filesystem::canonical has an issue on Wine
+PWIZ_API_DECL bfs::path canonical(const bfs::path from);
+
+
 PWIZ_API_DECL enum ByteSizeAbbreviation
 {
     /// sizes are treated as multiples of 2;
