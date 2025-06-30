@@ -34,7 +34,6 @@ using namespace System::Collections::Generic;
 #include "WiffFile.hpp"
 #endif
 #include "pwiz/utility/misc/Filesystem.hpp"
-#include <filesystem>
 using namespace SCIEX::Apis::Data::v1;
 using namespace SCIEX::Apis::Data::v1::Contracts;
 
@@ -300,7 +299,7 @@ WiffFile2Impl::WiffFile2Impl(const string& wiffpath)
     try
     {
         auto sampleRequest = DataReader()->RequestFactory->CreateSamplesReadRequest();
-        sampleRequest->AbsolutePathToWiffFile = ToSystemString(std::filesystem::canonical(std::filesystem::u8path(wiffpath)).u8string());
+        sampleRequest->AbsolutePathToWiffFile = ToSystemString(pwiz::util::canonical(wiffpath).string());
 
         allSamples = gcnew List<ISample^>();
 

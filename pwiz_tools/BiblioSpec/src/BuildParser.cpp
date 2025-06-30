@@ -248,10 +248,10 @@ string BuildParser::filesNotFoundMessage(
         messageString += "\n" + specfileroot;
 
     bfs::path deepestPath = filepath_.empty() ? bfs::current_path() : bfs::path(filepath_);
-    messageString += "\n\nIn any of the following directories:\n" + bfs::canonical(deepestPath).make_preferred().string();
+    messageString += "\n\nIn any of the following directories:\n" + pwiz::util::canonical(deepestPath).make_preferred().string();
     set<string> parentPaths;
     for (const auto& dir : directories)
-        parentPaths.insert((bfs::path(dir).is_absolute() ? dir : bfs::canonical(deepestPath / dir)).make_preferred().string());
+        parentPaths.insert((bfs::path(dir).is_absolute() ? dir : pwiz::util::canonical(deepestPath / dir)).make_preferred().string());
     for (const auto& dir : boost::make_iterator_range(parentPaths.rbegin(), parentPaths.rend()))
         messageString += "\n" + dir;
 
