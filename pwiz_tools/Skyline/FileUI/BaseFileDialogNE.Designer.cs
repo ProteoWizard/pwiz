@@ -121,7 +121,7 @@ namespace pwiz.Skyline.FileUI
             this.sourcePathTextBox.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.FileSystem;
             this.sourcePathTextBox.Name = "sourcePathTextBox";
             this.sourcePathTextBox.KeyUp += new System.Windows.Forms.KeyEventHandler(this.sourcePathTextBox_KeyUp);
-            // 
+            this.sourcePathTextBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.sourcePathTextBox_KeyPress);
             // labelSourcePath
             // 
             resources.ApplyResources(this.labelSourcePath, "labelSourcePath");
@@ -160,6 +160,7 @@ namespace pwiz.Skyline.FileUI
             resources.ApplyResources(this.navToolStrip, "navToolStrip");
             this.navToolStrip.BackColor = System.Drawing.SystemColors.Control;
             this.navToolStrip.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this.navToolStrip.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.navToolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.backButton,
             this.upOneLevelButton,
@@ -247,6 +248,10 @@ namespace pwiz.Skyline.FileUI
             this.lookInImageList.Images.SetKeyName(8, "folder.png");
             this.lookInImageList.Images.SetKeyName(9, "DataProcessing.png");
             this.lookInImageList.Images.SetKeyName(10, "File.png");
+            this.lookInImageList.Images.SetKeyName(11, "MethodFile.png");
+            this.lookInImageList.Images.SetKeyName(12, "noAccessFolder.png");
+            this.lookInImageList.Images.SetKeyName(13, "ReadOnlyFolder.png");
+            this.lookInImageList.Images.SetKeyName(14, "ReadWriteFolder.png");
             // 
             // recentDocumentsButton
             // 
@@ -299,10 +304,13 @@ namespace pwiz.Skyline.FileUI
             this.lookInImageListSmall.Images.SetKeyName(8, "Folder.png");
             this.lookInImageListSmall.Images.SetKeyName(9, "MassSpecFile.png");
             this.lookInImageListSmall.Images.SetKeyName(10, "UnknownFile.png");
-            // 
+            this.lookInImageListSmall.Images.SetKeyName(12, "noAccessFolder.png");
+            this.lookInImageListSmall.Images.SetKeyName(13, "ReadOnlyFolder.png");
+            this.lookInImageListSmall.Images.SetKeyName(14, "ReadWriteFolder.png");            // 
             // BaseFileDialogNE
             // 
-            this.AcceptButton = this.actionButton;
+            this.AcceptButton = this.actionButton; 
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.this_KeyDown);
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.cancelButton;

@@ -37,19 +37,28 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             folder,
             folder_without_sample_sets,
             sample_set, // a collection of related injections
-            injection   // like a .raw file
+            injection,   // like a .raw file
+            folder_with_methods,
+            method       // a Waters acquisition method
+        }
+
+        public new enum Attr
+        {
+            type,
+            id,
+            injectionId
         }
 
         protected override void Init(NameValueParameters nameValueParameters)
         {
             base.Init(nameValueParameters);
-            InjectionId = nameValueParameters.GetValue(@"injectionId");
-            FolderOrSampleSetId = nameValueParameters.GetValue(@"sampleSetId");
-            Type = (ItemType?) nameValueParameters.GetLongValue(@"type") ?? ItemType.folder;
+            InjectionId = nameValueParameters.GetValue(Attr.injectionId.ToString());
+            FolderOrSampleSetId = nameValueParameters.GetValue(Attr.id.ToString());
+            Type = (ItemType?) nameValueParameters.GetLongValue(Attr.type.ToString()) ?? ItemType.folder;
         }
         public string InjectionId { get; private set; }
         public string FolderOrSampleSetId { get; private set; }
-        public ItemType Type { get; private set; }
+        public ItemType Type { get; protected set; }
 
         public WatersConnectUrl ChangeInjectionId(string id)
         {
@@ -68,9 +77,11 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
 
         public override RemoteUrl ChangePathParts(IEnumerable<string> parts)
         {
+            var type = Type;
             var result = (WatersConnectUrl) base.ChangePathParts(parts);
             result.FolderOrSampleSetId = null;
-            result.Type = ItemType.folder;
+            if (type != ItemType.folder && type != ItemType.folder_with_methods)
+                result.Type = ItemType.folder; 
             return result;
         }
 
@@ -87,9 +98,9 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
         protected override NameValueParameters GetParameters()
         {
             var result = base.GetParameters();
-            result.SetValue(@"injectionId", InjectionId);
-            result.SetValue(@"sampleSetId", FolderOrSampleSetId);
-            result.SetLongValue(@"type", (long) Type);
+            result.SetValue(Attr.injectionId.ToString(), InjectionId);
+            result.SetValue(Attr.id.ToString(), FolderOrSampleSetId);
+            result.SetLongValue(Attr.type.ToString(), (long) Type);
             return result;
         }
 
