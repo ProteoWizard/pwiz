@@ -39,7 +39,7 @@ namespace pwiz.SkylineTestConnected
     [SuppressMessage("ReSharper", "StringLiteralTypo")]
     public class ArdiaFileUploadTest : AbstractFunctionalTestEx
     {
-        private const string TEST_RESULTS_DIRECTORY = @"ZZZ-Skyline";
+        private const string TEST_RESULTS_DIRECTORY = @"ZZZ-Skyline-TestResults";
 
         [TestMethod]
         public void TestArdiaFileUpload()
@@ -47,14 +47,6 @@ namespace pwiz.SkylineTestConnected
             if (!EnableArdiaTests)
             {   
                 Console.Error.WriteLine("NOTE: skipping Ardia test because username/password for Ardia is not configured in environment variables");
-                return;
-            }
-
-            // Make sure Ardia server is available
-            if (!IsRemoteHostAvailable(BASE_URL))
-            {
-                Console.Error.WriteLine("NOTE: skipping Ardia test because the server {0} is unavailable", BASE_URL);
-                Assert.Fail(@"Ardia server {0} is unavailable. Failing the test.", BASE_URL);
                 return;
             }
 
@@ -93,6 +85,15 @@ namespace pwiz.SkylineTestConnected
 
             // Test scenarios making remote API calls
             var client = ArdiaClient.Create(account);
+
+            // Make sure (1) the Ardia server is available and (2) the token can be used to call the API.
+            // Better to fail a specific check now than to fail a network call when the cause is less obvious.
+            if (client.CheckSession().IsFailure)
+            {
+                Console.Error.WriteLine("NOTE: skipping Ardia test because the server {0} is unavailable", account.ServerUrl);
+                Assert.Fail(@"Ardia server {0} is unavailable. Failing the test.", account.ServerUrl);
+                return;
+            }
 
             // TODO: a folder path abstraction would be nice...
             // Create a folder for this test run
@@ -266,6 +267,7 @@ namespace pwiz.SkylineTestConnected
         private static void TestSuccessfulUpload(ArdiaAccount account, ArdiaClient client, string[] folderPath) 
         {
             var publishDlg = ShowDialog<PublishDocumentDlgArdia>(() => SkylineWindow.PublishToArdia());
+            publishDlg.SkipPublish = true;
 
             WaitForConditionUI(() => publishDlg.IsLoaded);
 
@@ -284,15 +286,27 @@ namespace pwiz.SkylineTestConnected
 
             var shareTypeDlg = ShowDialog<ShareTypeDlg>(publishDlg.OkDialog);
             var docUploadedDlg = ShowDialog<MessageDlg>(shareTypeDlg.OkDialog);
-            OkDialog(docUploadedDlg, docUploadedDlg.ClickOk);
 
+            // CONSIDER: in this case, MessageDlg displays when publishing is successful AND when there's an error. 
+            //           Calling OkDialog(...) works in both cases - which causes downstream, less obvious errors.
+            //           Is there a better way to detect when a MessageDlg indicates an error without looking at 
+            //           the message string?
+            Assert.AreEqual(ArdiaResources.FileUpload_Success, docUploadedDlg.Message, @"Error publishing the document to Ardia");
+
+            OkDialog(docUploadedDlg, docUploadedDlg.ClickOk);
+            Assert.IsNotNull(publishDlg.DestinationPath);
             Assert.AreEqual(@$"/{folderPath[0]}/{folderPath[1]}", publishDlg.DestinationPath);
 
             // Use new document's ID to make another API call checking document can be read from the server
+            Assert.IsNotNull(publishDlg.PublishedDocument);
             var documentId = publishDlg.PublishedDocument.DocumentId;
 
             var ardiaClient = ArdiaClient.Create(account);
             var result = ardiaClient.GetDocument(documentId);
+
+            if (publishDlg.SkipPublish)
+                return;
+
             Assert.IsTrue(result.IsSuccess);
             Assert.IsNotNull(result.Value);
             Assert.AreEqual(documentId, result.Value.DocumentId);

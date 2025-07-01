@@ -60,6 +60,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         private const string PATH_GET_DOCUMENT    = @"/session-management/bff/document/api/v1/documents/{0}";
         private const string PATH_CREATE_FOLDER   = @"/session-management/bff/navigation/api/v1/folders";
         private const string PATH_DELETE_FOLDER   = @"/session-management/bff/navigation/api/v1/folders/folderPath";
+        private const string PATH_SESSION_COOKIE  = @"/session-management/bff/session-management/api/v1/SessionManagement/sessioncookie";
 
         public const long MAX_UPLOAD_SIZE = int.MaxValue;
         public const long MAX_UPLOAD_SIZE_GB = 2;
@@ -219,6 +220,10 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             {
                 return ArdiaResult<CreateDocumentResponse>.Canceled;
             }
+            else if (resultStaging.IsFailure)
+            {
+                return ArdiaResult<CreateDocumentResponse>.Failure(resultStaging);
+            }
 
             // Step 2 of 3: AWS - Upload File
             var presignedUrl = resultStaging.Value.Pieces[0].PresignedUrls[0];
@@ -227,6 +232,10 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             if (progressMonitor.IsCanceled)
             {
                 return ArdiaResult<CreateDocumentResponse>.Canceled;
+            } 
+            else if (resultUpload.IsFailure)
+            {
+                return ArdiaResult<CreateDocumentResponse>.Failure(resultUpload);
             }
 
             // Step 3 of 3: Ardia API - Create Document
@@ -238,9 +247,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
                 FilePath = destinationFolderPath
             };
 
-            var resultDocument = CreateDocument(requestDocument);
-
-            return ArdiaResult<CreateDocumentResponse>.Success(resultDocument.Value);
+            return CreateDocument(requestDocument);
         }
 
         // API documentation: https://api.hyperbridge.cmdtest.thermofisher.com/document/api/swagger/index.html
@@ -351,7 +358,15 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
                 }
                 else
                 {
-                    var message = ErrorMessageBuilder.Create(ArdiaResources.Error_StatusCode_Unexpected).ErrorDetailFromResponseBody(responseBody).Uri(uri).StatusCode(statusCode);
+                    var message = ErrorMessageBuilder.Create(ArdiaResources.Error_StatusCode_Unexpected).
+                        ErrorDetailFromResponseBody(responseBody).
+                        ErrorDetail(ArdiaResources.Error_FilePath, modelRequest.FilePath).
+                        ErrorDetail(ArdiaResources.Error_FileName, modelRequest.FileName).
+                        ErrorDetail(ArdiaResources.Error_UploadId, modelRequest.UploadId).
+                        ErrorDetail(ArdiaResources.Error_Size, modelRequest.Size.ToString(@"N0")).
+                        Uri(uri).
+                        StatusCode(statusCode);
+
                     return ArdiaResult<CreateDocumentResponse>.Failure(message.ToString(), statusCode, null);
                 }
             }
@@ -392,6 +407,36 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             {
                 var message = ErrorMessageBuilder.Create(ArdiaResources.Error_ProblemCommunicatingWithServer).ErrorDetailFromException(e).Uri(uri).StatusCode(statusCode);
                 return ArdiaResult<CreateDocumentResponse>.Failure(message.ToString(), statusCode, e);
+            }
+        }
+
+        public ArdiaResult CheckSession()
+        {
+            var uri = UriFromParts(ServerUri, PATH_SESSION_COOKIE);
+
+            HttpStatusCode? statusCode = null;
+            try
+            {
+                using var httpClient = AuthenticatedHttpClient();
+                using var response = httpClient.GetAsync(uri.AbsolutePath).Result;
+
+                statusCode = response.StatusCode;
+                var responseBody = response.Content.ReadAsStringAsync().Result;
+
+                if (statusCode == HttpStatusCode.OK)
+                {
+                    return ArdiaResult.Success();
+                }
+                else
+                {
+                    var message = ErrorMessageBuilder.Create(ArdiaResources.Error_StatusCode_Unexpected).ErrorDetailFromResponseBody(responseBody).Uri(uri).StatusCode(statusCode);
+                    return ArdiaResult.Failure(message.ToString(), statusCode, null);
+                }
+            }
+            catch (Exception e) when (ShouldHandleException(e))
+            {
+                var message = ErrorMessageBuilder.Create(ArdiaResources.Error_ProblemCommunicatingWithServer).ErrorDetailFromException(e).Uri(uri).StatusCode(statusCode);
+                return ArdiaResult.Failure(message.ToString(), statusCode, e);
             }
         }
 
@@ -498,12 +543,13 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
     
     public sealed class ErrorMessageBuilder
     {
-        private const string INDENT = "  "; // tab is too much, no space is too little
+        private const string INDENT = "    "; // tab is too much, no space is too little
 
         private readonly string _message;
         private string _messageDetail;
         private Uri _uri;
         private HttpStatusCode? _statusCode;
+        private readonly List<KeyValuePair<string, string>> _extraInfo;
 
         public static ErrorMessageBuilder Create(string error)
         {
@@ -513,6 +559,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         private ErrorMessageBuilder(string message)
         {
             _message = message;
+            _extraInfo = new List<KeyValuePair<string, string>>();
         }
 
         public ErrorMessageBuilder ErrorDetail(string messageDetail)
@@ -540,6 +587,12 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             return ErrorDetail(ReadErrorMessageFromResponse(responseBody));
         }
 
+        public ErrorMessageBuilder ErrorDetail(string format, string value)
+        {
+            _extraInfo.Add(new KeyValuePair<string, string>(format, value));
+            return this;
+        }
+
         public ErrorMessageBuilder Uri(Uri uri)
         {
             _uri = uri;
@@ -563,25 +616,35 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
                 sb.Append(INDENT);
                 sb.Append(ArdiaResources.Error_Detail);
                 sb.Append(_messageDetail);
-                sb.Append(Environment.NewLine);
+                sb.AppendLine();
             }
 
             if (_uri != null)
             {
                 sb.Append(INDENT);
                 sb.AppendFormat(ArdiaResources.Error_Host, _uri.Host);
-                sb.Append(Environment.NewLine);
+                sb.AppendLine(); 
 
                 sb.Append(INDENT);
                 sb.AppendFormat(ArdiaResources.Error_Path, _uri.AbsolutePath);
-                sb.Append(Environment.NewLine);
+                sb.AppendLine();
             }
 
             if (_statusCode != null)
             {
                 sb.Append(INDENT);
                 sb.AppendFormat(ArdiaResources.Error_StatusCode, _statusCode.ToString(), (int)_statusCode);
-                sb.Append(Environment.NewLine);
+                sb.AppendLine();
+            }
+
+            if (_extraInfo.Count > 0)
+            {
+                foreach (var kvPair in _extraInfo)
+                {
+                    sb.Append(INDENT);
+                    sb.AppendFormat(kvPair.Key, kvPair.Value);
+                    sb.AppendLine();
+                }
             }
 
             return sb.ToString();

@@ -34,6 +34,11 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             return new ArdiaResult<T>(default, message, statusCode, exception);
         }
 
+        public static ArdiaResult<T> Failure(ArdiaResult other)
+        {
+            return new ArdiaResult<T>(default, other.ErrorMessage, other.ErrorStatusCode, other.ErrorException);
+        }
+
         private ArdiaResult(T value) : base(true, null, null, null)
         {
             Value = value;

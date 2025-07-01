@@ -36,6 +36,8 @@ using TreeNode = System.Windows.Forms.TreeNode;
 
 namespace pwiz.Skyline.FileUI
 {
+    // TODO: improve handling error case - server unreachable / unavailable
+    // TODO: improve handling error case - token invalid
     public class PublishDocumentDlgArdia : PublishDocumentDlgBase
     {
         public enum ValidateInputResult { valid, invalid_blank, invalid_character }
@@ -72,7 +74,13 @@ namespace pwiz.Skyline.FileUI
         /// Used in tests.
         /// </summary>
         public TreeView FoldersTree => treeViewFolders;
-        
+
+        // TODO: remove when re-enabling publishing
+        /// <summary>
+        /// Used in tests to skip publishing the current Skyline document to a remote server. Does not skip any other read or write network operations.
+        /// </summary>
+        public bool SkipPublish { get; set; } = false;
+
         /// <summary>
         /// Used in tests to find a <see cref="TreeNode"/> by name.
         /// </summary>
@@ -166,9 +174,13 @@ namespace pwiz.Skyline.FileUI
             }
             else
             {
-                // Special case for the root node
-                var folderText = parentTreeNode.Parent == null ? ((ArdiaAccountInfo)parentTreeNode.Tag)?.Account.ServerUrl : parentTreeNode.Text;
-                var message = string.Format(ArdiaResources.OpenFolder_Error, folderText);
+                string message;
+                if (result.ErrorStatusCode == HttpStatusCode.Unauthorized)
+                    message = ArdiaResources.Error_InvalidToken;
+                else if (parentTreeNode.Parent == null)
+                    message = string.Format(ArdiaResources.OpenFolder_Error_Server, Account.ServerUrl);
+                else
+                    message = string.Format(ArdiaResources.OpenFolder_Error_Folder, parentTreeNode.Text);
 
                 MessageDlg.ShowWithExceptionAndNetworkDetail( this, message, result.ErrorMessage, result.ErrorException);
 
@@ -223,14 +235,18 @@ namespace pwiz.Skyline.FileUI
 
             var isCanceled = false;
 
-            using var waitDlg = new LongWaitDlg();
-            waitDlg.Text = UtilResources.PublishDocumentDlg_UploadSharedZipFile_Uploading_File;
-            waitDlg.PerformWork(parent, 1000, longWaitBroker =>
+            if (!SkipPublish)
             {
-                result = Client.PublishDocument(DestinationPath, FileName, longWaitBroker);
+                using var waitDlg = new LongWaitDlg();
+                waitDlg.Text = UtilResources.PublishDocumentDlg_UploadSharedZipFile_Uploading_File;
+                waitDlg.PerformWork(parent, 1000, longWaitBroker =>
+                {
+                    result = Client.PublishDocument(DestinationPath, FileName, longWaitBroker);
 
-                isCanceled = longWaitBroker.IsCanceled;
-            });
+                    isCanceled = longWaitBroker.IsCanceled;
+                });
+            }
+            else result = ArdiaResult<CreateDocumentResponse>.Success(new CreateDocumentResponse());
 
             if (isCanceled)
                 return;
@@ -243,11 +259,15 @@ namespace pwiz.Skyline.FileUI
             }
             else
             {
-                MessageDlg.ShowWithExceptionAndNetworkDetail(this, ArdiaResources.FileUpload_Error, result.ErrorMessage, result.ErrorException);
+                string message;
+                if (result.ErrorStatusCode == HttpStatusCode.Unauthorized)
+                    message = ArdiaResources.Error_InvalidToken;
+                else message = ArdiaResources.FileUpload_Error;
+
+                MessageDlg.ShowWithExceptionAndNetworkDetail(parent, message, result.ErrorMessage, result.ErrorException);
             }
         }
 
-        // TODO: short-circuit if the server is unavailable?
         public TreeNode CreateFolder()
         {
             var parentNode = treeViewFolders.SelectedNode;
@@ -355,7 +375,7 @@ namespace pwiz.Skyline.FileUI
                 switch (result.ErrorStatusCode)
                 {
                     case HttpStatusCode.Unauthorized:
-                        message = string.Format(ArdiaResources.CreateFolder_Error_NotAuthenticated, newFolderName);
+                        message = ArdiaResources.Error_InvalidToken;
                         break;
                     case HttpStatusCode.BadRequest:
                     case HttpStatusCode.Conflict:
