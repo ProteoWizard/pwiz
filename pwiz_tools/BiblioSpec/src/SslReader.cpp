@@ -242,14 +242,23 @@ SslReader::SslReader(BlibBuilder& maker,
               break;
           }
       }
-      if (dynamic_cast<sslPSM*>(psm)->rtInfo.retentionTime != 0)
-      {
-          returnData.retentionTime = dynamic_cast<sslPSM*>(psm)->rtInfo.retentionTime;
-          returnData.startTime = dynamic_cast<sslPSM*>(psm)->rtInfo.startTime;
-          returnData.endTime = dynamic_cast<sslPSM*>(psm)->rtInfo.endTime;
-      }
       return success;
   };
+
+  /**
+   * Apply any values carried by subclassed psm(e.g.SSL RT column values) that override those found
+   ** by spectrum lookup
+   */
+  void SslReader::applyPsmOverrideValues(PSM* psm, SpecData& specData)
+  {
+      auto ssl = dynamic_cast<sslPSM *>(psm);
+      if (ssl != nullptr && ssl->rtInfo.retentionTime != 0)
+      {
+          specData.retentionTime = ssl->rtInfo.retentionTime;
+          specData.startTime = ssl->rtInfo.startTime;
+          specData.endTime = ssl->rtInfo.endTime;
+      }
+  }
 
   /**
    * Finds modifications of the form [+/-float] and for each for each inserts
