@@ -2998,12 +2998,21 @@ namespace pwiz.SkylineTestUtil
 
         public static string ParseIrtProperties(string irtFormula, CultureInfo cultureInfo = null)
         {
+            ParseIrtSlopeAndIntercept(irtFormula, cultureInfo??CultureInfo.CurrentCulture, out var slope, out var intercept);
+            return $"IrtSlope = {slope},\r\nIrtIntercept = {intercept},\r\n";
+        }
+
+        public static void ParseIrtSlopeAndIntercept(string irtFormula, CultureInfo cultureInfo, out double slope, out double intercept)
+        {
             var decimalSeparator = (cultureInfo ?? CultureInfo.CurrentCulture).NumberFormat.NumberDecimalSeparator;
             var match = Regex.Match(irtFormula, $@"iRT = (?<slope>\d+{decimalSeparator}\d+) \* [^+-]+? (?<sign>[+-]) (?<intercept>\d+{decimalSeparator}\d+)");
             Assert.IsTrue(match.Success);
-            string slope = match.Groups["slope"].Value, intercept = match.Groups["intercept"].Value, sign = match.Groups["sign"].Value;
-            if (sign == "+") sign = string.Empty;
-            return $"IrtSlope = {slope},\r\nIrtIntercept = {sign}{intercept},\r\n";
+            slope = double.Parse(match.Groups["slope"].Value, cultureInfo);
+            intercept = double.Parse(match.Groups["intercept"].Value);
+            if (match.Groups["sign"].Value == "-")
+            {
+                intercept = -intercept;
+            }
         }
 
         #region Modification helpers

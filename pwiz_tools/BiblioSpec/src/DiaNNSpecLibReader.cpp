@@ -19,9 +19,11 @@
 #include "DiaNNSpecLibReader.h"
 #include "pwiz/data/common/Unimod.hpp"
 #include "libraries/csv.h"
+#ifdef USE_PARQUET_READER
 #include "arrow/io/api.h"
 #include "arrow/api.h"
 #include "parquet/arrow/reader.h"
+#endif
 #include <boost/type_index.hpp>
 #include <pwiz/data/proteome/AminoAcid.hpp>
 #include <boost/range/algorithm/find.hpp>
@@ -533,8 +535,9 @@ class Library {
     }
 
     void elution_group_index() {
-        size_t i, egt = 0, peg;
-        for (i = 0; i < elution_groups.size(); i++) if (elution_groups[i] > egt) egt = elution_groups[i]; egt++;
+        int egt = 0;
+        size_t i, peg;
+        for (i = 0; i < elution_groups.size(); i++) { if (elution_groups[i] > egt) { egt = elution_groups[i]; } egt++; }
         co_elution_index.resize(egt, std::pair<int, int>(0, 1));
         std::set<std::pair<int, int> > ce;
         for (i = 0; i < elution_groups.size(); i++) ce.insert(std::pair<int, int>(elution_groups[i], (int) i));
@@ -646,8 +649,10 @@ class DiaNNSpecLibReader::Impl
     class Reader
     {
         typedef io::CSVReader<column_count, io::trim_chars<' ', ' '>, io::no_quote_escape<'\t'>> CsvReader;
+        public:
         class ParquetReader;
 
+        private:
         unique_ptr<CsvReader> csvReader_;
         unique_ptr<ParquetReader> parquetReader_;
         string filepath_;
@@ -673,13 +678,15 @@ class DiaNNSpecLibReader::Impl
         // a wrapper for reading Parquet files that provides the same interface as CSVReader
         class ParquetReader
         {
+            const string& filepath_;
+
+#ifdef USE_PARQUET_READER
             unique_ptr<parquet::arrow::FileReader> reader_;
             vector<string> columnNames_; // and order
             vector<int> columnIndices_;
             int64_t numRowGroups_;
             int64_t rowIndex_ = 0;
             int64_t rowGroup_ = -1;
-            const string& filepath_;
 
             // an enum of supported types for columns
             enum ColumnType { int64, fp, str };
@@ -692,14 +699,19 @@ class DiaNNSpecLibReader::Impl
             {
                 return table->GetColumnByName(column_name)->chunk(0);
             }
+#endif
 
         public:
 
             ParquetReader(const string& filepath) : filepath_(filepath)
             {
 #ifndef USE_PARQUET_READER
+#ifdef WIN32
                 Verbosity::error("parquet files are not supported in current build (runtime debugging on)");
+#else
+                Verbosity::error("parquet files are not supported in current build (Linux)");
 #endif
+#else
                 auto input = arrow::io::ReadableFile::Open(filepath);
                 if (!input.ok())
                     Verbosity::error("cannot open %s: %s", filepath.c_str(), input.status().message().c_str());
@@ -711,13 +723,14 @@ class DiaNNSpecLibReader::Impl
                 numRowGroups_ = reader_->num_row_groups();
                 if (!numRowGroups_)
                     Verbosity::error("parquet library contains zero row groups for %s", filepath.c_str());
+#endif
             }
 
             static bool is_parquet(const string& filepath)
             {
 #ifndef USE_PARQUET_READER
                 return bal::iends_with(filepath, ".parquet");
-#endif
+#else
                 auto input = arrow::io::ReadableFile::Open(filepath);
                 if (!input.ok())
                     return false;
@@ -725,8 +738,17 @@ class DiaNNSpecLibReader::Impl
                 unique_ptr<parquet::arrow::FileReader> reader;
                 auto got_reader = parquet::arrow::OpenFile(input.ValueOrDie(), arrow::default_memory_pool(), &reader);
                 return got_reader.ok();
+#endif
             }
 
+#ifndef USE_PARQUET_READER
+            void close() {}
+            template<class ...ColNames> void read_header(io::ignore_column ignore_policy, ColNames...cols) {}
+            bool has_column(const std::string& name) const { return false; }
+            template<class ...ColType> bool read_row(ColType& ...cols) { return false; }
+            void seek_begin() {}
+            uint64_t num_rows() const { return 0; }
+#else
             void close()
             {
                 table_.reset();
@@ -874,6 +896,7 @@ class DiaNNSpecLibReader::Impl
                 num_rows_ = num_rows;
                 return num_rows;
             }
+#endif
         };
 
         static bool is_parquet(const string& filepath) { return ParquetReader::is_parquet(filepath); }
@@ -1018,7 +1041,7 @@ bool DiaNNSpecLibReader::parseFile()
         vector<bfs::path> siblingFiles;
         siblingFiles.insert(siblingFiles.end(), siblingParquetFiles.begin(), siblingParquetFiles.end());
         siblingFiles.insert(siblingFiles.end(), siblingTsvFiles.begin(), siblingTsvFiles.end());
-        map<int, vector<bfs::path>, std::greater<int>> tsvFilepathBySharedPrefixLength;
+        map<size_t, vector<bfs::path>, std::greater<int>> tsvFilepathBySharedPrefixLength;
         auto speclibFilename = bfs::path(impl_->specLibFile_).filename().string();
         for (const auto& tsvFilepath : siblingFiles)
         {
@@ -1026,7 +1049,7 @@ bool DiaNNSpecLibReader::parseFile()
                 continue;
             if (bal::contains(tsvFilepath.filename().string(), "first-pass") && !bal::contains(speclibFilename, "first-pass"))
                 continue;
-            int sharedPrefixLength = 0, i;
+            size_t sharedPrefixLength = 0, i;
             auto tsvFilename = tsvFilepath.filename().string();
             for (i = 0; i < tsvFilename.length() && i < speclibFilename.length(); ++i)
                 if (tsvFilename[i] != speclibFilename[i])
@@ -1202,8 +1225,9 @@ bool DiaNNSpecLibReader::parseFile()
     buildTables(GENERIC_QVALUE);
 
     // update RetentionTimes.RefSpectraID field after filtering
+    Verbosity::status("Updating RetentionTimes table after filtering.");
     blibMaker_.sql_stmt("UPDATE RetentionTimes SET RefSpectraID = newId "
-                        "FROM (SELECT t.[RefSpectraID] as oldId, s.[id] as newId FROM RefSpectra s, RetentionTimes t WHERE s.[SpecIdInFile] = t.[RefSpectraID]) AS IdMapping "
+                        "FROM (SELECT DISTINCT t.[RefSpectraID] as oldId, s.[id] as newId FROM RefSpectra s, RetentionTimes t WHERE s.[SpecIdInFile] = t.[RefSpectraID]) AS IdMapping "
                         "WHERE RefSpectraID == IdMapping.oldId");
 
     return true;
@@ -1246,7 +1270,7 @@ bool DiaNNSpecLibReader::getSpectrum(int identifier, SpecData& returnData, SPEC_
 
     returnData.mzs = new double[returnData.numPeaks];
     returnData.intensities = new float[returnData.numPeaks];
-    for (size_t i=0; i < returnData.numPeaks; ++i)
+    for (int i=0; i < returnData.numPeaks; ++i)
     {
         const auto& product = entry.target.fragments[i];
         returnData.mzs[i] = product.mz;

@@ -61,7 +61,7 @@ class sslPSM : public PSM {
             try{// might be a scan number or a string identifier
                 psm.specKey = boost::lexical_cast<int>(trimLeadingZeros(value));
                 psm.specIndex = -1;
-            } catch (bad_lexical_cast) {
+            } catch (bad_lexical_cast&) {
                 if (bal::istarts_with(value, "index="))
                     psm.specIndex = boost::lexical_cast<int>(value.substr(6));
                 else if (bal::istarts_with(value, "scan="))
@@ -80,7 +80,7 @@ class sslPSM : public PSM {
         } else {
             try{
                 psm.charge =  boost::lexical_cast<int>(trimLeadingZeros(value));
-            } catch (bad_lexical_cast) {
+            } catch (bad_lexical_cast&) {
                 throw BlibException(false, "Non-numeric charge value: %s.",
                                     value.c_str());
             }
@@ -106,7 +106,7 @@ class sslPSM : public PSM {
         } else {
             try {
                 psm.score = boost::lexical_cast<double>(value);
-            } catch (bad_lexical_cast) {
+            } catch (bad_lexical_cast&) {
                 throw BlibException(false, "Non-numeric score: %s",
                                     value.c_str());
             }
@@ -116,7 +116,7 @@ class sslPSM : public PSM {
         if (!value.empty()) {
             try {
                 psm.rtInfo.retentionTime = boost::lexical_cast<double>(value);
-            } catch (bad_lexical_cast) {
+            } catch (bad_lexical_cast&) {
                 throw BlibException(false, "Non-numeric retention time: %s",
                                     value.c_str());
             }
@@ -127,7 +127,7 @@ class sslPSM : public PSM {
             try {
                 psm.rtInfo.startTime = boost::lexical_cast<double>(value);
             }
-            catch (bad_lexical_cast) {
+            catch (bad_lexical_cast&) {
                 throw BlibException(false, "Non-numeric start time: %s",
                     value.c_str());
             }
@@ -138,7 +138,7 @@ class sslPSM : public PSM {
             try {
                 psm.rtInfo.endTime = boost::lexical_cast<double>(value);
             }
-            catch (bad_lexical_cast) {
+            catch (bad_lexical_cast&) {
                 throw BlibException(false, "Non-numeric end time: %s",
                     value.c_str());
             }
@@ -149,7 +149,7 @@ class sslPSM : public PSM {
             try {
                 psm.ionMobility = boost::lexical_cast<double>(value);
             }
-            catch (bad_lexical_cast) {
+            catch (bad_lexical_cast&) {
                 throw BlibException(false, "Non-numeric ion mobility value: %s",
                     value.c_str());
             }
@@ -165,7 +165,7 @@ class sslPSM : public PSM {
             try {
                 psm.ccs = boost::lexical_cast<double>(value);
             }
-            catch (bad_lexical_cast) {
+            catch (bad_lexical_cast&) {
                 throw BlibException(false, "Non-numeric CCS: %s",
                     value.c_str());
             }
@@ -216,7 +216,7 @@ class sslPSM : public PSM {
             try {
                 psm.smallMolMetadata.precursorMzDeclared = boost::lexical_cast<double>(value);
             }
-            catch (bad_lexical_cast) {
+            catch (bad_lexical_cast&) {
                 throw BlibException(false, "Non-numeric precursorMZ: %s",
                     value.c_str());
             }
