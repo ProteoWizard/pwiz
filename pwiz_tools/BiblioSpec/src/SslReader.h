@@ -257,6 +257,7 @@ class SslReader : public BuildParser, DelimitedFileConsumer<sslPSM>, public Pwiz
         SPEC_ID_TYPE findBy,
         SpecData& returnData,
         bool getPeaks);
+    virtual void applyPsmOverrideValues(PSM* psm, SpecData& specData); // Apply any values carried by subclassed psm (e.g. SSL RT column values) that override those found by spectrum lookup
 
   protected:
     string sslName_;
