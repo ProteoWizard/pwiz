@@ -28,6 +28,7 @@ using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.Win32;
 using pwiz.Common;
@@ -573,6 +574,9 @@ namespace pwiz.Skyline
                 // Add handler for non-UI thread exceptions. 
                 AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
+                // Add handler for unobserved Task exceptions
+                TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
+                
                 if (Settings.Default.SettingsUpgradeRequired)
                 {
                     Settings.Default.Upgrade();
@@ -585,16 +589,26 @@ namespace pwiz.Skyline
         private static readonly object _unhandledExceptionLock = new object();
         public static ToolService MainToolService;
 
+        private static void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
+        {
+            ReportUnhandledException(e.Exception);
+        }
+
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            ReportUnhandledException((Exception)e.ExceptionObject);
+        }
+
+        private static void ReportUnhandledException(Exception e)
         {
             // Only the first unhandled exception is reported.
             lock (_unhandledExceptionLock)
             {
                 try
                 {
-                    ReportShutdownDlg.SaveExceptionFile((Exception)e.ExceptionObject);
+                    ReportShutdownDlg.SaveExceptionFile(e);
                 }
-// ReSharper disable once EmptyGeneralCatchClause
+                // ReSharper disable once EmptyGeneralCatchClause
                 catch (Exception ex)
                 {
                     Trace.WriteLine(ex.ToString());
