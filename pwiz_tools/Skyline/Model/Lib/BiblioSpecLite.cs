@@ -340,7 +340,7 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     foreach (var scoreTypeName in scoreTypes)
                     {
-                        if (scoreTypesByName.TryGetValue(scoreTypeName, out var scoreType))
+                        if (scoreTypeName != null && scoreTypesByName.TryGetValue(scoreTypeName, out var scoreType))
                         {
                             detailsByFileId[file.Id].ScoreThresholds.Add(scoreType, file.CutoffScore);
                         }
