@@ -3535,10 +3535,10 @@ namespace pwiz.Skyline
             string fileName = null;
             try
             {
-                var ardiaAccounts = Settings.Default.RemoteAccountList.GetAccountsOfType(RemoteAccountType.ARDIA).Cast<ArdiaAccount>().ToList();
+                var ardiaAccount = Settings.Default.RemoteAccountList.GetAccountsOfType(RemoteAccountType.ARDIA).Cast<ArdiaAccount>().ToList()[0];
                 var documentFormat = GetFileFormatOnDisk();
 
-                using var publishDlg = new PublishDocumentDlgArdia(this, ardiaAccounts, DocumentFilePath, documentFormat);
+                using var publishDlg = new PublishDocumentDlgArdia(this, ardiaAccount, DocumentFilePath, documentFormat);
                 if (publishDlg.ShowDialog(this) == DialogResult.Cancel)
                 {
                     return;

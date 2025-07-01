@@ -34,6 +34,8 @@ using pwiz.Common.SystemUtil;
 // TODO: error handling - what can be reused with Panorama? Ex: PanoramaServerException, ErrorMessageBuilder?
 // TODO: error handling - check strings (esp. responseBody) for tokens and scrub if present
 // TODO: error handling - what happens if there's a problem reading or writing JSON? Handle JSONException?
+// TODO: check (1) host available and (2) token can make API calls
+// TODO: add code inspection making sure response.EnsureSuccessStatusCode() is not used
 // TODO: is there a way to make GetDocument and DeleteFolder test-only without just moving them into the test?
 namespace pwiz.CommonMsData.RemoteApi.Ardia
 {
@@ -42,7 +44,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
     ///     https://mikehadlow.blogspot.com/2012/07/tracing-systemnet-to-debug-http-clients.html
     /// </summary>
     [SuppressMessage("ReSharper", "IdentifierTypo")]
-    public class ArdiaClient
+    public sealed class ArdiaClient
     {
         // RFC 3986 specified path separator for URIs
         // CONSIDER: add UrlBuilder class to Skyline. Related PRs also define this constant and helper methods narrowly scoped to a remote server vendor

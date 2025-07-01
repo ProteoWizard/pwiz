@@ -44,12 +44,11 @@ namespace pwiz.Skyline.FileUI
         private static readonly char[] ILLEGAL_FOLDER_NAME_CHARS = { ':', '\\', '/', '*', '?', '"', '<', '>', '|' };
         private static readonly RemoteItemComparer REMOTE_ITEM_COMPARER = new RemoteItemComparer();
 
-        private readonly IList<ArdiaAccount> _ardiaAccounts;
-
-        public PublishDocumentDlgArdia(IDocumentUIContainer docContainer, IList<ArdiaAccount> accounts, string fileName, DocumentFormat? fileFormatOnDisk) 
+        public PublishDocumentDlgArdia(IDocumentUIContainer docContainer, ArdiaAccount account, string fileName, DocumentFormat? fileFormatOnDisk) 
             : base(docContainer, fileName, fileFormatOnDisk)
         {
-            _ardiaAccounts = accounts;
+            Account = account;
+            Client = ArdiaClient.Create(Account);
 
             treeViewFolders.ImageList.TransparentColor = Color.Magenta;
             treeViewFolders.ImageList.Images.Add(Resources.ArdiaIcon);  // 32bpp
@@ -61,6 +60,8 @@ namespace pwiz.Skyline.FileUI
         /// Fully qualified path for where to put the Skyline document on an Ardia server.
         /// </summary>
         public string DestinationPath { get; private set; }
+        private ArdiaAccount Account { get; }
+        private ArdiaClient Client { get; }
 
         /// <summary>
         /// If publishing succeeded, this is a <see cref="CreateDocumentResponse"/> representing the new Ardia document.
@@ -107,22 +108,19 @@ namespace pwiz.Skyline.FileUI
 
             UpdateTree(() =>
             {
-                foreach (var account in _ardiaAccounts)
+                // CONSIDER: do not need to support multiple accounts for now - so revisit the root node label
+                var label = $@"{Account.Username} @ {new Uri(Account.ServerUrl).Host}";
+                var treeNode = new TreeNode(label, (int)ImageId.ardia, (int)ImageId.ardia)
                 {
-                    // CONSIDER: do not need to support multiple accounts for now - so revisit the root node label
-                    var label = $@"{account.Username} @ {new Uri(account.ServerUrl).Host}";
-                    var treeNode = new TreeNode(label, (int)ImageId.ardia, (int)ImageId.ardia)
-                    {
-                        Tag = new ArdiaAccountInfo(account, account.GetRootUrl()),
-                    };
+                    Tag = new ArdiaAccountInfo(Account, Account.GetRootUrl()),
+                };
 
-                    // Assume the server has sub-folders and add this node so the TreeView's expand
-                    // icon appears without having actually called the Ardia API to get the child
-                    // nodes. SrmTreeNode does something similar.
-                    treeNode.Nodes.Add(CreateEmptyNode());
+                // Assume the server has sub-folders and add this node so the TreeView's expand
+                // icon appears without having actually called the Ardia API to get the child
+                // nodes. SrmTreeNode does something similar.
+                treeNode.Nodes.Add(CreateEmptyNode());
 
-                    treeViewFolders.Nodes.Add(treeNode);
-                }
+                treeViewFolders.Nodes.Add(treeNode);
             });
         }
 
@@ -149,7 +147,6 @@ namespace pwiz.Skyline.FileUI
                 return;
             }
 
-            var ardiaAccount = ArdiaAccountForTreeNode(parentTreeNode);
             var parentUrl = (ArdiaUrl)((ArdiaFolderInfo)parentTreeNode.Tag)?.RemoteUrl;
 
             var result = ArdiaResult<IList<RemoteItem>>.Default;
@@ -158,8 +155,7 @@ namespace pwiz.Skyline.FileUI
             waitDlg.Text = string.Format(ArdiaResources.OpenFolder_Title, parentTreeNode.Text);
             waitDlg.PerformWork(this, 1000, progressMonitor =>
             {
-                var ardiaClient = ArdiaClient.Create(ardiaAccount);
-                result = ardiaClient.GetFolders(parentUrl, progressMonitor);
+                result = Client.GetFolders(parentUrl, progressMonitor);
             });
 
             if (result.IsSuccess)
@@ -215,8 +211,6 @@ namespace pwiz.Skyline.FileUI
 
         public override void Upload(Control parent)
         {
-            var ardiaAccount = ArdiaAccountForTreeNode(treeViewFolders.SelectedNode);
-
             // TODO: remove after adding support for multipart uploads
             var fileSizeInBytes = new FileInfo(FileName).Length;
             if (fileSizeInBytes >= ArdiaClient.MAX_UPLOAD_SIZE)
@@ -233,8 +227,7 @@ namespace pwiz.Skyline.FileUI
             waitDlg.Text = UtilResources.PublishDocumentDlg_UploadSharedZipFile_Uploading_File;
             waitDlg.PerformWork(parent, 1000, longWaitBroker =>
             {
-                var ardiaClient = ArdiaClient.Create(ardiaAccount);
-                result = ardiaClient.PublishDocument(DestinationPath, FileName, longWaitBroker);
+                result = Client.PublishDocument(DestinationPath, FileName, longWaitBroker);
 
                 isCanceled = longWaitBroker.IsCanceled;
             });
@@ -254,11 +247,12 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        public void CreateFolder()
+        // TODO: short-circuit if the server is unavailable?
+        public TreeNode CreateFolder()
         {
             var parentNode = treeViewFolders.SelectedNode;
             if (parentNode == null)
-                return;
+                return null;
 
             // avoid highlighting two tree nodes at the same time by de-selecting this node
             treeViewFolders.SelectedNode = null;
@@ -268,7 +262,7 @@ namespace pwiz.Skyline.FileUI
 
             var newFolder = CreateFolderNode(ArdiaResources.CreateFolder_DefaultFolderName);
 
-            // If parent has child nodes, UI is better if parent expands before adding a new child
+            // If parent has child nodes, expanding the parent before adding the new child is a better UI experience
             if (parentNode.Nodes.Count > 0)
             {
                 parentNode.Expand();
@@ -285,6 +279,8 @@ namespace pwiz.Skyline.FileUI
             }
 
             newFolder.BeginEdit();
+
+            return newFolder;
         }
 
         /// <summary>
@@ -338,7 +334,6 @@ namespace pwiz.Skyline.FileUI
                 return;
             }
 
-            var ardiaAccount = ArdiaAccountForTreeNode(newTreeNode);
             var parentFolderPath = GetFolderPath(newTreeNode.Parent);
 
             var result = ArdiaResult.Default;
@@ -347,8 +342,7 @@ namespace pwiz.Skyline.FileUI
             waitDlg.Text = ArdiaResources.CreateFolder_Title;
             waitDlg.PerformWork(this, 1000, longWaitBroker =>
             {
-                var ardiaClient = ArdiaClient.Create(ardiaAccount);
-                result = ardiaClient.CreateFolder(parentFolderPath, newFolderName, longWaitBroker);
+                result = Client.CreateFolder(parentFolderPath, newFolderName, longWaitBroker);
             });
 
             if (result.IsSuccess)
@@ -429,22 +423,6 @@ namespace pwiz.Skyline.FileUI
 
             if (treeNode.Nodes[0] is PlaceholderTreeNode)
                 treeNode.Nodes.RemoveAt(0);
-        }
-
-        /// <summary>
-        /// Helper that walks up to the root of this tree, which refers to the Ardia server associated with the given <param name="treeNode"></param>
-        /// </summary>
-        /// <param name="treeNode">A node from the tree view</param>
-        /// <returns>the <see cref="ArdiaAccount"/> associated with the given <param name="treeNode"></param></returns>
-        private static ArdiaAccount ArdiaAccountForTreeNode(TreeNode treeNode)
-        {
-            var root = treeNode;
-            while (root.Parent != null)
-            {
-                root = root.Parent;
-            }
-
-            return ((ArdiaAccountInfo)root.Tag).Account;
         }
 
         /// <summary>

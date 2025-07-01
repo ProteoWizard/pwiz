@@ -16,8 +16,10 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.CommonMsData.RemoteApi;
 using pwiz.CommonMsData.RemoteApi.Ardia;
@@ -37,7 +39,7 @@ namespace pwiz.SkylineTestConnected
     [SuppressMessage("ReSharper", "StringLiteralTypo")]
     public class ArdiaFileUploadTest : AbstractFunctionalTestEx
     {
-        private const string TEST_RESULTS_DIRECTORY_NAME = @"ZZZ-Skyline";
+        private const string TEST_RESULTS_DIRECTORY = @"ZZZ-Skyline";
 
         [TestMethod]
         public void TestArdiaFileUpload()
@@ -90,27 +92,31 @@ namespace pwiz.SkylineTestConnected
             Test_StageDocument_Response();
 
             // Test scenarios making remote API calls
-            var setupClient = ArdiaClient.Create(account);
+            var client = ArdiaClient.Create(account);
 
-            // TODO: an abstraction for folder paths would be nice...
+            // TODO: a folder path abstraction would be nice...
+            // Create a folder for this test run
             var folderName = $@"TestResults-{DateTime.Now:yyyy-MM-dd_HH-mm-ss}";
-            var parentPath = $@"/{TEST_RESULTS_DIRECTORY_NAME}";
+            var parentPath = $@"/{TEST_RESULTS_DIRECTORY}";
             var testResultsPath = $@"{parentPath}/{folderName}";
 
-            // Create a folder holding results from this test run
-            var result = setupClient.CreateFolder(parentPath, folderName, null);
+            var result = client.CreateFolder(parentPath, folderName, null);
             Assert.IsTrue(result.IsSuccess);
 
-            Test_ArdiaClient_GetFolders(account);
-            Test_ArdiaClient_CreateFolder(account, testResultsPath);
+            // ArdiaClient tests
+            Test_ArdiaClient_GetFolders(account, client);
+            Test_ArdiaClient_CreateFolder(account, client, testResultsPath);
 
-            TestSuccessfulUpload(account, new[] { TEST_RESULTS_DIRECTORY_NAME, folderName });
+            // Skyline UI tests
+            TestSuccessfulUpload(account, client, new[] { TEST_RESULTS_DIRECTORY, folderName });
+            // TestCreateFolder(account, client, new[] {TEST_RESULTS_DIRECTORY, folderName, @"NewFolder01"});
+            // TestSuccessfulUpload(account, client, new[] { TEST_RESULTS_DIRECTORY, folderName, @"NewFolder01" });
 
             // TODO: keep directory if 1+ tests fail
-            // Delete directory for this test run - disabled for now
+            // Delete test result folder, keep if 1+ tests fail (disabled for now)
             // finally
             // {
-            //     setupClient.DeleteFolder(testResultsPath);
+            //     client.DeleteFolder(testResultsPath);
             // }
         }
 
@@ -236,32 +242,28 @@ namespace pwiz.SkylineTestConnected
             WaitForClosedForm(publishDlg);
         }
 
-        private static void Test_ArdiaClient_GetFolders(ArdiaAccount account)
+        private static void Test_ArdiaClient_GetFolders(ArdiaAccount account, ArdiaClient client)
         {
-            var ardiaClient = ArdiaClient.Create(account);
-
-            var result = ardiaClient.GetFolders(account.GetRootArdiaUrl(), null);
+            var result = client.GetFolders(account.GetRootArdiaUrl(), null);
             Assert.IsTrue(result.IsSuccess);
             Assert.IsNotNull(result.Value);
         }
 
-        private static void Test_ArdiaClient_CreateFolder(ArdiaAccount account, string path)
+        private static void Test_ArdiaClient_CreateFolder(ArdiaAccount account, ArdiaClient client, string path)
         {
-            var ardiaClient = ArdiaClient.Create(account);
-
-            var result = ardiaClient.CreateFolder(path, @"NewFolder01", null);
+            var result = client.CreateFolder(path, @"NewFolder01", null);
             Assert.IsTrue(result.IsSuccess);
 
             // Error - attempt to create folder with same name
-            result = ardiaClient.CreateFolder(path, @"NewFolder01", null);
+            result = client.CreateFolder(path, @"NewFolder01", null);
             Assert.IsTrue(result.IsFailure);
             Assert.AreEqual(HttpStatusCode.Conflict, result.ErrorStatusCode);
 
-            result = ardiaClient.DeleteFolder(@$"{path}/NewFolder01");
+            result = client.DeleteFolder(@$"{path}/NewFolder01");
             Assert.IsTrue(result.IsSuccess);
         }
 
-        private static void TestSuccessfulUpload(ArdiaAccount account, string[] folderPath) 
+        private static void TestSuccessfulUpload(ArdiaAccount account, ArdiaClient client, string[] folderPath) 
         {
             var publishDlg = ShowDialog<PublishDocumentDlgArdia>(() => SkylineWindow.PublishToArdia());
 
@@ -294,6 +296,55 @@ namespace pwiz.SkylineTestConnected
             Assert.IsTrue(result.IsSuccess);
             Assert.IsNotNull(result.Value);
             Assert.AreEqual(documentId, result.Value.DocumentId);
+        }
+
+        // See RenameProteinsTest for example of editing TreeNode's label
+        private static void TestCreateFolder(ArdiaAccount account, ArdiaClient client, string[] folderPath)
+        {
+            var newFolderName = folderPath.Last();
+
+            var publishDlg = ShowDialog<PublishDocumentDlgArdia>(() => SkylineWindow.PublishToArdia());
+            WaitForConditionUI(() => publishDlg.IsLoaded);
+
+            // Expand node for Ardia server
+            RunUI(() => { publishDlg.FoldersTree.Nodes[0].Expand(); });
+
+            // Expand each folder in the path
+            RunUI(() =>
+            {
+                var treeNode = publishDlg.FindByName(publishDlg.FoldersTree.SelectedNode.Nodes, folderPath[0]);
+                Assert.IsNotNull(treeNode, $@"Did not find expected TreeNode with text '{folderPath[0]}");
+                treeNode.Expand();
+            });
+
+            RunUI(() =>
+            {
+                var treeNode = publishDlg.FindByName(publishDlg.FoldersTree.SelectedNode.Nodes, folderPath[1]);
+                Assert.IsNotNull(treeNode, $@"Did not find expected TreeNode with text '{folderPath[1]}");
+                treeNode.Expand();
+            });
+
+            // Create new folder
+            RunUI(() =>
+            {
+                publishDlg.CreateFolder();
+
+                // TODO: simulate editing the new tree node's label - likely needs P/Invoke
+
+                var labelEditEventArgs = new NodeLabelEditEventArgs(publishDlg.FoldersTree.SelectedNode, newFolderName) { CancelEdit = false };
+                publishDlg.TreeViewFolders_AfterLabelEdit(publishDlg.FoldersTree, labelEditEventArgs);
+
+                var newFolderTreeNode = publishDlg.FindByName(publishDlg.FoldersTree.SelectedNode.Parent.Nodes, newFolderName);
+
+                Assert.IsNotNull(newFolderTreeNode);
+                Assert.AreEqual(newFolderName, newFolderTreeNode.Text);
+            });
+
+            // Make sure new folder is available
+            // TODO: add folder IDs to TreeNode.Tag
+            var folderId = string.Empty; // publishDlg.FoldersTree.SelectedNode;
+
+            // var result = client.GetFolder(folderId);
         }
 
         private static void RegisterRemoteServer(ArdiaAccount account) 
