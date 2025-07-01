@@ -27,12 +27,16 @@ namespace BindingRedirectGenerator
 {
     static class Program
     {
-        static void Main(string[] args)
+        static int Main(string[] args)
         {
             if (args.Length == 0)
             {
                 Console.WriteLine("Usage: BindingRedirectGenerator.exe <path-to-created-app.config> <path-to-dll1> <path-to-dll2> ...");
-                return;
+                Console.WriteLine("Creates the .config file with bindings redirects (if needed) based on the passed assemblies.");
+                Console.WriteLine();
+                Console.WriteLine("Usage: BindingRedirectGenerator.exe --test <path-to-dll1> <path-to-dll2> ...");
+                Console.WriteLine("Returns 0 if no redirects are necessary, else returns the number of redirects.");
+                return 1;
             }
 
             var loadedAssemblies = new Dictionary<string, AssemblyName>(StringComparer.OrdinalIgnoreCase);
@@ -100,6 +104,9 @@ namespace BindingRedirectGenerator
             sb.AppendLine("  </runtime>");
             sb.AppendLine("</configuration>");
 
+            if (args[0] == "--test")
+                return redirects;
+
             if (redirects == 0)
             {
                 Console.WriteLine($"No binding redirects needed for {Path.GetFileName(args[0])}.");
@@ -112,6 +119,8 @@ namespace BindingRedirectGenerator
                 File.WriteAllText(args[0], sb.ToString());
                 Console.WriteLine($"Generated {Path.GetFileName(args[0])} with {redirects} binding redirects.");
             }
+
+            return 0;
         }
     }
 }
