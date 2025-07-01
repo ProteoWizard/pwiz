@@ -1326,7 +1326,7 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>NoControl</value>
   </data>
   <data name="lblPeakWidthVariationPercent.Location" type="System.Drawing.Point, System.Drawing">
-    <value>115, 97</value>
+    <value>115, 122</value>
   </data>
   <data name="lblPeakWidthVariationPercent.Size" type="System.Drawing.Size, System.Drawing">
     <value>15, 13</value>
@@ -1350,7 +1350,7 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>0</value>
   </data>
   <data name="tbxMaxPeakWidthVariation.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 94</value>
+    <value>9, 119</value>
   </data>
   <data name="tbxMaxPeakWidthVariation.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 20</value>
@@ -1359,7 +1359,7 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>3</value>
   </data>
   <data name="tbxMaxPeakWidthVariation.ToolTip" xml:space="preserve">
-    <value>Peaks whose width differs by more than this amount from the best scoring replicate will have their boundaries adjusted.</value>
+    <value>Peaks where width differs by more than this amount from the best scoring replicate will have boundaries adjusted.</value>
   </data>
   <data name="&gt;&gt;tbxMaxPeakWidthVariation.Name" xml:space="preserve">
     <value>tbxMaxPeakWidthVariation</value>
@@ -1377,7 +1377,7 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>True</value>
   </data>
   <data name="lblMaxPeakWidthVariation.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 78</value>
+    <value>6, 103</value>
   </data>
   <data name="lblMaxPeakWidthVariation.Size" type="System.Drawing.Size, System.Drawing">
     <value>124, 13</value>
@@ -1386,7 +1386,7 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>2</value>
   </data>
   <data name="lblMaxPeakWidthVariation.Text" xml:space="preserve">
-    <value>Width delta greater than:</value>
+    <value>Wi&amp;dth delta greater than:</value>
   </data>
   <data name="&gt;&gt;lblMaxPeakWidthVariation.Name" xml:space="preserve">
     <value>lblMaxPeakWidthVariation</value>
@@ -1407,7 +1407,7 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>NoControl</value>
   </data>
   <data name="lblRtDeltaMin.Location" type="System.Drawing.Point, System.Drawing">
-    <value>115, 55</value>
+    <value>115, 71</value>
   </data>
   <data name="lblRtDeltaMin.Size" type="System.Drawing.Size, System.Drawing">
     <value>23, 13</value>
@@ -1431,7 +1431,7 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>3</value>
   </data>
   <data name="tbxMaxRtShift.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 55</value>
+    <value>9, 68</value>
   </data>
   <data name="tbxMaxRtShift.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 20</value>
@@ -1440,7 +1440,7 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>1</value>
   </data>
   <data name="tbxMaxRtShift.ToolTip" xml:space="preserve">
-    <value>Peaks whose center is more than this distance from the best scoring replicate will have their boundaries adjusted.</value>
+    <value>Peaks where the center time is more than this distance from the best scoring replicate will have boundaries adjusted.</value>
   </data>
   <data name="&gt;&gt;tbxMaxRtShift.Name" xml:space="preserve">
     <value>tbxMaxRtShift</value>
@@ -1458,16 +1458,16 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>True</value>
   </data>
   <data name="lblMaxRtShift.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 39</value>
+    <value>9, 52</value>
   </data>
   <data name="lblMaxRtShift.Size" type="System.Drawing.Size, System.Drawing">
-    <value>108, 13</value>
+    <value>111, 13</value>
   </data>
   <data name="lblMaxRtShift.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
   <data name="lblMaxRtShift.Text" xml:space="preserve">
-    <value>RT delta greater than</value>
+    <value>R&amp;T delta greater than:</value>
   </data>
   <data name="&gt;&gt;lblMaxRtShift.Name" xml:space="preserve">
     <value>lblMaxRtShift</value>
@@ -1485,7 +1485,7 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>True</value>
   </data>
   <data name="cbxImputeMissingPeaks.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 19</value>
+    <value>9, 19</value>
   </data>
   <data name="cbxImputeMissingPeaks.Size" type="System.Drawing.Size, System.Drawing">
     <value>93, 17</value>
@@ -1494,7 +1494,7 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>4</value>
   </data>
   <data name="cbxImputeMissingPeaks.Text" xml:space="preserve">
-    <value>Missing peaks</value>
+    <value>&amp;Missing peaks</value>
   </data>
   <data name="cbxImputeMissingPeaks.ToolTip" xml:space="preserve">
     <value>If checked, missing peaks will be moved to match the best scoring replicate.</value>
@@ -1512,10 +1512,10 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>6</value>
   </data>
   <data name="groupBoxPeakImputation.Location" type="System.Drawing.Point, System.Drawing">
-    <value>19, 177</value>
+    <value>19, 183</value>
   </data>
   <data name="groupBoxPeakImputation.Size" type="System.Drawing.Size, System.Drawing">
-    <value>321, 122</value>
+    <value>321, 153</value>
   </data>
   <data name="groupBoxPeakImputation.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
@@ -2875,7 +2875,7 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>3</value>
   </data>
   <metadata name="contextMenuCalculator.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>249, 17</value>
+    <value>248, 17</value>
   </metadata>
   <data name="addCalculatorContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>146, 22</value>
@@ -2916,6 +2916,9 @@ Transitions from the two precursors will not be paired with each other for the p
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
     <value>395, 541</value>
   </data>
+  <data name="$this.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
   </data>
@@ -2926,7 +2929,7 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=25.1.1.106, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=25.1.1.171, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
@@ -2956,6 +2959,6 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>PeptideSettingsUI</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=25.1.1.106, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=25.1.1.171, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
