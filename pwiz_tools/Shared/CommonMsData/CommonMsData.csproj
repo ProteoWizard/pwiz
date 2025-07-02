@@ -74,6 +74,8 @@
     <Compile Include="OpenMsDataFileParams.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RemoteApi\Ardia\ArdiaAccount.cs" />
+    <Compile Include="RemoteApi\Ardia\ArdiaClient.cs" />
+    <Compile Include="RemoteApi\Ardia\ArdiaCredentialHelper.cs" />
     <Compile Include="RemoteApi\Ardia\ArdiaFileObject.cs" />
     <Compile Include="RemoteApi\Ardia\ArdiaFolderObject.cs" />
     <Compile Include="RemoteApi\Ardia\ArdiaObject.cs" />
@@ -82,8 +84,14 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
+    <Compile Include="RemoteApi\Ardia\ArdiaResult.cs" />
     <Compile Include="RemoteApi\Ardia\ArdiaSession.cs" />
     <Compile Include="RemoteApi\Ardia\ArdiaUrl.cs" />
+    <Compile Include="RemoteApi\Ardia\CompleteMultiPartUploadRequest.cs" />
+    <Compile Include="RemoteApi\Ardia\CreateFolderRequest.cs" />
+    <Compile Include="RemoteApi\Ardia\CreateDocumentRequest.cs" />
+    <Compile Include="RemoteApi\Ardia\StageDocumentRequest.cs" />
+    <Compile Include="RemoteApi\Ardia\UploadPieceResponse.cs" />
     <Compile Include="RemoteApi\RemoteAccount.cs" />
     <Compile Include="RemoteApi\RemoteAccountType.cs" />
     <Compile Include="RemoteApi\RemoteApiResources.designer.cs">
