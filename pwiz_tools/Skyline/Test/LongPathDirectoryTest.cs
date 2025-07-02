@@ -35,30 +35,30 @@ namespace pwiz.SkylineTest
         {
             string fullyQualifiedDrivePath = @"C:\Folder\Subfolder";
             // Try simple first
-            PathIsFullyQualifiedTest(fullyQualifiedDrivePath, $"Expected {fullyQualifiedDrivePath} to be fully qualified.");
+            PathIsFullyQualifiedTest(fullyQualifiedDrivePath);
             // Try all valid drive letters
             for (char c = 'a'; c < 'z'; c++)
             {
                 string drivePath = c + fullyQualifiedDrivePath.Substring(1);
-                PathIsFullyQualifiedTest(drivePath, $"Expected {drivePath} to be fully qualified.");
+                PathIsFullyQualifiedTest(drivePath);
                 drivePath = char.ToUpperInvariant(c) + fullyQualifiedDrivePath.Substring(1);
-                PathIsFullyQualifiedTest(drivePath, $"Expected {drivePath} to be fully qualified.");
+                PathIsFullyQualifiedTest(drivePath);
             }
             // Try UNC path
-            PathIsFullyQualifiedTest(@"\\server\share\folder", "Expected \\\\server\\share\\folder to be fully qualified.");
+            PathIsFullyQualifiedTest(@"\\server\share\folder");
             // Try a valid long path
-            PathIsFullyQualifiedTest(@"C:\Folder".ToLongPath(), "Expected \\\\?\\C:\\Folder to be fully qualified.");
+            PathIsFullyQualifiedTest(@"C:\Folder".ToLongPath());
             // Test failures
-            PathIsNotFullyQualifiedTest(@"Folder\Subfolder", "Expected Folder\\Subfolder to be not fully qualified.");
-            PathIsNotFullyQualifiedTest(@"C:Folder\Subfolder", "Expected C:Folder\\Subfolder to be not fully qualified.");
-            PathIsNotFullyQualifiedTest("A", "Expected single character path 'A' to be not fully qualified.");
-            PathIsNotFullyQualifiedTest("B:", "Expected drive only path path 'B:' to be not fully qualified.");
-            PathIsNotFullyQualifiedTest(string.Empty, "Expected empty path to be not fully qualified.");
-            PathIsNotFullyQualifiedTest(null, "Expected null path to be not fully qualified.");
+            PathIsNotFullyQualifiedTest(@"Folder\Subfolder");
+            PathIsNotFullyQualifiedTest(@"C:Folder\Subfolder");
+            PathIsNotFullyQualifiedTest("A");
+            PathIsNotFullyQualifiedTest("B:");
+            PathIsNotFullyQualifiedTest(string.Empty);
+            PathIsNotFullyQualifiedTest(null);
 
-            ToLongPathTest(@"C:\Folder\Subfolder", "Expected long-path prefix to be added.");
-            ToLongPathTest(@"\\server\share\folder", "Expected long-path prefix to be added to UNC path.");
-            ToLongPathTest(@"C:\Folder\Subfolder".ToLongPath(), "Expected path with long-path prefix to remain unchanged.", false);
+            ToLongPathTest(@"C:\Folder\Subfolder");
+            ToLongPathTest(@"\\server\share\folder");
+            ToLongPathTest(@"C:\Folder\Subfolder".ToLongPath(), false);
             
             AssertEx.ThrowsException<ArgumentException>(() => @"Folder\Subfolder".ToLongPath());
             AssertEx.ThrowsException<ArgumentException>(() => @"C:Folder\Subfolder".ToLongPath());
@@ -66,26 +66,32 @@ namespace pwiz.SkylineTest
             AssertEx.ThrowsException<ArgumentException>(() => ((string)null).ToLongPath());
         }
 
-        private void PathIsFullyQualifiedTest(string path, string failureMessage)
+        private void PathIsFullyQualifiedTest(string path)
         {
-            Assert.IsTrue(PathEx.IsPathFullyQualified(path), failureMessage);
-            Assert.IsTrue(PathEx.IsPathFullyQualified(path.Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)));
+            string failureMessage = "Expected '{0}' to be fully qualified.";
+            Assert.IsTrue(PathEx.IsPathFullyQualified(path), failureMessage, path);
+            path = path.Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            Assert.IsTrue(PathEx.IsPathFullyQualified(path), failureMessage, path);
         }
-        private void PathIsNotFullyQualifiedTest(string path, string failureMessage)
+        private void PathIsNotFullyQualifiedTest(string path)
         {
-            Assert.IsFalse(PathEx.IsPathFullyQualified(path), failureMessage);
+            string failureMessage = "Expected '{0}' not to be fully qualified.";
+            Assert.IsFalse(PathEx.IsPathFullyQualified(path), failureMessage, path);
         }
 
-        private void ToLongPathTest(string path, string failureMessage, bool addPrefix = true)
+        private void ToLongPathTest(string path, bool addPrefix = true)
         {
+            string failureMessage = addPrefix
+                ? "Expected long-path prefix to be added to '{0}'"
+                : "Expected long-path prefix not to be added to '{0}'";
             string prefix = addPrefix ? PathEx.PREFIX_LONG_PATH : string.Empty;
-            Assert.AreEqual(prefix + path, path.ToLongPath(), failureMessage);
+            Assert.AreEqual(prefix + path, path.ToLongPath(), failureMessage, path);
             path = path.Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
             // Fix the long path prefix if it is not added and therefore just got
             // switched to AltDirectorySeparatorChar which is not valid.
             if (!addPrefix)
                 path = path.Substring(PathEx.PREFIX_LONG_PATH.Length).ToLongPath();
-            Assert.AreEqual(prefix + path, path.ToLongPath(), failureMessage);
+            Assert.AreEqual(prefix + path, path.ToLongPath(), failureMessage, path);
         }
 
         /// <summary>
