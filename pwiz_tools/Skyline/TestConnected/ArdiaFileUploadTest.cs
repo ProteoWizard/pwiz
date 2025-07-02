@@ -267,7 +267,6 @@ namespace pwiz.SkylineTestConnected
         private static void TestSuccessfulUpload(ArdiaAccount account, ArdiaClient client, string[] folderPath) 
         {
             var publishDlg = ShowDialog<PublishDocumentDlgArdia>(() => SkylineWindow.PublishToArdia());
-            publishDlg.SkipPublish = true;
 
             WaitForConditionUI(() => publishDlg.IsLoaded);
 
@@ -303,9 +302,6 @@ namespace pwiz.SkylineTestConnected
 
             var ardiaClient = ArdiaClient.Create(account);
             var result = ardiaClient.GetDocument(documentId);
-
-            if (publishDlg.SkipPublish)
-                return;
 
             Assert.IsTrue(result.IsSuccess);
             Assert.IsNotNull(result.Value);

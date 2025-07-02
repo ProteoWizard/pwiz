@@ -111,7 +111,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             return client;
         }
 
-        // API documentation: https://api.hyperbridge.cmdtest.thermofisher.com/navigation/api/swagger/index.html
+        // API documentation: https://api.ardia-core-int.cmdtest.thermofisher.com/navigation/api/swagger/index.html
         public ArdiaResult CreateFolder(string parentFolderPath, string folderName, IProgressMonitor progressMonitor)
         {
             var uri = UriFromParts(ServerUri, PATH_CREATE_FOLDER);
@@ -153,7 +153,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         /// unexpectedly specifies the Content-Type header's "charset=utf-8" attribute, which causes the delete API to return an error
         /// code (400 Bad Request). <see cref="HttpWebRequest"/> does not automatically set charset and works correctly.
         ///
-        /// API documentation: https://api.hyperbridge.cmdtest.thermofisher.com/navigation/api/swagger/index.html
+        /// API documentation:https://api.ardia-core-int.cmdtest.thermofisher.com/navigation/api/swagger/index.html
         /// </summary>
         /// <param name="folderPath">fully qualified path of the folder to delete</param>
         public ArdiaResult DeleteFolder(string folderPath)
@@ -250,7 +250,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             return CreateDocument(requestDocument);
         }
 
-        // API documentation: https://api.hyperbridge.cmdtest.thermofisher.com/document/api/swagger/index.html
+        // API documentation: https://api.ardia-core-int.cmdtest.thermofisher.com/document/api/swagger/index.html
         private ArdiaResult<StagedDocumentResponse> CreateStagedDocument(StageDocumentRequest modelRequest)
         {
             var uri = UriFromParts(ServerUri, PATH_STAGE_DOCUMENT);
@@ -331,7 +331,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             }
         }
 
-        // API documentation: https://api.hyperbridge.cmdtest.thermofisher.com/document/api/swagger/index.html
+        // API documentation: https://api.ardia-core-int.cmdtest.thermofisher.com/document/api/swagger/index.html
         private ArdiaResult<CreateDocumentResponse> CreateDocument(CreateDocumentRequest modelRequest) 
         {
             var uri = UriFromParts(ServerUri, PATH_CREATE_DOCUMENT);
@@ -377,7 +377,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             }
         }
 
-        // API documentation: https://api.hyperbridge.cmdtest.thermofisher.com/document/api/swagger/index.html
+        // API documentation: https://api.ardia-core-int.cmdtest.thermofisher.com/document/api/swagger/index.html
         public ArdiaResult<CreateDocumentResponse> GetDocument(string documentId)
         {
             var uri = UriFromParts(ServerUri, string.Format(PATH_GET_DOCUMENT, documentId));
@@ -440,7 +440,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             }
         }
 
-        // API documentation: https://api.hyperbridge.cmdtest.thermofisher.com/navigation/api/swagger/index.html
+        // API documentation: https://api.ardia-core-int.cmdtest.thermofisher.com/navigation/api/swagger/index.html
         public ArdiaResult<IList<RemoteItem>> GetFolders(ArdiaUrl folderUrl, IProgressMonitor progressMonitor)
         {
             var uri = GetFolderContentsUrl(Account, folderUrl);
