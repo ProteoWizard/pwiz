@@ -67,12 +67,20 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
 
         public static ArdiaClient Create(ArdiaAccount account)
         {
-            var ardiaUrl = account.GetRootArdiaUrl();
-            var serverApiUrl = ardiaUrl.ServerApiUrl;
-
             var applicationCode = ArdiaCredentialHelper.GetApplicationCode(account);
+            if (string.IsNullOrEmpty(applicationCode))
+            {
+                throw new IOException(ArdiaResources.Error_InvalidToken);
+            }
 
             var token = ArdiaCredentialHelper.GetToken(account);
+            if (string.IsNullOrEmpty(token))
+            {
+                throw new IOException(ArdiaResources.Error_InvalidToken);
+            }
+
+            var ardiaUrl = account.GetRootArdiaUrl();
+            var serverApiUrl = ardiaUrl.ServerApiUrl;
 
             return new ArdiaClient(account, serverApiUrl, applicationCode, token);
         }

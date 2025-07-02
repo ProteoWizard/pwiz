@@ -197,7 +197,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A problem occurred communicating with Ardia. Check your Ardia credentials in Skyline&apos;s Tools &gt; Options &gt; Remote Accounts menu and try again..
+        ///   Looks up a localized string similar to A problem occurred communicating with Ardia. Check your Ardia connection on the Remote Accounts tab under Skyline&apos;s Tools &gt; Options menu and try again..
         /// </summary>
         public static string Error_InvalidToken {
             get {

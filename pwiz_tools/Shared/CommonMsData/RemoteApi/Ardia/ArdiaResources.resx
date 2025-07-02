@@ -205,6 +205,6 @@
     <value>A problem occurred communicating with Ardia. Check the network connection.</value>
   </data>
   <data name="Error_InvalidToken" xml:space="preserve">
-    <value>A problem occurred communicating with Ardia. Check your Ardia credentials in Skyline's Tools > Options > Remote Accounts menu and try again.</value>
+    <value>A problem occurred communicating with Ardia. Check your Ardia connection on the Remote Accounts tab under Skyline's Tools > Options menu and try again.</value>
   </data>
 </root>
