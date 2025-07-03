@@ -44,7 +44,6 @@ class HardklorReader : public SslReader {
     ~HardklorReader();
 
     virtual void setColumnsAndSeparators(DelimitedFileReader<sslPSM> &fileReader);
-    virtual bool getSpectrum(PSM* psm, SPEC_ID_TYPE findBy, SpecData& returnData, bool getPeaks);
     virtual void addDataLine(sslPSM& data); // from DelimitedFileConsumer
 
 private:

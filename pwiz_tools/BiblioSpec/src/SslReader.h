@@ -29,6 +29,7 @@ namespace BiblioSpec {
 // classes and functions to use with the DelimitedFileReader
 struct RTINFO
 {
+    // Parsed RT info - overrides anythng you'd look up in scan data
     // All times in minutes
     double retentionTime;
     double startTime;
@@ -39,7 +40,7 @@ class sslPSM : public PSM {
   public:
     std::string filename; 
     PSM_SCORE_TYPE scoreType;
-    RTINFO rtInfo; // RT, startT, endT in minutes
+    RTINFO rtInfo; // Parsed RT info, overrides anything that might be looked up in scans
 
     sslPSM() : PSM(), scoreType(UNKNOWN_SCORE_TYPE)
     {
@@ -252,15 +253,11 @@ class SslReader : public BuildParser, DelimitedFileConsumer<sslPSM>, public Pwiz
     vector<PSM_SCORE_TYPE> getScoreTypes(); // inherited from BuildParser
     virtual void addDataLine(sslPSM& data); // from DelimitedFileConsumer
     virtual void setColumnsAndSeparators(DelimitedFileReader<sslPSM> &fileReader);
-
-    virtual bool getSpectrum(int identifier,
-                             SpecData& returnData,
-                             SPEC_ID_TYPE type,
-                             bool getPeaks);
-
-    virtual bool getSpectrum(string specName,
-                             SpecData& returnData,
-                             bool getPeaks);
+    virtual bool getSpectrum(PSM* psm,
+        SPEC_ID_TYPE findBy,
+        SpecData& returnData,
+        bool getPeaks);
+    virtual void applyPsmOverrideValues(PSM* psm, SpecData& specData); // Apply any values carried by subclassed psm (e.g. SSL RT column values) that override those found by spectrum lookup
 
   protected:
     string sslName_;
@@ -269,12 +266,9 @@ class SslReader : public BuildParser, DelimitedFileConsumer<sslPSM>, public Pwiz
     map<string, vector<PSM*> > fileMap_; // vector of PSMs for each spec file
     map<string, PSM_SCORE_TYPE> fileScoreTypes_; // score type for each file
 
-    map<int, RTINFO> overrideRt_; // forced retention times (key is scan number)
-
     void parseModSeq(vector<SeqMod>& mods, string& modSeq);
     void unmodifySequence(string& seq);
     string parseCrosslinkedSequence(vector<SeqMod>& mods, const string& modSeq);
-    static void setRtInfo(SpecData& returnData, const RTINFO& rtInfo);
   };
 
 } // namespace
