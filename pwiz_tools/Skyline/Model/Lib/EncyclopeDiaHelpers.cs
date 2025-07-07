@@ -182,7 +182,7 @@ namespace pwiz.Skyline.Model.Lib
             if (!EnsureRequiredFilesDownloaded(FilesToDownload, progressMonitor))
                 throw new InvalidOperationException(Resources.EncyclopeDiaHelpers_ConvertFastaToKoinaInputCsv_could_not_find_EncyclopeDia);
 
-            long javaMaxHeapMB = Math.Min(12 * 1024L * 1024 * 1024, MemoryInfo.TotalBytes / 2) / 1024 / 1024;
+            long javaMaxHeapMB = MemoryInfo.TotalBytes / 2;
             const string csvToLibraryClasspath = "edu.washington.gs.maccoss.encyclopedia.cli.ConvertBLIBToLibrary";
 
             var pr = new ProcessRunner();
