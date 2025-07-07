@@ -888,4 +888,7 @@ Would you like to continue?
   <data name="AlphapeptdeepLibraryBuilder_ExecutePeptdeep_AlphaPeptDeep_finished_in__0__minutes__1__seconds_" xml:space="preserve">
       <value>AlphaPeptDeep finished in {0} minutes {1} seconds.</value>
   </data>
+  <data name="PersistedViews_GetDefaults_Detailed_Info" xml:space="preserve">
+	  <value>Detailed Info</value>
+  </data>
 </root>
