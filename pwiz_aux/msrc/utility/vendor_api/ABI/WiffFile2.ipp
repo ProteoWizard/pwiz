@@ -300,7 +300,7 @@ WiffFile2Impl::WiffFile2Impl(const string& wiffpath)
     try
     {
         auto sampleRequest = DataReader()->RequestFactory->CreateSamplesReadRequest();
-        sampleRequest->AbsolutePathToWiffFile = ToSystemString(bfs::canonical(wiffpath, bfs::current_path()).string());
+        sampleRequest->AbsolutePathToWiffFile = ToSystemString(pwiz::util::canonical(wiffpath).string());
 
         allSamples = gcnew List<ISample^>();
 
