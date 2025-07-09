@@ -173,15 +173,15 @@ namespace pwiz.Skyline.Model.Results
                     _isHighAccProductFilter = !Equals(_fullScan.ProductMassAnalyzer,
                         FullScanMassAnalyzerType.qit);
 
-                    if (_fullScan.AcquisitionMethod == FullScanAcquisitionMethod.DIA &&
-                        _fullScan.IsolationScheme.IsAllIons)
+                    if (_fullScan.IsAllIons)
                     {
                         if (instrumentInfo != null)
                         {
                             _isWatersMse = _isWatersFile;
                             _isAgilentMse = instrumentInfo.IsAgilentFile;
-                            _isElectronIonizationMse = instrumentInfo.ConfigInfoList != null &&
-                                   instrumentInfo.ConfigInfoList.Any(c => @"electron ionization".Equals(c.Ionization));
+                            _isElectronIonizationMse = (instrumentInfo.ConfigInfoList != null &&
+                                                        instrumentInfo.ConfigInfoList.Any(c => @"electron ionization".Equals(c.Ionization))) ||
+                                                       _acquisitionMethod == FullScanAcquisitionMethod.EI;
                         }
                         _mseLevel =  _isElectronIonizationMse ? 2 : 1; // Electron ionization produces fragments only
                     }
@@ -612,8 +612,7 @@ namespace pwiz.Skyline.Model.Results
 
         public bool IsMseData()
         {
-            return (EnabledMsMs && _fullScan.AcquisitionMethod == FullScanAcquisitionMethod.DIA &&
-                    _fullScan.IsolationScheme.IsAllIons);
+            return (EnabledMsMs && _fullScan.IsAllIons);
         }
 
         /*
@@ -652,14 +651,7 @@ namespace pwiz.Skyline.Model.Results
         public bool IsSharedTime { get { return _isSharedTime; } }
         public bool IsAgilentMse { get { return _isAgilentMse; } }
 
-        public bool IsAllIons
-        {
-            get
-            {
-                return _acquisitionMethod == FullScanAcquisitionMethod.DIA &&
-                       _fullScan.IsolationScheme.IsAllIons;
-            }
-        }
+        public bool IsAllIons => _fullScan.IsAllIons;
 
         public bool ContainsTime(double time)
         {
@@ -1054,7 +1046,8 @@ namespace pwiz.Skyline.Model.Results
             // any isolation m/z.  So, use the instrument range.
             // Agilent MSe high energy scans present varying isolation windows, but always with the same low end - we've traditionally ignored them since it's "all ions"
             // Bruker all ions PASEF makes creative use of isolation windows so we do want to look at those when available
-            if (_mseLevel > 0 && (_isWatersMse || _isAgilentMse || precursors.All(p => p.IsolationMz == null)))
+            // EI data presents as all MS1 but as it's general fragmentation we treat it as all MS2
+            if (_mseLevel > 0 && (_isElectronIonizationMse || _isWatersMse || _isAgilentMse || precursors.All(p => p.IsolationMz == null)))
             {
                 double isolationWidth = _instrument.MaxMz - _instrument.MinMz;
                 double isolationMz = _instrument.MinMz + isolationWidth / 2;
@@ -1140,7 +1133,8 @@ namespace pwiz.Skyline.Model.Results
             }
 
             var filterPairs = new List<SpectrumFilterPair>();
-            if (acquisitionMethod == FullScanAcquisitionMethod.DIA)
+            if (acquisitionMethod == FullScanAcquisitionMethod.DIA || 
+                acquisitionMethod == FullScanAcquisitionMethod.EI)
             {
                 var isoTargMz = isoWin.IsolationMz.Value;
                 double? isoTargWidth = isoWin.IsolationWidth;
@@ -1220,6 +1214,11 @@ namespace pwiz.Skyline.Model.Results
         public void CalcDiaIsolationValues(ref SignedMz isolationTargetMz,
                                             ref double? isolationWidth)
         {
+            if (Equals(_fullScan.AcquisitionMethod, FullScanAcquisitionMethod.EI))
+            {
+                return; // isolationWidth is already set
+            }
+
             double isolationWidthValue;
             var isolationScheme = _fullScan.IsolationScheme;
             if (isolationScheme == null)

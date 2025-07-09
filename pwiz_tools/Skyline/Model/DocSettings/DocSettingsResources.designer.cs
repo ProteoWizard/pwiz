@@ -255,6 +255,15 @@ namespace pwiz.Skyline.Model.DocSettings {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Data independent acquisition: MS1 EI fragmented data is treated as MS2.
+        /// </summary>
+        public static string FullScanAcquisitionMethod_EI_TOOLTIP {
+            get {
+                return ResourceManager.GetString("FullScanAcquisitionMethod_EI_TOOLTIP", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} is not a valid Full Scan Acquisition Method.
         /// </summary>
         public static string FullScanAcquisitionMethod_FromName__0__is_not_a_valid_Full_Scan_Acquisition_Method {
