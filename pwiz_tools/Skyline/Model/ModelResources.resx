@@ -889,6 +889,6 @@ Would you like to continue?
       <value>AlphaPeptDeep finished in {0} minutes {1} seconds.</value>
   </data>
   <data name="PersistedViews_GetDefaults_Detailed_Info" xml:space="preserve">
-	  <value>Detailed Info</value>
+    <value>Detailed Info</value>
   </data>
 </root>
