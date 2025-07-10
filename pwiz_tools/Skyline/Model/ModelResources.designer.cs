@@ -1619,6 +1619,15 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Detailed Info.
+        /// </summary>
+        public static string PersistedViews_GetDefaults_Detailed_Info {
+            get {
+                return ResourceManager.GetString("PersistedViews_GetDefaults_Detailed_Info", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Main.
         /// </summary>
         public static string PersistedViews_MainGroup_Main {
