@@ -82,7 +82,6 @@ namespace pwiz.Skyline
         public static int MAX_GRAPH_CHROM = 100; // Never show more than this many chromatograms, lest we hit the Windows handle limit
         private readonly List<GraphChromatogram> _listGraphChrom = new List<GraphChromatogram>(); // List order is MRU, with oldest in position 0
         private bool _inGraphUpdate;
-        private ChromFileInfoId _alignToFile;
         private bool _alignToPrediction;
 
         public RTGraphController RTGraphController
@@ -799,23 +798,9 @@ namespace pwiz.Skyline
             }
         }
 
-        public ChromFileInfoId AlignToFile
-        {
-            get { return _alignToFile; }
-            set 
-            { 
-                if (ReferenceEquals(value, AlignToFile))
-                {
-                    return;
-                }
-                _alignToFile = value;
-                UpdateGraphPanes();
-            }
-        }
-
         public bool AlignToRtPrediction
         {
-            get { return null == AlignToFile && _alignToPrediction; }
+            get { return _alignToPrediction; }
             set
             {
                 if (value == AlignToRtPrediction)
@@ -823,30 +808,15 @@ namespace pwiz.Skyline
                     return;
                 }
                 _alignToPrediction = value;
-                if (_alignToPrediction)
-                {
-                    _alignToFile = null;
-                }
                 UpdateGraphPanes();
             }
         }
 
         public GraphValues.IRetentionTimeTransformOp GetRetentionTimeTransformOperation()
         {
-            if (null != AlignToFile)
-            {
-                return GraphValues.AlignToFileOp.GetAlignmentToFile(AlignToFile, Document.Settings);
-            }
             if (AlignToRtPrediction)
             {
-                // Only align to regressions that are auto-calculated.  Otherwise,
-                // conversion will be the same for all replicates, making this just
-                // a linear unit conversion
-                var predictRT = Document.Settings.PeptideSettings.Prediction.RetentionTime;
-                if (predictRT != null && predictRT.IsAutoCalculated)
-                {
-                    return new GraphValues.RegressionUnconversion(predictRT);
-                }
+                return new GraphValues.RetentionTimeAlignmentTransformOp(Document.Settings);
             }
             return null;
         }
@@ -1616,6 +1586,12 @@ namespace pwiz.Skyline
             UpdateChromGraphs();
         }
 
+        public void ShowImputedPeak(bool show)
+        {
+            Settings.Default.ShowImputedPeakBounds = show;
+            UpdateChromGraphs();
+        }
+
         public void SetShowRetentionTimes(ShowRTChrom showRTChrom)
         {
             Settings.Default.ShowRetentionTimesEnum = showRTChrom.ToString();
@@ -2372,7 +2348,7 @@ namespace pwiz.Skyline
             var thisEnd = change.EndTime.MeasuredTime;
             if (transformOp != null)
             {
-                transformOp.TryGetRegressionFunction(thisFile, out var regressionThis);
+                transformOp.TryGetRegressionFunction(change.FilePath, out var regressionThis);
                 if (regressionThis != null)
                 {
                     thisStart = regressionThis.GetY(thisStart);
@@ -2403,9 +2379,9 @@ namespace pwiz.Skyline
                     var start = thisStart;
                     var end = thisEnd;
 
-                    if (transformOp != null && !ReferenceEquals(AlignToFile, info.FileId))
+                    if (transformOp != null)
                     {
-                        transformOp.TryGetRegressionFunction(info.FileId, out var regression);
+                        transformOp.TryGetRegressionFunction(info.FilePath, out var regression);
                         if (regression != null)
                         {
                             start = regression.GetX(thisStart);
@@ -2846,6 +2822,7 @@ namespace pwiz.Skyline
                     {
                         linearRegressionContextMenuItem,
                         kernelDensityEstimationContextMenuItem,
+                        logRegressionContextMenuItem,
                         loessContextMenuItem
                     });
                 }
@@ -3473,42 +3450,15 @@ namespace pwiz.Skyline
             var predictRT = Document.Settings.PeptideSettings.Prediction.RetentionTime;
             if (predictRT != null && predictRT.IsAutoCalculated)
             {
-                var menuItem = new ToolStripMenuItem(string.Format(Resources.SkylineWindow_ShowCalculatorScoreFormat, predictRT.Calculator.Name), null, 
-                    (sender, eventArgs)=>AlignToRtPrediction=!AlignToRtPrediction)
-                    {
-                        Checked = AlignToRtPrediction,
-                    };
+                var menuItem = new ToolStripMenuItem(
+                    string.Format(Resources.SkylineWindow_ShowCalculatorScoreFormat, predictRT.Calculator.Name), null,
+                    (sender, eventArgs) => AlignToRtPrediction = !AlignToRtPrediction)
+                {
+                    Checked = AlignToRtPrediction,
+                };
                 items.Insert(iInsert++, menuItem);
             }
-            if (null != chromFileInfoId && DocumentUI.Settings.HasResults &&
-                !DocumentUI.Settings.DocumentRetentionTimes.FileAlignments.IsEmpty)
-            {
-                foreach (var chromatogramSet in DocumentUI.Settings.MeasuredResults.Chromatograms)
-                {
-                    var chromFileInfo = chromatogramSet.MSDataFileInfos
-                                                       .FirstOrDefault(
-                                                           chromFileInfoMatch =>
-                                                           ReferenceEquals(chromFileInfoMatch.FileId, chromFileInfoId));
-                    if (null == chromFileInfo)
-                    {
-                        continue;
-                    }
-                    string fileItemName = Path.GetFileNameWithoutExtension(SampleHelp.GetFileName(chromFileInfo.FilePath));
-                    var menuItemText = string.Format(Resources.SkylineWindow_AlignTimesToFileFormat, fileItemName);
-                    var alignToFileItem = new ToolStripMenuItem(menuItemText);
-                    if (ReferenceEquals(chromFileInfoId, AlignToFile))
-                    {
-                        alignToFileItem.Click += (sender, eventArgs) => AlignToFile = null;
-                        alignToFileItem.Checked = true;
-                    }
-                    else
-                    {
-                        alignToFileItem.Click += (sender, eventArgs) => AlignToFile = chromFileInfoId;
-                        alignToFileItem.Checked = false;
-                    }
-                    items.Insert(iInsert++, alignToFileItem);
-                }
-            }
+
             return iInsert;
         }
 

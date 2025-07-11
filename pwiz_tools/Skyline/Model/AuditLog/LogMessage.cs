@@ -110,6 +110,7 @@ namespace pwiz.Skyline.Model.AuditLog
         imported_spectral_library_intensities,
         imported_transition_list,
         imported_transition_list_from_file,
+        imputed_boundaries,
         inserted_data,
         inserted_peptide,
         inserted_peptides,

@@ -176,6 +176,15 @@ namespace pwiz.Skyline.Model.Results {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Loading {0}.
+        /// </summary>
+        public static string ChromatogramManager_LoadBackground_Loading__0_ {
+            get {
+                return ResourceManager.GetString("ChromatogramManager_LoadBackground_Loading__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Attempting to save results info for a file that cannot be found..
         /// </summary>
         public static string ChromatogramSet_GetOrdinalSaveId_Attempting_to_save_results_info_for_a_file_that_cannot_be_found {
