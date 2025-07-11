@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using Newtonsoft.Json.Linq;
 
 namespace pwiz.Common.Mock
 {
@@ -127,19 +125,28 @@ namespace pwiz.Common.Mock
         {
             if (_handlers.ContainsKey(handlerName))
                 throw new ArgumentException(string.Format(@"Handler {0} already exists", handlerName));
+            
+            return CreateReplaceHandler(handlerName);
+        }
+        public MockHttpMessageHandler CreateReplaceHandler(string handlerName)
+        {
             var handler = new MockHttpMessageHandler();
             _handlers[handlerName] = handler;
             return handler;
         }
 
-        public HttpMessageHandler getMessageHandler(string handlerName, HttpMessageHandler defaultHandler = null)
+
+        public HttpMessageHandler getMessageHandler(string handlerName, Func<HttpMessageHandler> defaultHandlerFactory = null)
         {
             if (_handlers.TryGetValue(handlerName, out var handler))
                 return handler;
-            else if (defaultHandler != null)
-                return defaultHandler;
-            else
-                return new HttpClientHandler();
+            else if (defaultHandlerFactory != null)
+            {
+                var defaultHandler = defaultHandlerFactory();
+                if (defaultHandler != null)
+                    return defaultHandler;
+            }
+            return new HttpClientHandler();
         }
     }
 }

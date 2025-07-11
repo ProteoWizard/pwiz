@@ -673,4 +673,7 @@ Would you like to remove some or all of this suffix to shorten the names used in
   <data name="WatersConnectSaveMethodFileDialog_ItemSelected_The_method_file__0__already_exists" xml:space="preserve">
     <value>The method file {0} already exists. Please, select different one.</value>
   </data>
+  <data name="WatersConnectSelectMethodFileDialog_ItemSelected_Method__0__does_not_exist" xml:space="preserve">
+    <value>Method {0} does not exist on this Waters Connect server. Please, select an existing method.</value>
+  </data>
 </root>

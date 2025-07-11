@@ -5,7 +5,7 @@ using pwiz.Skyline.Alerts;
 
 namespace pwiz.Skyline.FileUI
 {
-    sealed class WatersConnectSaveMethodFileDialog : WatersConnectMethodFileDialog
+    public sealed class WatersConnectSaveMethodFileDialog : WatersConnectMethodFileDialog
     {
         public string MethodName { get; private set; }
 

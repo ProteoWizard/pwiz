@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using pwiz.CommonMsData;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
 using pwiz.CommonMsData.RemoteApi;
 using pwiz.CommonMsData.RemoteApi.WatersConnect;
 using pwiz.Skyline.Model;
@@ -137,5 +138,23 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        #region Test support
+
+        public ImmutableList<ListViewItem> ListViewItems
+        {
+            get
+            {
+                return ImmutableList.ValueOf(listView.Items.OfType<ListViewItem>());
+            }
+        }
+
+        public ListViewItem SelectedItem
+        {
+            get => listView.SelectedItems.Count > 0 ? listView.SelectedItems[0] : null;
+        }
+
+        public TextBox SourcePathTextBox => sourcePathTextBox;
+
+        #endregion
     }
 }

@@ -1870,7 +1870,6 @@ namespace pwiz.Skyline.FileUI
             if (Equals(_instrumentType, ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT))
             {
                 // User cannot edit remote URL.
-                // TODO: [RC] Add a tooltip with full URL text
                 EnableTextTemplateFileField(false);
                 if (Settings.Default.ExportMethodTemplateList.TryGetValue(_instrumentType, out var templateFileUrl))
                 {
@@ -2614,6 +2613,11 @@ namespace pwiz.Skyline.FileUI
             get { return textPrimaryCount.Visible; }
         }
 
+        public TextBox TemplatePathField
+        {
+            get => textTemplateFile;
+        }
+
         public int CalculationTime
         {
             get { return _exportProperties.MultiplexIsolationListCalculationTime; }
@@ -2630,6 +2634,11 @@ namespace pwiz.Skyline.FileUI
         {
             get { return cbUseStartAndEndRts.Checked; }
             set { cbUseStartAndEndRts.Checked = value; }
+        }
+
+        public void ClickTemplateButton()
+        {
+            btnBrowseTemplate_Click(this, EventArgs.Empty);
         }
 
         #endregion

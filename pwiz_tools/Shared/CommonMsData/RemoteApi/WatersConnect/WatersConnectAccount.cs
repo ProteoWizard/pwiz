@@ -33,7 +33,8 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
     [XmlRoot("waters_connect_account")]
     public class WatersConnectAccount : RemoteAccount
     {
-        public static readonly string HANDLER_NAME = "WatersConnectHandler";
+        public static readonly string HANDLER_NAME = "WatersConnect.Handler.Main";
+        public static readonly string AUTH_HANDLER_NAME = "WatersConnect.Handler.Authentication";
 
         public class TokenCacheEntry
         {
@@ -130,8 +131,10 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             {
                     return tokenCacheEntry.TokenResponse;
             }
+
+            var authHandler = CommonApplicationSettings.HttpMessageHandlerFactory.getMessageHandler(AUTH_HANDLER_NAME, () => new HttpClientHandler());
             var tokenClient = new TokenClient(IdentityServer + IdentityConnectEndpoint, @"resourceownerclient_jwt",
-                ClientSecret, new HttpClientHandler());
+                ClientSecret, authHandler);
             if (_authenticationTokens.TryGetValue(this, out var expiredTokenCacheEntry))
             {
                 var refreshedToken = tokenClient.RequestRefreshTokenAsync(expiredTokenCacheEntry.TokenResponse.RefreshToken).Result;
@@ -201,7 +204,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             var builder = services.AddHttpClient("customClient");
             builder.ConfigurePrimaryHttpMessageHandler(() =>
             {
-                var handler = CommonApplicationSettings.HttpMessageHandlerFactory.getMessageHandler(HANDLER_NAME, GetDefaultMessageHandler());
+                var handler = CommonApplicationSettings.HttpMessageHandlerFactory.getMessageHandler(HANDLER_NAME, GetDefaultMessageHandler);
                 return handler;
             });
             var provider = services.BuildServiceProvider();

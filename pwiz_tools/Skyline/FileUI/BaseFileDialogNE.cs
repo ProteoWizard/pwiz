@@ -1094,7 +1094,12 @@ namespace pwiz.Skyline.FileUI
 
         private void this_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.Enter)
+            KeyPressHandler(e.KeyCode);
+        }
+
+        public void KeyPressHandler(Keys key)
+        {
+            if (key == Keys.Enter)
                 DoMainAction();
         }
 
@@ -1276,7 +1281,7 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        protected enum ImageIndex
+        public enum ImageIndex
         {
             RecentDocuments,
             Desktop,

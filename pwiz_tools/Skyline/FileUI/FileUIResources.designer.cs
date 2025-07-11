@@ -1811,5 +1811,14 @@ namespace pwiz.Skyline.FileUI {
                         "", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Method {0} does not exist on this Waters Connect server. Please, select an existing method..
+        /// </summary>
+        public static string WatersConnectSelectMethodFileDialog_ItemSelected_Method__0__does_not_exist {
+            get {
+                return ResourceManager.GetString("WatersConnectSelectMethodFileDialog_ItemSelected_Method__0__does_not_exist", resourceCulture);
+            }
+        }
     }
 }
