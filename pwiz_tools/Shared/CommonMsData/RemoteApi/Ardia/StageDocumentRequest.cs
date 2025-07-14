@@ -19,57 +19,48 @@ using System.Diagnostics.CodeAnalysis;
 using Newtonsoft.Json;
 
 // Ardia API StageDocument and Document models
-//     https://api.hyperbridge.cmdtest.thermofisher.com/document/api/swagger/index.html
-//
+//     https://api.ardia-core-int.cmdtest.thermofisher.com/document/api/swagger/index.html
 namespace pwiz.CommonMsData.RemoteApi.Ardia
 {
     [SuppressMessage("ReSharper", "IdentifierTypo")]
     public class StageDocumentRequest
     {
-        public const string SINGLE_DOCUMENT = "[SingleDocument]";
+        public const string DEFAULT_PIECE_NAME = "[SingleDocument]";
 
-        public static StageDocumentRequest Create()
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="fileSize">size in bytes of local file to upload</param>
+        /// <returns></returns>
+        public static StageDocumentRequest Create(long fileSize)
         {
-            return new StageDocumentRequest();
-        }
+            StageDocumentRequest model;
+            if (fileSize < ArdiaClient.DEFAULT_PART_SIZE_BYTES)
+            {
+                model = new StageDocumentRequest();
+                model.AddPiece();
+            }
+            else
+            {
+                model = new StageDocumentRequest();
+                model.AddPiece(true, fileSize, ArdiaClient.DEFAULT_PART_SIZE_MB);
+            }
 
-        public static StageDocumentRequest CreateSinglePieceDocument()
-        {
-            var document = Create();
-            document.AddSingleDocumentPiece();
-            return document;
+            return model;
         }
 
         private StageDocumentRequest() { }
 
         public IList<DocumentPieceRequest> Pieces { get; } = new List<DocumentPieceRequest>();
 
-        // CONSIDER: if SingleDocument, disallow adding additional pieces
-        public void AddSingleDocumentPiece()
+        private void AddPiece()
         {
-            AddPiece(SINGLE_DOCUMENT);
+            Pieces.Add(new DocumentPieceRequest());
         }
 
-        private void AddPiece(string name)
+        private void AddPiece(bool isMultiPart, long fileSize, long partSize)
         {
-            var piece = new DocumentPieceRequest
-            {
-                PieceName = name
-            };
-
-            Pieces.Add(piece);
-        }
-
-        public void AddPiece(string name, long partSize, long size, bool isMultiPart)
-        {
-            var piece = new DocumentPieceRequest
-            {
-                PieceName = name,
-                PartSize = partSize,
-                Size = size,
-                IsMultiPart = isMultiPart
-            };
-            Pieces.Add(piece);
+            Pieces.Add(new DocumentPieceRequest(isMultiPart, fileSize, partSize));
         }
 
         public string ToJson()
@@ -81,16 +72,23 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         {
             internal DocumentPieceRequest() { }
 
-            public string PieceName { get; internal set; }
-            
+            internal DocumentPieceRequest(bool isMultiPart, long size, long partSize)
+            {
+                IsMultiPart = isMultiPart;
+                Size = size;
+                PartSize = partSize;
+            }
+
+            public string PieceName => DEFAULT_PIECE_NAME;
+
             [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-            public long PartSize { get; internal set; }
-            
+            public bool IsMultiPart { get; internal set; }
+
             [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)] 
             public long Size { get; internal set; }
-            
-            [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)] 
-            public bool IsMultiPart { get; internal set; }
+
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+            public long PartSize { get; internal set; }
         }
     }
 
@@ -110,7 +108,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         {
             public string PieceName { get; set; }
 
-            public string PiecePath { get; set; }
+            // public string PiecePath { get; set; }
 
             public string StoragePath { get; set; }
 

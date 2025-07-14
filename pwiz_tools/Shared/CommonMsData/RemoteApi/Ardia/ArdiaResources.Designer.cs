@@ -260,15 +260,6 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unable to publish the document. The file is too large. Maximum file size is {0}GB..
-        /// </summary>
-        public static string FileUpload_ArchiveTooLarge {
-            get {
-                return ResourceManager.GetString("FileUpload_ArchiveTooLarge", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Unable to publish the document. A problem occurred communicating with the server..
         /// </summary>
         public static string FileUpload_Error {
@@ -278,7 +269,25 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Successfully published the document to Ardia..
+        ///   Looks up a localized string similar to Completed upload. Creating document..
+        /// </summary>
+        public static string FileUpload_Status_CreatingDocument {
+            get {
+                return ResourceManager.GetString("FileUpload_Status_CreatingDocument", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0:N0}% complete. Uploaded {1:N0} of {2:N0} MB..
+        /// </summary>
+        public static string FileUpload_Status_ProgressWithSize {
+            get {
+                return ResourceManager.GetString("FileUpload_Status_ProgressWithSize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Successfully uploaded the document to Ardia..
         /// </summary>
         public static string FileUpload_Success {
             get {

@@ -130,6 +130,13 @@ namespace pwiz.Skyline.FileUI
 
                 treeViewFolders.Nodes.Add(treeNode);
             });
+
+            // Expand the top-level folder if it's collapsed. This improves the UX when the
+            // top-level folder is collapsed, especially when there's no start to restore.
+            if (!treeViewFolders.Nodes[0].IsExpanded)
+            {
+                treeViewFolders.Nodes[0].Expand();
+            }
         }
 
         // CONSIDER: if the previously selected item is unavailable, set focus to top node (better than
@@ -221,27 +228,38 @@ namespace pwiz.Skyline.FileUI
             });
         }
 
-        public override void Upload(Control parent)
+        // TODO: re-work how files are read from the temp directory
+        private static string[] GatherLocalZipFiles(string fileName)
         {
-            // TODO: remove after adding support for multipart uploads
-            var fileSizeInBytes = new FileInfo(FileName).Length;
-            if (fileSizeInBytes >= ArdiaClient.MAX_UPLOAD_SIZE)
-            {
-                MessageDlg.Show(parent, string.Format(ArdiaResources.FileUpload_ArchiveTooLarge, ArdiaClient.MAX_UPLOAD_SIZE_GB));
-                return;
-            }
+            var paths = new List<string>();
 
+            // look for parts following pattern {name}-01.zip
+            var directory = Path.GetDirectoryName(fileName);
+            var fileNameNoExt = Path.GetFileNameWithoutExtension(fileName); // extension is ".zip"
+            var fileNamePattern = $@"{fileNameNoExt}.z*"; // *.zip";
+
+            var tmp = Directory.GetFiles(directory, fileNamePattern);
+
+            paths.AddRange(tmp);
+
+            return paths.ToArray();
+        }
+
+        public void Upload(Control parent, string fileName)
+        {
             var result = ArdiaResult<CreateDocumentResponse>.Default;
 
             var isCanceled = false;
 
             if (!SkipPublish)
             {
+                var paths = GatherLocalZipFiles(fileName);
+
                 using var waitDlg = new LongWaitDlg();
                 waitDlg.Text = UtilResources.PublishDocumentDlg_UploadSharedZipFile_Uploading_File;
                 waitDlg.PerformWork(parent, 1000, longWaitBroker =>
                 {
-                    result = Client.PublishDocument(DestinationPath, FileName, longWaitBroker);
+                    result = Client.PublishDocument(DestinationPath, paths, longWaitBroker);
 
                     isCanceled = longWaitBroker.IsCanceled;
                 });

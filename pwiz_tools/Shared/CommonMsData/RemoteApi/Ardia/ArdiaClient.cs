@@ -31,12 +31,12 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 
 // TODO: error handling - consider adding more information about the remote API call to exceptions (esp. unexpected ones) including uri, status code, and response body
-// TODO: error handling - what can be reused with Panorama? Ex: PanoramaServerException, ErrorMessageBuilder?
 // TODO: error handling - check strings (esp. responseBody) for tokens and scrub if present
 // TODO: error handling - what happens if there's a problem reading or writing JSON? Handle JSONException?
 // TODO: check (1) host available and (2) token can make API calls
 // TODO: add code inspection making sure response.EnsureSuccessStatusCode() is not used
 // TODO: is there a way to make GetDocument and DeleteFolder test-only without just moving them into the test?
+// CONSIDER: error handling - what can be reused with Panorama? Ex: PanoramaServerException, ErrorMessageBuilder?
 namespace pwiz.CommonMsData.RemoteApi.Ardia
 {
     /// <summary>
@@ -50,10 +50,14 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         // CONSIDER: add UrlBuilder class to Skyline. Related PRs also define this constant and helper methods narrowly scoped to a remote server vendor
         public const string URL_PATH_SEPARATOR = @"/";
 
-        private const string APPLICATION_JSON = @"application/json";
+        public const int DEFAULT_PART_SIZE_MB = 1024; // default is 1GB
+        public const int DEFAULT_PART_SIZE_BYTES = DEFAULT_PART_SIZE_MB * 1024 * 1024;
+
+        private const string HEADER_CONTENT_TYPE_APPLICATION_JSON = @"application/json";
+        private const string HEADER_CONTENT_TYPE_ZIP_COMPRESSED   = @"application/x-zip-compressed";
+        private const string HEADER_CONTENT_TYPE_FOLDER           = @"application/vnd.thermofisher.luna.folder";
         private const string COOKIE_BFF_HOST = "Bff-Host";
         private const string HEADER_APPLICATION_CODE = "applicationCode";
-        private const string HEADER_CONTENT_TYPE_FOLDER = @"application/vnd.thermofisher.luna.folder";
 
         private const string PATH_STAGE_DOCUMENT  = @"/session-management/bff/document/api/v1/stagedDocuments";
         private const string PATH_CREATE_DOCUMENT = @"/session-management/bff/document/api/v1/documents";
@@ -61,10 +65,10 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         private const string PATH_CREATE_FOLDER   = @"/session-management/bff/navigation/api/v1/folders";
         private const string PATH_DELETE_FOLDER   = @"/session-management/bff/navigation/api/v1/folders/folderPath";
         private const string PATH_SESSION_COOKIE  = @"/session-management/bff/session-management/api/v1/SessionManagement/sessioncookie";
+        private const string PATH_COMPLETE_MULTIPART_REQUEST = @"/session-management/bff/document/api/v1/documents/completeMultiPartRequest";
 
-        public const long MAX_UPLOAD_SIZE = int.MaxValue;
-        public const long MAX_UPLOAD_SIZE_GB = 2;
-
+        // CONSIDER: throwing IOException is a placeholder for improving the UX for editing RemoteAccounts which should
+        //           not allow the dialog to close until a newly added item is either connected or removed
         public static ArdiaClient Create(ArdiaAccount account)
         {
             var applicationCode = ArdiaCredentialHelper.GetApplicationCode(account);
@@ -114,7 +118,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             var client = new HttpClient(handler, false);
             client.BaseAddress = ServerUri;
             client.DefaultRequestHeaders.Add(HEADER_APPLICATION_CODE, ApplicationCode);
-            client.DefaultRequestHeaders.Add(HttpRequestHeader.Accept.ToString(), APPLICATION_JSON);
+            client.DefaultRequestHeaders.Add(HttpRequestHeader.Accept.ToString(), HEADER_CONTENT_TYPE_APPLICATION_JSON);
 
             return client;
         }
@@ -213,15 +217,22 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         /// Upload a zip file to the Ardia API. The .zip file must contain Skyline files - including .sky, .sky.view, .skyl, etc.
         /// </summary>
         /// <param name="destinationFolderPath">Absolute path to a destination folder on the Ardia Platform</param>
-        /// <param name="localZipFile">Absolute path to a local zip file to upload</param>
+        /// <param name="localZipFilePaths">Absolute path to a local zip file to upload</param>
         /// <param name="progressMonitor"></param>
         /// <returns>an <see cref="ArdiaResult"/>. If successful, the value is a <see cref="CreateDocumentResponse"/>. If failure, the value is null and the result includes info about the error.</returns>
-        public ArdiaResult<CreateDocumentResponse> PublishDocument(string destinationFolderPath, string localZipFile, IProgressMonitor progressMonitor)
+        public ArdiaResult<CreateDocumentResponse> PublishDocument(string destinationFolderPath, string[] localZipFilePaths, IProgressMonitor progressMonitor)
         {
             Assume.IsTrue(destinationFolderPath.StartsWith("/"));
+            Assume.IsTrue(localZipFilePaths.Length > 0);
 
-            // Step 1 of 3: Ardia API - Create Staged Document
-            var document = StageDocumentRequest.CreateSinglePieceDocument();
+            var partSizes = localZipFilePaths.Select(path => new FileInfo(path)).Select(fileInfo => fileInfo.Length).ToList();
+            var totalUploadSize = partSizes.Sum();
+            var destinationFileName = Path.GetFileName(localZipFilePaths.Last());
+
+            IProgressStatus progressStatus = new ProgressStatus(); 
+
+            // Step 1 of 4: Ardia API - Create Staged Multi-part Document
+            var document = StageDocumentRequest.Create(totalUploadSize);
             var resultStaging = CreateStagedDocument(document);
 
             if (progressMonitor.IsCanceled)
@@ -233,29 +244,65 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
                 return ArdiaResult<CreateDocumentResponse>.Failure(resultStaging);
             }
 
-            // Step 2 of 3: AWS - Upload File
-            var presignedUrl = resultStaging.Value.Pieces[0].PresignedUrls[0];
-            var resultUpload = UploadFile(localZipFile, presignedUrl);
+            // Step 2 of 4: AWS - Upload 1 or more file parts to AWS
+            long uploadedBytes = 0;
+            var piece = resultStaging.Value.Pieces[0];
+            var eTags = new List<string>();
 
-            if (progressMonitor.IsCanceled)
+            for (var i = 0; i < piece.PresignedUrls.Count; i++)
             {
-                return ArdiaResult<CreateDocumentResponse>.Canceled;
-            } 
-            else if (resultUpload.IsFailure)
-            {
-                return ArdiaResult<CreateDocumentResponse>.Failure(resultUpload);
+                var segmentStartPercent = uploadedBytes / (decimal)totalUploadSize * 100; 
+                var segmentEndPercent = (uploadedBytes + partSizes[i]) / (decimal)totalUploadSize * 100;
+                var segmentProgressMonitor = new SegmentProgressMonitor(progressMonitor, totalUploadSize, segmentStartPercent, segmentEndPercent);
+
+                var resultUpload = UploadFile(localZipFilePaths[i], piece.PresignedUrls[i], segmentProgressMonitor, progressStatus); 
+
+                if (progressMonitor.IsCanceled)
+                {
+                    return ArdiaResult<CreateDocumentResponse>.Canceled;
+                }
+                else if (resultUpload.IsFailure)
+                {
+                    return ArdiaResult<CreateDocumentResponse>.Failure(resultUpload);
+                }
+
+                eTags.Add(resultUpload.Value.ETag);
+                uploadedBytes += resultUpload.Value.BytesUploaded;
             }
 
-            // Step 3 of 3: Ardia API - Create Document
+            progressStatus = progressStatus.ChangeMessage(ArdiaResources.FileUpload_Status_CreatingDocument);
+            progressMonitor.UpdateProgress(progressStatus);
+
+            // Step 3 of 4: Ardia API - Complete multipart upload
+            if (localZipFilePaths.Length > 1)
+            {
+                var completeMultipartUploadRequest = CompleteMultiPartUploadRequest.Create(piece.StoragePath, piece.MultiPartId, eTags);
+                var resultCompleteMultipartUpload = CompleteMultiPartUpload(completeMultipartUploadRequest);
+
+                if (progressMonitor.IsCanceled)
+                {
+                    return ArdiaResult<CreateDocumentResponse>.Canceled;
+                }
+                else if (resultCompleteMultipartUpload.IsFailure)
+                {
+                    return ArdiaResult<CreateDocumentResponse>.Failure(resultStaging);
+                }
+            }
+
+            // Step 4 of 4: Ardia API - Create Document
             var requestDocument = new CreateDocumentRequest
             {
                 UploadId = resultStaging.Value.UploadId,
-                Size = resultUpload.Value,
-                FileName = Path.GetFileName(localZipFile),
+                Size = uploadedBytes,
+                FileName = destinationFileName,
                 FilePath = destinationFolderPath
             };
 
-            return CreateDocument(requestDocument);
+            var resultCreateDocument = CreateDocument(requestDocument);
+
+            progressStatus.Complete();
+
+            return resultCreateDocument;
         }
 
         // API documentation: https://api.ardia-core-int.cmdtest.thermofisher.com/document/api/swagger/index.html
@@ -268,10 +315,10 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             try
             {
                 var jsonString = modelRequest.ToJson();
+                using var content = new StringContent(jsonString, Encoding.UTF8, HEADER_CONTENT_TYPE_APPLICATION_JSON);
 
-                using var request = new StringContent(jsonString, Encoding.UTF8, APPLICATION_JSON);
                 using var httpClient = AuthenticatedHttpClient();
-                using var response = httpClient.PostAsync(uri.AbsolutePath, request).Result;
+                using var response = httpClient.PostAsync(uri.AbsolutePath, content).Result;
 
                 statusCode = response.StatusCode;
                 var responseBody = response.Content.ReadAsStringAsync().Result;
@@ -299,8 +346,10 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         /// </summary>
         /// <param name="zipFilePath">Path to the local archive</param>
         /// <param name="presignedUrl">URL for where to put the archive</param>
-        /// <returns>the size of the upload in bytes</returns>
-        private static ArdiaResult<long> UploadFile(string zipFilePath, string presignedUrl)
+        /// <param name="progressMonitor"></param>
+        /// <param name="progressStatus"></param>
+        /// <returns>If successful, information about each uploaded piece including size (in bytes) and eTag.</returns>
+        private static ArdiaResult<UploadPieceResponse> UploadFile(string zipFilePath, string presignedUrl, IProgressMonitor progressMonitor, IProgressStatus progressStatus)
         {
             var uri = new Uri(presignedUrl);
 
@@ -308,34 +357,74 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
 
             try
             {
-                using var awsHttpClient = new HttpClient();
-                using var awsRequest = new HttpRequestMessage(HttpMethod.Put, uri);
+                using var httpClient = new HttpClient();
+                using var request = new HttpRequestMessage(HttpMethod.Put, uri);
 
                 using var fileStream = File.OpenRead(zipFilePath);
                 using var progressStream = new ProgressStream(fileStream);
+                progressStream.SetProgressMonitor(progressMonitor, progressStatus, false);
+
                 using var fileContent = new StreamContent(progressStream);
+                request.Content = fileContent;
 
-                awsRequest.Content = fileContent;
+                var response = httpClient.SendAsync(request).Result;
 
-                var response = awsHttpClient.SendAsync(awsRequest).Result;
+                statusCode = response.StatusCode;
+
+                var eTag = response.Headers.ETag.Tag;
+                var model = UploadPieceResponse.Create(progressStream.Position, eTag);
+
+                if (statusCode == HttpStatusCode.OK)
+                {
+                    return ArdiaResult<UploadPieceResponse>.Success(model);
+                }
+                else
+                {
+                    var responseBody = response.Content.ReadAsStringAsync().Result;
+
+                    var message = ErrorMessageBuilder.Create(ArdiaResources.Error_StatusCode_Unexpected).ErrorDetailFromResponseBody(responseBody).Uri(uri).StatusCode(statusCode);
+                    return ArdiaResult<UploadPieceResponse>.Failure(message.ToString(), statusCode, null);
+                }
+            }
+            catch (Exception e) when (ShouldHandleException(e))
+            {
+                var message = ErrorMessageBuilder.Create(ArdiaResources.Error_ProblemCommunicatingWithServer).ErrorDetailFromException(e).Uri(uri).StatusCode(statusCode);
+                return ArdiaResult<UploadPieceResponse>.Failure(message.ToString(), statusCode, e);
+            }
+        }
+
+        // API documentation: https://api.ardia-core-int.cmdtest.thermofisher.com/document/api/swagger/index.html
+        private ArdiaResult CompleteMultiPartUpload(CompleteMultiPartUploadRequest modelRequest)
+        {
+            var uri = UriFromParts(ServerUri, PATH_COMPLETE_MULTIPART_REQUEST);
+
+            HttpStatusCode? statusCode = null;
+
+            try
+            {
+                var json = modelRequest.ToJson();
+                using var content = new StringContent(json, Encoding.UTF8, HEADER_CONTENT_TYPE_APPLICATION_JSON);
+
+                using var httpClient = AuthenticatedHttpClient();
+                using var response = httpClient.PutAsync(uri.AbsolutePath, content).Result;
 
                 statusCode = response.StatusCode;
                 var responseBody = response.Content.ReadAsStringAsync().Result;
 
                 if (statusCode == HttpStatusCode.OK)
                 {
-                    return ArdiaResult<long>.Success(progressStream.Position);
+                    return ArdiaResult.Success();
                 }
                 else
                 {
                     var message = ErrorMessageBuilder.Create(ArdiaResources.Error_StatusCode_Unexpected).ErrorDetailFromResponseBody(responseBody).Uri(uri).StatusCode(statusCode);
-                    return ArdiaResult<long>.Failure(message.ToString(), statusCode, null);
+                    return ArdiaResult.Failure(message.ToString(), statusCode, null);
                 }
             }
             catch (Exception e) when (ShouldHandleException(e))
             {
                 var message = ErrorMessageBuilder.Create(ArdiaResources.Error_ProblemCommunicatingWithServer).ErrorDetailFromException(e).Uri(uri).StatusCode(statusCode);
-                return ArdiaResult<long>.Failure(message.ToString(), statusCode, e);
+                return ArdiaResult.Failure(message.ToString(), statusCode, e);
             }
         }
 
@@ -351,7 +440,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
                 var jsonString = modelRequest.ToJson();
 
                 using var request = new StringContent(jsonString);
-                request.Headers.ContentType = new MediaTypeHeaderValue(APPLICATION_JSON);
+                request.Headers.ContentType = new MediaTypeHeaderValue(HEADER_CONTENT_TYPE_ZIP_COMPRESSED);
 
                 using var httpClient = AuthenticatedHttpClient();
                 using var response = httpClient.PostAsync(uri.AbsolutePath, request).Result;
@@ -415,36 +504,6 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             {
                 var message = ErrorMessageBuilder.Create(ArdiaResources.Error_ProblemCommunicatingWithServer).ErrorDetailFromException(e).Uri(uri).StatusCode(statusCode);
                 return ArdiaResult<CreateDocumentResponse>.Failure(message.ToString(), statusCode, e);
-            }
-        }
-
-        public ArdiaResult CheckSession()
-        {
-            var uri = UriFromParts(ServerUri, PATH_SESSION_COOKIE);
-
-            HttpStatusCode? statusCode = null;
-            try
-            {
-                using var httpClient = AuthenticatedHttpClient();
-                using var response = httpClient.GetAsync(uri.AbsolutePath).Result;
-
-                statusCode = response.StatusCode;
-                var responseBody = response.Content.ReadAsStringAsync().Result;
-
-                if (statusCode == HttpStatusCode.OK)
-                {
-                    return ArdiaResult.Success();
-                }
-                else
-                {
-                    var message = ErrorMessageBuilder.Create(ArdiaResources.Error_StatusCode_Unexpected).ErrorDetailFromResponseBody(responseBody).Uri(uri).StatusCode(statusCode);
-                    return ArdiaResult.Failure(message.ToString(), statusCode, null);
-                }
-            }
-            catch (Exception e) when (ShouldHandleException(e))
-            {
-                var message = ErrorMessageBuilder.Create(ArdiaResources.Error_ProblemCommunicatingWithServer).ErrorDetailFromException(e).Uri(uri).StatusCode(statusCode);
-                return ArdiaResult.Failure(message.ToString(), statusCode, e);
             }
         }
 
@@ -513,6 +572,37 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             }
         }
 
+        // API documentation: https://api.ardia-core-int.cmdtest.thermofisher.com/session-management/api/swagger/index.html
+        public ArdiaResult CheckSession()
+        {
+            var uri = UriFromParts(ServerUri, PATH_SESSION_COOKIE);
+
+            HttpStatusCode? statusCode = null;
+            try
+            {
+                using var httpClient = AuthenticatedHttpClient();
+                using var response = httpClient.GetAsync(uri.AbsolutePath).Result;
+
+                statusCode = response.StatusCode;
+                var responseBody = response.Content.ReadAsStringAsync().Result;
+
+                if (statusCode == HttpStatusCode.OK)
+                {
+                    return ArdiaResult.Success();
+                }
+                else
+                {
+                    var message = ErrorMessageBuilder.Create(ArdiaResources.Error_StatusCode_Unexpected).ErrorDetailFromResponseBody(responseBody).Uri(uri).StatusCode(statusCode);
+                    return ArdiaResult.Failure(message.ToString(), statusCode, null);
+                }
+            }
+            catch (Exception e) when (ShouldHandleException(e))
+            {
+                var message = ErrorMessageBuilder.Create(ArdiaResources.Error_ProblemCommunicatingWithServer).ErrorDetailFromException(e).Uri(uri).StatusCode(statusCode);
+                return ArdiaResult.Failure(message.ToString(), statusCode, e);
+            }
+        }
+
         private static Uri GetFolderContentsUrl(ArdiaAccount account, ArdiaUrl ardiaUrl)
         {
             return new Uri(account.GetFolderContentsUrl(ardiaUrl));
@@ -548,7 +638,43 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             else return string.Empty;
         }
     }
-    
+
+    internal class SegmentProgressMonitor : IProgressMonitor
+    {
+        private const int ONE_MB = 1024 * 1024;
+
+        private readonly IProgressMonitor _progressMonitor;
+        private readonly decimal _startPercent;
+        private readonly decimal _endPercent;
+        private readonly long _totalSize;
+
+        internal SegmentProgressMonitor(IProgressMonitor progressMonitor, long totalSize, decimal startPercent, decimal endPercent)
+        {
+            _progressMonitor = progressMonitor;
+            _totalSize = totalSize;
+            _startPercent = startPercent;
+            _endPercent = endPercent;
+        }
+
+        public UpdateProgressResponse UpdateProgress(IProgressStatus status)
+        {
+            var totalPercentComplete = _startPercent + (_endPercent - _startPercent) * (decimal)(status.PercentComplete / 100.0);
+            var currentBytes = (long)Math.Round(totalPercentComplete / 100 * _totalSize);
+
+            status = status.ChangePercentComplete((int)Math.Round(totalPercentComplete));
+            // status = status.ChangeMessage(@$"{totalPercentComplete:N0}% complete. Uploaded {currentBytes / ONE_MB:N0} of {_totalSize / ONE_MB:N0} MB.");
+
+            // TODO: tailor message for KB vs. MB vs. GB?
+            var msg = string.Format(ArdiaResources.FileUpload_Status_ProgressWithSize, totalPercentComplete, currentBytes / ONE_MB, _totalSize / ONE_MB);
+            status = status.ChangeMessage(msg);
+
+            return _progressMonitor.UpdateProgress(status);
+        }
+
+        public bool IsCanceled => _progressMonitor.IsCanceled;
+        public bool HasUI => _progressMonitor.HasUI;
+    }
+
     public sealed class ErrorMessageBuilder
     {
         private const string INDENT = "    "; // tab is too much, no space is too little

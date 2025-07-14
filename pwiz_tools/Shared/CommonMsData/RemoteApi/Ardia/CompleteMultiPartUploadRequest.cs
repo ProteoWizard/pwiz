@@ -15,34 +15,49 @@
  */
 
 using System.Collections.Generic;
-using pwiz.Common.Collections;
+using Newtonsoft.Json;
 
 namespace pwiz.CommonMsData.RemoteApi.Ardia
 {
     public class CompleteMultiPartUploadRequest
     {
-        public static CompleteMultiPartUploadRequest Create(string multiPartId, string storagePath, string eTag, int partNumber)
+        public static CompleteMultiPartUploadRequest Create(string storagePath, string multiPartId, IList<string> eTags)
         {
             var model = new CompleteMultiPartUploadRequest
             {
                 StoragePath = storagePath,
                 MultiPartId = multiPartId,
-                PartTags = PartTag.Create(eTag, partNumber)
             };
+
+            // NB: partTags are numbered starting at 1, so increment the loop index
+            for (var i = 0; i < eTags.Count; i++) 
+            {
+                model.AddPartTag(i + 1, eTags[i]);
+            }
 
             return model;
         }
 
-        public string StoragePath { get; set; }
-        public string MultiPartId { get; set; }
-        public IList<PartTag> PartTags { get; set; }
+        public string StoragePath { get; private set; }
+        public string MultiPartId { get; private set; }
+        public IList<PartTag> PartTags { get; } = new List<PartTag>();
+
+        public void AddPartTag(int partNumber, string eTag)
+        {
+            PartTags.Add(PartTag.Create(partNumber, eTag));
+        }
+
+        public string ToJson()
+        {
+            return JsonConvert.SerializeObject(this);
+        }
 
         public class PartTag
         {
-            public string ETag { get; set; }
-            public int PartNumber { get; set; }
+            public string ETag { get; private set; }
+            public int PartNumber { get; private set; }
 
-            public static IList<PartTag> Create(string eTag, int partNumber)
+            internal static PartTag Create(int partNumber, string eTag)
             {
                 var model = new PartTag
                 {
@@ -50,7 +65,12 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
                     PartNumber = partNumber
                 };
 
-                return ImmutableList.Singleton(model);
+                return model;
+            }
+
+            public override string ToString()
+            {
+                return $@"{PartNumber}: {ETag}";
             }
         }
     }

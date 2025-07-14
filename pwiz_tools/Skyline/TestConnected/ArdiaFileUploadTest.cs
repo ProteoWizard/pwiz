@@ -15,10 +15,10 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
-using System.Net.NetworkInformation;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.CommonMsData.RemoteApi;
@@ -71,7 +71,7 @@ namespace pwiz.SkylineTestConnected
             Assert.AreEqual(1, Settings.Default.RemoteAccountList.Count);
 
             account = (ArdiaAccount)Settings.Default.RemoteAccountList[0];
-            AssertEx.IsTrue(!string.IsNullOrEmpty(account.Token));
+            AssertEx.IsTrue(!string.IsNullOrEmpty(account.Token), "Ardia account does not have a token.");
 
             // Test scenarios 
             TestGetFolderPath();
@@ -79,9 +79,10 @@ namespace pwiz.SkylineTestConnected
             TestAccountHasCredentials(account);
             TestCreateArdiaError();
 
-            Test_StageDocument_Request_SinglePart();
-            Test_StageDocument_Request_MultiPart();
+            Test_StageDocument_Request_SmallDocument();
+            Test_StageDocument_Request_LargeDocument();
             Test_StageDocument_Response();
+            Test_StageDocument_Request_CompleteMultipartUpload();
 
             // Test scenarios making remote API calls
             var client = ArdiaClient.Create(account);
@@ -121,6 +122,25 @@ namespace pwiz.SkylineTestConnected
             // }
         }
 
+        private void Test_StageDocument_Request_CompleteMultipartUpload()
+        {
+            var eTags = new List<string> { "673889e3e0ea", "b24ef41f1022", "d37f2f3c36f3", "8082d9440527" };
+            var model = CompleteMultiPartUploadRequest.Create("2025/07/02/2cae3", "KbTcKnGXt6.asdfeqef--", eTags);
+
+            Assert.AreEqual("2025/07/02/2cae3", model.StoragePath);
+            Assert.AreEqual("KbTcKnGXt6.asdfeqef--", model.MultiPartId);
+            Assert.AreEqual(4, model.PartTags.Count);
+
+            // Test first and last PartTag and check PartNumber is correct since its numbering starts at 1
+            Assert.AreEqual(1, model.PartTags[0].PartNumber);
+            Assert.AreEqual("673889e3e0ea", model.PartTags[0].ETag);
+            Assert.AreEqual(4, model.PartTags[3].PartNumber);
+            Assert.AreEqual("8082d9440527", model.PartTags[3].ETag);
+
+            // var json = model.ToJson();
+            // Assert.AreEqual(REQUEST_JSON_COMPLETE_MULTIPART_UPLOAD, json);
+        }
+
         private static void Test_StageDocument_Response()
         {
             var stagedDocumentResponse = StagedDocumentResponse.FromJson(RESPONSE_JSON_CREATE_STAGED_DOCUMENT);
@@ -131,47 +151,48 @@ namespace pwiz.SkylineTestConnected
             Assert.IsNotNull(stagedDocumentResponse.Pieces);
             Assert.AreEqual(1, stagedDocumentResponse.Pieces.Count);
             Assert.IsNotNull(piece);
-            Assert.AreEqual(StageDocumentRequest.SINGLE_DOCUMENT, piece.PieceName);
-            Assert.AreEqual("/foobar", piece.PiecePath);
+            Assert.AreEqual(StageDocumentRequest.DEFAULT_PIECE_NAME, piece.PieceName);
+            Assert.AreEqual("/foobar", piece.StoragePath);
 
             var presignedUrls = piece.PresignedUrls;
             Assert.IsNotNull(presignedUrls);
             Assert.AreEqual("https://www.example.com/", presignedUrls[0]);
         }
 
-        private static void Test_StageDocument_Request_MultiPart()
+        private static void Test_StageDocument_Request_SmallDocument()
         {
-            var requestModel = StageDocumentRequest.Create();
-            requestModel.AddPiece(@"foobar.sky.z01", 1024, 1024, true);
-            requestModel.AddPiece(@"foobar.sky.z02", 2048, 3072, true);
-            requestModel.AddPiece(@"foobar.sky.zip", 4096, 7168, true);
+            const long fileSize = 24 * 1024 * 1024; // 24MB
 
-            Assert.IsNotNull(requestModel.Pieces);
-            Assert.AreEqual(3, requestModel.Pieces.Count);
-            Assert.AreEqual(@"foobar.sky.z01", requestModel.Pieces[0].PieceName);
-            Assert.AreEqual(1024, requestModel.Pieces[0].PartSize);
-            Assert.AreEqual(1024, requestModel.Pieces[0].Size);
-            Assert.IsTrue(requestModel.Pieces[0].IsMultiPart);
-
-            var json = requestModel.ToJson();
-            Assert.AreEqual(@"{""Pieces"":[{""PieceName"":""foobar.sky.z01"",""PartSize"":1024,""Size"":1024,""IsMultiPart"":true},{""PieceName"":""foobar.sky.z02"",""PartSize"":2048,""Size"":3072,""IsMultiPart"":true},{""PieceName"":""foobar.sky.zip"",""PartSize"":4096,""Size"":7168,""IsMultiPart"":true}]}", json);
-        }
-
-        private static void Test_StageDocument_Request_SinglePart()
-        {
-            // Model used for upload of Skyline documents < 2GB 
-            var requestModel = StageDocumentRequest.CreateSinglePieceDocument();
+            // Model for Skyline document < 2GB
+            var requestModel = StageDocumentRequest.Create(fileSize);
 
             Assert.IsNotNull(requestModel);
             Assert.IsNotNull(requestModel.Pieces);
             Assert.AreEqual(1, requestModel.Pieces.Count);
-            Assert.AreEqual(StageDocumentRequest.SINGLE_DOCUMENT, requestModel.Pieces[0].PieceName);
+            Assert.AreEqual(StageDocumentRequest.DEFAULT_PIECE_NAME, requestModel.Pieces[0].PieceName);
             Assert.IsFalse(requestModel.Pieces[0].IsMultiPart);
 
+            // Make sure attributes with default values are omitted from serialized JSON
             var json = requestModel.ToJson();
-
-            // Properties with default values should not be included in serialized JSON
             Assert.AreEqual(@"{""Pieces"":[{""PieceName"":""[SingleDocument]""}]}", json);
+        }
+
+        private static void Test_StageDocument_Request_LargeDocument()
+        {
+            const long fileSize = 6451738112; // ~6GB
+
+            // Model for Skyline document > 2GB
+            var requestModel = StageDocumentRequest.Create(fileSize);
+
+            Assert.IsNotNull(requestModel.Pieces);
+            Assert.AreEqual(1, requestModel.Pieces.Count);
+            Assert.AreEqual(StageDocumentRequest.DEFAULT_PIECE_NAME, requestModel.Pieces[0].PieceName);
+            Assert.IsTrue(requestModel.Pieces[0].IsMultiPart);
+            Assert.AreEqual(fileSize, requestModel.Pieces[0].Size);
+            Assert.AreEqual(ArdiaClient.DEFAULT_PART_SIZE_MB, requestModel.Pieces[0].PartSize);
+
+            var json = requestModel.ToJson();
+            Assert.AreEqual($@"{{""Pieces"":[{{""PieceName"":""[SingleDocument]"",""IsMultiPart"":true,""Size"":6451738112,""PartSize"":{ArdiaClient.DEFAULT_PART_SIZE_MB}}}]}}", json);
         }
 
         private static void TestCreateArdiaError()
@@ -374,21 +395,6 @@ namespace pwiz.SkylineTestConnected
             OkDialog(optionsDlg, optionsDlg.OkDialog);
         }
 
-        private static bool IsRemoteHostAvailable(string hostname)
-        {
-            using var ping = new Ping();
-            try
-            {
-                var pingReply = ping.Send(hostname);
-                return pingReply?.Status == IPStatus.Success;
-            }
-            catch (PingException)
-            {
-                // Ignore exceptions from ping operation
-                return false;
-            }
-        }
-
         /// <summary>
         /// Example JSON error - returned by Ardia when trying to create a new folder
         /// </summary>
@@ -399,6 +405,10 @@ namespace pwiz.SkylineTestConnected
         /// </summary>
         private const string ERROR_MESSAGE_XML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Error><Code>EntityTooLarge</Code><Message>Your proposed upload exceeds the maximum allowed size</Message><ProposedSize>6451738112</ProposedSize><MaxSizeAllowed>5368709120</MaxSizeAllowed><RequestId>...string...</RequestId><HostId>...string...</HostId></Error>";
 
-        private const string RESPONSE_JSON_CREATE_STAGED_DOCUMENT = "{pieces: [ { pieceName: \"[SingleDocument]\", piecePath: \"/foobar\", presignedUrls: [\"https://www.example.com/\"]} ], uploadId: \"97088887-788079\" }";
+        private const string RESPONSE_JSON_CREATE_STAGED_DOCUMENT = "{pieces: [ { pieceName: \"[SingleDocument]\", storagePath: \"/foobar\", presignedUrls: [\"https://www.example.com/\"]} ], uploadId: \"97088887-788079\" }";
+
+        // private const string FOOBAR = @"{""pieces"":[{""multiPartId"":""KbTcKnGXt6.asdfeqef--"",""pieceName"":""[SingleDocument]"",""presignedUrls"":[""https://www.example.com/test-only-upload-url-001"",""https://www.example.com/test-only-upload-url-002"",""https://www.example.com/test-only-upload-url-003"", ""https://www.example.com/test-only-upload-url-004""],""storagePath"":""2025/07/02/2cae3""}],""uploadId"":""6d5b0093-5521-4225-a6ba-bdf604d0fc1e""}";
+        // private const string REQUEST_JSON_COMPLETE_MULTIPART_UPLOAD = @"'{""StoragePath"": ""2025/07/02/2cae3"", ""MultiPartId"": ""KbTcKnGXt6.asdfeqef--"", ""PartTags"": [{""ETag"": ""673889e3e0ea"", ""PartNumber"": 1}, {""ETag"": ""b24ef41f1022"", ""PartNumber"": 2}, {""ETag"": ""d37f2f3c36f3"", ""PartNumber"": 3}, {""ETag"": ""8082d9440527"", ""PartNumber"": 4}]}";
+        //                                                              '{"StoragePath": "2025/07/02/2cae3", "MultiPartId": "KbTcKnGXt6.asdfeqef--", "PartTags": [{"ETag": "673889e3e0ea", "PartNumber": 1}, {"ETag": "b24ef41f1022", "PartNumber": 2}, {"ETag": "d37f2f3c36f3", "PartNumber": 3}, {"ETag": "8082d9440527", "PartNumber": 4}]}>. 
     }
 }

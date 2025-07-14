@@ -126,14 +126,17 @@
   <data name="ArdiaAccount_GetAuthenticatedHttpClient_Failed_to_open_Ardia_connection" xml:space="preserve">
     <value>Failed to open Ardia connection</value>
   </data>
+  <data name="FileUpload_Status_ProgressWithSize" xml:space="preserve">
+    <value>{0:N0}% complete. Uploaded {1:N0} of {2:N0} MB.</value>
+  </data>
+  <data name="FileUpload_Status_CreatingDocument" xml:space="preserve">
+    <value>Completed upload. Creating document.</value>
+  </data>
   <data name="FileUpload_Success" xml:space="preserve">
-    <value>Successfully published the document to Ardia.</value>
+    <value>Successfully uploaded the document to Ardia.</value>
   </data>
-  <data name="FileUpload_Error" xml:space="preserve">
+    <data name="FileUpload_Error" xml:space="preserve">
     <value>Unable to publish the document. A problem occurred communicating with the server.</value>
-  </data>
-  <data name="FileUpload_ArchiveTooLarge" xml:space="preserve">
-    <value>Unable to publish the document. The file is too large. Maximum file size is {0}GB.</value>
   </data>
   <data name="OpenFolder_Title" xml:space="preserve">
     <value>Opening folder {0}</value>

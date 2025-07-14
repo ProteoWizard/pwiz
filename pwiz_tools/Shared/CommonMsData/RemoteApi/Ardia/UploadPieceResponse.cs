@@ -18,14 +18,17 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
 {
     public class UploadPieceResponse
     {
-        public static UploadPieceResponse Create(string eTag)
+        public static UploadPieceResponse Create(long bytesUploaded, string eTag)
         {
             return new UploadPieceResponse
             {
+                BytesUploaded = bytesUploaded,
                 ETag = eTag
             };
         }
 
-        public string ETag { get; set; }
+        public long BytesUploaded { get; private set; }
+
+        public string ETag { get; private set; }
     }
 }

@@ -1416,7 +1416,7 @@ namespace pwiz.Skyline
             return !Dirty && null != DocumentFilePath ? SavedDocumentFormat : (DocumentFormat?) null;
         }
 
-        public bool ShareDocument(string fileDest, ShareType shareType)
+        public bool ShareDocument(string fileDest, ShareType shareType, bool useFileSaver = true, int zipFileMaxSegmentSize = 0)
         {
             try
             {
@@ -1424,7 +1424,7 @@ namespace pwiz.Skyline
                 using (var longWaitDlg = new LongWaitDlg())
                 {
                     longWaitDlg.Text = SkylineResources.SkylineWindow_ShareDocument_Compressing_Files;
-                    var sharing = new SrmDocumentSharing(DocumentUI, DocumentFilePath, fileDest, shareType);
+                    var sharing = new SrmDocumentSharing(DocumentUI, DocumentFilePath, fileDest, shareType, useFileSaver, zipFileMaxSegmentSize);
                     if (shareType.MustSaveNewDocument)
                     {
                         var tempDocumentPath = Path.Combine(sharing.EnsureTempDir().DirPath,
@@ -3532,7 +3532,6 @@ namespace pwiz.Skyline
                     return;
             }
 
-            string fileName = null;
             try
             {
                 var ardiaAccount = Settings.Default.RemoteAccountList.GetAccountsOfType(RemoteAccountType.ARDIA).Cast<ArdiaAccount>().ToList()[0];
@@ -3551,24 +3550,23 @@ namespace pwiz.Skyline
                     return;
                 }
 
-                fileName = publishDlg.FileName;
+                var fileName = publishDlg.FileName;
                 var shareType = shareTypeDlg.ShareType;
 
-                if (ShareDocument(fileName, shareType))
+                // TODO: add an abstraction (UploadFileBundle?) dealing with temp directory, file name, multi-part upload, etc
+                // TemporaryDirectory automatically cleans up .zip files uploaded to Ardia
+                using var tempDir = new TemporaryDirectory(null, Path.GetFileNameWithoutExtension(fileName));
+                
+                var tempFileName = Path.Combine(tempDir.DirPath, Path.GetFileName(fileName));
+
+                if (ShareDocument(tempFileName, shareType, false, ArdiaClient.DEFAULT_PART_SIZE_BYTES))
                 {
-                    publishDlg.Upload(this);
+                    publishDlg.Upload(this, tempFileName);
                 }
             }
             catch (Exception e)
             {
                 ExceptionUtil.DisplayOrReportException(this, e);
-            }
-            finally
-            {
-                // Cleanup: if the archive exists, remove it whether the upload succeeded or not
-                // CONSIDER: handle multipart uploads
-                if(fileName != null) 
-                    FileEx.SafeDelete(fileName);
             }
         }
 
