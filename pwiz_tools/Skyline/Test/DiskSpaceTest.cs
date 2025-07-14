@@ -24,7 +24,8 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTest
 {
     [TestClass]
-    // Test to ensure there is enough space on the disk before starting.
+    // Test to see if there is less than 5% of space left on disk.
+    // Necessary to prevent unrelated tests failing when an issue causes disk to fill up.
     public class DiskSpaceTest : AbstractUnitTest
     {
         private const double MIN_SPACE_PERCENT = .05;
