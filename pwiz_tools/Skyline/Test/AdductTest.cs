@@ -189,6 +189,12 @@ namespace pwiz.SkylineTest
 
             AssertEx.ThrowsException<InvalidDataException>(() => Adduct.FromStringAssumeProtonated("[M+2H]-")); // Try to declare wrong charge on common adduct
 
+            Assert.AreEqual(Adduct.EMPTY, Adduct.InferFromMassAndMz(100, new SignedMz(200)));
+            Assert.AreEqual(Adduct.M_PLUS_2H, Adduct.InferFromMassAndMz(1000, new SignedMz(500 + BioMassCalc.MassProton)));
+            Assert.AreEqual(Adduct.M_MINUS_2H, Adduct.InferFromMassAndMz(1000, new SignedMz(-(500 - BioMassCalc.MassProton))));
+            Assert.AreEqual(Adduct.M_PLUS_3, Adduct.InferFromMassAndMz(900, new SignedMz(300)));
+            Assert.AreEqual(Adduct.M_MINUS_3, Adduct.InferFromMassAndMz(900, new SignedMz(-300)));
+
             // Exercise the ability to work with masses and isotope labels
             Assert.IsTrue(ReferenceEquals(Adduct.SINGLY_PROTONATED, Adduct.SINGLY_PROTONATED.Unlabeled));
             var nolabel = Adduct.FromStringAssumeProtonated("M-2Na");

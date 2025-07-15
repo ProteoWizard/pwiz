@@ -807,10 +807,10 @@ namespace pwiz.Skyline.Model.Lib
         // N.B this was formerly "^PrecursorMz: ([^ ]+)" - no comma - I don't understand how double.Parse worked with existing
         // test inputs like "PrecursorMZ: 124.0757, 109.1" but somehow adding NOCASE suddenly made it necessary
         private static readonly Regex REGEX_PRECURSORMZ = new Regex(@"^(?:PrecursorMz|Selected Ion m/z):\s*([^ ,]+)", NOCASE);
-        private static readonly Regex REGEX_PRECURSORMZ_COMMENT = new Regex(@"Precursor Mz=([^ ,""]+)", NOCASE);
+        private static readonly Regex REGEX_PRECURSORMZ_COMMENT = new Regex(@"(Precursor Mz|Mz_exact)=([^ ,""]+)", NOCASE);
         private static readonly Regex REGEX_MOLWEIGHT = new Regex(@"^MW:\s*(.*)", NOCASE);
         private static readonly Regex REGEX_MOLWEIGHT_COMMENT = new Regex(@"ExactMass=([^ ,""]+)", NOCASE);
-        private static readonly Regex REGEX_EXACTMASS = new Regex(@"^ExactMass:\s*(.*)", NOCASE);
+        private static readonly Regex REGEX_EXACTMASS = new Regex(@"^ExactMass[:=]\s*(.*)", NOCASE);
         private static readonly Regex REGEX_IONMODE = new Regex(@"^IonMode:\s*(.*)", NOCASE);
         private const double DEFAULT_MZ_MATCH_TOLERANCE = 0.01; // Most .MSP formats we see present precursor m/z values that match at about this tolerance
         private const string MZVAULT_POSITIVE_SCAN_INDICATOR = @"Positive scan";
@@ -1000,6 +1000,20 @@ namespace pwiz.Skyline.Model.Lib
                         {
                             // No charge information, but we do have a formula - most likely GCMS data
                             isGC = true;
+                        }
+                    }
+
+                    if (adduct.IsEmpty && precursorMz.HasValue && massMol.HasValue)
+                    {
+                        var implied = Adduct.InferFromMassAndMz(massMol.Value, new SignedMz(precursorMz.Value));
+                        if (!Adduct.IsNullOrEmpty(implied) && (charge == 0 || charge == implied.AdductCharge))
+                        {
+                            adduct = implied;
+                            charge = implied.AdductCharge;
+                            if (string.IsNullOrEmpty(formula))
+                            {
+                                formula = MoleculeMassOffset.FormatMassModification(massMol.Value, massMol.Value, BioMassCalc.MassPrecision);
+                            }
                         }
                     }
 
@@ -1409,7 +1423,7 @@ namespace pwiz.Skyline.Model.Lib
                     {
                         try
                         {
-                            precursorMz = double.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
+                            precursorMz = double.Parse(match.Groups[2].Value, CultureInfo.InvariantCulture);
                         }
                         catch
                         {
@@ -1664,28 +1678,22 @@ namespace pwiz.Skyline.Model.Lib
                 }
                 annot = annot.Trim();
                 var space = annot.IndexOf(" ", StringComparison.Ordinal); 
-                if (space < 0)
+                var name = (space > 0 ? annot.Substring(0, space) : annot).Trim();
+                // Avoid uninteresting annotations e.g. blank, "?", or numeric crud like "85/86"
+                if (string.IsNullOrEmpty(name) || name.StartsWith("?") || !name.Any(char.IsLetter)) 
                 {
-                    annotations.Add(null); // Interesting annotations have more than one part
+                    annotations.Add(null);
                 }
                 else
                 {
-                    var name = annot.Substring(0, space).Trim();
-                    if (string.IsNullOrEmpty(name) || name.StartsWith("?")) 
-                    {
-                        annotations.Add(null);
-                    }
-                    else
-                    {
-                        var note = annot.Substring(space + 1).Trim();
-                        var z = Adduct.IsNullOrEmpty(adduct) ? charge : adduct.AdductCharge;
-                        var fragment_adduct = z > 0 ? Adduct.M_PLUS : Adduct.M_MINUS;
-                        var ion = new CustomIon(null, fragment_adduct,
-                            fragment_adduct.MassFromMz(mz, MassType.Monoisotopic),
-                            fragment_adduct.MassFromMz(mz, MassType.Average),
-                            name);
-                        annotations.Add(new List<SpectrumPeakAnnotation> {SpectrumPeakAnnotation.Create(ion, note)});
-                    }
+                    var note = space > 0 ? annot.Substring(space + 1).Trim() : string.Empty;
+                    var z = Adduct.IsNullOrEmpty(adduct) ? charge : adduct.AdductCharge;
+                    var fragment_adduct = z > 0 ? Adduct.M_PLUS : Adduct.M_MINUS;
+                    var ion = new CustomIon(null, fragment_adduct,
+                        fragment_adduct.MassFromMz(mz, MassType.Monoisotopic),
+                        fragment_adduct.MassFromMz(mz, MassType.Average),
+                        name);
+                    annotations.Add(new List<SpectrumPeakAnnotation> {SpectrumPeakAnnotation.Create(ion, note)});
                 }
                 // ReSharper restore LocalizableElement
             }
