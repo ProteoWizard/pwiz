@@ -23,7 +23,6 @@
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "BuildParser.h"
 #include "SpecData.h"
-#include "SslReader.h"
 
 namespace BiblioSpec {
 
@@ -248,10 +247,10 @@ string BuildParser::filesNotFoundMessage(
         messageString += "\n" + specfileroot;
 
     bfs::path deepestPath = filepath_.empty() ? bfs::current_path() : bfs::path(filepath_);
-    messageString += "\n\nIn any of the following directories:\n" + bfs::canonical(deepestPath).make_preferred().string();
+    messageString += "\n\nIn any of the following directories:\n" + pwiz::util::canonical(deepestPath).make_preferred().string();
     set<string> parentPaths;
     for (const auto& dir : directories)
-        parentPaths.insert((bfs::path(dir).is_absolute() ? dir : bfs::canonical(deepestPath / dir)).make_preferred().string());
+        parentPaths.insert((bfs::path(dir).is_absolute() ? dir : pwiz::util::canonical(deepestPath / dir)).make_preferred().string());
     for (const auto& dir : boost::make_iterator_range(parentPaths.rbegin(), parentPaths.rend()))
         messageString += "\n" + dir;
 
@@ -480,6 +479,8 @@ void BuildParser::buildTables(PSM_SCORE_TYPE scoreType, string specFilename, boo
             continue;
         }
 
+        applyPsmOverrideValues(psm, curSpectrum); // Apply any values carried by subclassed psm (e.g. SSL RT column values) that override those found by spectrum lookup
+
         curSpectrum.totalIonCurrent = 0;
         if (!psm->isPrecursorOnly())
         {
@@ -531,6 +532,15 @@ void BuildParser::buildTables(PSM_SCORE_TYPE scoreType, string specFilename, boo
             fileProgress_->add(fileProgressIncrement_);
         }
     }
+}
+
+/**
+ ** Apply any values carried by subclassed psm (e.g. SSL RT column values) that override
+ ** those found by spectrum lookup.
+ */
+void BuildParser::applyPsmOverrideValues(PSM* psm, SpecData& specData)
+{
+    // Default implementation does nothing
 }
 
 bool BuildParser::keepAmbiguous()
@@ -589,18 +599,14 @@ void BuildParser::insertSpectrum(PSM* psm,
     sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.ccs);
     sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.getIonMobilityHighEnergyOffset());
     sqlite3_bind_int(insertSpectrumStmt_, field++, (int) (psm->ionMobilityType == IONMOBILITY_NONE ? curSpectrum.ionMobilityType : psm->ionMobilityType));
-    sslPSM* sslpsm = dynamic_cast<sslPSM*>(psm);
-    double rt = (curSpectrum.retentionTime == 0 && sslpsm != NULL) ? sslpsm->rtInfo.retentionTime : curSpectrum.retentionTime;
-    double rtStart = (curSpectrum.startTime == 0 && sslpsm != NULL) ? sslpsm->rtInfo.startTime : curSpectrum.startTime;
-    double rtEnd = (curSpectrum.endTime == 0 && sslpsm != NULL) ? sslpsm->rtInfo.endTime : curSpectrum.endTime;
-    if (rt != 0) {
-        sqlite3_bind_double(insertSpectrumStmt_, field++, rt);
+    if (curSpectrum.retentionTime != 0) {
+        sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.retentionTime);
     } else {
         sqlite3_bind_null(insertSpectrumStmt_, field++);
     }
-    if (rtStart != 0 && rtEnd != 0) {
-        sqlite3_bind_double(insertSpectrumStmt_, field++, rtStart);
-        sqlite3_bind_double(insertSpectrumStmt_, field++, rtEnd);
+    if (curSpectrum.startTime != 0 && curSpectrum.endTime != 0) {
+        sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.startTime);
+        sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.endTime);
     } else {
         sqlite3_bind_null(insertSpectrumStmt_, field++);
         sqlite3_bind_null(insertSpectrumStmt_, field++);

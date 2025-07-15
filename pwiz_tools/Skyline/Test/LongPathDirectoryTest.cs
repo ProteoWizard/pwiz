@@ -20,6 +20,7 @@
 using System;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -29,6 +30,70 @@ namespace pwiz.SkylineTest
     [TestClass]
     public class LongPathDirectoryTest : AbstractUnitTest
     {
+        [TestMethod]
+        public void LongPathExTest()
+        {
+            string fullyQualifiedDrivePath = @"C:\Folder\Subfolder";
+            // Try simple first
+            PathIsFullyQualifiedTest(fullyQualifiedDrivePath);
+            // Try all valid drive letters
+            for (char c = 'a'; c < 'z'; c++)
+            {
+                string drivePath = c + fullyQualifiedDrivePath.Substring(1);
+                PathIsFullyQualifiedTest(drivePath);
+                drivePath = char.ToUpperInvariant(c) + fullyQualifiedDrivePath.Substring(1);
+                PathIsFullyQualifiedTest(drivePath);
+            }
+            // Try UNC path
+            PathIsFullyQualifiedTest(@"\\server\share\folder");
+            // Try a valid long path
+            PathIsFullyQualifiedTest(@"C:\Folder".ToLongPath());
+            // Test failures
+            PathIsNotFullyQualifiedTest(@"Folder\Subfolder");
+            PathIsNotFullyQualifiedTest(@"C:Folder\Subfolder");
+            PathIsNotFullyQualifiedTest("A");
+            PathIsNotFullyQualifiedTest("B:");
+            PathIsNotFullyQualifiedTest(string.Empty);
+            PathIsNotFullyQualifiedTest(null);
+
+            ToLongPathTest(@"C:\Folder\Subfolder");
+            ToLongPathTest(@"\\server\share\folder");
+            ToLongPathTest(@"C:\Folder\Subfolder".ToLongPath(), false);
+            
+            AssertEx.ThrowsException<ArgumentException>(() => @"Folder\Subfolder".ToLongPath());
+            AssertEx.ThrowsException<ArgumentException>(() => @"C:Folder\Subfolder".ToLongPath());
+            AssertEx.ThrowsException<ArgumentException>(() => string.Empty.ToLongPath());
+            AssertEx.ThrowsException<ArgumentException>(() => ((string)null).ToLongPath());
+        }
+
+        private void PathIsFullyQualifiedTest(string path)
+        {
+            string failureMessage = "Expected '{0}' to be fully qualified.";
+            Assert.IsTrue(PathEx.IsPathFullyQualified(path), failureMessage, path);
+            path = path.Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            Assert.IsTrue(PathEx.IsPathFullyQualified(path), failureMessage, path);
+        }
+        private void PathIsNotFullyQualifiedTest(string path)
+        {
+            string failureMessage = "Expected '{0}' not to be fully qualified.";
+            Assert.IsFalse(PathEx.IsPathFullyQualified(path), failureMessage, path);
+        }
+
+        private void ToLongPathTest(string path, bool addPrefix = true)
+        {
+            string failureMessage = addPrefix
+                ? "Expected long-path prefix to be added to '{0}'"
+                : "Expected long-path prefix not to be added to '{0}'";
+            string prefix = addPrefix ? PathEx.PREFIX_LONG_PATH : string.Empty;
+            Assert.AreEqual(prefix + path, path.ToLongPath(), failureMessage, path);
+            path = path.Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            // Fix the long path prefix if it is not added and therefore just got
+            // switched to AltDirectorySeparatorChar which is not valid.
+            if (!addPrefix)
+                path = path.Substring(PathEx.PREFIX_LONG_PATH.Length).ToLongPath();
+            Assert.AreEqual(prefix + path, path.ToLongPath(), failureMessage, path);
+        }
+
         /// <summary>
         /// When true console output is added to clarify what the test has accomplished
         /// </summary>
@@ -72,6 +137,20 @@ namespace pwiz.SkylineTest
                 DirectoryEx.SafeDeleteLongPath(inputPath);
                 Assert.IsFalse(DirectoryEx.ExistsLongPath(inputPath));
                 inputPath = Path.GetDirectoryName(inputPath);
+            }
+            
+            // ToLongPath tests
+            AssertEx.ThrowsException<ArgumentException>(() => @"path\to\file.txt".ToLongPath());
+            const string validPath = @"C:\path\to\file.txt";
+            AssertEx.NoExceptionThrown<Exception>(() => validPath.ToLongPath());
+            // Make sure calling multiple times does not cause multiple long-path prefixes
+            string testPath = validPath;
+            for (int i = 0; i < 3; i++)
+            {
+                string longPath = testPath.ToLongPath();
+                if (i > 0)
+                    Assert.AreEqual(testPath, longPath);
+                testPath = longPath;
             }
         }
     }

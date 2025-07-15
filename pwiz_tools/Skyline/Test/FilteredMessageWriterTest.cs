@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using pwiz.Common.SystemUtil;
@@ -30,46 +31,55 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void FilteredUserMessageWriterTest()
         {
-            // Arrange
-            var originalWriteUserMessage = Messages.WriteUserMessage; // Save the original delegate
-            try
+            using var capture = new UserMessageCapture();
+
+            // Mock the WriteUserMessage delegate
+            var filterStrings = new List<string>
             {
-                // Mock the WriteUserMessage delegate
-                var capturedMessages = new List<string>();
-                Messages.WriteUserMessage = (message, args) => capturedMessages.Add(string.Format(message, args));
-                var filterStrings = new List<string>
-                {
-                    @"filter this", // Filter out lines containing this
-                    @"s/old/new/",  // Replace "old" with "new"
-                    @"s/DiaNN\/Spectronaut/Skyline/" // Replace "DiaNN/Spectronaut" with "Skyline"
-                };
-                var writer = new FilteredUserMessageWriter(filterStrings);
-                var inputLines = new List<string>
-                {
-                    "This line contains filter this and should be skipped.",
-                    "This line contains old and should replace old with new.",
-                    "DiaNN/Spectronaut is a tool and should be replaced with Skyline.",
-                    "This line is unaffected and should be written as is."
-                };
-                // Act
-                foreach (var line in inputLines)
-                {
-                    writer.WriteLine(line);
-                }
-                // Assert
-                var expectedOutput = new List<string>
-                {
-                    "This line contains new and should replace new with new.",
-                    "Skyline is a tool and should be replaced with Skyline.",
-                    "This line is unaffected and should be written as is."
-                };
-                CollectionAssert.AreEqual(expectedOutput, capturedMessages);
-            }
-            finally
+                @"filter this", // Filter out lines containing this
+                @"s/old/new/",  // Replace "old" with "new"
+                @"s/DiaNN\/Spectronaut/Skyline/" // Replace "DiaNN/Spectronaut" with "Skyline"
+            };
+            var writer = new FilteredUserMessageWriter(filterStrings);
+            var inputLines = new List<string>
             {
-                // Restore the original delegate
-                Messages.WriteUserMessage = originalWriteUserMessage;
+                "This line contains filter this and should be skipped.",
+                "This line contains old and should replace old with new.",
+                "DiaNN/Spectronaut is a tool and should be replaced with Skyline.",
+                "This line is unaffected and should be written as is."
+            };
+            // Act
+            foreach (var line in inputLines)
+            {
+                writer.WriteLine(line);
             }
+            // Assert
+            var expectedOutput = new List<string>
+            {
+                "This line contains new and should replace new with new.",
+                "Skyline is a tool and should be replaced with Skyline.",
+                "This line is unaffected and should be written as is."
+            };
+            CollectionAssert.AreEqual(expectedOutput, capture.CapturedMessages);
+        }
+    }
+
+    public class UserMessageCapture : IDisposable
+    {
+        private Action<string, object[]> _originalWriteUserMessage;
+        
+        public UserMessageCapture()
+        {
+            _originalWriteUserMessage = Messages.WriteUserMessage; // Save the original delegate
+            CapturedMessages = new List<string>();
+            Messages.WriteUserMessage = (message, args) => CapturedMessages.Add(string.Format(message, args));
+        }
+        
+        public List<string> CapturedMessages { get; private set; }
+
+        public void Dispose()
+        {
+            Messages.WriteUserMessage = _originalWriteUserMessage;
         }
     }
 }

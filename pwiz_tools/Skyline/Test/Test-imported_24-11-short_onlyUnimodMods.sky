@@ -22,7 +22,6 @@
             <potential_loss formula="H4COS" massdiff_monoisotopic="63.998285" massdiff_average="64.10701" />
           </static_modification>
           <static_modification name="Acetyl (N-term)" terminus="N" variable="true" formula="C2H2O" unimod_id="1" short_name="1Ac" />
-          <static_modification name="Acetyl-Oxidation (N-term-M)" aminoacid="M" terminus="N" variable="true" formula="C2H2O2" />
         </static_modifications>
         <heavy_modifications />
       </peptide_modifications>
@@ -39,20 +38,6 @@
     <data_settings document_guid="2cdfe389-9309-4f76-bbc0-9fa5d15b57ea" audit_logging="true" />
   </settings_summary>
   <peptide_list label_name="Biognosys standards" websearch_status="X" auto_manage_children="false">
-    <peptide auto_manage_children="false" sequence="MSGSHSNDEDDVVQVPETSSPTK" modified_sequence="M[+58.005479]SGSHSNDEDDVVQVPETSSPTK" calc_neutral_pep_mass="2503.065656" num_missed_cleavages="0" rt_calculator_score="0.377337247133255">
-      <variable_modifications>
-        <variable_modification index_aa="0" modification_name="Acetyl-Oxidation (N-term-M)" mass_diff="+58" />
-      </variable_modifications>
-      <precursor charge="2" calc_neutral_mass="2503.065656" precursor_mz="1252.540104" auto_manage_children="false" collision_energy="0" modified_sequence="M[+58.0]SGSHSNDEDDVVQVPETSSPTK">
-        <transition_data>CiBoFnGmQjwSb06SQHgCgAFWoQHwqZSFdlKSQKoBAMABBQogaBRxTHDqAynCkEB4AoABUaEBeohGdzDGkECqAQDAAQUKIGgScXnOFhDag41AeAKAAVahAVC8DPfoi41AqgEAwAEFCiBoEHGAYfnzTWuKQHgCgAFQoQFkeXDaXHOKQKoBAMABBQogaAxx8n1xqYpag0B4AoABVKEBPT7nj5lig0CqAQDAAQUKIGgIcbEXCtjO83pAeAKAAVOhAXKzBaXsA3tAqgEAwAEFCiBoBnFQ3zKnS4N1QHgCgAFQoQGTJcZ0aZN1QKoBAMABBQogaBZxJH7FGo5Bk0B4AoABRKEBFb85jpVFk0CqAQDAAQIKIGgYcX9QFynUzZRAeAKAAVahAYvgh5zb0ZRAqgEAwAECCiBoGnHZImk3GlqWQHgCgAFWoQEBAtaqIV6WQKoBAMABAgogaBxx6StIM1ZamEB4AoABUaEBUyyWpl1emECqAQDAAQIKIGgecUP+mUGc5plAeAKAAVahAclN5LSj6plAqgEAwAEC</transition_data>
-      </precursor>
-      <precursor charge="3" calc_neutral_mass="2503.065656" precursor_mz="835.362495" auto_manage_children="false" collision_energy="0" modified_sequence="M[+58.0]SGSHSNDEDDVVQVPETSSPTK">
-        <transition_data>CiBoFnGmQjwSb06SQHgCgAFWoQHwqZSFdlKSQKoBAMABBQogaBRxTHDqAynCkEB4AoABUaEBeohGdzDGkECqAQDAAQUKIGgScXnOFhDag41AeAKAAVahAVC8DPfoi41AqgEAwAEFCiBoEHGAYfnzTWuKQHgCgAFQoQFkeXDaXHOKQKoBAMABBQogaAxx8n1xqYpag0B4AoABVKEBPT7nj5lig0CqAQDAAQUKIGgGcVDfMqdLg3VAeAKAAVChAZMlxnRpk3VAqgEAwAEFCiBoEHGAYfnzTWuKQHgEgAFQoQHCqSjBa3t6QKoBAMABBQogaBBxRs7CnlZKi0B4AoABRKEB0r6HhWVSi0CqAQDAAQIKIGgScZV+wtmtUo9AeAKAAUWhAbKNmcC8Wo9AqgEAwAECCiBoFnEkfsUajkGTQHgCgAFEoQEVvzmOlUWTQKoBAMABAgogaBhxf1AXKdTNlEB4AoABVqEBi+CHnNvRlECqAQDAAQIKIGgacdkiaTcaWpZAeAKAAVahAQEC1qohXpZAqgEAwAEC</transition_data>
-      </precursor>
-      <precursor charge="4" calc_neutral_mass="2503.065656" precursor_mz="626.77369" auto_manage_children="false" collision_energy="0" modified_sequence="M[+58.0]SGSHSNDEDDVVQVPETSSPTK">
-        <transition_data>CiBoFHFMcOoDKcKQQHgCgAFRoQF6iEZ3MMaQQKoBAMABBQogaBJxec4WENqDjUB4AoABVqEBULwM9+iLjUCqAQDAAQUKIGgQcYBh+fNNa4pAeAKAAVChAWR5cNpcc4pAqgEAwAEFCiBoDnFBLnHk4WKHQHgCgAFFoQEcDfnK8GqHQKoBAMABBQogaAxx8n1xqYpag0B4AoABVKEBPT7nj5lig0CqAQDAAQUKIGgIcbEXCtjO83pAeAKAAVOhAXKzBaXsA3tAqgEAwAEFCiBoBnFQ3zKnS4N1QHgCgAFQoQGTJcZ0aZN1QKoBAMABBQogaBBxgGH5801rikB4BIABUKEBwqkowWt7ekCqAQDAAQUKIGgWcSR+xRqOQZNAeAKAAUShARW/OY6VRZNAqgEAwAECCiBoGHF/UBcp1M2UQHgCgAFWoQGL4Iec29GUQKoBAMABAgogaBZxJH7FGo5Bk0B4BIABRKEBRNeVAZ1Jg0CqAQDAAQIKIGgYcX9QFynUzZRAeASAAVahAbr44w/j1YRAqgEAwAEC</transition_data>
-      </precursor>
-    </peptide>
     <peptide auto_manage_children="false" sequence="MSGSHSNDEDDVVQVPETSSPTK" modified_sequence="M[+42.010565]SGSHSNDEDDVVQVPETSSPTK" calc_neutral_pep_mass="2487.070742" num_missed_cleavages="0" rt_calculator_score="0.46566119790077209">
       <variable_modifications>
         <variable_modification index_aa="0" modification_name="Acetyl (N-term)" mass_diff="+42" />

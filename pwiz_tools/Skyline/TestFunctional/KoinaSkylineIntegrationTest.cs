@@ -208,7 +208,6 @@ namespace pwiz.SkylineTestFunctional
             var doc = SkylineWindow.Document;
 
             FileEx.SafeDelete(outBlib);
-            FileEx.SafeDelete(Path.ChangeExtension(outBlib, BiblioSpecLiteLibrary.EXT_CACHE));
 
             // Open Peptide Settings -- Library
             var peptideSettings = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
