@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using Newtonsoft.Json;
 
 namespace pwiz.CommonMsData.RemoteApi.Ardia
@@ -39,10 +37,6 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
     public class CreateDocumentResponse
     {
         public string DocumentId { get; set; }
-
-        [SuppressMessage("ReSharper", "IdentifierTypo")]
-        public IList<string> PresignedUrls { get; set; }
-
         public string RLink { get; set; }
 
         public static CreateDocumentResponse FromJson(string json)

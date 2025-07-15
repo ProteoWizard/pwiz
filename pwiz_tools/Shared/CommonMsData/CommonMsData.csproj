@@ -91,7 +91,9 @@
     <Compile Include="RemoteApi\Ardia\CreateFolderRequest.cs" />
     <Compile Include="RemoteApi\Ardia\CreateDocumentRequest.cs" />
     <Compile Include="RemoteApi\Ardia\StageDocumentRequest.cs" />
-    <Compile Include="RemoteApi\Ardia\UploadPieceResponse.cs" />
+    <Compile Include="RemoteApi\Ardia\StorageInfoResponse.cs" />
+    <Compile Include="RemoteApi\Ardia\UploadPartsRequest.cs" />
+    <Compile Include="RemoteApi\Ardia\UploadPartsResponse.cs" />
     <Compile Include="RemoteApi\RemoteAccount.cs" />
     <Compile Include="RemoteApi\RemoteAccountType.cs" />
     <Compile Include="RemoteApi\RemoteApiResources.designer.cs">

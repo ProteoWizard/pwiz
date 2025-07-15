@@ -35,7 +35,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         public static StageDocumentRequest Create(long fileSize)
         {
             StageDocumentRequest model;
-            if (fileSize < ArdiaClient.DEFAULT_PART_SIZE_BYTES)
+            if (fileSize < ArdiaClient.MAX_PART_SIZE_BYTES)
             {
                 model = new StageDocumentRequest();
                 model.AddPiece();
@@ -43,7 +43,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             else
             {
                 model = new StageDocumentRequest();
-                model.AddPiece(true, fileSize, ArdiaClient.DEFAULT_PART_SIZE_MB);
+                model.AddPiece(true, fileSize, ArdiaClient.MAX_PART_SIZE_BYTES);
             }
 
             return model;
