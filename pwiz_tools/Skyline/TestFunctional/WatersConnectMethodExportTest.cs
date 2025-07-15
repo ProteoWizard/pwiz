@@ -27,19 +27,21 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            // Test setup
             SetRequestHandlers();
-            var dlg = TestTemplateSelection();
-            TestMethodExport(dlg);
-        }
-
-        private ExportMethodDlg TestTemplateSelection()
-        {
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("MixedPolarity02.sky")));
             WaitForDocumentLoaded();
-
             var exportMethodDlg = ShowDialog<ExportMethodDlg>(() =>
                 SkylineWindow.ShowExportMethodDialog(ExportFileType.Method));
+            TestTemplateSelection(exportMethodDlg);
+            TestMethodExport(exportMethodDlg);
+        }
 
+        /// <summary>
+        /// Exercises the template selection dialog functionality.
+        /// </summary>
+        private void TestTemplateSelection(ExportMethodDlg exportMethodDlg)
+        {
             RunUI(() =>
             {
                 exportMethodDlg.InstrumentType = ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT;
@@ -56,17 +58,17 @@ namespace pwiz.SkylineTestFunctional
               
             });
             var templateDlg = ShowDialog<WatersConnectSelectMethodFileDialog>(() => exportMethodDlg.ClickTemplateButton());
+            WaitForConditionUI(1000, () => templateDlg.ListViewItems.Count == 1);
             RunUI(() =>
             {
-                Assert.AreEqual(1, templateDlg.ListViewItems.Count);
                 Assert.AreEqual("Company", templateDlg.ListViewItems[0].Text);
                 templateDlg.ListViewItems[0].Selected = true;
                 templateDlg.KeyPressHandler(Keys.Enter);
             });
+            WaitForConditionUI(1000,
+                () => templateDlg.ListViewItems.Count == 1 && templateDlg.ListViewItems[0].Text == @"Skyline");
             RunUI(() =>
             {
-                Assert.AreEqual(1, templateDlg.ListViewItems.Count);
-                Assert.AreEqual("Skyline", templateDlg.ListViewItems[0].Text);
                 templateDlg.ListViewItems[0].Selected = true;
                 templateDlg.KeyPressHandler(Keys.Enter);
             });
@@ -76,9 +78,11 @@ namespace pwiz.SkylineTestFunctional
             {
                 Assert.AreEqual("Company/Skyline/Test Method 37", exportMethodDlg.TemplatePathField.Text);
             });
-            return exportMethodDlg;
         }
 
+        /// <summary>
+        /// Exercises the dialog for the method file name/path selection.
+        /// </summary>
         private void TestMethodExport(ExportMethodDlg exportMethodDlg)
         {
             var warningDlg = ShowDialog<MultiButtonMsgDlg>(() => exportMethodDlg.OkDialog(), 1000);
@@ -92,7 +96,7 @@ namespace pwiz.SkylineTestFunctional
                 folderToSelect.Selected = true;
                 methodFileDlg.KeyPressHandler(Keys.Enter);
             });
-            WaitForConditionUI(2000, () => methodFileDlg.ListViewItems.Count == 11, () => "Template selection dialog is not populated within allotted time.");
+            WaitForConditionUI(1000, () => methodFileDlg.ListViewItems.Count == 11, () => "Template selection dialog is not populated within allotted time.");
             RunUI(() =>
             {
                 Assert.AreEqual(0, methodFileDlg.ListViewItems.Count(item => item.ImageIndex == (int)BaseFileDialogNE.ImageIndex.ReadOnlyFolder));
@@ -114,8 +118,9 @@ namespace pwiz.SkylineTestFunctional
             });
             RunUI(() =>
             {
-                var uploadErrorDlg = TryWaitForOpenForm<MessageDlg>(1000);
+                var uploadErrorDlg = TryWaitForOpenForm<MessageDlg>(200);
                 Assert.IsNull(uploadErrorDlg, "Method upload error: \n" + uploadErrorDlg?.DetailMessage);
+                uploadErrorDlg?.OkDialog();
             });
         }
 
@@ -134,9 +139,13 @@ namespace pwiz.SkylineTestFunctional
             });
         }
 
+        /// <summary>
+        /// Validates the method data uploaded to Waters Connect server.
+        /// </summary>
         public void ValidateMethodUpload(string jsonPayload)
         {
             var methodModel = JObject.Parse(jsonPayload);
+            Assert.AreNotEqual("FailMethod", methodModel["name"].ToString().Trim());    // FailMethod is used to test the failed upload
             Assert.AreEqual("TestMethod", methodModel["name"].ToString().Trim());
             Assert.AreEqual(23, methodModel["targets"].Children().Count());
             Assert.IsTrue(methodModel["targets"].Children().All(item =>

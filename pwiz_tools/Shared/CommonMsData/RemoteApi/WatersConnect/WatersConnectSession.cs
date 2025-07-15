@@ -334,5 +334,11 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             string url = string.Format(@"/waters_connect/v2.0/sample-sets/{0}/injection-data", watersConnectUrl.FolderOrSampleSetId);
             return new Uri(WatersConnectAccount.ServerUrl + url);
         }
+
+        public override void Dispose()
+        {
+            _httpClient?.Dispose();
+            base.Dispose();
+        }
     }
 }

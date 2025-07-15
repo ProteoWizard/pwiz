@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -70,6 +71,7 @@ namespace pwiz.Common.Mock
             {
                 Content = new StringContent(_response)
             };
+            Trace.WriteLine(string.Format("Request {0} received, string {1} served.", request.RequestUri, _response));
             return response;
         }
     }
@@ -91,6 +93,7 @@ namespace pwiz.Common.Mock
             {
                 Content = new StringContent(File.ReadAllText(_responseFile))
             };
+            Trace.WriteLine(string.Format("Request {0} received, file {1} served.", request.RequestUri, _responseFile));
             return response;
         }
     }

@@ -43,12 +43,28 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
         }
 
         public static readonly Dictionary<WatersConnectAccount, TokenCacheEntry> _authenticationTokens = new Dictionary<WatersConnectAccount, TokenCacheEntry>();
+        public static IHttpClientFactory _httpClientFactory;
 
         public static readonly WatersConnectAccount DEFAULT
             = new WatersConnectAccount(@"https://devconnect.waters.com:48444", string.Empty, string.Empty)
             {
                 IdentityServer = @"https://devconnect.waters.com:48333"
             };
+
+        static WatersConnectAccount()
+        {
+            var services = new ServiceCollection();
+            var builder = services.AddHttpClient("customClient");
+            builder.ConfigurePrimaryHttpMessageHandler(() =>
+                // Get mock handler for testing purposes.
+                CommonApplicationSettings.HttpMessageHandlerFactory.getMessageHandler(
+                    HANDLER_NAME,
+                    () => new WebRequestHandler()
+                        { UnsafeAuthenticatedConnectionSharing = true, PreAuthenticate = true })
+            );
+            var provider = services.BuildServiceProvider();
+            _httpClientFactory = provider.GetService<IHttpClientFactory>();
+        }
         public WatersConnectAccount(string serverUrl, string username, string password)
         {
             ServerUrl = serverUrl;
@@ -131,7 +147,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             {
                     return tokenCacheEntry.TokenResponse;
             }
-
+            // Get mock handler for testing purposes.
             var authHandler = CommonApplicationSettings.HttpMessageHandlerFactory.getMessageHandler(AUTH_HANDLER_NAME, () => new HttpClientHandler());
             var tokenClient = new TokenClient(IdentityServer + IdentityConnectEndpoint, @"resourceownerclient_jwt",
                 ClientSecret, authHandler);
@@ -189,28 +205,11 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             return itemsValue.OfType<JObject>().Select(f => new WatersConnectFileObject(f));
         }*/
 
-        public static HttpMessageHandler GetDefaultMessageHandler()
-        {
-            var handler = new WebRequestHandler();
-            handler.UnsafeAuthenticatedConnectionSharing = true;
-            handler.PreAuthenticate = true;
-            return handler;
-        }
         public HttpClient GetAuthenticatedHttpClient()
         {
             var tokenResponse = Authenticate();
-
-            var services = new ServiceCollection();
-            var builder = services.AddHttpClient("customClient");
-            builder.ConfigurePrimaryHttpMessageHandler(() =>
-            {
-                var handler = CommonApplicationSettings.HttpMessageHandlerFactory.getMessageHandler(HANDLER_NAME, GetDefaultMessageHandler);
-                return handler;
-            });
-            var provider = services.BuildServiceProvider();
-            var httpClientFactory = provider.GetService<IHttpClientFactory>();
-
-            var httpClient = httpClientFactory.CreateClient("customClient" );
+            var httpClient = _httpClientFactory.CreateClient("customClient");
+            
             httpClient.SetBearerToken(tokenResponse.AccessToken);
             //httpClient.DefaultRequestHeaders.Remove(@"Accept");
             //httpClient.DefaultRequestHeaders.Add(@"Accept", @"application/json");
