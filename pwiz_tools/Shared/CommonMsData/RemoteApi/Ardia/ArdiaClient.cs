@@ -66,6 +66,8 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         private const string PATH_DELETE_FOLDER   = @"/session-management/bff/navigation/api/v1/folders/folderPath";
         private const string PATH_SESSION_COOKIE  = @"/session-management/bff/session-management/api/v1/SessionManagement/sessioncookie";
         private const string PATH_COMPLETE_MULTIPART_REQUEST = @"/session-management/bff/document/api/v1/documents/completeMultiPartRequest";
+        private const string PATH_GET_PARENT_BY_PATH = @"/session-management/bff/navigation/api/v1/navigation/path";
+        private const string PATH_DATA_EXPLORER = @"/app/data-explorer";
 
         // CONSIDER: throwing IOException is a placeholder for improving the UX for editing RemoteAccounts which should
         //           not allow the dialog to close until a newly added item is either connected or removed
@@ -84,15 +86,17 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             }
 
             var ardiaUrl = account.GetRootArdiaUrl();
+            var serverUrl = ardiaUrl.ServerUrl;
             var serverApiUrl = ardiaUrl.ServerApiUrl;
 
-            return new ArdiaClient(account, serverApiUrl, applicationCode, token);
+            return new ArdiaClient(account, serverUrl, serverApiUrl, applicationCode, token);
         }
 
-        private ArdiaClient(ArdiaAccount account, string serverUrl, string applicationCode, string token)
+        private ArdiaClient(ArdiaAccount account, string serverUrl, string serverApiUrl, string applicationCode, string token)
         {
             Account = account;
-            ServerUri = new Uri(serverUrl);
+            ServerUrl = serverUrl;
+            ServerUri = new Uri(serverApiUrl);
             ApplicationCode = applicationCode;
             Token = token;
         }
@@ -102,6 +106,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         private string ApplicationCode { get; }
         private string Token { get; }
         private Uri ServerUri { get; }
+        private string ServerUrl { get; }
 
         /// <summary>
         /// Configure an <see cref="HttpClient"/> callers can use to access the Ardia API.
@@ -600,6 +605,39 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             {
                 var message = ErrorMessageBuilder.Create(ArdiaResources.Error_ProblemCommunicatingWithServer).ErrorDetailFromException(e).Uri(uri).StatusCode(statusCode);
                 return ArdiaResult.Failure(message.ToString(), statusCode, e);
+            }
+        }
+
+        //
+        public ArdiaResult<string> GetDataExplorerUrl(string path)
+        {
+            var uri = UriFromParts(ServerUri, $"{PATH_GET_PARENT_BY_PATH}?itemPath={Uri.EscapeDataString(path)}");
+
+            HttpStatusCode? statusCode = null;
+            try
+            {
+                using var httpClient = AuthenticatedHttpClient();
+                using var response = httpClient.GetAsync(uri).Result;
+
+                statusCode = response.StatusCode;
+                var responseBody = response.Content.ReadAsStringAsync().Result;
+
+                if (statusCode == HttpStatusCode.OK)
+                {
+                    var folder = GetParentFolderResponse.FromJson(responseBody);
+                    string dataExplorerUrl = ServerUrl + Path.Combine(PATH_DATA_EXPLORER, folder.RLink2);
+                    return ArdiaResult<string>.Success(dataExplorerUrl);
+                }
+                else
+                {
+                    var message = ErrorMessageBuilder.Create(ArdiaResources.Error_StatusCode_Unexpected).ErrorDetailFromResponseBody(responseBody).Uri(uri).StatusCode(statusCode);
+                    return ArdiaResult<string>.Failure(message.ToString(), statusCode, null);
+                }
+            }
+            catch (Exception e) when (ShouldHandleException(e))
+            {
+                var message = ErrorMessageBuilder.Create(ArdiaResources.Error_ProblemCommunicatingWithServer).ErrorDetailFromException(e).Uri(uri).StatusCode(statusCode);
+                return ArdiaResult<string>.Failure(message.ToString(), statusCode, e);
             }
         }
 

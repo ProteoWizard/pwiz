@@ -17,6 +17,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -273,7 +274,13 @@ namespace pwiz.Skyline.FileUI
             {
                 PublishedDocument = result.Value;
 
-                MessageDlg.Show(parent, ArdiaResources.FileUpload_Success);
+                string message = ArdiaResources.FileUpload_Success_Open_DataExplorer;
+                if (MultiButtonMsgDlg.Show(parent, message, MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false)
+                        == DialogResult.Yes)
+                {
+                    // need case handling here
+                    Process.Start(Client.GetDataExplorerUrl(DestinationPath).Value);
+                }
             }
             else
             {

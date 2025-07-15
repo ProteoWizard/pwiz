@@ -117,7 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="UnifiUrl_OpenMsDataFile_Cannot_find_account_for_username__0__and_server__1__" xml:space="preserve">
     <value>无法找到用户名 {0} 和服务器 {1} 的账户。</value>
   </data>
@@ -126,5 +125,8 @@
   </data>
   <data name="ArdiaAccount_GetAuthenticatedHttpClient_Failed_to_open_Ardia_connection" xml:space="preserve">
     <value>无法打开 Ardia 连接</value>
+  </data>
+  <data name="FileUpload_Success_Open_DataExplorer" xml:space="preserve">
+    <value />
   </data>
 </root>
