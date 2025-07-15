@@ -35,19 +35,17 @@ namespace pwiz.Skyline.Model.Lib
     /// </summary>
     public class LibraryFiles : IReadOnlyList<string>
     {
-        public static LibraryFiles EMPTY = new LibraryFiles(Array.Empty<string>(), Array.Empty<WorkflowType>());
+        public static LibraryFiles EMPTY = new LibraryFiles(Array.Empty<string>());
 
         private Dictionary<MsDataFileUri, int> _msDataFileUriLookup = new Dictionary<MsDataFileUri, int>();
         private ImmutableList<string> _baseNames;
-        public LibraryFiles(IEnumerable<string> sourceFilePaths, IEnumerable<WorkflowType> workflowTypes)
+        public LibraryFiles(IEnumerable<string> sourceFilePaths)
         {
             FilePaths = ImmutableList.ValueOf(sourceFilePaths);
-            WorkflowTypes = ImmutableList.ValueOf(workflowTypes);
             _baseNames = ImmutableList.ValueOf(FilePaths.Select(GetBaseName));
         }
 
         public ImmutableList<string> FilePaths { get; }
-        public ImmutableList<WorkflowType> WorkflowTypes { get; }
 
         public int Count
         {

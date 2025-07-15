@@ -118,7 +118,7 @@ namespace pwiz.Skyline.Model.Lib.Midas
                 }
 
                 var sourceFiles = _spectra.Keys.Select(key => key.FilePath).Distinct().ToList();
-                return new LibraryFiles(sourceFiles, Enumerable.Repeat(WorkflowType.DDA, sourceFiles.Count));
+                return new LibraryFiles(sourceFiles);
             }
         }
 

@@ -499,8 +499,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (!IsImportingSearchResults)
                 return WorkflowType == Workflow.dia;
 
-            var libraryFiles = ImportPeptideSearch.DocLib.LibraryFiles;
-            return libraryFiles.WorkflowTypes.All(w => w == Model.Lib.WorkflowType.DIA);
+            var libraryFiles = ImportPeptideSearch.DocLib.LibraryDetails.DataFiles;
+            return libraryFiles.All(d => d.WorkflowType == Model.Lib.WorkflowType.DIA);
         }
 
         private Pages LastPage
