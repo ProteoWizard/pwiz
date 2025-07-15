@@ -17,10 +17,8 @@
  * limitations under the License.
  */
 
-using System;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.SystemUtil;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest
