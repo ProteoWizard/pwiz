@@ -255,6 +255,7 @@
     <Compile Include="NewDocumentLoadLibrariesTest.cs" />
     <Compile Include="TargetRatiosTest.cs" />
     <Compile Include="TestPeakAreaDotpGraph.cs" />
+    <Compile Include="WatersConnectMethodExportTest.cs" />
     <Compile Include="ZedGraphClipboardTest.cs" />
     <Compile Include="ClusteredHeatMapTest.cs" />
     <Compile Include="ComplexCrosslinkTest.cs" />
@@ -715,6 +716,7 @@
     <None Include="UniquePeptidesDialogTest.zip" />
     <None Include="UpdateGlobalStandardTest.zip" />
     <None Include="VolcanoPlotLayoutTest.zip" />
+    <None Include="WatersConnectMethodExportTest.zip" />
     <None Include="ZedGraphClipboardTest.zip" />
   </ItemGroup>
   <ItemGroup>

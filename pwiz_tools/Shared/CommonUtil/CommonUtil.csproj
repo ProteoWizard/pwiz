@@ -96,11 +96,15 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\Microsoft.ConcurrencyVisualizer.Markers.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\Lib\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Net.Http" />
     <Reference Include="System.Security" />
     <Reference Include="System.Web" />
     <Reference Include="System.Windows.Forms" />
@@ -169,6 +173,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Images.resx</DependentUpon>
     </Compile>
+    <Compile Include="Mock\MockHttpMessageHandler.cs" />
     <Compile Include="SystemUtil\Assume.cs" />
     <Compile Include="SystemUtil\Caching\ProductionFacility.cs" />
     <Compile Include="SystemUtil\Caching\Production.cs" />

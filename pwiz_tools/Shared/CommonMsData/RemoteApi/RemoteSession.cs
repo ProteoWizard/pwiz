@@ -112,9 +112,20 @@ namespace pwiz.CommonMsData.RemoteApi
                 
                 if (_fetchRequests.Contains(key))
                 {
-                    return;
+                    if (_responses.TryGetValue(key, out var response))
+                    {
+                        if (response.Exception == null)
+                        {
+                            // Already have the response data.
+                            return;
+                        }
+                        else
+                            _responses.Remove(key);
+                    }
+                    else 
+                        return; // The request is already in progress.
                 }
-                _responses.Remove(key);
+                _fetchRequests.Remove(key);
                 AsyncFetch(requestUri, fetcher, out _);
             }
 
@@ -164,6 +175,11 @@ namespace pwiz.CommonMsData.RemoteApi
                     data = default(T);
                     return false;
                 }
+                if (remoteResponse.Exception != null)
+                {
+                    data = default(T);
+                    return false;
+                }
                 data = (T) remoteResponse.Data;
                 return true;
             }
@@ -194,7 +210,7 @@ namespace pwiz.CommonMsData.RemoteApi
             public RemoteServerException Exception { get; private set; }
         }
 
-        private struct RequestKey
+        protected struct RequestKey
         {
             public RequestKey(Type type, Uri uri) : this()
             {
@@ -205,5 +221,10 @@ namespace pwiz.CommonMsData.RemoteApi
             public Type Type { get; private set; }
             public Uri Uri { get; private set; }
         }
+    }
+
+    public class ProgressableStreamContents
+    {
+
     }
 }
