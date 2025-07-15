@@ -17,7 +17,6 @@
  */
 using System.Collections.Generic;
 using System.Windows.Forms;
-using System.IO;
 using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
 using pwiz.CommonMsData.RemoteApi;
