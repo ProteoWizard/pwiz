@@ -78,6 +78,7 @@ namespace pwiz.SkylineTestConnected
             TestValidateFolderName();
             TestAccountHasCredentials(account);
             TestCreateArdiaError();
+            TestPartSizeIsMb();
 
             Test_StageDocument_Request_SmallDocument();
             Test_StageDocument_Request_LargeDocument();
@@ -144,6 +145,14 @@ namespace pwiz.SkylineTestConnected
             // Assert.AreEqual(REQUEST_JSON_COMPLETE_MULTIPART_UPLOAD, json);
         }
 
+        /// <summary>
+        /// Make sure the maximum part size of a multipart Skyline document archive is in MB (rather than in bytes).
+        /// </summary>
+        private static void TestPartSizeIsMb()
+        {
+            Assert.IsTrue(ArdiaClient.MAX_PART_SIZE_MB > 1 && ArdiaClient.MAX_PART_SIZE_MB < 1024);
+        }
+
         private static void Test_StageDocument_Response()
         {
             var stagedDocumentResponse = StagedDocumentResponse.FromJson(RESPONSE_JSON_CREATE_STAGED_DOCUMENT);
@@ -189,13 +198,14 @@ namespace pwiz.SkylineTestConnected
 
             Assert.IsNotNull(requestModel.Pieces);
             Assert.AreEqual(1, requestModel.Pieces.Count);
-            Assert.AreEqual(StageDocumentRequest.DEFAULT_PIECE_NAME, requestModel.Pieces[0].PieceName);
+
             Assert.IsTrue(requestModel.Pieces[0].IsMultiPart);
+            Assert.AreEqual(StageDocumentRequest.DEFAULT_PIECE_NAME, requestModel.Pieces[0].PieceName);
             Assert.AreEqual(fileSize, requestModel.Pieces[0].Size);
-            Assert.AreEqual(ArdiaClient.MAX_PART_SIZE_BYTES, requestModel.Pieces[0].PartSize);
+            Assert.AreEqual(ArdiaClient.MAX_PART_SIZE_MB, requestModel.Pieces[0].PartSize);
 
             var json = requestModel.ToJson();
-            Assert.AreEqual($@"{{""Pieces"":[{{""PieceName"":""[SingleDocument]"",""IsMultiPart"":true,""Size"":6451738112,""PartSize"":{ArdiaClient.MAX_PART_SIZE_BYTES}}}]}}", json);
+            Assert.AreEqual($@"{{""Pieces"":[{{""PieceName"":""[SingleDocument]"",""IsMultiPart"":true,""Size"":6451738112,""PartSize"":{ArdiaClient.MAX_PART_SIZE_MB}}}]}}", json);
         }
 
         private static void TestCreateArdiaError()

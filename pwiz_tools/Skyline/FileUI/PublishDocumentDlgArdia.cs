@@ -232,17 +232,13 @@ namespace pwiz.Skyline.FileUI
         // TODO: re-work how files are read from the temp directory
         private static string[] GatherLocalZipFiles(string fileName)
         {
-            var paths = new List<string>();
-
-            // look for parts following pattern {name}-01.zip
             var directory = Path.GetDirectoryName(fileName);
-            var fileNameNoExt = Path.GetFileNameWithoutExtension(fileName); // extension is ".zip"
-            var fileNamePattern = $@"{fileNameNoExt}.z*"; // *.zip";
+            if (directory == null)
+                return new string[] {};
 
-            var tmp = Directory.GetFiles(directory, fileNamePattern);
+            var tmp = Directory.GetFiles(directory);
 
-            paths.AddRange(tmp);
-
+            var paths = new List<string>(tmp);
             return paths.ToArray();
         }
 
