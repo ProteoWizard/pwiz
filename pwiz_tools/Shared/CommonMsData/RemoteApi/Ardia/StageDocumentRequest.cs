@@ -43,7 +43,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             else
             {
                 model = new StageDocumentRequest();
-                model.AddPiece(true, fileSize, ArdiaClient.MAX_PART_SIZE_BYTES);
+                model.AddPiece(true, fileSize, ArdiaClient.MAX_PART_SIZE_MB);
             }
 
             return model;

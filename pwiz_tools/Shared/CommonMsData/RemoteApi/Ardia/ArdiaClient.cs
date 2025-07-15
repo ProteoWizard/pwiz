@@ -51,7 +51,8 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         // CONSIDER: add UrlBuilder class to Skyline. Related PRs also define this constant and helper methods narrowly scoped to a remote server vendor
         public const string URL_PATH_SEPARATOR = @"/";
 
-        public const int MAX_PART_SIZE_BYTES = 64 * 1024 * 1024;
+        public const int MAX_PART_SIZE_MB = 64;
+        public const int MAX_PART_SIZE_BYTES = MAX_PART_SIZE_MB * 1024 * 1024;
 
         private const string HEADER_CONTENT_TYPE_APPLICATION_JSON = @"application/json";
         private const string HEADER_CONTENT_TYPE_ZIP_COMPRESSED   = @"application/x-zip-compressed";
@@ -59,17 +60,17 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         private const string COOKIE_BFF_HOST = "Bff-Host";
         private const string HEADER_APPLICATION_CODE = "applicationCode";
 
-        private const string PATH_STAGE_DOCUMENT  = @"/session-management/bff/document/api/v1/stagedDocuments";
-        private const string PATH_CREATE_DOCUMENT = @"/session-management/bff/document/api/v1/documents";
-        private const string PATH_GET_DOCUMENT    = @"/session-management/bff/document/api/v1/documents/{0}";
-        private const string PATH_CREATE_FOLDER   = @"/session-management/bff/navigation/api/v1/folders";
-        private const string PATH_DELETE_FOLDER   = @"/session-management/bff/navigation/api/v1/folders/folderPath";
-        private const string PATH_SESSION_COOKIE  = @"/session-management/bff/session-management/api/v1/SessionManagement/sessioncookie";
+        private const string PATH_STAGE_DOCUMENT             = @"/session-management/bff/document/api/v1/stagedDocuments";
+        private const string PATH_CREATE_DOCUMENT            = @"/session-management/bff/document/api/v1/documents";
+        private const string PATH_GET_DOCUMENT               = @"/session-management/bff/document/api/v1/documents/{0}";
         private const string PATH_COMPLETE_MULTIPART_REQUEST = @"/session-management/bff/document/api/v1/documents/completeMultiPartRequest";
-        private const string PATH_STORAGE_INFO    = @"/session-management/bff/raw-data/api/v1/rawdata/storageInfo";
+        private const string PATH_CREATE_FOLDER              = @"/session-management/bff/navigation/api/v1/folders";
+        private const string PATH_DELETE_FOLDER              = @"/session-management/bff/navigation/api/v1/folders/folderPath";
+        private const string PATH_STORAGE_INFO               = @"/session-management/bff/raw-data/api/v1/rawdata/storageInfo";
+        private const string PATH_SESSION_COOKIE             = @"/session-management/bff/session-management/api/v1/SessionManagement/sessioncookie";
 
-        // CONSIDER: throwing IOException is a placeholder for improving the experience of editing Remote Account settings which should not
-        //           save a Remote Account until an item is either connected or removed.
+        // CONSIDER: throw IOException as a placeholder for improving the experience of editing Remote Account settings. It should
+        //           not be possible to exit the settings editor when the account is invalid.
         public static ArdiaClient Create(ArdiaAccount account)
         {
             var applicationCode = ArdiaCredentialHelper.GetApplicationCode(account);
