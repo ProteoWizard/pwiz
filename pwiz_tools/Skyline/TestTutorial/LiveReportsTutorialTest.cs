@@ -16,19 +16,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System.Drawing;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.AuditLog;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
-using System.Windows.Forms;
-using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.DocSettings.MetadataExtraction;
 using pwiz.Skyline.SettingsUI;
 
 namespace pwiz.SkylineTestTutorial
@@ -39,6 +40,7 @@ namespace pwiz.SkylineTestTutorial
         [TestMethod]
         public void TestLiveReportsTutorial()
         {
+            CoverShotName = "LiveReports";
             TestFilesZip =
                 @"TestTutorial\LiveReportsTutorial.zip";
             AuditLogList.IgnoreTestChecks = true;
@@ -59,13 +61,14 @@ namespace pwiz.SkylineTestTutorial
             RunUI(()=>auditLogForm.EnableAuditLogging(true));
             PauseForScreenShot<AuditLogForm>("Audit log after enabling audit logging");
             OkDialog(auditLogForm, auditLogForm.Close);
+            PauseForScreenShot("Status bar", null, ClipSelectionStatus);
             RunUI(() =>
             {
                 SkylineWindow.ShowDocumentGrid(true);
             });
             var documentGrid = FindOpenForm<DocumentGridForm>();
-            var rectReportsDropDown = ShowReportsDropdown(Resources.SkylineViewContext_GetDocumentGridRowSources_Proteins);
-            PauseForScreenShot<DocumentGridForm>("Document Grid Reports Menu", null, bmp=>ClipBitmap(bmp.CleanupBorder(true), rectReportsDropDown));
+            ShowReportsDropdown(Resources.SkylineViewContext_GetDocumentGridRowSources_Proteins);
+            PauseForScreenShot<DocumentGridForm>("Document Grid Reports Menu");
             HideReportsDropdown();
             RunUI(()=>
             {
@@ -74,15 +77,23 @@ namespace pwiz.SkylineTestTutorial
                         .SkylineViewContext_GetDocumentGridRowSources_Proteins));
             });
             WaitForCondition(() => documentGrid.IsComplete);
+            PauseForScreenShot<DocumentGridForm>("Proteins report");
             RunUI(() =>
             {
                 documentGrid.DataGridView.CurrentCell = documentGrid.DataGridView.Rows[3].Cells[0];
                 documentGrid.DataGridView.ClickCurrentCell();
-                Assert.AreEqual(SkylineWindow.Document.GetPathTo((int) SrmDocument.Level.MoleculeGroups, 3), SkylineWindow.SelectedPath);
+                Assert.AreEqual(SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.MoleculeGroups, 3), SkylineWindow.SelectedPath);
+            });
+            PauseForScreenShot<SequenceTreeForm>("Targets view");
+            PauseForScreenShot("Status bar", null, ClipSelectionStatus);
+            PauseForScreenShot(documentGrid.NavBar, processShot:bmp=>ClipControl(documentGrid.NavBar, bmp));
+            RunUI(()=>
+            {
                 documentGrid.DataboundGridControl.ChooseView(
                     ViewGroup.BUILT_IN.Id.ViewName(Resources.SkylineViewContext_GetDocumentGridRowSources_Replicates));
             });
             WaitForCondition(() => documentGrid.IsComplete);
+            PauseForScreenShot<DocumentGridForm>("Replicates report");
             RunLongDlg<DocumentSettingsDlg>(()=>SkylineWindow.ShowDocumentSettingsDialog(), documentSettingsDlg =>
             {
                 RunUI(()=>documentSettingsDlg.SelectTab(DocumentSettingsDlg.TABS.annotations));
@@ -114,6 +125,7 @@ namespace pwiz.SkylineTestTutorial
                 }, defineAnnotationDlg => defineAnnotationDlg.OkDialog());
                 PauseForScreenShot<DocumentSettingsDlg>("Document settings dialog with two annotations");
             }, documentSettingsDlg=>documentSettingsDlg.OkDialog());
+            WaitForCondition(() => documentGrid.IsComplete);
             RunUI(()=>
             {
                 documentGrid.Activate();
@@ -121,10 +133,10 @@ namespace pwiz.SkylineTestTutorial
                     PropertyPath.Root.Property(AnnotationDef.ANNOTATION_PREFIX + "Cohort"));
                 Assert.IsNotNull(cohortColumn);
                 documentGrid.DataGridView.CurrentCell = documentGrid.DataGridView.Rows[0].Cells[cohortColumn.Index];
-                documentGrid.DataGridView.ClickCurrentCell();
-
             });
+            OpenGridComboBox(documentGrid.DataGridView);
             PauseForScreenShot<DocumentGridForm>("Document grid with two annotations");
+            CloseGridComboBox(documentGrid.DataGridView);
             RunLongDlg<DocumentSettingsDlg>(()=>SkylineWindow.ShowDocumentSettingsDialog(), documentSettingsDlg =>
             {
                 RunUI(()=>documentSettingsDlg.SelectTab(DocumentSettingsDlg.TABS.metadata_rules));
@@ -145,8 +157,9 @@ namespace pwiz.SkylineTestTutorial
                         PauseForScreenShot<MetadataRuleEditor>("Diseased rule scrolled down");
 
                     }, metadataRuleEditor=>metadataRuleEditor.OkDialog());
+                    RunUI(()=>metadataRuleSetEditor.DataGridViewSteps.CurrentCell = metadataRuleSetEditor.DataGridViewSteps.Rows[1].Cells[0]);
                     PauseForScreenShot<MetadataRuleSetEditor>("Rule Set Editor with one rule");
-                    RunLongDlg<MetadataRuleEditor>(() => metadataRuleSetEditor.EditRule(0), metadataRuleEditor =>
+                    RunLongDlg<MetadataRuleEditor>(() => metadataRuleSetEditor.EditRule(1), metadataRuleEditor =>
                     {
                         RunUI(() =>
                         {
@@ -157,10 +170,27 @@ namespace pwiz.SkylineTestTutorial
                         });
                         PauseForScreenShot<MetadataRuleEditor>("Healthy rule");
                     }, metadataRuleEditor => metadataRuleEditor.OkDialog());
+                    RunUI(() => metadataRuleSetEditor.DataGridViewSteps.CurrentCell = metadataRuleSetEditor.DataGridViewSteps.Rows[2].Cells[0]);
                     PauseForScreenShot<MetadataRuleSetEditor>("Rule Set Editor with two rules");
-
+                    RunUI(() =>
+                    {
+                        metadataRuleSetEditor.RuleName = "Cohort and SubjectID";
+                    });
                 }, metadataRuleSetEditor => metadataRuleSetEditor.OkDialog());
             }, documentSettingsDlg=>documentSettingsDlg.OkDialog());
+        }
+
+        public Bitmap ClipControl(Control control, Bitmap bmp)
+        {
+            return CallUI(() =>
+            {
+                var parentWindowRect = ScreenshotManager.GetFramedWindowBounds(control);
+                var controlScreenRect = control.RectangleToScreen(new Rectangle(0, 0, control.Width, control.Height));
+                return ClipBitmap(bmp,
+                    new Rectangle(controlScreenRect.Left - parentWindowRect.Left,
+                        controlScreenRect.Top - parentWindowRect.Top, controlScreenRect.Width,
+                        controlScreenRect.Height));
+            });
         }
     }
 }
