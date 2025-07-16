@@ -255,7 +255,7 @@ namespace pwiz.Skyline.Model.DocSettings {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Data independent acquisition: MS1 EI fragmented data is treated as MS2.
+        ///   Looks up a localized string similar to Electron Ionization: MS1 data is assumed to be EI fragmented and is treated as MS2.
         /// </summary>
         public static string FullScanAcquisitionMethod_EI_TOOLTIP {
             get {

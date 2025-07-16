@@ -45,7 +45,7 @@ namespace pwiz.SkylineTestData
             var eiLoadedDocPath = TestFilesDir.GetTestPath("import-ei-loaded.sky");
 
             var output = RunCommand("--new=" + eiDocPath,
-                "--full-scan-acquisition-method=EI",  // Treat MS1 data as all-ions-fragmentation Ms2 results
+                "--full-scan-acquisition-method=EI",  // Treat MS1 data as all-ions-fragmentation MS2 results
                 "--full-scan-product-analyzer=tof",
                 "--full-scan-product-res=30000",
                 "--full-scan-rt-filter=scheduling_windows",
@@ -53,8 +53,6 @@ namespace pwiz.SkylineTestData
                 "--tran-product-ion-charges=1",
                 "--instrument-min-mz=42",
                 "--instrument-max-mz=2000",
-                "--instrument-min-time=" + 0.42,
-                "--instrument-max-time=" + 4.2,
                 "--instrument-dynamic-min-mz",
                 "--instrument-method-mz-tolerance=" + 0.42,
                 "--integrate-all",
@@ -71,7 +69,8 @@ namespace pwiz.SkylineTestData
                 "--out=" + eiLoadedDocPath);
             doc = ResultsUtil.DeserializeDocument(eiLoadedDocPath);
             Assert.AreEqual(16, doc.MoleculeTransitions.Count());
-            Assert.AreEqual(11, doc.MoleculeTransitions.Count(t => t.Results[0][0].Area > 0));
+            Assert.AreEqual(14, doc.MoleculeTransitions.Count(t => t.Results[0][0].Area > 0));
+            AssertEx.Serializable(doc); // Verifies consistency with current Skyline schema
         }
 
     }

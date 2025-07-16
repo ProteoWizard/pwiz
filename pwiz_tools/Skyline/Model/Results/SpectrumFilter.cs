@@ -175,14 +175,10 @@ namespace pwiz.Skyline.Model.Results
 
                     if (_fullScan.IsAllIons)
                     {
-                        if (instrumentInfo != null)
-                        {
-                            _isWatersMse = _isWatersFile;
-                            _isAgilentMse = instrumentInfo.IsAgilentFile;
-                            _isElectronIonizationMse = (instrumentInfo.ConfigInfoList != null &&
-                                                        instrumentInfo.ConfigInfoList.Any(c => @"electron ionization".Equals(c.Ionization))) ||
-                                                       _acquisitionMethod == FullScanAcquisitionMethod.EI;
-                        }
+                        _isWatersMse = _isWatersFile;
+                        _isAgilentMse = instrumentInfo?.IsAgilentFile ?? false;
+                        _isElectronIonizationMse = _acquisitionMethod == FullScanAcquisitionMethod.EI ||
+                                                   (instrumentInfo?.ConfigInfoList?.Any(c => @"electron ionization".Equals(c.Ionization)) ?? false);
                         _mseLevel =  _isElectronIonizationMse ? 2 : 1; // Electron ionization produces fragments only
                     }
                 }
