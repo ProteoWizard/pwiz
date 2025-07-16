@@ -178,6 +178,9 @@
   <data name="FullScanAcquisitionMethod_DDA_TOOLTIP" xml:space="preserve">
     <value>Data dependent acquisition: MS2 chromatograms are extracted but not used for quantification</value>
   </data>
+  <data name="FullScanAcquisitionMethod_EI_TOOLTIP" xml:space="preserve">
+    <value>Electron Ionization: MS1 data is assumed to be EI fragmented and is treated as MS2</value>
+  </data>
   <data name="FullScanAcquisitionMethod_DIA_TOOLTIP" xml:space="preserve">
     <value>Data independent acquisition: MS2 spectra contribute to the chromatograms of all precursors whose m/z values are within the isolation window</value>
   </data>
