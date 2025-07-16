@@ -139,8 +139,8 @@ id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	num
 100	AHSTGEQPPQLSLATR	564.96032714	3	AHSTGEQPPQLSLATR	-	-	2	12	0.83752459	0.0	0.0	2	2.87393617	2.84907579	2.91122508	3.39680093	N/A	N/A	N/A	N/A	N/A	1	99	3.74111482e-06	19
 101	AHVVPCFDASK	615.80041503	2	AHVVPC[+57.0]FDASK	-	-	2	12	0.95989257	0.0	0.0	2	2.71234989	2.68749666	2.73721051	3.71158998	N/A	N/A	N/A	N/A	N/A	1	100	3.74111482e-06	19
 id	fileName	idFileName	cutoffScore	workflowType
-1	B_240207_IO5x75_HeLa_400ng_5min_synchro_6x40_100ms_Slot2-1_1_7489	/BiblioSpec/tests/inputs/diann2-parquet/report-lib.parquet.skyline.speclib	0.0	1
-2	B_240207_IO5x75_HeLa_400ng_5min_synchro_6x40_100ms_Slot2-1_1_7491	/BiblioSpec/tests/inputs/diann2-parquet/report-lib.parquet.skyline.speclib	0.0	1
+1	B_240207_IO5x75_HeLa_400ng_5min_synchro_6x40_100ms_Slot2-1_1_7489.d	/BiblioSpec/tests/inputs/diann2-parquet/report-lib.parquet.skyline.speclib	0.0	1
+2	B_240207_IO5x75_HeLa_400ng_5min_synchro_6x40_100ms_Slot2-1_1_7491.d	/BiblioSpec/tests/inputs/diann2-parquet/report-lib.parquet.skyline.speclib	0.0	1
 id	scoreType	probabilityType
 0	UNKNOWN	NOT_A_PROBABILITY_VALUE
 1	PERCOLATOR QVALUE	PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT

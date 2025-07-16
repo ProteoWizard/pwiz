@@ -1362,7 +1362,7 @@ namespace TestPerf
             if (IsRecordMode)
             {
                 _testInfo.SaveExpectedValues();
-        }
+            }
         }
 
         private static Bitmap ClipDockingRect(Bitmap bmp, Rectangle rectFrame)
@@ -1478,11 +1478,11 @@ namespace TestPerf
             var actualCoefficients = editDlgFromSrm.PeakCalculatorsGrid.Items
                 .Select(item=> item.Weight.HasValue ? Math.Round(item.Weight.Value, 4) : (double?) null).ToArray();
 
-                if (IsRecordMode)
-                {
+            if (IsRecordMode)
+            {
                 expectedCoefficients = actualCoefficients;
-                }
-                else
+            }
+            else
             {
                 AssertEx.AreEqual(string.Join("|", expectedCoefficients), string.Join("|", actualCoefficients));
             }

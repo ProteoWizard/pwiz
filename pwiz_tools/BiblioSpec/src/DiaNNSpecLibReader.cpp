@@ -1089,24 +1089,46 @@ bool DiaNNSpecLibReader::parseFile()
         if (diannReportFilepath.empty())
             throw BlibException(true, "unable to determine DIA-NN report filename for '%s': the Parquet or TSV report is required to read speclib files and must be in the same directory as the speclib and share some leading characters (e.g. somedata-tsv.speclib and somedata-report.parquet)",
                 impl_->specLibFile_);
-
-        if (!diannStatsFilepath.empty())
+    }
+    else
+    {
+        // iterate all TSV files in the same directory as the speclib, looking for stats.tsv
+        vector<bfs::path> siblingTsvFiles;
+        pwiz::util::expand_pathmask(bfs::path(impl_->specLibFile_).parent_path() / "*.stats.tsv", siblingTsvFiles);
+        for (const auto& tsvFilepath : siblingTsvFiles)
         {
-            try
+            if (!bfs::is_regular_file(tsvFilepath))
+                continue;
+            if (bal::contains(tsvFilepath.filename().string(), "first-pass") && !bal::contains(diannReportFilepath, "first-pass"))
+                continue;
+            if (bal::ends_with(tsvFilepath.string(), ".stats.tsv"))
             {
-                Impl::Reader<3> reader;
-                reader.open_file(diannStatsFilepath);
-                reader.read_header(io::ignore_extra_column, "File.Name", "Precursors.Identified", "Proteins.Identified");
-                string fileName, id1, id2;
-                while (reader.read_row(fileName, id1, id2))
-                {
-                    diannFilenameByRun[bfs::path(fileName).filename().replace_extension("").string()] = fileName;
-                }
+                diannStatsFilepath = tsvFilepath.string();
+                break;
             }
-            catch (std::exception& e)
+        }
+    }
+
+    if (!diannStatsFilepath.empty())
+    {
+        try
+        {
+            Verbosity::debug("Reading filenames from stats.tsv: %s", diannStatsFilepath.c_str());
+            Impl::Reader<3> reader;
+            reader.open_file(diannStatsFilepath);
+            reader.read_header(io::ignore_extra_column, "File.Name", "Precursors.Identified", "Proteins.Identified");
+            string fileName, id1, id2;
+            while (reader.read_row(fileName, id1, id2))
             {
-                Verbosity::warn("error reading filepaths from stats report \"%s\": %s", diannStatsFilepath.c_str(), e.what());
+                string runName = bfs::path(fileName).filename().replace_extension("").string();
+                fileName = bfs::path(fileName).filename().string();
+                diannFilenameByRun[runName] = fileName;
+                Verbosity::debug("%s -> %s", runName.c_str(), fileName.c_str());
             }
+        }
+        catch (std::exception& e)
+        {
+            Verbosity::warn("error reading filepaths from stats report \"%s\": %s", diannStatsFilepath.c_str(), e.what());
         }
     }
 
