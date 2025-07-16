@@ -1058,8 +1058,10 @@ namespace pwiz.Skyline.Util
                         return QUADRUPLY_PROTONATED;
                     case 5:
                         return QUINTUPLY_PROTONATED;
+                    case -1:
+                        return Adduct.FromStringAssumeProtonated(@"[M-H]");
                 }
-                return Adduct.FromStringAssumeProtonated($@"[M{charge:+#;-#,CultureInfo.InvariantCulture}H]");
+                return Adduct.FromStringAssumeProtonated($@"[M{charge:+#;-#;0,CultureInfo.InvariantCulture}H]");
             }
             else if (type == ADDUCT_TYPE.non_proteomic)
             {
@@ -1080,7 +1082,7 @@ namespace pwiz.Skyline.Util
                     case -3:
                         return M_MINUS_3H;
                 }
-                return Adduct.FromStringAssumeProtonatedNonProteomic($@"[M{charge:+#;-#,CultureInfo.InvariantCulture}H]");
+                return Adduct.FromStringAssumeProtonatedNonProteomic($@"[M{charge:+#;-#;0,CultureInfo.InvariantCulture}H]");
             }
             else
             {
@@ -1101,7 +1103,7 @@ namespace pwiz.Skyline.Util
                     case -3:
                         return M_MINUS_3;
                 }
-                return Adduct.FromStringAssumeChargeOnly($@"[M{charge:+#;-#,CultureInfo.InvariantCulture}]");
+                return Adduct.FromStringAssumeChargeOnly($@"[M{charge:+#;-#;0,CultureInfo.InvariantCulture}]");
             }
         }
 

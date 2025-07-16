@@ -236,7 +236,16 @@ namespace pwiz.SkylineTest
             Assert.IsTrue(ReferenceEquals(Adduct.FromStringAssumeChargeOnly("M+"), Adduct.FromChargeNoMass(1))); // Both should return Adduct.M_PLUS
             Assert.IsTrue(ReferenceEquals(Adduct.FromStringAssumeChargeOnly("[M+]"), Adduct.FromChargeNoMass(1))); // Both should return Adduct.M_PLUS
             Assert.IsTrue(ReferenceEquals(Adduct.FromStringAssumeChargeOnly("M-H"), Adduct.M_MINUS_H));
-            Assert.IsTrue(ReferenceEquals(Adduct.FromStringAssumeChargeOnly("M+H"), Adduct.M_PLUS_H)); 
+            Assert.IsTrue(ReferenceEquals(Adduct.FromStringAssumeChargeOnly("M+H"), Adduct.M_PLUS_H));
+            Assert.AreEqual("[M-H]", Adduct.FromChargeProtonated(-1).AdductFormula);
+            Assert.AreEqual("[M-7H]", Adduct.FromChargeProtonated(-7).AdductFormula);
+            Assert.AreEqual("[M+17H]", Adduct.FromChargeProtonated(17).AdductFormula);
+            Assert.AreEqual("[M-H]", Adduct.FromCharge(-1, Adduct.ADDUCT_TYPE.non_proteomic).AdductFormula);
+            Assert.AreEqual("[M-7H]", Adduct.FromCharge(-7, Adduct.ADDUCT_TYPE.non_proteomic).AdductFormula);
+            Assert.AreEqual("[M+17H]", Adduct.FromCharge(17, Adduct.ADDUCT_TYPE.non_proteomic).AdductFormula);
+            Assert.AreEqual("[M-]", Adduct.FromCharge(-1, Adduct.ADDUCT_TYPE.charge_only).AdductFormula);
+            Assert.AreEqual("[M-7]", Adduct.FromCharge(-7, Adduct.ADDUCT_TYPE.charge_only).AdductFormula);
+            Assert.AreEqual("[M+17]", Adduct.FromCharge(17, Adduct.ADDUCT_TYPE.charge_only).AdductFormula);
 
             var a = Adduct.FromChargeProtonated(-1);
             var aa = Adduct.FromStringAssumeProtonated("M+CH3COO");
