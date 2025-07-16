@@ -69,7 +69,6 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         private const string PATH_GET_PARENT_BY_PATH         = @"/session-management/bff/navigation/api/v1/navigation/path";
         private const string PATH_STORAGE_INFO               = @"/session-management/bff/raw-data/api/v1/rawdata/storageInfo";
         private const string PATH_SESSION_COOKIE             = @"/session-management/bff/session-management/api/v1/SessionManagement/sessioncookie";
-        private const string PATH_DATA_EXPLORER              = @"/app/data-explorer";
 
         // CONSIDER: throw IOException as a placeholder for improving the experience of editing Remote Account settings. It should
         //           not be possible to exit the settings editor when the account is invalid.
@@ -88,17 +87,15 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             }
 
             var ardiaUrl = account.GetRootArdiaUrl();
-            var serverUrl = ardiaUrl.ServerUrl;
-            var serverApiUrl = ardiaUrl.ServerApiUrl;
+            var serverUrl = ardiaUrl.ServerApiUrl;
 
-            return new ArdiaClient(account, serverUrl, serverApiUrl, applicationCode, token);
+            return new ArdiaClient(account, serverUrl, applicationCode, token);
         }
 
-        private ArdiaClient(ArdiaAccount account, string serverUrl, string serverApiUrl, string applicationCode, string token)
+        private ArdiaClient(ArdiaAccount account, string serverUrl, string applicationCode, string token)
         {
             Account = account;
-            ServerUrl = serverUrl;
-            ServerUri = new Uri(serverApiUrl);
+            ServerUri = new Uri(serverUrl);
             ApplicationCode = applicationCode;
             Token = token;
         }
@@ -108,7 +105,6 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         private string ApplicationCode { get; }
         private string Token { get; }
         private Uri ServerUri { get; }
-        private string ServerUrl { get; }
 
         /// <summary>
         /// Configure an <see cref="HttpClient"/> callers can use to access the Ardia API.
@@ -663,8 +659,8 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             }
         }
 
-        //
-        public ArdiaResult<string> GetDataExplorerUrl(string path)
+        // API documentation: https://api.ardia-core-int.cmdtest.thermofisher.com/navigation/api/swagger/index.html
+        public ArdiaResult<GetParentFolderResponse> GetParentFolderByPath(string path)
         {
             var uri = UriFromParts(ServerUri, $"{PATH_GET_PARENT_BY_PATH}?itemPath={Uri.EscapeDataString(path)}");
 
@@ -679,20 +675,19 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
 
                 if (statusCode == HttpStatusCode.OK)
                 {
-                    var folder = GetParentFolderResponse.FromJson(responseBody);
-                    string dataExplorerUrl = ServerUrl + Path.Combine(PATH_DATA_EXPLORER, folder.RLink2);
-                    return ArdiaResult<string>.Success(dataExplorerUrl);
+                    var responseModel = GetParentFolderResponse.FromJson(responseBody, new Uri(Account.ServerUrl));
+                    return ArdiaResult<GetParentFolderResponse>.Success(responseModel);
                 }
                 else
                 {
                     var message = ErrorMessageBuilder.Create(ArdiaResources.Error_StatusCode_Unexpected).ErrorDetailFromResponseBody(responseBody).Uri(uri).StatusCode(statusCode);
-                    return ArdiaResult<string>.Failure(message.ToString(), statusCode, null);
+                    return ArdiaResult<GetParentFolderResponse>.Failure(message.ToString(), statusCode, null);
                 }
             }
             catch (Exception e) when (ShouldHandleException(e))
             {
                 var message = ErrorMessageBuilder.Create(ArdiaResources.Error_ProblemCommunicatingWithServer).ErrorDetailFromException(e).Uri(uri).StatusCode(statusCode);
-                return ArdiaResult<string>.Failure(message.ToString(), statusCode, e);
+                return ArdiaResult<GetParentFolderResponse>.Failure(message.ToString(), statusCode, e);
             }
         }
 
@@ -705,6 +700,8 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         {
             return new Uri(host.ToString().TrimEnd('/') + path);
         }
+
+
 
         private static bool ShouldHandleException(Exception exception)
         {

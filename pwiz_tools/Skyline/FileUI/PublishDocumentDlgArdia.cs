@@ -274,10 +274,10 @@ namespace pwiz.Skyline.FileUI
                 if (MultiButtonMsgDlg.Show(parent, successMessage, MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false)
                         == DialogResult.Yes)
                 {
-                    var getUrlResult = Client.GetDataExplorerUrl(DestinationPath);
+                    var getUrlResult = Client.GetParentFolderByPath(DestinationPath);
                     if (getUrlResult.IsSuccess)
                     {
-                        Process.Start(getUrlResult.Value);
+                        Process.Start(getUrlResult.Value.Url.ToString());
                     }
                     else
                     {

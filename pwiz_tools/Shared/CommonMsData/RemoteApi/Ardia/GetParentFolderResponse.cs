@@ -14,18 +14,25 @@
  * limitations under the License.
  */
 
-using System.Diagnostics.CodeAnalysis;
 using Newtonsoft.Json;
+using System;
+using System.IO;
 
 namespace pwiz.CommonMsData.RemoteApi.Ardia
 {
     public class GetParentFolderResponse
     {
+        private const string PATH_DATA_EXPLORER = @"/app/data-explorer/";
+
         public string RLink2 { get; set; }
 
-        public static GetParentFolderResponse FromJson(string json)
+        public Uri Url { get; set; }
+
+        public static GetParentFolderResponse FromJson(string json, Uri serverUrl)
         {
-            return JsonConvert.DeserializeObject<GetParentFolderResponse>(json);
+            var response = JsonConvert.DeserializeObject<GetParentFolderResponse>(json);
+            response.Url = new Uri(serverUrl.ToString().TrimEnd('/') + PATH_DATA_EXPLORER + response.RLink2);
+            return response;
         }
     }
 }
