@@ -232,6 +232,18 @@ namespace ResourcesOrganizer.ResourcesModel
             {
                 foreach (var entry in entryGroup.Reverse())
                 {
+                    if (!overrideAll && language != null)
+                    {
+                        var localizedEntry = entry.GetTranslation(language);
+                        if (localizedEntry == null)
+                        {
+                            continue;
+                        }
+                        if (localizedEntry.Issue == LocalizationIssue.NewResource && localizedEntry.Value == entry.Invariant.Value)
+                        {
+                            continue;
+                        }
+                    }
                     string? localizedText = entry.GetLocalizedText(language);
                     if (overrideAll && localizedText == null)
                     {
@@ -276,6 +288,23 @@ namespace ResourcesOrganizer.ResourcesModel
             return document;
         }
 
+        public bool AnyEntriesForLanguage(string language)
+        {
+            foreach (var entry in Entries)
+            {
+                var translation = entry.GetTranslation(language);
+                if (translation != null)
+                {
+                    if (translation.Value != entry.Invariant.Value)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
         public ResourcesFile ImportLocalizationRecords(string language, ILookup<string, LocalizationCsvRecord> records, out int matchCount, out int changeCount)
         {
             matchCount = 0;
@@ -284,7 +313,7 @@ namespace ResourcesOrganizer.ResourcesModel
             for (int i = 0; i < entries.Count; i++)
             {
                 var entry = entries[i];
-                foreach (var record in records[entry.Invariant.Name!])
+                foreach (var record in records[entry.Invariant.Name!].Concat(records[string.Empty]))
                 {
                     if (!string.IsNullOrEmpty(record.File) && record.File != RelativePath)
                     {

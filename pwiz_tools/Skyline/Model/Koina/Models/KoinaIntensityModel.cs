@@ -26,9 +26,9 @@ using System.Text;
 using Google.Protobuf;
 using Inference;
 using pwiz.Common.Chemistry;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using static Inference.ModelInferRequest.Types;
 
@@ -199,6 +199,8 @@ namespace pwiz.Skyline.Model.Koina.Models
 
             public PeptidePrecursorNCE WithNCE(int nce)
             {
+                if (NodePep != null)
+                    return new PeptidePrecursorNCE(NodePep, NodeGroup, LabelType, nce);
                 return new PeptidePrecursorNCE(Sequence, PrecursorCharge, PrecursorMz, ExplicitMods, LabelType, nce);
             }
 

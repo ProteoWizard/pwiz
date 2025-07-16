@@ -29,22 +29,20 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PauseAndContinueForm));
             this.btnContinue = new System.Windows.Forms.Button();
             this.lblDescription = new System.Windows.Forms.Label();
             this.lblDescriptionLink = new System.Windows.Forms.LinkLabel();
-            this.btnCopyToClipBoard = new System.Windows.Forms.Button();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.btnCopyMetafileToClipboard = new System.Windows.Forms.Button();
+            this.btnPreview = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // btnContinue
             // 
-            this.btnContinue.Location = new System.Drawing.Point(12, 32);
+            this.btnContinue.Location = new System.Drawing.Point(18, 54);
             this.btnContinue.Name = "btnContinue";
-            this.btnContinue.Size = new System.Drawing.Size(75, 23);
-            this.btnContinue.TabIndex = 0;
-            this.btnContinue.Text = "Continue";
+            this.btnContinue.Size = new System.Drawing.Size(168, 35);
+            this.btnContinue.TabIndex = 2;
+            this.btnContinue.Text = "&Continue";
             this.btnContinue.UseVisualStyleBackColor = true;
             this.btnContinue.Click += new System.EventHandler(this.btnContinue_Click);
             // 
@@ -52,65 +50,50 @@
             // 
             this.lblDescription.AutoEllipsis = true;
             this.lblDescription.AutoSize = true;
-            this.lblDescription.Location = new System.Drawing.Point(13, 13);
+            this.lblDescription.Location = new System.Drawing.Point(20, 20);
+            this.lblDescription.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblDescription.Name = "lblDescription";
-            this.lblDescription.Size = new System.Drawing.Size(60, 13);
-            this.lblDescription.TabIndex = 1;
+            this.lblDescription.Size = new System.Drawing.Size(89, 20);
+            this.lblDescription.TabIndex = 0;
             this.lblDescription.Text = "Description";
             // 
             // lblDescriptionLink
             // 
+            this.lblDescriptionLink.AutoEllipsis = true;
             this.lblDescriptionLink.AutoSize = true;
-            this.lblDescriptionLink.Location = new System.Drawing.Point(32, 13);
+            this.lblDescriptionLink.Location = new System.Drawing.Point(48, 20);
+            this.lblDescriptionLink.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblDescriptionLink.Name = "lblDescriptionLink";
-            this.lblDescriptionLink.Size = new System.Drawing.Size(60, 13);
-            this.lblDescriptionLink.TabIndex = 2;
+            this.lblDescriptionLink.Size = new System.Drawing.Size(89, 20);
+            this.lblDescriptionLink.TabIndex = 1;
             this.lblDescriptionLink.TabStop = true;
             this.lblDescriptionLink.Text = "Description";
             this.lblDescriptionLink.Visible = false;
             this.lblDescriptionLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.lblDescriptionLink_LinkClicked);
             // 
-            // btnCopyToClipBoard
+            // btnPreview
             // 
-            this.btnCopyToClipBoard.Enabled = false;
-            this.btnCopyToClipBoard.Location = new System.Drawing.Point(12, 61);
-            this.btnCopyToClipBoard.Name = "btnCopyToClipBoard";
-            this.btnCopyToClipBoard.Size = new System.Drawing.Size(75, 23);
-            this.btnCopyToClipBoard.TabIndex = 3;
-            this.btnCopyToClipBoard.Text = "Copy Form";
-            this.toolTip1.SetToolTip(this.btnCopyToClipBoard, resources.GetString("btnCopyToClipBoard.ToolTip"));
-            this.btnCopyToClipBoard.UseVisualStyleBackColor = true;
-            this.btnCopyToClipBoard.Visible = false;
-            this.btnCopyToClipBoard.Click += new System.EventHandler(this.btnCopyToClipboard_Click);
-            // 
-            // btnCopyMetafileToClipboard
-            // 
-            this.btnCopyMetafileToClipboard.Enabled = false;
-            this.btnCopyMetafileToClipboard.Location = new System.Drawing.Point(12, 90);
-            this.btnCopyMetafileToClipboard.Name = "btnCopyMetafileToClipboard";
-            this.btnCopyMetafileToClipboard.Size = new System.Drawing.Size(75, 23);
-            this.btnCopyMetafileToClipboard.TabIndex = 4;
-            this.btnCopyMetafileToClipboard.Text = "Copy Graph";
-            this.toolTip1.SetToolTip(this.btnCopyMetafileToClipboard, "Copies metafile to clipboard");
-            this.btnCopyMetafileToClipboard.UseVisualStyleBackColor = true;
-            this.btnCopyMetafileToClipboard.Visible = false;
-            this.btnCopyMetafileToClipboard.Click += new System.EventHandler(this.btnCopyMetaFileToClipboard_Click);
+            this.btnPreview.Location = new System.Drawing.Point(18, 95);
+            this.btnPreview.Name = "btnPreview";
+            this.btnPreview.Size = new System.Drawing.Size(168, 35);
+            this.btnPreview.TabIndex = 3;
+            this.btnPreview.Text = "&Preview";
+            this.btnPreview.UseVisualStyleBackColor = true;
+            this.btnPreview.Click += new System.EventHandler(this.btnPreview_Click);
             // 
             // PauseAndContinueForm
             // 
             this.AcceptButton = this.btnContinue;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.AutoSize = true;
-            this.ClientSize = new System.Drawing.Size(174, 128);
-            this.ControlBox = false;
-            this.Controls.Add(this.btnCopyMetafileToClipboard);
-            this.Controls.Add(this.btnCopyToClipBoard);
+            this.ClientSize = new System.Drawing.Size(205, 143);
+            this.Controls.Add(this.btnPreview);
             this.Controls.Add(this.lblDescriptionLink);
             this.Controls.Add(this.lblDescription);
             this.Controls.Add(this.btnContinue);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.KeyPreview = true;
+            this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "PauseAndContinueForm";
@@ -127,8 +110,7 @@
         private System.Windows.Forms.Button btnContinue;
         private System.Windows.Forms.Label lblDescription;
         private System.Windows.Forms.LinkLabel lblDescriptionLink;
-        private System.Windows.Forms.Button btnCopyToClipBoard;
         private System.Windows.Forms.ToolTip toolTip1;
-        private System.Windows.Forms.Button btnCopyMetafileToClipboard;
+        private System.Windows.Forms.Button btnPreview;
     }
 }

@@ -66,13 +66,13 @@ namespace pwiz.Skyline.FileUI
             _fileFormatOnDisk = fileFormatOnDisk;
 
             _panoramaServers = servers;
-            tbFilePath.Text = FileEx.GetTimeStampedFileName(fileName);
-            
-            treeViewFolders.ImageList = new ImageList();
-            treeViewFolders.ImageList.Images.Add(Resources.Panorama);
-            treeViewFolders.ImageList.Images.Add(Resources.LabKey);
-            treeViewFolders.ImageList.Images.Add(Resources.ChromLib);
-            treeViewFolders.ImageList.Images.Add(Resources.Folder);
+            tbFilePath.Text = FileTimeEx.GetTimeStampedFileName(fileName);
+
+            treeViewFolders.ImageList = new ImageList { ColorDepth = ColorDepth.Depth32Bit };
+            treeViewFolders.ImageList.Images.Add(Resources.Panorama);   // 24bpp
+            treeViewFolders.ImageList.Images.Add(Resources.LabKey);     // 8bpp
+            treeViewFolders.ImageList.Images.Add(Resources.ChromLib);   // 8bpp
+            treeViewFolders.ImageList.Images.Add(Resources.Folder);     // 32bpp
 
             ServerTreeStateRestorer = new TreeViewStateRestorer(treeViewFolders);
 
@@ -234,7 +234,7 @@ namespace pwiz.Skyline.FileUI
                 AddChildContainers(server, folderNode, subFolder);
 
                 // User can only upload to folders where TargetedMS is an active module.
-                var canUpload = PanoramaUtil.CheckInsertPermissions(subFolder) && PanoramaUtil.HasTargetedMsModule(subFolder);
+                var canUpload = PanoramaUtil.HasUploadPermissions(subFolder) && PanoramaUtil.HasTargetedMsModule(subFolder);
 
                 // If the user does not have write permissions in this folder or any
                 // of its subfolders, do not add it to the tree.

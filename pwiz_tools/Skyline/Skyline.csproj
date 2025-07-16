@@ -29,12 +29,13 @@
     <TargetFrameworkProfile />
     <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
     <EnableSecurityDebugging>false</EnableSecurityDebugging>
-    <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <!-- Make the assembly name configurable -->
     <MSBuildAssemblyName />
     <AssemblyName Condition=" '$(MSBuildAssemblyName)' == '' ">Skyline-daily</AssemblyName>
     <AssemblyName Condition=" '$(MSBuildAssemblyName)' != '' ">$(MSBuildAssemblyName)</AssemblyName>
-    <MascotParserPath>..\..\libraries\msparser_2_8_1_x86_win64</MascotParserPath>
+    <MascotParserPath>..\..\libraries\msparser_3_1_0_x86_win64</MascotParserPath>
+    <RuntimeIdentifiers>win</RuntimeIdentifiers>
     <PublishUrl>T:\www\site\skyline.ms\html\software\Skyline-daily13-64\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
@@ -52,8 +53,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>237</ApplicationRevision>
-    <ApplicationVersion>24.1.1.237</ApplicationVersion>
+    <ApplicationRevision>147</ApplicationRevision>
+    <ApplicationVersion>25.1.1.147</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -103,6 +104,9 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Dapper">
+      <HintPath>..\Shared\Lib\Dapper.dll</HintPath>
+    </Reference>
     <Reference Include="DigitalRune.Windows.Docking, Version=1.3.5.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath>
@@ -211,6 +215,14 @@
     </Compile>
     <Compile Include="Alerts\AlertLinkDlg.Designer.cs">
       <DependentUpon>AlertLinkDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Alerts\ArdiaLogoutDlg.cs" />
+    <Compile Include="Alerts\ArdiaLogoutDlg.Designer.cs">
+      <DependentUpon>ArdiaLogoutDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Alerts\ArdiaLoginDlg.cs" />
+    <Compile Include="Alerts\ArdiaLoginDlg.Designer.cs">
+      <DependentUpon>ArdiaLoginDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Alerts\KeyValueGridDlg.cs" />
     <Compile Include="Alerts\MsFraggerDownloadDlg.cs">
@@ -472,6 +484,12 @@
       <DependentUpon>SynchronizedIntegrationDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="EditUI\ZedGraphClipboard.cs" />
+    <Compile Include="FileUI\OpenFileDialogNE.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\OpenDataSourceDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="FileUI\ExportAnnotationsDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -499,6 +517,7 @@
     <Compile Include="FileUI\PeptideSearch\HardklorSearchControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Include="Model\Lib\AlphaPeptDeep\AlphapeptdeepLibraryBuilder.cs" />
     <Compile Include="Model\AuditLog\EnumNames.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -536,7 +555,8 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
     </Compile>
-    <Compile Include="Model\DocSettings\AbsoluteQuantification\BootstrapFiguresOfMeritCalculator.cs" />
+    <Compile Include="Controls\Databinding\ReplicatePivotColumns.cs" />
+    <Compile Include="Model\DllFinder.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\IFiguresOfMeritCalculator.cs" />
     <Compile Include="Model\Databinding\Entities\ColumnToolTips.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -544,6 +564,7 @@
       <DependentUpon>ColumnToolTips.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\Databinding\SurrogateStandardDataGridViewColumn.cs" />
+    <Compile Include="Model\DdaSearch\CometSearchEngine.cs" />
     <Compile Include="Model\DocSettings\RelativeAbundanceFormatting.cs" />
     <Compile Include="Model\DocumentModifier.cs" />
     <Compile Include="Model\FullScanPropertiesRes.Designer.cs">
@@ -557,7 +578,11 @@
     </Compile>
     <Compile Include="Model\FullScanProperties.cs" />
     <Compile Include="Model\IdPeptideDocNode.cs" />
+    <Compile Include="Model\Lib\AlphaPeptDeep\AbstractDeepLibraryBuilder.cs" />
+    <Compile Include="Model\Lib\Carafe\CarafeLibraryBuilder.cs" />
+    <Compile Include="Model\Proteome\AssociateProteinsResults.cs" />
     <Compile Include="Model\Lib\LibraryFiles.cs" />
+    <Compile Include="Model\Results\LcPeakIonMetrics.cs" />
     <Compile Include="Model\Results\Scoring\ReintegrateDlgSettings.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\BinnedSpectrum.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\SimilarityGrid.cs" />
@@ -565,6 +590,7 @@
     <Compile Include="Model\Results\Spectra\Alignment\SpectrumSummaryList.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumClassFilter.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumFilterAutoComplete.cs" />
+    <Compile Include="Model\Results\Spectra\SpectrumMetadatas.cs" />
     <Compile Include="Model\RetentionTimes\AlignmentFunction.cs" />
     <Compile Include="Model\SpectrumPropertiesResx.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -750,6 +776,12 @@
     <Compile Include="Model\Results\Scoring\AutoTrainManager.cs" />
     <Compile Include="Model\Results\Scoring\FeatureScores.cs" />
     <Compile Include="Model\Results\Scoring\ScoreQValueMap.cs" />
+    <Compile Include="Model\Tools\PythonInstaller.cs" />
+    <Compile Include="Model\Tools\ToolsResources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ToolsResources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Model\TransitionLossMap.cs" />
     <Compile Include="Properties\MetadataRuleSetList.cs" />
     <Compile Include="Properties\RemoteAccountList.cs" />
@@ -840,11 +872,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>ListsResources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Model\Tools\ToolsResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ToolsResources.resx</DependentUpon>
-    </Compile>
     <Compile Include="Model\ModelResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -855,7 +882,14 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>FileUIResources.resx</DependentUpon>
     </Compile>
+    <Compile Include="ToolsUI\PythonInstallerUI.cs" />
+    <Compile Include="ToolsUI\ToolsUIResources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ToolsUIResources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Util\AnnotatedDouble.cs" />
+    <Compile Include="Util\DataGridViewPasteHandler.cs" />
     <Compile Include="Util\UtilResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -910,11 +944,6 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>EntitiesResources.resx</DependentUpon>
-    </Compile>
-    <Compile Include="ToolsUI\ToolsUIResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ToolsUIResources.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\Optimization\OptimizationResources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -996,11 +1025,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>GroupComparisonResources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Model\Results\RemoteApi\RemoteApiResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>RemoteApiResources.resx</DependentUpon>
-    </Compile>
     <Compile Include="SettingsUI\Optimization\OptimizationResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -1036,11 +1060,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>IonMobilityResources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Model\Results\RemoteApi\Unifi\UnifiResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>UnifiResources.resx</DependentUpon>
-    </Compile>
     <Compile Include="Controls\Spectra\SpectraResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -1072,6 +1091,11 @@
     <Compile Include="Model\Koina\Config\KoinaConfig.cs" />
     <Compile Include="Model\Koina\Models\KoinaIntensityModel.cs" />
     <Compile Include="Model\Koina\Models\KoinaModel.cs" />
+    <Compile Include="Model\Koina\Models\ModelsResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ModelsResources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Model\Koina\KoinaConstants.cs" />
     <Compile Include="Model\Koina\Communication\KoinaPredictionClient.cs" />
     <Compile Include="Model\Koina\Models\KoinaRetentionTimeModel.cs" />
@@ -1087,12 +1111,6 @@
     <Compile Include="Model\Results\PeakIntegrator.cs" />
     <Compile Include="Model\Results\NormalizedValueCalculator.cs" />
     <Compile Include="Model\Results\NormalizeOption.cs" />
-    <Compile Include="Model\Results\RemoteApi\RemoteAccount.cs" />
-    <Compile Include="Model\Results\RemoteApi\RemoteAccountType.cs" />
-    <Compile Include="Model\Results\RemoteApi\RemoteItem.cs" />
-    <Compile Include="Model\Results\RemoteApi\RemoteServerException.cs" />
-    <Compile Include="Model\Results\RemoteApi\RemoteSession.cs" />
-    <Compile Include="Model\Results\RemoteApi\RemoteUrl.cs" />
     <Compile Include="Model\Results\TimeIntervals.cs" />
     <Compile Include="Model\Results\TriggeredAcquisition.cs" />
     <Compile Include="Model\Serialization\AnnotationScrubber.cs" />
@@ -1143,12 +1161,6 @@
     <Compile Include="Controls\GroupComparison\VolcanoPlotPropertiesDlg.Designer.cs">
       <DependentUpon>VolcanoPlotPropertiesDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="Model\Results\RemoteApi\Unifi\UnifiAccount.cs" />
-    <Compile Include="Model\Results\RemoteApi\Unifi\UnifiFileObject.cs" />
-    <Compile Include="Model\Results\RemoteApi\Unifi\UnifiFolderObject.cs" />
-    <Compile Include="Model\Results\RemoteApi\Unifi\UnifiObject.cs" />
-    <Compile Include="Model\Results\RemoteApi\Unifi\UnifiSession.cs" />
-    <Compile Include="Model\Results\RemoteApi\Unifi\UnifiUrl.cs" />
     <Compile Include="Model\TargetResolver.cs" />
     <Compile Include="Model\TransitionGroupIonMobilityInfo.cs" />
     <Compile Include="SettingsUI\MetadataRuleEditor.cs">
@@ -2070,7 +2082,6 @@
     <Compile Include="Model\Results\IRetentionTimePredictor.cs" />
     <Compile Include="Model\Results\IsotopeDistInfo.cs" />
     <Compile Include="Model\Results\MeasuredResults.cs" />
-    <Compile Include="Model\Results\MsDataFilePath.cs" />
     <Compile Include="Model\Results\MsxDemultiplexer.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -2318,12 +2329,6 @@
     <Compile Include="SettingsUI\EditLibraryDlg.Designer.cs">
       <DependentUpon>EditLibraryDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="SettingsUI\BuildLibraryNotification.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="SettingsUI\BuildLibraryNotification.Designer.cs">
-      <DependentUpon>BuildLibraryNotification.cs</DependentUpon>
-    </Compile>
     <Compile Include="SettingsUI\Irt\ChangeIrtPeptidesDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -2368,11 +2373,9 @@
     <Compile Include="FileUI\ExportMethodDlg.Designer.cs">
       <DependentUpon>ExportMethodDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="FileUI\OpenDataSourceDialog.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="FileUI\OpenDataSourceDialog.designer.cs">
-      <DependentUpon>OpenDataSourceDialog.cs</DependentUpon>
+    <Compile Include="FileUI\BaseFileDialogNE.cs" />
+    <Compile Include="FileUI\BaseFileDialogNE.designer.cs">
+      <DependentUpon>BaseFileDialogNE.cs</DependentUpon>
     </Compile>
     <Compile Include="Model\DocSettings\Modification.cs" />
     <Compile Include="Model\V01\XmlSrmDocument.cs" />
@@ -2455,6 +2458,13 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\AlertLinkDlg.zh-CHS.resx">
       <DependentUpon>AlertLinkDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\ArdiaLogoutDlg.resx">
+      <DependentUpon>ArdiaLogoutDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\ArdiaLoginDlg.resx">
+      <DependentUpon>ArdiaLoginDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\DetailedReportErrorDlg.ja.resx">
@@ -2617,6 +2627,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Clustering\HeatMapGraph.ja.resx">
       <DependentUpon>HeatMapGraph.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Clustering\HeatMapGraph.resx">
       <DependentUpon>HeatMapGraph.cs</DependentUpon>
@@ -2640,6 +2651,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Databinding\CandidatePeakForm.resx">
       <DependentUpon>CandidatePeakForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Databinding\CandidatePeakForm.zh-CHS.resx">
       <DependentUpon>CandidatePeakForm.cs</DependentUpon>
@@ -2726,6 +2738,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\Calibration\CalibrationGraphControl.resx">
       <DependentUpon>CalibrationGraphControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\DetectionsToolbar.ja.resx">
       <DependentUpon>DetectionsToolbar.cs</DependentUpon>
@@ -2861,9 +2874,11 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\FoldChangeVolcanoPlot.ja.resx">
       <DependentUpon>FoldChangeVolcanoPlot.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\FoldChangeVolcanoPlot.resx">
       <DependentUpon>FoldChangeVolcanoPlot.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\FoldChangeVolcanoPlot.zh-CHS.resx">
       <DependentUpon>FoldChangeVolcanoPlot.cs</DependentUpon>
@@ -2936,13 +2951,16 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Startup\TutorialImageResources.ja.resx">
       <DependentUpon>TutorialImageResources.resx</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Startup\TutorialImageResources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>TutorialImageResources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Startup\TutorialImageResources.zh-CHS.resx">
       <DependentUpon>TutorialImageResources.resx</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Startup\TutorialLinkResources.ja.resx">
       <DependentUpon>TutorialLinkResources.resx</DependentUpon>
@@ -3113,6 +3131,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\ConverterSettingsControl.ja.resx">
       <DependentUpon>ConverterSettingsControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\ConverterSettingsControl.zh-CHS.resx">
       <DependentUpon>ConverterSettingsControl.cs</DependentUpon>
@@ -3159,6 +3178,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\TransitionSettingsControl.ja.resx">
       <DependentUpon>TransitionSettingsControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\TransitionSettingsControl.resx">
       <DependentUpon>TransitionSettingsControl.cs</DependentUpon>
@@ -3581,12 +3601,12 @@
     <EmbeddedResource Include="FileUI\MProphetFeaturesDlg.zh-CHS.resx">
       <DependentUpon>MProphetFeaturesDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\OpenDataSourceDialog.ja.resx">
-      <DependentUpon>OpenDataSourceDialog.cs</DependentUpon>
+    <EmbeddedResource Include="FileUI\BaseFileDialogNE.ja.resx">
+      <DependentUpon>BaseFileDialogNE.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\OpenDataSourceDialog.zh-CHS.resx">
-      <DependentUpon>OpenDataSourceDialog.cs</DependentUpon>
+    <EmbeddedResource Include="FileUI\BaseFileDialogNE.zh-CHS.resx">
+      <DependentUpon>BaseFileDialogNE.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\BuildPeptideSearchLibraryControl.ja.resx">
@@ -3747,19 +3767,19 @@
       <DependentUpon>FeatureTooltips.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\PeptideLib.bmp" />
-    <EmbeddedResource Include="Resources\PeptideIrtLib.bmp" />
-    <EmbeddedResource Include="Resources\PeptideIrt.bmp" />
-    <EmbeddedResource Include="Resources\PeptideQc.bmp" />
-    <EmbeddedResource Include="Resources\PeptideQcLib.bmp" />
-    <EmbeddedResource Include="Resources\Skyline_Release.bmp" />
-    <EmbeddedResource Include="Resources\ToolUpdateAvailable.bmp" />
-    <EmbeddedResource Include="Resources\directoryicon.png" />
+    <None Include="Resources\PeptideLib.bmp" />
+    <None Include="Resources\PeptideIrtLib.bmp" />
+    <None Include="Resources\PeptideIrt.bmp" />
+    <None Include="Resources\PeptideQc.bmp" />
+    <None Include="Resources\PeptideQcLib.bmp" />
+    <None Include="Resources\Skyline_Release.bmp" />
+    <None Include="Resources\ToolUpdateAvailable.bmp" />
+    <None Include="Resources\directoryicon.png" />
     <EmbeddedResource Include="Model\IonMobility\mapping.xml">
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Icojam-Blueberry-Basic-Arrow-right.ico" />
-    <EmbeddedResource Include="Resources\Icojam-Blueberry-Basic-Arrow-left.ico" />
+    <None Include="Resources\Icojam-Blueberry-Basic-Arrow-right.ico" />
+    <None Include="Resources\Icojam-Blueberry-Basic-Arrow-left.ico" />
     <Content Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86\CLFIO32.dll">
       <Link>CLFIO32.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -3814,6 +3834,10 @@
     </Content>
     <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\QTFLDebugLog.dll">
       <Link>QTFLDebugLog.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Mobilion\MBI_SDK.dll">
+      <Link>MBI_SDK.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="..\..\pwiz\data\common\unimod.xml">
@@ -3994,25 +4018,25 @@
     <Content Include="Method\Thermo\Thermo.TNG.MethodXMLInterface.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <EmbeddedResource Include="Resources\EmptyList.bmp" />
-    <EmbeddedResource Include="Resources\HomeIcon.bmp" />
-    <EmbeddedResource Include="Resources\magnifier_zoom_in.ico" />
+    <None Include="Resources\EmptyList.bmp" />
+    <None Include="Resources\HomeIcon.bmp" />
+    <None Include="Resources\magnifier_zoom_in.ico" />
     <EmbeddedResource Include="Model\Optimization\mapping.xml" />
-    <EmbeddedResource Include="Resources\StartPage\WizardTransitionIcon.png" />
-    <EmbeddedResource Include="Resources\StartPage\WizardBlankDocument.bmp" />
-    <EmbeddedResource Include="Resources\StartPage\WizardFasta.png" />
-    <EmbeddedResource Include="Resources\StartPage\WizardImportPeptide.png" />
-    <EmbeddedResource Include="Resources\StartPage\WizardImportProteins.png" />
-    <EmbeddedResource Include="Resources\StartPage\WizardImportTransition.png" />
-    <EmbeddedResource Include="Resources\StartPage\WizardPeptideIcon.png" />
-    <EmbeddedResource Include="Resources\StartPage\WizardPeptideSearch.png" />
-    <EmbeddedResource Include="Resources\Molecule.bmp" />
-    <EmbeddedResource Include="Resources\MoleculeList.bmp" />
-    <EmbeddedResource Include="Resources\PeptideList.bmp" />
-    <EmbeddedResource Include="Resources\StartPage\WizardPeptideSearchDIA.png" />
-    <EmbeddedResource Include="Resources\StartPage\WizardPeptideSearchPRM.png" />
-    <EmbeddedResource Include="Resources\Ions_fragments.bmp" />
-    <EmbeddedResource Include="Resources\Edit_Undo_Multiple.bmp" />
+    <None Include="Resources\StartPage\WizardTransitionIcon.png" />
+    <None Include="Resources\StartPage\WizardBlankDocument.bmp" />
+    <None Include="Resources\StartPage\WizardFasta.png" />
+    <None Include="Resources\StartPage\WizardImportPeptide.png" />
+    <None Include="Resources\StartPage\WizardImportProteins.png" />
+    <None Include="Resources\StartPage\WizardImportTransition.png" />
+    <None Include="Resources\StartPage\WizardPeptideIcon.png" />
+    <None Include="Resources\StartPage\WizardPeptideSearch.png" />
+    <None Include="Resources\Molecule.bmp" />
+    <None Include="Resources\MoleculeList.bmp" />
+    <None Include="Resources\PeptideList.bmp" />
+    <None Include="Resources\StartPage\WizardPeptideSearchDIA.png" />
+    <None Include="Resources\StartPage\WizardPeptideSearchPRM.png" />
+    <None Include="Resources\Ions_fragments.bmp" />
+    <None Include="Resources\Edit_Undo_Multiple.bmp" />
     <EmbeddedResource Include="Model\Koina\Config\KoinaConfig.xml">
       <SubType>Designer</SubType>
     </EmbeddedResource>
@@ -4033,6 +4057,7 @@
     <Content Include="Method\AbSciex\TQ\BuildQTRAPMethod.exe.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="Model\Irt\StandardsDocuments\CiRT_all.sky" />
     <None Include="Method\Agilent\6400\BuildAgilentMethod.exe.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -4045,7 +4070,7 @@
     <Protobuf Include="ProtocolBuffers\grpc_service.proto" />
     <Protobuf Include="ProtocolBuffers\model_config.proto" />
     <None Include="Resources\Locked.bmp" />
-    <EmbeddedResource Include="Resources\MoleculeLib.bmp" />
+    <None Include="Resources\MoleculeLib.bmp" />
     <None Include="Resources\MoleculeStandard.bmp" />
     <None Include="Resources\MoleculeUI.bmp" />
     <None Include="Resources\Pindownlight.bmp" />
@@ -4071,84 +4096,85 @@
     <None Include="Method\Waters\BuildWatersMethod.exe.config" />
     <None Include="ProtocolBuffers\ChromatogramGroupData.proto" />
     <None Include="ProtocolBuffers\SkylineDocument.proto" />
-    <EmbeddedResource Include="Resources\StartPage\WizardMoleculeIcon.png" />
-    <EmbeddedResource Include="Resources\UIModeMixed.bmp" />
-    <EmbeddedResource Include="Resources\UIModeProteomic.bmp" />
-    <EmbeddedResource Include="Resources\UIModeSmallMolecules.bmp" />
+    <None Include="Resources\StartPage\WizardMoleculeIcon.png" />
+    <None Include="Resources\UIModeMixed.bmp" />
+    <None Include="Resources\UIModeProteomic.bmp" />
+    <None Include="Resources\UIModeSmallMolecules.bmp" />
     <None Include="Resources\Unlocked.bmp" />
     <None Include="Resources\warning.png" />
-    <EmbeddedResource Include="Resources\MoleculeIrt.bmp" />
-    <EmbeddedResource Include="Resources\MoleculeIrtLib.bmp" />
-    <EmbeddedResource Include="Resources\MoleculeStandardLib.bmp" />
-    <EmbeddedResource Include="Resources\Skyline_Release.ico" />
+    <None Include="Resources\MoleculeIrt.bmp" />
+    <None Include="Resources\MoleculeIrtLib.bmp" />
+    <None Include="Resources\MoleculeStandardLib.bmp" />
+    <None Include="Resources\Skyline_Release.ico" />
     <None Include="Resources\GenerateDecoys.bmp" />
-    <EmbeddedResource Include="Resources\StartPage\WizardBlankDocument-ja.bmp" />
-    <EmbeddedResource Include="Resources\StartPage\WizardBlankDocument-zh-CHS.bmp" />
+    <None Include="Resources\StartPage\WizardBlankDocument-ja.bmp" />
+    <None Include="Resources\StartPage\WizardBlankDocument-zh-CHS.bmp" />
     <None Include="Resources\EditLink.bmp" />
-    <EmbeddedResource Include="Resources\StartPage\AbsoluteQuant_start-ja.png" />
-    <EmbeddedResource Include="Resources\StartPage\AbsoluteQuant_start-zh-CHS.png" />
-    <EmbeddedResource Include="Resources\StartPage\AbsoluteQuant_start.png" />
-    <EmbeddedResource Include="Resources\StartPage\AuditLog_start-ja.png" />
-    <EmbeddedResource Include="Resources\StartPage\AuditLog_start-zh-CHS.png" />
-    <EmbeddedResource Include="Resources\StartPage\AuditLog_start.png" />
-    <EmbeddedResource Include="Resources\StartPage\CustomReports_start-ja.png" />
-    <EmbeddedResource Include="Resources\StartPage\CustomReports_start-zh-CHS.png" />
-    <EmbeddedResource Include="Resources\StartPage\CustomReports_start.png" />
-    <EmbeddedResource Include="Resources\StartPage\DIA-SWATH_start-ja.png" />
-    <EmbeddedResource Include="Resources\StartPage\DIA-SWATH_start-zh-CHS.png" />
-    <EmbeddedResource Include="Resources\StartPage\DIA-SWATH_start.png" />
-    <EmbeddedResource Include="Resources\StartPage\DIA_start-ja.png" />
-    <EmbeddedResource Include="Resources\StartPage\DIA_start-zh-CHS.png" />
-    <EmbeddedResource Include="Resources\StartPage\DIA_start.png" />
-    <EmbeddedResource Include="Resources\StartPage\ExistingQuant_start-ja.png" />
-    <EmbeddedResource Include="Resources\StartPage\ExistingQuant_start-zh-CHS.png" />
-    <EmbeddedResource Include="Resources\StartPage\ExistingQuant_start.png" />
-    <EmbeddedResource Include="Resources\StartPage\GroupedStudies_start-ja.png" />
-    <EmbeddedResource Include="Resources\StartPage\GroupedStudies_start-zh-CHS.png" />
-    <EmbeddedResource Include="Resources\StartPage\GroupedStudies_start.png" />
-    <EmbeddedResource Include="Resources\StartPage\HiResMetabolomics_start-ja.png" />
-    <EmbeddedResource Include="Resources\StartPage\HiResMetabolomics_start-zh-CHS.png" />
-    <EmbeddedResource Include="Resources\StartPage\HiResMetabolomics_start.png" />
-    <EmbeddedResource Include="Resources\StartPage\IMSFiltering_start-ja.png" />
-    <EmbeddedResource Include="Resources\StartPage\IMSFiltering_start-zh-CHS.png" />
-    <EmbeddedResource Include="Resources\StartPage\IMSFiltering_start.png" />
-    <EmbeddedResource Include="Resources\StartPage\iRT_start-ja.png" />
-    <EmbeddedResource Include="Resources\StartPage\iRT_start-zh-CHS.png" />
-    <EmbeddedResource Include="Resources\StartPage\iRT_start.png" />
-    <EmbeddedResource Include="Resources\StartPage\LibraryExplorer_start-ja.png" />
-    <EmbeddedResource Include="Resources\StartPage\LibraryExplorer_start-zh-CHS.png" />
-    <EmbeddedResource Include="Resources\StartPage\LibraryExplorer_start.png" />
-    <EmbeddedResource Include="Resources\StartPage\MethodEdit_start-ja.png" />
-    <EmbeddedResource Include="Resources\StartPage\MethodEdit_start-zh-CHS.png" />
-    <EmbeddedResource Include="Resources\StartPage\MethodEdit_start.png" />
-    <EmbeddedResource Include="Resources\StartPage\MethodRefine_start-ja.png" />
-    <EmbeddedResource Include="Resources\StartPage\MethodRefine_start-zh-CHS.png" />
-    <EmbeddedResource Include="Resources\StartPage\MethodRefine_start.png" />
-    <EmbeddedResource Include="Resources\StartPage\MS1Filtering_start-ja.png" />
-    <EmbeddedResource Include="Resources\StartPage\MS1Filtering_start-zh-CHS.png" />
-    <EmbeddedResource Include="Resources\StartPage\MS1Filtering_start.png" />
-    <EmbeddedResource Include="Resources\StartPage\OptimizeCE_start-ja.png" />
-    <EmbeddedResource Include="Resources\StartPage\OptimizeCE_start-zh-CHS.png" />
-    <EmbeddedResource Include="Resources\StartPage\OptimizeCE_start.png" />
-    <EmbeddedResource Include="Resources\StartPage\PeakPicking_start-ja.png" />
-    <EmbeddedResource Include="Resources\StartPage\PeakPicking_start-zh-CHS.png" />
-    <EmbeddedResource Include="Resources\StartPage\PeakPicking_start.png" />
-    <EmbeddedResource Include="Resources\StartPage\SmallMoleculeMethodDevCEOpt_start-ja.png" />
-    <EmbeddedResource Include="Resources\StartPage\SmallMoleculeMethodDevCEOpt_start-zh-CHS.png" />
-    <EmbeddedResource Include="Resources\StartPage\SmallMoleculeMethodDevCEOpt_start.png" />
-    <EmbeddedResource Include="Resources\StartPage\SmallMoleculeQuantification_start-ja.png" />
-    <EmbeddedResource Include="Resources\StartPage\SmallMoleculeQuantification_start-zh-CHS.png" />
-    <EmbeddedResource Include="Resources\StartPage\SmallMoleculeQuantification_start.png" />
-    <EmbeddedResource Include="Resources\StartPage\SmallMolecule_start-ja.png" />
-    <EmbeddedResource Include="Resources\StartPage\SmallMolecule_start-zh-CHS.png" />
-    <EmbeddedResource Include="Resources\StartPage\SmallMolecule_start.png" />
-    <EmbeddedResource Include="Resources\StartPage\TargetedMSMS_start-ja.png" />
-    <EmbeddedResource Include="Resources\StartPage\TargetedMSMS_start-zh-CHS.png" />
-    <EmbeddedResource Include="Resources\StartPage\TargetedMSMS_start.png" />
-    <EmbeddedResource Include="Resources\LogoAmanda_32.bmp" />
+    <None Include="Resources\StartPage\AbsoluteQuant_start-ja.png" />
+    <None Include="Resources\StartPage\AbsoluteQuant_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\AbsoluteQuant_start.png" />
+    <None Include="Resources\StartPage\AuditLog_start-ja.png" />
+    <None Include="Resources\StartPage\AuditLog_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\AuditLog_start.png" />
+    <None Include="Resources\StartPage\CustomReports_start-ja.png" />
+    <None Include="Resources\StartPage\CustomReports_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\CustomReports_start.png" />
+    <None Include="Resources\StartPage\DIA-SWATH_start-ja.png" />
+    <None Include="Resources\StartPage\DIA-SWATH_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\DIA-SWATH_start.png" />
+    <None Include="Resources\StartPage\DIA_start-ja.png" />
+    <None Include="Resources\StartPage\DIA_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\DIA_start.png" />
+    <None Include="Resources\StartPage\ExistingQuant_start-ja.png" />
+    <None Include="Resources\StartPage\ExistingQuant_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\ExistingQuant_start.png" />
+    <None Include="Resources\StartPage\GroupedStudies_start-ja.png" />
+    <None Include="Resources\StartPage\GroupedStudies_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\GroupedStudies_start.png" />
+    <None Include="Resources\StartPage\HiResMetabolomics_start-ja.png" />
+    <None Include="Resources\StartPage\HiResMetabolomics_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\HiResMetabolomics_start.png" />
+    <None Include="Resources\StartPage\IMSFiltering_start-ja.png" />
+    <None Include="Resources\StartPage\IMSFiltering_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\IMSFiltering_start.png" />
+    <None Include="Resources\StartPage\iRT_start-ja.png" />
+    <None Include="Resources\StartPage\iRT_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\iRT_start.png" />
+    <None Include="Resources\StartPage\LibraryExplorer_start-ja.png" />
+    <None Include="Resources\StartPage\LibraryExplorer_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\LibraryExplorer_start.png" />
+    <None Include="Resources\StartPage\MethodEdit_start-ja.png" />
+    <None Include="Resources\StartPage\MethodEdit_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\MethodEdit_start.png" />
+    <None Include="Resources\StartPage\MethodRefine_start-ja.png" />
+    <None Include="Resources\StartPage\MethodRefine_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\MethodRefine_start.png" />
+    <None Include="Resources\StartPage\MS1Filtering_start-ja.png" />
+    <None Include="Resources\StartPage\MS1Filtering_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\MS1Filtering_start.png" />
+    <None Include="Resources\StartPage\OptimizeCE_start-ja.png" />
+    <None Include="Resources\StartPage\OptimizeCE_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\OptimizeCE_start.png" />
+    <None Include="Resources\StartPage\PeakPicking_start-ja.png" />
+    <None Include="Resources\StartPage\PeakPicking_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\PeakPicking_start.png" />
+    <None Include="Resources\StartPage\SmallMoleculeMethodDevCEOpt_start-ja.png" />
+    <None Include="Resources\StartPage\SmallMoleculeMethodDevCEOpt_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\SmallMoleculeMethodDevCEOpt_start.png" />
+    <None Include="Resources\StartPage\SmallMoleculeQuantification_start-ja.png" />
+    <None Include="Resources\StartPage\SmallMoleculeQuantification_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\SmallMoleculeQuantification_start.png" />
+    <None Include="Resources\StartPage\SmallMolecule_start-ja.png" />
+    <None Include="Resources\StartPage\SmallMolecule_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\SmallMolecule_start.png" />
+    <None Include="Resources\LogoAmanda_32.bmp" />
     <Content Include="Method\Thermo\Thermo.TNG.MethodXMLInterface2.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="Model\Tools\InstallNvidiaLibraries-bat.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Tools\UninstallNvidiaLibraries-bat.txt" />
     <Content Include="percolator\msvcp140.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -4172,7 +4198,29 @@
     <None Include="Resources\Close.bmp" />
     <None Include="Resources\hardklor_logo.png" />
     <None Include="Resources\PanoramaDownload.bmp" />
-    <EmbeddedResource Include="Resources\koina-logo.fdf731d5.png" />
+    <None Include="Resources\koina-logo.fdf731d5.png" />
+    <None Include="Resources\Error.png" />
+    <None Include="Resources\StartPage\DDASearch_start-ja.png" />
+    <None Include="Resources\StartPage\DDASearch_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\DDASearch_start.png" />
+    <None Include="Resources\StartPage\DIA-PASEF_start-ja.png" />
+    <None Include="Resources\StartPage\DIA-PASEF_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\DIA-PASEF_start.png" />
+    <None Include="Resources\StartPage\DIA-QE_start.png" />
+    <None Include="Resources\StartPage\DIA-TTOF_start.png" />
+    <None Include="Resources\StartPage\DIA-Umpire-TTOF_start.png" />
+    <None Include="Resources\StartPage\PRMOrbitrap_start.png" />
+    <None Include="Resources\StartPage\PRM_start-ja.png" />
+    <None Include="Resources\StartPage\PRM_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\PRM_start.png" />
+    <None Include="Resources\StartPage\SmallMoleculeIMSLibraries_start.png" />
+    <None Include="Resources\StartPage\DIA-QE_start-ja.png" />
+    <None Include="Resources\StartPage\DIA-QE_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\DIA-TTOF_start-ja.png" />
+    <None Include="Resources\StartPage\DIA-TTOF_start-zh-CHS.png" />
+    <None Include="Resources\Properties.bmp" />
+    <None Include="Resources\prosit_logo_dark_blue.png" />
+    <None Include="Resources\Skyline_Daily.bmp" />
     <Content Include="SkylineDocPointer.ico" />
     <Content Include="SkylineProcessRunner.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -4190,6 +4238,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Databinding\PivotReplicateAndIsotopeLabelWidget.resx">
       <DependentUpon>PivotReplicateAndIsotopeLabelWidget.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ChooseSchedulingReplicatesDlg.resx">
       <DependentUpon>ChooseSchedulingReplicatesDlg.cs</DependentUpon>
@@ -4226,15 +4275,11 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\BuildLibraryDlg.ja.resx">
       <DependentUpon>BuildLibraryDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\BuildLibraryDlg.zh-CHS.resx">
       <DependentUpon>BuildLibraryDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\BuildLibraryNotification.ja.resx">
-      <DependentUpon>BuildLibraryNotification.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\BuildLibraryNotification.zh-CHS.resx">
-      <DependentUpon>BuildLibraryNotification.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\CalculateIsolationSchemeDlg.ja.resx">
       <DependentUpon>CalculateIsolationSchemeDlg.cs</DependentUpon>
@@ -4679,8 +4724,8 @@
     <EmbeddedResource Include="FileUI\MProphetFeaturesDlg.resx">
       <DependentUpon>MProphetFeaturesDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\OpenDataSourceDialog.resx">
-      <DependentUpon>OpenDataSourceDialog.cs</DependentUpon>
+    <EmbeddedResource Include="FileUI\BaseFileDialogNE.resx">
+      <DependentUpon>BaseFileDialogNE.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\MatchModificationsControl.resx">
@@ -4811,9 +4856,11 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\EditRemoteAccountDlg.ja.resx">
       <DependentUpon>EditRemoteAccountDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\EditRemoteAccountDlg.resx">
       <DependentUpon>EditRemoteAccountDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\EditRemoteAccountDlg.zh-CHS.resx">
       <DependentUpon>EditRemoteAccountDlg.cs</DependentUpon>
@@ -4832,18 +4879,19 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\EditServerDlg.resx">
       <DependentUpon>EditServerDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\EditServerDlg.zh-CHS.resx">
       <DependentUpon>EditServerDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="ToolsUI\PythonInstaller.ja.resx">
-      <DependentUpon>PythonInstaller.cs</DependentUpon>
+    <EmbeddedResource Include="ToolsUI\PythonInstallerLegacyDlg.ja.resx">
+      <DependentUpon>PythonInstallerLegacyDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="ToolsUI\PythonInstaller.resx">
-      <DependentUpon>PythonInstaller.cs</DependentUpon>
+    <EmbeddedResource Include="ToolsUI\PythonInstallerLegacyDlg.resx">
+      <DependentUpon>PythonInstallerLegacyDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="ToolsUI\PythonInstaller.zh-CHS.resx">
-      <DependentUpon>PythonInstaller.cs</DependentUpon>
+    <EmbeddedResource Include="ToolsUI\PythonInstallerLegacyDlg.zh-CHS.resx">
+      <DependentUpon>PythonInstallerLegacyDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\RInstaller.ja.resx">
       <DependentUpon>RInstaller.cs</DependentUpon>
@@ -4966,11 +5014,9 @@
     <Compile Include="ToolsUI\EditServerDlg.Designer.cs">
       <DependentUpon>EditServerDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="ToolsUI\PythonInstaller.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="ToolsUI\PythonInstaller.Designer.cs">
-      <DependentUpon>PythonInstaller.cs</DependentUpon>
+    <Compile Include="ToolsUI\PythonInstallerLegacyDlg.cs" />
+    <Compile Include="ToolsUI\PythonInstallerLegacyDlg.Designer.cs">
+      <DependentUpon>PythonInstallerLegacyDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="ToolsUI\RInstaller.cs">
       <SubType>Form</SubType>
@@ -5016,8 +5062,6 @@
     <Compile Include="Util\HistogramHelper.cs" />
     <Compile Include="Util\LongOperationRunner.cs" />
     <Compile Include="Util\CultureUtil.cs" />
-    <Compile Include="Util\DataGridViewPasteHandler.cs" />
-    <Compile Include="Util\DataSourceUtil.cs" />
     <Compile Include="Util\DirectSerializer.cs" />
     <Compile Include="Util\DockableFormEx.cs">
       <SubType>Form</SubType>
@@ -5031,7 +5075,6 @@
     <Compile Include="Util\IonInfo.cs" />
     <Compile Include="Util\Log.cs" />
     <Compile Include="Util\MemoryInfo.cs" />
-    <Compile Include="Util\NameValueParameters.cs" />
     <Compile Include="Util\PanoramaPublishUtil.cs" />
     <Compile Include="Util\PooledSqliteConnection.cs" />
     <Compile Include="Util\SystemMetrics.cs" />
@@ -5628,19 +5671,6 @@
       <DependentUpon>GroupComparisonResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Model\Results\RemoteApi\RemoteApiResources.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <SubType>Designer</SubType>
-      <LastGenOutput>RemoteApiResources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Model\Results\RemoteApi\RemoteApiResources.ja.resx">
-      <DependentUpon>RemoteApiResources.resx</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Model\Results\RemoteApi\RemoteApiResources.zh-CHS.resx">
-      <DependentUpon>RemoteApiResources.resx</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Optimization\OptimizationResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -5732,19 +5762,6 @@
       <DependentUpon>IonMobilityResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Model\Results\RemoteApi\Unifi\UnifiResources.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <SubType>Designer</SubType>
-      <LastGenOutput>UnifiResources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Model\Results\RemoteApi\Unifi\UnifiResources.ja.resx">
-      <DependentUpon>UnifiResources.resx</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Model\Results\RemoteApi\Unifi\UnifiResources.zh-CHS.resx">
-      <DependentUpon>UnifiResources.resx</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
     <EmbeddedResource Include="Model\Koina\Models\ModelsResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -5758,11 +5775,6 @@
       <DependentUpon>ModelsResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Model\Koina\Models\ModelsResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ModelsResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Controls\Spectra\SpectraResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -5794,18 +5806,18 @@
     <None Include="Properties\app.manifest">
       <SubType>Designer</SubType>
     </None>
-    <EmbeddedResource Include="Resources\Blank.bmp" />
-    <EmbeddedResource Include="Resources\DataProcessing.png" />
-    <EmbeddedResource Include="Resources\File.png" />
-    <EmbeddedResource Include="Resources\Folder.png" />
-    <EmbeddedResource Include="Resources\DropImage.bmp" />
-    <EmbeddedResource Include="Resources\Filter.bmp" />
-    <EmbeddedResource Include="Resources\ExternalTool.bmp" />
-    <EmbeddedResource Include="Resources\GreenCheck.bmp" />
-    <EmbeddedResource Include="Resources\Peptide.bmp" />
-    <EmbeddedResource Include="Resources\Protein.bmp" />
-    <EmbeddedResource Include="Resources\RedX.bmp" />
-    <EmbeddedResource Include="Resources\Skyline.bmp" />
+    <None Include="Resources\Blank.bmp" />
+    <None Include="Resources\DataProcessing.png" />
+    <None Include="Resources\File.png" />
+    <None Include="Resources\Folder.png" />
+    <None Include="Resources\DropImage.bmp" />
+    <None Include="Resources\Filter.bmp" />
+    <None Include="Resources\ExternalTool.bmp" />
+    <None Include="Resources\GreenCheck.bmp" />
+    <None Include="Resources\Peptide.bmp" />
+    <None Include="Resources\Protein.bmp" />
+    <None Include="Resources\RedX.bmp" />
+    <None Include="Resources\Skyline.bmp" />
     <EmbeddedResource Include="SettingsUI\EditDPDlg.resx">
       <DependentUpon>EditDPDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -6337,6 +6349,14 @@
       <Link>msconvert.exe</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\ProteowizardWrapper\obj\x86\msconvert.exe.config">
+      <Link>msconvert.exe.config</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\ProteowizardWrapper\obj\x64\msconvert.exe.config">
+      <Link>msconvert.exe.config</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\BiblioSpec\obj\x86\BlibBuild.exe">
       <Link>BlibBuild.exe</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -6345,12 +6365,36 @@
       <Link>BlibBuild.exe</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\BiblioSpec\obj\x86\BlibBuild.exe.config">
+      <Link>BlibBuild.exe.config</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\BiblioSpec\obj\x64\BlibBuild.exe.config">
+      <Link>BlibBuild.exe.config</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\BiblioSpec\obj\x86\BlibFilter.exe">
       <Link>BlibFilter.exe</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\BiblioSpec\obj\x64\BlibFilter.exe">
       <Link>BlibFilter.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\BiblioSpec\obj\x86\BlibFilter.exe.config">
+      <Link>BlibFilter.exe.config</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\BiblioSpec\obj\x64\BlibFilter.exe.config">
+      <Link>BlibFilter.exe.config</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\..\libraries\arrow\parquet.dll">
+      <Link>parquet.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\..\libraries\arrow\arrow.dll">
+      <Link>arrow.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' " Include="..\Shared\ProteowizardWrapper\obj\x86\msparser.dll">
@@ -6656,11 +6700,11 @@
       <DependentUpon>ImportResultsNameDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\TransitionGroup.bmp" />
-    <EmbeddedResource Include="Resources\NoPeak.bmp" />
-    <EmbeddedResource Include="Resources\Keep.bmp" />
-    <EmbeddedResource Include="Resources\Peak.bmp" />
-    <EmbeddedResource Include="Resources\TransitionGroupLib.bmp" />
+    <None Include="Resources\TransitionGroup.bmp" />
+    <None Include="Resources\NoPeak.bmp" />
+    <None Include="Resources\Keep.bmp" />
+    <None Include="Resources\Peak.bmp" />
+    <None Include="Resources\TransitionGroupLib.bmp" />
     <EmbeddedResource Include="SettingsUI\Irt\AddIrtCalculatorDlg.resx">
       <DependentUpon>AddIrtCalculatorDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -6679,10 +6723,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\BuildBackgroundProteomeDlg.resx">
       <DependentUpon>BuildBackgroundProteomeDlg.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\BuildLibraryNotification.resx">
-      <DependentUpon>BuildLibraryNotification.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Irt\CalibrateIrtDlg.resx">
@@ -6712,31 +6752,31 @@
       <DependentUpon>EditLibraryDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Comment.bmp" />
-    <EmbeddedResource Include="Resources\PeakBlank.bmp" />
-    <EmbeddedResource Include="Resources\Copy.bmp" />
-    <EmbeddedResource Include="Resources\Cut.bmp" />
-    <EmbeddedResource Include="Resources\Delete.bmp" />
-    <EmbeddedResource Include="Resources\down-pro32.bmp" />
-    <EmbeddedResource Include="Resources\Edit_Redo.bmp" />
-    <EmbeddedResource Include="Resources\Edit_Undo.bmp" />
-    <EmbeddedResource Include="Resources\Find.bmp" />
-    <EmbeddedResource Include="Resources\FindNext.bmp" />
-    <EmbeddedResource Include="Resources\FragmentS.bmp" />
-    <EmbeddedResource Include="Resources\FragmentLibS.bmp" />
-    <EmbeddedResource Include="Resources\NewDocument.bmp" />
-    <EmbeddedResource Include="Resources\Note.bmp" />
-    <EmbeddedResource Include="Resources\Open.bmp" />
-    <EmbeddedResource Include="Resources\OpenFolder.bmp" />
-    <EmbeddedResource Include="Resources\Paste.bmp" />
-    <EmbeddedResource Include="Resources\PopupBtn.bmp" />
-    <EmbeddedResource Include="Resources\Save.bmp" />
-    <EmbeddedResource Include="Resources\up-pro32.bmp" />
+    <None Include="Resources\Comment.bmp" />
+    <None Include="Resources\PeakBlank.bmp" />
+    <None Include="Resources\Copy.bmp" />
+    <None Include="Resources\Cut.bmp" />
+    <None Include="Resources\Delete.bmp" />
+    <None Include="Resources\down-pro32.bmp" />
+    <None Include="Resources\Edit_Redo.bmp" />
+    <None Include="Resources\Edit_Undo.bmp" />
+    <None Include="Resources\Find.bmp" />
+    <None Include="Resources\FindNext.bmp" />
+    <None Include="Resources\FragmentS.bmp" />
+    <None Include="Resources\FragmentLibS.bmp" />
+    <None Include="Resources\NewDocument.bmp" />
+    <None Include="Resources\Note.bmp" />
+    <None Include="Resources\Open.bmp" />
+    <None Include="Resources\OpenFolder.bmp" />
+    <None Include="Resources\Paste.bmp" />
+    <None Include="Resources\PopupBtn.bmp" />
+    <None Include="Resources\Save.bmp" />
+    <None Include="Resources\up-pro32.bmp" />
     <EmbeddedResource Include="Model\Lib\BlibData\mapping.xml">
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Fragment.bmp" />
-    <EmbeddedResource Include="Resources\FragmentLib.bmp" />
+    <None Include="Resources\Fragment.bmp" />
+    <None Include="Resources\FragmentLib.bmp" />
     <EmbeddedResource Include="SettingsUI\Irt\ChangeIrtPeptidesDlg.resx">
       <DependentUpon>ChangeIrtPeptidesDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -6749,27 +6789,27 @@
       <DependentUpon>ViewLibraryDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Wand.bmp" />
-    <EmbeddedResource Include="Resources\minus.bmp" />
-    <EmbeddedResource Include="Resources\plus.bmp" />
-    <EmbeddedResource Include="Resources\Dash.bmp" />
-    <EmbeddedResource Include="Resources\WandProhibit.bmp" />
-    <EmbeddedResource Include="Resources\Copy_Bitmap.bmp" />
-    <EmbeddedResource Include="Resources\Ions_1.bmp" />
-    <EmbeddedResource Include="Resources\Ions_2.bmp" />
-    <EmbeddedResource Include="Resources\Ions_A.bmp" />
-    <EmbeddedResource Include="Resources\Ions_B.bmp" />
-    <EmbeddedResource Include="Resources\Ions_C.bmp" />
-    <EmbeddedResource Include="Resources\Ions_X.bmp" />
-    <EmbeddedResource Include="Resources\Ions_Y.bmp" />
-    <EmbeddedResource Include="Resources\Ions_Z.bmp" />
-    <EmbeddedResource Include="Resources\Print.bmp" />
-    <EmbeddedResource Include="Resources\ProteoWizard.bmp" />
+    <None Include="Resources\Wand.bmp" />
+    <None Include="Resources\minus.bmp" />
+    <None Include="Resources\plus.bmp" />
+    <None Include="Resources\Dash.bmp" />
+    <None Include="Resources\WandProhibit.bmp" />
+    <None Include="Resources\Copy_Bitmap.bmp" />
+    <None Include="Resources\Ions_1.bmp" />
+    <None Include="Resources\Ions_2.bmp" />
+    <None Include="Resources\Ions_A.bmp" />
+    <None Include="Resources\Ions_B.bmp" />
+    <None Include="Resources\Ions_C.bmp" />
+    <None Include="Resources\Ions_X.bmp" />
+    <None Include="Resources\Ions_Y.bmp" />
+    <None Include="Resources\Ions_Z.bmp" />
+    <None Include="Resources\Print.bmp" />
+    <None Include="Resources\ProteoWizard.bmp" />
     <Content Include="$(MascotParserPath)\config\unimod_2.xsd">
       <Link>unimod_2.xsd</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <EmbeddedResource Include="Resources\add-pro32.bmp" />
+    <None Include="Resources\add-pro32.bmp" />
     <Content Include="SkylineCmd.exe.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -6789,31 +6829,31 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Skyline_TemporaryKey.pfx" />
-    <EmbeddedResource Include="Resources\PeptideStandard.bmp" />
-    <EmbeddedResource Include="Resources\PeptideStandardLib.bmp" />
-    <EmbeddedResource Include="Resources\RedXTransparentBackground.bmp" />
+    <None Include="Resources\PeptideStandard.bmp" />
+    <None Include="Resources\PeptideStandardLib.bmp" />
+    <None Include="Resources\RedXTransparentBackground.bmp" />
     <EmbeddedResource Include="Model\Irt\mapping.xml" />
     <EmbeddedResource Include="Model\Lib\BlibData\mapping_redundant.xml">
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Calculator.bmp" />
-    <EmbeddedResource Include="Resources\FragmentDecoy.bmp" />
-    <EmbeddedResource Include="Resources\PeptideDecoy.bmp" />
-    <EmbeddedResource Include="Resources\ProteinDecoy.bmp" />
-    <EmbeddedResource Include="Resources\TransitionGroupDecoy.bmp" />
-    <EmbeddedResource Include="Resources\FindResults.ico" />
-    <EmbeddedResource Include="Resources\Immediate.ico" />
-    <EmbeddedResource Include="Resources\PeptideDecoyLib.bmp" />
-    <EmbeddedResource Include="Resources\TransitionGroupLibDecoy.bmp" />
-    <EmbeddedResource Include="Resources\FragmentLibDecoy.bmp" />
-    <EmbeddedResource Include="Resources\AllIonsStatusButton.bmp" />
-    <EmbeddedResource Include="Resources\Panorama.bmp" />
-    <EmbeddedResource Include="Resources\ChromLib.bmp" />
-    <EmbeddedResource Include="Resources\LabKey.bmp" />
+    <None Include="Resources\Calculator.bmp" />
+    <None Include="Resources\FragmentDecoy.bmp" />
+    <None Include="Resources\PeptideDecoy.bmp" />
+    <None Include="Resources\ProteinDecoy.bmp" />
+    <None Include="Resources\TransitionGroupDecoy.bmp" />
+    <None Include="Resources\FindResults.ico" />
+    <None Include="Resources\Immediate.ico" />
+    <None Include="Resources\PeptideDecoyLib.bmp" />
+    <None Include="Resources\TransitionGroupLibDecoy.bmp" />
+    <None Include="Resources\FragmentLibDecoy.bmp" />
+    <None Include="Resources\AllIonsStatusButton.bmp" />
+    <None Include="Resources\Panorama.bmp" />
+    <None Include="Resources\ChromLib.bmp" />
+    <None Include="Resources\LabKey.bmp" />
     <EmbeddedResource Include="Model\Lib\ChromLib\Data\mapping.xml">
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\PanoramaPublish.bmp" />
+    <None Include="Resources\PanoramaPublish.bmp" />
     <Content Include="SkylineData.ico" />
     <Content Include="SkylineDoc.ico" />
   </ItemGroup>
@@ -6821,6 +6861,10 @@
     <ProjectReference Include="..\Shared\BiblioSpec\BiblioSpec.csproj">
       <Project>{32CC9B1A-9442-4B56-AF34-FB47595278A1}</Project>
       <Name>BiblioSpec</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Shared\CommonMsData\CommonMsData.csproj">
+      <Project>{86f8e7f5-a3ed-4519-9ad9-bf9abd6dd69f}</Project>
+      <Name>CommonMsData</Name>
     </ProjectReference>
     <ProjectReference Include="..\Shared\Common\Common.csproj">
       <Project>{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}</Project>
@@ -7107,7 +7151,15 @@
       <FileType>File</FileType>
     </PublishFile>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2">
+      <Version>1.0.2420.47</Version>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Model\AlphaPeptDeep\" />
+    <Folder Include="Model\Carafe\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterPublish">
     <Exec Command="SignAfterPublishKey.bat &quot;$(ProjectDir)University of Washington (MacCoss Lab).crt&quot; &quot;$(ProjectDir)bin\$(Platform)\$(ConfigurationName)\app.publish&quot; $(TargetName)" />

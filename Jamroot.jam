@@ -107,7 +107,7 @@ local default_libraries_path = "./libraries" ;
 local libraries_path = [ MATCH --libraries-path=(.*) : [ modules.peek : ARGV ] ] ;
 libraries_path ?= $(default_libraries_path) ; # set default path in absence of command-line path
 
-local default_boost_src = "$(libraries_path)/boost_1_76_0" ;
+local default_boost_src = "$(libraries_path)/boost_1_86_0" ;
 local boost_src = [ MATCH --boost-src=(.*) : [ modules.peek : ARGV ] ] ;
 boost_src ?= $(default_boost_src) ; # set default path in absence of command-line path
 
@@ -337,7 +337,7 @@ project pwiz
         <toolset>msvc:<runtime-link>shared
 
         # avoid deprecation warnings
-        <define>BOOST_NO_AUTO_PTR
+        <toolset>gcc:<define>BOOST_NO_AUTO_PTR
         <define>BOOST_BIND_GLOBAL_PLACEHOLDERS
 
         <define>BOOST_REGEX_MATCH_EXTRA                 # enable access to all captures
@@ -384,13 +384,11 @@ project pwiz
         <toolset>gcc:<define>_DEFAULT_SOURCE
         <toolset>clang:<define>_DEFAULT_SOURCE
 
-        # msparser uses old libstd++ API, so with GCC 5+, the entire project has to use it as well
-        <toolset>gcc:<define>_GLIBCXX_USE_CXX11_ABI=0
-
-        # set standard to C++14
-        <toolset>gcc:<cxxflags>-std=c++14
-        <toolset>darwin:<cxxflags>-std=c++14
-        <toolset>clang:<cxxflags>-std=c++14
+        # set standard to C++14, 17 for MSVC (due to Arrow)
+        <toolset>msvc:<cxxflags>"/std:c++17"
+        <toolset>gcc:<cxxflags>-std=c++17
+        <toolset>darwin:<cxxflags>-std=c++17
+        <toolset>clang:<cxxflags>-std=c++17
 
         # prevent warning about _BSD_SOURCE deprecation
         <toolset>gcc:<define>_DEFAULT_SOURCE
@@ -587,7 +585,7 @@ path-constant BOOST_SOURCE : $(boost_src) ;
 path-constant ZLIB_SOURCE : $(zlib_src) ;
 path-constant GD_SOURCE : $(PWIZ_LIBRARIES_PATH)/libgd-2.1.0alpha ;
 path-constant PNG_SOURCE : $(PWIZ_LIBRARIES_PATH)/libpng-1.5.6 ;
-path-constant FREETYPE_SOURCE : $(PWIZ_LIBRARIES_PATH)/freetype-2.4.7 ;
+path-constant FREETYPE_SOURCE : $(PWIZ_LIBRARIES_PATH)/freetype-VER-2-13-3 ;
 path-constant EXPAT_SOURCE : $(PWIZ_LIBRARIES_PATH)/expat-2.0.1 ;
 
 using ext-boost : $(BOOST_VERSION:J=.) : $(BOOST_SOURCE) : <zlib-src-location>$(ZLIB_SOURCE) ;
@@ -605,12 +603,12 @@ if [ modules.peek : NT ]
             if ! --without-sciex in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_ABI.7z" ; }
             if ! --without-agilent in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_Agilent.7z" ; }
             if ! --without-bruker in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_Bruker.7z" ; }
-# Waiting for CCS<->DT support in .mbi reader #            if ! --without-mobilion in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_Mobilion.7z" ; }
+            if ! --without-mobilion in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_Mobilion.7z" ; }
             if ! --without-shimadzu in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_Shimadzu.7z" ; }
             if ! --without-thermo in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_Thermo.7z" ; }
             #if ! --without-unifi in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_UNIFI.7z" ; }
             if ! --without-waters in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_Waters.7z" ; }
-            if ! --without-mascot in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_LIBRARIES_PATH) $(PWIZ_LIBRARIES_PATH)\\msparser_2_8_1_x86_win64.7z" ; }
+            if ! --without-mascot in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_LIBRARIES_PATH) $(PWIZ_LIBRARIES_PATH)\\msparser_3_1_0_x86_win64.7z" ; }
             RESCAN ;
         }
         else
@@ -638,7 +636,7 @@ else
         if --i-agree-to-the-vendor-licenses in $(args)
         {
             echo "Extracting vendor APIs..." ;
-            if ! --without-mascot in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)/7zz x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_LIBRARIES_PATH) $(PWIZ_LIBRARIES_PATH)/msparser_2_8_1_x86_linux64.7z" ; }
+            if ! --without-mascot in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)/7zz x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_LIBRARIES_PATH) $(PWIZ_LIBRARIES_PATH)/msparser_3_1_0_x86_linux64.7z" ; }
             RESCAN ;
         }
         else
@@ -756,7 +754,7 @@ rule install-location ( properties * )
 
 rule install-type ( properties * )
 {
-    local result = <install-type>EXE ;
+    local result = <install-type>EXE <install-type>CONFIG ;
     if <link>shared in $(properties)
     {
         result += <install-dependencies>on <install-type>SHARED_LIB <install-type>MANIFEST ;
@@ -778,7 +776,7 @@ rule install-vendor-api-dependencies-to-locations ( locations + : properties * )
             if [ path.exists pwiz_aux/msrc/utility/vendor_api/ABI/T2D ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/ABI/T2D//install_pwiz_vendor_api_abi_t2d/$(location) ; }
             if [ path.exists pwiz_aux/msrc/utility/vendor_api/Agilent ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Agilent//install_pwiz_vendor_api_agilent/$(location) ; }
             if [ path.exists pwiz_aux/msrc/utility/vendor_api/Bruker ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Bruker//install_pwiz_vendor_api_bruker/$(location) ; }
-    # wait for CCS<->DT support in Mobllion #         if [ path.exists pwiz_aux/msrc/utility/vendor_api/Mobilion ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Mobilion//install_pwiz_vendor_api_mbi/$(location) ; }
+            if [ path.exists pwiz_aux/msrc/utility/vendor_api/Mobilion ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Mobilion//install_pwiz_vendor_api_mbi/$(location) ; }
             if [ path.exists pwiz_aux/msrc/utility/vendor_api/Shimadzu ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Shimadzu//install_pwiz_vendor_api_shimadzu/$(location) ; }
             if [ path.exists pwiz_aux/msrc/utility/vendor_api/thermo ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/thermo//install_pwiz_vendor_api_thermo/$(location) ; }
             if [ path.exists pwiz_aux/msrc/utility/vendor_api/UIMF ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/UIMF//install_pwiz_vendor_api_uimf/$(location) ; }
@@ -1129,7 +1127,7 @@ rule mbi-dll-location ( api-path : properties * )
 {
     local result = $(api-path) ;
     if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ] &&
-       [ path.exists $(api-path)\\MBICore.dll ]
+       [ path.exists $(api-path)\\MBI_SDK.dll ]
     {
         return $(result) ;
     }
@@ -1236,7 +1234,7 @@ rule msparser-path ( properties * )
     {
         if [ feature.get-values <toolset-msvc:version> : $(properties) ] in "14.0" "14.1" "14.2" "14.3"
         {
-            lib-location = "$(PWIZ_LIBRARIES_PATH)\\msparser_2_8_1_x86_win64\\vs2017" ;
+            lib-location = "$(PWIZ_LIBRARIES_PATH)\\msparser_3_1_0_x86_win64\\vs2015" ;
         }
         else
         {
@@ -1250,7 +1248,7 @@ rule msparser-path ( properties * )
     } 
     else if <toolset>gcc in $(properties)
     {
-        lib-location = "$(PWIZ_LIBRARIES_PATH)/msparser_2_8_1_x86_linux64/gnu" ;
+        lib-location = "$(PWIZ_LIBRARIES_PATH)/msparser_3_1_0_x86_linux64/gnu" ;
     }
     else
     {
@@ -1731,7 +1729,6 @@ constant .common-sources :
     $(.common-src-exclusions)
     
     $(PWIZ_ROOT_PATH)/Jamroot.jam
-    $(PWIZ_ROOT_PATH)/NOTICE
     $(PWIZ_ROOT_PATH)/LICENSE
     $(PWIZ_ROOT_PATH)/quickbuild.bat
     $(PWIZ_ROOT_PATH)/quickbuild.sh

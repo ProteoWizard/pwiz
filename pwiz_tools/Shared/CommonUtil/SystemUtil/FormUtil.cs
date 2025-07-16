@@ -195,5 +195,14 @@ namespace pwiz.Common.SystemUtil
         {
             RemoveTabPage(tabPage, ImmutableList.Singleton(toolTipControl));
         }
+
+        public static Control GetFocus(this Control control)
+        {
+            if (control.Focused)
+                return control;
+            return (
+                from Control childControl in control.Controls
+                select GetFocus(childControl)).FirstOrDefault(focus => focus != null);
+        }
     }
 }

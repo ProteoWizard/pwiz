@@ -32,6 +32,10 @@ namespace pwiz.Common.SystemUtil
         {
             get { return CommonApplicationSettings.FunctionalTest; }
         }
+        public static bool PauseMode
+        {
+            get { return CommonApplicationSettings.PauseSeconds != 0; }
+        }
         public static bool Offscreen
         {
             get { return CommonApplicationSettings.Offscreen; }
@@ -68,7 +72,9 @@ namespace pwiz.Common.SystemUtil
 
         protected override bool ShowWithoutActivation
         {
-            get { return TestMode || Offscreen; }
+            // Avoid activating forms during test mode or when off screen, but not when
+            // pausing to show Skyline as it normally functions.
+            get { return (TestMode || Offscreen) && !PauseMode; }
         }
 
         protected override void Dispose(bool disposing)

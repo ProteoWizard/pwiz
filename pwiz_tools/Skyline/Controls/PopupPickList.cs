@@ -490,9 +490,11 @@ namespace pwiz.Skyline.Controls
             SetItemChecked(iChange, !GetItemChecked(iChange));
         }
 
-        public void SetItemChecked(int i, bool checkItem)
+        public void SetItemChecked(int i, bool checkItem, bool select = false)
         {
             SetItemCheckedInternal(i, checkItem);
+            if (select)
+                pickListMulti.SelectedIndex = i;
             pickListMulti.Invalidate(pickListMulti.GetItemRectangle(i));
 
             UpdateSelectAll();

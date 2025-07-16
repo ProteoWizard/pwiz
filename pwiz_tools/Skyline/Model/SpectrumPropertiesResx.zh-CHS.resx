@@ -104,7 +104,7 @@
     <value>文件</value>
   </data>
   <data name="Category_MatchInfo" xml:space="preserve">
-    <value>搜索</value>
+    <value>匹配</value>
   </data>
   <data name="Category_PrecursorInfo" xml:space="preserve">
     <value>母离子</value>
@@ -123,14 +123,12 @@
   </data>
   <data name="Description_Adduct" xml:space="preserve">
     <value>所选离子的加合物</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="Description_FileName" xml:space="preserve">
     <value>作为谱图源的文件的文件名和可能的完整路径</value>
   </data>
   <data name="Description_Formula" xml:space="preserve">
     <value>所选离子的中性化学式</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="Description_IdFileName" xml:space="preserve">
     <value>目标离子与谱图相匹配的文件的文件名以及可能的完整路径</value>
@@ -158,6 +156,12 @@
   </data>
   <data name="Description_SpectrumCount" xml:space="preserve">
     <value>谱图库中该肽段的测量谱图数量</value>
+  </data>
+  <data name="Description_KoinaDotpMatch" xml:space="preserve">
+    <value>库中与 Koina 谱图中标注峰之间的点积（本质为归一化平方根对比角点积，示例参见：https://doi.org/10.1007/s13361-016-1408-y）。用户可控制标注的离子类型，从而决定纳入计算的离子类型。</value>
+  </data>
+  <data name="Description_KoinaDotpMatchFull" xml:space="preserve">
+    <value>Koina 谱图中所有峰与库谱图中对应匹配峰之间的点积（本质为归一化平方根对比角点积）。</value>
   </data>
   <data name="Adduct" xml:space="preserve">
     <value>加合物</value>
@@ -200,5 +204,11 @@
   </data>
   <data name="SpectrumCount" xml:space="preserve">
     <value>谱图计数</value>
+  </data>
+  <data name="KoinaDotpMatch" xml:space="preserve">
+    <value>Koina 点积</value>
+  </data>
+  <data name="KoinaDotpMatchFull" xml:space="preserve">
+    <value>Koina 全点积</value>
   </data>
 </root>

@@ -24,9 +24,9 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using MathNet.Numerics;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -77,7 +77,7 @@ namespace pwiz.Skyline.Model
             for (int i = 0; i < OriginalSpectrumSources.Length; ++i)
             {
                 string outputDirectory = Path.GetDirectoryName(OriginalSpectrumSources[i].GetFilePath()) ?? string.Empty;
-                if (Program.FunctionalTest || !DirectoryEx.IsWritable(outputDirectory))
+                if (!DirectoryEx.IsWritable(outputDirectory))
                     outputDirectory = Path.GetDirectoryName(Program.MainWindow.DocumentFilePath) ?? string.Empty;
 
                 var outputFilepath = Path.Combine(outputDirectory, OriginalSpectrumSources[i].GetFileNameWithoutExtension() + DiaUmpireFileSuffix);

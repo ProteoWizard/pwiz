@@ -22,9 +22,9 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.FileUI.PeptideSearch
@@ -44,6 +44,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             listResultsFiles.DisplayMember = @"Name";
             SimultaneousFiles = Settings.Default.ImportResultsSimultaneousFiles;
             DoAutoRetry = Settings.Default.ImportResultsDoAutoRetry;
+
+            // Hide the GPF checkbox during screenshots until we branch for 24.1 docs
+            if (Program.PauseSeconds != 0)
+            {
+                btnBrowse.Top = cbGpf.Top;
+                btnRemove.Top = cbGpf.Top;
+                cbGpf.Visible = false;
+            }
         }
 
         private BindingList<ImportPeptideSearch.FoundResultsFile> _foundResultsFiles;
@@ -60,6 +68,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             get { return cbAutoRetry.Checked; }
             set { cbAutoRetry.Checked = value; }
+        }
+
+        public bool IsGpf
+        {
+            get => cbGpf.Checked;
+            set => cbGpf.Checked = value;
+        }
+
+        public bool HideFileAddRemoveButtons
+        {
+            get => btnBrowse.Visible;
+            set => btnBrowse.Visible = btnRemove.Visible = value;
         }
 
         public string Prefix { get; set; }

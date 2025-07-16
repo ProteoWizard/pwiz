@@ -31,6 +31,7 @@ using pwiz.BiblioSpec;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
@@ -603,6 +604,15 @@ namespace pwiz.Skyline.Model.Lib
         /// A <see cref="LibrarySpec"/> referencing the library to be built.
         /// </summary>
         LibrarySpec LibrarySpec { get; }
+    }
+
+    /// <summary>
+    /// Extra interface that can be added to an <see cref="ILibraryBuilder"/> class to provide
+    /// a warning to the users before the build begins and possibly to decide not to build.
+    /// </summary>
+    public interface ILibraryBuildWarning
+    {
+        string GetWarning();
     }
 
     public enum LibraryRedundancy { best, all, all_redundant }
@@ -2140,6 +2150,14 @@ namespace pwiz.Skyline.Model.Lib
             string inChiKey, IDictionary<string, string> otherKeys)
         {
             return Create(moleculeName, chemicalFormulaOrMassesString, inChiKey, otherKeys == null ? string.Empty : string.Join(@"\t", otherKeys.Select(kvp => kvp.Key + @":" + kvp.Value)));
+        }
+
+        public static SmallMoleculeLibraryAttributes Create(string moleculeName, string chemicalFormulaOrMassesString,
+            IDictionary<string, string> accessions)
+        {
+            accessions.TryGetValue(MoleculeAccessionNumbers.TagInChiKey, out var inChiKey);
+            return Create(moleculeName, chemicalFormulaOrMassesString, inChiKey, 
+                string.Join(@"\t", accessions.Where(kvp => kvp.Key != MoleculeAccessionNumbers.TagInChiKey).Select(kvp => kvp.Key + @":" + kvp.Value)));
         }
 
         public static SmallMoleculeLibraryAttributes Create(string moleculeName, string chemicalFormulaOrMassesString,

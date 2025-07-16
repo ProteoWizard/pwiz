@@ -25,6 +25,7 @@ using System.Xml;
 using Google.Protobuf;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
@@ -731,7 +732,8 @@ namespace pwiz.Skyline.Model.Serialization
                 if (!transition.IsCustom())
                 {
                     writer.WriteAttribute(ATTR.cleavage_aa, transition.AA.ToString(CultureInfo.InvariantCulture));
-                    writer.WriteAttribute(ATTR.loss_neutral_mass, nodeTransition.LostMass); //po
+                    if (nodeTransition.HasLoss)
+                        writer.WriteAttribute(ATTR.loss_neutral_mass, nodeTransition.LostMass); //po
                 }
             }
 

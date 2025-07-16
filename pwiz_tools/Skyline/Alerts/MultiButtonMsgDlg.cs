@@ -75,7 +75,8 @@ namespace pwiz.Skyline.Alerts
         /// </summary>
         /// <param name="ctl">The control to show</param>
         /// <param name="btnText">The text to show in the non-Cancel button (DialogResult.OK)</param>
-        public MultiButtonMsgDlg(Control ctl, string btnText) : this(string.Empty, btnText)
+        /// <param name="ctlContentAsText">A text representation of the control's contents.</param>
+        public MultiButtonMsgDlg(Control ctl, string btnText, string ctlContentAsText) : this(ctlContentAsText, btnText)
         {
             messageScrollPanel.Hide();
             splitContainer.Panel1.Controls.Add(ctl);
@@ -119,8 +120,9 @@ namespace pwiz.Skyline.Alerts
         /// <param name="btnNoText">The text to show in the second, non-default button (DialogResult.No)</param>
         /// <param name="allowCancel">When this is true a Cancel button is the button furthest to the
         /// right. Otherwise, only the two named buttons are visible.</param>
-        public MultiButtonMsgDlg(Control ctl, string btnYesText, string btnNoText, bool allowCancel)
-        : this(string.Empty, btnYesText, btnNoText, allowCancel)
+        /// <param name="ctlContentAsText">A text representation of the control's contents.</param>
+        public MultiButtonMsgDlg(Control ctl, string btnYesText, string btnNoText, bool allowCancel, string ctlContentAsText)
+        : this(ctlContentAsText, btnYesText, btnNoText, allowCancel)
         {
             messageScrollPanel.Hide();
             splitContainer.Panel1.Controls.Add(ctl);

@@ -1301,7 +1301,7 @@ namespace pwiz.Skyline.Properties
                 NormalizeOptionValue = value.PersistedName;
             }
         }
-
+      
         [UserScopedSetting]
         public OpenDataSourceState OpenDataSourceState
         {
@@ -1312,6 +1312,26 @@ namespace pwiz.Skyline.Properties
             set
             {
                 this[nameof(OpenDataSourceState)] = value;
+            }
+        }
+
+        [UserScopedSetting]
+        public SerializableDictionary<string, ArdiaRegistrationCodeEntry> ArdiaRegistrationCodeEntries
+        {
+            get
+            {
+                var value = (SerializableDictionary<string, ArdiaRegistrationCodeEntry>)this[nameof(ArdiaRegistrationCodeEntries)];
+                if (value == null)
+                {
+                    value = new SerializableDictionary<string, ArdiaRegistrationCodeEntry>();
+                    this[nameof(ArdiaRegistrationCodeEntries)] = value;
+                }
+
+                return value;
+            }
+            set
+            {
+                this[nameof(ArdiaRegistrationCodeEntries)] = value;
             }
         }
     }
@@ -1326,6 +1346,29 @@ namespace pwiz.Skyline.Properties
         public int ListSortColumnIndex { get; set; }
         public SortOrder ListSortOrder { get; set; }
         public Size WindowSize { get; set; }
+    }
+
+    public sealed class ArdiaRegistrationCodeEntry
+    {
+        /// <summary>
+        /// Gets or sets the client ID.
+        /// </summary>
+        public string ClientId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the client secret.
+        /// </summary>
+        public string ClientSecret { get; set; }
+
+        /// <summary>
+        /// Gets or sets the client name.
+        /// </summary>
+        public string ClientName { get; set; }
+
+        /// <summary>
+        /// Gets or sets the client application code.
+        /// </summary>
+        public string ClientApplicationCode { get; set; }
     }
 
     /// <summary>
@@ -2998,7 +3041,7 @@ namespace pwiz.Skyline.Properties
         public override IsolationScheme EditItem(Control owner, IsolationScheme item,
             IEnumerable<IsolationScheme> existing, object tag)
         {
-            using (var editIsolationScheme = new EditIsolationSchemeDlg(existing ?? this))
+            using (var editIsolationScheme = new EditIsolationSchemeDlg(existing ?? this, tag as SrmSettings))
             {
                 editIsolationScheme.IsolationScheme = item;
                 if (editIsolationScheme.ShowDialog(owner) == DialogResult.OK)

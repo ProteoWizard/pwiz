@@ -28,6 +28,7 @@ using Google.Protobuf.Collections;
 using Grpc.Core;
 using Inference;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.DocSettings;
@@ -686,69 +687,77 @@ namespace pwiz.Skyline.Model.Koina.Models
 
         /// <summary>
         /// Calculates the normalized contrast angle of the square rooted
-        /// intensities of the two given spectra.
+        /// intensities of the two given spectra using matched peaks only.
         /// </summary>
         /// <param name="spectrum1">First spectrum</param>
         /// <param name="spectrum2">Second spectrum</param>
         /// <param name="mzTolerance">Tolerance for considering two mzs the same</param>
         public static double CalculateSpectrumDotpMzMatch(LibraryRankedSpectrumInfo spectrum1, LibraryRankedSpectrumInfo spectrum2, MzTolerance mzTolerance)
         {
-            var matched1 = spectrum1.PeaksMatched.ToArray();
-            var matched2 = spectrum2.PeaksMatched.ToArray();
-            var intensities1All = new List<double>(matched1.Length + matched2.Length);
-            var intensities2All = new List<double>(matched1.Length + matched2.Length);
+            return CalculateSpectrumDotpMzFull(spectrum1.PeaksMatched, spectrum2.PeaksMatched, mzTolerance, true,
+                true);
+        }
+
+        /// <summary>
+        /// Calculates the normalized contrast angle of the square rooted
+        /// intensities of the two given spectra using all peaks and possibly ignoring
+        /// mismatched peaks
+        /// </summary>
+        /// <param name="spectrum1">First spectrum</param>
+        /// <param name="spectrum2">Second spectrum</param>
+        /// <param name="mzTolerance">Tolerance for considering two mzs the same</param>
+        /// <param name="ignoreMismatches1">if true, unmatched peaks from the first spectrum are ignored</param>
+        /// <param name="ignoreMismatches2">if true, unmatched peaks from the second spectrum are ignored</param>
+        public static double CalculateSpectrumDotpMzFull(IEnumerable<LibraryRankedSpectrumInfo.RankedMI> spectrum1,
+            IEnumerable<LibraryRankedSpectrumInfo.RankedMI> spectrum2, MzTolerance mzTolerance, bool ignoreMismatches1, bool ignoreMismatches2)
+        {
+
+            var s1 = spectrum1.ToArray();
+            var s2 = spectrum2.ToArray();
+            var vectorLength = s1.Length + s2.Length;
+
+            var intensities1All = new List<double>(vectorLength);
+            var intensities2All = new List<double>(vectorLength);
             var matchIndex1 = 0;
             var matchIndex2 = 0;
-            while (matchIndex1 < matched1.Length && matchIndex2 < matched2.Length)
+            while (matchIndex1 < s1.Length && matchIndex2 < s2.Length)
             {
-                var mz1 = matched1[matchIndex1].ObservedMz;
-                var mz2 = matched2[matchIndex2].ObservedMz;
+                var mz1 = s1[matchIndex1].ObservedMz;
+                var mz2 = s2[matchIndex2].ObservedMz;
                 if (mzTolerance.IsWithinTolerance(mz1, mz2))
                 {
-                    intensities1All.Add(matched1[matchIndex1].Intensity);
-                    intensities2All.Add(matched2[matchIndex2].Intensity);
-
-                    ++matchIndex1;
-                    ++matchIndex2;
+                    intensities1All.Add(s1[matchIndex1++].Intensity);
+                    intensities2All.Add(s2[matchIndex2++].Intensity);
                 }
                 else if (mz1 < mz2)
                 {
-                    intensities1All.Add(matched1[matchIndex1].Intensity);
-                    intensities2All.Add(0.0);
-                    ++matchIndex1;
+                    if (!ignoreMismatches1)
+                    {
+                        intensities1All.Add(s1[matchIndex1].Intensity);
+                        intensities2All.Add(0.0);
+                    }
+                    matchIndex1++;
                 }
                 else
                 {
-                    intensities1All.Add(0.0);
-                    intensities2All.Add(matched2[matchIndex2].Intensity);
-                    ++matchIndex2;
+                    if (!ignoreMismatches2)
+                    {
+                        intensities1All.Add(0.0);
+                        intensities2All.Add(s2[matchIndex2].Intensity);
+                    }
+                    matchIndex2++;
                 }
             }
-
             return new Statistics(intensities1All).NormalizedContrastAngleSqrt(
                 new Statistics(intensities2All));
         }
-
-        /*public static double CalculateSpectrumDotpIonMatch(LibraryRankedSpectrumInfo spectrum1,
-            LibraryRankedSpectrumInfo spectrum2)
-        {
-            var matched1 = spectrum1.PeaksMatched.ToArray();
-            var matched2 = spectrum2.PeaksMatched.ToArray();
-            var intensities1All = new List<double>(matched1.Length + matched2.Length);
-            var intensities2All = new List<double>(matched1.Length + matched2.Length);
-
-            foreach (var match1 in matched1)
-            {
-                var other = matched2.Where(m => m.MatchedIons.Intersect())
-            }
-        }*/
-
+ 
         /// <summary>
         /// ReLU activation for spectra
         /// </summary>
         /// <param name="f">float to apply ReLU to</param>
         /// <returns>If f is positive, returns f, otherwise 0</returns>
-        public static float ReLU(float f)
+            public static float ReLU(float f)
         {
             return Math.Max(f, 0.0f);
         }
@@ -866,7 +875,7 @@ namespace pwiz.Skyline.Model.Koina.Models
         /// <returns>A list of string representations of the sequence</returns>
         public static string[] DecodeSequences(InferInputTensor tensor)
         {
-            return DecodeSequences2(tensor).Select(s => s.FullNames).ToArray();
+            return DecodeSequences2(tensor).Select(s => s.MonoisotopicMasses).ToArray();
 
             /*var n = tensor.TensorShape.Dim[0].Size;
             var result = new string[n];
@@ -925,22 +934,7 @@ namespace pwiz.Skyline.Model.Koina.Models
             var result = new int[tensor.Shape[0]];
             for (int i = 0; i < tensor.Shape[0]; ++i)
             {
-                result[i] = -1;
-                for (int j = 0; j < tensor.Shape[1]; ++j)
-                {
-                    if (tensor.Contents.Fp32Contents[i * KoinaConstants.PRECURSOR_CHARGES + j] == 1.0f)
-                    {
-                        result[i] = j + 1;
-                        break;
-                    }
-                }
-
-                if (result[i] == -1)
-                {
-                    var charges = tensor.Contents.Fp32Contents.Skip(i * KoinaConstants.PRECURSOR_CHARGES).Take(KoinaConstants.PRECURSOR_CHARGES);
-                    throw new KoinaException(string.Format(@"[{0}] is not a valid one-hot encoded charge", string.Join(
-                        @", ", charges)));
-                }
+                result[i] = tensor.Contents.IntContents[i];
             }
 
             return result;

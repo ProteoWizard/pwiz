@@ -64,7 +64,7 @@ rule init ( version ? : location : options * )
                 [ src base ftbase ]
                 [ src base
                     ftsystem ftinit ftglyph ftmm ftbdf ftbbox ftdebug
-                    ftxf86 fttype1 ftpfr ftstroke ftwinfnt ftotval ftbitmap
+                    fttype1 ftpfr ftstroke ftwinfnt ftotval ftbitmap
                     ftsynth ftgxval ftlcdfil ftgasp ftpatent ]
                 [ src bdf bdf ]
                 [ src cache ftcache ]

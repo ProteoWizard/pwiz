@@ -243,11 +243,6 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public IFiguresOfMeritCalculator GetFiguresOfMeritCalculator()
         {
-            if (RegressionFit.BILINEAR == RegressionFit && MaxLoqCv.HasValue && !MaxLoqBias.HasValue)
-            {
-                return new BootstrapFiguresOfMeritCalculator(MaxLoqCv.Value / 100);
-            }
-
             return new SimpleFiguresOfMeritCalculator(LodCalculation, MaxLoqCv / 100, MaxLoqBias / 100);
         }
         #endregion

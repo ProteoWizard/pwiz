@@ -218,6 +218,9 @@
     <value>Searching for common features across replicates</value>
   </data>
   <data name="HardklorSearchEngine_PerformAllAlignments_Waiting_for_next_file" xml:space="preserve">
-      <value>Waiting for next file</value>
+    <value>Waiting for next file</value>
+  </data>
+  <data name="SearchSettingsControl_SelectedIndexChanged_Only_MSFragger_is_currently_supported" xml:space="preserve">
+    <value>Only MSFragger is currently supported for raw DIA searches. Enable DIA-Umpire to use other search engines.</value>
   </data>
 </root>

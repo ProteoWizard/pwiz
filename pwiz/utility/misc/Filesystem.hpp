@@ -34,8 +34,9 @@
 #include "String.hpp"
 #include "Container.hpp"
 #include <boost/filesystem/operations.hpp>
-#include <boost/filesystem/convenience.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include <boost/filesystem/directory.hpp>
+#include <boost/filesystem/exception.hpp>
 #include <boost/version.hpp>
 #include "pwiz/utility/misc/random_access_compressed_ifstream.hpp"
 
@@ -54,18 +55,42 @@ namespace bfs = boost::filesystem;
 // and v3 breaks the API in surprising ways
 // see http://www.boost.org/doc/libs/1_47_0/libs/filesystem/v3/doc/deprecated.html
 #if BOOST_FILESYSTEM_VERSION == 2
-// in BFS2 p.filename() or p.leaf() or p.extension() returns a string
+// in BFS2 p.filename() or p.filename() or p.extension() returns a string
 #define BFS_STRING(p) p
 #define BFS_GENERIC_STRING(p) p
 // in BFS2 complete() is in namespace
 #define BFS_COMPLETE bfs::complete
 #else
-// in BFS3 p.filename() or p.leaf() or p.extension() returns a bfs::path
+// in BFS3 p.filename() or p.filename() or p.extension() returns a bfs::path
 #define BFS_STRING(p) (p).string()
 #define BFS_GENERIC_STRING(p) (p).generic_string()
 // in BFS3 complete() is not in namespace
 #define BFS_COMPLETE bfs::system_complete
 #endif
+
+
+namespace boost {
+namespace filesystem {
+
+    inline std::string extension(const path& p)
+    {
+        return p.extension().string();
+    }
+
+    inline std::string basename(const path& p)
+    {
+        return p.stem().string();
+    }
+
+    inline path change_extension(const path& p, const path& new_extension)
+    {
+        path new_p(p);
+        new_p.replace_extension(new_extension);
+        return new_p;
+    }
+} // filesystem
+} // boost
+
 
 namespace pwiz {
 namespace util {
@@ -96,6 +121,11 @@ PWIZ_API_DECL int expand_pathmask(const bfs::path& pathmask,
 /// - if "ec" is not NULL, it will set it to the error code
 /// - if "ec" is NULL, a boost::filesystem_error is thrown
 PWIZ_API_DECL void copy_directory(const bfs::path& from, const bfs::path& to, bool recursive = true, boost::system::error_code* ec = 0);
+
+
+/// wrapper for std::filesystem::canonical because boost::filesystem::canonical has an issue on Wine
+PWIZ_API_DECL bfs::path canonical(const bfs::path from);
+
 
 PWIZ_API_DECL enum ByteSizeAbbreviation
 {
@@ -131,7 +161,8 @@ PWIZ_API_DECL void check_path_length(const string & path);
 PWIZ_API_DECL class TemporaryFile
 {
     public:
-    TemporaryFile(const string& extension/* = ".tmp"*/);
+    TemporaryFile(const string& filenamePrefix, const string& extension);
+    TemporaryFile(const string& extension/* = ".tmp"*/) : TemporaryFile("", extension) {};
     ~TemporaryFile();
 
     const bfs::path& path() const { return filepath; }

@@ -41,8 +41,8 @@ class PWIZ_API_DECL Reader_Mobilion : public Reader
 {
     public:
 
-	virtual std::string identify(const std::string& filename,
-                        const std::string& head) const;
+    virtual std::string identify(const std::string& filename,
+                                 const std::string& head) const;
 
     virtual void read(const std::string& filename,
                       const std::string& head,
@@ -60,7 +60,7 @@ class PWIZ_API_DECL Reader_Mobilion : public Reader
     }
 
     virtual const char * getType() const {return "Mobilion MBI";}
-    virtual CVID getCvType() const {return MS_file_format;}
+    virtual CVID getCvType() const {return MS_Mobilion_MBI_format;}
     virtual std::vector<std::string> getFileExtensions() const {return {".mbi"};}
 };
 

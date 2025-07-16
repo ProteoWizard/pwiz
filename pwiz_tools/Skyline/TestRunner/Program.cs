@@ -29,7 +29,6 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -52,6 +51,7 @@ using pwiz.Skyline.Util;
 //         problem.
 //using pwiz.SkylineTestUtil;
 using TestRunnerLib;
+using TestRunnerLib.PInvoke;
 
 
 namespace TestRunner
@@ -61,8 +61,8 @@ namespace TestRunner
         private static readonly string[] TEST_DLLS = { "Test.dll", "TestData.dll", "TestConnected.dll", "TestFunctional.dll", "TestTutorial.dll", "CommonTest.dll", "TestPerf.dll" };
 
         private static readonly string executingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-        private static readonly string[] allLanguages = new FindLanguages(executingDirectory, "en", "fr", "tr").Enumerate().ToArray(); // Languages used in pass 1, and in pass 2 perftets
-        private static readonly string[] qualityLanguages = new FindLanguages(executingDirectory, "en", "fr").Enumerate().ToArray(); // "fr" and "tr" pretty much test the same thing, so just use fr in pass 2
+        private static readonly string[] allLanguages = new FindLanguages(executingDirectory, "en-US", "fr-FR", "tr-TR").Enumerate().ToArray(); // Languages used in pass 1, and in pass 2 perftets
+        private static readonly string[] qualityLanguages = allLanguages.Where(l => !l.StartsWith("tr")).ToArray(); // "fr" and "tr" pretty much test the same thing, so just use fr in pass 2
 
         private const int LeakTrailingDeltas = 7;   // Number of trailing deltas to average and check against thresholds below
         // CONSIDER: Ideally these thresholds would be zero, but memory and handle retention are not stable enough to support that
@@ -192,17 +192,18 @@ namespace TestRunner
 
             public string GetLeakMessage(LeakTracking leakThresholds, string testName)
             {
+                var message = string.Empty;
                 if (ManagedMemory >= leakThresholds.ManagedMemory)
-                    return string.Format("!!! {0} LEAKED {1:0.#} Managed bytes\r\n", testName, ManagedMemory);
+                    message += string.Format("!!! {0} LEAKED {1:0.#} Managed bytes\r\n", testName, ManagedMemory);
                 if (HeapMemory >= leakThresholds.HeapMemory && !MutedHeapMemoryLeakTestNames.Contains(testName))
-                    return string.Format("!!! {0} LEAKED {1:0.#} Heap bytes\r\n", testName, HeapMemory);
+                    message += string.Format("!!! {0} LEAKED {1:0.#} Heap bytes\r\n", testName, HeapMemory);
                 if (TotalMemory >= leakThresholds.TotalMemory && !MutedTotalMemoryLeakTestNames.Contains(testName))
-                    return string.Format("!!! {0} LEAKED {1:0.#} bytes\r\n", testName, TotalMemory);
+                    message += string.Format("!!! {0} LEAKED {1:0.#} bytes\r\n", testName, TotalMemory);
                 if (UserGdiHandles >= leakThresholds.UserGdiHandles && !MutedUserGdiHandleLeakTestNames.Contains(testName))
-                    return string.Format("!!! {0} HANDLE-LEAKED {1:0.#} User+GDI\r\n", testName, UserGdiHandles);
+                    message += string.Format("!!! {0} HANDLE-LEAKED {1:0.#} User+GDI\r\n", testName, UserGdiHandles);
                 if (TotalHandles >= leakThresholds.TotalHandles && !MutedTotalHandleLeakTestNames.Contains(testName))
-                    return string.Format("!!! {0} HANDLE-LEAKED {1:0.#} Total\r\n", testName, TotalHandles);
-                return null;
+                    message += string.Format("!!! {0} HANDLE-LEAKED {1:0.#} Total\r\n", testName, TotalHandles);
+                return string.IsNullOrEmpty(message) ? null : message;
             }
 
             public string GetLogMessage(string testName, int passedCount)
@@ -245,18 +246,18 @@ namespace TestRunner
         static readonly string commandLineOptions =
             "?;/?;-?;help;skylinetester;debug;results;" +
             "test;skip;filter;form;" +
-            "loop=0;repeat=1;pause=0;startingpage=1;random=off;offscreen=on;multi=1;wait=off;internet=off;originalurls=off;" +
+            "loop=0;repeat=1;pause=0;startingshot=1;random=off;offscreen=on;multi=1;wait=off;internet=off;originalurls=off;" +
             "parallelmode=off;workercount=0;waitforworkers=off;keepworkerlogs=off;checkdocker=on;workername;queuehost;workerport;workertimeout;alwaysupcltpassword;" +
             "coverage=off;dotcoverexe=jetbrains.dotcover.commandlinetools\\2023.3.3\\tools\\dotCover.exe;" +
             "maxsecondspertest=-1;" +
-            "demo=off;showformnames=off;showpages=off;status=off;buildcheck=0;screenshotlist;" +
+            "demo=off;showformnames=off;status=off;buildcheck=0;" +
             "quality=off;pass0=off;pass1=off;pass2=on;" +
             "perftests=off;" +
             "retrydatadownloads=off;" +
             "runsmallmoleculeversions=off;" +
             "recordauditlogs=off;" +
             "clipboardcheck=off;profile=off;vendors=on;language=fr-FR,en-US;" +
-            "log=TestRunner.log;report=TestRunner.log;dmpdir=Minidumps;teamcitytestdecoration=off;verbose=off;listonly;showheader=on";
+            "log=TestRunner.log;report=TestRunner.log;dmpdir=Minidumps;teamcitytestdecoration=off;teamcitytestsuite=;verbose=off;listonly;showheader=on";
 
         private static readonly string dotCoverFilters = "/Filters=+:module=TestRunner /Filters=+:module=Skyline-daily /Filters=+:module=Skyline* /Filters=+:module=CommonTest " +
                                                          "/Filters=+:module=Test* /Filters=+:module=MSGraph /Filters=+:module=ProteomeDb /Filters=+:module=BiblioSpec " +
@@ -383,7 +384,7 @@ namespace TestRunner
                     TeamCityStartTestSuite(commandLineArgs);
 
                     // Prevent system sleep.
-                    using (new SystemSleep())
+                    using (new Kernel32Test.SystemSleep())
                     {
                         // Pause before first test for profiling.
                         bool profiling = commandLineArgs.ArgAsBool("profile");
@@ -422,12 +423,18 @@ namespace TestRunner
                     Console.WriteLine(e.StackTrace);
                 if (e.InnerException != null)
                 {
-                    Console.WriteLine("Inner exception:");
-                    Console.WriteLine(e.InnerException.Message);
-                    if (string.IsNullOrEmpty(e.InnerException.StackTrace))
-                        Console.WriteLine("No stacktrace");
-                    else
-                        Console.WriteLine(e.InnerException.StackTrace);
+                    var inner = e.InnerException;
+                    int i = 0;
+                    while (inner != null)
+                    {
+                        Console.WriteLine($"Inner exception {++i}:");
+                        Console.WriteLine(inner.Message);
+                        if (string.IsNullOrEmpty(inner.StackTrace))
+                            Console.WriteLine("No stacktrace");
+                        else
+                            Console.WriteLine(inner.StackTrace);
+                        inner = inner.InnerException;
+                    }
                 }
                 else
                 {
@@ -572,10 +579,19 @@ namespace TestRunner
 
                     string testName = msg.Split('/')[0];
                     string testLanguage = msg.Split('/')[1];
+                    int testPass = Convert.ToInt32(msg.Split('/')[2]);
+                    int[] passEnabled = { 0, 0, 0 };
+                    passEnabled[testPass] = 1;
                     var cargs = new CommandLineArgs(new[] { "test=" + testName }, commandLineOptions);
                     commandLineArgs.SetArg("language", testLanguage);
+                    for (var pass = 0; pass < passEnabled.Length; pass++)
+                    {
+                        var enabled = passEnabled[pass];
+                        commandLineArgs.SetArg("pass" + pass, enabled.ToString());
+                    }
+
                     var testList = LoadTestList(cargs);
-                    TeeLog($"Starting test {testName}-{testLanguage}");
+                    TeeLog($"Starting test {testName}-{testLanguage}-{testPass}");
                     using (var testLogStream = new MemoryStream())
                     using (var testLog = new StreamWriter(testLogStream, new UTF8Encoding(false)))
                     {
@@ -665,7 +681,7 @@ namespace TestRunner
                 var pwizRoot = Path.GetDirectoryName(Path.GetDirectoryName(GetSkylineDirectory().FullName));
                 string workerName = $"docker_check{GetTestRunTimeStamp()}";
                 string testRunnerExe = GetTestRunnerExe();
-                string dockerArgs = $"run --name {workerName} -it --rm -v \"{pwizRoot}\":c:\\pwiz {RunTests.DOCKER_IMAGE_NAME} \"{testRunnerExe} help\"";
+                string dockerArgs = $"run --name {workerName} --rm -v \"{pwizRoot}\":c:\\pwiz {RunTests.DOCKER_IMAGE_NAME} \"{testRunnerExe} help\"";
                 Console.WriteLine("Checking that Docker always_up_runner container can run.");
                 string checkOutput = RunTests.RunCommand("docker", dockerArgs, "Error checking whether always_up_runner can start");
                 if (checkOutput.Contains("StartService FAILED"))
@@ -769,7 +785,7 @@ namespace TestRunner
                 testRunnerCmd = testRunnerExe + " " + testRunnerCmd;
             testRunnerCmd = AddPassThroughArguments(commandLineArgs, testRunnerCmd);
 
-            string dockerArgs = $"run --name {workerName} -it --rm -m {workerBytes}b -v \"{PathEx.GetDownloadsPath()}\":c:\\downloads -v \"{pwizRoot}\":c:\\pwiz {RunTests.DOCKER_IMAGE_NAME} \"{testRunnerCmd}\" {dockerRunRedirect}";
+            string dockerArgs = $"run --name {workerName} --rm -m {workerBytes}b -v \"{PathEx.GetDownloadsPath()}\":c:\\downloads -v \"{pwizRoot}\":c:\\pwiz {RunTests.DOCKER_IMAGE_NAME} \"{testRunnerCmd}\" {dockerRunRedirect}";
             Console.WriteLine($"Launching {workerName}: docker {dockerArgs}");
             log?.WriteLine($"Launching {workerName}: docker {dockerArgs}");
             workerNames = (workerNames ?? "") + $"{workerName} ";
@@ -834,15 +850,17 @@ namespace TestRunner
 
         private class QueuedTestInfo
         {
-            public QueuedTestInfo(TestInfo testInfo, string language, int loopCount = 0)
+            public QueuedTestInfo(TestInfo testInfo, string language, int loopCount, int pass)
             {
                 TestInfo = testInfo;
                 Language = language;
                 LoopCount = loopCount;
+                Pass = pass;
             }
-            public TestInfo TestInfo { get; private set; }
-            public string Language { get; private set; }
+            public TestInfo TestInfo { get; }
+            public string Language { get; }
             public int LoopCount { get; private set; }
+            public int Pass { get; }
 
             public void IncrementLoopCount()
             {
@@ -875,31 +893,44 @@ namespace TestRunner
             var dockerTimeoutSecondsOverride = Environment.GetEnvironmentVariable("SKYLINE_TESTRUNNER_DOCKER_TIMEOUT_SEC");
             int workerTimeout = Convert.ToInt32(commandLineArgs.ArgAsStringOrDefault("workertimeout", dockerTimeoutSecondsOverride ?? "60"));
             int loop = (int) commandLineArgs.ArgAsLong("loop");
+            bool[] passEnabled = {
+                commandLineArgs.ArgAsBool("pass0"),
+                commandLineArgs.ArgAsBool("pass1"),
+                commandLineArgs.ArgAsBool("pass2")
+            };
             var languages = GetLanguages(commandLineArgs);
             if (commandLineArgs.ArgAsBool("buildcheck"))
             {
                 loop = 1;
-                languages = new[] { "en" };
+                languages = new[] { "en-US" };
             }
 
-            Action<string, StreamWriter, int> LogTestOutput = (testOutput, testLog, loopCount) =>
+            Action<string, StreamWriter, int> LogTestOutput = (testOutput, testLog, pass) =>
             {
                 testOutput = testOutput.Trim(' ', '\t', '\r', '\n');
                 testOutput = Regex.Replace(testOutput, @"\d+ failures", $"{testsFailed} failures");
-                testOutput = Regex.Replace(testOutput, @"^(\[\d+:\d+\])?\s*(\d+)\.(\d+)?", $" $1 {loopCount}.{testsResultsReturned} ", RegexOptions.Multiline);
+                testOutput = Regex.Replace(testOutput, @"^(\[\d+:\d+\])?\s*(\d+)\.(\d+)?", $" $1 {pass}.{testsResultsReturned} ", RegexOptions.Multiline);
 
                 Console.WriteLine(testOutput);
                 testLog.WriteLine(testOutput);
             };
 
-            // add tests to the queue (at least once, multiple times if loop > 1)
-            for (int i = 0; i < Math.Max(1, loop); ++i)
+            for (int pass=0; pass < passEnabled.Length; ++pass)
             {
-                foreach (var testInfo in testList)
+                if (!passEnabled[pass])
+                    continue;
+
+                // add tests to the queue (at least once, multiple times if loop > 1 and pass2)
+                int loopCount = pass == 2 ? Math.Max(1, loop) : 1;
+                var passLanguages = pass > 0 ? languages : new[] { "fr" };
+                for (int i = 0; i < loopCount; ++i)
                 {
-                    var queue = testInfo.DoNotRunInParallel ? nonParallelTestQueue : testQueue;
-                    foreach (var language in languages)
-                        queue.Enqueue(new QueuedTestInfo(testInfo, language, i));
+                    foreach (var testInfo in testList)
+                    {
+                        var queue = testInfo.DoNotRunInParallel ? nonParallelTestQueue : testQueue;
+                        foreach (var language in passLanguages)
+                            queue.Enqueue(new QueuedTestInfo(testInfo, language, i, pass));
+                    }
                 }
             }
 
@@ -933,10 +964,10 @@ namespace TestRunner
                 string workerNames = null;
 
                 // try to kill docker workers if process is terminated externally (e.g. SkylineTester)
-                SetConsoleCtrlHandler(c =>
+                Kernel32Test.SetConsoleCtrlHandler(c =>
                 {
-                    cts.Cancel();
                     RunTests.KillParallelWorkers(HostWorkerPid, workerNames);
+                    cts.Cancel();
                     Process.GetCurrentProcess().Kill();
                     return true;
                 }, true);
@@ -961,7 +992,7 @@ namespace TestRunner
                             for (int i = 0; i < normalWorkerCount; ++i)
                             {
                                 int i2 = i;
-                                Helpers.Try<Exception>(() => LaunchAndWaitForDockerWorker(i2, commandLineArgs, ref workerNames, false, perWorkerBytes, workerPort, workerInfoByName, log, coverageSnapshots), 4, 3000);
+                                TryHelper.Try<Exception>(() => LaunchAndWaitForDockerWorker(i2, commandLineArgs, ref workerNames, false, perWorkerBytes, workerPort, workerInfoByName, log, coverageSnapshots), 4, 3000);
                             }
                         }
                         else
@@ -990,6 +1021,7 @@ namespace TestRunner
 
                 // fix this to get PID of TestRunner, not dotCover
                 HostWorkerPid = LaunchHostWorker(commandLineArgs, workerPort, log, coverageSnapshots);
+                bool workersFinished = false;
 
                 // wait for workers to finish
                 void WaitForWorkersToFinish()
@@ -1002,6 +1034,8 @@ namespace TestRunner
                             Thread.Sleep(1000);
                             continue;
                         }
+
+                        workersFinished = true;
                         cts.Cancel();
                     }
                 }
@@ -1092,7 +1126,7 @@ namespace TestRunner
                                 try
                                 {
                                     //Console.WriteLine(testInfo.TestMethod.Name);
-                                    workerInfo.CurrentTest = testInfo.TestInfo.TestMethod.Name + "/" + testInfo.Language;
+                                    workerInfo.CurrentTest = testInfo.TestInfo.TestMethod.Name + "/" + testInfo.Language + "/" + testInfo.Pass;
                                     if (!workerSender.TrySendFrame(TimeSpan.FromSeconds(5), workerInfo.CurrentTest))
                                         continue;
                                     lock (timer) timer.Start();
@@ -1105,11 +1139,12 @@ namespace TestRunner
                                     if (!testPassed)
                                         Interlocked.Increment(ref testsFailed);
                                     string testOutput = Encoding.UTF8.GetString(result, 1, result.Length - 1);
-                                    LogTestOutput(testOutput, log, testInfo.LoopCount);
+                                    LogTestOutput(testOutput, log, testInfo.Pass + testInfo.LoopCount);
                                     Interlocked.Increment(ref testsResultsReturned);
-                                    testInfo.IncrementLoopCount();
+                                    if (testInfo.Pass == 2)
+                                        testInfo.IncrementLoopCount();
                                     if (loop == 0)
-                                        testQueue.Enqueue(testInfo);
+                                        (testInfo.TestInfo.DoNotRunInParallel ? nonParallelTestQueue : testQueue).Enqueue(testInfo);
                                 }
                                 finally
                                 {
@@ -1118,7 +1153,7 @@ namespace TestRunner
                                         //if (testInfo.TestMethod.Name == "TestSwathIsolationLists")
                                         //    testRequeue = false;
                                         Console.Error.WriteLine($"No result for test {workerInfo.CurrentTest}; requeuing...");
-                                        testQueue.Enqueue(testInfo);
+                                        (testInfo.TestInfo.DoNotRunInParallel ? nonParallelTestQueue : testQueue).Enqueue(testInfo);
                                     }
                                 }
                             }
@@ -1187,7 +1222,7 @@ namespace TestRunner
                     }, TaskCreationOptions.LongRunning);
                 }
 
-                if (cts.IsCancellationRequested)
+                if (!workersFinished && cts.IsCancellationRequested)
                     return false;
                 Console.WriteLine("Waiting for worker tasks to finish.");
                 foreach (var task in tasks)
@@ -1256,7 +1291,19 @@ namespace TestRunner
             string value = args.ArgAsString("language");
             if (value == "all")
                 return allLanguages;
-            return value.Split(',');
+            return value.Split(',').Select(GetCanonicalLanguage).ToArray();
+        }
+
+        private static string GetCanonicalLanguage(string rawLanguage)
+        {
+            // If the raw language is a prefix of something from allLanguages, use
+            // the full name.
+            foreach (var language in allLanguages)
+            {
+                if (language.StartsWith(rawLanguage))
+                    return language;
+            }
+            return rawLanguage;
         }
 
         private static DirectoryInfo GetSkylineDirectory()
@@ -1283,10 +1330,9 @@ namespace TestRunner
         private static void TeamCitySettings(CommandLineArgs commandLineArgs, out bool teamcityTestDecoration, out string testSpecification)
         {
             teamcityTestDecoration = commandLineArgs.ArgAsBool("teamcitytestdecoration");
-            if(commandLineArgs.HasArg("test"))
-                testSpecification = commandLineArgs.ArgAsString("test");
-            else
-                testSpecification = "all";
+            testSpecification = commandLineArgs.ArgAsStringOrDefault("teamcitytestsuite") ??
+                                commandLineArgs.ArgAsStringOrDefault("test") ??
+                                "all";
         }
 
         private static void TeamCityStartTestSuite(CommandLineArgs commandLineArgs)
@@ -1326,14 +1372,13 @@ namespace TestRunner
             bool useVendorReaders = commandLineArgs.ArgAsBool("vendors");
             bool showStatus = commandLineArgs.ArgAsBool("status");
             bool showFormNames = commandLineArgs.ArgAsBool("showformnames");
-            bool showMatchingPages = commandLineArgs.ArgAsBool("showpages");
             bool qualityMode = commandLineArgs.ArgAsBool("quality");
             bool pass0 = commandLineArgs.ArgAsBool("pass0");
             bool pass1 = commandLineArgs.ArgAsBool("pass1");
             bool pass2 = commandLineArgs.ArgAsBool("pass2");
             int timeoutMultiplier = (int) commandLineArgs.ArgAsLong("multi");
             int pauseSeconds = (int) commandLineArgs.ArgAsLong("pause");
-            int pauseStartingPage = (int)commandLineArgs.ArgAsLong("startingpage");
+            int pauseStartingScreenshot = (int)commandLineArgs.ArgAsLong("startingshot");
             var formList = commandLineArgs.ArgAsString("form");
             if (!formList.IsNullOrEmpty())
                 perftests = true;
@@ -1349,6 +1394,12 @@ namespace TestRunner
             bool asNightly = offscreen && qualityMode;  // While it is possible to run quality off screen from the Quality tab, this is what we use to distinguish for treatment of perf tests
             bool coverage = commandLineArgs.ArgAsBool("coverage");
 
+            // If pausing for screenshots, make sure this process is allowed to fully activate its forms
+            if (pauseSeconds != 0)
+            {
+                Process.GetCurrentProcess().AllowSetForegroundWindow();
+            }
+
             // If running Nightly tests, remove any flagged for exclusion by the NoNightlyTesting custom attribute
             if (asNightly)
             {
@@ -1362,6 +1413,15 @@ namespace TestRunner
             {
                 testList.RemoveAll(test => test.IsPerfTest);
                 unfilteredTestList.RemoveAll(test => test.IsPerfTest);
+            }
+            else
+            {
+                // Take advantage of the extra time available in perftest runs to do the leak tests we
+                // skip in regular nightlies - but skip leak tests covered in regular nightlies
+                foreach (var test in unfilteredTestList)
+                {
+                    test.DoNotLeakTest = !test.DoNotLeakTest;
+                }
             }
 
             // If this is a nightly run, check the SKYLINE_NIGHTLY_TEST_EXCLUSIONS env var 
@@ -1400,7 +1460,7 @@ namespace TestRunner
                 demoMode, buildMode, offscreen, internet, useOriginalURLs, showStatus, perftests,
                 runsmallmoleculeversions, recordauditlogs, teamcityTestDecoration,
                 retrydatadownloads,
-                pauseDialogs, pauseSeconds, pauseStartingPage, useVendorReaders, timeoutMultiplier, 
+                pauseDialogs, pauseSeconds, pauseStartingScreenshot, useVendorReaders, timeoutMultiplier, 
                 results, log, verbose, clientMode);
 
             var timer = new Stopwatch();
@@ -1464,13 +1524,11 @@ namespace TestRunner
 
                 // Get list of languages
                 var languages = buildMode
-                    ? new[] { "en" }
+                    ? new[] { "en-US" }
                     : GetLanguages(commandLineArgs);
 
                 if (showFormNames)
                     runTests.Skyline.Set("ShowFormNames", true);
-                if (showMatchingPages)
-                    runTests.Skyline.Set("ShowMatchingPages", true);
 
                 var removeList = new List<TestInfo>();
 
@@ -1480,26 +1538,28 @@ namespace TestRunner
                 //         No internet access,
                 if (pass0)
                 {
-                    runTests.Log("\r\n");
-                    runTests.Log("# Pass 0: Run with French number format, no vendor readers, no internet access.\r\n");
+                    if (!clientMode)
+                    {
+                        runTests.Log("\r\n");
+                        runTests.Log("# Pass 0: Run with French number format, no vendor readers, no internet access.\r\n");
+                        if (testList.Any(t => t.IsPerfTest))
+                        {
+                            // These are largely about vendor and/or internet performance, so not worth doing in pass 0
+                            runTests.Log("# Skipping perf tests for pass 0.\r\n");
+                        }
+                    }
 
                     runTests.Language = new CultureInfo("fr");
                     runTests.Skyline.Set("NoVendorReaders", true);
                     runTests.AccessInternet = false;
                     runTests.RunPerfTests = false;
                     runTests.CheckCrtLeaks = CrtLeakThreshold;
-                    bool warnedPass0PerfTest = false;
                     for (int testNumber = 0; testNumber < testList.Count; testNumber++)
                     {
                         var test = testList[testNumber];
                         if (test.IsPerfTest)
                         {
                             // These are largely about vendor and/or internet performance, so not worth doing in pass 0
-                            if (!warnedPass0PerfTest)
-                            {
-                                warnedPass0PerfTest = true;
-                                runTests.Log("# Skipping perf tests for pass 0.\r\n");
-                            }
                             continue;
                         }
                         if (!runTests.Run(test, 0, testNumber, dmpDir, false) || // No point in re-running a failed test
@@ -1521,9 +1581,24 @@ namespace TestRunner
                 // Pass 1: Look for cumulative leaks when test is run multiple times.
                 if (pass1)
                 {
-                    runTests.Log("\r\n");
-                    runTests.Log("# Pass 1: Run tests multiple times to detect memory leaks.\r\n");
-                    bool warnedPass1PerfTest = false;
+                    if (!clientMode)
+                    {
+                        runTests.Log("\r\n");
+                        runTests.Log("# Pass 1: Run tests multiple times to detect memory leaks.\r\n");
+                        if (testList.Any(t => t.DoNotLeakTest))
+                        {
+                            // These are  too lengthy to run multiple times for leak testing, so not a good fit for pass 1
+                            // But it's a shame to skip them entirely, so we flip the attribute so they run on perf test machines
+                            runTests.Log("# Tests with NoLeakTesting attribute are skipped in pass 1 but prioritized in pass 2.\r\n");
+                            runTests.Log("# Note that systems running perf tests invert the NoLeakTesting attribute to ensure overall coverage.\r\n");
+                        }
+                        if (testList.Any(t => t.IsPerfTest))
+                        {
+                            // These are generally too lengthy to run multiple times, so not a good fit for pass 1
+                            runTests.Log("# Skipping perf tests for pass 1 leak checks.\r\n");
+                        }
+                    }
+
                     var maxDeltas = new LeakTracking();
                     int maxIterationCount = 0;
 
@@ -1540,11 +1615,12 @@ namespace TestRunner
                             if (test.IsPerfTest)
                             {
                                 // These are generally too lengthy to run multiple times, so not a good fit for pass 1
-                                if (!warnedPass1PerfTest)
-                                {
-                                    warnedPass1PerfTest = true;
-                                    runTests.Log("# Skipping perf tests for pass 1 leak checks.\r\n");
-                                }
+                                continue;
+                            }
+
+                            if (test.DoNotLeakTest)
+                            {
+                                // These are specifically too lengthy to run multiple times, so not a good fit for pass 1
                                 continue;
                             }
 
@@ -1646,13 +1722,8 @@ namespace TestRunner
                     languages = qualityLanguages;
 
                 // Run all test passes.
-                int pass = 1;
+                int pass = 2; // at this point we always start at pass 2 (pass0 and pass1 will have run already, optionally)
                 int passEnd = pass + (int)loopCount;
-                if (pass0 || pass1)
-                {
-                    pass++;
-                    passEnd++;
-                }
                 if (loopCount <= 0)
                 {
                     passEnd = int.MaxValue;
@@ -1661,11 +1732,16 @@ namespace TestRunner
                 if (!pass2)
                     return runTests.FailureCount == 0;
 
-                if (pass == 2 && pass < passEnd && testList.Count > 0)
+                if (pass < passEnd && testList.Count > 0 && !clientMode)
                 {
                     runTests.Log("\r\n");
                     runTests.Log("# Pass 2+: Run tests in each selected language.\r\n");
                 }
+
+                // Move any tests with the NoLeakTesting attribute to the front of the list for pass 2, as we skipped them in pass 1
+                testList = testList.Where(t => t.DoNotLeakTest)
+                    .Concat(testList.Where(t => !t.DoNotLeakTest))
+                    .ToList();
 
                 int perfPass = pass; // For nightly tests, we'll run perf tests just once per language, and only in one language (dynamically chosen for coverage) if english and french (along with any others) are both enabled
                 bool needsPerfTestPass2Warning = asNightly && testList.Any(t => t.IsPerfTest); // No perf tests, no warning
@@ -1711,7 +1787,8 @@ namespace TestRunner
                                     }
                                     break;
                                 }
-                                if (!runTests.Run(test, pass, testNumber, dmpDir, false))
+                                if (!runTests.Run(test, pass, testNumber, dmpDir, false) || // Test failed, don't rerun
+                                    RunOnceTestNames.Contains(test.TestMethod.Name)) // No point in running certain tests more than once
                                 {
                                     removeList.Add(test);
                                     i = languages.Length - 1;   // Don't run other languages.
@@ -2277,50 +2354,6 @@ Here is a list of recognized arguments:
             {
                 yield return list[i];
             }
-        }
-
-
-        [DllImport("Kernel32")]
-        private static extern bool SetConsoleCtrlHandler(ConsoleCtrlEventHandler handler, bool add);
-        private delegate bool ConsoleCtrlEventHandler(CtrlType sig);
-
-        enum CtrlType
-        {
-            CTRL_C_EVENT = 0,
-            CTRL_BREAK_EVENT = 1,
-            CTRL_CLOSE_EVENT = 2,
-            CTRL_LOGOFF_EVENT = 5,
-            CTRL_SHUTDOWN_EVENT = 6
-        }
-    }
-
-    public class SystemSleep : IDisposable
-    {
-        private readonly EXECUTION_STATE _previousState;
-
-        public SystemSleep()
-        {
-            // Prevent system sleep.
-            _previousState = SetThreadExecutionState(
-                EXECUTION_STATE.awaymode_required |
-                EXECUTION_STATE.continuous |
-                EXECUTION_STATE.system_required);
-        }
-
-        public void Dispose()
-        {
-            SetThreadExecutionState(_previousState);
-        }
-
-        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern EXECUTION_STATE SetThreadExecutionState(EXECUTION_STATE esFlags);
-
-        [Flags]
-        private enum EXECUTION_STATE : uint
-        {
-            awaymode_required = 0x00000040,
-            continuous = 0x80000000,
-            system_required = 0x00000001
         }
     }
 }

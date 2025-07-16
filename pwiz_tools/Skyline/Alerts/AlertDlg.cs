@@ -4,6 +4,7 @@ using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Alerts
 {
@@ -95,6 +96,10 @@ namespace pwiz.Skyline.Alerts
         {
             base.OnLoad(e);
             GetModeUIHelper().OnLoad(this);
+        }
+        public override void CopyMessage()
+        {
+            ClipboardHelper.SetSystemClipboardText(this, GetTitleAndMessageDetail());
         }
     }
 }

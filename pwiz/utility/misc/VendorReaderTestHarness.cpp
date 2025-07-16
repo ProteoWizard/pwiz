@@ -40,6 +40,7 @@
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
+#include "pwiz/utility/misc/Timer.hpp"
 #include "boost/thread/thread.hpp"
 #include "boost/thread/barrier.hpp"
 #include "boost/locale/encoding_utf.hpp"
@@ -60,9 +61,22 @@ namespace util {
 
 namespace {
 
-const std::vector<CVID> excludedSpectra =
+struct TestTimer : Timer
 {
-    MS_electromagnetic_radiation_spectrum
+    TestTimer(const string& rawpath, const string& caption, bool reportTiming)
+    : caption_(caption), rawpath_(rawpath), reportTiming_(reportTiming)
+    {
+    }
+
+    ~TestTimer()
+    {
+        if (reportTiming_)
+            cerr << caption_ << " (" << rawpath_ << "): " << elapsed() << "s" << endl;
+    }
+
+    string caption_;
+    string rawpath_;
+    bool reportTiming_;
 };
 
 void testAccept(const Reader& reader, const string& rawpath)
@@ -284,7 +298,11 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
     // read file into MSData object
     vector<MSDataPtr> msds;
     string rawheader = pwiz::util::read_file_header(rawpath, 512);
-    reader.read(rawpath, rawheader, msds, readerConfig);
+
+    {
+        TestTimer readTimer(rawpath, "Reader::read", config.reportTimings);
+        reader.read(rawpath, rawheader, msds, readerConfig);
+    }
 
     string sourceName = BFS_STRING(bfs::path(rawpath).filename());
 
@@ -306,15 +324,25 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
         hackInMemoryMSData(sourceName, targetResult, config);
 
         // test for 1:1 equality with the target mzML
-        Diff<MSData, DiffConfig> diff(msd, targetResult, diffConfig);
-        if (diff) cerr << headDiff(diff, 5000) << endl;
-        unit_assert(!diff);
+        {
+            TestTimer diffTimer(rawpath, "Diff_mzML", config.reportTimings);
+            Diff<MSData, DiffConfig> diff(msd, targetResult, diffConfig);
+            if (diff) cerr << headDiff(diff, 5000) << endl;
+            unit_assert(!diff);
+        }
 
         // test ion mobility conversion
         auto imsl = boost::dynamic_pointer_cast<SpectrumListIonMobilityBase>(msd.run.spectrumListPtr);
+        if (imsl == nullptr)
+        {
+            auto wrapper = boost::dynamic_pointer_cast<SpectrumListWrapper>(msd.run.spectrumListPtr);
+            if (wrapper != nullptr)
+                imsl = boost::dynamic_pointer_cast<SpectrumListIonMobilityBase>(wrapper->innermost());
+        }
+
         if (imsl != nullptr && imsl->canConvertIonMobilityAndCCS())
         {
-            double imTestValue = 0.832;
+            double imTestValue = 400;
             double ccs = imsl->ionMobilityToCCS(imTestValue, 678.9, 2);
             double imValue = imsl->ccsToIonMobility(ccs, 678.9, 2);
             unit_assert_equal(imValue, imTestValue, 1e-5); // some vendors use 32-bit float so accuracy can't be too stringent
@@ -326,6 +354,7 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
         // test that non-IMS peak picked data have unique m/z values
         if (config.peakPicking && !config.combineIonMobilitySpectra && vendorMsd.run.spectrumListPtr)
         {
+            TestTimer duplicatesCheckTimer(rawpath, "Duplicates check", config.reportTimings);
             const auto& sl = *vendorMsd.run.spectrumListPtr;
             ostringstream ss;
 
@@ -333,7 +362,7 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
             {
                 map<double, vector<size_t>> duplicateIndicesByMz;
                 auto s = sl.spectrum(i, true);
-                auto mzArray = s->getMZArray()->data;
+                const auto& mzArray = s->getMZArray()->data;
                 for (size_t j=0; j < mzArray.size(); ++j)
                     duplicateIndicesByMz[mzArray[j]].push_back(j);
 
@@ -372,20 +401,20 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
         if (findUnicodeBytes(rawpath) == rawpath.end())
         {
             if (os_) (*os_) << "MZ5 serialization test of " << config.resultFilename(msd.run.id + ".mzML") << endl;
-            string targetResultFilename_mz5 = bfs::change_extension(targetResultFilename, ".mz5").string();
             {
+                TemporaryFile targetResultFilename_mz5(targetResultFilename.filename().replace_extension().string(), ".mz5");
                 MSData msd_mz5;
                 Serializer_mz5 serializer_mz5;
-                serializer_mz5.write(targetResultFilename_mz5, vendorMsd);
-                serializer_mz5.read(targetResultFilename_mz5, msd_mz5);
+                serializer_mz5.write(targetResultFilename_mz5.path().string(), vendorMsd);
+                serializer_mz5.read(targetResultFilename_mz5.path().string(), msd_mz5);
 
                 DiffConfig diffConfig_mz5(diffConfig);
                 diffConfig_mz5.ignoreExtraBinaryDataArrays = true;
+                TestTimer diffTimer_mz5(rawpath, "Diff_mz5", config.reportTimings);
                 Diff<MSData, DiffConfig> diff_mz5(vendorMsd, msd_mz5, diffConfig_mz5);
                 if (diff_mz5) cerr << headDiff(diff_mz5, 5000) << endl;
                 unit_assert(!diff_mz5);
             }
-            bfs::remove(targetResultFilename_mz5);
         }
 #endif
 
@@ -394,13 +423,13 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
         if (findUnicodeBytes(rawpath) == rawpath.end())
         {
             if (os_) (*os_) << "mzMLb serialization test of " << config.resultFilename(msd.run.id + ".mzML") << endl;
-            string targetResultFilename_mzMLb = bfs::change_extension(targetResultFilename, ".mzMLb").string();
             {
+                TemporaryFile targetResultFilename_mzMLb(targetResultFilename.filename().replace_extension().string(), ".mzMLb");
                 MSDataFile::WriteConfig config_mzMLb(MSDataFile::Format_mzMLb);
                 config_mzMLb.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_Zlib;
                 {
-                    MSDataFile::write(vendorMsd, targetResultFilename_mzMLb, config_mzMLb);
-                    MSDataFile msd_mzMLb(targetResultFilename_mzMLb);
+                    MSDataFile::write(vendorMsd, targetResultFilename_mzMLb.path().string(), config_mzMLb);
+                    MSDataFile msd_mzMLb(targetResultFilename_mzMLb.path().string());
                     msd_mzMLb.fileDescription.sourceFilePtrs.erase(msd_mzMLb.fileDescription.sourceFilePtrs.end() - 1);
 
                     DiffConfig diffConfig_mzMLb(diffConfig);
@@ -423,8 +452,8 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
                     else
                         config_mzMLb.binaryDataEncoderConfig.numpress = numpress;
 
-                    MSDataFile::write(vendorMsd, targetResultFilename_mzMLb, config_mzMLb);
-                    MSDataFile msd_mzMLb(targetResultFilename_mzMLb);
+                    MSDataFile::write(vendorMsd, targetResultFilename_mzMLb.path().string(), config_mzMLb);
+                    MSDataFile msd_mzMLb(targetResultFilename_mzMLb.path().string());
                     msd_mzMLb.fileDescription.sourceFilePtrs.erase(msd_mzMLb.fileDescription.sourceFilePtrs.end() - 1);
 
                     DiffConfig diffConfig_mzMLb(diffConfig);
@@ -438,7 +467,6 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
                     unit_assert(!diff_mzMLb);
                 }
             }
-            bfs::remove(targetResultFilename_mzMLb);
         }
 #endif
 
@@ -513,15 +541,22 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
                 config_mzXML.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_Zlib;
                 config_mzXML.binaryDataEncoderConfig.precision = BinaryDataEncoder::Precision_32;
             }
+
             Serializer_mzXML serializer_mzXML(config_mzXML);
-            serializer_mzXML.write(*stringstreamPtr, vendorMsd);
+            {
+                TestTimer writeTimer_mzXML(rawpath, "Write_mzXML", config.reportTimings);
+                serializer_mzXML.write(*stringstreamPtr, vendorMsd);
+            }
             if (os_) *os_ << "mzXML:\n" << stringstreamPtr->str() << endl;
             serializer_mzXML.read(serializedStreamPtr, msd_mzXML);
 
-            Diff<MSData, DiffConfig> diff_mzXML(vendorMsd, msd_mzXML, diffConfig_non_mzML);
-            if (diff_mzXML && !os_) cerr << "mzXML:\n" << headStream(*serializedStreamPtr, 5000) << endl;
-            if (diff_mzXML) cerr << headDiff(diff_mzXML, 5000) << endl;
-            unit_assert(!diff_mzXML);
+            {
+                TestTimer diffTimer_mzXML(rawpath, "Diff_mzXML", config.reportTimings);
+                Diff<MSData, DiffConfig> diff_mzXML(vendorMsd, msd_mzXML, diffConfig_non_mzML);
+                if (diff_mzXML && !os_) cerr << "mzXML:\n" << headStream(*serializedStreamPtr, 5000) << endl;
+                if (diff_mzXML) cerr << headDiff(diff_mzXML, 5000) << endl;
+                unit_assert(!diff_mzXML);
+            }
         }
     }
 
@@ -555,7 +590,8 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
     bfs::path::string_type unicodeTestString(boost::locale::conv::utf_to_utf<bfs::path::value_type>(L"-试验"));
     bfs::path rawpathPath(rawpath);
     bfs::path newRawPath = bfs::current_path() / rawpathPath.filename();
-    auto oldExtension = newRawPath.extension().native();
+    vector<bfs::path> extraCopiedPaths;
+    const auto& oldExtension = newRawPath.extension().native();
     newRawPath = newRawPath.replace_extension().native() + unicodeTestString + newRawPath.extension().native();
     if (bfs::exists(newRawPath))
         bfs::remove_all(newRawPath);
@@ -566,37 +602,19 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
         // special case for wiff files with accompanying .scan files
         if (bal::iends_with(rawpath, ".wiff") || bal::iends_with(rawpath, ".wiff2"))
         {
-            bfs::path wiffscanPath(rawpathPath);
-            wiffscanPath.replace_extension(".wiff.scan");
-            if (bfs::exists(wiffscanPath))
+            for (auto ext : { L".wiff.scan", L".dad.scan", L".dad.sidx" })
             {
-                bfs::path newWiffscanPath = bfs::current_path() / rawpathPath.filename(); // replace_extension won't work as desired on wiffscanPath
-                newWiffscanPath = newWiffscanPath.replace_extension().native() + unicodeTestString + boost::locale::conv::utf_to_utf<bfs::path::value_type>(L".wiff.scan");
-                if (bfs::exists(newWiffscanPath))
-                    bfs::remove(newWiffscanPath);
-                bfs::copy_file(wiffscanPath, newWiffscanPath);
-            }
-
-            wiffscanPath = rawpathPath;
-            wiffscanPath.replace_extension(".dad.scan");
-            if (bfs::exists(wiffscanPath))
-            {
-                bfs::path newWiffscanPath = bfs::current_path() / rawpathPath.filename(); // replace_extension won't work as desired on wiffscanPath
-                newWiffscanPath = newWiffscanPath.replace_extension().native() + unicodeTestString + boost::locale::conv::utf_to_utf<bfs::path::value_type>(L".dad.scan");
-                if (bfs::exists(newWiffscanPath))
-                    bfs::remove(newWiffscanPath);
-                bfs::copy_file(wiffscanPath, newWiffscanPath);
-            }
-
-            wiffscanPath = rawpathPath;
-            wiffscanPath.replace_extension(".dad.sidx");
-            if (bfs::exists(wiffscanPath))
-            {
-                bfs::path newWiffscanPath = bfs::current_path() / rawpathPath.filename(); // replace_extension won't work as desired on wiffscanPath
-                newWiffscanPath = newWiffscanPath.replace_extension().native() + unicodeTestString + boost::locale::conv::utf_to_utf<bfs::path::value_type>(L".dad.sidx");
-                if (bfs::exists(newWiffscanPath))
-                    bfs::remove(newWiffscanPath);
-                bfs::copy_file(wiffscanPath, newWiffscanPath);
+                bfs::path wiffscanPath(rawpathPath);
+                wiffscanPath.replace_extension(ext);
+                if (bfs::exists(wiffscanPath))
+                {
+                    bfs::path newWiffscanPath = bfs::current_path() / rawpathPath.filename(); // replace_extension won't work as desired on wiffscanPath
+                    newWiffscanPath = newWiffscanPath.replace_extension().native() + unicodeTestString + boost::locale::conv::utf_to_utf<bfs::path::value_type>(ext);
+                    if (bfs::exists(newWiffscanPath))
+                        bfs::remove(newWiffscanPath);
+                    bfs::copy_file(wiffscanPath, newWiffscanPath);
+                    extraCopiedPaths.emplace_back(newWiffscanPath);
+                }
             }
         }
         bfs::copy_file(rawpathPath, newRawPath);
@@ -677,17 +695,8 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
         bfs::remove_all(newRawPath); // remove the copy of the RAW file with non-ASCII characters
 
         // special case for wiff files with accompanying .scan files
-        if (bal::iequals(rawpathPath.extension().string(), ".wiff"))
-        {
-            bfs::path wiffscanPath(rawpathPath);
-            wiffscanPath.replace_extension(".wiff.scan");
-            if (bfs::exists(wiffscanPath))
-            {
-                bfs::path newWiffscanPath = bfs::current_path() / rawpathPath.filename(); // replace_extension won't work as desired on wiffscanPath
-                newWiffscanPath.replace_extension(unicodeTestString + boost::locale::conv::utf_to_utf<bfs::path::value_type>(L".wiff.scan"));
-                bfs::remove(newWiffscanPath);
-            }
-        }
+        for (auto extraPath : extraCopiedPaths)
+            bfs::remove(extraPath);
     }
     catch (bfs::filesystem_error& e)
     {
@@ -936,10 +945,10 @@ TestResult testReader(const Reader& reader, const vector<string>& args, bool tes
                     ++result.failedTests;
                 }
 
-                /* TODO: there are issues to be resolved here but not just simple crashes
-                testThreadSafety(1, reader, testAcceptOnly, requireUnicodeSupport, rawpath);
-                testThreadSafety(2, reader, testAcceptOnly, requireUnicodeSupport, rawpath);
-                testThreadSafety(4, reader, testAcceptOnly, requireUnicodeSupport, rawpath);*/
+                /* TODO: there are issues to be resolved here but not just simple crashes*/
+                //testThreadSafety(1, reader, testAcceptOnly, requireUnicodeSupport, rawpath, parentPath, config);
+                //testThreadSafety(2, reader, testAcceptOnly, requireUnicodeSupport, rawpath, parentPath, config);
+                //testThreadSafety(4, reader, testAcceptOnly, requireUnicodeSupport, rawpath, parentPath, config);
 
                 if (bfs::exists(rawpath))
                 {

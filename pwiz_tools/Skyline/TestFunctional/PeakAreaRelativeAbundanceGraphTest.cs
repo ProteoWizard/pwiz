@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -46,11 +47,16 @@ namespace pwiz.SkylineTestFunctional
         {
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("Rat_plasma.sky")));
             WaitForDocumentLoaded();
+            VerifyFindSelectedPaths();
             RunUI(() =>
             {
                 SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.Molecules, 0);
                 SkylineWindow.ShowPeakAreaRelativeAbundanceGraph();
-                var graphPane = FindGraphPane();
+            });
+            var graphPane = FindGraphPane();
+            WaitForConditionUI(() => graphPane.IsComplete);
+            RunUI(() =>
+            {
                 Assert.IsNotNull(graphPane);
                 var peakAreaGraph = FormUtil.OpenForms.OfType<GraphSummary>().FirstOrDefault(graph =>
                     graph.Type == GraphTypeSummary.abundance && graph.Controller is AreaGraphController);
@@ -58,12 +64,24 @@ namespace pwiz.SkylineTestFunctional
 
                 // Verify that setting the targets to Proteins or Peptides produces the correct number of points
                 SkylineWindow.SetAreaProteinTargets(true);
-                Assert.AreEqual(48, graphPane.CurveList.Sum(curve=>curve.NPts));
+            });
+            WaitForConditionUI(() => graphPane.IsComplete);
+            RunUI(() =>
+            {
+                Assert.AreEqual(48, graphPane.CurveList.Sum(curve => curve.NPts));
                 SkylineWindow.SetAreaProteinTargets(false);
-                Assert.AreEqual(125, graphPane.CurveList.Sum(curve=>curve.NPts));
+            });
+            WaitForConditionUI(() => graphPane.IsComplete);
+            RunUI(() =>
+            {
+                Assert.AreEqual(125, graphPane.CurveList.Sum(curve => curve.NPts));
 
                 // Verify that excluding peptide lists reduces the number of points
                 SkylineWindow.SetExcludePeptideListsFromAbundanceGraph(true);
+            });
+            WaitForConditionUI(() => graphPane.IsComplete);
+            RunUI(() =>
+            {
                 Assert.AreEqual(45, graphPane.CurveList.Sum(curve => curve.NPts));
                 //CONSIDER add quantitative checks for relative abundance results
             });
@@ -90,12 +108,12 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(Skyline.Controls.GroupComparison.GroupComparisonResources
                         .VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Protein_Expression_Formatting,
                     formattingDlg.Text);
-                var row = formattingDlg.GetCurrentBindingList().AddNew();
+                var row = formattingDlg.AddRow();
                 Assert.IsNotNull(row);
                 row.Expression = new MatchExpression("QE", new[] { MatchOption.PeptideSequence }).ToString();
                 row.PointSymbol = PointSymbol.Diamond;
                 row.Color = Color.FromArgb(Color.Indigo.ToArgb());
-                row = formattingDlg.GetCurrentBindingList().AddNew();
+                row = formattingDlg.AddRow();
                 Assert.IsNotNull(row);
                 row.Expression = new MatchExpression("GQ", new[] { MatchOption.PeptideSequence }).ToString();
                 row.PointSymbol = PointSymbol.Triangle;
@@ -158,11 +176,11 @@ namespace pwiz.SkylineTestFunctional
             formattingDlg = ShowDialog<VolcanoPlotFormattingDlg>(pane.ShowFormattingDialog);
             RunUI(() =>
             {
-                Assert.AreEqual(PointSymbol.Diamond, formattingDlg.GetCurrentBindingList()[0].PointSymbol);
-                formattingDlg.GetCurrentBindingList()[0].PointSymbol = PointSymbol.Plus;
+                Assert.AreEqual(PointSymbol.Diamond, formattingDlg.GetRowPointSymbol(0));
+                formattingDlg.SetRowPointSymbol(0, PointSymbol.Plus);
             });
             WaitForGraphs();
-            RunUI(() => formattingDlg.GetCurrentBindingList()[0].PointSymbol =PointSymbol.Diamond);
+            RunUI(() => formattingDlg.SetRowPointSymbol(0, PointSymbol.Diamond));
             WaitForGraphs();
             OkDialog(formattingDlg, formattingDlg.OkDialog);
         }
@@ -177,6 +195,46 @@ namespace pwiz.SkylineTestFunctional
                 }
             }
             return null;
+        }
+
+        private void VerifyFindSelectedPaths()
+        {
+            foreach (var path1 in EnumerateIdentityPaths(SkylineWindow.Document))
+            {
+                foreach (var path2 in EnumerateIdentityPaths(SkylineWindow.Document))
+                {
+                    bool isPathSelected = DotPlotUtil.IsPathSelected(path1, path2);
+                    bool anyFindSelectedPaths = DotPlotUtil.FindSelectedPaths(new[] { path1 }, new[] { path2 }).Any();
+                    if (isPathSelected != anyFindSelectedPaths)
+                    {
+                        Assert.AreEqual(DotPlotUtil.IsPathSelected(path1, path2), DotPlotUtil.FindSelectedPaths(new[] { path1 }, new[] { path2 }).Any(), "Mismatch for path {0} and {1}", path1, path2);
+                    }
+                }
+            }
+        }
+
+        private IEnumerable<IdentityPath> EnumerateIdentityPaths(SrmDocument document)
+        {
+            foreach (var moleculeGroup in document.MoleculeGroups.Take(2))
+            {
+                var moleculeGroupIdentityPath = new IdentityPath(moleculeGroup.PeptideGroup);
+                yield return moleculeGroupIdentityPath;
+                foreach (var molecule in document.Molecules.Take(2))
+                {
+                    var moleculeIdentityPath = new IdentityPath(moleculeGroupIdentityPath, molecule.Peptide);
+                    yield return moleculeIdentityPath;
+                    foreach (var transitionGroup in molecule.TransitionGroups.Take(2))
+                    {
+                        var transitionGroupIdentityPath =
+                            new IdentityPath(moleculeIdentityPath, transitionGroup.TransitionGroup);
+                        yield return transitionGroupIdentityPath;
+                        foreach (var transition in transitionGroup.Transitions.Take(2))
+                        {
+                            yield return new IdentityPath(transitionGroupIdentityPath, transition.Transition);
+                        }
+                    }
+                }
+            }
         }
     }
 }

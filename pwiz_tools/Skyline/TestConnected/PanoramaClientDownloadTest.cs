@@ -26,6 +26,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.PanoramaClient;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -40,7 +41,7 @@ namespace pwiz.SkylineTestConnected
     public class PanoramaClientDownloadTest : AbstractFunctionalTest
     {
         private const string TEST_USER = "skyline_tester@proteinms.net";
-        private const string TEST_PASSWORD = "lclcmsms";
+        private const string TEST_PASSWORD = "Lclcmsms1!";
         private const string PANORAMA_WEB = "https://panoramaweb.org";
         private const string TEST_FOLDER = "SkylineTest";
         private const string PANORAMA_FOLDER = "ForPanoramaClientTest";
@@ -74,8 +75,11 @@ namespace pwiz.SkylineTestConnected
             // Test viewing webDav browser
             TestWebDav();
 
-            // Test adding a new server to Panorama - Test with and without username and password
+            // Test adding a new server to Panorama
             TestAddServer();
+
+            // Test adding PanoramaWeb as an anonymous server, and downloading a document from Panorama Public.
+            TestWithAnonymousServer();
         }
 
         private void AddPanoramaServers()
@@ -239,7 +243,7 @@ namespace pwiz.SkylineTestConnected
             Assert.IsFalse(File.Exists(path));
         }
 
-        //TODO: Test adding a new server to Panorama - Test with and without username and password 
+        //Test adding a new Panorama server.
         private void TestAddServer()
         {
             var path = TEST_FOLDER;
@@ -258,8 +262,66 @@ namespace pwiz.SkylineTestConnected
             var remoteDlg = ShowDialog<PanoramaFilePicker>(editItem.OkDialog);
             if (Settings.Default.ServerList != null)
                 Assert.AreEqual(1, Settings.Default.ServerList.Count);
-            RunUI(() => Assert.IsTrue(remoteDlg.IsLoaded));
+            RunUI(() =>
+            {
+                Assert.IsTrue(remoteDlg.IsLoaded);
+                Assert.IsTrue(remoteDlg.FolderBrowser.SelectNode(TEST_FOLDER), "Unable to select folder '{0}'", TEST_FOLDER);
+                Assert.IsTrue(remoteDlg.FolderBrowser.SelectNode(PANORAMA_FOLDER), "Unable to select folder '{0}'", PANORAMA_FOLDER);
+            });
+            
             OkDialog(remoteDlg, remoteDlg.Close);
+        }
+
+        private void TestWithAnonymousServer()
+        {
+            var toolsOptionsDlg = ShowDialog<ToolOptionsUI>(() => SkylineWindow.ShowToolOptionsUI(ToolOptionsUI.TABS.Panorama));
+
+            // Clear the Panorama server list
+            var editServerListDlg = ShowDialog<EditListDlg<SettingsListBase<Server>, Server>>(toolsOptionsDlg.EditServers);
+            RunUI(editServerListDlg.ResetList);
+
+            // Add PanoramaWeb as an anonymous server
+            var editServerDlg = ShowDialog<EditServerDlg>(editServerListDlg.AddItem);
+            RunUI(() =>
+            {
+                editServerDlg.URL = PANORAMA_WEB;
+                editServerDlg.AnonymousServer = true;
+            });
+            OkDialog(editServerDlg, editServerDlg.OkDialog);
+            OkDialog(editServerListDlg, editServerListDlg.OkDialog);
+            OkDialog(toolsOptionsDlg, toolsOptionsDlg.OkDialog);
+
+            Assert.IsNotNull(Settings.Default.ServerList);
+            Assert.AreEqual(1, Settings.Default.ServerList.Count);
+
+            const string panoramaPublicFolderPath = "Panorama Public/2018/MacLean - Baker IMS";
+            // Document in the "Panorama Public/2018/MacLean - Baker IMS" folder on https://panoramaweb.org that we will download.
+            const string skyDocName = "BSA-Training_2017-09-21_17-59-13.sky.zip";
+            var downloadFilePath = TestContext.GetTestResultsPath(skyDocName);
+            FileEx.SafeDelete(downloadFilePath, true);
+            Assert.IsFalse(File.Exists(downloadFilePath));
+
+            var panoramaFilePickerDlg = ShowDialog<PanoramaFilePicker>(() => SkylineWindow.OpenFromPanorama(downloadFilePath));
+            RunUI(() =>
+            {
+                Assert.IsTrue(panoramaFilePickerDlg.IsLoaded);
+                Assert.IsFalse(panoramaFilePickerDlg.FolderBrowser.SelectNode(TEST_FOLDER),
+                    "Guest user should not be able to see the private folder '{0}'.", TEST_FOLDER);
+
+                foreach (var folder in panoramaPublicFolderPath.Split('/'))
+                {
+                    Assert.IsTrue(panoramaFilePickerDlg.FolderBrowser.SelectNode(folder),
+                        "Guest user should be able to see folder '{0}' in the folder path '{1}'.", folder, panoramaPublicFolderPath);
+                }
+            });
+
+            var doc = SkylineWindow.Document;
+            OkDialog(panoramaFilePickerDlg, () => Assert.IsTrue(panoramaFilePickerDlg.ClickFile(skyDocName), "Unable to select Skyline document {0}", skyDocName));
+            WaitForCondition(() => File.Exists(downloadFilePath));
+            var docLoaded = WaitForDocumentChangeLoaded(doc);
+            AssertEx.IsDocumentState(docLoaded, null, 1, 34, 38, 404);
+            FileEx.SafeDelete(downloadFilePath, true);
+            Assert.IsFalse(File.Exists(downloadFilePath));
         }
 
         // Test viewing webDav browser

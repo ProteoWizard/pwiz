@@ -144,6 +144,33 @@
   <data name="Analyzer">
     <value>アナライザー</value>
   </data>
+  <data name="ApexAnalyteIonCount">
+    <value>頂点アナライトイオン数</value>
+  </data>
+  <data name="ApexAnalyteIonCountFragment">
+    <value>頂点アナライトイオン数フラグメント</value>
+  </data>
+  <data name="ApexAnalyteIonCountMS1">
+    <value>頂点アナライトイオン数MS1</value>
+  </data>
+  <data name="ApexSpectrumId">
+    <value>頂点スペクトルID</value>
+  </data>
+  <data name="ApexSpectrumIdFragment">
+    <value>頂点スペクトルIDフラグメント</value>
+  </data>
+  <data name="ApexSpectrumIdMS1">
+    <value>頂点スペクトルID MS1</value>
+  </data>
+  <data name="ApexTotalIonCount">
+    <value>頂点総イオン数</value>
+  </data>
+  <data name="ApexTotalIonCountFragment">
+    <value>頂点総イオン数フラグメント</value>
+  </data>
+  <data name="ApexTotalIonCountMS1">
+    <value>頂点総イオン数MS1</value>
+  </data>
   <data name="Area">
     <value>面積</value>
   </data>
@@ -221,15 +248,12 @@
   </data>
   <data name="CalculatedConcentrationMessage">
     <value>計算濃度（メッセージ）</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CalculatedConcentrationRaw">
     <value>計算濃度（生データ）</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CalculatedConcentrationStrict">
     <value>計算濃度（厳密なデータ）</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CalibrationCurve">
     <value>校正曲線</value>
@@ -552,6 +576,9 @@
   <data name="IsDecoy">
     <value>同位体デコイ</value>
   </data>
+  <data name="IsolationWindowWidth">
+    <value>単離ウィンドウ幅</value>
+  </data>
   <data name="IsotopeDistIndex">
     <value>同位体分布インデックス</value>
   </data>
@@ -578,6 +605,39 @@
   </data>
   <data name="LastPosition">
     <value>最後の位置</value>
+  </data>
+  <data name="LcPeakAnalyteIonCount">
+    <value>LCピークアナライトイオン数</value>
+  </data>
+  <data name="LcPeakAnalyteIonCountFragment">
+    <value>LCピークアナライトイオン数フラグメント</value>
+  </data>
+  <data name="LcPeakAnalyteIonCountMS1">
+    <value>LCピークアナライトイオン数</value>
+  </data>
+  <data name="LcPeakIonMetricsFragment">
+    <value>LCピークイオン測定フラグメント</value>
+  </data>
+  <data name="LcPeakIonMetricsMS1">
+    <value>LCピークイオン測定MS1</value>
+  </data>
+  <data name="LcPeakTotalIonCount">
+    <value>LCピーク総イオン数</value>
+  </data>
+  <data name="LcPeakTotalIonCountFragment">
+    <value>LCピーク総イオン数フラグメント</value>
+  </data>
+  <data name="LcPeakTotalIonCountMS1">
+    <value>LCピーク総イオン数MS1</value>
+  </data>
+  <data name="LcPeakTotalIonCurrentArea">
+    <value>LCピーク総イオン電流領域</value>
+  </data>
+  <data name="LcPeakTotalIonCurrentAreaFragment">
+    <value>LCピーク総イオン電流領域フラグメント</value>
+  </data>
+  <data name="LcPeakTotalIonCurrentAreaMS1">
+    <value>LCピーク総イオン電流領域MS1</value>
   </data>
   <data name="LibraryCollisionCrossSection">
     <value>ライブラリ衝突断面積</value>
@@ -785,19 +845,15 @@
   </data>
   <data name="MoleculeListAbundanceMessage">
     <value>分子リスト存在量（メッセージ）</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="MoleculeListAbundanceStrict">
     <value>分子リスト存在量（厳密なデータ）</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="MoleculeListAbundanceTransitionAveraged">
     <value>分子リスト存在量（トランジション平均）</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="MoleculeListAbundanceTransitionSummed">
     <value>分子リスト存在量（トランジション合計）</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="MoleculeListLocator">
     <value>分子リストロケーター</value>
@@ -870,15 +926,12 @@
   </data>
   <data name="NormalizedAreaMessage">
     <value>正規化面積（メッセージ）</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="NormalizedAreaRaw">
     <value>正規化面積（生データ）</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="NormalizedAreaStrict">
     <value>正規化面積（厳密なデータ）</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="NumberOfPoints">
     <value>ポイント数</value>
@@ -978,7 +1031,6 @@
   </data>
   <data name="PeptideSpectrumMatchCount">
     <value>ペプチドスペクトルマッチ数</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="PointCount">
     <value>点数</value>
@@ -1000,15 +1052,12 @@
   </data>
   <data name="PrecursorCalculatedConcentrationMessage">
     <value>プリカーサー計算濃度（メッセージ）</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="PrecursorCalculatedConcentrationRaw">
     <value>プリカーサー計算濃度（生データ）</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="PrecursorCalculatedConcentrationStrict">
     <value>プリカーサー計算濃度（厳密なデータ）</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="PrecursorCharge">
     <value>プリカーサー電荷</value>
@@ -1042,15 +1091,12 @@
   </data>
   <data name="PrecursorNormalizedAreaMessage">
     <value>プリカーサー正規化面積（メッセージ）</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="PrecursorNormalizedAreaRaw">
     <value>プリカーサー正規化面積（生データ）</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="PrecursorNormalizedAreaStrict">
     <value>プリカーサー正規化面積（厳密なデータ）</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="PrecursorNote">
     <value>プリカーサーメモ</value>
@@ -1112,6 +1158,9 @@
   <data name="ProductNeutralMass">
     <value>プロダクトニュートラル質量</value>
   </data>
+  <data name="ProportionTruncated">
+    <value>切断比</value>
+  </data>
   <data name="Protein">
     <value>タンパク質</value>
   </data>
@@ -1120,19 +1169,15 @@
   </data>
   <data name="ProteinAbundanceMessage">
     <value>タンパク質存在量（メッセージ）</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ProteinAbundanceStrict">
     <value>タンパク質存在量（厳密なデータ）</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ProteinAbundanceTransitionAveraged">
     <value>タンパク質存在量（トランジション平均）</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ProteinAbundanceTransitionSummed">
     <value>タンパク質存在量（トランジション合計）</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ProteinAccession">
     <value>タンパク質アクセッション</value>
@@ -1208,7 +1253,6 @@
   </data>
   <data name="Raw">
     <value>生データ</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="RawData">
     <value>生データ</value>
@@ -1392,14 +1436,12 @@
   </data>
   <data name="Strict">
     <value>厳密なデータ</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="SummaryMessage">
     <value>概要に関するメッセージ</value>
   </data>
   <data name="SurrogateExternalStandard">
     <value>サロゲート外部標準</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="TargetQualitativeIonRatio">
     <value>ターゲット定性イオン比</value>

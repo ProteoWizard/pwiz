@@ -20,6 +20,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Controls;
 
 namespace pwiz.Common.DataBinding
@@ -84,6 +85,11 @@ namespace pwiz.Common.DataBinding
             {
                 return _current;
             }
+        }
+
+        public ImmutableList<RowItem> GetRowItems()
+        {
+            return _rowItems.ToImmutable();
         }
     }
 }

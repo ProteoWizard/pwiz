@@ -281,9 +281,6 @@ Skylineがもう一度生データファイルからクロマトグラムを抽�
   <data name="OverlapDemultiplexer_InitializeFile_OverlapDemultiplexer_InitializeFile_Improperly_formed_overlap_multiplexing_file" xml:space="preserve">
     <value>OverlapDemultiplexer：InitializeFileが不適切な形式で多重化ファイルと重複しています</value>
   </data>
-  <data name="PeptideChromDataSets_AddDataSet_Unable_to_process_chromatograms_for_the_molecule___0___because_one_chromatogram_ends_at_time___1___and_the_other_ends_at_time___2___" xml:space="preserve">
-    <value>分子「{0}」のクロマトグラムを処理できません。時間「{1}」で終わるクロマトグラムと時間「{2}」で終わるクロマトグラムがあります。</value>
-  </data>
   <data name="PeptideChromDataSets_MergePeakGroups_Unexpected_null_peak_list" xml:space="preserve">
     <value>予期しない空値のピークリスト</value>
   </data>
@@ -298,7 +295,6 @@ Skylineがもう一度生データファイルからクロマトグラムを抽�
   </data>
   <data name="ScanProvider_GetMsDataFileSpectraWithCommonRetentionTime_The_scan_ID___0___could_not_be_found_in_the_file___1___" xml:space="preserve">
     <value>ファイル「{1}」内でスキャンID「{0}」を見つけられませんでした。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ScanProvider_GetScans_The_data_file__0__could_not_be_found__either_at_its_original_location_or_in_the_document_or_document_parent_folder_" xml:space="preserve">
     <value>データファイル{0}が元の場所、ドキュメント内、ドキュメント親フォルダ内のどこにも見つかりませんでした。</value>
@@ -332,22 +328,24 @@ Skylineがもう一度生データファイルからクロマトグラムを抽�
   </data>
   <data name="PeptideChromDataSets_FilterByRetentionTime_Discarding_chromatograms_for___0___because_the_explicit_retention_time__1__is_not_between__2__and__3_" xml:space="preserve">
     <value>保持時間{1}が{2}と{3}の間でないため「{0}」 のクロマトグラムを破棄しています</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="IonMobilityFinder_EvaluateBestIonMobilityValue_need_a_value_for_Transition_Settings___ion_mobility_filtering___Window_type" xml:space="preserve">
-    <value>トランジション設定のイオン移動度フィルタウィンドウタイプの値が必要</value>
-    <comment>Needs Review:New resource</comment>
+    <value>トランジション設定、イオン移動度フィルタリング、ウィンドウタイプの値が必要です</value>
+    <comment>Needs Review:English text changed
+Old English:need a value for  Transition Settings  Ion mobility filtering  Window type
+Current English:need a value for Transition Settings, Ion mobility filtering, Window type
+Old Localized:トランジション設定のイオン移動度フィルタウィンドウタイプの値が必要</comment>
   </data>
   <data name="IonMobilityFinder_FindIonMobilityPeaks_mixed_ion_mobility_types_are_not_supported" xml:space="preserve">
     <value>混合イオン移動度タイプには対応していません</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="DataFileInstrumentInfo_CCSFromIonMobility_no_conversion" xml:space="preserve">
     <value>ベンダー提供のライブラリでは、{0}のCSSを移動度={1:0.###}、mz={2:0.####}、電荷={3}で決定できません。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="DataFileInstrumentInfo_IonMobilityFromCCS_no_conversion" xml:space="preserve">
     <value>ベンダー提供のライブラリでは、{0}のイオン移動度をCSS={1:0.###}、mz={2:0.####}、電荷={3}で決定できません。</value>
-    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PeptideChromDataSets_FilterByRetentionTime_Discarding_empty_chromatograms_for__0_" xml:space="preserve">
+    <value>次に対する空のクロマトグラムを破棄しています: {0}</value>
   </data>
 </root>

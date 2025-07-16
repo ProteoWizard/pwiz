@@ -25,17 +25,30 @@ using System.Linq;
 using System.Threading;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
 {
     public abstract class AbstractDdaSearchEngine : IDisposable
     {
+        public class MzToleranceUnits
+        {
+            public MzToleranceUnits(string name, MzTolerance.Units unit)
+            {
+                Name = name;
+                Unit = unit;
+            }
+
+            public string Name { get; }
+            public MzTolerance.Units Unit { get; }
+        }
+
         public abstract string[] FragmentIons { get; }
         public abstract string[] Ms2Analyzers { get; }
+        public virtual MzToleranceUnits[] PrecursorIonToleranceUnitTypes { get; } = { new MzToleranceUnits(@"Da", MzTolerance.Units.mz), new MzToleranceUnits(@"ppm", MzTolerance.Units.ppm) };
+        public virtual MzToleranceUnits[] FragmentIonToleranceUnitTypes { get; } = { new MzToleranceUnits(@"Da", MzTolerance.Units.mz), new MzToleranceUnits(@"ppm", MzTolerance.Units.ppm) };
         public abstract string EngineName { get; }
         public abstract string CutoffScoreName { get; }
         public abstract string CutoffScoreLabel { get; }
@@ -53,7 +66,7 @@ namespace pwiz.Skyline.Model
             public Setting(string name, int defaultValue, int minValue = int.MinValue, int maxValue = int.MaxValue)
             {
                 Name = name;
-                _value = defaultValue;
+                _value = DefaultValue = defaultValue;
                 MinValue = minValue;
                 MaxValue = maxValue;
             }
@@ -61,7 +74,7 @@ namespace pwiz.Skyline.Model
             public Setting(string name, double defaultValue, double minValue = double.MinValue, double maxValue = double.MaxValue)
             {
                 Name = name;
-                _value = defaultValue;
+                _value = DefaultValue = defaultValue;
                 MinValue = minValue;
                 MaxValue = maxValue;
             }
@@ -69,7 +82,7 @@ namespace pwiz.Skyline.Model
             public Setting(string name, bool defaultValue)
             {
                 Name = name;
-                _value = defaultValue;
+                _value = DefaultValue = defaultValue;
                 MinValue = false;
                 MaxValue = true;
             }
@@ -78,16 +91,16 @@ namespace pwiz.Skyline.Model
             {
                 Name = name;
                 MinValue = string.Empty;
-                _value = defaultValue ?? string.Empty;
+                _value = DefaultValue = defaultValue ?? string.Empty;
                 ValidValues = validValues;
             }
 
-            public Setting(Setting other)
+            public Setting(Setting other, object newValue = null)
             {
                 Name = other.Name;
                 MinValue = other.MinValue;
                 MaxValue = other.MaxValue;
-                _value = other.Value;
+                _value = DefaultValue = newValue ?? other.Value;
                 ValidValues = other.ValidValues;
             }
             
@@ -104,6 +117,9 @@ namespace pwiz.Skyline.Model
                 set { _value = Validate(value); }
             }
 
+            public object DefaultValue { get; }
+            public bool IsDefault => Equals(DefaultValue, _value);
+
             public object Validate(object value)
             {
                 // incoming value must either be a string or value type must stay the same
@@ -118,8 +134,8 @@ namespace pwiz.Skyline.Model
                     case string s:
                         if (ValidValues?.Any(o => o.Equals(value)) == false)
                             throw new ArgumentOutOfRangeException(string.Format(
-                                "The value {0} is not valid for the argument {1} which must one of: {2}",
-                                s, Name, string.Join(@", ", ValidValues)));
+                                Resources.CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for__1___It_must_be_one_of_the_following___2_,
+                                value, Name, string.Join(@", ", ValidValues)));
                         return value;
 
                     case bool b:
@@ -224,6 +240,11 @@ namespace pwiz.Skyline.Model
 
         public abstract void SetModifications(IEnumerable<StaticMod> modifications, int maxVariableMods_);
 
-        public abstract void Dispose();
+        public bool IsDisposed;
+
+        public virtual void Dispose()
+        {
+            IsDisposed = true;
+        }
     }
 }

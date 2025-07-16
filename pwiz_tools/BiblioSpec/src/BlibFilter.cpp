@@ -43,7 +43,6 @@
 #include "CommandLine.h"
 #include "SqliteRoutine.h"
 #include "boost/program_options.hpp"
-#include "boost/log/detail/snprintf.hpp"
 
 namespace ops = boost::program_options;
 
@@ -170,7 +169,7 @@ void BlibFilter::parseCommandLine(const int argc,
 
             ("best-scoring,b",
              value<bool>()->default_value(false),
-             "Description of option.  Default false.")
+             "Select only the spectrum with the best score for each peptide (spectrum TIC is used as tiebreaker).  Default false.")
 
             ;
 
@@ -216,7 +215,7 @@ void BlibFilter::attachAll()
 {
     Verbosity::status("Filtering redundant library '%s'.",
                       redundantFileName_.c_str());
-    boost::log::aux::snprintf(zSql, ZSQLBUFLEN, "ATTACH DATABASE '%s' as %s", SqliteRoutine::ESCAPE_APOSTROPHES(redundantFileName_).c_str(),
+    snprintf(zSql, ZSQLBUFLEN, "ATTACH DATABASE '%s' as %s", SqliteRoutine::ESCAPE_APOSTROPHES(redundantFileName_).c_str(),
             redundantDbName_);
     sql_stmt(zSql);
 
@@ -236,7 +235,7 @@ string BlibFilter::getLSID()
 {
     // Use the same LSID as the redundant version, but replace
     // 'redundant' with 'nr'.
-    boost::log::aux::snprintf(zSql, ZSQLBUFLEN, "SELECT libLSID FROM %s.LibInfo", redundantDbName_);
+    snprintf(zSql, ZSQLBUFLEN, "SELECT libLSID FROM %s.LibInfo", redundantDbName_);
     
     int iRow, iCol;
     char** result;
@@ -263,7 +262,7 @@ string BlibFilter::getLSID()
 void BlibFilter::getNextRevision(int* major, int* minor)
 {
     // Use same revision as the redundant version
-   boost::log::aux::snprintf(zSql, ZSQLBUFLEN,   "SELECT majorVersion, minorVersion FROM %s.LibInfo", 
+   snprintf(zSql, ZSQLBUFLEN,   "SELECT majorVersion, minorVersion FROM %s.LibInfo", 
             redundantDbName_);
     
     int iRow, iCol;
@@ -442,7 +441,7 @@ void BlibFilter::buildNonRedundantLib() {
         //first Order by peptideModSeq and charge, filter by num peaks
         order_by = "peptideModSeq, precursorCharge " + optional_cols;
     }
-   boost::log::aux::snprintf(zSql, ZSQLBUFLEN,  
+    snprintf(zSql, ZSQLBUFLEN,  
             "SELECT id,peptideSeq,precursorMZ,precursorCharge,peptideModSeq,"
             "prevAA, nextAA, numPeaks, score, scoreType, "
             "ionMobility, collisionalCrossSectionSqA, ionMobilityHighEnergyOffset, ionMobilityType, "
@@ -528,12 +527,12 @@ void BlibFilter::buildNonRedundantLib() {
             double ionMobilityValue = ionMobilityValueIndex > 0 ? sqlite3_column_double(pStmt, ionMobilityValueIndex) : 0;
             int ionMobilityType = ionMobilityTypeIndex > 0 ? sqlite3_column_int(pStmt, ionMobilityTypeIndex) : 0;
             tmpRef->setIonMobility(ionMobilityType == 1 ? ionMobilityValue : 0, ionMobilityType == 1 ? IONMOBILITY_DRIFTTIME_MSEC : IONMOBILITY_NONE);
-            tmpRef->setCollisionalCrossSection(ionMobilityType == 2 ? ionMobilityValue : 0);
+            tmpRef->setCollisionalCrossSection(ccsIndex > 0 ? sqlite3_column_double(pStmt, ccsIndex) : 0);
         } else if (ionMobilityIndex > 0) {
             double ionMobilityValue = sqlite3_column_double(pStmt, ionMobilityIndex);
             IONMOBILITY_TYPE ionMobilityType = (ionMobilityTypeIndex > 0) ? (IONMOBILITY_TYPE)sqlite3_column_int(pStmt, ionMobilityTypeIndex) : IONMOBILITY_DRIFTTIME_MSEC;
             tmpRef->setIonMobility(ionMobilityValue, ionMobilityType);
-            tmpRef->setCollisionalCrossSection(sqlite3_column_double(pStmt, ccsIndex));
+            tmpRef->setCollisionalCrossSection(ccsIndex > 0 ? sqlite3_column_double(pStmt, ccsIndex) : 0);
             if (molNameIndex > 0) {
                 // moleculeName, chemicalFormula, precursorAdduct, inchiKey, otherKeys
                 tmpRef->setMoleculeName(reinterpret_cast<const char*>(sqlite3_column_text(pStmt, molNameIndex)));
@@ -544,7 +543,7 @@ void BlibFilter::buildNonRedundantLib() {
             }
         } else {
             tmpRef->setIonMobility(0, IONMOBILITY_NONE);
-            tmpRef->setCollisionalCrossSection(0);
+            tmpRef->setCollisionalCrossSection(ccsIndex > 0 ? sqlite3_column_double(pStmt, ccsIndex) : 0);
         }
 
         if (startTimeIndex > 0 && endTimeIndex > 0) {
@@ -575,7 +574,7 @@ void BlibFilter::buildNonRedundantLib() {
         if (!useBestScoring_) // peaks not necessary in best scoring mode
         {
             int refSpectraId = sqlite3_column_int(pStmt, 0);
-            boost::log::aux::snprintf(idPos, ZSQLBUFLEN - qlen, "%i", refSpectraId);
+            snprintf(idPos, ZSQLBUFLEN - qlen, "%i", refSpectraId);
             peakRc = sqlite3_prepare(peakConnection, zSqlPeakQuery, -1, &peakStmt, NULL);
             check_rc(peakRc, zSqlPeakQuery, "Failed selecting peaks.");
             peakRc = sqlite3_step(peakStmt);

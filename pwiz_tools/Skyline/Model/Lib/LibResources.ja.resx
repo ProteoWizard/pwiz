@@ -198,7 +198,6 @@
   </data>
   <data name="EncyclopeDiaHelpers_Generate_Waiting_for_chromatogram_library" xml:space="preserve">
     <value>クロマトグラムライブラリの待機中</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="EncyclopeDiaHelpers_GenerateLibrary_Generating_chromatogram_library_0_of_1_2" xml:space="preserve">
     <value>クロマトグラムライブラリ({1}の{0})：{2}の生成</value>
@@ -244,6 +243,9 @@
   </data>
   <data name="NistLibraryBase_CreateCache_Could_not_read_the_precursor_m_z_value___0__" xml:space="preserve">
     <value>プリカーサーm/z値「{0}」を読み込めませんでした</value>
+  </data>
+  <data name="NistLibraryBase_CreateCache_Could_not_read_the_precursor_CCS_value___0__" xml:space="preserve">
+    <value>プリカーサ―CCS値を読み取れませんでした "{0}"</value>
   </data>
   <data name="NistLibraryBase_CreateCache_Invalid_format_at_peak__0__for__1__" xml:space="preserve">
     <value>{1}のピーク{0}の無効な形式。</value>
@@ -293,11 +295,9 @@
   </data>
   <data name="ParallelRunner_Generate_An_EncyclopeDIA_task_failed_" xml:space="preserve">
     <value>EncyclopeDIAタスクが失敗しました。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ProgressMonitorForFile_UpdateProgress_Demultiplexing_spectra___0___1_" xml:space="preserve">
     <value>スペクトルの逆多重化：{0}/{1}</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="SmallMoleculeLibraryAttributes_KeyValuePairs_Average_mass" xml:space="preserve">
     <value>平均質量</value>
@@ -340,5 +340,11 @@
   </data>
   <data name="XHunterLibSpec_PEP_RANK_PROCESSED_INTENSITY_Processed_intensity" xml:space="preserve">
     <value>処理強度</value>
+  </data>
+  <data name="NistLibraryBase_GetMod_Unknown_modification__0__at_line__1_" xml:space="preserve">
+    <value>行{1}に不明の修飾{0}</value>
+  </data>
+  <data name="NistLibraryBase_CreateCache_Missing_details_for__0__at_line__1___this_entry_will_be_ignored" xml:space="preserve">
+    <value>行{1}に{0}の詳細がないため、このエントリは無視されます</value>
   </data>
 </root>

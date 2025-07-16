@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
@@ -82,7 +83,7 @@ namespace pwiz.SkylineTestData
 
         private IEnumerable<ChromKey> ReadChromatogramKeys(MsDataFileUri msDataFileUri)
         {
-            using var msDataFile = msDataFileUri.OpenMsDataFile(false, false, false, false, false);
+            using var msDataFile = msDataFileUri.OpenMsDataFile(new OpenMsDataFileParams());
             for (int i = 0; i < msDataFile.ChromatogramCount; i++)
             {
                 var id = msDataFile.GetChromatogramId(i, out _);

@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.BiblioSpec;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
@@ -54,7 +55,8 @@ namespace pwiz.SkylineTestFunctional
         private PeptideSettingsUI PeptideSettingsUI { get; set; }
         private bool ReportLibraryBuildFailures { get; set; }
 
-        [TestMethod]
+        [TestMethod,
+         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
         public void TestLibraryBuild()
         {
             TestFilesZip = @"TestFunctional\LibraryBuildTest.zip";
@@ -424,7 +426,7 @@ namespace pwiz.SkylineTestFunctional
             // no recalibrate, add iRTs, add predictor
             _libraryName = libraryBaseName + "_irt2"; // library_test_irt2
             BuildLibraryIrt(true, false, true);
-            RunUI(() => Assert.IsTrue(PeptideSettingsUI.Prediction.RetentionTime.Name.Equals(_libraryName)));
+            RunUI(() => Assert.IsTrue(PeptideSettingsUI.SelectedRTPredictor.Equals(_libraryName)));
             var editIrtDlg2 = ShowDialog<EditIrtCalcDlg>(PeptideSettingsUI.EditCalculator);
             RunUI(() => Assert.IsTrue(ReferenceEquals(editIrtDlg2.IrtStandards, IrtStandard.BIOGNOSYS_10)));
             OkDialog(editIrtDlg2, editIrtDlg2.CancelDialog);
@@ -432,12 +434,12 @@ namespace pwiz.SkylineTestFunctional
             // recalibrate, add iRTs, no add predictor
             _libraryName = libraryBaseName + "_irt3"; // library_test_irt3
             BuildLibraryIrt(true, true, false);
-            RunUI(() => Assert.IsTrue(PeptideSettingsUI.Prediction.RetentionTime.Name.Equals(libraryBaseName + "_irt2")));
+            RunUI(() => Assert.IsTrue(PeptideSettingsUI.SelectedRTPredictor.Equals(libraryBaseName + "_irt2")));
 
             // recalibrate, add iRTs, add predictor
             _libraryName = libraryBaseName + "_irt4"; // library_test_irt4
             BuildLibraryIrt(true, true, true);
-            RunUI(() => Assert.IsTrue(PeptideSettingsUI.Prediction.RetentionTime.Name.Equals(_libraryName)));
+            RunUI(() => Assert.IsTrue(PeptideSettingsUI.SelectedRTPredictor.Equals(_libraryName)));
             var editIrtDlg4 = ShowDialog<EditIrtCalcDlg>(PeptideSettingsUI.EditCalculator);
             RunUI(() => Assert.IsTrue(editIrtDlg4.IrtStandards.IsEmpty));
             OkDialog(editIrtDlg4, editIrtDlg4.CancelDialog);
@@ -675,7 +677,7 @@ namespace pwiz.SkylineTestFunctional
                                 ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
 
             // Control console output on failure for diagnosing nightly test failures
-            PeptideSettingsUI.ReportLibraryBuildFailure = ReportLibraryBuildFailures;
+            // PeptideSettingsUI.ReportLibraryBuildFailure = ReportLibraryBuildFailures;
             
             // Allow a person watching to see what is going on in the Library tab
             RunUI(() =>

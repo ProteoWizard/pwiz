@@ -24,6 +24,7 @@ namespace pwiz.Common
         private static string _programNameAndVersion;
         public static bool Offscreen { get; set; }
         public static bool FunctionalTest { get; set; }
+        public static int PauseSeconds { get; set; }
         /// <summary>
         /// Whether the class name of the form should be displayed in form titles
         /// </summary>

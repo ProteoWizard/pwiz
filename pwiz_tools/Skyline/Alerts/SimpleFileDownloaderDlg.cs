@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Text;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Util;
@@ -34,6 +35,7 @@ namespace pwiz.Skyline.Alerts
         /// </summary>
         public static DialogResult Show(Control parent, string title, IEnumerable<FileDownloadInfo> requiredFiles)
         {
+            var ctlTextRepresentation = new StringBuilder();
             var layout = new TableLayoutPanel
             {
                 Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top,
@@ -63,6 +65,7 @@ namespace pwiz.Skyline.Alerts
             };
             layout.Controls.Add(downloadMessageLabel, 0, 0);
             layout.SetColumnSpan(downloadMessageLabel, 2);
+            ctlTextRepresentation.AppendLine(downloadMessage);
 
             int row = 2;
             var gridLabels = new List<Label>();
@@ -90,6 +93,7 @@ namespace pwiz.Skyline.Alerts
                 gridLabels.Add(name);
                 gridLabels.Add(url);
                 ++row;
+                ctlTextRepresentation.AppendFormat(@"{0}{1}{2}{3}", name.Text, '\t', url.Text, Environment.NewLine);
             }
 
             var activeScreen = parent == null ? Screen.PrimaryScreen : Screen.FromHandle(parent.Handle);
@@ -102,7 +106,7 @@ namespace pwiz.Skyline.Alerts
                 label.Width += 10;
             }
 
-            using (var dlg = new MultiButtonMsgDlg(layout, AlertsResources.AlertDlg_GetDefaultButtonText__Yes, AlertsResources.AlertDlg_GetDefaultButtonText__No, false))
+            using (var dlg = new MultiButtonMsgDlg(layout, AlertsResources.AlertDlg_GetDefaultButtonText__Yes, AlertsResources.AlertDlg_GetDefaultButtonText__No, false, ctlTextRepresentation.ToString()))
             {
                 dlg.Text = title;
                 dlg.ClientSize = new Size(defaultWidth, defaultHeight);

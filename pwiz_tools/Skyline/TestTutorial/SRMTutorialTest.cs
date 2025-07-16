@@ -23,6 +23,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.EditUI;
@@ -41,7 +42,8 @@ namespace pwiz.SkylineTestTutorial
     [TestClass]
     public class SrmTutorialTest : AbstractFunctionalTestEx
     {
-        [TestMethod]
+        [TestMethod,
+         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once    
         public void TestSrmTutorialLegacy()
         {
             //Set true to look at tutorial screenshots
@@ -115,11 +117,11 @@ namespace pwiz.SkylineTestTutorial
                 ShowDialog<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(pepSettings.EditHeavyMods);
             var addDlgOne = ShowDialog<EditStaticModDlg>(editHeavyModListDlg.AddItem);
             RunUI(() => addDlgOne.SetModification("Label:13C(6)15N(2) (C-term K)"));
-            PauseForScreenShot("Isotope modification 1", 3);
+            PauseForScreenShot("Isotope modification 1");
             OkDialog(addDlgOne, addDlgOne.OkDialog);
             var addDlgTwo = ShowDialog<EditStaticModDlg>(editHeavyModListDlg.AddItem);
             RunUI(() => addDlgTwo.SetModification("Label:13C(6)15N(4) (C-term R)"));
-            PauseForScreenShot("Isotope modification 2", 3);
+            PauseForScreenShot("Isotope modification 2");
             OkDialog(addDlgTwo, addDlgTwo.OkDialog);
             OkDialog(editHeavyModListDlg, editHeavyModListDlg.OkDialog);
             RunUI(() =>
@@ -128,15 +130,15 @@ namespace pwiz.SkylineTestTutorial
                 pepSettings.SetIsotopeModifications(1, true);
             });
             RunUI(() => pepSettings.SelectedTab = PeptideSettingsUI.TABS.Digest);
-            PauseForScreenShot("Digestion tab", 4);
+            PauseForScreenShot("Digestion tab");
             RunUI(() => pepSettings.SelectedTab = PeptideSettingsUI.TABS.Prediction);
-            PauseForScreenShot("Prediction tab", 4);
+            PauseForScreenShot("Prediction tab");
             RunUI(() => pepSettings.SelectedTab = PeptideSettingsUI.TABS.Filter);
-            PauseForScreenShot("Filter tab", 4);
+            PauseForScreenShot("Filter tab");
             RunUI(() => pepSettings.SelectedTab = PeptideSettingsUI.TABS.Library);
-            PauseForScreenShot("Library tab", 4);
+            PauseForScreenShot("Library tab");
             RunUI(() => pepSettings.SelectedTab = PeptideSettingsUI.TABS.Modifications);
-            PauseForScreenShot("Modifications tab", 4);
+            PauseForScreenShot("Modifications tab");
 
             var docBeforePeptideSettings = SkylineWindow.Document;
             OkDialog(pepSettings, pepSettings.OkDialog);
@@ -181,13 +183,13 @@ namespace pwiz.SkylineTestTutorial
             });
 
             RunUI(() => transitionDlg.SelectedTab = TransitionSettingsUI.TABS.Prediction);
-            PauseForScreenShot("Prediction Tab", 7);
+            PauseForScreenShot("Prediction Tab");
             RunUI(() => transitionDlg.SelectedTab = TransitionSettingsUI.TABS.Filter);
-            PauseForScreenShot("Filter Tab", 7);
+            PauseForScreenShot("Filter Tab");
             RunUI(() => transitionDlg.SelectedTab = TransitionSettingsUI.TABS.Library);
-            PauseForScreenShot("Library Tab", 7);
+            PauseForScreenShot("Library Tab");
             RunUI(() => transitionDlg.SelectedTab = TransitionSettingsUI.TABS.Instrument);
-            PauseForScreenShot("Instrument Tab", 7);
+            PauseForScreenShot("Instrument Tab");
             var docBeforeTransitionSettings = SkylineWindow.Document;
             OkDialog(transitionDlg, transitionDlg.OkDialog);
             WaitForDocumentChangeLoaded(docBeforeTransitionSettings);
@@ -203,7 +205,7 @@ namespace pwiz.SkylineTestTutorial
             var docBeforePaste = SkylineWindow.Document;
             var peptidePasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPastePeptidesDlg);
             var matchingDlg = ShowDialog<FilterMatchedPeptidesDlg>(peptidePasteDlg.PastePeptides);
-            PauseForScreenShot("Filter Peptides", 1);
+            PauseForScreenShot("Filter Peptides");
             OkDialog(matchingDlg, matchingDlg.OkDialog);
             OkDialog(peptidePasteDlg, peptidePasteDlg.OkDialog);
 
@@ -217,7 +219,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ExpandPrecursors();
                 SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].FirstNode.FirstNode;
             });
-            PauseForScreenShot("Skyline Window", 2);
+            PauseForScreenShot("Skyline Window");
 
             // Test min ion count setting
             RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, dlg =>
@@ -255,10 +257,10 @@ namespace pwiz.SkylineTestTutorial
                 exportDlg.ExportStrategy = ExportStrategy.Single;
                 exportDlg.DwellTime = 20;
             });
-            PauseForScreenShot("Export Transition List", 3);
+            PauseForScreenShot("Export Transition List");
             var declusteringWarningDlg = ShowDialog<MultiButtonMsgDlg>(
                 () => exportDlg.OkDialog(GetTestPath("Tutorial-2_TransitionList\\SRMcourse_20140210_MtbProteomeLib_TransList.csv")));
-            PauseForScreenShot("Decluster Window", 3);
+            PauseForScreenShot("Decluster Window");
             OkDialog(declusteringWarningDlg, declusteringWarningDlg.Btn1Click);
             WaitForClosedForm(exportDlg);
 
@@ -267,12 +269,13 @@ namespace pwiz.SkylineTestTutorial
             var pepSettings2 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             RunUI(() => pepSettings2.SelectedTab = PeptideSettingsUI.TABS.Library);
             var buildLibraryDlg = ShowDialog<BuildLibraryDlg>(pepSettings2.ShowBuildLibraryDlg);
+            const string libraryName = "Mtb_hDP_20140210";
             RunUI(() =>
             {
                 buildLibraryDlg.LibraryPath = GetTestPath("Skyline");
-                buildLibraryDlg.LibraryName = "Mtb_hDP_20140210";
+                buildLibraryDlg.LibraryName = libraryName;
             });
-            PauseForScreenShot("Build Library Window", 2);
+            PauseForScreenShot("Build Library Window");
             RunUI(() =>
             {
                 buildLibraryDlg.OkWizardPage();
@@ -280,8 +283,9 @@ namespace pwiz.SkylineTestTutorial
             });
             WaitForConditionUI(() => buildLibraryDlg.Grid.ScoreTypesLoaded);
             RunUI(() => buildLibraryDlg.Grid.SetScoreThreshold(0.9));
-            PauseForScreenShot("Build Library Window Next", 2);
+            PauseForScreenShot("Build Library Window Next");
             OkDialog(buildLibraryDlg, buildLibraryDlg.OkWizardPage);
+            WaitForConditionUI(() => pepSettings2.PickedLibraries.Contains(libraryName));
             RunUI(() =>
             {
                 pepSettings2.SetLibraryChecked(0, true);
@@ -296,7 +300,7 @@ namespace pwiz.SkylineTestTutorial
             var libraryExpl = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
             var messageWarning = WaitForOpenForm<AddModificationsDlg>();
             OkDialog(messageWarning, messageWarning.OkDialogAll);
-            PauseForScreenShot("Spectral Library Explorer Window", 3);
+            PauseForScreenShot("Spectral Library Explorer Window");
             OkDialog(libraryExpl, libraryExpl.Close);
 
             var exportDlg2 = ShowDialog<ExportMethodDlg>(SkylineWindow.ShowExportTransitionListDlg);
@@ -335,7 +339,7 @@ namespace pwiz.SkylineTestTutorial
                 editCollisionEnergy.StepSize = 2;
                 editCollisionEnergy.StepCount = 5;
             });
-            PauseForScreenShot("Edit Collision Energy Equation Window", 2);
+            PauseForScreenShot("Edit Collision Energy Equation Window");
             OkDialog(editCollisionEnergy, editCollisionEnergy.OkDialog);
             OkDialog(transitionSettings, transitionSettings.OkDialog);
             
@@ -362,7 +366,7 @@ namespace pwiz.SkylineTestTutorial
                 exportDlg3.MethodType = ExportMethodType.Standard;
                 exportDlg2.DwellTime = 20;
             });
-            PauseForScreenShot("Export Transition List", 3);
+            PauseForScreenShot("Export Transition List");
             var defaultWaringDlg = ShowDialog<MultiButtonMsgDlg>(
                 () => exportDlg3.OkDialog(GetTestPath("Tutorial-4_Parameters\\SRMcourse_20140211_Parameters_CEO.csv")));
             OkDialog(defaultWaringDlg, defaultWaringDlg.Btn1Click);
@@ -378,7 +382,7 @@ namespace pwiz.SkylineTestTutorial
 
             RestoreViewOnScreen(43);
             RunUI(() => SkylineWindow.ShowChromatogramLegends(false));
-            PauseForScreenShot("Skyline Window", 3);
+            PauseForScreenShot("Skyline Window");
 
             ImportResults("", new[]
             {
@@ -392,7 +396,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.MAXIMUM);
             });
             RestoreViewOnScreen(44);
-            PauseForScreenShot("Skyline Window", 4);
+            PauseForScreenShot("Skyline Window");
 
             var transitionSettings2 = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
             RunUI(() => { transitionSettings2.SelectedTab = TransitionSettingsUI.TABS.Prediction; });
@@ -403,7 +407,7 @@ namespace pwiz.SkylineTestTutorial
                 addCollisionEnergyDlg.RegressionName = "SRMcourse_20140211_Parameters_custom-CE-equation";
             });
             var equationGraphDlg = ShowDialog<GraphRegression>(addCollisionEnergyDlg.ShowGraph);
-            PauseForScreenShot("Collision Energy Equation Graph", 6);
+            PauseForScreenShot("Collision Energy Equation Graph");
             OkDialog(equationGraphDlg, equationGraphDlg.CloseDialog);
             OkDialog(addCollisionEnergyDlg, addCollisionEnergyDlg.OkDialog);
             RunUI(() =>
@@ -412,7 +416,7 @@ namespace pwiz.SkylineTestTutorial
                 transitionSettings2.SelectedTab = TransitionSettingsUI.TABS.Instrument;
                 transitionSettings2.MZMatchTolerance = 0.01;
             });
-            PauseForScreenShot("Instrument Tab", 7);
+            PauseForScreenShot("Instrument Tab");
             OkDialog(transitionSettings2, transitionSettings2.OkDialog);
 
             //Tutorial 4-B
@@ -431,7 +435,7 @@ namespace pwiz.SkylineTestTutorial
             ImportResults("", paths2, null, false);
             RestoreViewOnScreen(48);
             RunUI(() => SkylineWindow.AutoZoomBestPeak());
-            PauseForScreenShot("Skyline Window", 8);
+            PauseForScreenShot("Skyline Window");
         }
 
         private void ImportResults(string prefix, string[] paths, string optimization, bool addNew = true)

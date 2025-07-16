@@ -26,6 +26,7 @@ using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -33,7 +34,6 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.Irt;
@@ -46,13 +46,15 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class AssayLibraryImportTest : AbstractFunctionalTestEx
     {
-        [TestMethod]
+        [TestMethod,
+         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
         public void TestAssayLibraryImport()
         {
             Preamble();
         }
 
-        [TestMethod]
+        [TestMethod,
+         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once]
         public void TestAssayLibraryImportAsSmallMolecules()
         {
             if (SkipSmallMoleculeTestVersions())
@@ -72,7 +74,7 @@ namespace pwiz.SkylineTestFunctional
         private static bool _asSmallMolecules;
         private static bool _smallMolDemo; // Set true for a convenient interactive  demo of small mol UI
 
-        private static void DemoPause(string message, Action action = null)
+        private void DemoPause(string message, Action action = null)
         {
             if (_smallMolDemo)
             {
@@ -757,10 +759,11 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(Settings.Default.SpectralLibraryList.Contains(SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs[0]));
 
             // 28.  Do exactly the same thing over again, should happen silently, with only a prompt to add library info
+            var docSameList = SkylineWindow.Document;
             ImportTransitionListSkipColumnSelectWithMessage(textConflict,
                 Resources.SkylineWindow_ImportMassList_The_transition_list_appears_to_contain_spectral_library_intensities___Create_a_document_library_from_these_intensities_,
                 libraryDlgRepeat => libraryDlgRepeat.Btn0Click());
-            WaitForDocumentLoaded();
+            docSameList = WaitForDocumentChangeLoaded(docSameList);
             ValidateDocAndIrt(_asSmallMolecules ? 345 : 690 , 355, 10); // N.B. small mol transition list reader recognizes repeated transitions and ignores them
             RunUI(() =>
             {
@@ -782,9 +785,9 @@ namespace pwiz.SkylineTestFunctional
             ImportTransitionListSkipColumnSelectWithMessage(textNoError,
 Resources.SkylineWindow_ImportMassList_The_transition_list_appears_to_contain_iRT_values__but_the_document_does_not_have_an_iRT_calculator___Create_a_new_calculator_and_add_these_iRT_values_, 
 importIrt => importIrt.Btn1Click());
-            var libraryDlgLibOnly = WaitForOpenForm<MultiButtonMsgDlg>();
+            var libraryDlgLibOnly = WaitForMultiButtonMsgDlg(Resources.SkylineWindow_ImportMassList_The_transition_list_appears_to_contain_spectral_library_intensities___Create_a_document_library_from_these_intensities_);
             OkDialog(libraryDlgLibOnly, libraryDlgLibOnly.Btn0Click);
-            var libraryDlgOverwriteLibOnly = WaitForOpenForm<MultiButtonMsgDlg>();
+            var libraryDlgOverwriteLibOnly = WaitForMultiButtonMsgDlg(Resources.SkylineWindow_ImportMassList_There_is_an_existing_library_with_the_same_name__0__as_the_document_library_to_be_created___Overwrite_this_library_or_skip_import_of_library_intensities_);
             RunUI(libraryDlgOverwriteLibOnly.Btn0Click);
             var docLibraryOnlyComplete = WaitForDocumentChangeLoaded(docLibraryOnly);
             // Haven't created a calculator
@@ -1387,8 +1390,7 @@ importIrt => importIrt.Btn1Click());
         public static void ImportTransitionListSkipColumnSelectWithMessage(string csvPath, string expectedMessage, Action<MultiButtonMsgDlg> messageAction, bool isDemo = false)
         {
             ImportTransitionListSkipColumnSelect(csvPath, null, true, isDemo);
-            var messageDlg = WaitForOpenForm<MultiButtonMsgDlg>();
-            AssertEx.AreEqual(expectedMessage, messageDlg.Message);
+            var messageDlg = WaitForMultiButtonMsgDlg(expectedMessage);
             OkDialog(messageDlg, () => messageAction(messageDlg));
         }
 

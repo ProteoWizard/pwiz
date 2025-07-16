@@ -159,6 +159,7 @@
     </Compile>
     <Compile Include="AddTransitionsTest.cs" />
     <Compile Include="AdductTest.cs" />
+    <Compile Include="AlphapeptdeepLibraryBuilderTest.cs" />
     <Compile Include="AnalyticsTest.cs" />
     <Compile Include="AnnotatedDoubleTest.cs" />
     <Compile Include="AnnotationUnitTest.cs" />
@@ -171,17 +172,22 @@
     <Compile Include="ChromatogramExporterTest.cs" />
     <Compile Include="ChromatogramGroupIdsTest.cs" />
     <Compile Include="CmdLineAssociateProteinsTest.cs" />
+    <Compile Include="CommandLineThermoMethodTest.cs" />
     <Compile Include="ElibQuantifiableTransitionTest.cs" />
     <Compile Include="ErrorIfPersistentFilesDirModifiedTest.cs" />
     <Compile Include="FastaSequenceTest.cs" />
+    <Compile Include="FilteredMessageWriterTest.cs" />
+    <Compile Include="ImmutableListTest.cs" />
     <Compile Include="LocalizedHtmlTutorialsTest.cs" />
     <Compile Include="LibraryRankedSpectrumInfoTest.cs" />
+    <Compile Include="LongPathDirectoryTest.cs" />
     <Compile Include="MassListIonsTest.cs" />
     <Compile Include="MatchExpressionTest.cs" />
     <Compile Include="OnDemandFeatureCalculatorTest.cs" />
     <Compile Include="FeatureTooltipTest.cs" />
     <Compile Include="CommandLinePeakBoundaryTest.cs" />
     <Compile Include="PeptideTest.cs" />
+    <Compile Include="ProgressStatusChangeSegmentsEndPercentageTest.cs" />
     <Compile Include="ProteinAssociationTest.cs" />
     <Compile Include="ProtocolBuffers\GeneratedCode\LegacySkylineDocumentProto.cs" />
     <Compile Include="ProtocolBuffers\LegacyProtocolBufferFormatsTest.cs" />
@@ -282,15 +288,22 @@
     <Compile Include="TypeSafeEnumTest.cs" />
     <Compile Include="UndoManagerTest.cs" />
     <Compile Include="UniModTest.cs" />
+    <Compile Include="InstallNvidiaTest.cs" />
     <Compile Include="UniquePrefixTest.cs" />
     <Compile Include="MassListInputsTest.cs" />
     <Compile Include="EncyclopeDiaHelpersTest.cs" />
     <Compile Include="SrmSettingsNewTest.cs" />
+    <Compile Include="DllFinderUnitTest.cs" />
     <Compile Include="UtilTest.cs" />
     <Compile Include="VariableModTest.cs" />
     <Compile Include="WebEnabledFastaImporterTest.cs" />
+    <Compile Include="ZedGraphTest.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Shared\CommonMsData\CommonMsData.csproj">
+      <Project>{86F8E7F5-A3ED-4519-9AD9-BF9ABD6DD69F}</Project>
+      <Name>CommonMsData</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Shared\Common\Common.csproj">
       <Project>{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}</Project>
       <Name>Common</Name>
@@ -323,6 +336,10 @@
       <Project>{DDA2EA4C-B632-4FDF-94BA-F71E4C152056}</Project>
       <Name>Skyline</Name>
     </ProjectReference>
+    <ProjectReference Include="..\TestRunnerLib\TestRunnerLib.csproj">
+      <Project>{E3F0E34F-F9E6-4360-996F-E2054E4FA1AE}</Project>
+      <Name>TestRunnerLib</Name>
+    </ProjectReference>
     <ProjectReference Include="..\TestUtil\TestUtil.csproj">
       <Project>{1A76F2B4-353A-4BCF-9D15-70D4B387E480}</Project>
       <Name>TestUtil</Name>
@@ -335,7 +352,9 @@
     <None Include="CommandLineAssayImportTest.zip" />
     <None Include="CommandLineImportAnnotationsTest.zip" />
     <None Include="CommandLineMProphetTest.zip" />
+    <EmbeddedResource Include="CommandLineThermoMethodTest.json" />
     <None Include="DecoysTest.zip" />
+    <EmbeddedResource Include="DllFinderUnitTest.json" />
     <None Include="DocLoadLibraryTest.zip" />
     <EmbeddedResource Include="explicit-losses.sky" />
     <EmbeddedResource Include="DocumentSerializerTest.sky" />
@@ -371,6 +390,9 @@
     <None Include="OnDemandFeatureCalculatorTest.zip" />
     <None Include="PeakBoundaryTest.zip" />
     <None Include="PeakGroupIntegratorTest.zip" />
+    <EmbeddedResource Include="predict.speclib.tsv" />
+    <EmbeddedResource Include="predict_transformed.speclib.tsv" />
+    <EmbeddedResource Include="predict_transformed.speclib.blib" />
     <None Include="Proteome\ProteomeDbTest.zip" />
     <EmbeddedResource Include="Reporting\HeavyLabeledLeucine.sky" />
     <EmbeddedResource Include="Reporting\PivotIsotopeLabel.skyr" />
@@ -385,6 +407,8 @@
     <EmbeddedResource Include="SmallMoleculesMzOnly_3-7.sky" />
     <None Include="ProtocolBuffers\generatecode.bat" />
     <None Include="ProtocolBuffers\LegacySkylineDocumentProto.proto" />
+    <EmbeddedResource Include="Test-imported_24-11-short_onlyUnimodMods.sky" />
+    <EmbeddedResource Include="Test-imported_24-11-short_nonUnimodMods.sky" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">

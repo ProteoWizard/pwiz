@@ -546,6 +546,21 @@ namespace pwiz.Skyline.Model.AuditLog
     [XmlRoot(XML_ROOT)]
     public class AuditLogEntry : Immutable, IXmlSerializable
     {
+        public interface ITimeProvider
+        {
+            DateTime Now { get; }
+        }
+
+        /// <summary>
+        /// For consistent screenshots involving AuditLogEntries
+        /// </summary>
+        public static ITimeProvider TimeProvider { get; set; }
+
+        public static DateTime Now
+        {
+            get { return TimeProvider?.Now ?? DateTime.UtcNow; }
+        }
+
         public const string XML_ROOT = "audit_log_entry";
 
         private ImmutableList<DetailLogMessage> _allInfo;
@@ -904,7 +919,7 @@ namespace pwiz.Skyline.Model.AuditLog
         /// </summary>
         public static AuditLogEntry CreateEmptyEntry()
         {
-            return new AuditLogEntry(DateTime.UtcNow, string.Empty, SrmDocument.DOCUMENT_TYPE.none);
+            return new AuditLogEntry(Now, string.Empty, SrmDocument.DOCUMENT_TYPE.none);
         }
 
         /// <summary>
@@ -1015,7 +1030,7 @@ namespace pwiz.Skyline.Model.AuditLog
         /// </summary>
         public static AuditLogEntry CreateSingleMessageEntry(MessageInfo info, string extraInfo = null)
         {
-            var result = new AuditLogEntry(DateTime.UtcNow, string.Empty, info.DocumentType, extraInfo)
+            var result = new AuditLogEntry(Now, string.Empty, info.DocumentType, extraInfo)
             {
                 UndoRedo = info.ToMessage(LogLevel.undo_redo),
                 Summary = info.ToMessage(LogLevel.summary),
@@ -1103,8 +1118,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 Reflector<Targets>.EnumerateDiffNodes(objInfo, property, docType, false,
                     ignoreTransitions
                         ? (Func<DiffNode, bool>) (node => !IsTransitionDiff(node.Property.PropertyType))
-                        : null),
-                DateTime.UtcNow);
+                        : null));
 
             if (diffTree.Root != null)
             {
@@ -1127,7 +1141,7 @@ namespace pwiz.Skyline.Model.AuditLog
         /// </summary>
         public static AuditLogEntry CreateLogEnabledDisabledEntry(SrmDocument document)
         {
-            var result = new AuditLogEntry(DateTime.UtcNow, string.Empty, document.DocumentType);
+            var result = new AuditLogEntry(Now, string.Empty, document.DocumentType);
 
             var type = document.Settings.DataSettings.AuditLogging ? MessageType.log_enabled : MessageType.log_disabled;
             var docType = document.DocumentType;
@@ -1635,7 +1649,7 @@ namespace pwiz.Skyline.Model.AuditLog
                     .ChangeRootObjectPair(docPair.ToObjectType());
 
             var diffTree =
-                DiffTree.FromEnumerator(Reflector<T>.EnumerateDiffNodes(docPair.ToObjectType(), rootProp, docPair.OldDocumentType, (T)this), DateTime.UtcNow);
+                DiffTree.FromEnumerator(Reflector<T>.EnumerateDiffNodes(docPair.ToObjectType(), rootProp, docPair.OldDocumentType, (T)this));
             if (diffTree.Root == null)
                 return baseEntry;
 

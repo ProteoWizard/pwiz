@@ -32,6 +32,7 @@ using Newtonsoft.Json.Linq;
 using pwiz.PanoramaClient;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -315,18 +316,16 @@ namespace pwiz.Skyline
                     longWaitDlg.ProgressValue = 0;
                     longWaitDlg.PerformWork(parentWindow ?? this, 500, progressMonitor =>
                     {
-                        string skylineDocumentHash;
-                        using (var hashingStreamReader = new HashingStreamReaderWithProgress(path, progressMonitor))
-                        {
-                            // Wrap stream in XmlReader so that BaseUri is known
-                            var reader = XmlReader.Create(hashingStreamReader,
-                                new XmlReaderSettings() { IgnoreWhitespace = true },
-                                path);
-
-                            XmlSerializer ser = new XmlSerializer(typeof (SrmDocument));
-                            document = (SrmDocument) ser.Deserialize(reader);
-                            skylineDocumentHash = hashingStreamReader.Stream.Done();
-                        }
+                        using var fileStream = File.OpenRead(path);
+                        using var progressStream = new ProgressStream(fileStream);
+                        progressStream.SetProgressMonitor(progressMonitor, new ProgressStatus(Path.GetFileName(path)), true);
+                        using var hashingStream = new HashingStream(progressStream, true);
+                        // Wrap stream in XmlReader so that BaseUri is known
+                        var reader = XmlReader.Create(new StreamReader(hashingStream, Encoding.UTF8),
+                            new XmlReaderSettings { IgnoreWhitespace = true }, path);
+                        XmlSerializer ser = new XmlSerializer(typeof (SrmDocument));
+                        document = (SrmDocument) ser.Deserialize(reader);
+                        var skylineDocumentHash = hashingStream.Done();
 
                         try
                         {
@@ -360,7 +359,7 @@ namespace pwiz.Skyline
                     if (!SrmDocument.IsSkylineFile(path, out var explained))
                     {
                         exception = new IOException(
-                            explained); // Offer a more helpful explanation than that from the failed XML parser
+                            explained, x); // Offer a more helpful explanation than that from the failed XML parser
                     }
                 }
             }
@@ -1874,7 +1873,7 @@ namespace pwiz.Skyline
                 string extraInfo = null;
                 if (importInfo.File)
                 {
-                    info = new MessageInfo(MessageType.imported_fasta, docPair.NewDocumentType, importInfo.Text);
+                    info = new MessageInfo(MessageType.imported_fasta, docPair.NewDocumentType, AuditLogPath.Create(importInfo.Text));
                 }
                 else
                 {
@@ -2832,7 +2831,7 @@ namespace pwiz.Skyline
                         switch (dlg.ShowDialog(this))
                         {
                             case DialogResult.Yes:
-                                if (!ShowGenerateDecoysDlg(dlg))
+                                if (!ShowGenerateDecoysDlg(this))
                                     return;
                                 break;
                             case DialogResult.No:
@@ -2840,7 +2839,7 @@ namespace pwiz.Skyline
                                     SkylineResources.SkylineWindow_ImportResults_Are_you_sure__Peak_scoring_models_trained_with_non_matching_targets_and_decoys_may_produce_incorrect_results_,
                                     MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false))
                                 {
-                                    if (dlg2.ShowDialog(dlg) == DialogResult.No)
+                                    if (dlg2.ShowDialog(this) == DialogResult.No)
                                         return;
                                 }
                                 break;
@@ -2860,7 +2859,7 @@ namespace pwiz.Skyline
                     switch (dlg.ShowDialog(this))
                     {
                         case DialogResult.Yes:
-                            if (!ShowGenerateDecoysDlg(dlg))
+                            if (!ShowGenerateDecoysDlg(this))
                                 return;
                             break;
                         case DialogResult.No:
@@ -3298,9 +3297,6 @@ namespace pwiz.Skyline
                             string redundantDocLibPath = BiblioSpecLiteSpec.GetRedundantName(docLibPath);
                             FileEx.SafeDelete(redundantDocLibPath);
 
-                            string docLibCachePath = BiblioSpecLiteLibrary.GetLibraryCachePath(docLibPath);
-                            FileEx.SafeDelete(docLibCachePath);
-
                             string midasLibPath = MidasLibSpec.GetLibraryFileName(DocumentFilePath);
                             FileEx.SafeDelete(midasLibPath);
                         }
@@ -3686,7 +3682,7 @@ namespace pwiz.Skyline
             {
                 if (e is PanoramaServerException || e is WebException) return false;
 
-                MessageDlg.ShowWithException(this, TextUtil.LineSeparate(Resources.RemoteSession_FetchContents_There_was_an_error_communicating_with_the_server__, e.Message), e);
+                MessageDlg.ShowWithException(this, TextUtil.LineSeparate(CommonMsDataResources.RemoteSession_FetchContents_There_was_an_error_communicating_with_the_server__, e.Message), e);
                 return false;
             }
 
@@ -3694,7 +3690,7 @@ namespace pwiz.Skyline
             if (folders?[@"path"] == null || !folderPath.Contains(Uri.EscapeUriString(folders[@"path"].ToString())))
                 return false;
 
-            if (!(PanoramaUtil.CheckInsertPermissions(folders) && PanoramaUtil.HasTargetedMsModule(folders)))
+            if (!(PanoramaUtil.HasUploadPermissions(folders) && PanoramaUtil.HasTargetedMsModule(folders)))
                 return false;
 
             ShareType shareType;
@@ -3713,7 +3709,7 @@ namespace pwiz.Skyline
                 return false;
             }
 
-            var zipFilePath = FileEx.GetTimeStampedFileName(fileName);
+            var zipFilePath = FileTimeEx.GetTimeStampedFileName(fileName);
             if (!ShareDocument(zipFilePath, shareType)) 
                 return false;
 
@@ -3742,16 +3738,24 @@ namespace pwiz.Skyline
         {
             try
             {
+                string warningMessage = null;
                 lock (GetDocumentChangeLock())
                 {
                     var originalDocument = Document;
                     ModifiedDocument newDocument = null;
+
                     using (var longWaitDlg = new LongWaitDlg(this))
                     {
-                        longWaitDlg.PerformWork(this, 1000, broker =>
+                        longWaitDlg.PerformWork(this, 1000, progressMonitor =>
                         {
                             var documentAnnotations = new DocumentAnnotations(originalDocument);
-                            newDocument = documentAnnotations.ReadAnnotationsFromFile(broker.CancellationToken, filename);
+                            using var fileStream = File.OpenRead(filename);
+                            using var progressStream = new ProgressStream(fileStream);
+                            progressStream.SetProgressMonitor(progressMonitor,
+                                new ProgressStatus(SkylineResources.SkylineWindow_ImportAnnotations_Reading_annotations)
+                                    .ChangePercentComplete(0), true);
+                            newDocument = documentAnnotations.ReadAnnotationsFromStream(longWaitDlg.CancellationToken, filename, progressStream);
+                            warningMessage = documentAnnotations.GetWarningMessage();
                         });
                     }
                     if (newDocument != null)
@@ -3760,11 +3764,17 @@ namespace pwiz.Skyline
                             DocumentModifier.FromResult(originalDocument, newDocument));
                     }
                 }
+
+                if (warningMessage != null)
+                {
+                    MessageDlg.Show(this, warningMessage, true);
+                }
             }
             catch (Exception exception)
             {
                 MessageDlg.ShowException(this, exception);
             }
+            
         }
 
         public void ImportAnnotations(TextReader reader, MessageInfo messageInfo)

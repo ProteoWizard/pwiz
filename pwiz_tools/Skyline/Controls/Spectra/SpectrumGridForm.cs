@@ -28,6 +28,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Filtering;
 using pwiz.Common.Spectra;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.FileUI;
@@ -36,7 +37,6 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
@@ -602,7 +602,13 @@ namespace pwiz.Skyline.Controls.Spectra
             {
                 string message = string.Format(SpectraResources.SpectrumReader_ReadSpectraFromFile_Reading_spectra_from__0_, file.GetFileName());
                 CommonActionUtil.SafeBeginInvoke(_form, () => _form.UpdateProgress(message, 0, file));
-                using (var msDataFile = file.OpenMsDataFile(true, false, false, false, true))
+
+                string docDir = Path.GetDirectoryName(_form.SkylineWindow.DocumentFilePath) ?? Directory.GetCurrentDirectory();
+                var openMsDataFileParams = new OpenMsDataFileParams()
+                {
+                    DownloadPath = docDir
+                };
+                using (var msDataFile = file.OpenMsDataFile(openMsDataFileParams))
                 {
                     var spectra = new List<SpectrumMetadata>();
                     int spectrumCount = msDataFile.SpectrumCount;

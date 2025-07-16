@@ -838,7 +838,6 @@
   </data>
   <data name="SkylineWindow_GetDownloadName__0___1__" xml:space="preserve">
     <value>{0}({1})</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="AlertDlg_GetDefaultButtonText__Ignore" xml:space="preserve">
     <value>忽略(&amp;I)</value>
@@ -1204,11 +1203,9 @@
   </data>
   <data name="ReportSpecList_GetDefaults_Molecule_RT_Results" xml:space="preserve">
     <value>分子保留时间结果</value>
-    <comment>Needs Review:Missing translation</comment>
   </data>
   <data name="ReportSpecList_GetDefaults_Molecule_Transition_Results" xml:space="preserve">
     <value>分子离子对结果</value>
-    <comment>Needs Review:Missing translation</comment>
   </data>
   <data name="MessageBoxHelper_ValidateNameTextBox__0__cannot_be_empty" xml:space="preserve">
     <value>{0}不能为空。</value>
@@ -3260,6 +3257,15 @@
   <data name="PasteDlg_UpdateMoleculeType_Note" xml:space="preserve">
     <value>注释</value>
   </data>
+  <data name="PasteDlg_UpdateMoleculeType_PrecursorNote" xml:space="preserve">
+    <value>母离子注释</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_MoleculeNote" xml:space="preserve">
+    <value>分子注释</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_MoleculeListNote" xml:space="preserve">
+    <value>分子列表注释</value>
+  </data>
   <data name="BuildBackgroundProteomeDlg_RefreshStatus_Click_the_Add_File_button_to_add_a_FASTA_file_and_create_a_new_proteome_file" xml:space="preserve">
     <value>单击“添加文件”按钮来添加一个 FASTA 文件，并且创建一个新的蛋白质组文件。</value>
   </data>
@@ -3868,7 +3874,6 @@
   </data>
   <data name="EncyclopeDiaHelpers_ConvertFastaToKoinaInputCsv_could_not_find_EncyclopeDia" xml:space="preserve">
     <value>找不到 EncyclopeDIA</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="EncyclopeDiaHelpers_GenerateLibrary_Combining_quantification_libraries" xml:space="preserve">
     <value>正在组合定量库</value>
@@ -3889,131 +3894,106 @@
   <data name="EncyclopeDiaHelpers_GenerateLibrary_Running_command___0___1_" xml:space="preserve">
     <value>正在运行命令:{0} {1}</value>
   </data>
+  <data name="FormulaBox_FormulaBox_Help" xml:space="preserve">
+    <value>帮助</value>
+  </data>
   <data name="SkylineWindow_DownloadPanoramaFile_File_does_not_exist__It_may_have_been_deleted_on_the_server_" xml:space="preserve">
     <value>文件不存在。可能已在服务器上删除。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_with_a_user_account__To_upload_documents_to_a_server_a_user_account_is_required_" xml:space="preserve">
     <value>没有包含用户帐户的 Panorama 服务器。要将文档上传到服务器，必须要有用户帐户。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ProteinAssociation_CreateDocTree_Unmapped_Peptides" xml:space="preserve">
     <value>未映射的肽段</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_ExportSpecLib_Spectral_library_file__0__exported_successfully_" xml:space="preserve">
     <value>成功导出谱图库文件 {0}。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_ExportSpecLib_Error__The_document_must_contain_at_least_one_precursor_to_export_a_spectral_library_" xml:space="preserve">
     <value>错误：文档必须至少包含一个母离子，才能导出谱图库。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_ExportSpecLib_Error__The_document_must_contain_results_to_export_a_spectral_library_" xml:space="preserve">
     <value>错误：文档必须包含结果才能导出谱图库。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_ExportMProphetFeatures_mProphet_features_file__0__exported_successfully_" xml:space="preserve">
     <value>成功导出 mProphet 特征文件 {0}。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_targets_for_which_to_export_mProphet_features_" xml:space="preserve">
     <value>错误：要导出mProphet 特征文件，文档必须包含目标。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_results_to_export_mProphet_features_" xml:space="preserve">
     <value>错误：要导出mProphet 特征文件，文档必须包含结果。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandArgs_ParseAnnotationTypes_Error__Attempting_to_exclude_an_unknown_annotation_type__0___Try_one_of_the_following_" xml:space="preserve">
     <value>错误：试图排除未知注释类型“{0}”。尝试下面的一种方法：</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_AddAnnotations_Annotations_successfully_defined_from_file__0__" xml:space="preserve">
     <value>从文件 {0} 成功定义注释。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="Extensions_CustomToString_Protein_Expression" xml:space="preserve">
     <value>蛋白质表达</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_" xml:space="preserve">
     <value>成功导出注释文件 {0}。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_AddAnnotations_Error__Unable_to_read_annotations_from_file__0__" xml:space="preserve">
     <value>错误：无法读取文件 {0} 中的注释。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandArgs_ParseAnnotationTypes_Error__Attempting_to_specify_an_unknown_annotation_type___0____Try_one_of_the_following_" xml:space="preserve">
     <value>错误：试图指定未知注释类型“{0}”。尝试下面的一种方法：</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandArgs_ParseAnnotationTarget_Error__Attempting_to_specify_an_unknown_annotation_target___0____Try_one_of_the_following_" xml:space="preserve">
     <value>错误：试图指定未知注释目标“{0}”。尝试下面的一种方法：</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_SetAnnotations_Warning__Skipping_annotation___0___due_to_a_name_conflict_" xml:space="preserve">
     <value>警告：由于名称与现有注释冲突，将跳过注释“{0}”。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_SetAnnotations_Warning__The_annotation___0___was_overwritten_" xml:space="preserve">
     <value>警告：由于名称冲突，将覆盖现有注释“{0}”。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_AddAnnotationsFromArguments_Error__Cannot_add_a__0__type_annotation_without_providing_a_list_values_of_through__1__" xml:space="preserve">
     <value>错误：如果未通过 {1} 提供值列表，则无法添加 {0} 类型注释。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_AddAnnotationFromEnvironment_Error__Cannot_add_new_annotation___0___without_providing_at_least_one_target_through__1__" xml:space="preserve">
     <value>错误：在未通过 {1} 至少提供一个目标的情况下，无法添加新注释“{0}”。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_ExportAnnotations_Try_one_of_the_following_" xml:space="preserve">
     <value>尝试下面的一种方法：</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_ExportAnnotations_Error__The_document_must_contain_annotations_in_order_to_export_annotations_" xml:space="preserve">
     <value>错误：要导出注释，文档中必须包含注释。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_SetPeptideDigestSettings_Error__Could_not_find_background_proteome_file__0_" xml:space="preserve">
     <value>错误：无法找到背景蛋白质组文件 {0}</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="PeptideMod_SetTerminus_A_peptide_modification_must_be_added_before_giving_it_a_terminal_or_amino_acid_specificity_" xml:space="preserve">
     <value>必须先添加肽段修饰，然后再为之赋予末端或氨基酸特异性。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="koina_logo_fdf731d5" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\koina-logo.fdf731d5.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="CommandLine_ImportPeptideList_Importing_peptide_list__0__from_file__1____" xml:space="preserve">
     <value>正在导入文件 {1} 中的肽段列表 {0}…</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_ImportPeptideList_Importing_peptide_lists_from_file__0____" xml:space="preserve">
     <value>正在导入文件 {0} 中的肽段列表…</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_ImportPeptideList_Warning__peptide_list_file_contains_lines_with_____Ignoring_provided_list_name_" xml:space="preserve">
     <value>警告：肽段列表文件中含有 &gt;&gt; 行。忽略所提供的列表名称。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_AssociateProteins_Associating_peptides_with_proteins_from_FASTA_file__0_" xml:space="preserve">
     <value>正在关联肽段与 FASTA 文件 {0} 中的蛋白质</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="BuildLibraryDlg_ValidateBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_Koina_predictions_" xml:space="preserve">
     <value>向文档中添加肽段母离子，根据 Koina 预测建立库。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_ImportPeptideList_Using_the_Unimod_definitions_for_the_following_modifications_" xml:space="preserve">
     <value>针对下列修饰使用 Unimod 定义：</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="PeptideMod_SetVariable_A_peptide_modification_must_be_added_before_assigning_its_variable_status_" xml:space="preserve">
     <value>必须先添加肽段修饰，然后再指定其可变状态。</value>
-    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Error" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Error.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

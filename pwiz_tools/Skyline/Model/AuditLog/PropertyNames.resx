@@ -1808,4 +1808,13 @@
   <data name="TransitionFullScan_SpectrumFilter" xml:space="preserve">
     <value>Spectrum Filter</value>
   </data>
+  <data name="ImportResultsSettings_IsGpf" xml:space="preserve">
+    <value>Gas phase fractionation</value>
+  </data>
+  <data name="BuildPeptideSearchLibrarySettings_UseDiaUmpire" xml:space="preserve">
+    <value>Deconvolute spectra with DIA-Umpire</value>
+  </data>
+  <data name="TransitionFilterAndLibrariesSettings_SpectrumFilter" xml:space="preserve">
+    <value>Spectrum Filter</value>
+  </data>
 </root>

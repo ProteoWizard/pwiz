@@ -260,6 +260,11 @@ namespace timsdata
             tims_scannum_to_oneoverk0(handle, frame_id, &in[0], &out[0], uint32_t(in.size()));
         }
 
+        double timesOneOverK0toCCSMz(const double ooK0, const int charge, const double mz)
+        {
+            return tims_oneoverk0_to_ccs_for_mz(ooK0, charge, mz);
+        }
+
     private:
         void ctor_complete()
         {

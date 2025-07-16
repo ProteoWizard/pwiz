@@ -26,6 +26,7 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Lib;
@@ -449,6 +450,38 @@ namespace pwiz.Skyline.Model.RetentionTimes
             }
 
             return null;
+        }
+
+        public Dictionary<string, AlignmentFunction> GetAllMappingFunctions(FileRetentionTimeAlignments alignTo, int maxStopovers)
+        {
+            Dictionary<string, AlignmentFunction> alignmentFunctions = new Dictionary<string, AlignmentFunction>();
+            foreach (var source in RetentionTimeSources.Values)
+            {
+                if (alignTo.Name == source.Name)
+                {
+                    continue;
+                }
+
+                var alignmentFunction = GetMappingFunction(alignTo.Name, source.Name, maxStopovers);
+                if (alignmentFunction != null)
+                {
+                    alignmentFunctions[source.Name] = alignmentFunction;
+                }
+            }
+
+            return alignmentFunctions;
+        }
+
+        public RetentionTimeAlignmentIndexes GetRetentionTimeAlignmentIndexes(string name)
+        {
+            var file = FileAlignments.Find(name);
+            if (file == null)
+            {
+                return null;
+            }
+
+            return new RetentionTimeAlignmentIndexes(GetAllMappingFunctions(file, 3)
+                .Select(kvp => new RetentionTimeAlignmentIndex(kvp.Key, kvp.Value)));
         }
 
         public static AlignmentFunction MakeAlignmentFunc(IEnumerable<RegressionLine> regressionLines)

@@ -32,6 +32,7 @@ using pwiz.PanoramaClient;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
@@ -57,7 +58,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline
 {
-    public class CommandLine : IDisposable
+    public class CommandLine : IDisposable/*, IRemoteAccountUserInteraction*/
     {
         private CommandStatusWriter _out;
 
@@ -116,6 +117,8 @@ namespace pwiz.Skyline
 
         private int RunInner(string[] args, bool withoutUsage = false)
         {
+            //RemoteSession.RemoteAccountUserInteraction = this;
+
             _importedResults = false;
 
             var commandArgs = new CommandArgs(_out, _doc != null);
@@ -612,9 +615,18 @@ namespace pwiz.Skyline
             return HandleExceptions(commandArgs, ()=>
             {
                 var documentAnnotations = new DocumentAnnotations(_doc);
+                using var stream = File.OpenRead(commandArgs.ImportAnnotations);
+                using var progressStream = new ProgressStream(stream);
+                var progressStatus = new ProgressStatus();
+                progressStream.SetProgressMonitor(new CommandProgressMonitor(_out, progressStatus), progressStatus, true);
                 var modifiedDocument =
-                    documentAnnotations.ReadAnnotationsFromFile(CancellationToken.None, commandArgs.ImportAnnotations);
+                    documentAnnotations.ReadAnnotationsFromStream(CancellationToken.None, commandArgs.ImportAnnotations, progressStream);
                 ModifyDocument(DocumentModifier.FromResult(_doc, modifiedDocument));
+                var warningMessage = documentAnnotations.GetWarningMessage();
+                if (warningMessage != null)
+                {
+                    _out.WriteLine(warningMessage);
+                }
             }, SkylineResources.CommandLine_ImportAnnotations_Error__Failed_while_reading_annotations_);
         }
 
@@ -910,7 +922,7 @@ namespace pwiz.Skyline
                 }
                 else
                 {
-                    sharedFileName = FileEx.GetTimeStampedFileName(_skylineFile);
+                    sharedFileName = FileTimeEx.GetTimeStampedFileName(_skylineFile);
                 }
                 var sharedFilePath = Path.Combine(sharedFileDir, sharedFileName);
                 if (!ShareDocument(_doc, _skylineFile, sharedFilePath, commandArgs.SharedFileType, _out, commandArgs))
@@ -1401,23 +1413,23 @@ namespace pwiz.Skyline
             try
             {
                 var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
-                string hash;
-                using (var hashingStreamReader = new HashingStreamReaderWithProgress(skylineFile, progressMonitor))
-                {
-                    // Wrap stream in XmlReader so that BaseUri is known
-                    var reader = XmlReader.Create(hashingStreamReader, 
-                        new XmlReaderSettings() { IgnoreWhitespace = true }, 
-                        skylineFile);  
-                    XmlSerializer xmlSerializer = new XmlSerializer(typeof(SrmDocument));
-                    _out.WriteLine(Resources.CommandLine_OpenSkyFile_Opening_file___);
+                using var fileStream = File.OpenRead(skylineFile);
+                using var progressStream = new ProgressStream(fileStream);
+                progressStream.SetProgressMonitor(progressMonitor, new ProgressStatus(Path.GetFileName(skylineFile)), true);
+                using var hashingStream = new HashingStream(progressStream, true);
+                // Wrap stream in XmlReader so that BaseUri is known
+                var reader = XmlReader.Create(new StreamReader(hashingStream, Encoding.UTF8), 
+                    new XmlReaderSettings { IgnoreWhitespace = true }, 
+                    skylineFile);  
+                XmlSerializer xmlSerializer = new XmlSerializer(typeof(SrmDocument));
+                _out.WriteLine(Resources.CommandLine_OpenSkyFile_Opening_file___);
 
-                    SetDocument(ConnectDocument((SrmDocument)xmlSerializer.Deserialize(reader), skylineFile));
-                    if (_doc == null)
-                        return false;
+                SetDocument(ConnectDocument((SrmDocument)xmlSerializer.Deserialize(reader), skylineFile));
+                if (_doc == null)
+                    return false;
 
-                    _out.WriteLine(Resources.CommandLine_OpenSkyFile_File__0__opened_, Path.GetFileName(skylineFile));
-                    hash = hashingStreamReader.Stream.Done();
-                }
+                _out.WriteLine(Resources.CommandLine_OpenSkyFile_File__0__opened_, Path.GetFileName(skylineFile));
+                var hash = hashingStream.Done();
 
                 SetDocument(_doc.ReadAuditLog(skylineFile, hash, () => null));
 
@@ -2176,7 +2188,7 @@ namespace pwiz.Skyline
             // Skip if file write time is after importBefore or before importAfter
             try
             {
-                var fileLastWriteTime = replicateFile.GetFileLastWriteTime();
+                var fileLastWriteTime = CommandArgs.IsRemoteUrl(replicateFile.GetFilePath()) ? DateTime.UtcNow : replicateFile.GetFileLastWriteTime();
                 if (importBefore != null && importBefore < fileLastWriteTime)
                 {
                     _out.WriteLine(SkylineResources.CommandLine_ImportResultsFile_File_write_date__0__is_after___import_before_date__1___Ignoring___,
@@ -2282,8 +2294,8 @@ namespace pwiz.Skyline
                 if (fastaPath.IsNullOrEmpty())
                     throw new ArgumentException(Resources.CommandLine_AssociateProteins_a_FASTA_file_must_be_imported_before_associating_proteins);
                 _out.WriteLine(Resources.CommandLine_AssociateProteins_Associating_peptides_with_proteins_from_FASTA_file__0_, Path.GetFileName(fastaPath));
-                var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(String.Empty));
-                var proteinAssociation = new ProteinAssociation(Document, progressMonitor);
+                var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(ProteomeResources.ProteinAssociation_ListPeptidesForMatching_Building_peptide_prefix_tree));
+                var proteinAssociation = new ProteinAssociation(Document, progressMonitor.CancellationToken);
                 proteinAssociation.UseFastaFile(fastaPath, progressMonitor);
                 proteinAssociation.ApplyParsimonyOptions(commandArgs.AssociateProteinsGroupProteins.GetValueOrDefault(),
                     commandArgs.AssociateProteinsGeneLevelParsimony.GetValueOrDefault(),
@@ -2321,6 +2333,7 @@ namespace pwiz.Skyline
                     Equals(standard.Name, commandArgs.IrtStandardName));
                 if (irtStandard == null)
                 {
+                    // TODO: This should really be an Error that causes processing to stop rather than information treated like no iRT standard was specified
                     _out.WriteLine(SkylineResources.CommandLine_ImportSearchInternal_The_iRT_standard_name___0___is_invalid_,
                         commandArgs.IrtStandardName);
                     return null;
@@ -2349,7 +2362,10 @@ namespace pwiz.Skyline
             foreach (var file in commandArgs.SearchResultsFiles)
                 _out.WriteLine(Path.GetFileName(file));
             if (!builder.BuildLibrary(progressMonitor))
+            {
+                _out.WriteLine(SkylineResources.CommandLine_ImportSearchInternal_Error__Failed_to_build_the_spectral_library_);
                 return false;
+            }
 
             if (!string.IsNullOrEmpty(builder.AmbiguousMatchesMessage))
                 _out.WriteLine(builder.AmbiguousMatchesMessage);
@@ -2391,7 +2407,7 @@ namespace pwiz.Skyline
                             import.IrtStandard = autoStandards[0];
                             break;
                         default:
-                            _out.WriteLine(SkylineResources.CommandLine_ImportSearchInternal_iRT_standard_set_to__0___but_multiple_iRT_standards_were_found__iRT_standard_must_be_set_explicitly_,
+                            _out.WriteLine(SkylineResources.CommandLine_ImportSearchInternal_Error__iRT_standard_set_to__0___but_multiple_iRT_standards_were_found__iRT_standard_must_be_set_explicitly_,
                                 IrtStandard.AUTO.Name);
                             return false;
                     }
@@ -3976,6 +3992,42 @@ namespace pwiz.Skyline
 
             if (Equals(type, ExportFileType.Method))
             {
+                // If the instrument type is either just Thermo or a Thermo instrument type that
+                // support the TNG XML method API
+                string thermoInstallationType = ExportInstrumentType.ThermoInstallationType(args.MethodInstrumentType);
+                if (thermoInstallationType != null || Equals(args.MethodInstrumentType, ExportInstrumentType.THERMO))
+                {
+                    var dllFinder = new ThermoDllFinder();
+                    var thermoSoftwareInfo = dllFinder.GetSoftwareInfo();   // CONSIDER: This behaves differently for tests on a computer with Thermo software installed
+                    if (thermoSoftwareInfo.InstrumentType == null)
+                    {
+                        _out.WriteLine(TextUtil.SpaceSeparate(Resources.CommandStatusWriter_WriteLine_Error_,
+                            ModelResources.ThermoMassListExporter_EnsureLibraries_Failed_to_find_a_valid_Thermo_instrument_installation_));
+                        _out.WriteLine(thermoSoftwareInfo.FailureReason);
+                        return false;
+                    }
+                    // If not generally exporting a Thermo method, and the instrument type
+                    // specified does not match the installed type, then error.
+                    else if (Equals(args.MethodInstrumentType, ExportInstrumentType.THERMO))
+                    {
+                        var instrumentType = ExportInstrumentType.ThermoTypeFromInstallationType(thermoSoftwareInfo.InstrumentType);
+                        if (instrumentType == null)
+                        {
+                            _out.WriteLine(TextUtil.SpaceSeparate(Resources.CommandStatusWriter_WriteLine_Error_, 
+                                string.Format(ModelResources.ThermoMassListExporter_EnsureLibraries_Unknown_Thermo_instrument_type___0___installed_, thermoSoftwareInfo.InstrumentType)));
+                            return false;
+                        }
+
+                        args.MethodInstrumentType = instrumentType;
+                    }
+                    else if (!Equals(thermoSoftwareInfo.InstrumentType, thermoInstallationType))
+                    {
+                        _out.WriteLine(ModelResources.CommandLine_ExportInstrumentFile_Error__The_specified_instrument_type___0___does_not_match_the_installed_software___1___,
+                            args.MethodInstrumentType, thermoSoftwareInfo.InstrumentType);
+                        _out.WriteLine(ModelResources.CommandLine_ExportInstrumentFile_Use_the_instrument_type__Thermo__to_export_a_method_with_the_installed_software_);
+                        return false;
+                    }
+                }
                 if (string.IsNullOrEmpty(args.TemplateFile))
                 {
                     _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__A_template_file_is_required_to_export_a_method_);
@@ -4508,7 +4560,7 @@ namespace pwiz.Skyline
                 {
                     return false;
                 }
-                var zipFilePath = FileEx.GetTimeStampedFileName(documentPath);
+                var zipFilePath = FileTimeEx.GetTimeStampedFileName(documentPath);
                 var published = false;
                 if (ShareDocument(document, documentPath, zipFilePath, selectedShareType, _statusWriter, commandArgs))
                 {
@@ -4563,6 +4615,29 @@ namespace pwiz.Skyline
                 return false;
             }
         }
+
+        /*public Func<HttpClient> UserLogin(RemoteAccount account)
+        {
+            if (InvokeRequired)
+            {
+                Func<HttpClient> client = null;
+                Program.Invoke(() => client = UserLogin(account));
+                return client;
+            }
+
+            switch (account)
+            {
+                case ArdiaAccount ardia:
+                {
+                    using var loginDlg = new ArdiaLoginDlg(ardia, true);
+                    if (DialogResult.Cancel == loginDlg.ShowParentlessDialog())
+                        throw new OperationCanceledException();
+                    return loginDlg.AuthenticatedHttpClientFactory;
+                }
+                default:
+                    throw new NotImplementedException();
+            }
+        }*/
     }
 
     public class CommandStatusWriter : TextWriter
@@ -5055,6 +5130,7 @@ namespace pwiz.Skyline
         {
             // Show progress at least every 2 seconds and at 100%, if any other percentage
             // output has been shown.
+            // ReSharper disable once InconsistentlySynchronizedField
             return (currentTime - _lastOutput).TotalSeconds < SecondsBetweenStatusUpdates && !status.IsError &&
                    (status.PercentComplete != 100 || _lastOutput == _waitStart);
         }

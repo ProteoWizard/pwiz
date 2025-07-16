@@ -35,9 +35,7 @@
             // calibrationGraphControl1
             // 
             resources.ApplyResources(this.calibrationGraphControl1, "calibrationGraphControl1");
-            this.calibrationGraphControl1.ModeUIAwareFormHelper = null;
             this.calibrationGraphControl1.Name = "calibrationGraphControl1";
-            this.calibrationGraphControl1.Options = null;
             this.calibrationGraphControl1.PointClicked += new System.Action<pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.CalibrationPoint>(this.calibrationGraphControl1_PointClicked);
             // 
             // CalibrationForm

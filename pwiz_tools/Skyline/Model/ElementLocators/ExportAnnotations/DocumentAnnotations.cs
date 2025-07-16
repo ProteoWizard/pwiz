@@ -45,6 +45,8 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
         public const string PROPERTY_PREFIX = "property_";
 
         private IDictionary<string, ElementHandler> _elementHandlers;
+        private HashSet<ElementRef> _notFoundRefs = new HashSet<ElementRef>();
+        
         // ReSharper restore LocalizableElement
         public DocumentAnnotations(SkylineDataSchema skylineDataSchema)
         {
@@ -105,28 +107,27 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
             return value.ToString();
         }
 
-        public ModifiedDocument ReadAnnotationsFromFile(CancellationToken cancellationToken, string filename)
+        public ModifiedDocument ReadAnnotationsFromStream(CancellationToken cancellationToken, string filename,
+            Stream stream)
         {
-            using (var streamReader = new StreamReader(filename))
+            var streamReader = new StreamReader(stream);
+            var originalDocument = Document;
+            var modifiedDocument =
+                new ModifiedDocument(ReadAnnotationsFromTextReader(cancellationToken, streamReader));
+            if (ReferenceEquals(originalDocument, modifiedDocument.Document))
             {
-                var originalDocument = Document;
-                var modifiedDocument =
-                    new ModifiedDocument(ReadAnnotationsFromTextReader(cancellationToken, streamReader));
-                if (ReferenceEquals(originalDocument, modifiedDocument.Document))
-                {
-                    return null;
-                }
-
-                return modifiedDocument.ChangeAuditLogEntry(AuditLogEntry.CreateSingleMessageEntry(
-                    new MessageInfo(MessageType.imported_annotations, modifiedDocument.Document.DocumentType,
-                        filename)));
+                return null;
             }
+
+            return modifiedDocument.ChangeAuditLogEntry(AuditLogEntry.CreateSingleMessageEntry(
+                new MessageInfo(MessageType.imported_annotations, modifiedDocument.Document.DocumentType,
+                    filename)));
         }
 
         public SrmDocument ReadAnnotationsFromTextReader(CancellationToken cancellationToken, TextReader textReader)
         {
             DataSchema.BeginBatchModifyDocument();
-            var dsvReader = new DsvFileReader(textReader, TextUtil.SEPARATOR_CSV);
+            using var dsvReader = new DsvFileReader(textReader, TextUtil.SEPARATOR_CSV);
             ReadAllAnnotations(cancellationToken, dsvReader);
             DataSchema.CommitBatchModifyDocument(string.Empty, null);
             return DataSchema.Document;
@@ -155,7 +156,8 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
                 SkylineObject element = handler.FindElement(elementRef);
                 if (element == null)
                 {
-                    throw ElementNotFoundException(elementRef);
+                    _notFoundRefs.Add(elementRef);
+                    continue;
                 }
                 for (int icol = 0; icol < fieldNames.Count; icol++)
                 {
@@ -203,11 +205,6 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
                     }
                 }
             }
-        }
-
-        private static Exception ElementNotFoundException(ElementRef elementRef)
-        {
-            return new InvalidDataException(string.Format(ExportAnnotationsResources.DocumentAnnotations_ElementNotFoundException_Could_not_find_element___0___, elementRef));
         }
 
         private static Exception ElementNotSupportedException(ElementRef elementRef)
@@ -310,6 +307,22 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
                 }
             }
             skylineObject.SetAnnotation(annotationDef, value);
+        }
+
+        public string GetWarningMessage()
+        {
+            if (_notFoundRefs.Count == 0)
+            {
+                return null;
+            }
+
+            var message = _notFoundRefs.Count == 1
+                ? ElementLocatorsResources.DocumentAnnotations_GetWarningMessage_The_following_element_could_not_be_found_
+                : string.Format(ElementLocatorsResources.DocumentAnnotations_GetWarningMessage_The_following__0__elements_could_not_be_found_, _notFoundRefs.Count);
+
+            return TextUtil.LineSeparate(
+                _notFoundRefs.Select(locator => locator.ToString()).OrderBy(s => s)
+                    .Prepend(message));
         }
     }
 }

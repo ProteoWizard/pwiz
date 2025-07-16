@@ -88,7 +88,7 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Search.
+        ///   Looks up a localized string similar to Match.
         /// </summary>
         internal static string Category_MatchInfo {
             get {
@@ -192,6 +192,24 @@ namespace pwiz.Skyline.Model {
         internal static string Description_Ion_Mobility {
             get {
                 return ResourceManager.GetString("Description_Ion Mobility", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Dot product (actually it is a normalized square root contrast angle, see here for an example: https://doi.org/10.1007/s13361-016-1408-y) between the annotated peaks in the library and Koina spectra. User controls which ion types are annotated, and hence included into the calculation. .
+        /// </summary>
+        internal static string Description_KoinaDotpMatch {
+            get {
+                return ResourceManager.GetString("Description_KoinaDotpMatch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Dot product (actually it is a normalized square root contrast angle) between all peaks in the Koina spectrum and those peaks in the library spectrum that match them..
+        /// </summary>
+        internal static string Description_KoinaDotpMatchFull {
+            get {
+                return ResourceManager.GetString("Description_KoinaDotpMatchFull", resourceCulture);
             }
         }
         
@@ -336,6 +354,24 @@ namespace pwiz.Skyline.Model {
         internal static string IonMobility {
             get {
                 return ResourceManager.GetString("IonMobility", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Koina dot product.
+        /// </summary>
+        internal static string KoinaDotpMatch {
+            get {
+                return ResourceManager.GetString("KoinaDotpMatch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Full Koina dot product.
+        /// </summary>
+        internal static string KoinaDotpMatchFull {
+            get {
+                return ResourceManager.GetString("KoinaDotpMatchFull", resourceCulture);
             }
         }
         

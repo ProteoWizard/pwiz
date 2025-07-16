@@ -277,6 +277,7 @@ feature.feature embed-manifest-via : mt linker : incidental propagated ;
 
 type.register PDB : pdb ;
 type.register CSPROJ : csproj ;
+type.register CONFIG : config ;
 
 
 ################################################################################
@@ -1177,6 +1178,11 @@ rule link.clr.dll ( targets + : sources * : properties * )
     actions manifest.user bind EMBED_MANIFEST_FILE
     {
         $(.SETUP) $(.MT) -manifest "$(EMBED_MANIFEST_FILE)" "-outputresource:$(<[1]);1"
+    }
+
+    actions generate-binding-redirects
+    {
+        BindingRedirectGenerator.exe $(<) $(>)
     }
 
 
@@ -2101,6 +2107,42 @@ class msvc-linking-generator : linking-generator
                     $(action).replace-targets $(target) : $(registered-target) ;
                 }
                 result += $(registered-target) ;
+            }
+
+            local assemblies = [ $(property-set).get <assembly> ] ;
+            if $(assemblies)
+            {
+                if $(name-main:S) = ".exe"
+                {
+                    local exe-config = $(name-main:S=.exe.config) ;
+                    if ! [ path.is-rooted $(exe-config) ]
+                    {
+                        local exe-path = [ path.join [ $(result[1]).path ] $(name-main:G=) ] ;
+                        exe-config = $(exe-path).config ;
+                    }
+                    
+                    # Test whether binding redirects are needed
+                    local args = "" ;
+                    for local assembly in $(assemblies)
+                    {
+                        local assembly-path = [ $(assembly).name ] ;
+                        args += [ path.native $(assembly-path) ] ;
+                    }
+
+                    test-redirects = [ SHELL "BindingRedirectGenerator.exe --test $(args:J= )" : exit-status ] ;
+
+                    if $(test-redirects[2]) > 0
+                    {
+                        local config-action = [ class.new action $(assemblies) : msvc.generate-binding-redirects : $(property-set) ] ;
+                        local target = [ class.new file-target $(exe-config) exact : CONFIG : $(project) : $(config-action) ] ;
+                        local registered-target = [ virtual-target.register $(target) ] ;
+                        if $(target) != $(registered-target)
+                        {
+                            $(action).replace-targets $(target) : $(registered-target) ;
+                        }
+                        result += $(registered-target) ;
+                    }
+                }
             }
         }
         return $(result) ;

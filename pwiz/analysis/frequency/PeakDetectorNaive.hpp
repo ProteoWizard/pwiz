@@ -47,7 +47,7 @@ class PWIZ_API_DECL PeakDetectorNaive : public PeakDetector
 {
     public:
     /// create an instance.
-    static std::auto_ptr<PeakDetectorNaive> create(double noiseFactor = 5, 
+    static std::unique_ptr<PeakDetectorNaive> create(double noiseFactor = 5, 
                                                    unsigned int detectionRadius = 2);
 
     virtual double noiseFactor() const = 0;

@@ -37,7 +37,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     [TestClass]
     public class PerfImportBrukerPrmPasefTest : AbstractFunctionalTestEx
     {
-        private bool IsRecordMode { get { return false; } }
+        protected override bool IsRecordMode => false;
 
         [TestMethod]
         public void BrukerPrmPasefImportTest()

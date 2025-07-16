@@ -149,6 +149,10 @@
       <Project>{32CC9B1A-9442-4B56-AF34-FB47595278A1}</Project>
       <Name>BiblioSpec</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Shared\CommonMsData\CommonMsData.csproj">
+      <Project>{86f8e7f5-a3ed-4519-9ad9-bf9abd6dd69f}</Project>
+      <Name>CommonMsData</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Shared\Common\Common.csproj">
       <Project>{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}</Project>
       <Name>Common</Name>
@@ -212,22 +216,15 @@
     <None Include="AbsoluteQuantViews.zip" />
     <None Include="AuditLogViews.zip" />
     <None Include="CEOptimizationViews.zip" />
-    <None Include="CustomReportsViews.zip" />
     <None Include="DiaViews.zip" />
-    <None Include="ExistingExperimentsViews.zip" />
-    <None Include="GroupedStudies1Views.zip" />
     <None Include="IrtViews.zip" />
     <None Include="LibraryExplorerViews.zip" />
     <None Include="MethodEditCSVs.zip" />
-    <None Include="MethodEditViews.zip" />
-    <None Include="MethodRefinementViews.zip" />
-    <None Include="Ms1FullScanFilteringViews.zip" />
     <None Include="PeakPickingViews.zip" />
     <None Include="SmallMolMethodDevCEOptViews.zip" />
     <None Include="SmallMoleculesQuantificationViews.zip" />
     <None Include="SmallMoleculeViews.zip" />
     <None Include="SRMViews.zip" />
-    <None Include="TargetedMSMSViews.zip" />
     <None Include="GroupedStudiesViews.zip" />
   </ItemGroup>
   <ItemGroup>

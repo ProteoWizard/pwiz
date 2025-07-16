@@ -41,7 +41,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     [TestClass]
     public class PerfImportBrukerDiaPasefTest : AbstractFunctionalTestEx
     {
-        private bool IsRecordMode { get { return false; } }
+        protected override bool IsRecordMode => false;
 
         [TestMethod, NoParallelTesting(TestExclusionReason.VENDOR_FILE_LOCKING)] // No parallel testing as Bruker reader locks the files it reads
         public void BrukerDiaPasefImportTest()

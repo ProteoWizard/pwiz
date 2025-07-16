@@ -32,6 +32,8 @@ namespace pwiz.Skyline.Model
         [Category("SpectrumInfo")] public string MirrorPeakCount { get; set; }
         [Category("SpectrumInfo")] public string TotalIC { get; set; }
         [Category("SpectrumInfo")] public string MirrorTotalIC { get; set; }
+        [Category("MatchInfo")] public string KoinaDotpMatch { get; set; }
+        [Category("MatchInfo")] public string KoinaDotpMatchFull { get; set; }
 
         public void SetFileName(string fileName)
         {

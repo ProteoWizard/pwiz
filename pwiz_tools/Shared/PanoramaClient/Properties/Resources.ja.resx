@@ -135,7 +135,6 @@
   </data>
   <data name="UserState_GetErrorMessage_The_username_and_password_could_not_be_authenticated_with_the_panorama_server_" xml:space="preserve">
     <value>Panoramaサーバーでユーザー名とパスワードが認証できませんでした。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="PanoramaUtil_EnsureLogin_Could_not_authenticate_user__Response_received_from_server___0___1_" xml:space="preserve">
     <value>ユーザーを認証できませんでした。サーバーから受信した応答：{0} {1}</value>
@@ -148,11 +147,9 @@
   </data>
   <data name="ServerState_GetErrorMessage_The_server__0__does_not_exist_" xml:space="preserve">
     <value>サーバー{0}が存在していません。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="WebPanoramaClient_SaveFile_Select_the_folder_where_the_file_will_be_downloaded" xml:space="preserve">
     <value>ファイルのダウンロード先フォルダを選択</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="Icojam-Blueberry-Basic-Arrow-right" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Icojam-Blueberry-Basic-Arrow-right.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -192,159 +189,131 @@
   </data>
   <data name="PanoramaFilePicker_Open_Click_You_must_select_a_file_first_" xml:space="preserve">
     <value>最初にファイルを選択してください。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="PanoramaFolderBrowser_InitializeServers_Go_to_Tools___Options___Panorama_tab_to_update_the_username_and_password" xml:space="preserve">
     <value>[ツール] - [オプション] - [Panorama] タブへ移動し、ユーザー名とパスワードを更新してください</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="PanoramaFolderBrowser_InitializeServers_Failed_attempting_to_retrieve_information_from_the_following_servers" xml:space="preserve">
     <value>以下のサーバーからの情報の取得に失敗しました</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="PanoramaDirectoryPicker_DirectoryPicker_Load_Open" xml:space="preserve">
     <value>開</value>
   </data>
   <data name="WebDavBrowser_AddWebDavFolders_Failed_attempting_to_retrieve_information_from_the_following_folders_" xml:space="preserve">
     <value>以下のフォルダからの情報の取得に失敗しました</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="PanoramaFilePicker_ShowFiles_There_are_no_files_in_this_folder" xml:space="preserve">
     <value>このフォルダにファイルはありません</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="PanoramaFilePicker_ShowFiles_There_are_no_Skyline_files_in_this_folder" xml:space="preserve">
     <value>このフォルダにSkylineファイルはありません</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="PanoramaFilePicker_ALL_VER_All" xml:space="preserve">
     <value>すべて</value>
   </data>
   <data name="PanoramaFilePicker_RECENT_VER_Most_recent" xml:space="preserve">
     <value>最近</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="LabKeyError_ToString_Response_status___0_" xml:space="preserve">
     <value>応答ステータス：{0}</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="AbstractPanoramaClient_SendZipFile_Deleting_temporary_file_on_server" xml:space="preserve">
     <value>サーバーの一時ファイルの削除中</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="AbstractPanoramaClient_SendZipFile_Waiting_for_data_import_completion___" xml:space="preserve">
     <value>データインポートの完了待ち...</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="AbstractPanoramaClient_ValidateFolder_Error_validating_folder___0__" xml:space="preserve">
     <value>フォルダ「{0}」検証中のエラー</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="AbstractPanoramaClient_GetInfoForFolders_Error_getting_information_for_folder___0__" xml:space="preserve">
     <value>フォルダ「{0}」情報取得中のエラー</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="AbstractPanoramaClient_GetWebDavPath_There_was_an_error_getting_the_WebDAV_url_for_folder___0__" xml:space="preserve">
     <value>フォルダ「{0}」のWebDAV url取得中にエラーが発生しました。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="AbstractPanoramaClient_updateProgressAndWait_Importing_data___0___complete_" xml:space="preserve">
     <value>データをインポート中。{0}%完了。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="AbstractPanoramaClient_updateProgressAndWait_Status_on_server_is___0_" xml:space="preserve">
     <value>サーバーのステータス：{0}</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="AbstractPanoramaClient_webClient_UploadProgressChanged_Progress_Updated" xml:space="preserve">
     <value>進捗状況を更新しました</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="AbstractPanoramaClient_webClient_UploadProgressChanged_Uploaded__0_fs__of__1_fs_" xml:space="preserve">
     <value>{1:fs}中{0:fs}がアップロード済み</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="WebPanoramaClient_EnsureLogin_Server_did_not_return_a_valid_JSON_response___0__is_not_a_Panorama_server_" xml:space="preserve">
     <value>サーバーは有効なJSON応答を返しませんでした。{0}はPanoramaサーバーではありません。</value>
   </data>
   <data name="AbstractPanoramaClient_WaitForDocumentImportCompleted_There_was_an_error_getting_the_status_of_the_document_import_pipeline_job_" xml:space="preserve">
     <value>ドキュメントのインポートパイプラインジョブのステータス取得中にエラーが発生しました。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="AbstractPanoramaClient_QueueDocUploadPipelineJob_There_was_an_error_adding_the_document_import_job_on_the_server_" xml:space="preserve">
     <value>サーバーでドキュメントのインポートジョブ追加中にエラーが発生しました。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="AbstractPanoramaClient_UploadTempZipFile_There_was_an_error_uploading_the_file_" xml:space="preserve">
     <value>ファイルのアップロード中にエラーが発生しました。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="AbstractPanoramaClient_RenameTempZipFile_There_was_an_error_renaming_the_temporary_zip_file_on_the_server_" xml:space="preserve">
     <value>サーバーで一時zipファイルの名称変更中にエラーが発生しました。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="AbstractPanoramaClient_DeleteTempZipFile_There_was_an_error_deleting_the_temporary_zip_file_on_the_server_" xml:space="preserve">
     <value>サーバーで一時zipファイルの削除エラーが発生しました。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ServerStateErrors_Error_The_server__0__is_not_a_Panorama_server_" xml:space="preserve">
     <value>サーバー{0}はPanoramaサーバーではありません。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ErrorMessageBuilder_Build_Response__" xml:space="preserve">
     <value>応答： </value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="AbstractRequestHelper_DoRequest__0__request_was_unsuccessful_" xml:space="preserve">
     <value>{0}のリクエストが失敗しました。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="AbstractPanoramaClient_GetWebDavPath_Missing_webDavURL_in_response_" xml:space="preserve">
     <value>応答にwebDavURLが不足しています。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="AbstractPanoramaClient_ConfirmFileOnServer_File_was_not_uploaded_to_the_server__Please_try_again__or_if_the_problem_persists__please_contact_your_Panorama_server_administrator_" xml:space="preserve">
     <value>ファイルがサーバーにアップロードされませんでした。もう一度試すか、あるいは問題が続くようであればPanoramaサーバー管理者に問い合わせてください。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="AbstractRequestHelper_ParseJsonResponse_Error_parsing_response_as_JSON_" xml:space="preserve">
     <value>応答をJSONとして解析できませんでした。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="PanoramaRequestHelper_Post_There_was_an_error_getting_a_CSRF_token_from_the_server_" xml:space="preserve">
     <value>サーバーからのCSRFトークン取得中にエラーが発生しました。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ErrorMessageBuilder_Build_Error__" xml:space="preserve">
     <value>エラー： </value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ErrorMessageBuilder_Build_Response_status___0_" xml:space="preserve">
     <value>応答ステータス：{0}</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="FolderStateErrors_Error_Unrecognized_error_trying_to_get_the_status_for_folder__0__" xml:space="preserve">
     <value>フォルダ{0}のステータスを取得中に認識できないエラーが発生しました。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="PanoramaUtil_LabKeyAllowedFileName_File_name_may_not_contain_any_of_these_characters___0_" xml:space="preserve">
     <value>ファイル名に次の文字を使用することはできません：{0}</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="PanoramaUtil_LabKeyAllowedFileName_File_name_may_not_begin_with_any_of_these_characters___0_" xml:space="preserve">
     <value>ファイル名を次の文字で始めることはできません：{0}</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="PanoramaUtil_LabKeyAllowedFileName_File_name_may_not_contain_space_followed_by_dash" xml:space="preserve">
     <value>ファイル名では、スペースの後にダッシュを使用することはできません。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="AbstractPanoramaClient_ParseUploadFileCompletedEventArgs_Request_cancelled" xml:space="preserve">
     <value>リクエストがキャンセルされました</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="AbstractPanoramaClient_ParseUploadFileCompletedEventArgs_There_was_an_error_reading_the_server_response_" xml:space="preserve">
     <value>サーバー応答の読み取り中にエラーが発生しました。</value>
-    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="AbstractPanoramaClient_CreateTargetedMsFolder_Error_creating_Panorama_folder__0__" xml:space="preserve">
+    <value>Panoramaフォルダ{0}作成中にエラーが発生しました。</value>
+  </data>
+  <data name="AbstractPanoramaClient_DeleteFolderIfExists_Error_deleting_Panorama_folder__0__" xml:space="preserve">
+    <value>Panoramaフォルダ{0}削除中にエラーが発生しました。</value>
+  </data>
+  <data name="AbstractPanoramaClient_CreateTargetedMsFolder_Folder_already_exists___0__" xml:space="preserve">
+    <value>フォルダは既に存在します: {0}.</value>
   </data>
 </root>

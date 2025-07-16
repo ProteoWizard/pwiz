@@ -52,6 +52,20 @@ namespace pwiz.Common.SystemUtil
         private string _tmpDirForCleanup;
 
         /// <summary>
+        /// When greater than zero, this value is used to track progress percent complete.
+        /// </summary>
+        public int ExpectedOutputLinesCount { get; set; }
+        /// <summary>
+        /// This value tracks the total number of lines output on last call to Run, and is used to help track significant deviation from ExpectedOutputLinesCount.
+        /// </summary>
+        public int OutputLinesGenerated { get; private set; }
+
+        /// <summary>
+        /// When set to true this value prevents progress status message updates based on process output.
+        /// </summary>
+        public bool SilenceStatusMessageUpdates { get; set; }
+
+        /// <summary>
         /// Used in R package installation. We print progress % for processRunner progress
         /// but we dont want that output to be shown to the user when we display the output
         /// of the installation script to the immediate window. 
@@ -67,7 +81,7 @@ namespace pwiz.Common.SystemUtil
         public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status,
             ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal, bool forceTempfilesCleanup = false)
         {
-            Run(psi, stdin, progress,ref status, null, priorityClass, forceTempfilesCleanup);
+            Run(psi, stdin, progress, ref status, null, priorityClass, forceTempfilesCleanup);
         }
 
         public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status, TextWriter writer,
@@ -118,7 +132,7 @@ namespace pwiz.Common.SystemUtil
             {
                 try
                 {
-                    proc.StandardInput.Write(stdin);
+                    proc.StandardInput.WriteLine(stdin);
                 }
                 finally
                 {
@@ -151,10 +165,14 @@ namespace pwiz.Common.SystemUtil
                 StringBuilder sbError = new StringBuilder();
                 int percentLast = 0;
                 string line;
+                OutputLinesGenerated = 0;
                 while ((line = reader.ReadLine(progress)) != null)
                 {
                     if (writer != null && (HideLinePrefix == null || !line.StartsWith(HideLinePrefix)))
+                    {
                         writer.WriteLine(line);
+                        OutputLinesGenerated++;
+                    }
 
                     string lineLower = line.ToLowerInvariant();
                     if (progress == null || lineLower.StartsWith(@"error") || lineLower.StartsWith(@"warning"))
@@ -198,8 +216,18 @@ namespace pwiz.Common.SystemUtil
                             if (StatusPrefix != null)
                                 line = line.Substring(StatusPrefix.Length);
 
-                            status = status.ChangeMessage(line);
-                            progress.UpdateProgress(status);
+                            var statusOld = status;
+                            if (!SilenceStatusMessageUpdates)
+                                status = status.ChangeMessage(line);
+
+                            if (updateProgressPercentage && ExpectedOutputLinesCount > 0)
+                            {
+                                percentLast = Math.Min(99, OutputLinesGenerated * 100 / ExpectedOutputLinesCount);
+                                if (percentLast != status.PercentComplete)
+                                    status = status.ChangePercentComplete(percentLast);
+                            }
+                            if (!ReferenceEquals(status, statusOld))
+                                progress.UpdateProgress(status);
                         }
                     }
                 }
@@ -221,10 +249,10 @@ namespace pwiz.Common.SystemUtil
                         ? Path.Combine(Environment.CurrentDirectory, psi.FileName)
                         : psi.FileName;
                     // ReSharper disable LocalizableElement
-                    sbError.AppendFormat("\r\nCommand-line: {0} {1}\r\nWorking directory: {2}{3}", processPath,
+                    sbError.AppendFormat("\r\nCommand-line: {0} {1}\r\nWorking directory: {2}{3}\r\nExit code: {4}", processPath,
                         // ReSharper restore LocalizableElement
                         string.Join(" ", proc.StartInfo.Arguments), psi.WorkingDirectory,
-                        stdin != null ? "\r\nStandard input:\r\n" + stdin : "");
+                        stdin != null ? "\r\nStandard input:\r\n" + stdin : "", exit);
                     throw new IOException(sbError.ToString());
                 }
 

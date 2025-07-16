@@ -42,6 +42,12 @@ namespace pwiz.SkylineTest
         private string TWO_PENTANE_MASS_OFFSET = @"[222.22/222.222]"; // Not a meaningful value, just for testing
         private readonly double massTaxol = 853.3309;
 
+        private void TestAdductCharge(string adductText, int expectedCharge, HashSet<string> coverage)
+        {
+            var adduct = Adduct.FromStringAssumeProtonated(adductText);
+            coverage.Add(adduct.AsFormula());
+        }
+
         private void TestPentaneAdduct(string adductText, string expectedFormula, int expectedCharge, HashSet<string> coverage)
         {
             var adduct = Adduct.FromStringAssumeProtonated(adductText);
@@ -487,6 +493,112 @@ namespace pwiz.SkylineTest
             TestPentaneAdduct("[M-3H-3]", "C5H9", -3, coverage); // We're trusting the user to declare charge
             TestPentaneAdduct("[M+S-2]", "C5H12S", -2, coverage); // We're trusting the user to declare charge
             TestPentaneAdduct("[M+S]2-", "C5H12S", -2, coverage); // We're trusting the user to declare charge
+
+            // Adducts from the Maclean lab CCS compendium
+            TestPentaneAdduct("[M+CF3COO]", "C7H12F3O2", -1, coverage);
+            TestPentaneAdduct("[M-2H+Na]", "C5H10Na", -1, coverage);
+            TestPentaneAdduct("[M+CH3COO]", "C7H15O2", -1, coverage);
+            TestPentaneAdduct("[M+Cl]", "C5H12Cl", -1, coverage);
+            TestPentaneAdduct("[M+HCOO]", "C6H13O2", -1, coverage);
+            TestTaxolAdduct("[M-H-CO2]", 808.33384, -1, coverage);
+            TestPentaneAdduct("[2M-H]", "C10H23", -1, coverage);
+            TestPentaneAdduct("[M-H+H2O]", "C5H13O", -1, coverage);
+            TestPentaneAdduct("[2M+Na]", "C10H24Na", 1, coverage);
+            TestAdductCharge("[M-Br+O]", -1, coverage);
+            TestAdductCharge("[M-Cl+O]", -1, coverage);
+            TestAdductCharge("[M-H2O-H]", -1, coverage);
+            TestAdductCharge("[M-H-CO2]", -1, coverage);
+            TestAdductCharge("[M-H-H2O]", -1, coverage);
+            TestAdductCharge("[2M+H-2H2O]", 1, coverage);
+            TestAdductCharge("[2M+H-3H2O]", 1, coverage);
+            TestAdductCharge("[2M+H-H2O]", 1, coverage);
+            TestPentaneAdduct("[2M+K]", "C10H24K", 1, coverage);
+            TestAdductCharge("[M+2H-2H2O]", 2, coverage);
+            TestPentaneAdduct("[M+H+K]", "C5H13K", 2, coverage);
+            TestPentaneAdduct("[M+2Na-H]", "C5H11Na2", 1, coverage);
+            TestPentaneAdduct("[M+H+Na]", "C5H13Na", 2, coverage);
+            TestAdductCharge("[M+H-H2O]", 1, coverage);
+            TestPentaneAdduct("[M+H+H2O]", "C5H15O", 1, coverage);
+            TestAdductCharge("[M+H-2H2O]", 1, coverage);
+            TestAdductCharge("[M+H-H2O-NH3]", 1, coverage);
+            TestPentaneAdduct("[M-H+2Na]", "C5H11Na2", 1, coverage);
+            TestAdductCharge("[M+Na-2H2O]", 1, coverage);
+            TestAdductCharge("[M+Na-H2O]", 1, coverage);
+            TestPentaneAdduct("[M+NH4]", "C5H16N", 1, coverage);
+            TestPentaneAdduct("[M+2Na]", "C5H12Na2", 2, coverage);
+            TestAdductCharge("[M+2H-H2O]", 2, coverage);
+            TestPentaneAdduct("[M+Cu]", "C5H12Cu", 2, coverage);
+            TestPentaneAdduct("[M+Na+K]", "C5H12NaK", 2, coverage);
+            TestPentaneAdduct("[M+2H+K]", "C5H14K", 3, coverage);
+
+            // Metal adducts are useful in PFAS research
+            TestAdductCharge("[M+Cu]", 2, coverage);
+            TestAdductCharge("[M+Mg]", 2, coverage);
+            TestAdductCharge("[M+Ca]", 2, coverage);
+            TestAdductCharge("[M+Zn]", 2, coverage);
+            TestAdductCharge("[M+Ag]", 1, coverage);
+
+            // From Baker Lab Multidimensional RPLC-IMS-MS PFAS Database
+            foreach (var kvp in new[] {
+                         ("[M4C13+H]",1), 
+                         ("[M4C13+NH4]",1),
+                         ("[M4C13+H]",1),
+                         ("[M+H]",1),
+                         ("[M+NH4]",1),
+                         ("[M+Na]",1),
+                         ("[M+K]",1),
+                         ("[M4C13+Na]",1),
+                         ("[M2C13-H]",-1),
+                         ("[M4C13-H]",-1),
+                         ("[M-H]",-1),
+                         ("[M-2H+Na]",-1),
+                         ("[M+CH3O]",-1),
+                         ("[M+Cl]",-1),
+                         ("[M-C2H4-OH]",-1),
+                         ("[M-H] ",-1),
+                         ("[M-CH2-COOH]",-1),
+                         ("[M8C13-H]",-1),
+                         ("[M3C13-H]",-1),
+                         ("[M1C13-H-CO2]",-1),
+                         ("[M6C13-H-CO2]",-1),
+                         ("[M7C13-H]",-1),
+                         ("[M6C13-H]",-1),
+                         ("[M5C13-H-CO2]",-1),
+                         ("[M9C13-H]",-1),
+                         ("[M8C13-H-CO2]",-1),
+                         ("[M7C13-H-CO2]",-1),
+                         ("[M4C13-H-CO2]",-1),
+                         ("[M3C13-H-CO2]",-1),
+                         ("[M2C13-H-CO2]",-1),
+                         ("[M-H-CO2]",-1),
+                         ("[M-2H+K]",-1),
+                         ("[M-3H+2Na]",-1),
+                         ("[M-3H+Na+K]",-1),
+                         ("[M-4H+3Na]",-1),
+                         ("[M-4H+2Na+K]",-1),
+                         ("[M-4H+Na+2K]",-1),
+                         ("[M-5H+4Na]",-1),
+                         ("[M-5H+3Na+K]",-1),
+                         ("[M-COOH-HF]",-1),
+                         ("[M+CH3O]", -1),
+                         ("[M-CH2-COOH]", -1),
+                         ("[M1C13-H-CO2]", -1),
+                         ("[M4C13-H]", -1),
+                         ("[M-H-CO2]", -1),
+                         ("[M-2H+Na]", -1),
+                         ("[M-2H+K]", -1),
+                         ("[M-3H+2Na]", -1),
+                         ("[M-3H+Na+K]", -1),
+                         ("[M-4H+3Na]", -1),
+                         ("[M-4H+2Na+K]", -1),
+                         ("[M-4H+Na+2K]", -1),
+                         ("[M-5H+4Na]", -1),
+                         ("[M-5H+3Na+K]", -1),
+                         ("[M-COOH-HF]", -1),
+                         ("[M-C2H4-OH]", -1)})
+            {
+                TestAdductCharge(kvp.Item1, kvp.Item2, coverage);
+            }
 
             // Did we test all the adducts we claim to support?
             foreach (var adducts in AllSupportedAdducts)

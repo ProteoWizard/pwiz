@@ -19,10 +19,10 @@
 using System;
 using System.Drawing;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs;
@@ -238,14 +238,6 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         sealed class ClipboardLockingForm : FormEx
         {
-            [DllImport("user32.dll", EntryPoint = "OpenClipboard", SetLastError = true)]
-            private static extern bool OpenClipboard(IntPtr hWndNewOwner);
-
-            [DllImport("user32.dll", SetLastError = true)]
-            private static extern bool CloseClipboard();
-
-            [DllImport("user32.dll", SetLastError = true)]
-            private static extern bool EmptyClipboard();
             public ClipboardLockingForm()
             {
                 Text = @"System Clipboard Is Locked";
@@ -257,7 +249,7 @@ namespace pwiz.SkylineTestFunctional
                 int retry = 0;
                 while (true)
                 {
-                    if (OpenClipboard(Handle))
+                    if (User32.OpenClipboard(Handle))
                     {
                         break;
                     }
@@ -270,13 +262,13 @@ namespace pwiz.SkylineTestFunctional
                     Console.Out.WriteLine("Failed to open clipboard. Retry #{0}", retry);
                     Thread.Sleep(10);
                 }
-                bool emptyClipboardResult = EmptyClipboard();
+                bool emptyClipboardResult = User32.EmptyClipboard();
                 AssertEx.IsTrue(emptyClipboardResult);
             }
 
             protected override void OnHandleDestroyed(EventArgs e)
             {
-                AssertEx.IsTrue(CloseClipboard());
+                AssertEx.IsTrue(User32.CloseClipboard());
                 base.OnHandleDestroyed(e);
             }
         }

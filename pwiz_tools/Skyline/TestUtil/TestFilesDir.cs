@@ -24,7 +24,6 @@ using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.SkylineTestUtil
@@ -82,11 +81,11 @@ namespace pwiz.SkylineTestUtil
             string zipBaseName = Path.GetFileNameWithoutExtension(relativePathZip);
             if (zipBaseName == null)
                 Assert.Fail("Null zip base name");  // Resharper
-            directoryName = GetExtractDir(directoryName, zipBaseName, false);   // Only persistent files can be extract here
-            FullPath = TestContext.GetTestPath(directoryName);
+            DirectoryName = GetExtractDir(directoryName, zipBaseName, false);   // Only persistent files can be extract here
+            FullPath = TestContext.GetTestPath(DirectoryName);
             if (Directory.Exists(FullPath))
             {
-                Helpers.TryTwice(() => Directory.Delete(FullPath, true));
+                TryHelper.TryTwice(() => Directory.Delete(FullPath, true));
             }
             // where to place persistent (usually large, expensive to extract) files if any
             PersistentFiles = persistentFiles;
@@ -95,15 +94,18 @@ namespace pwiz.SkylineTestUtil
                 PersistentFilesDir = GetExtractDir(Path.GetDirectoryName(relativePathZip), zipBaseName, isExtractHere);
 
             TestContext.ExtractTestFiles(relativePathZip, FullPath, PersistentFiles, PersistentFilesDir);
+        }
 
+        public void RecordMetrics()
+        {
             // record the size of the persistent directory after extracting
-            var targetDir = isExtractHere ? Path.Combine(PersistentFilesDir ?? "", directoryName) : PersistentFilesDir;
+            var targetDir = IsExtractHere ? Path.Combine(PersistentFilesDir ?? string.Empty, DirectoryName) : PersistentFilesDir;
             var persistentDirInfo = string.IsNullOrEmpty(PersistentFilesDir) ? null : new DirectoryInfo(targetDir);
             if (persistentDirInfo != null && Directory.Exists(PersistentFilesDir))
             {
                 var persistentFileInfos = persistentDirInfo.EnumerateFiles("*", SearchOption.AllDirectories).ToList();
                 PersistentFilesDirTotalSize = persistentFileInfos.Sum(f => f.Length);
-                PersistentFilesDirFileSet = persistentFileInfos.Select(f => PathEx.RemovePrefix(f.FullName, Path.GetDirectoryName(PersistentFilesDir) + "\\")).ToHashSet();
+                PersistentFilesDirFileSet = persistentFileInfos.Select(f => PathEx.GetRelativePath(Path.GetDirectoryName(PersistentFilesDir), f.FullName)).ToHashSet();
             }
         }
 
@@ -118,6 +120,7 @@ namespace pwiz.SkylineTestUtil
             return directoryName;
         }
 
+        public string DirectoryName { get; private set; }
         public string FullPath { get; private set; }
 
         public string PersistentFilesDir { get; private set; }
@@ -197,9 +200,7 @@ namespace pwiz.SkylineTestUtil
             ABI,
             Agilent,
             Bruker,
-/* Waiting for CCS<->DT support in .mbi reader
             Mobilion,
-*/
             Shimadzu,
             Thermo,
             UIMF,
@@ -310,7 +311,7 @@ namespace pwiz.SkylineTestUtil
             }
 
             long currentSize = currentFileInfos.Sum(f => f.Length);
-            var currentFiles = currentFileInfos.Select(f => PathEx.RemovePrefix(f.FullName, Path.GetDirectoryName(PersistentFilesDir) + "\\")).ToHashSet();
+            var currentFiles = currentFileInfos.Select(f => PathEx.GetRelativePath(Path.GetDirectoryName(PersistentFilesDir), f.FullName)).ToHashSet();
             var newFiles = new HashSet<string>(currentFiles);
             newFiles.ExceptWith(PersistentFilesDirFileSet);
             var deletedFiles = new HashSet<string>(PersistentFilesDirFileSet);
@@ -373,7 +374,7 @@ namespace pwiz.SkylineTestUtil
                 RemoveReadonlyFlags(path);
                 try
                 {
-                    Helpers.TryTwice(() => Directory.Delete(path, true));
+                    TryHelper.TryTwice(() => Directory.Delete(path, true));
                 }
                 catch (Exception e)
                 {
@@ -390,36 +391,37 @@ namespace pwiz.SkylineTestUtil
 
             try
             {
-                Helpers.TryTwice(() => Directory.Move(path, guidName));
+                TryHelper.TryTwice(() => Directory.Move(path, guidName));
             }
             catch (IOException)
             {
                 // Useful for debugging. Exception names file that is locked.
                 try
                 {
-                    Helpers.TryTwice(() => Directory.Delete(path, true));
+                    TryHelper.TryTwice(() => Directory.Delete(path, true));
+                    return; // If this succeeds then the lock was only temporary and we don't have a GUID folder to move back.
                 }
                 catch (Exception e)
                 {
-                    throw new IOException($@"Directory.Move(""{path}"",""{guidName}"") failed, attempt to delete instead resulted in ""{e.Message}""{GetProcessNamesLockingFile(path, e)}");
+                    throw new IOException($@"Directory.Move(""{path}"", ""{guidName}"") failed, attempt to delete instead resulted in ""{e.Message}""{GetProcessNamesLockingFile(path, e)}");
                 }
             }
 
             // Move the file back to where it was, and fail if this throws
             try
             {
-                Helpers.TryTwice(() => Directory.Move(guidName, path));
+                TryHelper.TryTwice(() => Directory.Move(guidName, path));
             }
             catch (IOException)
             {
                 try
                 {
                     // Useful for debugging. Exception names file that is locked.
-                    Helpers.TryTwice(() => Directory.Delete(guidName, true));
+                    TryHelper.TryTwice(() => Directory.Delete(guidName, true));
                 }
                 catch (Exception e)
                 {
-                    throw new IOException($@"Directory.Move(""{guidName}"",(""{path}"") failed, attempt to delete instead resulted in ""{e.Message}""{GetProcessNamesLockingFile(path, e)}");
+                    throw new IOException($@"Directory.Move(""{guidName}"", ""{path}"") failed, attempt to delete instead resulted in ""{e.Message}""{GetProcessNamesLockingFile(path, e)}");
                 }
             }
         }

@@ -198,7 +198,6 @@
   </data>
   <data name="EncyclopeDiaHelpers_Generate_Waiting_for_chromatogram_library" xml:space="preserve">
     <value>正在等待色谱图库</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="EncyclopeDiaHelpers_GenerateLibrary_Generating_chromatogram_library_0_of_1_2" xml:space="preserve">
     <value>正在生成色谱图库 ({0}/{1}): {2}</value>
@@ -244,6 +243,9 @@
   </data>
   <data name="NistLibraryBase_CreateCache_Could_not_read_the_precursor_m_z_value___0__" xml:space="preserve">
     <value>无法读取母离子质荷比值“{0}”</value>
+  </data>
+  <data name="NistLibraryBase_CreateCache_Could_not_read_the_precursor_CCS_value___0__" xml:space="preserve">
+    <value>无法读取母离子 CCS 值 "{0}"</value>
   </data>
   <data name="NistLibraryBase_CreateCache_Invalid_format_at_peak__0__for__1__" xml:space="preserve">
     <value>针对{1}的峰{0}格式无效。</value>
@@ -293,11 +295,9 @@
   </data>
   <data name="ParallelRunner_Generate_An_EncyclopeDIA_task_failed_" xml:space="preserve">
     <value>EncyclopeDIA 任务失败。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ProgressMonitorForFile_UpdateProgress_Demultiplexing_spectra___0___1_" xml:space="preserve">
     <value>分用谱图：{0}/{1}</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="SmallMoleculeLibraryAttributes_KeyValuePairs_Average_mass" xml:space="preserve">
     <value>平均质量</value>
@@ -340,5 +340,11 @@
   </data>
   <data name="XHunterLibSpec_PEP_RANK_PROCESSED_INTENSITY_Processed_intensity" xml:space="preserve">
     <value>处理的强度</value>
+  </data>
+  <data name="NistLibraryBase_GetMod_Unknown_modification__0__at_line__1_" xml:space="preserve">
+    <value>第 {1} 行有未知的修饰 {0}</value>
+  </data>
+  <data name="NistLibraryBase_CreateCache_Missing_details_for__0__at_line__1___this_entry_will_be_ignored" xml:space="preserve">
+    <value>第 {1} 行的 {0} 缺少详细信息， 该条目将被忽略</value>
   </data>
 </root>

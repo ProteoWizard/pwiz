@@ -745,12 +745,11 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
         public string ImportFromSpectralLibrary(LibrarySpec librarySpec, IList<ValidatingIonMobilityPrecursor> existing)
         {
-            var libraryManager = ((ILibraryBuildNotificationContainer)Program.MainWindow).LibraryManager;
             Library library = null;
             IEnumerable<ValidatingIonMobilityPrecursor> peptideCollisionalCrossSections = null;
             try
             {
-                library = libraryManager.TryGetLibrary(librarySpec);
+                library = Program.MainWindow.LibraryManager.TryGetLibrary(librarySpec);
                 using (var longWait = new LongWaitDlg())
                 {
                     longWait.Text = IonMobilityResources.CollisionalCrossSectionGridViewDriver_AddSpectralLibrary_Adding_Spectral_Library;

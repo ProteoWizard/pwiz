@@ -115,6 +115,7 @@
 #include <cmath>
 #include <ctime>
 #include <bitset>
+#include <random>
 
 //#include <boost/lexical_cast.hpp>
 #include "pwiz/utility/misc/optimized_lexical_cast.hpp"
@@ -144,8 +145,6 @@
 #include <boost/preprocessor/library.hpp>
 #include <boost/array.hpp>
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem/operations.hpp>
-#include <boost/filesystem/convenience.hpp>
 #include <boost/foreach.hpp>
 #include <boost/range.hpp>
 #include <boost/format.hpp>
@@ -153,6 +152,7 @@
 
 
 #include "pwiz/utility/misc/Std.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
 #include "pwiz/data/common/cv.hpp"
 #include "pwiz/data/proteome/Peptide.hpp"

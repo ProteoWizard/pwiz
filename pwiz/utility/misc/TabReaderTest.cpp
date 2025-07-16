@@ -92,7 +92,7 @@ int main(int argc, char** argv)
                 // hack to allow running unit test from a different directory:
                 // Jamfile passes full path to specified input file.
                 // we want the path, so we can ignore filename
-                datapath = bfs::path(argv[i]).branch_path(); 
+                datapath = bfs::path(argv[i]).parent_path(); 
         }   
         if (os_) *os_ << "TabReaderTest\n";
         runTests(datapath);

@@ -501,6 +501,9 @@
   <data name="searchEngineComboBox.Items2" xml:space="preserve">
     <value>MSFragger</value>
   </data>
+  <data name="searchEngineComboBox.Items3" xml:space="preserve">
+    <value>Comet</value>
+  </data>
   <data name="searchEngineComboBox.Location" type="System.Drawing.Point, System.Drawing">
     <value>16, 39</value>
   </data>
@@ -617,7 +620,6 @@
   </data>
   <data name="labelPPM.Text" xml:space="preserve">
     <value>PPM</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;labelPPM.Name" xml:space="preserve">
     <value>labelPPM</value>
@@ -645,7 +647,6 @@
   </metadata>
   <data name="textHardklorMinIntensityPPM.ToolTip" xml:space="preserve">
     <value>試料内で検出されたすべてのフィーチャーの強度の合計に対する強度がこれより低いフィーチャーを無視</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;textHardklorMinIntensityPPM.Name" xml:space="preserve">
     <value>textHardklorMinIntensityPPM</value>
@@ -673,7 +674,6 @@
   </data>
   <data name="labelMinIntensityPPM.Text" xml:space="preserve">
     <value>最小強度比(&amp;I)：</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;labelMinIntensityPPM.Name" xml:space="preserve">
     <value>labelMinIntensityPPM</value>
@@ -725,7 +725,6 @@
   </data>
   <data name="labelHardklorMinIdotP.Text" xml:space="preserve">
     <value>最小同位体ドット積(&amp;D)：</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;labelHardklorMinIdotP.Name" xml:space="preserve">
     <value>labelHardklorMinIdotP</value>
@@ -750,7 +749,6 @@
   </data>
   <data name="textHardklorSignalToNoise.ToolTip" xml:space="preserve">
     <value>Hardklor設定のシグナルノイズ比の閾値を設定します。つまり、スコア算出アルゴリズムで考慮されるためにスペクトルウィンドウでピークが超える必要のある相対的存在量となります。これは、ペプチドが同定されたスペクトル領域のローカルノイズ閾値であることに留意してください。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;textHardklorSignalToNoise.Name" xml:space="preserve">
     <value>textHardklorSignalToNoise</value>
@@ -781,7 +779,6 @@
   </data>
   <data name="lblHardklorSignalToNoise.Text" xml:space="preserve">
     <value>最小信号対ノイズ比(&amp;S)：</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;lblHardklorSignalToNoise.Name" xml:space="preserve">
     <value>lblHardklorSignalToNoise</value>
@@ -806,7 +803,6 @@
   </data>
   <data name="groupBoxHardklor.Text" xml:space="preserve">
     <value>検索パラメータ</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;groupBoxHardklor.Name" xml:space="preserve">
     <value>groupBoxHardklor</value>
@@ -832,7 +828,6 @@
   <data name="textCutoff.ToolTip" xml:space="preserve">
     <value>ライブラリに含める結果のスペクトルに対するカットオフに使用される1.0から0までのスコア（1.0が最も高確率と考えられる）。
 TPP pepXMLでは、この値は最小PeptideProphet確率です。Mascotでは、この値は1 - 最大期待値です。SEQUEST SQTでは、この値は1 - 最大FDRです。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;textCutoff.Name" xml:space="preserve">
     <value>textCutoff</value>
@@ -863,10 +858,6 @@ TPP pepXMLでは、この値は最小PeptideProphet確率です。Mascotでは�
   </data>
   <data name="labelCutoff.Text" xml:space="preserve">
     <value>カットオフスコア(&amp;C)：</value>
-    <comment>Needs Review:English text changed
-Old English:Q value cutoff:
-Current English:&amp;Cut-off score:
-Old Localized:Q値のカットオフ：</comment>
   </data>
   <data name="&gt;&gt;labelCutoff.Name" xml:space="preserve">
     <value>labelCutoff</value>

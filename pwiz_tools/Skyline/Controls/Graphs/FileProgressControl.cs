@@ -22,6 +22,7 @@ using System.Drawing;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 
@@ -29,6 +30,13 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     public partial class FileProgressControl : UserControl
     {
+        public interface IStateProvider
+        {
+            DateTime Time { get; }
+            string PrepareErrorText(string errorText);
+        }
+
+        private readonly IStateProvider _stateProvider;
         private int _number;
         private MsDataFileUri _filePath;
         private bool _selected;
@@ -47,8 +55,9 @@ namespace pwiz.Skyline.Controls.Graphs
         public event EventHandler ShowGraph;
         public event EventHandler ShowLog;
 
-        public FileProgressControl()
+        public FileProgressControl(IStateProvider stateProvider)
         {
+            _stateProvider = stateProvider;
             InitializeComponent();
             labelPercent.Text = string.Empty;
             TabStop = false;
@@ -132,8 +141,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     if (Error == null)
                     {
-                        Error = string.Format(GraphsResources.FileProgressControl_SetStatus_, DateTime.Now.ToShortTimeString(),
-                            ExceptionUtil.GetMessage(status.ErrorException));
+                        Error = string.Format(GraphsResources.FileProgressControl_SetStatus_, _stateProvider.Time.ToShortTimeString(),
+                            _stateProvider.PrepareErrorText(ExceptionUtil.GetMessage(status.ErrorException)));
                         _errorCount++;
                         if (_errorLog.Count == 3)
                         {

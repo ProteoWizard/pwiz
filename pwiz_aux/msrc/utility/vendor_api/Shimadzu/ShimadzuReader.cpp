@@ -119,7 +119,10 @@ public:
             precursorCharge_ = precursorInfo->second;
         }
         else
-            precursorMz_ = (double) spectrum_->AcqModeMz * MASS_MULTIPLIER;
+            precursorMz_ = (double)spectrum_->AcqModeMz * MASS_MULTIPLIER;
+
+        if (((ShimadzuGeneric::Param::MS::MassEventInfo^) eventInfo_) != nullptr)
+            qTransmissionMzWidth_ = (double)eventInfo_->QTransmissionMzWidthNmzManual * PRECURSOR_MZ_MULTIPLIER / 2;
     }
 
     virtual double getScanTime() const { return spectrum_->RetentionTime; }
@@ -132,8 +135,16 @@ public:
     virtual double getMinX() const { return ((ShimadzuGeneric::Param::MS::MassEventInfo^) eventInfo_) == nullptr ? 0 : (double) eventInfo_->StartMz * MASS_MULTIPLIER; }
     virtual double getMaxX() const { return ((ShimadzuGeneric::Param::MS::MassEventInfo^) eventInfo_) == nullptr ? 0 : (double) eventInfo_->EndMz * MASS_MULTIPLIER; }
 
-    virtual bool getHasIsolationInfo() const { return false; }
-    virtual void getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit) const { }
+    virtual bool getHasIsolationInfo() const { return qTransmissionMzWidth_ > 0; }
+    virtual void getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit) const
+    {
+        if (!getHasIsolationInfo())
+            return;
+
+        centerMz = precursorMz_;
+        lowerLimit = qTransmissionMzWidth_;
+        upperLimit = qTransmissionMzWidth_;
+    }
 
     virtual bool getHasPrecursorInfo() const { return precursorMz_ > 0; }
     virtual void getPrecursorInfo(double& selectedMz, double& intensity, int& charge) const
@@ -184,6 +195,7 @@ public:
     gcroot<ShimadzuGeneric::Param::MS::MassEventInfo^> eventInfo_;
     double precursorMz_;
     int precursorCharge_;
+    double qTransmissionMzWidth_;
 };
 
 

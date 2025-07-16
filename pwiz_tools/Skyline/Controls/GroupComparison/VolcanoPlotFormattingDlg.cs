@@ -390,7 +390,52 @@ namespace pwiz.Skyline.Controls.GroupComparison
             return column;
         }
 
-        public BindingList<MatchRgbHexColor> GetCurrentBindingList()
+        public MatchRgbHexColor AddRow(MatchRgbHexColor match = null)
+        {
+            if (IsLastRowEmpty)
+            {
+                // Testing for screenshots needs to be able to activate
+                // the form which puts to focus on the grid and adds an
+                // empty row to the binding list. This was causing tests
+                // to fail when they tried to change the binding list
+                // with a dirty row. Silently removing the row below fixes
+                // the issue.
+                _bindingList.RaiseListChangedEvents = false;
+                try
+                {
+                    regexColorRowGrid1.DataGridView.CancelEdit();
+                    _bindingList.RemoveAt(_bindingList.Count - 1);
+                }
+                finally
+                {
+                    _bindingList.RaiseListChangedEvents = true;
+                }
+            }
+
+            if (match == null)
+                return _bindingList.AddNew();
+
+            _bindingList.Add(match);
+            return match;
+        }
+
+        private bool IsLastRowEmpty => Equals(_bindingList.LastOrDefault(), MatchRgbHexColor.EMPTY);
+
+        public PointSymbol GetRowPointSymbol(int rowIndex)
+        {
+            return _bindingList[rowIndex].PointSymbol;
+        }
+
+        public void SetRowPointSymbol(int rowIndex, PointSymbol pointSymbol)
+        {
+            _bindingList[rowIndex].PointSymbol = pointSymbol;
+        }
+
+        /// <summary>
+        /// Used by the <see cref="ColorGrid{T}"/> but not for general use.
+        /// Extend the testing interface if you need more.
+        /// </summary>
+        BindingList<MatchRgbHexColor> ColorGrid<MatchRgbHexColor>.IColorGridOwner.GetCurrentBindingList()
         {
             return _bindingList;
         }

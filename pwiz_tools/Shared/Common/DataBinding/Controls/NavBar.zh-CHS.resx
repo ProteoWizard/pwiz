@@ -332,6 +332,15 @@
   <metadata name="bindingNavigator1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>122, 17</value>
   </metadata>
+  <data name="freezeColumnsUpToToolStripMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="freezeColumnsUpToToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>187, 22</value>
+  </data>
+  <data name="freezeColumnsUpToToolStripMenuItem.Text" xml:space="preserve">
+    <value>最多冻结列数达</value>
+  </data>
   <data name="btnGroupTotal.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
@@ -561,6 +570,12 @@
   </data>
   <data name="&gt;&gt;btnGroupTotal.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSplitButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;freezeColumnsUpToToolStripMenuItem.Name" xml:space="preserve">
+    <value>freezeColumnsUpToToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;freezeColumnsUpToToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;navBarButtonCluster.Name" xml:space="preserve">
     <value>navBarButtonCluster</value>

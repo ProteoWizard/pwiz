@@ -24,6 +24,7 @@ using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
@@ -95,8 +96,7 @@ namespace pwiz.Skyline.Model.Results
             _listScoreTypes = DetailedPeakFeatureCalculators.FeatureNames;
 
             string basename = MSDataFilePath.GetFileNameWithoutExtension();
-            var fileAlignments = _document.Settings.DocumentRetentionTimes.FileAlignments.Find(basename);
-            FileAlignmentIndices = new RetentionTimeAlignmentIndices(fileAlignments);
+            FileAlignmentIndices = _document.Settings.DocumentRetentionTimes.GetRetentionTimeAlignmentIndexes(basename);
         }
 
         private void ScoreWriteChromDataSets(PeptideChromDataSets chromDataSets, int threadIndex)
@@ -117,7 +117,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         private MsDataFileUri MSDataFilePath { get; set; }
-        private RetentionTimeAlignmentIndices FileAlignmentIndices { get; set; }
+        private RetentionTimeAlignmentIndexes FileAlignmentIndices { get; set; }
 
         private DetailedFeatureCalculators DetailedPeakFeatureCalculators { get; set; }
 
@@ -187,13 +187,21 @@ namespace pwiz.Skyline.Model.Results
                     {
                         // Always use SIM as spectra, if any full-scan chromatogram extraction is enabled
                         var fullScan = _document.Settings.TransitionSettings.FullScan;
-                        bool enableSimSpectrum = fullScan.IsEnabled; // And chromatogram extraction requires SIM as spectra
-                        bool preferOnlyMs1 = fullScan.IsEnabledMs && !fullScan.IsEnabledMsMs; // If we don't want MS2, ask reader to totally skip it (not guaranteed)
-                        bool centroidMs1 = fullScan.IsCentroidedMs;
-                        bool centroidMs2 = fullScan.IsCentroidedMsMs;
-                        const bool ignoreZeroIntensityPoints = true; // Omit zero intensity points during extraction
-                        inFile = MSDataFilePath.OpenMsDataFile(enableSimSpectrum, preferOnlyMs1,
-                            centroidMs1, centroidMs2, ignoreZeroIntensityPoints);
+                        string docDir = Path.GetDirectoryName(CachePath) ?? Directory.GetCurrentDirectory();
+                        using var cancellationTokenSource = new PollingCancellationToken(() => _loader.IsCanceled);
+                        var openMsDataFileParams = new OpenMsDataFileParams(cancellationTokenSource.Token, _loader, _status)
+                        {
+                            SimAsSpectra = fullScan.IsEnabled, // And chromatogram extraction requires SIM as spectra
+                            PreferOnlyMs1 =
+                                fullScan.IsEnabledMs &&
+                                !fullScan
+                                    .IsEnabledMsMs, // If we don't want MS2, ask reader to totally skip it (not guaranteed)
+                            CentroidMs1 = fullScan.IsCentroidedMs,
+                            CentroidMs2 = fullScan.IsCentroidedMsMs,
+                            DownloadPath = docDir
+                        };
+                        inFile = MSDataFilePath.OpenMsDataFile(openMsDataFileParams);
+                        _status = openMsDataFileParams.ProgressStatus;
                     }
 
                     // Check for cancellation
@@ -552,8 +560,8 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         private int CompareMaxRetentionTime(PeptideChromDataSets p1, PeptideChromDataSets p2)
         {
-            var time1 = p1.FirstKey.OptionalMaxTime;
-            var time2 = p2.FirstKey.OptionalMaxTime;
+            var time1 = p1.MaxTime;
+            var time2 = p2.MaxTime;
             if (time1.HasValue)
             {
                 if (time2.HasValue)

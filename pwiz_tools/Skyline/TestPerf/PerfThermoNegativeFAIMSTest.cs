@@ -21,6 +21,7 @@ using System;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
@@ -28,7 +29,6 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.IonMobility;
-using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 //
@@ -150,7 +150,7 @@ namespace TestPerf // Tests in this namespace are skipped unless the RunPerfTest
 
         }
 
-        private bool IsRecordMode { get { return false; } }
+        protected override bool IsRecordMode => false;
 
         private void TestReports(string msg = null)
         {

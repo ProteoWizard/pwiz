@@ -126,6 +126,33 @@ replicate data. Or #N/A if the file was imported with a version older than 1.1.<
     <value>The type of analyzer that was used to collect the spectrum.
 If more than one analyzer was used, the names of the analyzers will be separated by slashes.</value>
   </data>
+  <data name="ApexAnalyteIonCount">
+    <value>Product of the total transition intensity and the injection time of the spectrum with the highest transition intensity</value>
+  </data>
+  <data name="ApexAnalyteIonCountFragment">
+    <value>Product of the total transition intensity and the injection time of the MS2 spectrum with the highest transition intensity</value>
+  </data>
+  <data name="ApexAnalyteIonCountMS1">
+    <value>Product of the total precursor intensity and the injection time of the MS1 spectrum with the highest precursor intensity</value>
+  </data>
+  <data name="ApexSpectrumId">
+    <value>Identifier of the spectrum with the highest transition intensity</value>
+  </data>
+  <data name="ApexSpectrumIdFragment">
+    <value>Identifier of the MS2 spectrum with the highest transition intensity</value>
+  </data>
+  <data name="ApexSpectrumIdMS1">
+    <value>Identifier of the MS1 spectrum with the highest precursor intensity</value>
+  </data>
+  <data name="ApexTotalIonCount">
+    <value>Product of the total ion current and the injection time of the MS2 spectrum with the highest transition intensity</value>
+  </data>
+  <data name="ApexTotalIonCountFragment">
+    <value>Product of the total ion current and the injection time of the MS2 spectrum with the highest transition intensity</value>
+  </data>
+  <data name="ApexTotalIonCountMS1">
+    <value>Product of the total precursor intensity and the injection time of the MS1 spectrum with the highest precursor intensity</value>
+  </data>
   <data name="Area">
     <value>Area under the curve (AUC), minus background, for the transition peak.</value>
   </data>
@@ -166,7 +193,7 @@ appeared on the heavy transitions.</value>
     <value>If true, then Skyline will automatically add or remove transitions from the precursor depending on the Transition Settings Filter, spectral library, etc.</value>
   </data>
   <data name="AverageMassErrorPPM">
-    <value>Average Mass Error PPM</value>
+    <value>The area weighted mean for all transitions of the difference between the expected and measured m/z values expressed in parts per million (PPM)</value>
   </data>
   <data name="AverageMasses">
     <value>The modified sequence which specifies modifications with their average masses, e.g. "C[+57.05162]".</value>
@@ -292,7 +319,7 @@ specific default collision energy equation within Skyline</value>
   <data name="CountTruncated">
     <value>The number of transitions for a precursor that integrate a peak with a
 boundary at either end of the acquisition time range, where intensity at the end is
-greater than 1% of the entire peak height higher than the other extent.</value>
+greater than 25% of the background-subtracted peak height higher than the other extent.</value>
   </data>
   <data name="Cv">
     <value>Cv</value>
@@ -599,6 +626,39 @@ indicating which isotope modifications are applied</value>
   <data name="LastPosition">
     <value>The position of the last (C-terminal) amino acid of the peptide within its
 containing protein sequence, or #N/A if no protein sequence is available</value>
+  </data>
+  <data name="LcPeakAnalyteIonCount">
+    <value>Sum of the products of the transition intensities and the injection time of the spectra between the peak integration boundaries</value>
+  </data>
+  <data name="LcPeakAnalyteIonCountFragment">
+    <value>Sum of the products of the transition intensities and the injection time of the MS2 spectra between the peak integration boundaries</value>
+  </data>
+  <data name="LcPeakAnalyteIonCountMS1">
+    <value>Sum of the products of the total precursor intensity and the injection time of the MS1 spectra between the peak integration boundaries</value>
+  </data>
+  <data name="LcPeakIonMetricsFragment">
+    <value>Values related to the number of ions in the mass spectrometer while collecting MS2 spectra between the peak integration boundaries</value>
+  </data>
+  <data name="LcPeakIonMetricsMS1">
+    <value>Values related to the number of ions in the mass spectrometer while collecting MS1 spectra between the peak integration boundaries</value>
+  </data>
+  <data name="LcPeakTotalIonCount">
+    <value>Sum of the products of the total ion current and the injection time of the spectra between the peak integration boundaries</value>
+  </data>
+  <data name="LcPeakTotalIonCountFragment">
+    <value>Sum of the products of the total ion current and the injection time of the MS2 spectra between the peak integration boundaries</value>
+  </data>
+  <data name="LcPeakTotalIonCountMS1">
+    <value>Sum of the products of the total ion current and the injection time of the MS1 spectra between the peak integration boundaries</value>
+  </data>
+  <data name="LcPeakTotalIonCurrentArea">
+    <value>Integral of the total ion current between the peak integration boundaries</value>
+  </data>
+  <data name="LcPeakTotalIonCurrentAreaFragment">
+    <value>Integral of the total ion current of the MS2 spectra between the peak integration boundaries</value>
+  </data>
+  <data name="LcPeakTotalIonCurrentAreaMS1">
+    <value>Integral of the total ion current of the MS1 spectra between the peak integration boundaries</value>
   </data>
   <data name="LibraryCollisionCrossSection">
     <value>The collision cross section for the precursor from the ion mobility library</value>
@@ -1186,6 +1246,11 @@ the decoy m/z.</value>
   <data name="ProductNeutralMass">
     <value>Neutral mass of the product ion peptide fragment in Daltons.</value>
   </data>
+  <data name="ProportionTruncated">
+    <value>The area weighted mean (0 to 1.0) of transitions for a precursor that integrate a peak with a
+boundary at either end of the acquisition time range, where intensity at the end is
+greater than 25% of the background-subtracted peak height higher than the other extent.</value>
+  </data>
   <data name="Protein">
     <value>Protein</value>
   </data>
@@ -1492,7 +1557,7 @@ file, or the file name again for other file types.</value>
 values.</value>
   </data>
   <data name="Strict">
-    <value>Calculated value unavailable when missing data could comparisons between replicates.</value>
+    <value>Calculated value unavailable when missing data could impact comparisons between replicates.</value>
   </data>
   <data name="SummaryMessage">
     <value>Description of the change</value>
@@ -1591,8 +1656,8 @@ using the Results Grid.</value>
     <value>Transitions</value>
   </data>
   <data name="Truncated">
-    <value>True if the integrated a peak has a boundary at either end of the acquisition
-time range, where intensity at the end is greater than 1% of the entire peak height
+    <value>True if the integrate peak has a boundary at either end of the acquisition
+time range, where intensity at the end is greater than 25% of the background-subtracted peak height
 higher than the other extent.</value>
   </data>
   <data name="TurningPoint">

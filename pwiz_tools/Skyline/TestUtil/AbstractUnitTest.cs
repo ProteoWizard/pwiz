@@ -85,7 +85,7 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         protected bool RunPerfTests
         {
-            get { return TestContext.GetBoolValue("RunPerfTests", false); }  // Return false if unspecified
+            get { return TestContext.GetBoolValue("RunPerfTests", true); }  // Return true if unspecified
             set { TestContext.Properties["RunPerfTests"] = value.ToString(CultureInfo.InvariantCulture); }
         }
 
@@ -107,18 +107,16 @@ namespace pwiz.SkylineTestUtil
             set { TestContext.Properties["RecordAuditLogs"] = value.ToString(CultureInfo.InvariantCulture); }
         }
 
-        /// <summary>
-        /// This controls whether we run the various tests that are small molecule versions of our standard tests,
-        /// for example DocumentExportImportTestAsSmallMolecules().  Such tests convert the entire document to small
-        /// molecule representations before proceeding.
-        /// Developers that want to see such tests execute within the IDE can add their machine name to the SmallMoleculeDevelopers
-        /// list below (partial matches suffice, so name carefully!)
-        /// </summary>
-        private static string[] SmallMoleculeDevelopers = {"BSPRATT"}; 
         protected bool RunSmallMoleculeTestVersions
         {
-            get { return TestContext.GetBoolValue("RunSmallMoleculeTestVersions", false) || SmallMoleculeDevelopers.Any(smd => Environment.MachineName.Contains(smd)); }
+            get { return TestContext.GetBoolValue("RunSmallMoleculeTestVersions", true); }
             set { TestContext.Properties["RunSmallMoleculeTestVersions"] = value.ToString(CultureInfo.InvariantCulture); }
+        }
+
+        protected int TestPass
+        {
+            get { return (int) TestContext.GetLongValue("TestPass", 0); }
+            set { TestContext.Properties["TestPass"] = value.ToString(); }
         }
 
         /// <summary>
@@ -256,7 +254,20 @@ namespace pwiz.SkylineTestUtil
                     TestFilesDirs[i] = new TestFilesDir(TestContext, TestFilesZipPaths[i], TestDirectoryName,
                         TestFilesPersistent, IsExtractHere(i));
                 }
+                CleanupPersistentDir(); // Clean up before recording metrics
+                foreach (var dir in TestFilesDirs)
+                {
+                    dir.RecordMetrics();
+                }
             }
+        }
+
+        /// <summary>
+        /// Override this function with any specific file deletions that need to
+        /// happen to avoid leaving files in the PersistentFilesDir.
+        /// </summary>
+        protected virtual void CleanupPersistentDir()
+        {
         }
 
         private static string DownloadZipFile(string targetFolder, string zipPath, string zipFilePath)
@@ -454,6 +465,8 @@ namespace pwiz.SkylineTestUtil
             // mask the original error.
             if (TestFilesDirs != null && TestContext.CurrentTestOutcome == UnitTestOutcome.Passed)
             {
+                CleanupPersistentDir();
+
                 foreach (var dir in TestFilesDirs.Where(d => d != null))
                 {
                     dir.Cleanup();
@@ -495,7 +508,7 @@ namespace pwiz.SkylineTestUtil
         /// <returns>true iff ReSharper code analysis is detected</returns>
         public static bool SkipForResharperAnalysis()
         {
-            if (Helpers.RunningResharperAnalysis)
+            if (TryHelper.RunningResharperAnalysis)
             {
                 Console.Write(MSG_SKIPPING_SLOW_RESHARPER_ANALYSIS_TEST); // Log this via console for TestRunner
                 return true;

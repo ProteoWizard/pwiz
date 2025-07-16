@@ -232,10 +232,6 @@ namespace pwiz.SkylineTestFunctional
 
             var calibrationCurveFitter = peptideEntity.GetCalibrationCurveFitter();
             var calibrationCurve = calibrationCurveFitter.GetCalibrationCurve();
-            if (calibrationCurveFitter.FiguresOfMeritCalculator is BootstrapFiguresOfMeritCalculator bootstrapFiguresOfMeritCalculator)
-            {
-                return calibrationCurveFitter.GetFiguresOfMerit(calibrationCurve).LimitOfQuantification;
-            }
             var concentrationMultiplier = peptideEntity.ConcentrationMultiplier.GetValueOrDefault(1);
             double? bestLoq = null;
             foreach (var grouping in peptideResults.OrderByDescending(g => g.Key))

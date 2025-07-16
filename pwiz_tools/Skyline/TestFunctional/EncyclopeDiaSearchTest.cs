@@ -36,14 +36,16 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class EncyclopeDiaSearchTest : AbstractFunctionalTestEx
     {
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
+        [TestMethod,
+         NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE),
+         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
         public void TestEncyclopeDiaSearch()
         {
             TestFilesZip = @"Test\EncyclopeDiaHelpersTest.zip";
             RunFunctionalTest();
         }
 
-        private bool IsRecordMode => false;
+        protected override bool IsRecordMode => false;
         private int[] FinalTargetCounts = { 33, 35, 35, 140 };
 
         protected override void DoTest()

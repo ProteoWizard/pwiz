@@ -28,7 +28,7 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        private static bool IsRecordMode { get { return false; } }
+        protected override bool IsRecordMode => false;
 
         protected override void DoTest()
         {
@@ -97,12 +97,10 @@ namespace pwiz.SkylineTestFunctional
             var errDlg2 = ShowDialog<MessageDlg>(SkylineWindow.ShowExportSpectralLibraryDialog);
             Assert.AreEqual(Resources.SkylineWindow_ShowExportSpectralLibraryDialog_The_document_must_contain_at_least_one_peptide_precursor_to_export_a_spectral_library_, errDlg2.Message);
             OkDialog(errDlg2, errDlg2.OkDialog);
-
-            Assert.IsFalse(IsRecordMode);   // Don't commit in record mode
         }
 
 
-        private static void CheckRefSpectraAll(IList<DbRefSpectra> refSpectra)
+        private void CheckRefSpectraAll(IList<DbRefSpectra> refSpectra)
         {
             if (IsRecordMode)
             {

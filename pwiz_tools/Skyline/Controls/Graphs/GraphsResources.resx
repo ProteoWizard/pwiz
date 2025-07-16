@@ -539,7 +539,7 @@ Here are the last 3 errors:
     <value>{0} spectra are not available in this data file. Showing {1} instead.</value>
   </data>
   <data name="GraphSpectrum_DoUpdate_dotp___0_0_0000_" xml:space="preserve">
-    <value>dotp: {0:0.0000}</value>
+    <value>{0:0.0000}</value>
   </data>
   <data name="GraphSpectrum_UpdateUI_Failure_loading_spectrum__Library_may_be_corrupted" xml:space="preserve">
     <value>Failure loading spectrum. Library may be corrupted.</value>
@@ -759,5 +759,8 @@ Here are the last 3 errors:
   </data>
   <data name="RelativeAbundanceGraph_ToolTip_Rank" xml:space="preserve">
     <value>Rank</value>
+  </data>
+  <data name="GraphChromatogram_UpdateUI_No_quantitative_chromatograms_found" xml:space="preserve">
+    <value>No quantitative chromatograms found</value>
   </data>
 </root>

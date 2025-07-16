@@ -21,9 +21,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.EditUI;
@@ -33,7 +35,6 @@ using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -60,11 +61,9 @@ namespace pwiz.SkylineTestFunctional
             TestUseBackgroundProteome();
             TestFastaOverride();
             TestParsimonyOptions();
-
-            Assert.IsFalse(IsRecordMode);
         }
 
-        public bool IsRecordMode => false;
+        protected override bool IsRecordMode => false;
 
         private void TestInvalidFasta()
         {
@@ -82,7 +81,10 @@ namespace pwiz.SkylineTestFunctional
                 "PEPTID\u0002EK"
             });
             // ReSharper restore LocalizableElement
-            var errorDlg = ShowDialog<MessageDlg>(() => associateProteinsDlg.FastaFileName = invalidFastaFilepath);
+            RunUI(()=>associateProteinsDlg.FastaFileName = invalidFastaFilepath);
+            WaitForConditionUI(() => associateProteinsDlg.IsComplete);
+            var errorDlg = ShowDialog<MessageDlg>(associateProteinsDlg.ClickErrorButton);
+            
             AssertEx.Contains(errorDlg.Message, Resources.AssociateProteinsDlg_UseFastaFile_An_error_occurred_during_protein_association_, "\x02");
             OkDialog(errorDlg, errorDlg.OkDialog);
             OkDialog(associateProteinsDlg, associateProteinsDlg.CancelDialog);
@@ -693,7 +695,24 @@ namespace pwiz.SkylineTestFunctional
             {
                 var testCase = _parsimonyTestCases[i];
                 string fastaFilePath = TestFilesDir.GetTestPath("testProteins.fasta");
-                using (var fastaFile = new StreamWriter(fastaFilePath))
+                StreamWriter fastaFile = null;
+                for (int retry = 0;; retry++)
+                {
+                    try
+                    {
+                        fastaFile = new StreamWriter(fastaFilePath);
+                        break;
+                    }
+                    catch (IOException)
+                    {
+                        if (retry >= 100)
+                        {
+                            throw;
+                        }
+                        Thread.Sleep(10);
+                    }
+                }
+                using (fastaFile)
                 {
                     Assume.IsTrue(testCase.ProteinDescriptions.IsNullOrEmpty() || testCase.Proteins.Length == testCase.ProteinDescriptions.Length);
                     if (testCase.ProteinDescriptions != null && testCase.ProteinDescriptions.Length > 0)
@@ -754,7 +773,7 @@ namespace pwiz.SkylineTestFunctional
                             dlg.SelectedSharedPeptides = optionsAndResult.SharedPeptides;
                             dlg.MinPeptidesPerProtein = optionsAndResult.MinPeptidesPerProtein;
                         });
-
+                        WaitForConditionUI(() => dlg.IsComplete);
                         RunUI(() =>
                         {
                             if (IsRecordMode)
@@ -821,7 +840,7 @@ namespace pwiz.SkylineTestFunctional
                             dlg.SelectedSharedPeptides = optionsAndResult.SharedPeptides;
                             dlg.MinPeptidesPerProtein = optionsAndResult.MinPeptidesPerProtein;
                         });
-                        //PauseTest();
+                        WaitForConditionUI(() => dlg.IsComplete);
                         RunUI(() =>
                         {
                             Assert.AreEqual(optionsAndResult.ExpectedFinalProteins, dlg.FinalResults.FinalProteinCount, $"Test case {i + 1}.{j + 1} FinalProteinCount");
