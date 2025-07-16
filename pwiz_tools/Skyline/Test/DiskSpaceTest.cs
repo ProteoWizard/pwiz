@@ -23,9 +23,9 @@ using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest
 {
-    [TestClass]
     // Test to see if there is less than 5% of space left on disk.
     // Necessary to prevent unrelated tests failing when an issue causes disk to fill up.
+    [TestClass]
     public class DiskSpaceTest : AbstractUnitTest
     {
         private const double MIN_SPACE_PERCENT = .05;
@@ -33,9 +33,10 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestIsDiskFull()
         {
-            DriveInfo drive = new DriveInfo(Path.GetPathRoot(TestContext.TestDir));
-            Assert.IsTrue((double)drive.TotalFreeSpace / drive.TotalSize > MIN_SPACE_PERCENT, 
-                $"The disk has less than {MIN_SPACE_PERCENT * 100}% of space remaining.");
+            var rootPath = Path.GetPathRoot(TestContext.TestDir);
+            var drive = new DriveInfo(rootPath);
+            var errorMessage = $"Warning: this machine is running out of disk space. The {rootPath} drive has less than {MIN_SPACE_PERCENT * 100}% of space remaining. Running out of space will cause other tests to fail.";
+            Assert.IsTrue((double)drive.TotalFreeSpace / drive.TotalSize > MIN_SPACE_PERCENT, errorMessage);
         }
     }
 }
