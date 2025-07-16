@@ -3559,7 +3559,7 @@ namespace pwiz.Skyline
                 
                 var tempFileName = Path.Combine(tempDir.DirPath, Path.GetFileName(fileName));
 
-                if (ShareDocument(tempFileName, shareType, false, ArdiaClient.MAX_PART_SIZE_BYTES))
+                if (ShareDocument(tempFileName, shareType, false, publishDlg.MaxPartSize))
                 {
                     publishDlg.Upload(this, tempFileName);
                 }

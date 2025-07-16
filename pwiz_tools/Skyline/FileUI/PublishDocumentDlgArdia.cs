@@ -17,7 +17,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -37,8 +36,6 @@ using TreeNode = System.Windows.Forms.TreeNode;
 
 namespace pwiz.Skyline.FileUI
 {
-    // TODO: improve handling error case - server unreachable / unavailable
-    // TODO: improve handling error case - token invalid
     public class PublishDocumentDlgArdia : PublishDocumentDlgBase
     {
         public enum ValidateInputResult { valid, invalid_blank, invalid_character }
@@ -63,6 +60,13 @@ namespace pwiz.Skyline.FileUI
         /// Fully qualified path for where to put the Skyline document on an Ardia server.
         /// </summary>
         public string DestinationPath { get; private set; }
+
+        public int MaxPartSize
+        {
+            get => Client.UploadPartSizeBytes;
+            set => Client.ChangePartSizeForTests(value);
+        }
+
         private ArdiaAccount Account { get; }
         private ArdiaClient Client { get; }
 
@@ -270,20 +274,21 @@ namespace pwiz.Skyline.FileUI
             {
                 PublishedDocument = result.Value;
 
-                string successMessage = ArdiaResources.FileUpload_Success_Open_DataExplorer;
-                if (MultiButtonMsgDlg.Show(parent, successMessage, MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false)
-                        == DialogResult.Yes)
-                {
-                    var getUrlResult = Client.GetDataExplorerUrl(DestinationPath);
-                    if (getUrlResult.IsSuccess)
-                    {
-                        Process.Start(getUrlResult.Value);
-                    }
-                    else
-                    {
-                        MessageDlg.ShowWithExceptionAndNetworkDetail(parent, ArdiaResources.Error_StatusCode_Unexpected, getUrlResult.ErrorMessage, getUrlResult.ErrorException);
-                    }
-                }
+                MessageDlg.Show(parent, ArdiaResources.FileUpload_Success);
+                // string successMessage = ArdiaResources.FileUpload_Success_Open_DataExplorer;
+                // if (MultiButtonMsgDlg.Show(parent, successMessage, MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false)
+                //     == DialogResult.Yes)
+                // {
+                //     var getUrlResult = Client.GetDataExplorerUrl(DestinationPath);
+                //     if (getUrlResult.IsSuccess)
+                //     {
+                //         Process.Start(getUrlResult.Value);
+                //     }
+                //     else
+                //     {
+                //         MessageDlg.ShowWithExceptionAndNetworkDetail(parent, ArdiaResources.Error_StatusCode_Unexpected, getUrlResult.ErrorMessage, getUrlResult.ErrorException);
+                //     }
+                // }
             }
             else
             {
