@@ -829,6 +829,8 @@ class DiaNNSpecLibReader::Impl
                 t = strArray->Value(rowIndex_);
             }
 
+            void read_row_helper(std::size_t i) const {}
+
             template<class T, class ...ColType>
             void read_row_helper(std::size_t i, T& t, ColType&...cols) const
             {
