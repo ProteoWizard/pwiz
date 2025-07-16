@@ -146,7 +146,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="RemoteApi\Ardia\ArdiaResources.ja.resx" />
+    <EmbeddedResource Include="RemoteApi\Ardia\ArdiaResources.ja.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="RemoteApi\Ardia\ArdiaResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>ArdiaResources.Designer.cs</LastGenOutput>

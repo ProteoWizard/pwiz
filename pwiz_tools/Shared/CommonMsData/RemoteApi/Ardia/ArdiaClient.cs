@@ -51,8 +51,8 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         // CONSIDER: add UrlBuilder class to Skyline. Related PRs also define this constant and helper methods narrowly scoped to a remote server vendor
         public const string URL_PATH_SEPARATOR = @"/";
 
-        public const int MAX_PART_SIZE_MB = 64;
-        public const int MAX_PART_SIZE_BYTES = MAX_PART_SIZE_MB * 1024 * 1024;
+        public const int DEFAULT_PART_SIZE_MB = 64;
+        public const int DEFAULT_PART_SIZE_BYTES = DEFAULT_PART_SIZE_MB * 1024 * 1024;
 
         private const string HEADER_CONTENT_TYPE_APPLICATION_JSON = @"application/json";
         private const string HEADER_CONTENT_TYPE_ZIP_COMPRESSED   = @"application/x-zip-compressed";
@@ -66,9 +66,10 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         private const string PATH_COMPLETE_MULTIPART_REQUEST = @"/session-management/bff/document/api/v1/documents/completeMultiPartRequest";
         private const string PATH_CREATE_FOLDER              = @"/session-management/bff/navigation/api/v1/folders";
         private const string PATH_DELETE_FOLDER              = @"/session-management/bff/navigation/api/v1/folders/folderPath";
-        private const string PATH_GET_PARENT_BY_PATH         = @"/session-management/bff/navigation/api/v1/navigation/path";
         private const string PATH_STORAGE_INFO               = @"/session-management/bff/raw-data/api/v1/rawdata/storageInfo";
         private const string PATH_SESSION_COOKIE             = @"/session-management/bff/session-management/api/v1/SessionManagement/sessioncookie";
+        private const string PATH_GET_PARENT_BY_PATH         = @"/session-management/bff/navigation/api/v1/navigation/path";
+        private const string PATH_DATA_EXPLORER              = @"/app/data-explorer";
 
         // CONSIDER: throw IOException as a placeholder for improving the experience of editing Remote Account settings. It should
         //           not be possible to exit the settings editor when the account is invalid.
@@ -98,6 +99,27 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             ServerUri = new Uri(serverUrl);
             ApplicationCode = applicationCode;
             Token = token;
+            UploadPartSizeMBs = DEFAULT_PART_SIZE_MB;
+        }
+
+        public int UploadPartSizeMBs { get; private set; }
+        public int UploadPartSizeBytes => UploadPartSizeMBs * 1024 * 1024;
+
+        // CONSIDER: enforce this can only be used from tests
+        /// <summary>
+        /// ONLY USE IN TESTS. Configure the max part size for multipart uploads.
+        /// </summary>
+        /// <param name="partSizeMBs"></param>
+        public void ChangePartSizeForTests(int partSizeMBs)
+        {
+            Assume.IsTrue(IsValidPartSize(partSizeMBs), @"Max part size must be greater than or equal to 5 and less than 2048");
+
+            UploadPartSizeMBs = partSizeMBs;
+        }
+
+        public static bool IsValidPartSize(int partSizeMBs)
+        {
+            return partSizeMBs >= 5 && partSizeMBs < 2048;
         }
 
         public bool HasCredentials => !string.IsNullOrWhiteSpace(ApplicationCode) && !string.IsNullOrWhiteSpace(Token);
@@ -219,8 +241,8 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         /// <summary>
         /// Upload a Skyline document archive to the Ardia API. The archive must be created by SrmDocumentSharing prior to calling this method and will contain 
         /// many files including .sky, .sky.view, .skyl, .skyd, and more. <see cref="localZipFilePaths"/> contains paths to the pieces of the .zip file. Skyline
-        /// documents smaller than <see cref="MAX_PART_SIZE_BYTES"/> will be a single .sky.zip file (aka: one "part"). Skyline document archives larger than
-        /// <see cref="MAX_PART_SIZE_BYTES"/> will be multipart .zip archives and could be split across many (> 1,000) parts.
+        /// documents smaller than <see cref="DEFAULT_PART_SIZE_BYTES"/> will be a single .sky.zip file (aka: one "part"). Skyline document archives larger than
+        /// <see cref="DEFAULT_PART_SIZE_BYTES"/> will be multipart .zip archives and could be split across many (> 1,000) parts.
         ///
         /// Callers are responsible for cleaning up temporary files or directories created when archiving the Skyline document.
         /// </summary>
@@ -240,7 +262,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             IProgressStatus progressStatus = new ProgressStatus(); 
 
             // Step 1 of 4: Ardia API - Create Staged Multi-part Document
-            var document = StageDocumentRequest.Create(totalUploadSize);
+            var document = StageDocumentRequest.Create(totalUploadSize, UploadPartSizeMBs);
             var resultStaging = CreateStagedDocument(document);
 
             if (progressMonitor.IsCanceled)
@@ -660,7 +682,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         }
 
         // API documentation: https://api.ardia-core-int.cmdtest.thermofisher.com/navigation/api/swagger/index.html
-        public ArdiaResult<GetParentFolderResponse> GetParentFolderByPath(string path)
+        public ArdiaResult<GetParentFolderResponse> GetFolderByGetParentFolderByPath(string path)
         {
             var uri = UriFromParts(ServerUri, $"{PATH_GET_PARENT_BY_PATH}?itemPath={Uri.EscapeDataString(path)}");
 
@@ -759,6 +781,8 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         {
             var totalPercentComplete = _startPercent + (_endPercent - _startPercent) * (decimal)(status.PercentComplete / 100.0);
             var currentBytes = (long)Math.Round(totalPercentComplete / 100 * _totalBytes);
+
+            BytesWritten = currentBytes;
 
             BytesWritten = currentBytes;
 
@@ -914,11 +938,34 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             // Response body might be JSON - ex: errors from JSON
             try
             {
+                /* Example error message:
+                 {
+                    "type":"https://tools.ietf.org/html/rfc9110#section-15.5.1",
+                    "title":"One or more validation errors occurred.",
+                    "status":400,
+                    "errors":{
+                        "Pieces[0].PartSize":[
+                            "'Part Size' must be greater than or equal to '5'."
+                        ]
+                    },
+                    "traceId":"00-5ba80912e8eb5499ba8c560f810b9853-b2ab21672f142dac-00"
+                }
+                 */
                 var jsonResponse = JObject.Parse(responseBody);
+
+                var sb = new StringBuilder();
                 if (jsonResponse?[@"title"] != null)
                 {
-                    return jsonResponse[@"title"].ToString();
+                    sb.Append(jsonResponse[@"title"]);
                 }
+
+                // TODO: read specific fields from the errors object
+                if (jsonResponse?[@"errors"] != null)
+                {
+                    sb.Append(jsonResponse[@"errors"]);
+                }
+
+                return sb.ToString();
             }
             catch (JsonReaderException)
             {

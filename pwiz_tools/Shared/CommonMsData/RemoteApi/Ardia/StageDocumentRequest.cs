@@ -17,6 +17,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Newtonsoft.Json;
+using pwiz.Common.SystemUtil;
 
 // Ardia API StageDocument and Document models
 //     https://api.ardia-core-int.cmdtest.thermofisher.com/document/api/swagger/index.html
@@ -28,22 +29,22 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         public const string DEFAULT_PIECE_NAME = "[SingleDocument]";
 
         /// <summary>
-        /// 
         /// </summary>
         /// <param name="fileSize">size in bytes of local file to upload</param>
+        /// <param name="maxPartSizeMBs">max size of a part in MB</param>
         /// <returns></returns>
-        public static StageDocumentRequest Create(long fileSize)
+        public static StageDocumentRequest Create(long fileSize, int maxPartSizeMBs)
         {
-            StageDocumentRequest model;
-            if (fileSize < ArdiaClient.MAX_PART_SIZE_BYTES)
+            Assume.IsTrue(ArdiaClient.IsValidPartSize(maxPartSizeMBs));
+
+            var model = new StageDocumentRequest();
+            if (fileSize < maxPartSizeMBs * 1024 * 1024)
             {
-                model = new StageDocumentRequest();
                 model.AddPiece();
             }
             else
             {
-                model = new StageDocumentRequest();
-                model.AddPiece(true, fileSize, ArdiaClient.MAX_PART_SIZE_MB);
+                model.AddPiece(true, fileSize, maxPartSizeMBs);
             }
 
             return model;
@@ -58,9 +59,9 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             Pieces.Add(new DocumentPieceRequest());
         }
 
-        private void AddPiece(bool isMultiPart, long fileSize, long partSize)
+        private void AddPiece(bool isMultiPart, long fileSize, long maxPartSize)
         {
-            Pieces.Add(new DocumentPieceRequest(isMultiPart, fileSize, partSize));
+            Pieces.Add(new DocumentPieceRequest(isMultiPart, fileSize, maxPartSize));
         }
 
         public string ToJson()
@@ -72,11 +73,11 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         {
             internal DocumentPieceRequest() { }
 
-            internal DocumentPieceRequest(bool isMultiPart, long size, long partSize)
+            internal DocumentPieceRequest(bool isMultiPart, long size, long maxPartSize)
             {
                 IsMultiPart = isMultiPart;
                 Size = size;
-                PartSize = partSize;
+                PartSize = maxPartSize;
             }
 
             public string PieceName => DEFAULT_PIECE_NAME;

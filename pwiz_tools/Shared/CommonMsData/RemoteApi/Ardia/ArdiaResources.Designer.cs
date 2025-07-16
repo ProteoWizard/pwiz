@@ -296,15 +296,6 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Upload succeeded, would you like to go to Ardia?.
-        /// </summary>
-        public static string FileUpload_Success_Open_DataExplorer {
-            get {
-                return ResourceManager.GetString("FileUpload_Success_Open_DataExplorer", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Error getting document &apos;{0}&apos;. A problem occurred communicating with the server..
         /// </summary>
         public static string GetDocument_Error {
