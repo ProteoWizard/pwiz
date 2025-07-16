@@ -154,7 +154,9 @@
       <LastGenOutput>ArdiaResources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="RemoteApi\Ardia\ArdiaResources.zh-CHS.resx" />
+    <EmbeddedResource Include="RemoteApi\Ardia\ArdiaResources.zh-CHS.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="RemoteApi\RemoteApiResources.ja.resx">
       <DependentUpon>RemoteApiResources.resx</DependentUpon>
       <SubType>Designer</SubType>
