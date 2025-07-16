@@ -356,6 +356,9 @@ namespace pwiz.Skyline.Model
                     string searchFileDirectory = Path.GetDirectoryName(searchFilename);
                     yield return searchFileDirectory;
 
+                    if (searchFileDirectory == null)
+                        continue;
+
                     DirectoryInfo parentDir = Directory.GetParent(searchFileDirectory);
                     if (parentDir != null)
                     {
