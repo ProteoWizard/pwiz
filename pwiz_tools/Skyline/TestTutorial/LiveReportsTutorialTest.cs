@@ -18,12 +18,15 @@
  */
 
 using System.Drawing;
+using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.AuditLog;
 using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Controls.Lists;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Properties;
@@ -31,6 +34,7 @@ using pwiz.SkylineTestUtil;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.SkylineTestTutorial
 {
@@ -134,9 +138,10 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsNotNull(cohortColumn);
                 documentGrid.DataGridView.CurrentCell = documentGrid.DataGridView.Rows[0].Cells[cohortColumn.Index];
             });
-            OpenGridComboBox(documentGrid.DataGridView);
-            PauseForScreenShot<DocumentGridForm>("Document grid with two annotations");
-            CloseGridComboBox(documentGrid.DataGridView);
+            using (new GridTester(documentGrid.DataGridView).ShowComboBox())
+            {
+                PauseForScreenShot<DocumentGridForm>("Document grid with two annotations");
+            }
             RunLongDlg<DocumentSettingsDlg>(()=>SkylineWindow.ShowDocumentSettingsDialog(), documentSettingsDlg =>
             {
                 RunUI(()=>documentSettingsDlg.SelectTab(DocumentSettingsDlg.TABS.metadata_rules));
@@ -178,6 +183,46 @@ namespace pwiz.SkylineTestTutorial
                     });
                 }, metadataRuleSetEditor => metadataRuleSetEditor.OkDialog());
             }, documentSettingsDlg=>documentSettingsDlg.OkDialog());
+            WaitForCondition(() => documentGrid.IsComplete);
+            PauseForScreenShot<DocumentGridForm>("Document Grid with populated Cohort and SubjectID");
+            RunLongDlg<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog, documentSettingsDlg =>
+            {
+                RunUI(() =>
+                {
+                    documentSettingsDlg.SelectTab(DocumentSettingsDlg.TABS.lists);
+                });
+                RunLongDlg<ListDesigner>(documentSettingsDlg.AddList, listDesigner =>
+                {
+                    PauseForScreenShot<ListDesigner>("Blank list designer");
+                    RunUI(() =>
+                    {
+                        listDesigner.ListName = "Samples";
+
+                    });
+                    var gridTester = new GridTester(listDesigner.ListPropertiesGrid);
+                    gridTester.SetCellValue(0, 0, "SubjectID");
+                    gridTester.SetCellValue(0, 1, ListPropertyType.GetAnnotationTypeName(AnnotationDef.AnnotationType.text));
+                    gridTester.SetCellValue(1, 0, "Sex");
+                    gridTester.SetCellValue(1, 1, ListPropertyType.GetAnnotationTypeName(AnnotationDef.AnnotationType.text));
+                    gridTester.SetCellValue(2, 0, "Weight");
+                    gridTester.SetCellValue(2, 1, ListPropertyType.GetAnnotationTypeName(AnnotationDef.AnnotationType.number));
+                    gridTester.SetCellValue(3, 0, "Name");
+                    gridTester.SetCellValue(3, 1, ListPropertyType.GetAnnotationTypeName(AnnotationDef.AnnotationType.text));
+                    RunUI(() =>
+                    {
+                        listDesigner.IdProperty = "SubjectID";
+                        listDesigner.DisplayProperty = "Name";
+                    });
+                    PauseForScreenShot<ListDesigner>("Completed Samples list definition");
+                }, listDesigner => listDesigner.OkDialog());
+            }, documentSettingsDlg=>documentSettingsDlg.OkDialog());
+            RunUI(() => SkylineWindow.ShowList("Samples"));
+            var listGridForm = FindOpenForm<ListGridForm>();
+            Assert.IsNotNull(listGridForm);
+            PauseForScreenShot<ListGridForm>("Empty samples list");
+            SetClipboardText(TextUtil.LineSeparate(File.ReadAllLines(TestFilesDir.GetTestPath("SampleInfo.txt")).Skip(1)));
+            RunUI(()=>listGridForm.DataGridView.SendPaste());
+            PauseForScreenShot<ListGridForm>("Completed samples list");
         }
 
         public Bitmap ClipControl(Control control, Bitmap bmp)

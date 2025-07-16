@@ -1493,35 +1493,6 @@ namespace pwiz.SkylineTestUtil
             });
         }
 
-        protected void OpenGridComboBox(DataGridView dataGridView)
-        {
-            RunUI(() =>
-            {
-                dataGridView.BeginEdit(false);
-                var comboBox = (ComboBox)dataGridView.EditingControl;
-                comboBox.DropDownClosed += PreventComboClosing;
-                comboBox.DroppedDown = true;
-            });
-        }
-
-        protected void CloseGridComboBox(DataGridView dataGridView)
-        {
-            RunUI(() =>
-            {
-                var comboBox = (ComboBox)dataGridView.EditingControl;
-                comboBox.DropDownClosed -= PreventComboClosing;
-            });
-        }
-
-        private static void PreventComboClosing(object sender, EventArgs args)
-        {
-            var comboBox = (ComboBox)sender;
-            if (!comboBox.DroppedDown)
-            {
-                comboBox.DroppedDown = true;
-            }
-        }
-
         private static int IndexOfItem(ToolStripItemCollection items, string itemText)
         {
             for (int i = 0; i < items.Count; i++)
