@@ -112,6 +112,11 @@ namespace pwiz.Skyline.Model.Proteome
             ParsimoniousProteins = null;
         }
 
+        public ProteinAssociation Clone()
+        {
+            return (ProteinAssociation)MemberwiseClone();
+        }
+
         public void UseFastaFile(string file, ILongWaitBroker broker)
         {
             if (!File.Exists(file))
