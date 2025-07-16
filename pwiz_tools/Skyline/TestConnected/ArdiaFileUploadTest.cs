@@ -78,6 +78,7 @@ namespace pwiz.SkylineTestConnected
             TestValidateFolderName();
             TestAccountHasCredentials(account);
             TestCreateArdiaError();
+            TestPartSizeIsMb();
 
             Test_StageDocument_Request_SmallDocument();
             Test_StageDocument_Request_LargeDocument();
@@ -108,9 +109,12 @@ namespace pwiz.SkylineTestConnected
             // ArdiaClient tests
             Test_ArdiaClient_GetFolders(account, client);
             Test_ArdiaClient_CreateFolder(account, client, testResultsPath);
+            Test_ArdiaClient_GetStorageInfo(account, client);
 
             // Skyline UI tests
             TestSuccessfulUpload(account, client, new[] { TEST_RESULTS_DIRECTORY, folderName });
+
+            // TODO: finish CreateFolder test
             // TestCreateFolder(account, client, new[] {TEST_RESULTS_DIRECTORY, folderName, @"NewFolder01"});
             // TestSuccessfulUpload(account, client, new[] { TEST_RESULTS_DIRECTORY, folderName, @"NewFolder01" });
 
@@ -141,6 +145,14 @@ namespace pwiz.SkylineTestConnected
             // Assert.AreEqual(REQUEST_JSON_COMPLETE_MULTIPART_UPLOAD, json);
         }
 
+        /// <summary>
+        /// Make sure the maximum part size of a multipart Skyline document archive is in MB (rather than in bytes).
+        /// </summary>
+        private static void TestPartSizeIsMb()
+        {
+            Assert.IsTrue(ArdiaClient.MAX_PART_SIZE_MB > 1 && ArdiaClient.MAX_PART_SIZE_MB < 1024);
+        }
+
         private static void Test_StageDocument_Response()
         {
             var stagedDocumentResponse = StagedDocumentResponse.FromJson(RESPONSE_JSON_CREATE_STAGED_DOCUMENT);
@@ -161,9 +173,9 @@ namespace pwiz.SkylineTestConnected
 
         private static void Test_StageDocument_Request_SmallDocument()
         {
-            const long fileSize = 24 * 1024 * 1024; // 24MB
+            const long fileSize = 8 * 1024; // 8K
 
-            // Model for Skyline document < 2GB
+            // Create model for 1-part Skyline document
             var requestModel = StageDocumentRequest.Create(fileSize);
 
             Assert.IsNotNull(requestModel);
@@ -179,20 +191,21 @@ namespace pwiz.SkylineTestConnected
 
         private static void Test_StageDocument_Request_LargeDocument()
         {
-            const long fileSize = 6451738112; // ~6GB
+            const long fileSize = 6451738112; // > 6GB
 
-            // Model for Skyline document > 2GB
+            // Create model for multipart Skyline document
             var requestModel = StageDocumentRequest.Create(fileSize);
 
             Assert.IsNotNull(requestModel.Pieces);
             Assert.AreEqual(1, requestModel.Pieces.Count);
-            Assert.AreEqual(StageDocumentRequest.DEFAULT_PIECE_NAME, requestModel.Pieces[0].PieceName);
+
             Assert.IsTrue(requestModel.Pieces[0].IsMultiPart);
+            Assert.AreEqual(StageDocumentRequest.DEFAULT_PIECE_NAME, requestModel.Pieces[0].PieceName);
             Assert.AreEqual(fileSize, requestModel.Pieces[0].Size);
-            Assert.AreEqual(ArdiaClient.DEFAULT_PART_SIZE_MB, requestModel.Pieces[0].PartSize);
+            Assert.AreEqual(ArdiaClient.MAX_PART_SIZE_MB, requestModel.Pieces[0].PartSize);
 
             var json = requestModel.ToJson();
-            Assert.AreEqual($@"{{""Pieces"":[{{""PieceName"":""[SingleDocument]"",""IsMultiPart"":true,""Size"":6451738112,""PartSize"":{ArdiaClient.DEFAULT_PART_SIZE_MB}}}]}}", json);
+            Assert.AreEqual($@"{{""Pieces"":[{{""PieceName"":""[SingleDocument]"",""IsMultiPart"":true,""Size"":6451738112,""PartSize"":{ArdiaClient.MAX_PART_SIZE_MB}}}]}}", json);
         }
 
         private static void TestCreateArdiaError()
@@ -283,6 +296,13 @@ namespace pwiz.SkylineTestConnected
 
             result = client.DeleteFolder(@$"{path}/NewFolder01");
             Assert.IsTrue(result.IsSuccess);
+        }
+
+        private void Test_ArdiaClient_GetStorageInfo(ArdiaAccount account, ArdiaClient client)
+        {
+            var storageInfo = client.GetServerStorageInfo();
+
+            Assert.IsTrue(storageInfo.IsSuccess);
         }
 
         private static void TestSuccessfulUpload(ArdiaAccount account, ArdiaClient client, string[] folderPath) 

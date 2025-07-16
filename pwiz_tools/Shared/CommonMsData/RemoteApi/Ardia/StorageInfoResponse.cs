@@ -14,21 +14,20 @@
  * limitations under the License.
  */
 
+using Newtonsoft.Json;
+
 namespace pwiz.CommonMsData.RemoteApi.Ardia
 {
-    public class UploadPieceResponse
+    public class StorageInfoResponse
     {
-        public static UploadPieceResponse Create(long bytesUploaded, string eTag)
+        public static StorageInfoResponse Create(string json)
         {
-            return new UploadPieceResponse
-            {
-                BytesUploaded = bytesUploaded,
-                ETag = eTag
-            };
+            return JsonConvert.DeserializeObject<StorageInfoResponse>(json);
         }
 
-        public long BytesUploaded { get; private set; }
-
-        public string ETag { get; private set; }
+        private StorageInfoResponse() { }
+        
+        public long TotalSpace { get; }
+        public long AvailableFreeSpace { get; }
     }
 }
