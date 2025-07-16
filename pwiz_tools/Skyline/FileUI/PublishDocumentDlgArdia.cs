@@ -270,12 +270,19 @@ namespace pwiz.Skyline.FileUI
             {
                 PublishedDocument = result.Value;
 
-                string message = ArdiaResources.FileUpload_Success_Open_DataExplorer;
-                if (MultiButtonMsgDlg.Show(parent, message, MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false)
+                string successMessage = ArdiaResources.FileUpload_Success_Open_DataExplorer;
+                if (MultiButtonMsgDlg.Show(parent, successMessage, MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false)
                         == DialogResult.Yes)
                 {
-                    // need case handling here
-                    Process.Start(Client.GetDataExplorerUrl(DestinationPath).Value);
+                    var getUrlResult = Client.GetDataExplorerUrl(DestinationPath);
+                    if (getUrlResult.IsSuccess)
+                    {
+                        Process.Start(getUrlResult.Value);
+                    }
+                    else
+                    {
+                        MessageDlg.ShowWithExceptionAndNetworkDetail(parent, ArdiaResources.Error_StatusCode_Unexpected, getUrlResult.ErrorMessage, getUrlResult.ErrorException);
+                    }
                 }
             }
             else
