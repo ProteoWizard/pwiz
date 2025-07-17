@@ -720,7 +720,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
 
         public static Uri UriFromParts(Uri host, params string[] paths)
         {
-            var baseUri = host.ToString().TrimEnd('/');
+            var baseUri = host.AbsoluteUri.TrimEnd('/');
 
             var combinedPath = string.Join("/", paths.Select(p => p.Trim('/')));
 
@@ -729,12 +729,12 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             if (!Uri.TryCreate(full, UriKind.Absolute, out var result))
                 throw new UriFormatException($"Resulting URI was not valid: {full}");
 
-            return result;
+            return new Uri(result.AbsoluteUri);
         }
 
         public static Uri UriWithParams(Uri url, IDictionary<string, string> queryParams)
         {
-            var baseUri = url.ToString().TrimEnd('/');
+            var baseUri = url.AbsoluteUri.TrimEnd('/');
 
             string full;
 
@@ -750,7 +750,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             if (!Uri.TryCreate(full, UriKind.Absolute, out var result))
                 throw new UriFormatException($"Resulting URI was not valid: {full}");
 
-            return result;
+            return new Uri(result.AbsoluteUri);
         }
 
         private static bool ShouldHandleException(Exception exception)

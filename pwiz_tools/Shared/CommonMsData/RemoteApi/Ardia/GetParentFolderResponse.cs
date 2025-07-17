@@ -21,7 +21,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
 {
     public class GetParentFolderResponse
     {
-        private const string PATH_DATA_EXPLORER = @"/app/data-explorer/";
+        private const string PATH_DATA_EXPLORER = @"/app/data-explorer";
 
         public string RLink2 { get; set; }
 
