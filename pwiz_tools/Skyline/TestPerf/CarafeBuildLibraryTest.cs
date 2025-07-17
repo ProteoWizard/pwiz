@@ -208,17 +208,20 @@ namespace TestPerf
             RunUI(() =>
             {
                 spectralLibraryViewer.ChangeSelectedLibrary(LibraryPathTunedBySkyIrt);
+                spectralLibraryViewer.Close();
             });
-
-            OkDialog(spectralLibraryViewer, spectralLibraryViewer.Close);
 
             var saveChangesDlg =
                 ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.NewDocument(), WAIT_TIME);
             AssertEx.AreComparableStrings(SkylineResources.SkylineWindow_CheckSaveDocument_Do_you_want_to_save_changes,
                 saveChangesDlg.Message);
-            OkDialog(saveChangesDlg, saveChangesDlg.ClickNo);
 
-            FileStreamManager.Default.CloseAllStreams();
+            RunUI(() =>
+            {
+                saveChangesDlg.ClickNo();
+                FileStreamManager.Default.CloseAllStreams();
+            });
+
             WaitForCondition(() => !FileStreamManager.Default.HasPooledStreams);
             TestFilesDir.CheckForFileLocks(TestFilesDir.FullPath);
 
@@ -287,16 +290,18 @@ namespace TestPerf
                 spectralLibraryViewer.ChangeSelectedLibrary(LibraryPathTunedBySky);
                 spectralLibraryViewer.ChangeSelectedLibrary(LibraryPathTunedByDiann);
                 spectralLibraryViewer.ChangeSelectedLibrary(LibraryPathTunedBySkyIrt);
+                spectralLibraryViewer.Close();
             });
-
-            OkDialog(spectralLibraryViewer, spectralLibraryViewer.Close);
 
             var saveChangesDlg =
                 ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.NewDocument(), WAIT_TIME);
             AssertEx.AreComparableStrings(SkylineResources.SkylineWindow_CheckSaveDocument_Do_you_want_to_save_changes,
                 saveChangesDlg.Message);
-            OkDialog(saveChangesDlg, saveChangesDlg.ClickNo);
-            FileStreamManager.Default.CloseAllStreams();
+            RunUI( () =>
+            {
+                saveChangesDlg.ClickNo();
+                FileStreamManager.Default.CloseAllStreams();
+            });
             WaitForCondition(() => !FileStreamManager.Default.HasPooledStreams); 
             TestFilesDir.CheckForFileLocks(TestFilesDir.FullPath);
             
