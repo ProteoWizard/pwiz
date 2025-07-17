@@ -304,7 +304,7 @@ namespace pwiz.Skyline.Controls
             var modLosses = peptideSet.Modifications.StaticModsDeduped;
 
             //remove the buttons for losses
-            foreach (var cb in Controls.OfType<CheckBox>().ToList().FindAll(cb => cb.Tag is FragmentLoss).ToList())
+            foreach (var cb in Controls.OfType<CheckBox>().ToList().FindAll(cb => cb.Tag is FragmentLoss))
             {
                 Controls.Remove(cb);
                 cb.CheckedChanged -= LossButton_CheckedChanged;
