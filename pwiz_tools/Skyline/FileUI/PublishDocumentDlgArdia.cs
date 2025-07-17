@@ -17,6 +17,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -270,29 +271,7 @@ namespace pwiz.Skyline.FileUI
             if (isCanceled)
                 return;
 
-            if (result.IsSuccess)
-            {
-                PublishedDocument = result.Value;
-
-                MessageDlg.Show(parent, ArdiaResources.FileUpload_Success);
-
-                /*
-                string successMessage = ArdiaResources.FileUpload_Success_Open_DataExplorer;
-                if (MultiButtonMsgDlg.Show(parent, successMessage, MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false)
-                        == DialogResult.Yes)
-                {
-                    var getUrlResult = Client.GetParentFolderByPath(DestinationPath);
-                    if (getUrlResult.IsSuccess)
-                    {
-                        Process.Start(getUrlResult.Value.Url.ToString());
-                    }
-                    else
-                    {
-                        MessageDlg.ShowWithExceptionAndNetworkDetail(parent, ArdiaResources.Error_StatusCode_Unexpected, getUrlResult.ErrorMessage, getUrlResult.ErrorException);
-                    }
-                }*/
-            }
-            else
+            if (result.IsFailure)
             {
                 string message;
                 if (result.ErrorStatusCode == HttpStatusCode.Unauthorized)
@@ -300,7 +279,30 @@ namespace pwiz.Skyline.FileUI
                 else message = ArdiaResources.FileUpload_Error;
 
                 MessageDlg.ShowWithExceptionAndNetworkDetail(parent, message, result.ErrorMessage, result.ErrorException);
+                return;
             }
+
+            PublishedDocument = result.Value;
+
+            string successMessage = ArdiaResources.FileUpload_Success_OpenDataExplorer;
+            if (MultiButtonMsgDlg.Show(parent, successMessage, MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false)
+                    == DialogResult.No)
+                return;
+
+            var getUrlResult = Client.GetFolderByGetParentFolderByPath(DestinationPath);
+            if (getUrlResult.IsFailure)
+            {
+                string message;
+                if (result.ErrorStatusCode == HttpStatusCode.Unauthorized)
+                    message = ArdiaResources.Error_InvalidToken;
+                else
+                    message = ArdiaResources.Error_StatusCode_Unexpected;
+                MessageDlg.ShowWithExceptionAndNetworkDetail(parent, message, getUrlResult.ErrorMessage, getUrlResult.ErrorException);
+                return;
+                
+            }
+
+            Process.Start(getUrlResult.Value.Url.ToString());
         }
 
         public TreeNode CreateFolder()
