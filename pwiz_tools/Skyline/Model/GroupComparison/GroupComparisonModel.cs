@@ -138,7 +138,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 lock (_lock)
                 {
-                    if (Equals(Document, value))
+                    if (ReferenceEquals(Document, value))
                     {
                         return;
                     }
@@ -226,7 +226,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             var groupComparisonDef = GroupComparisonDef;
             if (_results != null)
             {
-                if (Equals(_results.Document, srmDocument) && Equals(_results.GroupComparer.ComparisonDef, groupComparisonDef))
+                if (ReferenceEquals(_results.Document, srmDocument) && Equals(_results.GroupComparer.ComparisonDef, groupComparisonDef))
                 {
                     return;
                 }
@@ -240,7 +240,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 return;
             }
-            if (_groupComparer == null || !Equals(srmDocument, _groupComparer.SrmDocument) ||
+            if (_groupComparer == null || !ReferenceEquals(srmDocument, _groupComparer.SrmDocument) ||
                 !Equals(groupComparisonDef, _groupComparer.ComparisonDef))
             {
                 _groupComparer = new GroupComparer(groupComparisonDef, srmDocument, _qrFactorizationCache);
