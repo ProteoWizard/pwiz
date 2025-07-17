@@ -30,7 +30,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         public static GetParentFolderResponse FromJson(string json, Uri serverUrl)
         {
             var response = JsonConvert.DeserializeObject<GetParentFolderResponse>(json);
-            response.Url = new Uri(serverUrl.ToString().TrimEnd('/') + PATH_DATA_EXPLORER + response.RLink2);
+            response.Url = ArdiaClient.UriFromParts(serverUrl, PATH_DATA_EXPLORER, response.RLink2);
             return response;
         }
     }

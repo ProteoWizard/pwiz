@@ -684,7 +684,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         // API documentation: https://api.ardia-core-int.cmdtest.thermofisher.com/navigation/api/swagger/index.html
         public ArdiaResult<GetParentFolderResponse> GetFolderByGetParentFolderByPath(string path)
         {
-            var uri = UriFromParts(ServerUri, $"{PATH_GET_PARENT_BY_PATH}?itemPath={Uri.EscapeDataString(path)}");
+            var uri = UriWithParams(UriFromParts(ServerUri, PATH_GET_PARENT_BY_PATH), new Dictionary<string, string> { ["itemPath"] = path });
 
             HttpStatusCode? statusCode = null;
             try
@@ -718,12 +718,40 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             return new Uri(account.GetFolderContentsUrl(ardiaUrl));
         }
 
-        private static Uri UriFromParts(Uri host, string path)
+        public static Uri UriFromParts(Uri host, params string[] paths)
         {
-            return new Uri(host.ToString().TrimEnd('/') + path);
+            var baseUri = host.ToString().TrimEnd('/');
+
+            var combinedPath = string.Join("/", paths.Select(p => p.Trim('/')));
+
+            var full = $"{baseUri}/{combinedPath}";
+
+            if (!Uri.TryCreate(full, UriKind.Absolute, out var result))
+                throw new UriFormatException($"Resulting URI was not valid: {full}");
+
+            return result;
         }
 
+        public static Uri UriWithParams(Uri url, IDictionary<string, string> queryParams)
+        {
+            var baseUri = url.ToString().TrimEnd('/');
 
+            string full;
+
+            if (queryParams != null && queryParams.Count > 0)
+            {
+                var query = string.Join("&", queryParams.Select(kvp =>
+                    $"{Uri.EscapeDataString(kvp.Key)}={Uri.EscapeDataString(kvp.Value)}"
+                ));
+                full = $"{baseUri}?{query}";
+            }
+            else full = baseUri;
+
+            if (!Uri.TryCreate(full, UriKind.Absolute, out var result))
+                throw new UriFormatException($"Resulting URI was not valid: {full}");
+
+            return result;
+        }
 
         private static bool ShouldHandleException(Exception exception)
         {
