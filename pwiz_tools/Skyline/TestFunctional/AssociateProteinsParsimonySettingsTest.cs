@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -34,22 +35,46 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class AssociateProteinsParsimonySettingsTest : AbstractFunctionalTest
     {
-        // Expected values get saved in "TestFunctional\AssociateProteinsParsimonySettingsTest.data\ExpectedValues.json"
+        // What fraction of scenarios to test. 1=Every scenario, 3=Every third scenario
+        private int _scenarioFractionToTest = 1;
         protected override bool IsRecordMode => false;
+        private string GetExpectedValuesFilePath()
+        {
+            return Path.Combine(ExtensionTestContext.GetProjectDirectory(
+                @"TestFunctional\AssociateProteinsParsimonySettingsTest.data"), "ExpectedValues.json");
+        }
+        private const string _testFileZipPath = @"TestFunctional\AssociateProteinsParsimonySettingsTest.zip";
+
 
         [TestMethod]
         public void TestAssociateProteinsParsimonySettings()
         {
-            TestFilesZip = @"TestFunctional\AssociateProteinsParsimonySettingsTest.zip";
+            TestFilesZip = _testFileZipPath;
+            RunFunctionalTest();
+        }
+
+        /// <summary>
+        /// Cycles through the same scenarios as <see cref="TestAssociateProteinsParsimonySettings"/> but
+        /// only waits for a quarter of the scenarios to finish. This verifies that
+        /// <see cref="AssociateProteinsResults.PRODUCER"/> does not have any threading issues.
+        /// </summary>
+        [TestMethod]
+        public void TestQuarterOfAssociateProteinParsimonySettings()
+        {
+            _scenarioFractionToTest = 4;
+            TestFilesZip = _testFileZipPath;
             RunFunctionalTest();
         }
 
         protected override void DoTest()
         {
+            if (_scenarioFractionToTest != 1)
+            {
+                Assert.IsFalse(IsRecordMode);
+            }
             var parsimonySettingsList = EnumerateParsimonySettings().ToList();
             MappingResults[] expectedValues;
-            string expectedValuesPath = Path.Combine(ExtensionTestContext.GetProjectDirectory(
-                @"TestFunctional\AssociateProteinsParsimonySettingsTest.data"), "ExpectedValues.json");
+            string expectedValuesPath = GetExpectedValuesFilePath();
             if (IsRecordMode)
             {
                 expectedValues = new MappingResults[parsimonySettingsList.Count];
@@ -79,6 +104,11 @@ namespace pwiz.SkylineTestFunctional
                     associateProteinsDlg.RemoveSubsetProteins = parsimonySettings.RemoveSubsetProteins;
                     associateProteinsDlg.SelectedSharedPeptides = parsimonySettings.SharedPeptides;
                 });
+                if (0 != iScenario % _scenarioFractionToTest)
+                {
+                    Thread.Sleep(50);
+                    continue;
+                }
                 WaitForCondition(() => associateProteinsDlg.IsComplete);
                 Assert.IsNotNull(associateProteinsDlg.FinalResults);
                 var actualMappingResults = GetMappingResults(associateProteinsDlg);
@@ -103,6 +133,7 @@ namespace pwiz.SkylineTestFunctional
                 }).Serialize(jsonTextWriter, expectedValues);
             }
 
+            WaitForCondition(() => associateProteinsDlg.IsOkEnabled);
             OkDialog(associateProteinsDlg, associateProteinsDlg.OkDialog);
         }
 
