@@ -307,7 +307,7 @@ namespace pwiz.Skyline.Model.Lib
             }
             foreach (var spectrumSourceFile in _librarySourceFiles)
             {
-                detailsByFileId.Add(spectrumSourceFile.Id, new SpectrumSourceFileDetails(spectrumSourceFile.FilePath, spectrumSourceFile.IdFilePath));
+                detailsByFileId.Add(spectrumSourceFile.Id, new SpectrumSourceFileDetails(spectrumSourceFile.FilePath, spectrumSourceFile.IdFilePath, spectrumSourceFile.WorkflowType));
                 scoreTypesByFileId.Add(spectrumSourceFile.Id, new HashSet<string>());
             }
 
@@ -561,7 +561,8 @@ namespace pwiz.Skyline.Model.Lib
             id,
             fileName,
             idFileName,
-            cutoffScore
+            cutoffScore,
+            workflowType
         }
 
         private enum ScoreTypes
@@ -686,6 +687,7 @@ namespace pwiz.Skyline.Model.Lib
                             reader.GetOrdinal(SpectrumSourceFiles
                                 .idFileName); // Save the search result file, too (may be distinct from the spectra source file)
                         int iIdCutoffScore = reader.GetOrdinal(SpectrumSourceFiles.cutoffScore);
+                        int iWorkflowType = reader.GetOrdinal(SpectrumSourceFiles.workflowType);
                         while (reader.Read())
                         {
                             string filename = reader.GetString(iFilename);
@@ -694,7 +696,10 @@ namespace pwiz.Skyline.Model.Lib
                                 : reader.GetString(iIdFilename);
                             int id = reader.GetInt32(iId);
                             double? cutoffScore = iIdCutoffScore < 0 || reader.IsDBNull(iIdCutoffScore) ? (double?) null : reader.GetDouble(iIdCutoffScore);
-                            librarySourceFiles.Add(new BiblioLiteSourceInfo(id, filename, idFilename ?? string.Empty, cutoffScore));
+                            WorkflowType workflowType = iWorkflowType < 0 || reader.IsDBNull(iWorkflowType)
+                                ? WorkflowType.DDA
+                                : (WorkflowType) reader.GetInt32(iWorkflowType);
+                            librarySourceFiles.Add(new BiblioLiteSourceInfo(id, filename, idFilename ?? string.Empty, cutoffScore, workflowType));
                         }
                     }
 
@@ -1774,6 +1779,7 @@ namespace pwiz.Skyline.Model.Lib
             [CanBeNull] public string IDFileName { get; set; }
 
             [CanBeNull] public string FileName { get; set; }
+            public WorkflowType WorkflowType { get; set; }
 
             public int Count { get; set; }
 
@@ -1836,6 +1842,7 @@ namespace pwiz.Skyline.Model.Lib
                     var iSpecIdInFile = reader.GetOrdinal(RefSpectra.SpecIDinFile);
                     var iIdFileName = reader.GetOrdinal(SpectrumSourceFiles.idFileName);
                     var iFileName = reader.GetOrdinal(SpectrumSourceFiles.fileName);
+                    var iWorkflowType = reader.GetOrdinal(SpectrumSourceFiles.workflowType);
                     var iCopies = reader.GetOrdinal(RefSpectra.copies);
                     var iScore = reader.GetOrdinal(RefSpectra.score);
                     var iScoreType = reader.GetOrdinal(ScoreTypes.scoreType);
@@ -1850,6 +1857,11 @@ namespace pwiz.Skyline.Model.Lib
                             sheetInfo.IDFileName = reader.IsDBNull(iIdFileName) ? null : reader.GetString(iIdFileName);
                             sheetInfo.FileName = reader.IsDBNull(iFileName) ? null : reader.GetString(iFileName);
                         }
+
+                        sheetInfo.WorkflowType = iWorkflowType < 0 || reader.IsDBNull(iWorkflowType)
+                            ? WorkflowType.DDA
+                            : (WorkflowType) reader.GetInt32(iWorkflowType);
+
                         if (hasScores)
                         {
                             sheetInfo.Score = reader.IsDBNull(iScore) ? (double?)null : reader.GetDouble(iScore);
@@ -2023,18 +2035,20 @@ namespace pwiz.Skyline.Model.Lib
 
         private struct BiblioLiteSourceInfo
         {
-            public BiblioLiteSourceInfo(int id, string filePath, string idFilePath, double? cutoffScore) : this()
+            public BiblioLiteSourceInfo(int id, string filePath, string idFilePath, double? cutoffScore, WorkflowType workflowType) : this()
             {
                 Id = id;
                 FilePath = filePath;
                 IdFilePath = idFilePath;
                 CutoffScore = cutoffScore;
+                WorkflowType = workflowType;
             }
 
             public int Id { get; private set; }
             public string FilePath { get; private set; } // File from which the spectra were taken (may be same as idFilePath if spectra are taken from search file)
             public string IdFilePath { get; private set; } // File from which the IDs were taken (e.g. search results file from Mascot etc)
             public double? CutoffScore { get; }
+            public WorkflowType WorkflowType { get; private set; } // DDA or DIA
 
             public string BaseName
             {
