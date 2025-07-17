@@ -60,9 +60,16 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             IrtStandard = irtStandard;
             _warningMods = GetWarningMods();
         }
-
+        protected AbstractDeepLibraryBuilder(SrmDocument document, SrmDocument trainingDocument, IrtStandard irtStandard)
+        {
+            Document = document;
+            TrainingDocument = trainingDocument;
+            IrtStandard = irtStandard;
+            _warningMods = GetWarningMods();
+        }
         public SrmDocument Document { get; private set; }
 
+        public SrmDocument TrainingDocument { get; private set; }
         public IrtStandard IrtStandard { get; private set; }
 
         public string AmbiguousMatchesMessage => null;
@@ -120,18 +127,29 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             var result = new List<string> { string.Join(TextUtil.SEPARATOR_TSV_STR, GetHeaderColumnNames(training)) };
 
             // First add the iRT standard peptides
-            if (IrtStandard != null && !IrtStandard.IsEmpty && !IrtStandard.IsAuto)
+            if (!training && IrtStandard != null && !IrtStandard.IsEmpty && !IrtStandard.IsAuto)
             {
                 foreach (var peptide in IrtStandard.GetDocument().Peptides)
                 {
-                    result.AddRange(GetTableRows(peptide, training));
+                    result.AddRange(GetTableRows(peptide, false));
                 }
             }
 
             // Build precursor table row by row
-            foreach (var peptide in Document.Peptides)
+            if (training)
             {
-                result.AddRange(GetTableRows(peptide, training));
+                if (TrainingDocument != null)
+                    foreach (var peptide in TrainingDocument.Peptides)
+                    {
+                        result.AddRange(GetTableRows(peptide, true));
+                    }
+            }
+            else
+            {
+                foreach (var peptide in Document.Peptides)
+                {
+                    result.AddRange(GetTableRows(peptide, false));
+                }
             }
 
             return result.Distinct();

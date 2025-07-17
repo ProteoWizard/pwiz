@@ -254,7 +254,7 @@ namespace pwiz.Skyline.SettingsUI
 
         internal SrmDocument _trainingDocument;
 
-        private bool ValidateBuilder(bool validateInputFiles, bool createDlg = false, bool newBuilder = false)
+        private bool ValidateBuilder(bool validateInputFiles)
         {
             string name;
             if (!_helper.ValidateNameTextBox(textName, out name))
@@ -262,10 +262,6 @@ namespace pwiz.Skyline.SettingsUI
 
             string outputPath = textPath.Text;
 
-            if (newBuilder && Builder != null)
-            {
-                ResetBuilder();
-            }
             if (string.IsNullOrEmpty(outputPath))
             {
                 _helper.ShowTextBoxError(textPath, SettingsUIResources.BuildLibraryDlg_ValidateBuilder_You_must_specify_an_output_file_path, outputPath);
@@ -329,7 +325,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 else if (radioCarafeSource.Checked)
                 {
-                    if (!CreateCarafeBuilder(name, outputPath, createDlg, newBuilder))
+                    if (Builder == null && !CreateCarafeBuilder(name, outputPath))
                         return false;
                 }
                 else
@@ -390,7 +386,7 @@ namespace pwiz.Skyline.SettingsUI
             set => _testLibFilepath = value;
         }
 
-        private bool CreateCarafeBuilder(string name, string outputPath, bool createDlg = false, bool newBuilder = false)
+        private bool CreateCarafeBuilder(string name, string outputPath)
         {
             if (tabControlMain.SelectedIndex == (int)Pages.learning &&
            (textBoxMsMsData.Text == "" || textBoxTrainingDoc.Text == "" ||
@@ -402,26 +398,23 @@ namespace pwiz.Skyline.SettingsUI
             }
 
 
-            if (!SetupPythonEnvironmentForCarafe(createDlg))
+            if (!SetupPythonEnvironmentForCarafe())
             {
                 return false;
             }
 
-            if (Builder == null && newBuilder)
+
+            string msMsDataFilePath = textBoxMsMsData.Text;
+            if (!File.Exists(msMsDataFilePath))
             {
-                string msMsDataFilePath = textBoxMsMsData.Text;
-                if (!File.Exists(msMsDataFilePath))
-                {
-                    _helper.ShowTextBoxError(textBoxMsMsData, @$"{msMsDataFilePath} does not exist.");
-                    return false;
-                }
-                Builder ??= new CarafeLibraryBuilder(name, outputPath, CARAFE, CarafePythonVirtualEnvironmentDir,
-                    msMsDataFilePath, textBoxTrainingDoc.Text, textBoxProteinDatabase.Text, DocumentUI, _trainingDocument,
-                    labelDoc.Text == string.Format(SettingsUIResources.BuildLibraryDlg_DIANN_report_document), IrtStandard, out _testLibFilepath, out _libFilepath);
-
-                btnNext.Enabled = true;
+                _helper.ShowTextBoxError(textBoxMsMsData, @$"{msMsDataFilePath} does not exist.");
+                return false;
             }
+            Builder = new CarafeLibraryBuilder(name, outputPath, CARAFE, CarafePythonVirtualEnvironmentDir,
+                msMsDataFilePath, textBoxTrainingDoc.Text, textBoxProteinDatabase.Text, DocumentUI, _trainingDocument,
+                labelDoc.Text == string.Format(SettingsUIResources.BuildLibraryDlg_DIANN_report_document), IrtStandard, out _testLibFilepath, out _libFilepath);
 
+            btnNext.Enabled = true;
 
             return true;
         }
@@ -494,7 +487,7 @@ namespace pwiz.Skyline.SettingsUI
             return true;
         }
 
-        private bool SetupPythonEnvironmentForCarafe(bool createDlg = true)
+        private bool SetupPythonEnvironmentForCarafe()
         {
             var pythonInstaller = CarafeLibraryBuilder.CreatePythonInstaller(new TextBoxStreamWriterHelper());
 
@@ -650,7 +643,7 @@ namespace pwiz.Skyline.SettingsUI
             Cursor.Current = Cursors.WaitCursor;
             if (tabControlMain.SelectedIndex == (int)Pages.learning && radioCarafeSource.Checked)
             {
-                if (ValidateBuilder(true, true, true))
+                if (ValidateBuilder(true))
                 {
                     Settings.Default.LibraryFilterDocumentPeptides = LibraryFilterPeptides;
                     Settings.Default.LibraryKeepRedundant = LibraryKeepRedundant;
@@ -666,14 +659,14 @@ namespace pwiz.Skyline.SettingsUI
             }
             else if (tabControlMain.SelectedIndex != (int)Pages.properties || radioAlphaSource.Checked || radioKoinaSource.Checked)
             {
-                if (ValidateBuilder(true, true, true))
+                if (ValidateBuilder(true))
                 {
                     Settings.Default.LibraryFilterDocumentPeptides = LibraryFilterPeptides;
                     Settings.Default.LibraryKeepRedundant = LibraryKeepRedundant;
                     DialogResult = DialogResult.OK;
                 }
             }
-            else if (ValidateBuilder(false, true, true))
+            else if (ValidateBuilder(false))
             {
                 Settings.Default.LibraryDirectory = Path.GetDirectoryName(LibraryPath);
 

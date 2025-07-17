@@ -121,8 +121,6 @@ namespace pwiz.Skyline.Model.Lib.Carafe
 
         public static string PythonVersion => Settings.Default.PythonEmbeddableVersion;
         private string PythonVirtualEnvironmentName { get; }
-        public new SrmDocument Document { get; }
-        private SrmDocument TrainingDocument { get; }
         public string DbInputFilePath { get; private set; }
         internal string ExperimentDataFilePath { get; set; }
         internal string ExperimentDataTuningFilePath { get; set; }
@@ -192,7 +190,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
 
         private string CarafeOutputLibraryDir => Path.Combine(WorkDir, OUTPUT_LIBRARY);
 
-        private string CarafeOutputLibraryFilePath => Path.Combine(CarafeOutputLibraryDir, OUTPUT_LIBRARY_FILE_NAME_BLIB);
+        internal string CarafeOutputLibraryFilePath => Path.Combine(CarafeOutputLibraryDir, OUTPUT_LIBRARY_FILE_NAME_BLIB);
 
         internal string CarafeOutputLibraryCsvFilePath => Path.Combine(CarafeOutputLibraryDir, OUTPUT_LIBRARY_FILE_NAME_CSV);
         //        public string BuilderLibraryPath;
@@ -533,7 +531,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             SrmDocument document,
             SrmDocument trainingDocument,
             bool diann_training, 
-            IrtStandard irtStandard, out string testLibraryOutputPath, out string builderLibraryOutputPath) : base(document, irtStandard)
+            IrtStandard irtStandard, out string testLibraryOutputPath, out string builderLibraryOutputPath) : base(document, trainingDocument, irtStandard)
         {
             string rootProcessingDir = Path.GetDirectoryName(libOutPath);
             if (string.IsNullOrEmpty(rootProcessingDir))
@@ -543,8 +541,6 @@ namespace pwiz.Skyline.Model.Lib.Carafe
 
             EnsureWorkDir(rootProcessingDir, PREFIX_WORKDIR);
 
-            Document = document;
-            TrainingDocument = trainingDocument;
             DbInputFilePath = dbInputFilePath;
             PythonVirtualEnvironmentName = pythonVirtualEnvironmentName;
             PythonVirtualEnvironmentScriptsDir = pythonVirtualEnvironmentScriptsDir;
@@ -553,16 +549,13 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
 
             Directory.CreateDirectory(JavaDir);
-            Directory.CreateDirectory(WorkDir);
+            Directory.CreateDirectory(CarafeJavaDir);
 
             _diann_training = diann_training;
             if (_diann_training)
                 TuningFilePath = experimentDataTuningFilePath;
             else
                 TuningFilePath = TrainingFilePath;
-
-            Document = document;
-
 
             BuilderLibraryPath = CarafeOutputLibraryFilePath;
             TestLibraryPath = CarafeOutputLibraryCsvFilePath;
@@ -587,7 +580,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             SrmDocument document, 
             SrmDocument trainingDocument, 
             IDictionary<string, AbstractDdaSearchEngine.Setting> libraryParameters,
-            IrtStandard irtStandard) : base(document, irtStandard)
+            IrtStandard irtStandard) : base(document, trainingDocument, irtStandard)
         {
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
             //PythonVersion = pythonVersion;
@@ -596,10 +589,8 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             //ProteinDatabaseFilePath = proteinDatabaseFilePath;
             ExperimentDataFilePath = experimentDataFilePath;
             ExperimentDataTuningFilePath = experimentDataTuningFilePath;
-            Document = document;
-            TrainingDocument = trainingDocument;
             LibraryParameters = libraryParameters;
-            Directory.CreateDirectory(WorkDir);
+            EnsureWorkDir(Path.GetDirectoryName(libOutPath), PREFIX_WORKDIR);
             Directory.CreateDirectory(JavaDir);
             Directory.CreateDirectory(CarafeJavaDir);
 
@@ -610,8 +601,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             IProgressStatus progressStatus = new ProgressStatus();
             try
             {
-               
-                Directory.CreateDirectory(WorkDir);
+
                 Directory.CreateDirectory(JavaDir);
                 Directory.CreateDirectory(CarafeJavaDir);
 
@@ -870,7 +860,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
                 // clean java dir
                 JavaDirInfo.Delete(true);
                 Directory.CreateDirectory(JavaDir);
- 
+
                 // download java sdk package
                 using var webClient = new MultiFileAsynchronousDownloadClient(progress, 1);
                 if (!webClient.DownloadFileAsync(JavaSdkUri, JavaSdkDownloadPath, out var exception))
@@ -885,8 +875,6 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             if (!isCarafeValid)
             {
                 // clean carafe dir
-                //CarafeJavaDirInfo.Delete(true);
-                Directory.CreateDirectory(WorkDir);
                 Directory.CreateDirectory(CarafeJavaDir);
 
 
@@ -962,7 +950,11 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             progressStatus.ChangePercentComplete(0);
 
             // compose carafe cmd command arguments to build library
-            var args = @$"cd {WorkDir} && echo %PATH% > myPath && " + TextUtil.SpaceSeparate(
+            //var args = @$"cd {WorkDir} && echo %PATH% > myPath && " + TextUtil.SpaceSeparate(
+            //    TextUtil.Quote(PythonVirtualEnvironmentActivateScriptPath)
+            //);
+
+            var args = TextUtil.SpaceSeparate(
                 TextUtil.Quote(PythonVirtualEnvironmentActivateScriptPath)
             );
 
@@ -987,9 +979,8 @@ namespace pwiz.Skyline.Model.Lib.Carafe
 
             // execute command
             var pr = new ProcessRunner();
-            var psi = new ProcessStartInfo()
+            var psi = new ProcessStartInfo( batPath, "")
             {
-                FileName = batPath,
                 CreateNoWindow = true,
                 UseShellExecute = false,
                 RedirectStandardOutput = true,

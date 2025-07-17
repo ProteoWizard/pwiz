@@ -27,6 +27,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.Carafe;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
@@ -45,7 +46,7 @@ namespace TestPerf
         /// <summary>
         /// When true Python installation is forced by deleting any old installation
         /// </summary>
-        private bool IsCleanPythonMode => false;
+        private bool IsCleanPythonMode => true;
 
 
         /// <summary>
@@ -57,13 +58,13 @@ namespace TestPerf
         /// <summary>
         /// When true the test write the Python hash value for <see cref="Settings.PythonEmbeddableHash"/>
         /// </summary>
-        protected override bool IsRecordMode => true;
+        protected override bool IsRecordMode => false;
 
         public string LogOutput => TestContext.GetTestResultsPath("TestConsole.log");
 
         public IAsynchronousDownloadClient TestDownloadClient { get; set; }
         private const string TESTDATA_URL = @"https://skyline.ms/tutorials/CarafeTestData/";
-        private const string TESTDATA_FILE = @"CarafeBuildLibraryTest.zip";
+        private const string TESTDATA_FILE = @"CarafeBuildLibraryTestSmall.zip";
         private const string TESTDATA_DIR = @"TestPerf";
 
 
@@ -93,11 +94,12 @@ namespace TestPerf
                 PrintEnvironment();
             }
 
+
             if (IsCleanPythonMode)
                 AssertEx.IsTrue(PythonInstaller.DeleteToolsPythonDirectory());
 
             string currentDirectory = Directory.GetCurrentDirectory();
-            TestFilesZip = $@"{currentDirectory}\\{TESTDATA_DIR}\\{TESTDATA_FILE}";
+            TestFilesZip = $@"{currentDirectory}\{TESTDATA_DIR}\{TESTDATA_FILE}";
 
             Directory.CreateDirectory(TESTDATA_DIR);
 
@@ -118,7 +120,7 @@ namespace TestPerf
 
         private void DownloadTestDataPackage(IProgressMonitor progressMonitor)
         {
-            
+
             using var webClient = TestDownloadClient ?? new MultiFileAsynchronousDownloadClient(progressMonitor, 1);
             if (!webClient.DownloadFileAsync(TestDataPackageUri, TestFilesZip, out var downloadException))
                 throw new ToolExecutionException(@"TestData package download failed...", downloadException);
@@ -127,9 +129,12 @@ namespace TestPerf
 
         string LibraryTunedByDiann => @"CarafeLibraryTunedByDiann";
         string LibraryTunedBySky => @"CarafeLibraryTunedBySkyline";
+        string LibraryTunedBySkyIrt => @"CarafeLibraryTunedBySkylineIrt";
         string LibraryTunedByThis => @"CarafeLibraryTunedByThis";
         private string LibraryPathTunedByDiann => TestContext.GetTestPath(@"TestCarafeBuildLibrary\LibraryTunedByDiann.blib");
         private string LibraryPathTunedBySky => TestContext.GetTestPath(@"TestCarafeBuildLibrary\LibraryTunedBySkyline.blib");
+        private string LibraryPathTunedBySkyIrt => TestContext.GetTestPath(@"TestCarafeBuildLibrary\LibraryTunedBySkylineIrt.blib");
+
         private string LibraryPathTunedByThis => TestContext.GetTestPath(@"TestCarafeBuildLibrary\LibraryTunedByThis.blib");
         private string openSkyDoc = "";
 
@@ -140,14 +145,29 @@ namespace TestPerf
             TestFilesDir.GetTestPath("LibraryWithIrt.blib");
 
         string DiannFineTuneFile => TestFilesDir.GetTestPath(@"report.tsv");
-        string MzMLFile => TestFilesDir.GetTestPath(@"Crucios_20240320_CH_15_HeLa_CID_27NCE_01.mzML");
-        string SkyFineTuneFile => TestFilesDir.GetTestPath(@"Lumos_8mz_staggered_reCID_human\Lumos_8mz_staggered_reCID_human.sky");
-        string ProteinDatabase => TestFilesDir.GetTestPath(@"UP000005640_9606.fasta");
+        string MzMLFile => TestFilesDir.GetTestPath(@"Lumos_8mz_staggered_reCID_human_small\Crucios_20240320_CH_15_HeLa_CID_27NCE_01.mzML");
+        private string SkyFineTuneFile => SkyTestFile; //TestFilesDir.GetTestPath(@"Lumos_8mz_staggered_reCID_human\Lumos_8mz_staggered_reCID_human.sky");
+
+        private string SkyTestFile => TestFilesDir.GetTestPath(@"Lumos_8mz_staggered_reCID_human_small\Lumos_8mz_staggered_reCID_human.sky");
+
+
+        string ProteinDatabase => TestFilesDir.GetTestPath(@"UP000005640_9606_small.fasta");
+
         protected override void DoTest()
         {
             //TestEmptyDocumentMessage();
 
-            OpenDocument(TestFilesDir.GetTestPath(@"Lumos_8mz_staggered_reCID_human\\Lumos_8mz_staggered_reCID_human.sky"));
+            //TestCarafeBuildLibrary();
+
+            OpenDocument(TestFilesDir.GetTestPath(SkyTestFile));
+
+            //var fullTestFilePath = ResultsUtil.ResourceToTestFile(typeof(ResultsUtil), "Lumos_8mz_staggered_reCID_human_small.sky", SkyTestFile);
+
+            //OpenDocument(fullTestFilePath);
+
+
+
+
 
             const string answerWithoutIrt = "without_iRT/predict_transformed.speclib.tsv";
             const string libraryWithoutIrt = "CarafeLibraryWithoutIrt";
@@ -156,12 +176,20 @@ namespace TestPerf
             const string answerWithIrt = "with_iRT/predict_transformed.speclib.tsv";
 
             var peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
+           
+            
+            //RunUI(()=>MessageDlg.Show(peptideSettings, $@"Current Directory: {Environment.CurrentDirectory}\nPATH: {Environment.GetEnvironmentVariable("PATH")}"));
+
 
             var simulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT; // Simulates not having Nvidia library but having the GPU
-            CarafeBuildLibrary(peptideSettings, LibraryTunedBySky, LibraryPathTunedBySky, MzMLFile, "", SkyFineTuneFile, BuildLibraryDlg.LearningOptions.another_doc, @"test_res_fine_tuned_bySky.csv", simulatedInstallationState);
+            CarafeBuildLibrary(peptideSettings, LibraryTunedBySky, LibraryPathTunedBySky, MzMLFile, "", SkyFineTuneFile, BuildLibraryDlg.BuildLibraryTargetOptions.currentSkylineDocument, BuildLibraryDlg.LearningOptions.another_doc, TestFilesDir.GetTestPath(@"test_res_fine_tuned_bySky.blib"), simulatedInstallationState);
 
             simulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD; // Simulates not having Nvidia GPU
-            CarafeBuildLibrary(peptideSettings, LibraryTunedByDiann, LibraryPathTunedByDiann, MzMLFile, "", DiannFineTuneFile, BuildLibraryDlg.LearningOptions.diann_report, @"test_res_fine_tuned_byDiann.csv", simulatedInstallationState);
+            CarafeBuildLibrary(peptideSettings, LibraryTunedByDiann, LibraryPathTunedByDiann, MzMLFile, "", DiannFineTuneFile, BuildLibraryDlg.BuildLibraryTargetOptions.currentSkylineDocument,BuildLibraryDlg.LearningOptions.diann_report, TestFilesDir.GetTestPath(@"test_res_fine_tuned_byDiann.blib"), simulatedInstallationState);
+           
+  //          CarafeBuildLibrary(peptideSettings, LibraryTunedByThis, LibraryPathTunedByThis, MzMLFile, ProteinDatabase, DiannFineTuneFile, BuildLibraryDlg.LearningOptions.diann_report, TestFilesDir.GetTestPath(@"test_res_fine_tuned_byThis.blib"), simulatedInstallationState);
+
+            CarafeBuildLibrary(peptideSettings, LibraryTunedBySkyIrt, LibraryPathTunedBySkyIrt, MzMLFile, "", SkyFineTuneFile, BuildLibraryDlg.BuildLibraryTargetOptions.currentSkylineDocument, BuildLibraryDlg.LearningOptions.another_doc, TestFilesDir.GetTestPath(@"test_res_fine_tuned_bySky_iRT.blib"), simulatedInstallationState, IrtStandard.BIOGNOSYS_11);
 
             var fileHash = PythonInstallerUtil.GetMD5FileHash(PythonInstaller.PythonEmbeddablePackageDownloadPath);
 
@@ -177,8 +205,9 @@ namespace TestPerf
             var spectralLibraryViewer = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
             RunUI(() =>
             {
-                spectralLibraryViewer.ChangeSelectedLibrary(libraryWithoutIrt);
-                spectralLibraryViewer.ChangeSelectedLibrary(libraryWithIrt);
+                spectralLibraryViewer.ChangeSelectedLibrary(LibraryPathTunedBySky);
+                spectralLibraryViewer.ChangeSelectedLibrary(LibraryPathTunedByDiann);
+                spectralLibraryViewer.ChangeSelectedLibrary(LibraryPathTunedBySkyIrt);
             });
 
             OkDialog(spectralLibraryViewer, spectralLibraryViewer.Close);
@@ -189,12 +218,13 @@ namespace TestPerf
                 saveChangesDlg.Message);
             OkDialog(saveChangesDlg, saveChangesDlg.ClickNo);
 
+            WaitForCondition(1000, () => !FileStreamManager.Default.HasPooledStreams, string.Empty, false); 
             TestFilesDir.CheckForFileLocks(TestFilesDir.FullPath);
         }
 
-        protected  void DoTestBACK()
+        protected void DoTestBACK()
         {
-            openSkyDoc = TestFilesDir.GetTestPath(@"Lumos_8mz_staggered_reCID_human\Lumos_8mz_staggered_reCID_human.sky"); //(@"Test-imported\Test-imported.sky");
+            openSkyDoc = TestFilesDir.GetTestPath(SkyTestFile); //(@"Test-imported\Test-imported.sky");
             OpenDocument(openSkyDoc);
 
             var peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
@@ -202,23 +232,23 @@ namespace TestPerf
             const string libraryTunedByDiann = @"CarafeLibraryTunedByDiann";
             const string libraryTunedBySky = @"CarafeLibraryTunedBySkyline";
             const string libraryTunedByThis = @"CarafeLibraryTunedByThis";
-            string diannFineTuneFile = TestFilesDir.GetTestPath(@"report.tsv");
-            string mzMLFile = TestFilesDir.GetTestPath(@"Crucios_20240320_CH_15_HeLa_CID_27NCE_01.mzML");
-            string skyFineTuneFile = TestFilesDir.GetTestPath(@"Lumos_8mz_staggered_reCID_human\Lumos_8mz_staggered_reCID_human.sky");
-            string proteinDatabase = TestFilesDir.GetTestPath(@"UP000005640_9606.fasta");
-            
+            string diannFineTuneFile = DiannFineTuneFile;
+            string mzMLFile = MzMLFile;
+            string skyFineTuneFile = SkyTestFile;
+            string proteinDatabase = ProteinDatabase;
 
-            CarafeBuildLibrary(peptideSettings, libraryTunedBySky, LibraryTunedBySky, mzMLFile, "", skyFineTuneFile, BuildLibraryDlg.LearningOptions.another_doc, @"test_res_fine_tuned_bySky.csv");
+
+            CarafeBuildLibrary(peptideSettings, libraryTunedBySky, LibraryTunedBySky, mzMLFile, "", skyFineTuneFile, BuildLibraryDlg.BuildLibraryTargetOptions.currentSkylineDocument, BuildLibraryDlg.LearningOptions.another_doc, @"test_res_fine_tuned_bySky.csv");
             OkDialog(peptideSettings, peptideSettings.OkDialog);
 
             peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
 
-            CarafeBuildLibrary(peptideSettings, libraryTunedByDiann, LibraryTunedByDiann, mzMLFile, "", diannFineTuneFile, BuildLibraryDlg.LearningOptions.diann_report,@"test_res_fine_tuned_byDiann.csv");
+            CarafeBuildLibrary(peptideSettings, libraryTunedByDiann, LibraryTunedByDiann, mzMLFile, "", diannFineTuneFile, BuildLibraryDlg.BuildLibraryTargetOptions.currentSkylineDocument, BuildLibraryDlg.LearningOptions.diann_report, @"test_res_fine_tuned_byDiann.csv");
             OkDialog(peptideSettings, peptideSettings.OkDialog);
 
             peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
 
-            CarafeBuildLibrary(peptideSettings, libraryTunedByThis, LibraryTunedByThis, mzMLFile, proteinDatabase, "", BuildLibraryDlg.LearningOptions.this_doc, @"test_res_fine_tuned_bySky.csv");
+            CarafeBuildLibrary(peptideSettings, libraryTunedByThis, LibraryTunedByThis, mzMLFile, proteinDatabase, "", BuildLibraryDlg.BuildLibraryTargetOptions.currentSkylineDocument, BuildLibraryDlg.LearningOptions.this_doc, @"test_res_fine_tuned_bySky.csv");
             OkDialog(peptideSettings, peptideSettings.OkDialog);
 
             var spectralLibraryViewer = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
@@ -232,14 +262,10 @@ namespace TestPerf
 
             // test with iRT
             peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
-            CarafeBuildLibrary(peptideSettings, libraryTunedByThis, LibraryTunedByThis, mzMLFile, proteinDatabase, "", BuildLibraryDlg.LearningOptions.this_doc, "test_res_fine_tuned_bySky_iRT.csv", PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD, IrtStandard.BIOGNOSYS_11);
+            CarafeBuildLibrary(peptideSettings, libraryTunedByThis, LibraryTunedByThis, mzMLFile, proteinDatabase, "", BuildLibraryDlg.BuildLibraryTargetOptions.currentSkylineDocument, BuildLibraryDlg.LearningOptions.this_doc, "test_res_fine_tuned_bySky_iRT.csv", PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD, IrtStandard.BIOGNOSYS_11);
             //OkDialog(spectralLibraryViewer, spectralLibraryViewer.Close);
+            PauseTest();
         }
-        protected override void Cleanup()
-        {
-            DirectoryEx.SafeDelete("TestCarafeBuildLibrary");
-        }
-
 
         /// <summary>
         /// Test goes through building of a Library by Carafe with or without iRT
@@ -247,6 +273,7 @@ namespace TestPerf
         /// <param name="peptideSettings">Open PeptideSettingsUI Dialog object</param>
         /// <param name="libraryName">Name of the library to build</param>
         /// <param name="libraryPath">Path of the library to build</param>
+        /// <param name="buildTarget">Build library target peptides, current document peptides (or FASTA database if current doc is blank)</param>
         /// <param name="learnFrom">Source of fine tuning document</param>
         /// <param name="answerFile">Answer sheet in the test</param>
         /// <param name="simulatedInstallationState">Python Simulated State helps determine whether user is offered Nvidia install</param>
@@ -254,30 +281,41 @@ namespace TestPerf
         /// <param name="mzMLFile">MS/MS Data file path</param>
         /// <param name="proteinDatabase">Protein FASTA database</param>
         /// <param name="fineTuneFile">fine tuning file path</param>
-        private void CarafeBuildLibrary(PeptideSettingsUI peptideSettings, string libraryName, 
-            string libraryPath, string mzMLFile, string proteinDatabase, string fineTuneFile, BuildLibraryDlg.LearningOptions learnFrom, string answerFile, PythonInstaller.eSimulatedInstallationState simulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT, IrtStandard iRTtype = null)
+        private void CarafeBuildLibrary(PeptideSettingsUI peptideSettings, string libraryName,
+            string libraryPath, string mzMLFile, string proteinDatabase, string fineTuneFile,
+            BuildLibraryDlg.BuildLibraryTargetOptions buildTarget, BuildLibraryDlg.LearningOptions learnFrom,
+            string answerFile,
+            PythonInstaller.eSimulatedInstallationState simulatedInstallationState =
+                PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT, IrtStandard iRTtype = null)
         {
             var buildLibraryDlg = ShowDialog<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg);
-
+            // PauseTest();
             RunUI(() =>
             {
                 buildLibraryDlg.LibraryName = libraryName;
                 buildLibraryDlg.LibraryPath = libraryPath;
+                buildLibraryDlg.ComboBuildLibraryTarget = buildTarget;
                 buildLibraryDlg.ComboLearnFrom = learnFrom;
                 buildLibraryDlg.Carafe = true;
+                if (iRTtype != null) buildLibraryDlg.IrtStandard = iRTtype;
+
+                buildLibraryDlg.OkWizardPage();
+
                 buildLibraryDlg.TextBoxMsMsDataFile = mzMLFile;
                 buildLibraryDlg.TextBoxProteinDatabase = proteinDatabase;
                 buildLibraryDlg.TextBoxTrainingDoc = fineTuneFile;
 
-                if (iRTtype != null) buildLibraryDlg.IrtStandard = iRTtype;
 
                 buildLibraryDlg.UnloadTrainingDocument();
                 if (proteinDatabase == "" && learnFrom == BuildLibraryDlg.LearningOptions.another_doc)
                     buildLibraryDlg.LoadTrainingDocument(fineTuneFile);
 
-                buildLibraryDlg.OkWizardPage();
+                //buildLibraryDlg.OkWizardPage();
+                //buildLibraryDlg.OkWizardPage();
             });
-
+            //PauseTest();
+            Assert.AreEqual(buildLibraryDlg.ButtonNextText, @"Finish");
+            Assert.IsTrue(buildLibraryDlg.ButtonNextEnabled);
             // Test the control path where Python needs installation and is
             if (simulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT)
             {
@@ -286,7 +324,15 @@ namespace TestPerf
                 PythonInstaller.SimulatedInstallationState = simulatedInstallationState;
                 var confirmDlg = TestNvidiaInstallPython(buildLibraryDlg);
                 if (confirmDlg != null)
+                {
                     OkDialog(confirmDlg, confirmDlg.OkDialog);
+                }
+                else
+                {
+                    PythonInstaller.SimulatedInstallationState =
+                        PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD;
+                    //RunUI(buildLibraryDlg.OkWizardPage);
+                }
             }
             else
             {
@@ -295,7 +341,7 @@ namespace TestPerf
             }
 
             var carafeLibraryBuilder = (CarafeLibraryBuilder)buildLibraryDlg.Builder;
-            string builtLibraryPath = carafeLibraryBuilder.CarafeOutputLibraryCsvFilePath;
+            string builtLibraryPath = carafeLibraryBuilder.CarafeOutputLibraryFilePath;
 
 
 
@@ -313,6 +359,23 @@ namespace TestPerf
 
             WaitForClosedForm<BuildLibraryDlg>();
             WaitForCondition(() => File.Exists(builtLibraryPath));
+            //Wait until the BLIB is complete before moving on to comparing to the answersheet
+            WaitForCondition(() =>
+            {
+                try
+                {
+                    using (FileStream fs = File.Open(builtLibraryPath, FileMode.Open, FileAccess.Read, FileShare.None))
+                    {
+                        return true; // File is accessible and not locked
+                    }
+                }
+                catch (Exception)
+                {
+                    // ignored
+                }
+
+                return false;
+            });
 
             //AssertEx.IsFalse(carafeLibraryBuilder.FractionOfExpectedOutputLinesGenerated > 2, @"TestCarafeBuildLibrary: Total count of generated output is more than twice of the expected count ... ");
             //AssertEx.IsFalse(carafeLibraryBuilder.FractionOfExpectedOutputLinesGenerated < 0.5, @"TestCarafeBuildLibrary: Total count of generated output is less than half of the expected count ... ");
@@ -321,14 +384,27 @@ namespace TestPerf
             // });
 
             //TestResultingLibByHash(storedHash);
-            TestResultingLibByValues(buildLibraryDlg,TestFilesDir.GetTestPath(answerFile));
 
+            //This doesn't allow cleanup
+           
+            using (var expected = LibrarySpec.CreateFromPath("answer", answerFile))
+            {
+                using (var result = LibrarySpec.CreateFromPath("testBuilt", builtLibraryPath))
+                {
+                    AssertEx.LibraryEquals(expected, result);
+                }
+
+                //AssertEx.AreEqualDatabases( answerFile, builtLibraryPath);
+
+                //TestResultingLibByValues(buildLibraryDlg, TestFilesDir.GetTestPath(answerFile))
+            }
         }
+
         private static void VerifyAddIrts(AddIrtPeptidesDlg dlg)
         {
             RunUI(() =>
             {
-                Assert.AreEqual(7, dlg.PeptidesCount);
+                Assert.AreEqual(100, dlg.PeptidesCount);
                 Assert.AreEqual(1, dlg.RunsConvertedCount); // Libraries now convert through internal alignment to single RT scale
                 Assert.AreEqual(0, dlg.RunsFailedCount);
             });

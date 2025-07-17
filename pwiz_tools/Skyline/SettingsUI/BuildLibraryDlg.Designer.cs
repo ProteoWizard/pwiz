@@ -882,7 +882,14 @@
         private System.Windows.Forms.CheckedListBox listLibraries;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.LinkLabel alphaPeptDeepSettings;
-
+        internal string ButtonNextText
+        {
+            get => btnNext.Text;
+        }
+        internal bool  ButtonNextEnabled
+        {
+            get => btnNext.Enabled;
+        }
         internal string TextBoxMsMsDataFile
         {
             get => textBoxMsMsData.Text;
@@ -902,6 +909,11 @@
         {
             get => (LearningOptions)comboLearnFrom.SelectedIndex;
             set => comboLearnFrom.SelectedIndex = (int)value;
+        }
+        internal BuildLibraryTargetOptions ComboBuildLibraryTarget
+        {
+            get => (BuildLibraryTargetOptions)comboBuildLibraryTarget.SelectedIndex;
+            set => comboBuildLibraryTarget.SelectedIndex = (int)value;
         }
     }
 }
