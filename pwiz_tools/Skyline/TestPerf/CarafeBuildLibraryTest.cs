@@ -49,7 +49,7 @@ namespace TestPerf
         /// </summary>
         private bool IsCleanPythonMode => true;
 
-        private bool RunExtendedTest => false;
+        private bool RunExtendedTest => true;
 
         /// <summary>
         /// When true console output is added to clarify what the test has accomplished
@@ -389,7 +389,12 @@ namespace TestPerf
             PythonInstaller.eSimulatedInstallationState simulatedInstallationState =
                 PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT, IrtStandard iRTtype = null)
         {
-            var buildLibraryDlg = ShowDialog<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg);
+            bool buildLibraryDlgFinished = false;
+            var buildLibraryDlg = ShowDialog<BuildLibraryDlg> (() =>
+            {
+                peptideSettings.ShowBuildLibraryDlg();
+                buildLibraryDlgFinished = true;
+            });
             // PauseTest();
             RunUI(() =>
             {
@@ -456,7 +461,7 @@ namespace TestPerf
             }
 
             WaitForClosedForm<BuildLibraryDlg>();
-
+            WaitForCondition(() => buildLibraryDlgFinished);
 
             var carafeLibraryBuilder = (CarafeLibraryBuilder)buildLibraryDlg.Builder;
             string builtLibraryPath = carafeLibraryBuilder.CarafeOutputLibraryFilePath;
