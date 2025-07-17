@@ -49,6 +49,7 @@ namespace TestPerf
         /// </summary>
         private bool IsCleanPythonMode => true;
 
+        private bool RunExtendedTest => false;
 
         /// <summary>
         /// When true console output is added to clarify what the test has accomplished
@@ -156,6 +157,78 @@ namespace TestPerf
 
         protected override void DoTest()
         {
+            if (RunExtendedTest)
+                LongTest();
+            else
+                ShortTest();
+        }
+
+        private void ShortTest()
+        {
+
+            //TestEmptyDocumentMessage();
+
+            //TestCarafeBuildLibrary();
+            DirectoryEx.SafeDelete(TestContext.GetTestPath(@"TestCarafeBuildLibrary\"));
+            Directory.CreateDirectory(TestContext.GetTestPath(@"TestCarafeBuildLibrary\"));
+
+            OpenDocument(TestFilesDir.GetTestPath(SkyTestFile));
+
+            //var fullTestFilePath = ResultsUtil.ResourceToTestFile(typeof(ResultsUtil), "Lumos_8mz_staggered_reCID_human_small.sky", SkyTestFile);
+
+            //OpenDocument(fullTestFilePath);
+
+            const string answerWithoutIrt = "without_iRT/predict_transformed.speclib.tsv";
+            const string libraryWithoutIrt = "CarafeLibraryWithoutIrt";
+
+            const string libraryWithIrt = "CarafeLibraryWithIrt";
+            const string answerWithIrt = "with_iRT/predict_transformed.speclib.tsv";
+
+            var peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
+
+
+            //RunUI(()=>MessageDlg.Show(peptideSettings, $@"Current Directory: {Environment.CurrentDirectory}\nPATH: {Environment.GetEnvironmentVariable("PATH")}"));
+
+
+            var simulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT; // Simulates not having Nvidia library but having the GPU
+            
+            var builtLibraryBySkyIrt = CarafeBuildLibrary(peptideSettings, LibraryTunedBySkyIrt, LibraryPathTunedBySkyIrt, MzMLFile, "", SkyFineTuneFile, BuildLibraryDlg.BuildLibraryTargetOptions.currentSkylineDocument, BuildLibraryDlg.LearningOptions.another_doc, TestFilesDir.GetTestPath(@"test_res_fine_tuned_bySky_iRT.blib"), simulatedInstallationState, IrtStandard.BIOGNOSYS_11);
+
+            var fileHash = PythonInstallerUtil.GetMD5FileHash(PythonInstaller.PythonEmbeddablePackageDownloadPath);
+
+            if (IsRecordMode)
+                Console.WriteLine($@"Computed PythonEmbeddableHash: {fileHash}");
+            Assert.AreEqual(Settings.Default.PythonEmbeddableHash, fileHash);
+
+            var addRtStdDlg = WaitForOpenForm<AddIrtStandardsToDocumentDlg>();
+            OkDialog(addRtStdDlg, addRtStdDlg.CancelDialog);
+
+            var spectralLibraryViewer = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
+
+            RunUI(() =>
+            {
+                spectralLibraryViewer.ChangeSelectedLibrary(LibraryPathTunedBySkyIrt);
+            });
+
+            OkDialog(spectralLibraryViewer, spectralLibraryViewer.Close);
+
+            var saveChangesDlg =
+                ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.NewDocument(), WAIT_TIME);
+            AssertEx.AreComparableStrings(SkylineResources.SkylineWindow_CheckSaveDocument_Do_you_want_to_save_changes,
+                saveChangesDlg.Message);
+            OkDialog(saveChangesDlg, saveChangesDlg.ClickNo);
+
+            FileStreamManager.Default.CloseAllStreams();
+            WaitForCondition(() => !FileStreamManager.Default.HasPooledStreams);
+            TestFilesDir.CheckForFileLocks(TestFilesDir.FullPath);
+
+            var expected = LibrarySpec.CreateFromPath("answer", TestFilesDir.GetTestPath(@"test_res_fine_tuned_bySky_iRT.blib"));
+            var result = LibrarySpec.CreateFromPath("testBuilt", builtLibraryBySkyIrt);
+            AssertEx.LibraryEquals(expected, result);
+        }
+        private void LongTest() 
+        {
+       
             //TestEmptyDocumentMessage();
 
             //TestCarafeBuildLibrary();
