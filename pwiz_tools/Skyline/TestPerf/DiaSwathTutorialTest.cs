@@ -970,7 +970,6 @@ namespace TestPerf
                 Console.WriteLine();
 
             var peptidesPerProteinDlg = ShowDialog<AssociateProteinsDlg>(() => importPeptideSearchDlg.ClickNextButton());
-            PauseTest();
             WaitForCondition(() => peptidesPerProteinDlg.DocumentFinalCalculated);
             if (IsRecordMode)
                 Console.WriteLine();    // Line break after test run information
