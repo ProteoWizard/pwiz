@@ -28,13 +28,17 @@ using System.Linq;
 
 namespace pwiz.SkylineTestFunctional
 {
+    /// <summary>
+    /// Tests choosing different parsimony settings in <see cref="AssociateProteinsDlg"/>
+    /// </summary>
     [TestClass]
     public class AssociateProteinsParsimonySettingsTest : AbstractFunctionalTest
     {
+        // Expected values get saved in "TestFunctional\AssociateProteinsParsimonySettingsTest.data\ExpectedValues.json"
         protected override bool IsRecordMode => false;
 
         [TestMethod]
-        public void TestAssociateProteinsOptions()
+        public void TestAssociateProteinsParsimonySettings()
         {
             TestFilesZip = @"TestFunctional\AssociateProteinsParsimonySettingsTest.zip";
             RunFunctionalTest();
@@ -102,7 +106,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(associateProteinsDlg, associateProteinsDlg.OkDialog);
         }
 
-        public IEnumerable<ProteinAssociation.ParsimonySettings> EnumerateParsimonySettings()
+        private IEnumerable<ProteinAssociation.ParsimonySettings> EnumerateParsimonySettings()
         {
             foreach (var groupProteins in new[] { false, true })
             {
