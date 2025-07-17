@@ -24,6 +24,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Irt;
@@ -158,6 +159,8 @@ namespace TestPerf
             //TestEmptyDocumentMessage();
 
             //TestCarafeBuildLibrary();
+            DirectoryEx.SafeDelete(TestContext.GetTestPath(@"TestCarafeBuildLibrary\"));
+            Directory.CreateDirectory(TestContext.GetTestPath(@"TestCarafeBuildLibrary\"));
 
             OpenDocument(TestFilesDir.GetTestPath(SkyTestFile));
 
@@ -183,9 +186,13 @@ namespace TestPerf
 
             var simulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT; // Simulates not having Nvidia library but having the GPU
             var builtLibraryBySky = CarafeBuildLibrary(peptideSettings, LibraryTunedBySky, LibraryPathTunedBySky, MzMLFile, "", SkyFineTuneFile, BuildLibraryDlg.BuildLibraryTargetOptions.currentSkylineDocument, BuildLibraryDlg.LearningOptions.another_doc, TestFilesDir.GetTestPath(@"test_res_fine_tuned_bySky.blib"), simulatedInstallationState);
-
+        
+            peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
+            
             simulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD; // Simulates not having Nvidia GPU
             var builtLibraryByDiann = CarafeBuildLibrary(peptideSettings, LibraryTunedByDiann, LibraryPathTunedByDiann, MzMLFile, "", DiannFineTuneFile, BuildLibraryDlg.BuildLibraryTargetOptions.currentSkylineDocument,BuildLibraryDlg.LearningOptions.diann_report, TestFilesDir.GetTestPath(@"test_res_fine_tuned_byDiann.blib"), simulatedInstallationState);
+
+            peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
 
             //          CarafeBuildLibrary(peptideSettings, LibraryTunedByThis, LibraryPathTunedByThis, MzMLFile, ProteinDatabase, DiannFineTuneFile, BuildLibraryDlg.LearningOptions.diann_report, TestFilesDir.GetTestPath(@"test_res_fine_tuned_byThis.blib"), simulatedInstallationState);
 
@@ -197,12 +204,11 @@ namespace TestPerf
                 Console.WriteLine($@"Computed PythonEmbeddableHash: {fileHash}");
             Assert.AreEqual(Settings.Default.PythonEmbeddableHash, fileHash);
 
-            OkDialog(peptideSettings, peptideSettings.OkDialog);
-
             var addRtStdDlg = WaitForOpenForm<AddIrtStandardsToDocumentDlg>();
             OkDialog(addRtStdDlg, addRtStdDlg.CancelDialog);
 
             var spectralLibraryViewer = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
+
             RunUI(() =>
             {
                 spectralLibraryViewer.ChangeSelectedLibrary(LibraryPathTunedBySky);
@@ -378,7 +384,6 @@ namespace TestPerf
             string builtLibraryPath = carafeLibraryBuilder.CarafeOutputLibraryFilePath;
 
             WaitForCondition(() => File.Exists(builtLibraryPath));
-            //Wait until the BLIB is complete before moving on to comparing to the answersheet
             WaitForCondition(() =>
             {
                 try
@@ -395,7 +400,11 @@ namespace TestPerf
 
                 return false;
             });
+            WaitForClosedForm<LongWaitDlg>();
 
+            OkDialog(peptideSettings, peptideSettings.OkDialog);
+
+            //WaitForCondition(() => !FileStreamManager.Default.HasPooledStreams);
             return builtLibraryPath;
             //AssertEx.IsFalse(carafeLibraryBuilder.FractionOfExpectedOutputLinesGenerated > 2, @"TestCarafeBuildLibrary: Total count of generated output is more than twice of the expected count ... ");
             //AssertEx.IsFalse(carafeLibraryBuilder.FractionOfExpectedOutputLinesGenerated < 0.5, @"TestCarafeBuildLibrary: Total count of generated output is less than half of the expected count ... ");
