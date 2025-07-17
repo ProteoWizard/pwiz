@@ -117,7 +117,7 @@ namespace pwiz.SkylineTestFunctional
             AssertCurveListsSame(graphChromatogram.GetCurveList(graphChromatogramGraphControl.MasterPane.PaneList[0]),
                 peakAreaSummary.GraphControl.MasterPane.PaneList[0].CurveList.FindAll(c => c.Tag is IdentityPath && !c.IsY2Axis));
             AssertCurveListsSame(graphChromatogram.GetCurveList(graphChromatogramGraphControl.MasterPane.PaneList[1]),
-                peakAreaSummary.GraphControl.MasterPane.PaneList[1].CurveList.FindAll(c => c.Tag is IdentityPath && !c.IsY2Axis).ToList());
+                peakAreaSummary.GraphControl.MasterPane.PaneList[1].CurveList.FindAll(c => c.Tag is IdentityPath && !c.IsY2Axis));
         }
 
         private static void AssertCurveListsSame(List<CurveItem> curveList1, List<CurveItem> curveList2)
