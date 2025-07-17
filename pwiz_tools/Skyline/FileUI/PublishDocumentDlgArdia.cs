@@ -284,19 +284,14 @@ namespace pwiz.Skyline.FileUI
 
             PublishedDocument = result.Value;
 
-            string successMessage = ArdiaResources.FileUpload_Success_OpenDataExplorer;
-            if (MultiButtonMsgDlg.Show(parent, successMessage, MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false)
-                    == DialogResult.No)
+            var successMessage = ArdiaResources.FileUpload_Success_OpenDataExplorer;
+            if (MultiButtonMsgDlg.Show(parent, successMessage, MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false) == DialogResult.No)
                 return;
 
             var getUrlResult = Client.GetFolderByGetParentFolderByPath(DestinationPath);
             if (getUrlResult.IsFailure)
             {
-                string message;
-                if (result.ErrorStatusCode == HttpStatusCode.Unauthorized)
-                    message = ArdiaResources.Error_InvalidToken;
-                else
-                    message = ArdiaResources.Error_StatusCode_Unexpected;
+                var message = result.ErrorStatusCode == HttpStatusCode.Unauthorized ? ArdiaResources.Error_InvalidToken : ArdiaResources.Error_StatusCode_Unexpected;
                 MessageDlg.ShowWithExceptionAndNetworkDetail(parent, message, getUrlResult.ErrorMessage, getUrlResult.ErrorException);
                 return;
             }
