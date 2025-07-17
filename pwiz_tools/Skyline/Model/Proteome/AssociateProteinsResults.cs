@@ -175,18 +175,18 @@ namespace pwiz.Skyline.Model.Proteome
                 Parameters parameter,
                 IDictionary<WorkOrder, object> inputs)
             {
-                var preliminaryResults = inputs.Values.OfType<PreliminaryResults>().First();
+                var preliminaryResults = inputs.Values.OfType<ParsimonyIndependentResults>().First();
                 return ProduceResults(productionMonitor, parameter, preliminaryResults);
             }
 
-            public AssociateProteinsResults ProduceResults(ProductionMonitor productionMonitor, Parameters parameter, PreliminaryResults preliminaryResults) 
+            public AssociateProteinsResults ProduceResults(ProductionMonitor productionMonitor, Parameters parameter, ParsimonyIndependentResults parsimonyIndependentResults) 
             {
-                var results = new AssociateProteinsResults(parameter).ChangeError(preliminaryResults.ErrorMessage, preliminaryResults.ErrorException);
+                var results = new AssociateProteinsResults(parameter).ChangeError(parsimonyIndependentResults.ErrorMessage, parsimonyIndependentResults.ErrorException);
                 if (results.IsErrorResult)
                 {
                     return results;
                 }
-                var proteinAssociation = preliminaryResults.GetProteinAssociation();
+                var proteinAssociation = parsimonyIndependentResults.GetProteinAssociation();
                 if (proteinAssociation?.AssociatedProteins == null)
                 {
                     return results;
@@ -222,13 +222,13 @@ namespace pwiz.Skyline.Model.Proteome
 
             public override IEnumerable<WorkOrder> GetInputs(Parameters parameter)
             {
-                yield return PRELIMINARY_RESULTS_PRODUCER.MakeWorkOrder(new PreliminaryParameters(parameter.Document,
+                yield return PRELIMINARY_RESULTS_PRODUCER.MakeWorkOrder(new ParsimonyIndependentParameters(parameter.Document,
                     parameter.FastaFilePath, parameter.BackgroundProteome));
             }
         }
 
-        private static readonly Producer<PreliminaryParameters, PreliminaryResults> PRELIMINARY_RESULTS_PRODUCER =
-            Producer.FromFunction<PreliminaryParameters, PreliminaryResults>(ProducePreliminaryResults);
+        private static readonly Producer<ParsimonyIndependentParameters, ParsimonyIndependentResults> PRELIMINARY_RESULTS_PRODUCER =
+            Producer.FromFunction<ParsimonyIndependentParameters, ParsimonyIndependentResults>(ProduceParsimonyIndependentResults);
 
 
         private class ProgressImpl : ILongWaitBroker, IProgressMonitor
@@ -306,9 +306,9 @@ namespace pwiz.Skyline.Model.Proteome
             Producer.FromFunction<ImmutableList<string>, StringSearch>((productionMonitor, peptides) =>
                 new StringSearch(peptides, productionMonitor.CancellationToken));
 
-        private class PreliminaryParameters
+        private class ParsimonyIndependentParameters
         {
-            public PreliminaryParameters(SrmDocument document, string fastaFilePath, BackgroundProteome backgroundProteome)
+            public ParsimonyIndependentParameters(SrmDocument document, string fastaFilePath, BackgroundProteome backgroundProteome)
             {
                 Document = document;
                 FastaFilePath = fastaFilePath;
@@ -319,7 +319,7 @@ namespace pwiz.Skyline.Model.Proteome
             public string FastaFilePath { get; }
             public BackgroundProteome BackgroundProteome { get; }
 
-            protected bool Equals(PreliminaryParameters other)
+            protected bool Equals(ParsimonyIndependentParameters other)
             {
                 return ReferenceEquals(Document, other.Document) && FastaFilePath == other.FastaFilePath && Equals(BackgroundProteome, other.BackgroundProteome);
             }
@@ -329,7 +329,7 @@ namespace pwiz.Skyline.Model.Proteome
                 if (obj is null) return false;
                 if (ReferenceEquals(this, obj)) return true;
                 if (obj.GetType() != GetType()) return false;
-                return Equals((PreliminaryParameters)obj);
+                return Equals((ParsimonyIndependentParameters)obj);
             }
 
             public override int GetHashCode()
@@ -344,10 +344,10 @@ namespace pwiz.Skyline.Model.Proteome
             }
         }
 
-        private class PreliminaryResults : Immutable
+        private class ParsimonyIndependentResults : Immutable
         {
             private ProteinAssociation _proteinAssociation;
-            public PreliminaryResults ChangeProteinAssociation(ProteinAssociation proteinAssociation)
+            public ParsimonyIndependentResults ChangeProteinAssociation(ProteinAssociation proteinAssociation)
             {
                 return ChangeProp(ImClone(this), im => im._proteinAssociation = proteinAssociation);
             }
@@ -359,7 +359,7 @@ namespace pwiz.Skyline.Model.Proteome
 
             public string ErrorMessage { get; private set; }
             public Exception ErrorException { get; private set; }
-            public PreliminaryResults ChangeError(string errorMessage, Exception exception)
+            public ParsimonyIndependentResults ChangeError(string errorMessage, Exception exception)
             {
                 return ChangeProp(ImClone(this), im =>
                 {
@@ -369,13 +369,13 @@ namespace pwiz.Skyline.Model.Proteome
             }
         }
 
-        private static PreliminaryResults ProducePreliminaryResults(ProductionMonitor productionMonitor, PreliminaryParameters parameter)
+        private static ParsimonyIndependentResults ProduceParsimonyIndependentResults(ProductionMonitor productionMonitor, ParsimonyIndependentParameters parameter)
         {
             var document = parameter.Document;
             var stringSearch = new StringSearch(document.Peptides.Select(peptide => peptide.Target.Sequence));
             var proteinAssociation =
                 new ProteinAssociation(parameter.Document, stringSearch);
-            var results = new PreliminaryResults();
+            var results = new ParsimonyIndependentResults();
             if (!string.IsNullOrEmpty(parameter.FastaFilePath))
             {
                 if (!File.Exists(parameter.FastaFilePath))
