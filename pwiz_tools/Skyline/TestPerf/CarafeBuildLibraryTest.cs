@@ -46,7 +46,7 @@ namespace TestPerf
         /// <summary>
         /// When true Python installation is forced by deleting any old installation
         /// </summary>
-        private bool IsCleanPythonMode => true;
+        private bool IsCleanPythonMode => false;
 
 
         /// <summary>
@@ -386,18 +386,11 @@ namespace TestPerf
             //TestResultingLibByHash(storedHash);
 
             //This doesn't allow cleanup
-           
-            using (var expected = LibrarySpec.CreateFromPath("answer", answerFile))
-            {
-                using (var result = LibrarySpec.CreateFromPath("testBuilt", builtLibraryPath))
-                {
-                    AssertEx.LibraryEquals(expected, result);
-                }
 
-                //AssertEx.AreEqualDatabases( answerFile, builtLibraryPath);
+            var expected = LibrarySpec.CreateFromPath("answer", answerFile);
+            var result = LibrarySpec.CreateFromPath("testBuilt", builtLibraryPath);
+            AssertEx.LibraryEquals(expected, result);
 
-                //TestResultingLibByValues(buildLibraryDlg, TestFilesDir.GetTestPath(answerFile))
-            }
         }
 
         private static void VerifyAddIrts(AddIrtPeptidesDlg dlg)
