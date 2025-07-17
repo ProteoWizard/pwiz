@@ -336,15 +336,15 @@ namespace pwiz.SkylineTestConnected
             });
 
             var shareTypeDlg = ShowDialog<ShareTypeDlg>(publishDlg.OkDialog);
-            var docUploadedDlg = ShowDialog<MessageDlg>(shareTypeDlg.OkDialog);
+            var docUploadedDlg = ShowDialog<MultiButtonMsgDlg>(shareTypeDlg.OkDialog);
 
             // CONSIDER: in this case, MessageDlg displays when publishing is successful AND when there's an error. 
             //           Calling OkDialog(...) works in both cases - which causes downstream, less obvious errors.
             //           Is there a better way to detect when a MessageDlg indicates an error without looking at 
             //           the message string?
-            Assert.AreEqual(ArdiaResources.FileUpload_Success, docUploadedDlg.Message, @"Error publishing the document to Ardia");
+            Assert.AreEqual(ArdiaResources.FileUpload_Success_OpenDataExplorer, docUploadedDlg.Message, @"Error publishing the document to Ardia");
 
-            OkDialog(docUploadedDlg, docUploadedDlg.ClickOk);
+            OkDialog(docUploadedDlg, docUploadedDlg.ClickYes);
             Assert.IsNotNull(publishDlg.DestinationPath);
             Assert.AreEqual(@$"/{folderPath[0]}/{folderPath[1]}", publishDlg.DestinationPath);
 

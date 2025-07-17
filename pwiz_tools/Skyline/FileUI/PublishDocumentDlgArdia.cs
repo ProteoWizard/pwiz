@@ -299,7 +299,6 @@ namespace pwiz.Skyline.FileUI
                     message = ArdiaResources.Error_StatusCode_Unexpected;
                 MessageDlg.ShowWithExceptionAndNetworkDetail(parent, message, getUrlResult.ErrorMessage, getUrlResult.ErrorException);
                 return;
-                
             }
 
             Process.Start(getUrlResult.Value.Url.ToString());
