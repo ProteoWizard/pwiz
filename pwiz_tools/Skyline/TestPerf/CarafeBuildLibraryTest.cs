@@ -47,7 +47,7 @@ namespace TestPerf
         /// <summary>
         /// When true Python installation is forced by deleting any old installation
         /// </summary>
-        private bool IsCleanPythonMode => false;
+        private bool IsCleanPythonMode => true;
 
 
         /// <summary>
@@ -223,7 +223,7 @@ namespace TestPerf
             AssertEx.AreComparableStrings(SkylineResources.SkylineWindow_CheckSaveDocument_Do_you_want_to_save_changes,
                 saveChangesDlg.Message);
             OkDialog(saveChangesDlg, saveChangesDlg.ClickNo);
-
+            FileStreamManager.Default.CloseAllStreams();
             WaitForCondition(() => !FileStreamManager.Default.HasPooledStreams); 
             TestFilesDir.CheckForFileLocks(TestFilesDir.FullPath);
             
