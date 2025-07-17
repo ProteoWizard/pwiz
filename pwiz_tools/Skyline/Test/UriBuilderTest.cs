@@ -19,8 +19,6 @@ namespace pwiz.SkylineTest
             var host = new Uri(VALID_HOST);
             Assert.AreEqual(VALID_HOST + PATH_1, ArdiaClient.UriFromParts(host, PATH_1).AbsoluteUri);
             Assert.AreEqual(VALID_HOST + PATH_1 + "/" + PATH_2, ArdiaClient.UriFromParts(host, PATH_1, PATH_2).AbsoluteUri);
-
-
         }
 
         [TestMethod]
