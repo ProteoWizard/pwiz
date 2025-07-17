@@ -114,7 +114,13 @@ namespace pwiz.Skyline.Model.Proteome
 
         public ProteinAssociation Clone()
         {
-            return (ProteinAssociation)MemberwiseClone();
+            var result = (ProteinAssociation)MemberwiseClone();
+            result._proteinOrGeneGroupResultCacheByGeneLevel = new Dictionary<bool, ProteinOrGeneGroupResultCache>()
+            {
+                { false, null },
+                { true, null }
+            };
+            return result;
         }
 
         public void UseFastaFile(string file, ILongWaitBroker broker)
