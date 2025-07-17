@@ -182,14 +182,14 @@ namespace TestPerf
 
 
             var simulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT; // Simulates not having Nvidia library but having the GPU
-            CarafeBuildLibrary(peptideSettings, LibraryTunedBySky, LibraryPathTunedBySky, MzMLFile, "", SkyFineTuneFile, BuildLibraryDlg.BuildLibraryTargetOptions.currentSkylineDocument, BuildLibraryDlg.LearningOptions.another_doc, TestFilesDir.GetTestPath(@"test_res_fine_tuned_bySky.blib"), simulatedInstallationState);
+            var builtLibraryBySky = CarafeBuildLibrary(peptideSettings, LibraryTunedBySky, LibraryPathTunedBySky, MzMLFile, "", SkyFineTuneFile, BuildLibraryDlg.BuildLibraryTargetOptions.currentSkylineDocument, BuildLibraryDlg.LearningOptions.another_doc, TestFilesDir.GetTestPath(@"test_res_fine_tuned_bySky.blib"), simulatedInstallationState);
 
             simulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD; // Simulates not having Nvidia GPU
-            CarafeBuildLibrary(peptideSettings, LibraryTunedByDiann, LibraryPathTunedByDiann, MzMLFile, "", DiannFineTuneFile, BuildLibraryDlg.BuildLibraryTargetOptions.currentSkylineDocument,BuildLibraryDlg.LearningOptions.diann_report, TestFilesDir.GetTestPath(@"test_res_fine_tuned_byDiann.blib"), simulatedInstallationState);
-           
-  //          CarafeBuildLibrary(peptideSettings, LibraryTunedByThis, LibraryPathTunedByThis, MzMLFile, ProteinDatabase, DiannFineTuneFile, BuildLibraryDlg.LearningOptions.diann_report, TestFilesDir.GetTestPath(@"test_res_fine_tuned_byThis.blib"), simulatedInstallationState);
+            var builtLibraryByDiann = CarafeBuildLibrary(peptideSettings, LibraryTunedByDiann, LibraryPathTunedByDiann, MzMLFile, "", DiannFineTuneFile, BuildLibraryDlg.BuildLibraryTargetOptions.currentSkylineDocument,BuildLibraryDlg.LearningOptions.diann_report, TestFilesDir.GetTestPath(@"test_res_fine_tuned_byDiann.blib"), simulatedInstallationState);
 
-            CarafeBuildLibrary(peptideSettings, LibraryTunedBySkyIrt, LibraryPathTunedBySkyIrt, MzMLFile, "", SkyFineTuneFile, BuildLibraryDlg.BuildLibraryTargetOptions.currentSkylineDocument, BuildLibraryDlg.LearningOptions.another_doc, TestFilesDir.GetTestPath(@"test_res_fine_tuned_bySky_iRT.blib"), simulatedInstallationState, IrtStandard.BIOGNOSYS_11);
+            //          CarafeBuildLibrary(peptideSettings, LibraryTunedByThis, LibraryPathTunedByThis, MzMLFile, ProteinDatabase, DiannFineTuneFile, BuildLibraryDlg.LearningOptions.diann_report, TestFilesDir.GetTestPath(@"test_res_fine_tuned_byThis.blib"), simulatedInstallationState);
+
+            var builtLibraryBySkyIrt = CarafeBuildLibrary(peptideSettings, LibraryTunedBySkyIrt, LibraryPathTunedBySkyIrt, MzMLFile, "", SkyFineTuneFile, BuildLibraryDlg.BuildLibraryTargetOptions.currentSkylineDocument, BuildLibraryDlg.LearningOptions.another_doc, TestFilesDir.GetTestPath(@"test_res_fine_tuned_bySky_iRT.blib"), simulatedInstallationState, IrtStandard.BIOGNOSYS_11);
 
             var fileHash = PythonInstallerUtil.GetMD5FileHash(PythonInstaller.PythonEmbeddablePackageDownloadPath);
 
@@ -218,8 +218,20 @@ namespace TestPerf
                 saveChangesDlg.Message);
             OkDialog(saveChangesDlg, saveChangesDlg.ClickNo);
 
-            WaitForCondition(1000, () => !FileStreamManager.Default.HasPooledStreams, string.Empty, false); 
+            WaitForCondition(() => !FileStreamManager.Default.HasPooledStreams); 
             TestFilesDir.CheckForFileLocks(TestFilesDir.FullPath);
+            
+            var expected = LibrarySpec.CreateFromPath("answer", TestFilesDir.GetTestPath(@"test_res_fine_tuned_bySky_iRT.blib")); 
+            var result = LibrarySpec.CreateFromPath("testBuilt", builtLibraryBySkyIrt); 
+            AssertEx.LibraryEquals(expected, result); 
+            
+            expected = LibrarySpec.CreateFromPath("answer", TestFilesDir.GetTestPath(@"test_res_fine_tuned_byDiann.blib"));
+            result = LibrarySpec.CreateFromPath("testBuilt", builtLibraryByDiann);
+            AssertEx.LibraryEquals(expected, result);
+
+            expected = LibrarySpec.CreateFromPath("answer", TestFilesDir.GetTestPath(@"test_res_fine_tuned_bySky.blib"));
+            result = LibrarySpec.CreateFromPath("testBuilt", builtLibraryBySky);
+            AssertEx.LibraryEquals(expected, result);
         }
 
         protected void DoTestBACK()
@@ -263,12 +275,17 @@ namespace TestPerf
             // test with iRT
             peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
             CarafeBuildLibrary(peptideSettings, libraryTunedByThis, LibraryTunedByThis, mzMLFile, proteinDatabase, "", BuildLibraryDlg.BuildLibraryTargetOptions.currentSkylineDocument, BuildLibraryDlg.LearningOptions.this_doc, "test_res_fine_tuned_bySky_iRT.csv", PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD, IrtStandard.BIOGNOSYS_11);
+
+            //  var expected = LibrarySpec.CreateFromPath("answer", answerFile);
+            //  var result = LibrarySpec.CreateFromPath("testBuilt", builtLibraryPath);
+            //  AssertEx.LibraryEquals(expected, result);
+
             //OkDialog(spectralLibraryViewer, spectralLibraryViewer.Close);
             PauseTest();
         }
 
         /// <summary>
-        /// Test goes through building of a Library by Carafe with or without iRT
+        /// Test goes through building of a Library by Carafe with or without iRT.  Returns path to library built/
         /// </summary>
         /// <param name="peptideSettings">Open PeptideSettingsUI Dialog object</param>
         /// <param name="libraryName">Name of the library to build</param>
@@ -281,7 +298,7 @@ namespace TestPerf
         /// <param name="mzMLFile">MS/MS Data file path</param>
         /// <param name="proteinDatabase">Protein FASTA database</param>
         /// <param name="fineTuneFile">fine tuning file path</param>
-        private void CarafeBuildLibrary(PeptideSettingsUI peptideSettings, string libraryName,
+        private string CarafeBuildLibrary(PeptideSettingsUI peptideSettings, string libraryName,
             string libraryPath, string mzMLFile, string proteinDatabase, string fineTuneFile,
             BuildLibraryDlg.BuildLibraryTargetOptions buildTarget, BuildLibraryDlg.LearningOptions learnFrom,
             string answerFile,
@@ -340,9 +357,6 @@ namespace TestPerf
                 RunUI(buildLibraryDlg.OkWizardPage);
             }
 
-            var carafeLibraryBuilder = (CarafeLibraryBuilder)buildLibraryDlg.Builder;
-            string builtLibraryPath = carafeLibraryBuilder.CarafeOutputLibraryFilePath;
-
 
 
             if (iRTtype != null)
@@ -358,6 +372,11 @@ namespace TestPerf
             }
 
             WaitForClosedForm<BuildLibraryDlg>();
+
+
+            var carafeLibraryBuilder = (CarafeLibraryBuilder)buildLibraryDlg.Builder;
+            string builtLibraryPath = carafeLibraryBuilder.CarafeOutputLibraryFilePath;
+
             WaitForCondition(() => File.Exists(builtLibraryPath));
             //Wait until the BLIB is complete before moving on to comparing to the answersheet
             WaitForCondition(() =>
@@ -377,6 +396,7 @@ namespace TestPerf
                 return false;
             });
 
+            return builtLibraryPath;
             //AssertEx.IsFalse(carafeLibraryBuilder.FractionOfExpectedOutputLinesGenerated > 2, @"TestCarafeBuildLibrary: Total count of generated output is more than twice of the expected count ... ");
             //AssertEx.IsFalse(carafeLibraryBuilder.FractionOfExpectedOutputLinesGenerated < 0.5, @"TestCarafeBuildLibrary: Total count of generated output is less than half of the expected count ... ");
             // PythonInstaller.SimulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD;
@@ -387,11 +407,13 @@ namespace TestPerf
 
             //This doesn't allow cleanup
 
-            var expected = LibrarySpec.CreateFromPath("answer", answerFile);
-            var result = LibrarySpec.CreateFromPath("testBuilt", builtLibraryPath);
-            AssertEx.LibraryEquals(expected, result);
+            // var expected = LibrarySpec.CreateFromPath("answer", answerFile);
+            // var result = LibrarySpec.CreateFromPath("testBuilt", builtLibraryPath);
+            // AssertEx.LibraryEquals(expected, result);
 
         }
+
+
 
         private static void VerifyAddIrts(AddIrtPeptidesDlg dlg)
         {
