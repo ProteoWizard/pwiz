@@ -27,7 +27,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
 
         private StorageInfoResponse() { }
         
-        public long TotalSpace { get; }
-        public long AvailableFreeSpace { get; }
+        // public long TotalSpace { get; }
+        // public long AvailableFreeSpace { get; }
     }
 }
