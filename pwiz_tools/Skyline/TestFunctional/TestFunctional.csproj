@@ -164,6 +164,7 @@
     <Compile Include="AlphabeticalReportEditorTest.cs" />
     <Compile Include="ApplyPeakToAllTest.cs" />
     <Compile Include="AreaNormalizeOptionTest.cs" />
+    <Compile Include="AssociateProteinsParsimonySettingsTest.cs" />
     <Compile Include="AssociateProteinsWhileLoadingTest.cs" />
     <Compile Include="AssociateProteinVariantTest.cs" />
     <Compile Include="AutoSelectPeptidesTest.cs" />
