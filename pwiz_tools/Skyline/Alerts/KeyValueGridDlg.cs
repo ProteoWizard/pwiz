@@ -103,7 +103,6 @@ namespace pwiz.Skyline.Alerts
 
 
                     comboBox.Items.AddRange(validValues.Cast<object>().ToArray());
-
                     
                     if ((kvp.Value as AbstractDdaSearchEngine.Setting)!.OtherAction != null)
                     {
@@ -134,9 +133,9 @@ namespace pwiz.Skyline.Alerts
                                         var newText = setting.OtherAction(keyToControl[other_kvp.Key].Text, comboBox.Text);
                                         keyToControl[other_kvp.Key].Text = newText;
                                     }
-                                    thisBox.Focus();
                                     thisBox.Text = String.Empty;
                                     thisBox.DroppedDown = false;
+                                    thisBox.Focus();
                                     break;
                                 }
 
@@ -144,7 +143,7 @@ namespace pwiz.Skyline.Alerts
                         }
                     };
 
-                    comboBox.TextChanged += (sender, args) =>
+                    comboBox.TextUpdate += (sender, args) =>
                     {
                         ComboBox thisBox = sender as ComboBox;
                         if (thisBox != null)
@@ -164,8 +163,8 @@ namespace pwiz.Skyline.Alerts
                             // Restore text and cursor position
                             if (thisBox.Text != currentText)
                                 thisBox.Text = currentText;
-
-                            //thisBox.Cursor = Cursor.Show();    
+                        
+                            thisBox.Cursor = Cursors.Default;    
                             //thisBox.Focus(); // Ensure focus is retained
                             thisBox.SelectionLength = 0;
                             thisBox.SelectionStart = thisBox.Text.Length;
