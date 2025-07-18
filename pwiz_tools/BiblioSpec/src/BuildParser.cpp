@@ -287,7 +287,8 @@ bool lessThanPosition(const SeqMod& mod1, const SeqMod& mod2)
  * \returns The ID for this file in the table.
  */
 sqlite3_int64 BuildParser::insertSpectrumFilename(string& filename, 
-                                                  bool insertAsIs){
+                                                  bool insertAsIs,
+                                                  WORKFLOW_TYPE workflowType){
     // get full path of filename
     string fullPath;
     if(insertAsIs){
@@ -303,7 +304,7 @@ sqlite3_int64 BuildParser::insertSpectrumFilename(string& filename,
     }
 
     // get the file ID to save with each spectrum
-    sqlite3_int64 fileId = blibMaker_.addFile(fullPath, blibMaker_.getCutoffScore(), fullFilename_);
+    sqlite3_int64 fileId = blibMaker_.addFile(fullPath, blibMaker_.getCutoffScore(), fullFilename_, workflowType);
 
     const int MAX_SPECTRUM_FILES = 2000;
     int curFile = blibMaker_.getCurFile();
@@ -381,7 +382,7 @@ void BuildParser::OptionalSort(PSM_SCORE_TYPE scoreType)
  *
  * Requires that the curSpecFilename be set.
  */
-void BuildParser::buildTables(PSM_SCORE_TYPE scoreType, string specFilename, bool showSpecProgress) {
+void BuildParser::buildTables(PSM_SCORE_TYPE scoreType, string specFilename, bool showSpecProgress, WORKFLOW_TYPE workflowType) {
     // return if no psms for this file
     if( psms_.size() == 0 ) {
         Verbosity::warn("No matches passed score filter in %s. %d matches did not pass filter.", curSpecFileName_.c_str(), filteredOutPsmCount_ );
@@ -455,9 +456,9 @@ void BuildParser::buildTables(PSM_SCORE_TYPE scoreType, string specFilename, boo
     int fileId = 0;
     if( !psmsAreNonRedundant ) {
         if( specFilename.empty() ){
-            fileId = (int) insertSpectrumFilename(curSpecFileName_);
+            fileId = (int) insertSpectrumFilename(curSpecFileName_, false, workflowType);
         } else {
-            fileId = (int) insertSpectrumFilename(specFilename, true); // insert as is
+            fileId = (int) insertSpectrumFilename(specFilename, true, workflowType); // insert as is
         }
     }
 

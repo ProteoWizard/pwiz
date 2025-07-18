@@ -153,6 +153,7 @@ public:
             _identityServerUrl = gcnew Uri(queryVars[L"identity"] == nullptr ? defaultIdentityServer : queryVars[L"identity"]);
             _clientScope = queryVars[L"scope"] == nullptr ? defaultClientScope : queryVars[L"scope"];
             _clientSecret = queryVars[L"secret"] == nullptr ? L"secret" : queryVars[L"secret"];
+            _clientId = queryVars[L"clientId"] == nullptr ? L"resourceownerclient_jwt" : queryVars[L"clientId"];
             _sampleResultUrl = _baseUrl = gcnew Uri(temp->GetLeftPart(UriPartial::Path));
             _sampleSetId = queryVars[L"sampleSetId"] != nullptr ? queryVars[L"sampleSetId"] : throw gcnew ArgumentException("sampleSetId parameter is required");
             _injectionId = queryVars[L"injectionId"] != nullptr ? queryVars[L"injectionId"] : throw gcnew ArgumentException("injectionId parameter is required");
@@ -451,7 +452,7 @@ private:
         return (size_t)floor(logicalIndex / 200.0);
     }
 
-    static String^ getAccessTokenResult(String^ uri, AccessTokenRequest^ request)
+    static Object^ getAccessTokenResult(String^ uri, AccessTokenRequest^ request)
     {
         auto fields = gcnew System::Collections::Generic::Dictionary<System::String^, System::String^>();
         fields->Add(IdentityModel::OidcConstants::TokenRequest::GrantType, IdentityModel::OidcConstants::GrantTypes::Password);
@@ -459,11 +460,11 @@ private:
         fields->Add(IdentityModel::OidcConstants::TokenRequest::Password, request->Password);
         fields->Add(IdentityModel::OidcConstants::TokenRequest::Scope, request->Scope);
 
-        auto tokenClient = gcnew TokenClient(request->Uri, "resourceownerclient_jwt", request->Secret, nullptr);
+        auto tokenClient = gcnew TokenClient(request->Uri, request->ClientId, request->Secret, nullptr);
         TokenResponse^ response = tokenClient->RequestAsync(fields, System::Threading::CancellationToken::None)->Result;
         if (response->IsError)
             throw user_error("authentication error: incorrect hostname, username or password? (" + ToStdString(response->Error) + ")");
-        return response->AccessToken;
+        return gcnew KeyValuePair<String^, DateTime>(response->AccessToken, DateTime::UtcNow.AddSeconds(response->ExpiresIn));
     }
 
     void getAccessToken()
@@ -491,11 +492,19 @@ private:
         request->Password = password;
         request->Scope = _clientScope;
         request->Secret = _clientSecret;
+        request->ClientId = _clientId;
         request->Uri = tokenEndpoint();
 
-        auto tokenEndpointUrlSerialized = tokenEndpoint() + "/" + username + "/" + password + "/" + _clientScope + "/" + _clientSecret;
-        auto delgt = gcnew Func<String^, AccessTokenRequest^, String^>(getAccessTokenResult);
-        _accessToken = globalResponseCache->GetOrAdd(tokenEndpointUrlSerialized, delgt, request);
+        auto tokenEndpointUrlSerialized = tokenEndpoint() + "/" + username + "/" + password + "/" + _clientScope + "/" + _clientSecret + "/" + _clientId;
+        auto delgt = gcnew Func<String^, AccessTokenRequest^, Object^>(getAccessTokenResult);
+        auto cachedToken = safe_cast<KeyValuePair<String^, DateTime>^>(globalResponseCache->GetOrAdd(tokenEndpointUrlSerialized, delgt, request));
+        if (DateTime::UtcNow >= cachedToken->Value)
+        {
+            String^ d;
+            globalResponseCache->TryRemove(tokenEndpointUrlSerialized, d);
+            cachedToken = safe_cast<KeyValuePair<String^, DateTime>^>(globalResponseCache->GetOrAdd(tokenEndpointUrlSerialized, delgt, request));
+        }
+        _accessToken = cachedToken->Key;
         //Console::WriteLine(_accessToken);
     }
 
@@ -505,7 +514,7 @@ private:
         _httpClient->BaseAddress = gcnew Uri(_baseUrl->GetLeftPart(System::UriPartial::Authority));
     }*/
 
-    static String^ getHttpResult(String^ uri, HttpClient^ httpClient)
+    static Object^ getHttpResult(String^ uri, HttpClient^ httpClient)
     {
         try
         {
@@ -523,9 +532,9 @@ private:
 
     void getSampleMetadata()
     {
-        auto delgt = gcnew Func<String^, HttpClient^, String^>(getHttpResult);
+        auto delgt = gcnew Func<String^, HttpClient^, Object^>(getHttpResult);
         HttpClient^ httpClient = _httpClient;
-        String^ json = globalResponseCache->GetOrAdd(injectionsMetadataEndpoint(), delgt, httpClient);
+        String^ json = safe_cast<String^>(globalResponseCache->GetOrAdd(injectionsMetadataEndpoint(), delgt, httpClient));
 
         try
         {
@@ -778,7 +787,12 @@ private:
                 fi.id = ToStdString(channelJson->SelectToken("$.id")->ToString());
                 auto name = channelJson->SelectToken("$.name")->ToString();
                 fi.name = ToStdString(name);
-                fi.index = Convert::ToInt32(Text::RegularExpressions::Regex::Replace(name, "(\\d+)\\:.*", "$1")) - 1; // parse channel number from name field and subtract one to use as the index
+                auto channelIndexStr = Text::RegularExpressions::Regex::Replace(name, "(\\d+)\\:.*", "$1");
+                if (channelIndexStr == name)
+                    fi.index = -1;
+                else
+                    fi.index = Convert::ToInt32(channelIndexStr) - 1; // parse channel number from name field and subtract one to use as the index
+
                 //fi.hasCCSCalibration = (bool)spectrumInfo->SelectToken("$.hasCCSCalibration");
                 fi.channelDataShape = ParseEnum<ChannelDataShape>(channelDataShape);
                 fi.channelDataType = ParseEnum<ChannelDataType>(channelDataType);
@@ -871,6 +885,9 @@ private:
 
         for (auto& ci : _channelInfo)
         {
+            if (ci.scanningMethod == ScanningMethod::Unknown)
+                continue;
+
             auto findItr = std::find_if(_chromatograms.begin(), _chromatograms.end(), [&ci](const auto& x) { return ci.id == x.altId; });
             if (findItr == _chromatograms.end())
                 throw std::runtime_error("error finding TIC chromatogram for channel " + ci.name);
@@ -1119,6 +1136,9 @@ private:
         _numNetworkSpectra = 0;
         for (auto& ci : _channelInfo)
         {
+            if (ci.scanningMethod == ScanningMethod::Unknown)
+                continue;
+
             ci.scanIndexOffset = _numNetworkSpectra;
             _numNetworkSpectra += ci.numSpectra;
             if (ci.ticChromatogram->timeArray.size() != ci.numSpectra)
@@ -1131,6 +1151,9 @@ private:
 
         for (auto& ci : _channelInfo)
         {
+            if (ci.scanningMethod == ScanningMethod::Unknown)
+                continue;
+
             for (size_t i = 0; i < ci.ticChromatogram->timeArray.size(); ++i)
                 _spectrumIndex.emplace_back(ci.ticChromatogram->timeArray[i], &ci, static_cast<int>(i));
         }

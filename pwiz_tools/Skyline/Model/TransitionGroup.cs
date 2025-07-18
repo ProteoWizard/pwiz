@@ -778,7 +778,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private readonly struct LossId : IComparable
+        private readonly struct LossId : IComparable, IEquatable<LossId>
         {
             public LossId(IonType ionType, double mass, int charge)
             {
