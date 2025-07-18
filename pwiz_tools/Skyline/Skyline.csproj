@@ -14,8 +14,9 @@
     <FileAlignment>512</FileAlignment>
     <ApplicationIcon>Skyline.ico</ApplicationIcon>
     <IsWebBootstrapper>true</IsWebBootstrapper>
-    <ManifestCertificateThumbprint>FE05A4E5B557E824D58CFC715ADBC1D6EB26B5AE</ManifestCertificateThumbprint>
-    <ManifestKeyFile>Skyline_2_TemporaryKey.pfx</ManifestKeyFile>
+    <ManifestCertificateThumbprint>586806A1F7B1C85AD63BC46CA599EC4142EBE84A</ManifestCertificateThumbprint>
+    <ManifestKeyFile>
+    </ManifestKeyFile>
     <GenerateManifests>true</GenerateManifests>
     <TargetZone>LocalIntranet</TargetZone>
     <SignManifests>true</SignManifests>
@@ -34,7 +35,7 @@
     <AssemblyName Condition=" '$(MSBuildAssemblyName)' != '' ">$(MSBuildAssemblyName)</AssemblyName>
     <MascotParserPath>..\..\libraries\msparser_3_1_0_x86_win64</MascotParserPath>
     <RuntimeIdentifiers>win</RuntimeIdentifiers>
-    <PublishUrl>publish\</PublishUrl>
+	<PublishUrl>T:\www\site\skyline.ms\html\software\Skyline-daily13-64\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
     <UpdateEnabled>false</UpdateEnabled>
@@ -44,15 +45,15 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>false</MapFileExtensions>
-    <InstallUrl>https://proteome.gs.washington.edu/~dshteyn/SkylineCarafePreviewTest/</InstallUrl>
-    <UpdateUrl>https://proteome.gs.washington.edu/~dshteyn/SkylineCarafePreviewTest/</UpdateUrl>
+    <InstallUrl>https://skyline.gs.washington.edu/software/Skyline-daily13-64/</InstallUrl>
+    <UpdateUrl>https://skyline.gs.washington.edu/software/Skyline-daily13-64/</UpdateUrl>
     <SupportUrl>https://skyline.ms/support.url</SupportUrl>
-    <ProductName>Skyline-Carafe-Preview</ProductName>
+    <ProductName>Skyline-daily</ProductName>
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>186</ApplicationRevision>
-    <ApplicationVersion>25.1.1.186</ApplicationVersion>
+    <ApplicationRevision>147</ApplicationRevision>
+    <ApplicationVersion>25.1.1.147</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
