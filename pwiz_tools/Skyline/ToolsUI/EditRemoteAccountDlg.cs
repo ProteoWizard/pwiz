@@ -135,10 +135,7 @@ namespace pwiz.Skyline.ToolsUI
                 textArdiaAlias_Username.Text = remoteAccount.Username;
                 textArdiaServerURL.Text = remoteAccount.ServerUrl;
 
-                if (ardiaAccount.HasAuthenticatedHttpClientFactory())
-                {
-                    _ardiaAccount_CurrentlyLoggedIn = ardiaAccount;
-                }
+                _ardiaAccount_CurrentlyLoggedIn = ardiaAccount.HasToken() ? ardiaAccount : null;
 
                 cbArdiaDeleteRawAfterImport.Checked = ardiaAccount.DeleteRawAfterImport;
                 
@@ -204,6 +201,12 @@ namespace pwiz.Skyline.ToolsUI
                 remoteAccount = ardiaAccount;
             }
             return remoteAccount;
+        }
+
+        // Test Only
+        public void LogoutAccount()
+        {
+            logoutArdia_UsingSystemDefaultBrowser();
         }
 
         private void btnLogoutArdia_Click(object sender, EventArgs e)
