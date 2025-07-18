@@ -81,6 +81,7 @@ namespace
         String^ Password;
         String^ Scope;
         String^ Secret;
+        String^ ClientId;
     };
 }
 
@@ -211,6 +212,7 @@ class UnifiData::Impl
             _identityServerUrl = gcnew Uri(queryVars[L"identity"] == nullptr ? defaultIdentityServer : queryVars[L"identity"]);
             _clientScope = queryVars[L"scope"] == nullptr ? defaultClientScope : queryVars[L"scope"];
             _clientSecret = queryVars[L"secret"] == nullptr ? L"secret" : queryVars[L"secret"];
+            _clientId = queryVars[L"clientId"] == nullptr ? L"resourceownerclient" : queryVars[L"clientId"];
             _sampleResultUrl = gcnew Uri(temp->GetLeftPart(UriPartial::Path));
 
             initHttpClient();
@@ -821,6 +823,7 @@ class UnifiData::Impl
     gcroot<Uri^> _identityServerUrl;
     gcroot<System::String^> _clientScope;
     gcroot<System::String^> _clientSecret;
+    gcroot<System::String^> _clientId;
     gcroot<System::String^> _accessToken;
     inline static gcroot<IHttpClientFactory^> _httpClientFactory;
     gcroot<HttpClient^> _httpClient;
@@ -832,7 +835,7 @@ class UnifiData::Impl
     int _numNetworkSpectra; // number of spectra without accounting for drift scans
     int _numLogicalSpectra; // number of spectra with IMS spectra counting as 200 logical spectra
 
-    inline static gcroot<ConcurrentDictionary<String^, System::String^>^> globalResponseCache = gcnew ConcurrentDictionary<String^, String^>();
+    inline static gcroot<ConcurrentDictionary<String^, Object^>^> globalResponseCache = gcnew ConcurrentDictionary<String^, Object^>();
 
     gcroot<System::Collections::Generic::List<System::String^>^> _chromatogramIds; //  chromatogram GUIDs
     vector<UnifiChromatogramInfo> _chromatogramInfo;
@@ -1005,7 +1008,7 @@ class UnifiData::Impl
         fields->Add(IdentityModel::OidcConstants::TokenRequest::Password, password);
         fields->Add(IdentityModel::OidcConstants::TokenRequest::Scope, _clientScope);
 
-        auto tokenClient = gcnew TokenClient(tokenEndpoint(), "resourceownerclient", _clientSecret, nullptr, IdentityModel::Client::AuthenticationStyle::BasicAuthentication);
+        auto tokenClient = gcnew TokenClient(tokenEndpoint(), _clientId, _clientSecret, nullptr, IdentityModel::Client::AuthenticationStyle::BasicAuthentication);
         TokenResponse^ response = tokenClient->RequestAsync(fields, System::Threading::CancellationToken::None)->Result;
         if (response->IsError)
             throw user_error("authentication error: incorrect hostname, username or password? (" + ToStdString(response->Error) + ")");

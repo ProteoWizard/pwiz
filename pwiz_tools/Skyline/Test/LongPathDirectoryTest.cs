@@ -30,140 +30,68 @@ namespace pwiz.SkylineTest
     [TestClass]
     public class LongPathDirectoryTest : AbstractUnitTest
     {
-        private const string PREFIX_LONG_PATH = @"\\?\"; // Assuming this is the long-path prefix
-
         [TestMethod]
-        public void IsPathFullyQualified_ValidDriveLetterPath_ReturnsTrue()
+        public void LongPathExTest()
         {
-            string path = @"C:\Folder\Subfolder";
-            bool result = PathEx.IsPathFullyQualified(path);
+            string fullyQualifiedDrivePath = @"C:\Folder\Subfolder";
+            // Try simple first
+            PathIsFullyQualifiedTest(fullyQualifiedDrivePath);
+            // Try all valid drive letters
+            for (char c = 'a'; c < 'z'; c++)
+            {
+                string drivePath = c + fullyQualifiedDrivePath.Substring(1);
+                PathIsFullyQualifiedTest(drivePath);
+                drivePath = char.ToUpperInvariant(c) + fullyQualifiedDrivePath.Substring(1);
+                PathIsFullyQualifiedTest(drivePath);
+            }
+            // Try UNC path
+            PathIsFullyQualifiedTest(@"\\server\share\folder");
+            // Try a valid long path
+            PathIsFullyQualifiedTest(@"C:\Folder".ToLongPath());
+            // Test failures
+            PathIsNotFullyQualifiedTest(@"Folder\Subfolder");
+            PathIsNotFullyQualifiedTest(@"C:Folder\Subfolder");
+            PathIsNotFullyQualifiedTest("A");
+            PathIsNotFullyQualifiedTest("B:");
+            PathIsNotFullyQualifiedTest(string.Empty);
+            PathIsNotFullyQualifiedTest(null);
 
-            Assert.IsTrue(result, "Expected C:\\Folder\\Subfolder to be fully qualified.");
+            ToLongPathTest(@"C:\Folder\Subfolder");
+            ToLongPathTest(@"\\server\share\folder");
+            ToLongPathTest(@"C:\Folder\Subfolder".ToLongPath(), false);
+            
+            AssertEx.ThrowsException<ArgumentException>(() => @"Folder\Subfolder".ToLongPath());
+            AssertEx.ThrowsException<ArgumentException>(() => @"C:Folder\Subfolder".ToLongPath());
+            AssertEx.ThrowsException<ArgumentException>(() => string.Empty.ToLongPath());
+            AssertEx.ThrowsException<ArgumentException>(() => ((string)null).ToLongPath());
         }
 
-        [TestMethod]
-        public void IsPathFullyQualified_ValidUncPath_ReturnsTrue()
+        private void PathIsFullyQualifiedTest(string path)
         {
-            string path = @"\\server\share\folder";
-            bool result = PathEx.IsPathFullyQualified(path);
-
-            Assert.IsTrue(result, "Expected \\\\server\\share\\folder to be fully qualified.");
+            string failureMessage = "Expected '{0}' to be fully qualified.";
+            Assert.IsTrue(PathEx.IsPathFullyQualified(path), failureMessage, path);
+            path = path.Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            Assert.IsTrue(PathEx.IsPathFullyQualified(path), failureMessage, path);
+        }
+        private void PathIsNotFullyQualifiedTest(string path)
+        {
+            string failureMessage = "Expected '{0}' not to be fully qualified.";
+            Assert.IsFalse(PathEx.IsPathFullyQualified(path), failureMessage, path);
         }
 
-        [TestMethod]
-        public void IsPathFullyQualified_RelativePath_ReturnsFalse()
+        private void ToLongPathTest(string path, bool addPrefix = true)
         {
-            string path = @"Folder\Subfolder";
-            bool result = PathEx.IsPathFullyQualified(path);
-
-            Assert.IsFalse(result, "Expected Folder\\Subfolder to be not fully qualified.");
-        }
-
-        [TestMethod]
-        public void IsPathFullyQualified_DriveRelativePath_ReturnsFalse()
-        {
-            string path = @"C:Folder\Subfolder";
-            bool result = PathEx.IsPathFullyQualified(path);
-
-            Assert.IsFalse(result, "Expected C:Folder\\Subfolder to be not fully qualified.");
-        }
-
-        [TestMethod]
-        public void IsPathFullyQualified_LongPathPrefix_ReturnsFalse()
-        {
-            string path = @"\\?\C:\Folder";
-            bool result = PathEx.IsPathFullyQualified(path);
-
-            Assert.IsFalse(result, "Expected \\\\?\\C:\\Folder to be not fully qualified (special case).");
-        }
-
-        [TestMethod]
-        public void IsPathFullyQualified_EmptyPath_ReturnsFalse()
-        {
-            string path = "";
-            bool result = PathEx.IsPathFullyQualified(path);
-
-            Assert.IsFalse(result, "Expected empty path to be not fully qualified.");
-        }
-
-        [TestMethod]
-        public void IsPathFullyQualified_NullPath_ReturnsFalse()
-        {
-            bool result = PathEx.IsPathFullyQualified(null);
-
-            Assert.IsFalse(result, "Expected null path to be not fully qualified.");
-        }
-
-        [TestMethod]
-        public void ToLongPath_FullyQualifiedDriveLetterPath_ReturnsPrefixedPath()
-        {
-            string path = @"C:\Folder\Subfolder";
-            string expected = PREFIX_LONG_PATH + path;
-            string result = path.ToLongPath();
-
-            Assert.AreEqual(expected, result, "Expected long-path prefix to be added.");
-        }
-
-        [TestMethod]
-        public void ToLongPath_FullyQualifiedUncPath_ReturnsPrefixedPath()
-        {
-            string path = @"\\server\share\folder";
-            string expected = PREFIX_LONG_PATH + path;
-            string result = path.ToLongPath();
-
-            Assert.AreEqual(expected, result, "Expected long-path prefix to be added to UNC path.");
-        }
-
-        [TestMethod]
-        public void ToLongPath_AlreadyLongPath_ReturnsUnchangedPath()
-        {
-            string path = @"\\?\C:\Folder\Subfolder";
-            string result = path.ToLongPath();
-
-            Assert.AreEqual(path, result, "Expected path with long-path prefix to remain unchanged.");
-        }
-
-        [TestMethod]
-        public void ToLongPath_RelativePath_ThrowsArgumentException()
-        {
-            string path = @"Folder\Subfolder";
-
-            AssertEx.ThrowsException<ArgumentException>(() => path.ToLongPath());
-        }
-
-        [TestMethod]
-        public void ToLongPath_DriveRelativePath_ThrowsArgumentException()
-        {
-            string path = @"C:Folder\Subfolder";
-
-            AssertEx.ThrowsException<ArgumentException>(() => path.ToLongPath());
-        }
-
-        [TestMethod]
-        public void ToLongPath_ForwardSlashPath_ReturnsPrefixedPath()
-        {
-            string path = @"C:/Folder/Subfolder";
-            string expected = PREFIX_LONG_PATH + path;
-            string result = path.ToLongPath();
-
-            Assert.AreEqual(expected, result, "Expected long-path prefix for forward-slash path.");
-        }
-
-        [TestMethod]
-        public void ToLongPath_EmptyPath_ThrowsArgumentException()
-        {
-            string path = "";
-
-            AssertEx.ThrowsException<ArgumentException>(() => path.ToLongPath());
-        }
-
-        [TestMethod]
-        public void ToLongPath_NullPath_ThrowsArgumentException()
-        {
-            string path = null;
-
-            // ReSharper disable once ExpressionIsAlwaysNull
-            AssertEx.ThrowsException<NullReferenceException>(() => path.ToLongPath());
+            string failureMessage = addPrefix
+                ? "Expected long-path prefix to be added to '{0}'"
+                : "Expected long-path prefix not to be added to '{0}'";
+            string prefix = addPrefix ? PathEx.PREFIX_LONG_PATH : string.Empty;
+            Assert.AreEqual(prefix + path, path.ToLongPath(), failureMessage, path);
+            path = path.Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            // Fix the long path prefix if it is not added and therefore just got
+            // switched to AltDirectorySeparatorChar which is not valid.
+            if (!addPrefix)
+                path = path.Substring(PathEx.PREFIX_LONG_PATH.Length).ToLongPath();
+            Assert.AreEqual(prefix + path, path.ToLongPath(), failureMessage, path);
         }
 
         /// <summary>
