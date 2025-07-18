@@ -54,18 +54,24 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         }
 
         private DateTime _nowTime = DateTime.Now;
-        private IList<string> _warningMods;
-
         protected AbstractDeepLibraryBuilder(SrmDocument document, IrtStandard irtStandard)
         {
             Document = document;
             IrtStandard = irtStandard;
+            _warningMods = GetWarningMods();
         }
-
+        protected AbstractDeepLibraryBuilder(SrmDocument document, SrmDocument trainingDocument, IrtStandard irtStandard)
+        {
+            Document = document;
+            TrainingDocument = trainingDocument;
+            IrtStandard = irtStandard;
+            _warningMods = GetWarningMods();
+        }
         public SrmDocument Document { get; private set; }
-        
+
+        public SrmDocument TrainingDocument { get; private set; }
         public IrtStandard IrtStandard { get; private set; }
-        
+
         public string AmbiguousMatchesMessage => null;
 
         public string BuildCommandArgs => null;
@@ -75,7 +81,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         public string TimeStamp => _nowTime.ToString(@"yyyy-MM-dd_HH-mm-ss");
 
         public string WorkDir { get; private set; }
-
+        
         public void EnsureWorkDir(string path, string tool)
         {
             if (WorkDir == null)
@@ -84,19 +90,19 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 Directory.CreateDirectory(WorkDir);
             }
         }
-        
+
         public abstract string InputFilePath { get; }
-        
+
         public abstract string TrainingFilePath { get; }
 
         public float FractionOfExpectedOutputLinesGenerated => TotalExpectedLinesOfOutput != 0
-            ? TotalGeneratedLinesOfOutput / (float) TotalExpectedLinesOfOutput
+            ? TotalGeneratedLinesOfOutput / (float)TotalExpectedLinesOfOutput
             : 1.0F;
-        
+
         public int TotalExpectedLinesOfOutput { get; private protected set; }
         public int TotalGeneratedLinesOfOutput { get; private protected set; }
 
-        public void PreparePrecursorInputFile(IList<ModificationType> modificationNames, IProgressMonitor progress, ref IProgressStatus progressStatus)
+        public void PreparePrecursorInputFile(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
             progress.UpdateProgress(progressStatus = progressStatus
                 .ChangeMessage(ModelResources.LibraryHelper_PreparePrecursorInputFile_Preparing_prediction_input_file));
@@ -105,7 +111,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             File.WriteAllLines(InputFilePath, precursorTable);
         }
 
-        public void PrepareTrainingInputFile(IList<ModificationType> modificationNames, IProgressMonitor progress, ref IProgressStatus progressStatus)
+        public void PrepareTrainingInputFile(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
             progress.UpdateProgress(progressStatus = progressStatus
                 .ChangeMessage(ModelResources.LibraryHelper_PrepareTrainingInputFile_Preparing_training_input_file));
@@ -121,18 +127,29 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             var result = new List<string> { string.Join(TextUtil.SEPARATOR_TSV_STR, GetHeaderColumnNames(training)) };
 
             // First add the iRT standard peptides
-            if (IrtStandard != null && !IrtStandard.IsEmpty && !IrtStandard.IsAuto)
+            if (!training && IrtStandard != null && !IrtStandard.IsEmpty && !IrtStandard.IsAuto)
             {
                 foreach (var peptide in IrtStandard.GetDocument().Peptides)
                 {
-                    result.AddRange(GetTableRows(peptide, training));
+                    result.AddRange(GetTableRows(peptide, false));
                 }
             }
 
             // Build precursor table row by row
-            foreach (var peptide in Document.Peptides)
+            if (training)
             {
-                result.AddRange(GetTableRows(peptide, training));
+                if (TrainingDocument != null)
+                    foreach (var peptide in TrainingDocument.Peptides)
+                    {
+                        result.AddRange(GetTableRows(peptide, true));
+                    }
+            }
+            else
+            {
+                foreach (var peptide in Document.Peptides)
+                {
+                    result.AddRange(GetTableRows(peptide, false));
+                }
             }
 
             return result.Distinct();
@@ -161,18 +178,14 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             string modsBuilder, string modSitesBuilder);
 
         protected abstract string ToolName { get; }
-        
+
         protected abstract IList<ModificationType> ModificationTypes { get; }
 
+        private IList<string> _warningMods;
         protected internal bool ValidateModifications(ModifiedSequence modifiedSequence, out string mods, out string modSites)
         {
             var modsBuilder = new StringBuilder();
             var modSitesBuilder = new StringBuilder();
-
-            // The list returned below is probably always short enough that determining
-            // if it contains a modification would not be greatly improved by caching a set
-            // for use here instead of the list.
-            var warningMods = GetWarningMods();
 
             bool unsupportedModification = false;
             var setUnsupported = new HashSet<string>();
@@ -192,7 +205,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 }
 
                 var unimodIdWithName = mod.UnimodIdWithName;
-                if (warningMods.Contains(mod.Name))
+                if (_warningMods.Contains(mod.Name))
                 {
                     if (!setUnsupported.Contains(mod.Name))
                     {
@@ -218,7 +231,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
             mods = modsBuilder.ToString();
             modSites = modSitesBuilder.ToString();
-            
+
             return !unsupportedModification;
         }
 
@@ -237,12 +250,9 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             return string.Format(ModelResources.Alphapeptdeep_Warn_unknown_modification,
                 warningModString);
         }
-        
+
         public IList<string> GetWarningMods()
         {
-            if (_warningMods != null)
-                return _warningMods;
-
             var resultList = new List<string>();
 
             // Build precursor table row by row
@@ -274,8 +284,6 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                     }
                 }
             }
-
-            _warningMods = resultList;
             return resultList;
         }
     }

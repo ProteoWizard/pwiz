@@ -686,7 +686,7 @@ namespace pwiz.Skyline
         {
             // Not allowed to set the document to null.
             Debug.Assert(docNew != null);
-            if (docNew.DeferSettingsChanges)
+            if (docNew != null && docNew.DeferSettingsChanges)
             {
                 throw new InvalidOperationException();
             }
@@ -2705,6 +2705,7 @@ namespace pwiz.Skyline
 
         #region Tools Menu
 
+        private ToolOptionsUI _toolOptionsUI;
         private void optionsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ShowToolOptionsUI();
@@ -2712,19 +2713,15 @@ namespace pwiz.Skyline
 
         public void ShowToolOptionsUI()
         {
-            using (var dlg = new ToolOptionsUI(_documentUI.Settings))
-            {
-                dlg.ShowDialog(this);
-            }
+            _toolOptionsUI ??= new ToolOptionsUI(_documentUI.Settings);
+            _toolOptionsUI.ShowDialog(this);
         }
 
         public void ShowToolOptionsUI(IWin32Window owner, ToolOptionsUI.TABS tab)
         {
-            using (var dlg = new ToolOptionsUI(_documentUI.Settings))
-            {
-                dlg.NavigateToTab(tab);
-                dlg.ShowDialog(owner);
-            }
+            _toolOptionsUI ??= new ToolOptionsUI(_documentUI.Settings);
+            _toolOptionsUI.NavigateToTab(tab);
+            _toolOptionsUI.ShowDialog(owner);
         }
 
         public void ShowToolOptionsUI(ToolOptionsUI.TABS tab)
@@ -3261,7 +3258,7 @@ namespace pwiz.Skyline
                     if (proteomic && !backgroundProteome.IsNone)
                     {
                         int ichPeptideSeparator = labelText.IndexOf(FastaSequence.PEPTIDE_SEQUENCE_SEPARATOR,
-                                                                    StringComparison.Ordinal);
+                            StringComparison.Ordinal);
                         string proteinName;
                         if (ichPeptideSeparator >= 0)
                         {
@@ -3276,6 +3273,7 @@ namespace pwiz.Skyline
                             proteinName = labelText;
                         }
                         fastaSequence = backgroundProteome.GetFastaSequence(proteinName);
+                        
                     }
                     string peptideGroupName = null;
                     string modifyMessage;

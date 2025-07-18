@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using pwiz.Common.Properties;
@@ -34,10 +35,10 @@ namespace pwiz.Common.SystemUtil
         void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status,
             ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal, bool forceTempfilesCleanup = false);
         void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status,
-                 TextWriter writer, ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal,
-                 bool forceTempfilesCleanup = false,
-                 Func<string, int, bool> outputAndExitCodeAreGoodFunc = null,
-                 bool updateProgressPercentage = true);
+            TextWriter writer, ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal,
+            bool forceTempfilesCleanup = false,
+            Func<string, int, bool> outputAndExitCodeAreGoodFunc = null,
+            bool updateProgressPercentage = true);
     }
 
     public class ProcessRunner : IProcessRunner
@@ -50,6 +51,18 @@ namespace pwiz.Common.SystemUtil
         public bool ShowCommandAndArgs { get; set; }
         private readonly List<string> _messageLog = new List<string>();
         private string _tmpDirForCleanup;
+
+        public bool EnableImmediateLog { get; set; }
+        public string[] FilterStrings { get; set; }
+
+        public bool EnableRunningTimeMessage { get; set; }
+
+        private Stopwatch _timer;
+
+        public TimeSpan ElapsedRunningTime()
+        {
+            return _timer.Elapsed;
+        }
 
         /// <summary>
         /// When greater than zero, this value is used to track progress percent complete.
@@ -90,6 +103,7 @@ namespace pwiz.Common.SystemUtil
             Func<string, int, bool> outputAndExitCodeAreGoodFunc = null,
             bool updateProgressPercentage = true)
         {
+            _timer = new Stopwatch();
             // Make sure required streams are redirected.
             psi.RedirectStandardOutput = true;
             psi.RedirectStandardError = true;
@@ -107,6 +121,7 @@ namespace pwiz.Common.SystemUtil
 
             Process proc = null;
             var msgFailureStartingCommand = $@"Failure starting command ""{cmd}"".";
+            _timer.Start();
             try
             {
                 proc = Process.Start(psi);
@@ -157,7 +172,7 @@ namespace pwiz.Common.SystemUtil
             {
                 sbOutput = new StringBuilder();
                 writer = new StringWriter(sbOutput);
-            }
+            } 
 
             try
             {
@@ -171,13 +186,16 @@ namespace pwiz.Common.SystemUtil
                     if (writer != null && (HideLinePrefix == null || !line.StartsWith(HideLinePrefix)))
                     {
                         writer.WriteLine(line);
-                        OutputLinesGenerated++;
+                        if (!(writer as FilteredUserMessageWriter).LastLineRemoved)
+                            OutputLinesGenerated++;
                     }
 
                     string lineLower = line.ToLowerInvariant();
                     if (progress == null || lineLower.StartsWith(@"error") || lineLower.StartsWith(@"warning"))
                     {
                         sbError.AppendLine(line);
+                        if (EnableImmediateLog && writer != null)
+                            writer.WriteLineAsync(line);
                     }
                     else // if (progress != null)
                     {
@@ -189,6 +207,7 @@ namespace pwiz.Common.SystemUtil
                             }
                             progress.UpdateProgress(status = status.Cancel());
                             CleanupTmpDir(psi); // Clean out any tempfiles left behind, if forceTempfilesCleanup was set
+                            _timer.Stop();
                             return;
                         }
 
@@ -219,6 +238,8 @@ namespace pwiz.Common.SystemUtil
                             var statusOld = status;
                             if (!SilenceStatusMessageUpdates)
                                 status = status.ChangeMessage(line);
+                            else if (EnableImmediateLog)
+                                writer.WriteLineAsync(line);
 
                             if (updateProgressPercentage && ExpectedOutputLinesCount > 0)
                             {
@@ -232,7 +253,17 @@ namespace pwiz.Common.SystemUtil
                     }
                 }
                 proc.WaitForExit();
+                _timer.Stop();
+
                 int exit = proc.ExitCode;
+                if (EnableRunningTimeMessage)
+                {
+                    string message = string.Format(Resources.ProcessRunner_Process_Finished_in_time,
+                        ElapsedRunningTime().Minutes, ElapsedRunningTime().Seconds);
+                    Messages.WriteAsyncUserMessage(message);
+                }
+
+                _timer = null;
 
                 if (!outputAndExitCodeAreGoodFunc(reader.GetErrorLines(), exit))
                 {
@@ -359,6 +390,20 @@ namespace pwiz.Common.SystemUtil
             }
 
             return tmpDirForCleanup;
+        }
+
+        /// <summary>
+        /// Function to help with filtering lines of output, return true if line contains one of possible filters provided, false otherwise
+        /// </summary>
+        /// <param name="line">line considered for filtering</param>
+        /// <param name="filters">array of string filters being considered</param>
+        /// <returns>true when filter matches, false otherwise</returns>
+        private bool FilterOutputLine(string line, string[] filters)
+        {
+            if (filters == null || line == null || filters.Length == 0 ) 
+                return false;
+            
+            return filters.Any(filter => line.Contains(filter));
         }
 
         public IEnumerable<string> MessageLog()

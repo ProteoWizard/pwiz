@@ -62,7 +62,7 @@ namespace pwiz.SkylineTest
                 Assert.AreEqual(1, group.Count(), "Duplicate accession {0}", group.Key);
             }
         }
-        
+
         /// <summary>
         /// This library never gets built, but its work directory does get created and used.
         /// </summary>
@@ -82,7 +82,7 @@ namespace pwiz.SkylineTest
                 new Peptide("KINGPELVISKINK"),
                 new Peptide("LIVER")
             };
-         
+
             var document = CreateTestSimpleDocument(peptides);
 
             TestGetPrecursorTable(document, SIMPLE_PRECURSOR_TABLE_ANSWER);
@@ -114,7 +114,7 @@ namespace pwiz.SkylineTest
             var precursorTable = builder.GetPrecursorTable(false);
 
             var generatedResult = precursorTable as string[] ?? precursorTable.ToArray();
-           
+
             if (IsRecordMode)
             {
                 File.WriteAllLines(LogOutput, generatedResult);
@@ -246,7 +246,7 @@ namespace pwiz.SkylineTest
                 unsupportedName
             };
 
-            var aceOxMetMod = new StaticMod("Acetyl-Oxidation (N-term-M)", "M",ModTerminus.N, true, "H2C2O2", LabelAtoms.None, RelativeRT.Unknown, null,
+            var aceOxMetMod = new StaticMod("Acetyl-Oxidation (N-term-M)", "M", ModTerminus.N, true, "H2C2O2", LabelAtoms.None, RelativeRT.Unknown, null,
                 null, null, null, "Acetyl-Ox");
             var fakeUnimodAceOxMetMod = new StaticMod("Acetyl-Oxidation (N-term-M)", "M", ModTerminus.N, true, "H2C2O2", LabelAtoms.None, RelativeRT.Unknown, null,
                 null, null, 35, "Acetyl-Ox");
@@ -434,7 +434,7 @@ namespace pwiz.SkylineTest
             for (int i = 0; i < peptideNodes.Length; i++)
             {
                 ExplicitMods mods = null;
-                
+
                 if (expMods != null)
                     mods = expMods[i];
 
@@ -474,7 +474,7 @@ namespace pwiz.SkylineTest
             return CreateTestDocumentInternal(CreatePeptideDocNodes(peptideList).ToArray());
         }
 
-        private static SrmDocument CreateTestDocumentInternal(PeptideDocNode[] nodePepArray)
+        private SrmDocument CreateTestDocumentInternal(PeptideDocNode[] nodePepArray)
         {
             var doc = new SrmDocument(SrmSettingsList.GetDefault());
 
@@ -487,7 +487,7 @@ namespace pwiz.SkylineTest
         }
 
         private readonly IEnumerable<string> SIMPLE_PRECURSOR_TABLE_ANSWER =
-            new [] {
+            new[] {
                 "sequence	mods	mod_sites	charge",
                 "LGGNEQVTR			2",
                 "GAGSSEPVTGLDAK			2",
@@ -507,7 +507,7 @@ namespace pwiz.SkylineTest
             };
         private readonly IEnumerable<string> MIXED_PRECURSOR_TABLE_ANSWER =
             new[] {
-                "sequence	mods	mod_sites	charge",                
+                "sequence	mods	mod_sites	charge",
                 "LGGNEQVTR			2",
                 "GAGSSEPVTGLDAK			2",
                 "VEATFGVDESNAK			2",

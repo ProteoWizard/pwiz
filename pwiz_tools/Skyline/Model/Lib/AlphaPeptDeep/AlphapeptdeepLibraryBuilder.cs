@@ -40,7 +40,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
         public ArgumentAndValue(string name, string value, bool quoteValue)
             : this(name, value, DEFAULT_DASH, quoteValue)
-        {}
+        { }
 
         public ArgumentAndValue(string name, string value, string dash = DEFAULT_DASH, bool quoteValue = false)
         {
@@ -116,7 +116,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
         // Processing intermediate file names
         private const string INPUT_FILE_NAME = @"input.tsv";
-        private const string SETTINGS_FILE_NAME = @"settings.yaml";
+        private const string SETTINGS_FILE_NAME = @"settings_defaults.yaml";
         private const string OUTPUT_SPECTRAL_LIB_FILE_NAME = @"predict.speclib.tsv";
         private const string TRANSFORMED_OUTPUT_SPECTRAL_LIB_FILE_NAME = @"predict_sky.speclib.tsv";
 
@@ -137,6 +137,14 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
         public static string PythonVersion => Settings.Default.PythonEmbeddableVersion;
         public static string ScriptsDir => PythonInstallerUtil.GetPythonVirtualEnvironmentScriptsDir(PythonVersion, ALPHAPEPTDEEP);
+        public static IDictionary<string, AbstractDdaSearchEngine.Setting> UserParameters { get; private set; }
+
+        public static void AlphaPeptDeepDefaultSettings()
+        {
+            UserParameters = new Dictionary<string, AbstractDdaSearchEngine.Setting>();
+            foreach (var kvp in DefaultUserExposedParameters)
+                UserParameters[kvp.Key] = new AbstractDdaSearchEngine.Setting(kvp.Value);
+        }
 
         public static PythonInstaller CreatePythonInstaller(TextWriter writer)
         {
@@ -154,12 +162,13 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         }
 
         /// <summary>
-        /// List of UniMod Modifications available
+        /// List of UniMod Modifications available.  AlphaPeptDeep should support the modifications
+        /// defined in https://github.com/MannLabs/alphabase/blob/main/alphabase/constants/const_files/modification.tsv
         /// </summary>
         public static readonly IList<ModificationType> MODIFICATION_NAMES = PopulateUniModList(null);
 
         protected override string ToolName => ALPHAPEPTDEEP;
-        
+
         protected override IList<ModificationType> ModificationTypes => MODIFICATION_NAMES;
 
         public LibrarySpec LibrarySpec { get; private set; }
@@ -180,11 +189,11 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
         public override string InputFilePath => Path.Combine(WorkDir, INPUT_FILE_NAME);
         public override string TrainingFilePath => null;
-        
+
         private string SettingsFilePath => Path.Combine(WorkDir, SETTINGS_FILE_NAME);
         private string OutputModelsDir => Path.Combine(WorkDir, OUTPUT_MODELS);
         private string OutputSpectralLibsDir => Path.Combine(WorkDir, OUTPUT_SPECTRAL_LIBS);
-        
+
         public string OutputSpectraLibFilepath => Path.Combine(OutputSpectralLibsDir, OUTPUT_SPECTRAL_LIB_FILE_NAME);
         public string TransformedOutputSpectraLibFilepath => Path.Combine(OutputSpectralLibsDir, TRANSFORMED_OUTPUT_SPECTRAL_LIB_FILE_NAME);
 
@@ -206,9 +215,55 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 new ArgumentAndValue(@"library--output_tsv--translate_mod_to_unimod_id", @"True"),
                 new ArgumentAndValue(@"library--rt_to_irt", @"True"),
                 new ArgumentAndValue(@"library--decoy", @"diann"),
-                new ArgumentAndValue(@"device", 
+                new ArgumentAndValue(@"torch_device--device_type",
                     PythonInstaller.SimulatedInstallationState != PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD ? @"gpu" : @"cpu")
             };
+
+        private static readonly ImmutableDictionary<string, AbstractDdaSearchEngine.Setting> DefaultUserExposedParameters =
+            new ImmutableDictionary<string, AbstractDdaSearchEngine.Setting>(
+                new Dictionary<string, AbstractDdaSearchEngine.Setting>
+                {
+                    /*
+                    {
+                        ModelResources.AlphaPeptDeep_min_peptide_length_short,
+                        new AbstractDdaSearchEngine.Setting(ModelResources.AlphaPeptDeep_min_peptide_length_long, 7, 1)
+                    },
+                    {
+                        ModelResources.AlphaPeptDeep_max_peptide_length_short,
+                        new AbstractDdaSearchEngine.Setting(ModelResources.AlphaPeptDeep_max_peptide_length_long, 35, 1)
+                    },
+                    */
+                    {
+                        ModelResources.AlphaPeptDeep_min_fragment_mz_short,
+                        new AbstractDdaSearchEngine.Setting(ModelResources.AlphaPeptDeep_min_fragment_mz_long, 200, 0.0)
+                    },
+                    {
+                        ModelResources.AlphaPeptDeep_max_fragment_mz_short,
+                        new AbstractDdaSearchEngine.Setting(ModelResources.AlphaPeptDeep_max_fragment_mz_long, 2000, 0.0)
+                    },
+                    /*
+                    {
+                        ModelResources.AlphaPeptDeep_max_fragment_charge_short,
+                        new AbstractDdaSearchEngine.Setting(ModelResources.AlphaPeptDeep_max_fragment_charge_long, 2, 1)
+                    },
+                    {
+                        ModelResources.AlphaPeptDeep_min_precursor_charge_short,
+                        new AbstractDdaSearchEngine.Setting(ModelResources.AlphaPeptDeep_min_precursor_charge_long, 2, 1)
+                    },
+                    {
+                        ModelResources.AlphaPeptDeep_max_precursor_charge_short,
+                        new AbstractDdaSearchEngine.Setting(ModelResources.AlphaPeptDeep_max_precursor_charge_short, 4, 1)
+                    },
+                    */
+                    {
+                        ModelResources.AlphaPeptDeep_min_relative_intensity_short,
+                        new AbstractDdaSearchEngine.Setting(ModelResources.AlphaPeptDeep_min_relative_intensity_long, 0.001, 0)
+                    },
+                    {
+                        ModelResources.AlphaPeptDeep_keep_k_highest_peaks_short,
+                        new AbstractDdaSearchEngine.Setting(ModelResources.AlphaPeptDeep_keep_k_highest_peaks_long, 12, 1)
+                    }
+                });
 
         private Dictionary<string, string> OpenSwathAssayLikeColName =>
             new Dictionary<string, string>()
@@ -240,6 +295,8 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
             rootProcessingDir = Path.Combine(rootProcessingDir, Path.GetFileNameWithoutExtension(libOutPath));
             EnsureWorkDir(rootProcessingDir, PREFIX_WORKDIR);
+            if (AlphapeptdeepLibraryBuilder.UserParameters == null) 
+                AlphapeptdeepLibraryBuilder.AlphaPeptDeepDefaultSettings();
         }
 
         public bool BuildLibrary(IProgressMonitor progress)
@@ -259,16 +316,63 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             }
         }
 
+        private List<ArgumentAndValue> getUserSettingArgumentAndValues(IProgressMonitor progress, ref IProgressStatus progressStatus)
+        {
+            var readyArgs = new List<ArgumentAndValue>();
+            foreach (var arg in UserParameters)
+            {
+                if (arg.Key == ModelResources.AlphaPeptDeep_min_peptide_length_short)
+                {
+                    readyArgs.Add(new ArgumentAndValue(@"library--min_peptide_len", arg.Value.Value.ToString()));
+                }
+                else if (arg.Key == ModelResources.AlphaPeptDeep_max_peptide_length_short)
+                {
+                    readyArgs.Add(new ArgumentAndValue(@"library--max_peptide_len", arg.Value.Value.ToString()));
+                }
+                else if (arg.Key == ModelResources.AlphaPeptDeep_min_fragment_mz_short)
+                {
+                    readyArgs.Add(new ArgumentAndValue(@"library--output_tsv--min_fragment_mz ", arg.Value.Value.ToString()));
+                }
+                else if (arg.Key == ModelResources.AlphaPeptDeep_max_fragment_mz_short)
+                {
+                    readyArgs.Add(new ArgumentAndValue(@"library--output_tsv--max_fragment_mz ", arg.Value.Value.ToString()));
+                }
+                else if (arg.Key == ModelResources.AlphaPeptDeep_min_precursor_charge_short)
+                {
+                    readyArgs.Add(new ArgumentAndValue(@"library--min_precursor_charge ", arg.Value.Value.ToString()));
+                }
+                else if (arg.Key == ModelResources.AlphaPeptDeep_max_precursor_charge_short)
+                {
+                    readyArgs.Add(new ArgumentAndValue(@"library--max_precursor_charge ", arg.Value.Value.ToString()));
+                }
+                else if (arg.Key == ModelResources.AlphaPeptDeep_max_fragment_charge_short)
+                {
+                    readyArgs.Add(new ArgumentAndValue(@"library--output_tsv--max_frag_charge ", arg.Value.Value.ToString()));
+                }
+                else if (arg.Key == ModelResources.AlphaPeptDeep_min_relative_intensity_short)
+                {
+                    readyArgs.Add(new ArgumentAndValue(@"library--output_tsv--min_relative_intensity", arg.Value.Value.ToString()));
+                }
+                else if (arg.Key == ModelResources.AlphaPeptDeep_keep_k_highest_peaks_short)
+                {
+                    readyArgs.Add(new ArgumentAndValue(@"library--output_tsv--keep_higest_k_peaks", arg.Value.Value.ToString()));
+                }
+            }
+
+            return readyArgs;
+        }
+
         private void RunAlphapeptdeep(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
             // Note: Segments are distributed to balance the expected work of each task
             var segmentEndPercentages = new[] { 5, 10, 15, 95 };
+
             progressStatus = progressStatus.ChangeSegments(0, ImmutableList<int>.ValueOf(segmentEndPercentages));
-            PreparePrecursorInputFile(MODIFICATION_NAMES, progress, ref progressStatus);
+            PreparePrecursorInputFile(progress, ref progressStatus);
             progressStatus = progressStatus.NextSegment();
             PrepareSettingsFile(progress, ref progressStatus);
             progressStatus = progressStatus.NextSegment();
-            ExecutePeptdeep(progress, ref progressStatus);
+            ExecutePeptdeep(progress, ref progressStatus, getUserSettingArgumentAndValues(progress, ref progressStatus));
             progressStatus = progressStatus.NextSegment();
             TransformPeptdeepOutput(progress, ref progressStatus);
             progressStatus = progressStatus.NextSegment();
@@ -280,6 +384,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             progress.UpdateProgress(progressStatus = progressStatus
                 .ChangeMessage(ModelResources.AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Preparing_settings_file));
 
+            var args = TextUtil.SpaceSeparate(CmdFlowCommandArguments.Select(arg => arg.ToString()));
             // Generate template settings.yaml file
             var pr = new ProcessRunner();
             var psi = new ProcessStartInfo(PeptdeepExecutablePath, $@"{EXPORT_SETTINGS_COMMAND} ""{SettingsFilePath}""")
@@ -304,7 +409,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             }
         }
 
-        private void ExecutePeptdeep(IProgressMonitor progress, ref IProgressStatus progressStatus)
+        private void ExecutePeptdeep(IProgressMonitor progress, ref IProgressStatus progressStatus, IList<ArgumentAndValue> userArgs)
         {
             Stopwatch timer = new Stopwatch();
             progress.UpdateProgress(progressStatus = progressStatus
@@ -312,7 +417,8 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
             progressStatus.ChangePercentComplete(0);
             // Compose peptdeep cmd-flow command arguments to build library
-            var args = TextUtil.SpaceSeparate(CmdFlowCommandArguments.Select(arg => arg.ToString()));
+            var allArgs = CmdFlowCommandArguments.Concat(userArgs);
+            var args = TextUtil.SpaceSeparate(allArgs.Select(arg => arg.ToString()));
 
             // Execute command
             var pr = new ProcessRunner();
@@ -338,9 +444,10 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 };
 
                 pr.SilenceStatusMessageUpdates = true;  // Use FilteredUserMessageWriter to write process output instead of ProgressStatus.ChangeMessage()
-                pr.ExpectedOutputLinesCount = 119;
+                pr.ExpectedOutputLinesCount = 200;
                 timer.Start();
-                pr.Run(psi, string.Empty, progress, ref progressStatus, new FilteredUserMessageWriter(filterStrings), ProcessPriorityClass.BelowNormal, true);
+                pr.Run(psi, string.Empty, progress, ref progressStatus, 
+                    new FilteredUserMessageWriter(filterStrings), ProcessPriorityClass.BelowNormal, true);
                 timer.Stop();
                 string message = string.Format(ModelResources.AlphapeptdeepLibraryBuilder_ExecutePeptdeep_AlphaPeptDeep_finished_in__0__minutes__1__seconds_, timer.Elapsed.Minutes, timer.Elapsed.Seconds);
                 Messages.WriteAsyncUserMessage(message);
@@ -385,7 +492,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             while (null != reader.ReadLine())
             {
                 var line = new List<string>();
-                
+
                 foreach (var colName in colNames)
                 {
                     var cell = reader.GetFieldByName(colName);
