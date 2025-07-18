@@ -176,17 +176,17 @@ namespace pwiz.Skyline.SettingsUI
                     .ToArray());
             ceCombo.SelectedItem = Settings.Default.KoinaNCE;
             
-            if (_documentUiContainer.Document.PeptideCount > 0)
-                comboBuildLibraryTarget.SelectedIndex = (int)BuildLibraryTargetOptions.currentSkylineDocument;
-            else
-                comboBuildLibraryTarget.SelectedIndex = (int)BuildLibraryTargetOptions.fastaFile;
-
             comboLearnFrom.SelectedIndex = (int)DataSourcePages.files;
 
             _helper = new MessageBoxHelper(this);
 
             _driverStandards = new SettingsListComboDriver<IrtStandard>(comboStandards, Settings.Default.IrtStandardList);
             _driverStandards.LoadList(IrtStandard.EMPTY.GetKey());
+
+             if (_documentUiContainer.DocumentFilePath != null && _documentUiContainer.Document.HasPeptides)
+                 comboBuildLibraryTarget.SelectedIndex = (int)BuildLibraryTargetOptions.currentSkylineDocument;
+             else
+                 comboBuildLibraryTarget.SelectedIndex = (int)BuildLibraryTargetOptions.fastaFile;
 
             Grid = gridInputFiles;
             Grid.FilesChanged += (sender, e) =>
@@ -1162,7 +1162,6 @@ namespace pwiz.Skyline.SettingsUI
                 textBoxTrainingDoc.Text = "";
             else
                 return;
-
             comboLearnFrom.SelectedIndex = (int)learningOption;
             switch (learningOption)
             {
@@ -1177,12 +1176,19 @@ namespace pwiz.Skyline.SettingsUI
                 case LearningOptions.this_doc:
                     if (_documentUiContainer.DocumentFilePath != null)
                     {
-                        labelDoc.Enabled = false;
-                        buttonTrainingDoc.Enabled = false;
-                        textBoxTrainingDoc.Enabled = false;
-                        labelDoc.Text = string.Format(SettingsUIResources.BuildLibraryDlg_Skyline_tuning_document);
+                        //labelDoc.Text = string.Format(SettingsUIResources.BuildLibraryDlg_Skyline_tuning_document);
                         comboLearnFrom.SelectedIndex = (int)_currentLearningOption;
-                        _helper.ShowTextBoxError(tabControlLearning, SettingsUIResources.BuildLibraryDlg_Cannot_predict_library_for_and_tune_from_the_same_document);
+                        if (!_documentUiContainer.Document.HasPeptides)
+                        {
+                            _helper.ShowTextBoxError(tabControlLearning, SettingsUIResources.BuildLibraryDlg_Current_Skyline_document_is_missing_peptides);
+                        }
+                        else
+                        {
+                            _helper.ShowTextBoxError(tabControlLearning,
+                                SettingsUIResources
+                                    .BuildLibraryDlg_Cannot_predict_library_for_and_tune_from_the_same_document);
+                        }
+
                         tabPage1.BackColor = tabPage1.Parent.BackColor;
                     }
                     else
@@ -1233,7 +1239,7 @@ namespace pwiz.Skyline.SettingsUI
                     break;
 
                 case BuildLibraryTargetOptions.fastaFile:
-                    if (_documentUiContainer.DocumentFilePath != null)
+                    if (_documentUiContainer.DocumentFilePath != null && _documentUiContainer.Document.HasPeptides)
                     {
                         tabControlLearning.SelectedIndex = (int)LearningOptions.another_doc;
                         _helper.ShowTextBoxError(tabControlLearning, SettingsUIResources.BuildLibraryDlg_Cannot_predict_library_for_FASTA_file_when_Skyline_document_is_loaded);
