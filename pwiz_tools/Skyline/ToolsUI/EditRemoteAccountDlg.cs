@@ -203,6 +203,12 @@ namespace pwiz.Skyline.ToolsUI
             return remoteAccount;
         }
 
+        // Test Only
+        public void LogoutAccount()
+        {
+            logoutArdia_UsingSystemDefaultBrowser();
+        }
+
         private void btnLogoutArdia_Click(object sender, EventArgs e)
         {
             logoutArdia_UsingSystemDefaultBrowser();
