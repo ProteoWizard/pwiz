@@ -990,14 +990,21 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             psi.EnvironmentVariables[@"TMP"] = JAVA_TMPDIR_PATH;
             try
             {
+                var filterStrings = new[]
+                {
+                    @"No ions matched!",
+                    @"s/^x: [0-9]*$//",
+                    @"s/^index_(start|end|apex): [0-9]*$//",
+                    @"s/^[0-9\.]*$//" //replace strange number sequences
+                };
                 pr.SilenceStatusMessageUpdates =
                     true; // Use SimpleUserMessageWriter to write process output instead of ProgressStatus.ChangeMessage()
-                pr.ExpectedOutputLinesCount = 1000;
+                pr.ExpectedOutputLinesCount = 550;
 
                 pr.EnableImmediateLog = false;
                 pr.EnableRunningTimeMessage = true;
                 pr.Run(psi, string.Empty, progress, ref progressStatus,
-                    new SimpleUserMessageWriter(), ProcessPriorityClass.BelowNormal, true);
+                    new FilteredUserMessageWriter(filterStrings), ProcessPriorityClass.BelowNormal, true);
             }
             catch (Exception ex)
             {

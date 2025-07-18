@@ -186,7 +186,8 @@ namespace pwiz.Common.SystemUtil
                     if (writer != null && (HideLinePrefix == null || !line.StartsWith(HideLinePrefix)))
                     {
                         writer.WriteLine(line);
-                        OutputLinesGenerated++;
+                        if (!(writer as FilteredUserMessageWriter).LastLineRemoved)
+                            OutputLinesGenerated++;
                     }
 
                     string lineLower = line.ToLowerInvariant();
