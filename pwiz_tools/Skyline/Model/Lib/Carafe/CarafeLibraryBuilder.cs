@@ -137,7 +137,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
         private string JavaDir => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), JAVA);
 
 
-
+        private static string JAVA_TMPDIR_PATH => Path.Combine(Environment.GetEnvironmentVariable("SystemRoot")!, @"Temp");
         private string CarafeJavaDir => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), CARAFE);
         private string UserDir => Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         private DirectoryInfo JavaDirInfo => new DirectoryInfo(JavaDir);
@@ -987,7 +987,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
                 RedirectStandardError = true,
                 RedirectStandardInput = false
             };
-
+            psi.EnvironmentVariables[@"TMP"] = JAVA_TMPDIR_PATH;
             try
             {
                 pr.SilenceStatusMessageUpdates =
