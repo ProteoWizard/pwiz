@@ -360,10 +360,10 @@
     <value>接続</value>
   </data>
   <data name="EditRemoteAccountDlg_GetBrowserLogoutUrl_Error__no_Ardia_registration_code_for_URL" xml:space="preserve">
-    <value>エラー： URLのArdia登録コードがありません</value>
+    <value>エラー: URLに対するArdia登録コードがありません</value>
   </data>
   <data name="EditRemoteAccountDlg_GetBrowserLogoutUrl_Error__unable_to_compute_URL_for_logout" xml:space="preserve">
-    <value>エラー： URL for ArdiaログアウトのURLを演算できません</value>
+    <value>エラー: ArdiaログアウトのURLを演算できません</value>
   </data>
   <data name="EditRemoteAccountDlg_TestArdiaAccount_Login_was_canceled" xml:space="preserve">
     <value>ログインがキャンセルされました</value>
