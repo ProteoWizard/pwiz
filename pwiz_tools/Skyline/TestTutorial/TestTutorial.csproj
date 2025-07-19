@@ -122,6 +122,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AuditLogTutorialTest.cs" />
+    <Compile Include="LiveReportsTutorialTest.cs" />
     <Compile Include="SmallMolMethodDevCEOptTutorial.cs" />
     <Compile Include="SmallMoleculesQuantificationTutorial.cs" />
     <Compile Include="SmallMoleculesTutorial.cs" />
