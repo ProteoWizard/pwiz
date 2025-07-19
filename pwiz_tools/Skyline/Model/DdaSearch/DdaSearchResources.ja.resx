@@ -173,7 +173,7 @@
     <value>msconvert変換を開始しています</value>
   </data>
   <data name="HardklorSearchEngine_PerformAllAlignments_Performing_retention_time_alignment__0__vs__1_" xml:space="preserve">
-    <value>RT調整: {0} vs {1}</value>
+    <value>保持時間アラインメント：{0}対{1}</value>
     <comment>Needs Review:English text changed
 Old English:Retention time alignment: {0} vs {1}
 Current English:RT alignment: {0} vs {1}
