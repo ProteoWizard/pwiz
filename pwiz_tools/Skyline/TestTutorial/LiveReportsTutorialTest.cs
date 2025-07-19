@@ -23,18 +23,23 @@ using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Controls.Editor;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.AuditLog;
 using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.Lists;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util.Extensions;
+using Peptide = pwiz.Skyline.Model.Databinding.Entities.Peptide;
 
 namespace pwiz.SkylineTestTutorial
 {
@@ -223,6 +228,89 @@ namespace pwiz.SkylineTestTutorial
             SetClipboardText(TextUtil.LineSeparate(File.ReadAllLines(TestFilesDir.GetTestPath("SampleInfo.txt")).Skip(1)));
             RunUI(()=>listGridForm.DataGridView.SendPaste());
             PauseForScreenShot<ListGridForm>("Completed samples list");
+
+            RunUI(()=>
+            {
+                documentGrid.Activate();
+                documentGrid.DataboundGridControl.ChooseView(ViewGroup.BUILT_IN.Id.ViewName(Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides));
+            });
+            WaitForCondition(() => documentGrid.IsComplete);
+            RunLongDlg<ViewEditor>(documentGrid.DataboundGridControl.NavBar.CustomizeView, viewEditor =>
+            {
+                RunUI(()=>
+                {
+                    viewEditor.ChooseColumnsTab.RemoveColumns(4, viewEditor.ChooseColumnsTab.ColumnCount);
+                    viewEditor.ChooseColumnsTab.SelectColumn(3);
+                    Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(PropertyPath.Root.Property(nameof(SkylineDocument.Proteins))
+                        .LookupAllItems().Property(nameof(Protein.Peptides))
+                        .LookupAllItems().Property(nameof(Peptide.Precursors))
+                        .LookupAllItems().Property(nameof(Precursor.Results))
+                        .DictionaryValues().Property(nameof(PrecursorResult.TotalArea))));
+                    viewEditor.ChooseColumnsTab.AddSelectedColumn();
+                });
+                PauseForScreenShot(viewEditor);
+                RunUI(() =>
+                {
+                    viewEditor.ChooseColumnsTab.MoveColumnsUp(); // Move "Standard Type" to before "Total Area"
+                    viewEditor.ChooseColumnsTab.SelectColumn(4); // Select "Total Area" column
+                    Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(PropertyPath.Root.Property(nameof(SkylineDocument.Replicates)).LookupAllItems()));
+                    viewEditor.ChooseColumnsTab.AddSelectedColumn();
+                });
+                PauseForScreenShot(viewEditor);
+                RunUI(()=>viewEditor.ViewName = "Peptide Areas");
+            }, viewEditor=>viewEditor.OkDialog());
+            PauseForScreenShot<DocumentGridForm>("Document Grid: Peptide Areas");
+            RunLongDlg<ViewEditor>(documentGrid.DataboundGridControl.NavBar.CustomizeView, viewEditor =>
+            {
+                PauseForScreenShot(viewEditor);
+                RunUI(()=> {
+                    var pivotWidget = viewEditor.ViewEditorWidgets.OfType<PivotReplicateAndIsotopeLabelWidget>()
+                        .FirstOrDefault();
+                    Assert.IsNotNull(pivotWidget);
+                    pivotWidget.SetPivotReplicate(true);
+                });
+            }, viewEditor => viewEditor.OkDialog());
+            RunUI(() =>
+            {
+                documentGrid.FloatingPane.FloatingWindow.Width = 1500;
+            });
+            PauseForScreenShot(documentGrid);
+            RunUI(() =>
+            {
+                documentGrid.DataGridView.CurrentCell = documentGrid.DataGridView.Rows[0].Cells[0];
+                documentGrid.DataGridView.ClickCurrentCell();
+                SkylineWindow.ShowPeakAreaReplicateComparison();
+            });
+            WaitForGraphs();
+
+            var peakAreaReplicateComparisonGraphSummary = FindGraphSummaryByGraphType<AreaReplicateGraphPane>();
+            PauseForScreenShot(peakAreaReplicateComparisonGraphSummary);
+            RunLongDlg<ViewEditor>(documentGrid.DataboundGridControl.NavBar.CustomizeView, viewEditor =>
+            {
+                RunLongDlg<FindColumnDlg>(viewEditor.ShowFindDialog, findColumnDlg =>
+                {
+                    RunUI(() =>
+                    {
+                        findColumnDlg.FindText = ColumnCaptions.NormalizedArea;
+                    });
+                    WaitForConditionUI(findColumnDlg.IsReadyToSearch);
+                    RunUI(findColumnDlg.SearchForward);
+                }, findColumnDlg=> findColumnDlg.Close());
+                PauseForScreenShot(viewEditor);
+                RunUI(()=>viewEditor.ChooseColumnsTab.AddSelectedColumn());
+                PauseForScreenShot(viewEditor);
+            }, viewEditor=>viewEditor.OkDialog());
+            RunUI(()=>documentGrid.Activate());
+            PauseForScreenShot(documentGrid);
+            RunDlg<ChooseFormatDlg>(
+                () => documentGrid.DataboundGridControl.ShowFormatDialog(documentGrid.DataGridView.Columns[4]),
+                chooseFormatDlg =>
+                {
+                    chooseFormatDlg.FormatText = FormatSuggestion.Scientific.FormatString;
+                    chooseFormatDlg.DialogResult = DialogResult.OK;
+                });
+            PauseForScreenShot(documentGrid);
+            PauseTest();
         }
 
         public Bitmap ClipControl(Control control, Bitmap bmp)
