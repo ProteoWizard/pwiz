@@ -132,7 +132,7 @@
     <value>総トランジション強度とトランジション強度が最高のMS2スペクトルの注入時間の積</value>
   </data>
   <data name="ApexAnalyteIonCountMS1">
-    <value>総プリカーサーとトランジション強度が最高のMS1スペクトルの注入時間の積</value>
+    <value>総プリカーサー強度とプリカーサー強度が最高のMS1スペクトルの注入時間の積</value>
   </data>
   <data name="ApexSpectrumId">
     <value>トランジション強度が最高のスペクトルの識別子</value>
@@ -144,13 +144,13 @@
     <value>プリカーサー強度が最高のMS1スペクトルの識別子</value>
   </data>
   <data name="ApexTotalIonCount">
-    <value>総イオン電流とトランジション強度が最高のMS2スペクトルの注入時間の積</value>
+    <value>総イオン電流値とトランジション強度が最高のMS2スペクトルの注入時間の積</value>
   </data>
   <data name="ApexTotalIonCountFragment">
-    <value>総イオン電流とトランジション強度が最高のMS2スペクトルの注入時間の積</value>
+    <value>総イオン電流値とトランジション強度が最高のMS2スペクトルの注入時間の積</value>
   </data>
   <data name="ApexTotalIonCountMS1">
-    <value>総プリカーサーとトランジション強度が最高のMS1スペクトルの注入時間の積</value>
+    <value>総プリカーサー強度とプリカーサー強度が最高のMS1スペクトルの注入時間の積</value>
   </data>
   <data name="Area">
     <value>トランジションピークの曲線下の面積（AUC）からバックグラウンドを引いたものです。</value>
@@ -189,7 +189,7 @@
     <value>真の場合、Skylineは[トランジションの設定]フィルタ、スペクトルライブラリなどによってプリカーサーから自動的にトランジションを追加または削除します。</value>
   </data>
   <data name="AverageMassErrorPPM">
-    <value>100万分の1(PPM)の単位で表される予測m/z値と測定m/z値の間の差のすべてのトランジションの荷重面積平均</value>
+    <value>100万分の1(PPM)の単位で表される予測m/z値と測定m/z値の間の差のすべてのトランジションの面積加重平均</value>
     <comment>Needs Review:English text changed
 Old English:Average Mass Error PPM
 Current English:The area weighted mean for all transitions of the difference between the expected and measured m/z values expressed in parts per million (PPM)
@@ -310,9 +310,9 @@ Old Localized:平均質量誤差(PPM)</comment>
     <value>倍率変化を中心とする信頼区間を決定するのに使用された信頼度です。</value>
   </data>
   <data name="CountTruncated">
-    <value>ピークと解析時間範囲のいずれかの終端の
-境界を積分するプリカーサーのトランジション数。この場合、その終端の強度は
-もう一方の終端よりもバックグラウンドを差し引いたピークの高さが25%高くなります。</value>
+    <value>データ取得時間範囲のいずれかの終端の
+境界でピーク積分するプリカーサーのトランジション数。この場合、その終端の強度は
+もう一方の終端よりもバックグラウンドを差し引いたピーク高さが25%以上高いものを対象とします。</value>
     <comment>Needs Review:English text changed
 Old English:The number of transitions for a precursor that integrate a peak with a
 boundary at either end of the acquisition time range, where intensity at the end is
@@ -578,7 +578,7 @@ Old Localized:取得時間範囲内のピークの両側で強度が全体のピ
   </data>
   <data name="IsolationWindowWidth">
     <value>プリカーサ―が単離されたm/zウィンドウの幅。
-2つ以上のプリカーサーが単離された場合、単離ウィンドウ幅は、各プリカーサー周囲のウィンドウの合計です。</value>
+2つ以上のプリカーサーが単離された場合、単離ウィンドウ幅は、各プリカーサー周囲のウィンドウの合計となります。</value>
   </data>
   <data name="IsotopeDistIndex">
     <value>モノアイソトピックピークであればゼロ、M+1であれば1、M+2であれば2などとなります。 </value>
@@ -608,37 +608,37 @@ Old Localized:取得時間範囲内のピークの両側で強度が全体のピ
     <value>ペプチドに含まれるタンパク質シークエンスの最後の（C末端）アミノ酸の位置です。タンパク質シークエンスがない場合には#N/Aとなります。</value>
   </data>
   <data name="LcPeakAnalyteIonCount">
-    <value>トランジション強度の積とピーク積分境界間のスペクトルの注入時間の合計</value>
+    <value>トランジション強度とピーク積分境界間でのスペクトルの注入時間との積の合計</value>
   </data>
   <data name="LcPeakAnalyteIonCountFragment">
-    <value>トランジション強度の積とピーク積分境界間のMS2スペクトルの注入時間の合計</value>
+    <value>トランジション強度とピーク積分境界間でのMS2スペクトルの注入時間との積の合計</value>
   </data>
   <data name="LcPeakAnalyteIonCountMS1">
-    <value>総プリカーサー強度の積とピーク積分境界間のMS1スペクトルの注入時間の合計</value>
+    <value>総プリカーサー強度とピーク積分境界間でのMS1スペクトルの注入時間との積の合計</value>
   </data>
   <data name="LcPeakIonMetricsFragment">
-    <value>ピーク積分境界間のMS2スペクトルを収集する間の質量分析装置内のイオン数に関係する値</value>
+    <value>ピーク積分境界間のMS2スペクトルを取得する間に質量分析装置内に存在するイオン数に関係する値</value>
   </data>
   <data name="LcPeakIonMetricsMS1">
-    <value>ピーク積分境界間のMS1スペクトルを収集する間の質量分析装置内のイオン数に関係する値</value>
+    <value>ピーク積分境界間のMS1スペクトルを取得する間に質量分析装置内に存在するイオン数に関係する値</value>
   </data>
   <data name="LcPeakTotalIonCount">
-    <value>総イオン電流の積とピーク積分境界間のスペクトルの注入時間の合計</value>
+    <value>ピーク積分境界間のスペクトルの総イオン電流値と注入時間の積の総和</value>
   </data>
   <data name="LcPeakTotalIonCountFragment">
-    <value>総イオン電流の積とピーク積分境界間のMS2スペクトルの注入時間の合計</value>
+    <value>ピーク積分境界間のMS2スペクトルの総イオン電流値と注入時間の積の総和</value>
   </data>
   <data name="LcPeakTotalIonCountMS1">
-    <value>総イオン電流の積とピーク積分境界間のMS1スペクトルの注入時間の合計</value>
+    <value>ピーク積分境界間のMS1スペクトルの総イオン電流値と注入時間の積の総和</value>
   </data>
   <data name="LcPeakTotalIonCurrentArea">
-    <value>ピーク積分境界間のイオン電流合計の積分</value>
+    <value>ピーク積分境界間の総イオン電流値の総和</value>
   </data>
   <data name="LcPeakTotalIonCurrentAreaFragment">
-    <value>ピーク積分境界間のMS2スペクトルのイオン電流合計の積分</value>
+    <value>ピーク積分境界間のMS2スペクトルの総イオン電流値の総和</value>
   </data>
   <data name="LcPeakTotalIonCurrentAreaMS1">
-    <value>ピーク積分境界間のMS1スペクトルのイオン電流合計の積分</value>
+    <value>ピーク積分境界間のMS1スペクトルの総イオン電流値の総和</value>
   </data>
   <data name="LibraryCollisionCrossSection">
     <value>イオン移動度ライブラリからのプリカーサーの衝突断面積</value>
@@ -1175,9 +1175,9 @@ Old Localized:取得時間範囲内のピークの両側で強度が全体のピ
     <value>ペプチドのプロダクトイオンのニュートラルな質量（Da）。</value>
   </data>
   <data name="ProportionTruncated">
-    <value>ピークと解析時間範囲のいずれかの終端の
-境界を積分するプリカーサーのトランジションの面積加重平均(0～1.0)。この場合、その終端の強度は
-もう一方の終端よりもバックグラウンドを差し引いたピークの高さが25%高くなります。</value>
+    <value>データ取得時間範囲のいずれかの終端の
+境界でピーク積分するプリカーサーのトランジションの面積加重平均(0～1.0)。この場合、その終端の強度は
+もう一方の終端よりもバックグラウンドを差し引いたピーク高さが25%以上高いものを対象とします。</value>
   </data>
   <data name="Protein">
     <value>タンパク質</value>
@@ -1563,9 +1563,7 @@ Old Localized:繰り返し測定間の比較に欠損データが影響する可
     <value>トランジション</value>
   </data>
   <data name="Truncated">
-    <value>積分ピークの境界が解析
-時間範囲のいずれかの終端にある場合は真。この場合、その終端の強度は
-もう一方の終端よりもバックグラウンドを差し引いたピークの高さが25%高くなります</value>
+    <value>積分ピークの境界がデータ取得時間幅のいずれかの終端にあり、その終端がもう一方の終端よりもバックグラウンドを差し引いたピーク高さが25%以上高い場合は真となります。</value>
     <comment>Needs Review:English text changed
 Old English:True if the integrated a peak has a boundary at either end of the acquisition
 time range, where intensity at the end is greater than 1% of the entire peak height

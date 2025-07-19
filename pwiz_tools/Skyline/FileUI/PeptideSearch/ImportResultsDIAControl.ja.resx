@@ -352,7 +352,7 @@
     <value>8</value>
   </data>
   <data name="cbGpf.Text" xml:space="preserve">
-    <value>気相分別(&amp;G)</value>
+    <value>気相分画(&amp;G)</value>
   </data>
   <data name="&gt;&gt;cbGpf.Name" xml:space="preserve">
     <value>cbGpf</value>

@@ -104,7 +104,7 @@
     <value>「{1}」内のアミノ酸「{0}」はKoinaでサポートされません</value>
   </data>
   <data name="KoinaUnsupportedModificationException_KoinaUnsupportedModificationException_Modification___0___at_index___1___in___2___is_not_supported_by_Koina" xml:space="preserve">
-    <value>「{2}」のインデックス「{1}」の修飾「{0}」はKoinaによりサポートされていません。</value>
+    <value>「{2}」のインデックス「{1}」の修飾「{0}」はKoinaではサポートされていません。</value>
   </data>
   <data name="KoinaModel_BatchPredict_Constructing_Koina_inputs" xml:space="preserve">
     <value>Koina入力を構築しています</value>

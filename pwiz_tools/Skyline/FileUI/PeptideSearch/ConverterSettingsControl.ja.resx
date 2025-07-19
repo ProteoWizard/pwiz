@@ -235,7 +235,7 @@
     <value>17, 17</value>
   </metadata>
   <data name="cbDiaUmpire.ToolTip" xml:space="preserve">
-    <value>DIA-Umpireで偽DDAスペクトルを作成 (DDA検索エンジンの使用が可能になります)</value>
+    <value>DIA-Umpireで疑似DDAスペクトルを作成 (DDA検索エンジンの使用が可能になります)</value>
   </data>
   <data name="&gt;&gt;cbDiaUmpire.Name" xml:space="preserve">
     <value>cbDiaUmpire</value>
@@ -268,7 +268,7 @@
     <value>15</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>DIAファイル上でDIA-Umpireを実行すると、利用可能なDDA検索エンジンのいずれかを使用できるようになります。生データのDIAスペクトルの検索をサポートしているのは、MSFraggerだけです。</value>
+    <value>DIAファイルでDIA-Umpireを実行すると、利用可能なDDA検索エンジンのいずれかを使用できるようになります。生データのDIAスペクトルの検索をサポートしているのは、MSFraggerだけです。</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
