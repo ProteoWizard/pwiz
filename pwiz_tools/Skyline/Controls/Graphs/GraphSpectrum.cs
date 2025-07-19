@@ -27,6 +27,7 @@ using System.Windows.Forms;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.MSGraph;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
@@ -139,9 +140,10 @@ namespace pwiz.Skyline.Controls.Graphs
         private ImmutableList<Precursor> Precursors => _updateManager.Precursors;
         private int PrecursorCount => Precursors?.Count ?? 0;
 
-        private SpectrumDisplayInfo _mirrorSpectrum;
         private SpectrumDisplayInfo _spectrum;
-                
+        private string _userSelectedSpectrum;
+        private SpectrumDisplayInfo _mirrorSpectrum;
+        private string _userSelectedMirrorSpectrum;
 
         private bool _inToolbarUpdate;
         // TODO
@@ -202,11 +204,11 @@ namespace pwiz.Skyline.Controls.Graphs
         public bool HasSpectrum { get { return GraphItem != null; }}
 
         /// <summary>
-        /// Normalized collisition energy for Koina
+        /// Normalized collision energy for Koina
         /// </summary>
         public int KoinaNCE
         {
-            get { return (int) comboCE.SelectedItem; }
+            get { return (int) (comboCE.SelectedItem ?? -1); }
             set { comboCE.SelectedItem = value; }
         }
 
@@ -300,7 +302,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 var newMods = DocumentUI.Settings.PeptideSettings.Modifications.StaticModsLosses;
                 var oldMods = e.DocumentPrevious.Settings.PeptideSettings.Modifications.StaticModsLosses;
-                var addedMods = newMods.ToList().FindAll(newMod => !oldMods.Contains(newMod)).ToList();
+                var addedMods = newMods.ToList().FindAll(newMod => !oldMods.Contains(newMod));
                 if (addedMods.Any())
                     Settings.Default.ShowLosses = Settings.Default.ShowLosses + @"," + addedMods.ToString(@",");
             }
@@ -314,6 +316,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 !ReferenceEquals(DocumentUI.Settings.PeptideSettings.Libraries.Libraries,
                                  e.DocumentPrevious.Settings.PeptideSettings.Libraries.Libraries))
             {
+                _userSelectedSpectrum = _userSelectedMirrorSpectrum = null;
                 ZoomSpectrumToSettings();
                 Settings.Default.ShowLosses = DocumentUI.Settings.PeptideSettings.Modifications.StaticModsLosses.ToString(@",");
                 _updateManager.ClearPrecursors();
@@ -453,10 +456,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (!Equals(selectedPrecursor, comboPrecursor.SelectedItem))
                     {
                         comboSpectrum.Items.Clear();
-                        comboMirrorSpectrum.Items.Clear();
-                        selectedSpectrum = null;
                         selectedSpectrumIndex = -1;
-                        selectedMirror = null;
+                        selectedSpectrum = _userSelectedSpectrum;
+                        comboMirrorSpectrum.Items.Clear();
+                        selectedMirror = _userSelectedMirrorSpectrum;
                     }
                 }
 
@@ -554,6 +557,16 @@ namespace pwiz.Skyline.Controls.Graphs
                     return;
                 }
             }
+        }
+
+        public void SelectSpectrum(string libraryName)
+        {
+            comboSpectrum.SelectedItem = libraryName;
+        }
+
+        public void SelectMirrorSpectrum(string libraryName)
+        {
+            comboMirrorSpectrum.SelectedItem = libraryName;
         }
 
         private bool SpectrumMatches(SpectrumDisplayInfo spectrumDisplayInfo, SpectrumIdentifier spectrumIdentifier)
@@ -1646,6 +1659,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (!_inToolbarUpdate)
             {
+                _userSelectedSpectrum = comboSpectrum.SelectedItem.ToString();
                 _updateManager.QueueUpdate(true);
             }
         }
@@ -1654,6 +1668,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (!_inToolbarUpdate)
             {
+                _userSelectedMirrorSpectrum = comboMirrorSpectrum.SelectedItem.ToString();
                 UpdateUI();
             }
         }

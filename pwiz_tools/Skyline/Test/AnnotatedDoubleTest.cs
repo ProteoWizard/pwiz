@@ -37,6 +37,7 @@ namespace pwiz.SkylineTest
             var dataSchema = new DataSchema();
             Assert.IsTrue(AggregateOperation.Cv.IsValidForType(dataSchema, typeof(AnnotatedDouble)));
             Assert.IsTrue(AggregateOperation.Sum.IsValidForType(dataSchema, typeof(AnnotatedDouble)));
+            Assert.IsTrue(AggregateOperation.Median.IsValidForType(dataSchema, typeof(AnnotatedDouble)));
         }
 
         [TestMethod]

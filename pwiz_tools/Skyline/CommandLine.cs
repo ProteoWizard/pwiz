@@ -32,6 +32,7 @@ using pwiz.PanoramaClient;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
@@ -921,7 +922,7 @@ namespace pwiz.Skyline
                 }
                 else
                 {
-                    sharedFileName = FileEx.GetTimeStampedFileName(_skylineFile);
+                    sharedFileName = FileTimeEx.GetTimeStampedFileName(_skylineFile);
                 }
                 var sharedFilePath = Path.Combine(sharedFileDir, sharedFileName);
                 if (!ShareDocument(_doc, _skylineFile, sharedFilePath, commandArgs.SharedFileType, _out, commandArgs))
@@ -2293,8 +2294,8 @@ namespace pwiz.Skyline
                 if (fastaPath.IsNullOrEmpty())
                     throw new ArgumentException(Resources.CommandLine_AssociateProteins_a_FASTA_file_must_be_imported_before_associating_proteins);
                 _out.WriteLine(Resources.CommandLine_AssociateProteins_Associating_peptides_with_proteins_from_FASTA_file__0_, Path.GetFileName(fastaPath));
-                var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(String.Empty));
-                var proteinAssociation = new ProteinAssociation(Document, progressMonitor);
+                var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(ProteomeResources.ProteinAssociation_ListPeptidesForMatching_Building_peptide_prefix_tree));
+                var proteinAssociation = new ProteinAssociation(Document, progressMonitor.CancellationToken);
                 proteinAssociation.UseFastaFile(fastaPath, progressMonitor);
                 proteinAssociation.ApplyParsimonyOptions(commandArgs.AssociateProteinsGroupProteins.GetValueOrDefault(),
                     commandArgs.AssociateProteinsGeneLevelParsimony.GetValueOrDefault(),
@@ -4559,7 +4560,7 @@ namespace pwiz.Skyline
                 {
                     return false;
                 }
-                var zipFilePath = FileEx.GetTimeStampedFileName(documentPath);
+                var zipFilePath = FileTimeEx.GetTimeStampedFileName(documentPath);
                 var published = false;
                 if (ShareDocument(document, documentPath, zipFilePath, selectedShareType, _statusWriter, commandArgs))
                 {

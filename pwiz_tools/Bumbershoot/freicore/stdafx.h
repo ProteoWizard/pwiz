@@ -115,6 +115,7 @@
 #include <cmath>
 #include <ctime>
 #include <bitset>
+#include <random>
 
 //#include <boost/lexical_cast.hpp>
 #include "pwiz/utility/misc/optimized_lexical_cast.hpp"

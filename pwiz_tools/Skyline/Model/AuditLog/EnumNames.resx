@@ -438,11 +438,14 @@
   <data name="ListSortDirection_Descending" xml:space="preserve">
     <value>Descending</value>
   </data>
+  <data name="CountDistinctImpl_CountDistinct" xml:space="preserve">
+    <value>Count Distinct</value>
+  </data>
   <data name="CountImpl_Count" xml:space="preserve">
     <value>Count</value>
   </data>
   <data name="NumericAggregate_Cv" xml:space="preserve">
-    <value>Coefficent Of Variation</value>
+    <value>Coefficient Of Variation</value>
   </data>
   <data name="NumericAggregate_Mean" xml:space="preserve">
     <value>Mean</value>
@@ -452,6 +455,9 @@
   </data>
   <data name="NumericAggregate_Sum" xml:space="preserve">
     <value>Sum</value>
+  </data>
+  <data name="NumericAggregate_Median" xml:space="preserve">
+    <value>Median</value>
   </data>
   <data name="SelectOne_Max" xml:space="preserve">
     <value>Max</value>
@@ -737,5 +743,8 @@
   </data>
   <data name="SharedPeptidesGene_Removed" xml:space="preserve">
     <value>Removed (peptides must be unique to a single gene)</value>
+  </data>
+  <data name="SearchEngine_Comet" xml:space="preserve">
+    <value>Comet</value>
   </data>
 </root>

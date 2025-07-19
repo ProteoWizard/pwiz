@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -108,7 +109,7 @@ namespace pwiz.SkylineTestFunctional
             foreach (var file in datafiles)
             {
                 Assert.AreEqual(0, file.BestSpectrum);
-                Assert.AreEqual(0, file.MatchedSpectrum);
+                Assert.AreNotEqual(0, file.MatchedSpectrum);
                 Assert.AreEqual(0, file.ScoreThresholds.Count);
             }
 

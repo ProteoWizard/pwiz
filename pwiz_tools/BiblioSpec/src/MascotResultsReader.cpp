@@ -84,13 +84,13 @@ void MascotResultsReader::initParse() {
         }
     }
 
-    ms_file_ = new ms_mascotresfile(realDatFilePath.c_str(), 0, "",
+    ms_file_ = new ms_mascotresfile_dat(realDatFilePath.c_str(), 0, "",
                                     cacheFlag,
                                     cachePath);
 
     if (!ms_file_->isValid()) {
         int error = ms_file_->getLastError();
-        if( error !=  ms_mascotresfile::ERR_NO_ERROR ) {
+        if( error != ms_mascotresfile_dat::ERR_NO_ERROR ) {
             string msg = getErrorMessage(error);
             throw BlibException(true, "Error with '%s'. %s", 
                                 realDatFilePath.c_str(), msg.c_str());
@@ -807,51 +807,51 @@ string MascotResultsReader::getErrorMessage(){
 string MascotResultsReader::getErrorMessage(int errorCode){
     string message;
     switch(errorCode){
-    case ms_mascotresfile::ERR_NO_ERROR:
+    case ms_mascotresfile_dat::ERR_NO_ERROR:
         message = "No error reported.";
         break;
-    case ms_mascotresfile::ERR_NOMEM:
+    case ms_mascotresfile_dat::ERR_NOMEM:
         message = "Not enough memory.";
         break;
-    case ms_mascotresfile::ERR_NOSUCHFILE:
+    case ms_mascotresfile_dat::ERR_NOSUCHFILE:
         message = "No such file.";
         break;
-    case ms_mascotresfile::ERR_MISSINGSECTION:
+    case ms_mascotresfile_dat::ERR_MISSINGSECTION:
         message = "Missing section.";
         break;
-    case ms_mascotresfile::ERR_MISSINGSECTIONEND:
+    case ms_mascotresfile_dat::ERR_MISSINGSECTIONEND:
         message = "Missing section end.";
         break;
-    case ms_mascotresfile::ERR_READINGFILE:
+    case ms_mascotresfile_dat::ERR_READINGFILE:
         message = "Error reading file.";
         break;
-    case ms_mascotresfile::ERR_INVALID_CACHE_DIR:
+    case ms_mascotresfile_dat::ERR_INVALID_CACHE_DIR:
         message = "Invalid cache directory '";
         message += getPsmFilePath();
         message += "'";
         break;
-    case ms_mascotresfile::ERR_FAIL_OPEN_DAT_FILE:
+    case ms_mascotresfile_dat::ERR_FAIL_OPEN_DAT_FILE:
         message = "Error opening .dat file.";
         break;
-    case ms_mascotresfile::ERR_FAIL_MK_CACHE_DIR:
+    case ms_mascotresfile_dat::ERR_FAIL_MK_CACHE_DIR:
         message = "Failed to create cache directory.";
         break;
-    case ms_mascotresfile::ERR_FAIL_CDB_INIT:
+    case ms_mascotresfile_dat::ERR_FAIL_CDB_INIT:
         message = "Error initiailzing cache CDB file.";
         break;
-    case ms_mascotresfile::ERR_MISSING_CDB_FILE:
+    case ms_mascotresfile_dat::ERR_MISSING_CDB_FILE:
         message = "Missing cache CDB file.";
         break;
-    case ms_mascotresfile::ERR_INVALID_NUMQUERIES:
+    case ms_mascotresfile_dat::ERR_INVALID_NUMQUERIES:
         message = "Invalid number of queries.";
         break;
-    case ms_mascotresfile::ERR_INVALID_RESFILE:
+    case ms_mascotresfile_dat::ERR_INVALID_RESFILE:
         message = "Invalid results (.dat) file.";
         break;
-    case ms_mascotresfile::ERR_FAIL_MK_CDB_FILE:
+    case ms_mascotresfile_dat::ERR_FAIL_MK_CDB_FILE:
         message = "Failed to create the cache CDB file.";
         break;
-    case ms_mascotresfile::ERR_FAIL_CLOSE_FILE:
+    case ms_mascotresfile_dat::ERR_FAIL_CLOSE_FILE:
         message = "Failed to close file.";
         break;
     default:
@@ -867,7 +867,7 @@ string MascotResultsReader::getErrorMessage(int errorCode){
  */
 unsigned int MascotResultsReader::getCacheFlag(const string& filename, 
                                                int threshold){
-  unsigned int flag = ms_mascotresfile::RESFILE_NOFLAG;
+  unsigned int flag = ms_mascotresfile_dat::RESFILE_NOFLAG;
 
   // determine the size of the .dat file
   auto size = bfs::file_size(filename);
@@ -875,7 +875,7 @@ unsigned int MascotResultsReader::getCacheFlag(const string& filename,
       size, threshold);
 
   if (size > threshold  ){
-    flag = ms_mascotresfile::RESFILE_USE_CACHE;
+    flag = ms_mascotresfile_dat::RESFILE_USE_CACHE;
   }
 
   return flag;

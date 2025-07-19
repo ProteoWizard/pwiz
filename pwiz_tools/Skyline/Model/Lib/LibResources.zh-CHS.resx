@@ -244,6 +244,9 @@
   <data name="NistLibraryBase_CreateCache_Could_not_read_the_precursor_m_z_value___0__" xml:space="preserve">
     <value>无法读取母离子质荷比值“{0}”</value>
   </data>
+  <data name="NistLibraryBase_CreateCache_Could_not_read_the_precursor_CCS_value___0__" xml:space="preserve">
+    <value>无法读取母离子 CCS 值 "{0}"</value>
+  </data>
   <data name="NistLibraryBase_CreateCache_Invalid_format_at_peak__0__for__1__" xml:space="preserve">
     <value>针对{1}的峰{0}格式无效。</value>
   </data>
@@ -337,5 +340,11 @@
   </data>
   <data name="XHunterLibSpec_PEP_RANK_PROCESSED_INTENSITY_Processed_intensity" xml:space="preserve">
     <value>处理的强度</value>
+  </data>
+  <data name="NistLibraryBase_GetMod_Unknown_modification__0__at_line__1_" xml:space="preserve">
+    <value>第 {1} 行有未知的修饰 {0}</value>
+  </data>
+  <data name="NistLibraryBase_CreateCache_Missing_details_for__0__at_line__1___this_entry_will_be_ignored" xml:space="preserve">
+    <value>第 {1} 行的 {0} 缺少详细信息， 该条目将被忽略</value>
   </data>
 </root>

@@ -23,6 +23,7 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.IO.Pipes;
+using System.Linq;
 using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -80,7 +81,9 @@ namespace pwiz.Skyline
             }
         }
         public static string TestName { get; set; }                 // Set during unit and functional tests
+        public static bool ClosingForms { get; set; }               // Set to true during AbstractFunctionalTest.CloseOpenForm (all forms should check this before cancelling a Close request)
         public static string DefaultUiMode { get; set; }            // Set to avoid seeing NoModeUiDlg at the start of a test
+        public static bool IsPaused => FormUtil.OpenForms.Any(form => form.GetType().Name == "PauseAndContinueForm");
 
         public static bool SkylineOffscreen
         {

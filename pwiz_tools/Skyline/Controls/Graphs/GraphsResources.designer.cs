@@ -1210,6 +1210,15 @@ namespace pwiz.Skyline.Controls.Graphs {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No quantitative chromatograms found.
+        /// </summary>
+        public static string GraphChromatogram_UpdateUI_No_quantitative_chromatograms_found {
+            get {
+                return ResourceManager.GetString("GraphChromatogram_UpdateUI_No_quantitative_chromatograms_found", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No TIC chromatogram found.
         /// </summary>
         public static string GraphChromatogram_UpdateUI_No_TIC_chromatogram_found {

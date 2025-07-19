@@ -29,9 +29,9 @@ using System.Threading;
 using JetBrains.Annotations;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -585,7 +585,7 @@ namespace pwiz.Skyline.Model.Lib
                 foreach(var kvp in DefaultParameters)
                     Parameters[kvp.Key] = new AbstractDdaSearchEngine.Setting(kvp.Value);
                 V2scoring = true; // EncyclopeDIA defaults to V1 but we want to default to V2
-                LogProgressForIndividualFiles = false;
+                LogProgressForIndividualFiles = true;
             }
 
             public IDictionary<string, AbstractDdaSearchEngine.Setting> Parameters { get; }

@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
@@ -173,10 +174,12 @@ namespace pwiz.Skyline.Controls.Graphs
                     var nodeGroup = docNode as TransitionGroupDocNode;
                     if (IsMultiSelect)
                     {
-                        var peptides = peptidePaths.Select(path => document.FindNode(path))
-                            .Cast<PeptideDocNode>().ToArray();
-                        var peptideDocNode = peptides.FirstOrDefault(
-                            peptide => 0 <= peptide.FindNodeIndex(docNode.Id));
+                        PeptideDocNode peptideDocNode = null;
+                        if (identityPath.Depth >= (int)SrmDocument.Level.Molecules)
+                        {
+                            peptideDocNode = (PeptideDocNode)document.FindNode(
+                                identityPath.GetPathTo((int)SrmDocument.Level.Molecules));
+                        }
                         if (peptideDocNode == null)
                         {
                             continue;

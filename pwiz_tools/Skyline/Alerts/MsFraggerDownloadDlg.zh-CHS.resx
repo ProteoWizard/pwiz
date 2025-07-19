@@ -121,39 +121,12 @@
     <value>17, 17</value>
   </metadata>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="tbUsageConditions.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Left, Right</value>
-  </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="tbUsageConditions.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 12</value>
-  </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="tbUsageConditions.Multiline" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="tbUsageConditions.Size" type="System.Drawing.Size, System.Drawing">
-    <value>375, 100</value>
-  </data>
-  <data name="tbUsageConditions.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="tbUsageConditions.Text" xml:space="preserve">
+  <data name="rtbUsageConditions.Text" xml:space="preserve">
     <value>根据学术许可，MSFragger 可免费用于学术研究、非商业或教育目的。用于其他用途时，需要在最初的 60 天评估期过后联系密歇根大学技术转让办公室的 Drew Bennett (andbenne@umich.edu) 获取商业许可。
 
 如有疑问，请联系 Alexey Nesvizhskii 教授 (nesvi@med.umich.edu)。</value>
-  </data>
-  <data name="&gt;&gt;tbUsageConditions.Name" xml:space="preserve">
-    <value>tbUsageConditions</value>
-  </data>
-  <data name="&gt;&gt;tbUsageConditions.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tbUsageConditions.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;tbUsageConditions.ZOrder" xml:space="preserve">
-    <value>6</value>
   </data>
   <data name="cbAgreeToLicense.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>

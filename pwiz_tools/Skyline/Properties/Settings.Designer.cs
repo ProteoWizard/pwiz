@@ -12,7 +12,7 @@ namespace pwiz.Skyline.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.11.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.13.0.0")]
     public sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -3531,6 +3531,51 @@ namespace pwiz.Skyline.Properties {
         public int KoinaRetryCount {
             get {
                 return ((int)(this["KoinaRetryCount"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("3.9.13")]
+        public string PythonEmbeddableVersion {
+            get {
+                return ((string)(this["PythonEmbeddableVersion"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("57731cf80b1c429a0be7133266d7d7cf")]
+        public string PythonEmbeddableHash {
+            get {
+                return ((string)(this["PythonEmbeddableHash"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("https://msfragger-upgrader.nesvilab.org/upgrader/LICENSE-ACADEMIC.pdf")]
+        public string MsFraggerLicenseUrl {
+            get {
+                return ((string)(this["MsFraggerLicenseUrl"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("http://msfragger-upgrader.nesvilab.org/upgrader/upgrade_download.php")]
+        public string MsFraggerVerifyUrl {
+            get {
+                return ((string)(this["MsFraggerVerifyUrl"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("https://msfragger-upgrader.nesvilab.org/upgrader/download.php")]
+        public string MsFraggerDownloadUrl {
+            get {
+                return ((string)(this["MsFraggerDownloadUrl"]));
             }
         }
     }

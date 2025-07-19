@@ -27,6 +27,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.MSGraph;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Controls.SeqNode;
@@ -1150,6 +1151,12 @@ namespace pwiz.Skyline.Controls.Graphs
                         case DisplayTypeChrom.qc:
                             message = GraphsResources.GraphChromatogram_UpdateUI_No_QC_chromatogram_found;
                             break;
+                        default:
+                            if (Settings.Default.ShowQuantitativeOnly)
+                            {
+                                message = GraphsResources.GraphChromatogram_UpdateUI_No_quantitative_chromatograms_found;
+                            }
+                            break;
                     }
                     SetErrorGraphItem(new UnavailableChromGraphItem(Helpers.PeptideToMoleculeTextMapper.Translate(message, DocumentUI.DocumentType)));
                 }
@@ -1640,7 +1647,7 @@ namespace pwiz.Skyline.Controls.Graphs
             AlignmentFunction timeRegressionFunction, double[] dotProducts, double bestProduct, bool isFullScanMs,
             int? step, float fontSize, int width, DashStyle dashStyle, FullScanInfo fullScanInfo, PaneKey graphPaneKey)
         {
-            if (tranPeakInfo == null || chromatogramInfo == null)
+            if (tranPeakInfo == null || chromatogramInfo == null || tranPeakInfo.IsEmpty)
                 return; // Nothing to shade
             if (chromatogramInfo.TransformChrom.IsDerivative())
             {

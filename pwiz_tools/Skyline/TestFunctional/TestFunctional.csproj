@@ -164,7 +164,10 @@
     <Compile Include="AlphabeticalReportEditorTest.cs" />
     <Compile Include="ApplyPeakToAllTest.cs" />
     <Compile Include="AreaNormalizeOptionTest.cs" />
+    <Compile Include="AssociateProteinsParsimonySettingsTest.cs" />
+    <Compile Include="AssociateProteinsWhileLoadingTest.cs" />
     <Compile Include="AssociateProteinVariantTest.cs" />
+    <Compile Include="AutoSelectPeptidesTest.cs" />
     <Compile Include="AutoTrainModelTest.cs" />
     <Compile Include="AutoZoomTest.cs" />
     <Compile Include="BatchCalibrationGroupComparisonTest.cs" />
@@ -172,6 +175,7 @@
     <Compile Include="CandidatePeakTest.cs" />
     <Compile Include="CantReadSkydTest.cs" />
     <Compile Include="ChargedLossesLibraryTest.cs" />
+    <Compile Include="ChromatogramExtractionRangeTest.cs" />
     <Compile Include="CleavableCrosslinkTest.cs" />
     <Compile Include="ConstrainNormalizationMethodTest.cs" />
     <Compile Include="CopyProteinGroupTest.cs" />
@@ -181,6 +185,7 @@
     <Compile Include="DetectionsPlotErrorTest.cs" />
     <Compile Include="DocumentGridExportTest.cs" />
     <Compile Include="DocumentGridUndoTest.cs" />
+    <Compile Include="EditablePivotTest.cs" />
     <Compile Include="EditNeutralLossesTest.cs" />
     <Compile Include="EncyclopeDiaLibraryMatchTest.cs" />
     <Compile Include="EncyclopeDiaPeptidesWithNoSignalTest.cs" />
@@ -209,6 +214,7 @@
     <Compile Include="MixedSrmPrmTest.cs" />
     <Compile Include="Ms1SpectrumFilterTest.cs" />
     <Compile Include="MultiInjectionReplicatesTest.cs" />
+    <Compile Include="MultiInjectReplicatePivotTest.cs" />
     <Compile Include="MultiInjectRescoreTest.cs" />
     <Compile Include="ChangeDocumentGuidTest.cs" />
     <Compile Include="OpenDocWithBackgroundProteomeTest.cs" />
@@ -225,6 +231,8 @@
     <Compile Include="RemoveNeutralLossModificationTest.cs" />
     <Compile Include="RenameMoleculeTest.cs" />
     <Compile Include="ReplicateNameMetadataRuleTest.cs" />
+    <Compile Include="ReplicatePivotColumnsTest.cs" />
+    <Compile Include="ReplicatePivotGridTest.cs" />
     <Compile Include="RescoreInPlaceTest.cs" />
     <Compile Include="ResultFileMetadataBackCompatTest.cs" />
     <Compile Include="SaveAfterProteinAssociationTest.cs" />
@@ -403,7 +411,7 @@
     <Compile Include="KoinaSkylineIntegrationTest.cs" />
     <Compile Include="ProteinMetadataFunctionalTest.cs" />
     <Compile Include="ProteinMetadataBackgroundLoaderTest.cs" />
-    <Compile Include="PythonInstallerTest.cs" />
+    <Compile Include="PythonInstallerLegacyDlgTest.cs" />
     <Compile Include="QuantitativeTest.cs" />
     <Compile Include="RefineProteinListDlgTest.cs" />
     <Compile Include="RefineListDlgTest.cs" />
@@ -472,6 +480,10 @@
     <ProjectReference Include="..\..\Shared\BiblioSpec\BiblioSpec.csproj">
       <Project>{32CC9B1A-9442-4B56-AF34-FB47595278A1}</Project>
       <Name>BiblioSpec</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Shared\CommonMsData\CommonMsData.csproj">
+      <Project>{86f8e7f5-a3ed-4519-9ad9-bf9abd6dd69f}</Project>
+      <Name>CommonMsData</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Shared\Common\Common.csproj">
       <Project>{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}</Project>
@@ -650,6 +662,7 @@
     <None Include="ProteinMetadataBackgroundLoaderTest.zip" />
     <None Include="ProteinMetadataFunctionalTest.zip" />
     <None Include="ProxlTest.zip" />
+    <None Include="PythonInstallerTest.zip" />
     <None Include="QcTraceNameTest.zip" />
     <None Include="QualitativeIonRatioTest.zip" />
     <None Include="QuantitativePeakAreaTest.zip" />
@@ -659,6 +672,7 @@
     <None Include="ReintegrateDlgTest.zip" />
     <None Include="RemovePrefixSuffixTest.zip" />
     <None Include="RenameMoleculeTest.zip" />
+    <None Include="ReplicatePivotGridTest.zip" />
     <None Include="ReportSharingTest.zip" />
     <None Include="ReportSummaryTest.zip" />
     <None Include="RescoreImportDocumentTest.zip" />

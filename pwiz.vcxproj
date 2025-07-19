@@ -76,6 +76,8 @@
     <ClCompile>
       <PreprocessorDefinitions>PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;PWIZ_READER_SHIMADZU;PWIZ_READER_UNIFI;WIN32;USE_RAW_PTR;PWIZ_READER_BRUKER_WITH_COMPASSXTRACT;PWIZ_READER_UNIFI;PWIZ_READER_UIMF;PWIZ_READER_MOBILION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <CompileAsManaged>true</CompileAsManaged>
+      <ForcedUsingFiles>Microsoft.Extensions.DependencyInjection.Abstractions.dll;Microsoft.Extensions.Http.dll</ForcedUsingFiles>
+      <AdditionalUsingDirectories>pwiz_tools\Shared\Lib</AdditionalUsingDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|x64'">
@@ -84,6 +86,9 @@
       <CompileAsManaged>true</CompileAsManaged>
       <PreprocessorDefinitions>PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;PWIZ_READER_SHIMADZU;PWIZ_READER_UNIFI;WIN32;PWIZ_READER_BRUKER_WITH_COMPASSXTRACT;PWIZ_READER_UNIFI;PWIZ_READER_UIMF;PWIZ_READER_MOBILION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalUsingDirectories>pwiz_tools\Shared\Lib</AdditionalUsingDirectories>
+      <ForcedUsingFiles>Microsoft.Extensions.DependencyInjection.Abstractions.dll;Microsoft.Extensions.Http.dll</ForcedUsingFiles>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -471,6 +476,9 @@
     <ClCompile Include="pwiz\data\vendor_readers\UIMF\Reader_UIMF_Test.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\UIMF\SpectrumList_UIMF.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\UNIFI\ChromatogramList_UNIFI.cpp" />
+    <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\UNIFI\ParallelDownloadQueue.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|x64'">true</CompileAsManaged>
+    </ClCompile>
     <ClCompile Include="pwiz\data\vendor_readers\UNIFI\Reader_UNIFI_Test.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\UNIFI\Reader_UNIFI.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\UNIFI\Reader_UNIFI_Detail.cpp" />
@@ -619,6 +627,8 @@
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|x64'">true</CompileAsManaged>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|x64'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalUsingDirectories Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|x64'">$(SolutionDir)build-nt-x86\msvc-release-x86_64;$(SolutionDir)build-nt-x86\pwiz\utility\bindings\CLI\msvc-14.3\rls\adrs-mdl-64\thrd-mlt\us-clr-tr</AdditionalUsingDirectories>
+      <ForcedUsingFiles Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|x64'">pwiz_bindings_cli.dll</ForcedUsingFiles>
     </ClCompile>
     <ClCompile Include="pwiz\utility\bindings\CLI\msdata\Reader.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|Win32'">true</CompileAsManaged>
@@ -875,8 +885,10 @@
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\UIMF\UIMFReaderTest.cpp" />
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\UNIFI\UnifiData.cpp">
       <ExternalWarningLevel Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|x64'">Level1</ExternalWarningLevel>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|x64'">true</CompileAsManaged>
     </ClCompile>
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\UNIFI\UnifiDataTest.cpp" />
+    <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\UNIFI\WatersConnectData.ipp" />
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Waters\RawData.cpp" />
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Waters\RawDataTest.cpp" />
     <ClCompile Include="pwiz_tools\BiblioSpec\src\BuildParser.cpp" />
@@ -1005,6 +1017,7 @@
     <ClInclude Include="pwiz\data\vendor_readers\UIMF\Reader_UIMF.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\UIMF\SpectrumList_UIMF.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\UNIFI\ChromatogramList_UNIFI.hpp" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\UNIFI\ParallelDownloadQueue.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\UNIFI\Reader_UNIFI.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\UNIFI\Reader_UNIFI_Detail.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\UNIFI\SpectrumList_UNIFI.hpp" />
@@ -1380,6 +1393,7 @@
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\thermo\ScanFilter.h" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\UIMF\UIMFReader.hpp" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\UNIFI\UnifiData.hpp" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\UNIFI\WatersConnectProtobuf.hpp" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Waters\MassLynxRaw.hpp" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Waters\MassLynxRawChromatogramReader.h" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Waters\MassLynxRawDataFile.h" />

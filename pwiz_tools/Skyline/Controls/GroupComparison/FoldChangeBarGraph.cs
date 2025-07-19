@@ -336,5 +336,13 @@ namespace pwiz.Skyline.Controls.GroupComparison
                     break;
             }
         }
+
+        public override bool IsComplete
+        {
+            get
+            {
+                return !IsUpdatePending && base.IsComplete;
+            }
+        }
     }
 }
