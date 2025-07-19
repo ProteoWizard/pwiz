@@ -386,7 +386,7 @@
     <value>警告： 結果ファイル'{0}'を特定できません</value>
   </data>
   <data name="CommandLine_ImportSearchInternal_Error__iRT_standard_set_to__0___but_multiple_iRT_standards_were_found__iRT_standard_must_be_set_explicitly_" xml:space="preserve">
-    <value>エラー： iRT標準が{0}に設定されましたが、複数のiRT標準が検出されました。iRT標準の設定を確認してください。</value>
+    <value>エラー： iRT標準が{0}に設定されましたが、複数のiRT標準が検出されました。iRT標準は明示的に設定する必要があります。</value>
   </data>
   <data name="CommandLine_ImportSearchInternal_The_iRT_standard_name___0___is_invalid_" xml:space="preserve">
     <value>iRT標準名「{0}」は無効です。</value>
@@ -1179,7 +1179,7 @@
   </data>
   <data name="SkylineWindow_SaveDocumentBeforeImportingResults" xml:space="preserve">
     <value>ディスク上には現在のドキュメントにはない結果があります。
-今すぐドキュメントを保存すると、そのような余分な結果が削除され、現在の設定を使って新しい結果をインポートします。
+今すぐドキュメントを保存すると、それらの追加の結果が削除され、現在の設定が新しい結果をインポートするために使用されてしまいます。
 
 今すぐドキュメントを保存しますか？</value>
   </data>

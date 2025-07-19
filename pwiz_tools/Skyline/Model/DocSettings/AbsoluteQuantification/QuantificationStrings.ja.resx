@@ -256,7 +256,7 @@
     <value>なし</value>
   </data>
   <data name="LodCalculation_TURNING_POINT_Bilinear_turning_point_legacy" xml:space="preserve">
-    <value>双線形転換点(レガシー)</value>
+    <value>双線形転回点(レガシー)</value>
   </data>
   <data name="LodCalculation_BLANK_PLUS_2SD_Blank_plus_2___SD" xml:space="preserve">
     <value>ブランク ＋2 * SD</value>

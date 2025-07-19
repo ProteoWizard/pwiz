@@ -281,7 +281,7 @@
     <value>ArdiaでクライアントとしてSkyline登録中に検証エラーが発生しました。URL{0}に接続できませんでした。サーバーURL: {1}.エラーメッセージ: {2}</value>
   </data>
   <data name="ArdiaLoginDlg_ValidateActivationStatus_Error_validating_Skyline_registration_in_Ardia_as_Client__Failed_to_process_result_from_webservice_call_to_URL__0___Server_URL___1_" xml:space="preserve">
-    <value>ArdiaでクライアントとしてSkyline登録中に検証エラーが発生しました。URL {0}へのウェブサービス呼び出しの結果を処理できませんでした。サーバーURL: {1}</value>
+    <value>ArdiaでクライアントとしてSkyline登録中に検証エラーが発生しました。URL {0}へのウェブサービス呼び出しからの結果を処理できませんでした。サーバーURL: {1}</value>
   </data>
   <data name="ArdiaLoginDlg_ValidateActivationStatus_Error_validating_Skyline_registration_in_Ardia_" xml:space="preserve">
     <value>ArdiaでSkyline登録中に検証エラーが発生しました。</value>
@@ -290,7 +290,7 @@
     <value>{3}URL{0}に接続できませんでした。サーバーURL: {1}.エラーメッセージ: {2}</value>
   </data>
   <data name="ArdiaLoginDlg_ValidateActivationStatus__2__Failed_to_process_result_from_webservice_call_to_URL__0___Server_URL___1_" xml:space="preserve">
-    <value>{2}URL{0}へのウェブサービス呼び出しの結果を処理できませんでした。サーバーURL: {1}</value>
+    <value>{2}URL{0}へのウェブサービス呼び出しからの結果を処理できませんでした。サーバーURL: {1}</value>
   </data>
   <data name="ArdiaLoginDlg_ValidateActivationStatus__3__Failed_to_process_webservice_response___Probably_failed_to_connect_to_URL__0___Server_URL___1___Error_message___2_" xml:space="preserve">
     <value>{3} ウェブサービスの応答を処理できませんでした。URL {0}に接続できなかった可能性があります。サーバーURL: {1}.エラーメッセージ: {2}</value>
@@ -322,6 +322,6 @@
     <value>ログインページを読み込めませんでした。HTTPステータスコードは{0}です。ログインページURL: {1}</value>
   </data>
   <data name="ArdiaLoginDlg_CoreWebView2OnNavigationCompleted_AfterNavigateToLoginURL_Load_Login_page_failed_with_HTTP_status_code__0__Login_Page_URL___1_" xml:space="preserve">
-    <value>ログインページを読み込めませんでした。HTTPステータスコードは{0}です。クライアント登録コードが無効な可能性があります。新しいクライアント登録コードをサーバーから受信した直後であるため、不具合の可能性があります。ログインページURL: {1}</value>
+    <value>ログインページを読み込めませんでした。HTTPステータスコードは{0}です。クライアント登録コードが無効な可能性があります。新しいクライアント登録コードをサーバーから受信したところであるため、これはバグの可能性があります。ログインページURL: {1}</value>
   </data>
 </root>

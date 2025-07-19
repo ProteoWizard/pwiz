@@ -145,13 +145,13 @@
     <value>アナライザー</value>
   </data>
   <data name="ApexAnalyteIonCount">
-    <value>頂点アナライトイオンカウント</value>
+    <value>頂点アナライトイオン数</value>
   </data>
   <data name="ApexAnalyteIonCountFragment">
-    <value>頂点アナライトイオンカウントフラグメント</value>
+    <value>頂点アナライトイオン数フラグメント</value>
   </data>
   <data name="ApexAnalyteIonCountMS1">
-    <value>頂点アナライトイオンカウントMS1</value>
+    <value>頂点アナライトイオン数MS1</value>
   </data>
   <data name="ApexSpectrumId">
     <value>頂点スペクトルID</value>
@@ -163,13 +163,13 @@
     <value>頂点スペクトルID MS1</value>
   </data>
   <data name="ApexTotalIonCount">
-    <value>頂点総イオンカウント</value>
+    <value>頂点総イオン数</value>
   </data>
   <data name="ApexTotalIonCountFragment">
-    <value>頂点総イオンカウントフラグメント</value>
+    <value>頂点総イオン数フラグメント</value>
   </data>
   <data name="ApexTotalIonCountMS1">
-    <value>頂点総イオンカウントMS1</value>
+    <value>頂点総イオン数MS1</value>
   </data>
   <data name="Area">
     <value>面積</value>
@@ -607,37 +607,37 @@
     <value>最後の位置</value>
   </data>
   <data name="LcPeakAnalyteIonCount">
-    <value>LCピークアナライトイオンカウント</value>
+    <value>LCピークアナライトイオン数</value>
   </data>
   <data name="LcPeakAnalyteIonCountFragment">
-    <value>LCピークアナライトイオンカウントフラグメント</value>
+    <value>LCピークアナライトイオン数フラグメント</value>
   </data>
   <data name="LcPeakAnalyteIonCountMS1">
-    <value>LCピークアナライトイオンカウントMS1</value>
+    <value>LCピークアナライトイオン数</value>
   </data>
   <data name="LcPeakIonMetricsFragment">
-    <value>LCピークイオンメトリクスフラグメント</value>
+    <value>LCピークイオン測定フラグメント</value>
   </data>
   <data name="LcPeakIonMetricsMS1">
-    <value>LCピークイオンメトリクスMS1</value>
+    <value>LCピークイオン測定MS1</value>
   </data>
   <data name="LcPeakTotalIonCount">
-    <value>LCピーク総イオンカウント</value>
+    <value>LCピーク総イオン数</value>
   </data>
   <data name="LcPeakTotalIonCountFragment">
-    <value>LCピーク総イオンカウントフラグメント</value>
+    <value>LCピーク総イオン数フラグメント</value>
   </data>
   <data name="LcPeakTotalIonCountMS1">
-    <value>LCピーク総イオンカウントMS1</value>
+    <value>LCピーク総イオン数MS1</value>
   </data>
   <data name="LcPeakTotalIonCurrentArea">
-    <value>LCピーク総イオン電流面積</value>
+    <value>LCピーク総イオン電流領域</value>
   </data>
   <data name="LcPeakTotalIonCurrentAreaFragment">
-    <value>LCピーク総イオン電流面積フラグメント</value>
+    <value>LCピーク総イオン電流領域フラグメント</value>
   </data>
   <data name="LcPeakTotalIonCurrentAreaMS1">
-    <value>LCピーク総イオン電流面積MS1</value>
+    <value>LCピーク総イオン電流領域MS1</value>
   </data>
   <data name="LibraryCollisionCrossSection">
     <value>ライブラリ衝突断面積</value>

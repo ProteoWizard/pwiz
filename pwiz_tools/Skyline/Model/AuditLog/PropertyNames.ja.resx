@@ -1809,7 +1809,7 @@
     <value>スペクトルフィルタ</value>
   </data>
   <data name="ImportResultsSettings_IsGpf" xml:space="preserve">
-    <value>気相分画</value>
+    <value>気相分別</value>
   </data>
   <data name="BuildPeptideSearchLibrarySettings_UseDiaUmpire" xml:space="preserve">
     <value>DIA-Umpireでスペクトルをデコンボリューション</value>

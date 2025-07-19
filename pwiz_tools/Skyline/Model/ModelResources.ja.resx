@@ -837,7 +837,8 @@
     <value>装置{1}のProgramPath{0}に必須ファイルがありません:</value>
   </data>
   <data name="ThermoDllFinder_GetSoftwareInfo_Failed_to_find_a_machine_name_key_with_a_valid_ProgramPath" xml:space="preserve">
-    <value>以下のWindowsレジストリキー「 {0}」 で有効なProgramPath値のあるマシン名キーを検出できませんでした:</value>
+    <value>以下からWindowsレジストリキー「 {0}」 の
+で有効なProgramPath値のあるマシン名キーを検出できませんでした:</value>
   </data>
   <data name="ThermoMassListExporter_EnsureLibraries_Unknown_Thermo_instrument_type___0___installed_" xml:space="preserve">
     <value>インストールされたThermo装置タイプ「{0}」が不明です。</value>

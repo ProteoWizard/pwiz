@@ -725,7 +725,7 @@ Old Localized:DIA生データ (ライブラリのデコンボリューション�
     <value>Lightに対する比率</value>
   </data>
   <data name="LodCalculation_turning_point_stderr" xml:space="preserve">
-    <value>双線形転換点標準エラー</value>
+    <value>双線形転回点標準エラー</value>
   </data>
   <data name="BilinearRegressionFit_bilinear" xml:space="preserve">
     <value>双線形</value>
