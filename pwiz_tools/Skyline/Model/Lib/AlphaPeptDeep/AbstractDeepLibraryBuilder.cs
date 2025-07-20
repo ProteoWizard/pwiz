@@ -208,14 +208,12 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         {
             Document = document;
             IrtStandard = irtStandard;
-            _warningMods = GetWarningMods();
         }
         protected AbstractDeepLibraryBuilder(SrmDocument document, SrmDocument trainingDocument, IrtStandard irtStandard)
         {
             Document = document;
             TrainingDocument = trainingDocument;
             IrtStandard = irtStandard;
-            _warningMods = GetWarningMods();
         }
         public SrmDocument Document { get; private set; }
 

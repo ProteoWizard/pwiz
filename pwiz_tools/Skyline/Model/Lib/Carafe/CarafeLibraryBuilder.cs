@@ -219,7 +219,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
         public static IDictionary<string, AbstractDdaSearchEngine.Setting> ModelParameters { get; private set; }
         public static IDictionary<string, AbstractDdaSearchEngine.Setting> LibraryParameters { get; private set; }
 
-
+        protected override LibraryBuilderModificationSupport libraryBuilderModificationSupport { get; }
 
         private IList<ArgumentAndValue> CommandArguments =>
             new List<ArgumentAndValue>
@@ -594,7 +594,6 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             EnsureWorkDir(Path.GetDirectoryName(libOutPath), PREFIX_WORKDIR);
             Directory.CreateDirectory(JavaDir);
             Directory.CreateDirectory(CarafeJavaDir);
-            Directory.CreateDirectory(CarafeDir);
             libraryBuilderModificationSupport = new LibraryBuilderModificationSupport(null);
         }
 
