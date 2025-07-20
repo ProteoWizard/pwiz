@@ -337,7 +337,7 @@
     <value>8</value>
   </data>
   <data name="cbxSingleBatch.Text" xml:space="preserve">
-    <value>1つのバッチだけの繰り返し測定を表示</value>
+    <value>1バッチのみの繰り返し測定を表示</value>
   </data>
   <data name="&gt;&gt;cbxSingleBatch.Name" xml:space="preserve">
     <value>cbxSingleBatch</value>
