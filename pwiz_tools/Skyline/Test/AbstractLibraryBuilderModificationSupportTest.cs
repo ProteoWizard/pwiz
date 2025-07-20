@@ -28,7 +28,29 @@ namespace pwiz.SkylineTest
     public class AbstractLibraryBuilderModificationSupportTests : AbstractUnitTest
     {
 
-        public LibraryBuilderModificationSupport Support => new LibraryBuilderModificationSupport(Ms2SupportedList, RtSupportedList, CcsSupportedList);
+        public LibraryBuilderModificationSupport Support => new LibraryBuilderModificationSupport(MODEL_SUPPORTED_MODIFICATION_INDICES);
+
+        private static Dictionary<ModificationIndex, PredictionSupport> MODEL_SUPPORTED_MODIFICATION_INDICES =
+            new Dictionary<ModificationIndex, PredictionSupport>
+
+            {
+                {
+                    new ModificationIndex(1,
+                        new ModificationType("001:MOD1", "TestMod1", "TestOnly")), PredictionSupport.ALL
+                },
+                {
+                    new ModificationIndex(2,
+                        new ModificationType("002:MOD2", "TestMod2", "TestOnly")), PredictionSupport.FRAGMENTATION
+                },
+                {
+                    new ModificationIndex(3, new ModificationType("003:MOD3", "TestMod3", "TestOnly")), PredictionSupport.RETENTION_TIME
+                },
+                {
+                    new ModificationIndex(4, new ModificationType("004:MOD4", "TestMod4", "TestOnly")), PredictionSupport.CCS
+                }
+
+            };
+
         IList<ModificationType> Ms2SupportedList => new List<ModificationType>
         {
             new ModificationType("001:MOD1", "TestMod1", "TestOnly"),
@@ -53,21 +75,21 @@ namespace pwiz.SkylineTest
             Assert.IsNotNull(Support._predictionSupport);
             Assert.AreEqual(Support._predictionSupport.Count, 4); // MOD1, MOD2, MOD3, MOD4
 
-            Assert.IsTrue(Support._predictionSupport["001"].IsFragmentationPredictionSupported);
-            Assert.IsTrue(Support._predictionSupport["001"].IsRetentionTimePredictionSupported);
-            Assert.IsTrue(Support._predictionSupport["001"].IsCcsPredictionSupported);
+            Assert.IsTrue(Support._predictionSupport["001"].Fragmentation);
+            Assert.IsTrue(Support._predictionSupport["001"].RetentionTime);
+            Assert.IsTrue(Support._predictionSupport["001"].Ccs);
 
-            Assert.IsTrue(Support._predictionSupport["002"].IsFragmentationPredictionSupported);
-            Assert.IsFalse(Support._predictionSupport["002"].IsRetentionTimePredictionSupported);
-            Assert.IsFalse(Support._predictionSupport["002"].IsCcsPredictionSupported);
+            Assert.IsTrue(Support._predictionSupport["002"].Fragmentation);
+            Assert.IsFalse(Support._predictionSupport["002"].RetentionTime);
+            Assert.IsFalse(Support._predictionSupport["002"].Ccs);
 
-            Assert.IsFalse(Support._predictionSupport["003"].IsFragmentationPredictionSupported);
-            Assert.IsTrue(Support._predictionSupport["003"].IsRetentionTimePredictionSupported);
-            Assert.IsFalse(Support._predictionSupport["003"].IsCcsPredictionSupported);
+            Assert.IsFalse(Support._predictionSupport["003"].Fragmentation);
+            Assert.IsTrue(Support._predictionSupport["003"].RetentionTime);
+            Assert.IsFalse(Support._predictionSupport["003"].Ccs);
 
-            Assert.IsFalse(Support._predictionSupport["004"].IsFragmentationPredictionSupported);
-            Assert.IsFalse(Support._predictionSupport["004"].IsRetentionTimePredictionSupported);
-            Assert.IsTrue(Support._predictionSupport["004"].IsCcsPredictionSupported);
+            Assert.IsFalse(Support._predictionSupport["004"].Fragmentation);
+            Assert.IsFalse(Support._predictionSupport["004"].RetentionTime);
+            Assert.IsTrue(Support._predictionSupport["004"].Ccs);
         }
 
         [TestMethod]
@@ -145,7 +167,7 @@ namespace pwiz.SkylineTest
         public void AbstractLibraryBuilderModificationSupportTests_PopulatePredictionModificationSupport_EmptyList_DoesNotThrow()
         {
             // Arrange
-            var support = new LibraryBuilderModificationSupport(new List<ModificationType>(), new List<ModificationType>(), new List<ModificationType>());
+            var support = new LibraryBuilderModificationSupport(new Dictionary<ModificationIndex, PredictionSupport>());
 
             // Assert
             Assert.IsNotNull(support._predictionSupport);
@@ -156,7 +178,7 @@ namespace pwiz.SkylineTest
         public void AbstractLibraryBuilderModificationSupportTests_PopulatePredictionModificationSupport_NullList_HandlesGracefully()
         {
             // Arrange
-            var support = new LibraryBuilderModificationSupport(null, null, null);
+            var support = new LibraryBuilderModificationSupport(null);
 
             // Assert
             Assert.IsNotNull(support._predictionSupport);

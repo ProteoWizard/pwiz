@@ -126,7 +126,8 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         private const string MOD_SITES = @"mod_sites";
         private const string CHARGE = @"charge";
 
-        private static readonly IEnumerable<string> PrecursorTableColumnNames = new[] { SEQUENCE, MODS, MOD_SITES, CHARGE };
+        private static readonly IEnumerable<string> PrecursorTableColumnNames =
+            new[] { SEQUENCE, MODS, MOD_SITES, CHARGE };
 
         // Column names for BlibBuild
         private const string MODIFIED_PEPTIDE = "ModifiedPeptide";
@@ -136,14 +137,16 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         private const string COLLISIONAL_CROSS_SECTION = "CollisionalCrossSection";
 
         public static string PythonVersion => Settings.Default.PythonEmbeddableVersion;
-        public static string ScriptsDir => PythonInstallerUtil.GetPythonVirtualEnvironmentScriptsDir(PythonVersion, ALPHAPEPTDEEP);
+
+        public static string ScriptsDir =>
+            PythonInstallerUtil.GetPythonVirtualEnvironmentScriptsDir(PythonVersion, ALPHAPEPTDEEP);
 
         public static PythonInstaller CreatePythonInstaller(TextWriter writer)
         {
             var packages = new[]
             {
                 new PythonPackage { Name = @"peptdeep", Version = null },
-                
+
                 // We manually set numpy to the latest version before 2.0 because of a backward incompatibility issue
                 // See details for tracking issue in AlphaPeptDeep repo: https://github.com/MannLabs/alphapeptdeep/issues/190
                 // TODO: delete the following line after the issue above is resolved
@@ -159,32 +162,30 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         public static readonly IList<ModificationType> MODIFICATION_NAMES = PopulateUniModList(null);
 
         protected override string ToolName => ALPHAPEPTDEEP;
-        
+
         protected override IList<ModificationType> ModificationTypes => MODIFICATION_NAMES;
-        protected override LibraryBuilderModificationSupport libraryBuilderModificationSupport { get;  }
+        protected override LibraryBuilderModificationSupport libraryBuilderModificationSupport { get; }
 
-        private static IList<ModificationIndex> MS2_SUPPORT_MODIFICATION_INDICES =>
-            new[]
+        private static Dictionary<ModificationIndex, PredictionSupport> MODEL_SUPPORTED_MODIFICATION_INDICES =
+            new Dictionary<ModificationIndex, PredictionSupport>
+
             {
-                new ModificationIndex(4, new ModificationType(@"4", @"Carbamidomethyl", @"H(3) C(2) N O")),
-                new ModificationIndex(21, new ModificationType(@"21", @"Phospho", @"H O(3) P")),
-                new ModificationIndex(35, new ModificationType(@"35", @"Oxidation", @"O")),
-                new ModificationIndex(121, new ModificationType(@"121", @"GG", @"H(6) C(4) N(2) O(2)"))
+                {
+                    new ModificationIndex(4,
+                        new ModificationType(@"4", @"Carbamidomethyl", @"H(3) C(2) N O")), PredictionSupport.ALL
+                },
+                {
+                    new ModificationIndex(21,
+                        new ModificationType(@"21", @"Phospho", @"H O(3) P")), PredictionSupport.FRAGMENTATION
+                },
+                {
+                    new ModificationIndex(35, new ModificationType(@"35", @"Oxidation", @"O")), PredictionSupport.ALL
+                },
+                {
+                    new ModificationIndex(121, new ModificationType(@"121", @"GG", @"H(6) C(4) N(2) O(2)")), PredictionSupport.FRAGMENTATION
+                }
+
             };
-
-        private static IList<ModificationIndex> RT_SUPPORT_MODIFICATION_INDICES => new[]
-        {
-            new ModificationIndex(4, new ModificationType(@"4", @"Carbamidomethyl", @"H(3) C(2) N O")),
-            new ModificationIndex(35, new ModificationType(@"35", @"Oxidation", @"O"))
-        };
-        private static IList<ModificationIndex> CCS_SUPPORT_MODIFICATION_INDICES => new[]
-        {
-            new ModificationIndex(4, new ModificationType(@"4", @"Carbamidomethyl", @"H(3) C(2) N O")),
-            new ModificationIndex(35, new ModificationType(@"35", @"Oxidation", @"O"))
-        };
-
-
-        // protected override IList<ModificationType> FullSupportModificationTypes => PopulateUniModList(FULL_SUPPORT_MODIFICATION_INDICES);
 
         public LibrarySpec LibrarySpec { get; private set; }
 
@@ -257,8 +258,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             SrmDocument document, IrtStandard irtStandard) : base(document, irtStandard)
         {
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
-            libraryBuilderModificationSupport = new LibraryBuilderModificationSupport(PopulateUniModList(MS2_SUPPORT_MODIFICATION_INDICES), 
-                PopulateUniModList(RT_SUPPORT_MODIFICATION_INDICES), PopulateUniModList(CCS_SUPPORT_MODIFICATION_INDICES));
+            libraryBuilderModificationSupport = new LibraryBuilderModificationSupport(MODEL_SUPPORTED_MODIFICATION_INDICES);
             string rootProcessingDir = Path.GetDirectoryName(libOutPath);
             if (string.IsNullOrEmpty(rootProcessingDir))
                 throw new ArgumentException($@"AlphapeptdeepLibraryBuilder libOutputPath {libOutPath} must be a full path.");

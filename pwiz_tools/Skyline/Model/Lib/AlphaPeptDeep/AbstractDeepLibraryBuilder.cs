@@ -30,65 +30,62 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 {
+    public class PredictionSupport : Immutable
+    {
+        public static readonly PredictionSupport ALL = new PredictionSupport()
+            { Fragmentation = true, RetentionTime = true, Ccs = true };
 
+        public static readonly PredictionSupport FRAGMENTATION = new PredictionSupport() { Fragmentation = true };
+
+        public static readonly PredictionSupport RETENTION_TIME = new PredictionSupport() { RetentionTime = true };
+
+        public static readonly PredictionSupport CCS = new PredictionSupport() { Ccs = true };
+
+        public static readonly PredictionSupport FRAG_RT_ONLY = new PredictionSupport()
+            { Fragmentation = true, RetentionTime = true, Ccs = false };
+
+        public static readonly PredictionSupport FRAG_CCS_ONLY = new PredictionSupport()
+            { Fragmentation = true, RetentionTime = false, Ccs = true };
+
+        public static readonly PredictionSupport RT_CCS_ONLY = new PredictionSupport()
+            { Fragmentation = false, RetentionTime = true, Ccs = true };
+
+        public static readonly PredictionSupport NONE = new PredictionSupport()
+            { Fragmentation = false, RetentionTime = false, Ccs = false };
+
+
+        public bool Fragmentation { get; private set; }
+        public bool RetentionTime { get; private set; }
+        public bool Ccs { get; private set; }
+    };
     public class LibraryBuilderModificationSupport
     {
-        public class PredictionSupport
-        {
-            public bool IsFragmentationPredictionSupported { get; set; }
-            public bool IsRetentionTimePredictionSupported { get; set; }
-            public bool IsCcsPredictionSupported { get; set; }
-        };
-       
         internal Dictionary<string, PredictionSupport> _predictionSupport; //key is ModificationType.Accession
 
-        public enum SupportType
+        /// <summary>
+        /// Helper function to populate the list of supported modifications
+        /// </summary>
+        /// <param name="supportedModifications">Mapping ModificationIndex to PredictionSupport</param>
+        private void PopulatePredictionModificationSupport(Dictionary<ModificationIndex, PredictionSupport> supportedModifications)
         {
-            Fragmentation,
-            RetentionTime,
-            Ccs
-        }
-/// <summary>
-/// Helper function to populate the list of supported modifications
-/// </summary>
-/// <param name="supportList">List of ModificationTypes supported</param>
-/// <param name="type">Type of support: MS2 fragmentation, Retention Time, Collisional Cross Section</param>
-        private void PopulatePredictionModificationSupport(IList<ModificationType> supportList, SupportType type)
-        {
-            if (supportList == null)
+            if (supportedModifications == null)
                 return;
 
-            foreach (ModificationType mod in supportList)
+            foreach (KeyValuePair<ModificationIndex, PredictionSupport> mod in supportedModifications)
             {
-                var key = mod.Accession.Split(':')[0];
+                var key = mod.Key.Modification.Accession.Split(':')[0];
 
                 if (!_predictionSupport.ContainsKey(key))
                     _predictionSupport.Add(key, new PredictionSupport());
 
-                switch (type)
-                {
-                    case SupportType.Fragmentation:
-                        _predictionSupport[key].IsFragmentationPredictionSupported = true;
-                        break;
-                    case SupportType.RetentionTime:
-                        _predictionSupport[key].IsRetentionTimePredictionSupported = true;
-                        break;
-                    case SupportType.Ccs:
-                        _predictionSupport[key].IsCcsPredictionSupported = true;
-                        break;
-                }
+                _predictionSupport[key] = mod.Value;
             }
         }
 
-        public LibraryBuilderModificationSupport(IList<ModificationType> ms2SupportedList,
-            IList<ModificationType> rtSupportedList, IList<ModificationType> ccsSupportedList)
+        public LibraryBuilderModificationSupport(Dictionary<ModificationIndex, PredictionSupport> supportedModifications)
         {
             _predictionSupport = new Dictionary<string, PredictionSupport>();
-            
-            PopulatePredictionModificationSupport(ms2SupportedList, SupportType.Fragmentation);
-            PopulatePredictionModificationSupport(rtSupportedList, SupportType.RetentionTime);
-            PopulatePredictionModificationSupport(ccsSupportedList, SupportType.Ccs);
-
+            PopulatePredictionModificationSupport(supportedModifications);
         }
 
         public bool AreAllModelsSupported(string accession)
@@ -104,7 +101,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 return false;
             }
 
-            return _predictionSupport[key].IsFragmentationPredictionSupported;
+            return _predictionSupport[key].Fragmentation;
         }
         public bool IsRtSupportedMod(string accession)
         {
@@ -114,7 +111,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 return false;
             }
 
-            return _predictionSupport[key].IsRetentionTimePredictionSupported;
+            return _predictionSupport[key].RetentionTime;
         }
         public bool IsCcsSupportedMod(string accession)
         {
@@ -124,7 +121,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 return false;
             }
 
-            return _predictionSupport[key].IsCcsPredictionSupported;
+            return _predictionSupport[key].Ccs;
         }
 
 

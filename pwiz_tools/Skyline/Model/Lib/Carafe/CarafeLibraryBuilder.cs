@@ -256,8 +256,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             PythonVirtualEnvironmentName = pythonVirtualEnvironmentName;
             ExperimentDataFilePath = experimentDataFilePath;
             ExperimentDataTuningFilePath = experimentDataTuningFilePath;
-            libraryBuilderModificationSupport = new LibraryBuilderModificationSupport(PopulateUniModList(null),
-                PopulateUniModList(null), PopulateUniModList(null));
+            libraryBuilderModificationSupport = new LibraryBuilderModificationSupport(null);
         }
 
         public CarafeLibraryBuilder(
@@ -280,8 +279,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             Directory.CreateDirectory(RootDir);
             Directory.CreateDirectory(JavaDir);
             Directory.CreateDirectory(CarafeDir);
-            libraryBuilderModificationSupport = new LibraryBuilderModificationSupport(PopulateUniModList(null),
-                PopulateUniModList(null), PopulateUniModList(null));
+            libraryBuilderModificationSupport = new LibraryBuilderModificationSupport(null);
         }
 
         public bool BuildLibrary(IProgressMonitor progress)
