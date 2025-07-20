@@ -1112,9 +1112,8 @@
 	<data name="ThermoDllFinder_GetSoftwareInfo_The_ProgramPath__0__for_the_instrument__1__is_missing_required_files_" xml:space="preserve">
     <value>The ProgramPath {0} for the instrument {1} is missing required files:</value>
   </data>
-	<data name="ThermoDllFinder_GetSoftwareInfo_Failed_to_find_a_machine_name_key_with_a_valid_ProgramPath" xml:space="preserve">
-    <value>Failed to find a machine name key with a valid ProgramPath value in the
-in the Windows registry key '{0}' from:</value>
+  <data name="ThermoDllFinder_GetSoftwareInfo_Failed_to_find_a_machine_name_key_with_a_valid_ProgramPath" xml:space="preserve">
+    <value>Failed to find a machine name key with a valid ProgramPath value in the Windows registry key '{0}' from:</value>
   </data>
 	<data name="ThermoMassListExporter_EnsureLibraries_Unknown_Thermo_instrument_type___0___installed_" xml:space="preserve">
     <value>Unknown Thermo instrument type '{0}' installed.</value>
