@@ -365,7 +365,7 @@ namespace TestPerf
             //  AssertEx.LibraryEquals(expected, result);
 
             //OkDialog(spectralLibraryViewer, spectralLibraryViewer.Close);
-            PauseTest();
+            //PauseTest();
         }
 
         /// <summary>

@@ -116,7 +116,6 @@ namespace pwiz.Skyline.Model.Lib.Carafe
         public ISkylineProcessRunnerWrapper SkylineProcessRunner { get; set; }
 
         private string PythonVirtualEnvironmentScriptsDir { get; }
-
         public LibrarySpec LibrarySpec { get; private set; }
 
         public static string PythonVersion => Settings.Default.PythonEmbeddableVersion;
@@ -566,6 +565,8 @@ namespace pwiz.Skyline.Model.Lib.Carafe
                 CarafeLibraryBuilder.ModelParameters == null || 
                 CarafeLibraryBuilder.LibraryParameters == null)
                 CarafeLibraryBuilder.CarafeDefaultSettings();
+
+            libraryBuilderModificationSupport = new LibraryBuilderModificationSupport(null);
         }
 
         public CarafeLibraryBuilder(
@@ -593,7 +594,8 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             EnsureWorkDir(Path.GetDirectoryName(libOutPath), PREFIX_WORKDIR);
             Directory.CreateDirectory(JavaDir);
             Directory.CreateDirectory(CarafeJavaDir);
-
+            Directory.CreateDirectory(CarafeDir);
+            libraryBuilderModificationSupport = new LibraryBuilderModificationSupport(null);
         }
 
         public bool BuildLibrary(IProgressMonitor progress)

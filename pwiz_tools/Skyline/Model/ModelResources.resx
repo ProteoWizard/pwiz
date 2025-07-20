@@ -1126,7 +1126,16 @@ in the Windows registry key '{0}' from:</value>
 
 Would you like to continue building this predicted library?</value>
   </data>
-	<data name="NvidiaInstaller_Requesting_Administrator_elevation" xml:space="preserve">
+  <data name="Alphapeptdeep_Warn_limited_modification" xml:space="preserve">
+    <value>Warning: The predicted library might be of poor quality, due to the following modifications detected with limited support in the default predictive model: 
+
+{0}
+
+Please consider using the fine-tuning method provided by Carafe for building this library.
+
+Would you like to continue building this predicted library?</value>
+  </data>
+  <data name="NvidiaInstaller_Requesting_Administrator_elevation" xml:space="preserve">
     <value>Administrative privileges are required to install Nvidia Cuda tools the first time. Consult with your system administrator if you don&apos;t have the necessary permissions and ask them to run the following script:
 
 {0}
