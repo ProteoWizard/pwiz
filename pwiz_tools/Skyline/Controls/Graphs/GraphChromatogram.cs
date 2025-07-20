@@ -34,6 +34,7 @@ using pwiz.CommonMsData;
 using pwiz.MSGraph;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Controls.SeqNode;
+using pwiz.Skyline.Menus;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
@@ -2328,7 +2329,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void ShowImputedPeakBounds(ChromGraphItem chromGraphPrimary, PeptideDocNode[] nodePeps)
         {
-            if (!Settings.Default.ShowImputedPeakBounds)
+            if (!ChromatogramContextMenu.IsShowImputedPeak(DocumentUI))
             {
                 return;
             }

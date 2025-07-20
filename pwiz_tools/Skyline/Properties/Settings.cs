@@ -1334,6 +1334,19 @@ namespace pwiz.Skyline.Properties
                 this[nameof(ArdiaRegistrationCodeEntries)] = value;
             }
         }
+
+        [UserScopedSetting]
+        public bool? ShowImputedPeakBounds
+        {
+            get
+            {
+                return (bool?)this[nameof(ShowImputedPeakBounds)];
+            }
+            set
+            {
+                this[nameof(ShowImputedPeakBounds)] = value;
+            }
+        }
     }
 
     [Serializable]

@@ -883,9 +883,6 @@
     <Setting Name="FeatureFindingMinIntensityPPM" Type="System.Double" Scope="User">
       <Value Profile="(Default)">100</Value>
     </Setting>
-    <Setting Name="ShowImputedPeakBounds" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
-    </Setting>
     <Setting Name="RtRegressionBinCount" Type="System.Int32" Scope="Application">
       <Value Profile="(Default)">2000</Value>
     </Setting>

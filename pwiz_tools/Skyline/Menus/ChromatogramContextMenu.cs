@@ -25,6 +25,7 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
@@ -87,7 +88,7 @@ namespace pwiz.Skyline.Menus
 
             originalPeakMenuItem.Checked = set.ShowOriginalPeak;
             menuStrip.Items.Insert(iInsert++, originalPeakMenuItem);
-            imputedPeakMenuItem.Checked = set.ShowImputedPeakBounds;
+            imputedPeakMenuItem.Checked = IsShowImputedPeak(DocumentUI);
             menuStrip.Items.Insert(iInsert++, imputedPeakMenuItem);
 
             menuStrip.Items.Insert(iInsert++, retentionTimesContextMenuItem);
@@ -724,6 +725,17 @@ namespace pwiz.Skyline.Menus
         private void chromPropsContextMenuItem_Click(object sender, EventArgs e)
         {
             SkylineWindow.ShowChromatogramProperties();
+        }
+
+        /// <summary>
+        /// Returns true if the imputed peak boundaries should be shown for a particular document.
+        /// If <see cref="Settings.ShowImputedPeakBounds"/> is null, then the imputed bounds should
+        /// only be shown if the document has some peak imputation settings.
+        /// </summary>
+        public static bool IsShowImputedPeak(SrmDocument document)
+        {
+            return Settings.Default.ShowImputedPeakBounds ??
+                   !ImputationSettings.DEFAULT.Equals(document.Settings.PeptideSettings.Imputation);
         }
     }
 }
