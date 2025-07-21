@@ -22,11 +22,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Net;
-using System.Reflection;
-using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.IO;
 
 namespace SetupDeployProject
@@ -88,7 +84,7 @@ namespace SetupDeployProject
                     {
                         var preReplaceLength = filelistTemplate.Length;
                         string automaticIncludedFilename = $"{filename} (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)";
-                        if (filelistTemplate.ToString().IndexOf(automaticIncludedFilename) > 0)
+                        if (filelistTemplate.ToString().IndexOf(automaticIncludedFilename, StringComparison.Ordinal) > 0)
                             continue;
                         filelistTemplate.Replace(filename, automaticIncludedFilename);
                         bool didReplace = filelistTemplate.Length != preReplaceLength;
