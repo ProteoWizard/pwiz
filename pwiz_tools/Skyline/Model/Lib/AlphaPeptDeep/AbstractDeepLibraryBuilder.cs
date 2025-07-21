@@ -201,9 +201,9 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         }
 
         private DateTime _nowTime = DateTime.Now;
-        private IList<string> _noMs2SupportWarningMods = null;
-        private IList<string> _noRtSupportWarningMods = null;
-        private IList<string> _noCcsSupportWarningMods = null;
+        private IList<string> _noMs2SupportWarningMods;
+        private IList<string> _noRtSupportWarningMods;
+        private IList<string> _noCcsSupportWarningMods;
         protected AbstractDeepLibraryBuilder(SrmDocument document, IrtStandard irtStandard)
         {
             Document = document;
@@ -478,9 +478,9 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             if (_noMs2SupportWarningMods != null && _noRtSupportWarningMods != null && _noCcsSupportWarningMods != null)
                 return (_noMs2SupportWarningMods, _noRtSupportWarningMods, _noCcsSupportWarningMods);
     
-            var noMs2SupportResultList = new List<string>();
-            var noRtSupportResultList = new List<string>();
-            var noCcsSupportResultList = new List<string>();
+            _noMs2SupportWarningMods = new List<string>();
+            _noRtSupportWarningMods = new List<string>();
+            _noCcsSupportWarningMods = new List<string>();
 
             // Build precursor table row by row
             foreach (var peptide in Document.Peptides)
@@ -492,22 +492,22 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                     var mod = modifiedSequence.ExplicitMods[i];
                     if (!mod.UnimodId.HasValue)
                     {
-                        var haveMod = noMs2SupportResultList.FirstOrDefault(m => m == mod.Name);
+                        var haveMod = _noMs2SupportWarningMods.FirstOrDefault(m => m == mod.Name);
                         if (haveMod == null)
                         {
-                            noMs2SupportResultList.Add(mod.Name);
+                            _noMs2SupportWarningMods.Add(mod.Name);
                         }
 
-                        haveMod = noRtSupportResultList.FirstOrDefault(m => m == mod.Name);
+                        haveMod = _noRtSupportWarningMods.FirstOrDefault(m => m == mod.Name);
                         if (haveMod == null)
                         {
-                            noRtSupportResultList.Add(mod.Name);
+                            _noRtSupportWarningMods.Add(mod.Name);
                         }
 
-                        haveMod = noCcsSupportResultList.FirstOrDefault(m => m == mod.Name);
+                        haveMod = _noCcsSupportWarningMods.FirstOrDefault(m => m == mod.Name);
                         if (haveMod == null)
                         {
-                            noCcsSupportResultList.Add(mod.Name);
+                            _noCcsSupportWarningMods.Add(mod.Name);
                         }
                     }
 
@@ -515,33 +515,33 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
                     if (!libraryBuilderModificationSupport.IsMs2SupportedMod(unimodIdWithName))
                     {
-                        var haveMod = noMs2SupportResultList.FirstOrDefault(m => m == mod.Name);
+                        var haveMod = _noMs2SupportWarningMods.FirstOrDefault(m => m == mod.Name);
                         if (haveMod == null)
                         {
-                            noMs2SupportResultList.Add(mod.Name);
+                            _noMs2SupportWarningMods.Add(mod.Name);
                         }
                     }
                     if (!libraryBuilderModificationSupport.IsRtSupportedMod(unimodIdWithName))
                     {
-                        var haveMod = noRtSupportResultList.FirstOrDefault(m => m == mod.Name);
+                        var haveMod = _noRtSupportWarningMods.FirstOrDefault(m => m == mod.Name);
                         if (haveMod == null)
                         {
-                            noRtSupportResultList.Add(mod.Name);
+                            _noRtSupportWarningMods.Add(mod.Name);
                         }
                     }
                     if (!libraryBuilderModificationSupport.IsCcsSupportedMod(unimodIdWithName))
                     {
-                        var haveMod = noCcsSupportResultList.FirstOrDefault(m => m == mod.Name);
+                        var haveMod = _noCcsSupportWarningMods.FirstOrDefault(m => m == mod.Name);
                         if (haveMod == null)
                         {
-                            noCcsSupportResultList.Add(mod.Name);
+                            _noCcsSupportWarningMods.Add(mod.Name);
                         }
                     }
  
                 }
             }
             
-            return (noMs2SupportResultList, noRtSupportResultList, noCcsSupportResultList);
+            return (_noMs2SupportWarningMods, _noRtSupportWarningMods, _noCcsSupportWarningMods);
         }
     }
 }
