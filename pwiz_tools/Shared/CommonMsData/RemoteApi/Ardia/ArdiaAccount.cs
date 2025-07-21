@@ -199,7 +199,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
 
         public bool HasToken()
         {
-            return !string.IsNullOrEmpty(Token.Encrypted);
+            return !EncryptedToken.IsNullOrEmpty(Token);
         }
 
         #region Implementation of IXmlSerializable
