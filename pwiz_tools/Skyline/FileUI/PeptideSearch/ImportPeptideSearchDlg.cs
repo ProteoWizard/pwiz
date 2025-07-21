@@ -494,6 +494,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                          !BuildPepSearchLibControl.PerformDDASearch; }
         }
 
+        private bool GetAreLibrarySpectraDIA()
+        {
+            if (!IsImportingSearchResults)
+                return WorkflowType == Workflow.dia;
+
+            var libraryFiles = ImportPeptideSearch.DocLib.LibraryDetails.DataFiles;
+            return libraryFiles.All(d => d.WorkflowType == Model.Lib.WorkflowType.DIA);
+        }
+
         private Pages LastPage
         {
             get
@@ -617,7 +626,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     var oldImportResultsControl = (Control) ImportResultsControl;
                     getChromatogramsPage.Controls.Remove(oldImportResultsControl);
 
-                    if (WorkflowType != Workflow.dia || HasPeakBoundaries)
+                    if (WorkflowType != Workflow.dia || HasPeakBoundaries || (IsImportingSearchResults && GetAreLibrarySpectraDIA()))
                     {
                         if (!(ImportResultsControl is ImportResultsControl))
                         {
