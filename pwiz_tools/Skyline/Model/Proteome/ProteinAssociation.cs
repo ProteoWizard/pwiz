@@ -112,6 +112,17 @@ namespace pwiz.Skyline.Model.Proteome
             ParsimoniousProteins = null;
         }
 
+        public ProteinAssociation Clone()
+        {
+            var result = (ProteinAssociation)MemberwiseClone();
+            result._proteinOrGeneGroupResultCacheByGeneLevel = new Dictionary<bool, ProteinOrGeneGroupResultCache>()
+            {
+                { false, null },
+                { true, null }
+            };
+            return result;
+        }
+
         public void UseFastaFile(string file, ILongWaitBroker broker)
         {
             if (!File.Exists(file))

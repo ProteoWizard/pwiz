@@ -210,7 +210,7 @@ namespace pwiz.CommonMsData.RemoteApi
             public RemoteServerException Exception { get; private set; }
         }
 
-        protected struct RequestKey
+        private struct RequestKey : IEquatable<RequestKey>
         {
             public RequestKey(Type type, Uri uri) : this()
             {
@@ -220,6 +220,25 @@ namespace pwiz.CommonMsData.RemoteApi
 
             public Type Type { get; private set; }
             public Uri Uri { get; private set; }
+
+
+            public bool Equals(RequestKey other)
+            {
+                return Type == other.Type && Equals(Uri, other.Uri);
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is RequestKey other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return ((Type != null ? Type.GetHashCode() : 0) * 397) ^ (Uri != null ? Uri.GetHashCode() : 0);
+                }
+            }
         }
     }
 
