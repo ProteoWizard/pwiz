@@ -252,9 +252,6 @@
       <Component Id="NHibernate.dll">
         <File Source="$(var.Skyline.TargetDir)/NHibernate.dll" KeyPath="yes"/>
       </Component>
-      <Component Id="OneOf.dll">
-        <File Source="$(var.Skyline.TargetDir)/OneOf.dll" KeyPath="yes"/>
-       </Component>
       <Component Id="parquet.dll">
         <File Source="$(var.Skyline.TargetDir)/parquet.dll" KeyPath="yes"/>
       </Component>
