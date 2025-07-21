@@ -71,7 +71,7 @@ namespace pwiz.SkylineTestConnected
             Assert.AreEqual(1, Settings.Default.RemoteAccountList.Count);
 
             account = (ArdiaAccount)Settings.Default.RemoteAccountList[0];
-            AssertEx.IsTrue(!string.IsNullOrEmpty(account.Token), "Ardia account does not have a token.");
+            AssertEx.IsTrue(!EncryptedToken.IsNullOrEmpty(account.Token), "Ardia account does not have a token.");
 
             // Test scenarios 
             TestGetFolderPath();

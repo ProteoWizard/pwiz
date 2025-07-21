@@ -47,18 +47,18 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
     public class ArdiaAccount : RemoteAccount
     {
         // TEST ONLY
-        public static readonly ArdiaAccount DEFAULT = new ArdiaAccount(string.Empty, string.Empty, string.Empty, string.Empty);
+        public static readonly ArdiaAccount DEFAULT = new ArdiaAccount(string.Empty, string.Empty, string.Empty, EncryptedToken.Empty);
 
         public override RemoteAccountType AccountType => RemoteAccountType.ARDIA;
         public bool DeleteRawAfterImport { get; private set; }
-        public string Token { get; internal set; }
+        public EncryptedToken Token { get; internal set; }
 
         // TEST ONLY properties for supporting the automated tests in class ArdiaTest
         public string TestingOnly_NotSerialized_Role { get; private set; }
         public string TestingOnly_NotSerialized_Username { get; private set; }
         public string TestingOnly_NotSerialized_Password { get; private set; }
 
-        public ArdiaAccount(string serverUrl, string username, string password, string token)
+        public ArdiaAccount(string serverUrl, string username, string password, EncryptedToken token)
         {
             ServerUrl = serverUrl;
             Username = username;
@@ -161,7 +161,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             return result;
         }
 
-        public ArdiaAccount ChangeToken(string token)
+        public ArdiaAccount ChangeToken(EncryptedToken token)
         {
             var result = ChangeProp(ImClone(this), im => im.Token = token);
             result._authenticatedHttpClientFactory = _authenticatedHttpClientFactory;
@@ -199,7 +199,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
 
         public bool HasToken()
         {
-            return !string.IsNullOrEmpty(Token);
+            return !string.IsNullOrEmpty(Token.Encrypted);
         }
 
         #region Implementation of IXmlSerializable
@@ -220,10 +220,10 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             base.ReadXElement(xElement);
             DeleteRawAfterImport = Convert.ToBoolean((string)xElement.Attribute(ATTR.delete_after_import.ToString()));
 
-            var tokenString = (string)xElement.Attribute(ATTR.token.ToString());
-            if (!string.IsNullOrEmpty(tokenString))
+            var encryptedTokenString = (string)xElement.Attribute(ATTR.token.ToString());
+            if (!string.IsNullOrEmpty(encryptedTokenString))
             {
-                Token = tokenString;
+                Token = EncryptedToken.FromEncryptedString(encryptedTokenString);
             }
         }
 
@@ -232,9 +232,9 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             base.WriteXml(writer);
             writer.WriteAttributeString(ATTR.delete_after_import.ToString(), DeleteRawAfterImport.ToString(CultureInfo.InvariantCulture).ToLowerInvariant());
 
-            if (!string.IsNullOrEmpty(Token))
+            if (!EncryptedToken.IsNullOrEmpty(Token))
             {
-                writer.WriteAttributeString(ATTR.token.ToString(), Token);
+                writer.WriteAttributeString(ATTR.token.ToString(), Token.Encrypted);
             }
         }
 
@@ -258,7 +258,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
                 return false;
             if (!Equals(DeleteRawAfterImport, obj.DeleteRawAfterImport))
                 return false;
-            if(!string.Equals(Token, obj.Token))
+            if(!string.Equals(Token.Encrypted, obj.Token.Encrypted))
                 return false;
 
             if (!Equals(TestingOnly_NotSerialized_Role, obj.TestingOnly_NotSerialized_Role))

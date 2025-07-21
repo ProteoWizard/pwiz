@@ -81,7 +81,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             }
 
             var token = ArdiaCredentialHelper.GetToken(account);
-            if (string.IsNullOrEmpty(token))
+            if (EncryptedToken.IsNullOrEmpty(token))
             {
                 throw new IOException(ArdiaResources.Error_InvalidToken);
             }
@@ -92,12 +92,12 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             return new ArdiaClient(account, serverUrl, applicationCode, token);
         }
 
-        private ArdiaClient(ArdiaAccount account, string serverUrl, string applicationCode, string token)
+        private ArdiaClient(ArdiaAccount account, string serverUrl, string applicationCode, EncryptedToken token)
         {
             Account = account;
             ServerUri = new Uri(serverUrl);
             ApplicationCode = applicationCode;
-            _encryptedToken = token;
+            Token = token;
             UploadPartSizeMBs = DEFAULT_PART_SIZE_MB;
         }
 
@@ -121,11 +121,10 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             return partSizeMBs >= 5 && partSizeMBs < 2048;
         }
 
-        public bool HasCredentials => !string.IsNullOrWhiteSpace(ApplicationCode) && !string.IsNullOrWhiteSpace(Token);
+        public bool HasCredentials => !string.IsNullOrWhiteSpace(ApplicationCode) && !EncryptedToken.IsNullOrEmpty(Token);
         private ArdiaAccount Account { get; }
         private string ApplicationCode { get; }
-        private readonly string _encryptedToken;
-        private string Token => !_encryptedToken.IsNullOrEmpty() ? CommonTextUtil.DecryptString(_encryptedToken) : null;
+        private EncryptedToken Token { get; }
         private Uri ServerUri { get; }
 
         /// <summary>
@@ -135,7 +134,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         private HttpClient AuthenticatedHttpClient()
         {
             var cookieContainer = new CookieContainer();
-            cookieContainer.Add(ServerUri, new Cookie(COOKIE_BFF_HOST, Token));
+            cookieContainer.Add(ServerUri, new Cookie(COOKIE_BFF_HOST, Token.Decrypted));
 
             var handler = new HttpClientHandler();
             handler.CookieContainer = cookieContainer;
@@ -209,7 +208,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
                 httpWebRequest.Headers[HEADER_APPLICATION_CODE] = ApplicationCode;
                 httpWebRequest.CookieContainer = new CookieContainer();
 
-                var cookie = new Cookie(COOKIE_BFF_HOST, Token)
+                var cookie = new Cookie(COOKIE_BFF_HOST, Token.Decrypted)
                 {
                     Domain = ServerUri.Host
                 };
