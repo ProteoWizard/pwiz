@@ -186,7 +186,7 @@ namespace pwiz.Common.SystemUtil
                     if (writer != null && (HideLinePrefix == null || !line.StartsWith(HideLinePrefix)))
                     {
                         writer.WriteLine(line);
-                        if (!(writer as FilteredUserMessageWriter).LastLineRemoved)
+                        if (!(writer is FilteredUserMessageWriter) || !(writer as FilteredUserMessageWriter).LastLineRemoved)
                             OutputLinesGenerated++;
                     }
 
