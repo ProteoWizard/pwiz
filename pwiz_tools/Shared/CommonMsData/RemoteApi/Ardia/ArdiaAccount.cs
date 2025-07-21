@@ -224,7 +224,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             var tokenString = (string)xElement.Attribute(ATTR.token.ToString());
             if (!string.IsNullOrEmpty(tokenString))
             {
-                Token = CommonTextUtil.DecryptString(tokenString);
+                Token = tokenString;
             }
         }
 
@@ -235,7 +235,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
 
             if (!string.IsNullOrEmpty(Token))
             {
-                writer.WriteAttributeString(ATTR.token.ToString(), CommonTextUtil.EncryptString(Token));
+                writer.WriteAttributeString(ATTR.token.ToString(), Token);
             }
         }
 

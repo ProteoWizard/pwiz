@@ -35,7 +35,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         {
             Assume.IsNotNull(account);
 
-            account.Token = token;
+            account.Token = CommonTextUtil.EncryptString(token);
         }
 
         public static string GetApplicationCode(ArdiaAccount account)

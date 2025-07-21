@@ -97,7 +97,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             Account = account;
             ServerUri = new Uri(serverUrl);
             ApplicationCode = applicationCode;
-            Token = token;
+            _encryptedToken = token;
             UploadPartSizeMBs = DEFAULT_PART_SIZE_MB;
         }
 
@@ -124,7 +124,8 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         public bool HasCredentials => !string.IsNullOrWhiteSpace(ApplicationCode) && !string.IsNullOrWhiteSpace(Token);
         private ArdiaAccount Account { get; }
         private string ApplicationCode { get; }
-        private string Token { get; }
+        private string _encryptedToken;
+        public string Token => !_encryptedToken.IsNullOrEmpty() ? CommonTextUtil.DecryptString(_encryptedToken) : null;
         private Uri ServerUri { get; }
 
         /// <summary>
