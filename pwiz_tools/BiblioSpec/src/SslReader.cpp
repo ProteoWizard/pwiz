@@ -104,16 +104,6 @@ SslReader::SslReader(BlibBuilder& maker,
           psms.push_back(curPSM);
       }
 
-      if (newPSM.rtInfo.retentionTime != 0 || newPSM.rtInfo.startTime != 0)
-      {
-          int identifier = newPSM.specKey;
-          if (newPSM.specIndex != -1) // not default value means scan id is index=<index>
-              identifier = newPSM.specIndex;
-          else if (newPSM.specKey == -1) // default value
-              identifier = std::hash<string>()(newPSM.specName);
-
-          overrideRt_[identifier] = newPSM.rtInfo;
-      }
   }
 
   void SslReader::setColumnsAndSeparators(DelimitedFileReader<sslPSM> &fileReader)
@@ -222,43 +212,52 @@ SslReader::SslReader(BlibBuilder& maker,
     }
     return vector<PSM_SCORE_TYPE>(allScoreTypes.begin(), allScoreTypes.end());
   }
-  
-  bool SslReader::getSpectrum(int identifier,
-                              SpecData& returnData,
-                              SPEC_ID_TYPE type,
-                              bool getPeaks) {
-    if (PwizReader::getSpectrum(identifier, returnData, type, getPeaks))
-    {
-      map<int, RTINFO>::const_iterator i = overrideRt_.find(identifier);
-      if (i != overrideRt_.end()) {
-          setRtInfo(returnData, i->second);
+
+  bool SslReader::getSpectrum(PSM* psm,
+      SPEC_ID_TYPE findBy,
+      SpecData& returnData,
+      bool getPeaks)
+  {
+      bool isMS1 = psm->isPrecursorOnly();
+      if (isMS1)
+      {
+          getPeaks = false;
+          if (psm->specKey < 0 && findBy == SPEC_ID_TYPE::SCAN_NUM_ID)
+          {
+              findBy = NAME_ID; // Look up by constructed ID since there's no actual spectrum associated
+          }
       }
-      return true;
-    }
-    return false;
-  }
+      bool success = true;
+      if (getPeaks)
+      {
+          switch (findBy) {
+          case NAME_ID:
+              success = PwizReader::getSpectrum(psm->specName, returnData, getPeaks);
+              break;
+          case SCAN_NUM_ID:
+              success = PwizReader::getSpectrum(psm->specKey, returnData, findBy, getPeaks);
+              break;
+          case INDEX_ID:
+              success = PwizReader::getSpectrum(psm->specIndex, returnData, findBy, getPeaks);
+              break;
+          }
+      }
+      return success;
+  };
 
-  void SslReader::setRtInfo(SpecData& returnData, const RTINFO &rtInfo) {
-    if (rtInfo.retentionTime != 0)
-        returnData.retentionTime = rtInfo.retentionTime;
-    if (rtInfo.startTime != 0)
-        returnData.startTime = rtInfo.startTime;
-    if (rtInfo.endTime != 0)
-        returnData.endTime = rtInfo.endTime;
-}
-
-  bool SslReader::getSpectrum(string identifier,
-                              SpecData& returnData,
-                              bool getPeaks) {
-    if (PwizReader::getSpectrum(identifier, returnData, getPeaks))
-    {
-        map<int, RTINFO>::const_iterator i = overrideRt_.find(std::hash<string>()(identifier));
-        if (i != overrideRt_.end()) {
-            setRtInfo(returnData, i->second);
-        }
-        return true;
-    }
-    return false;
+  /**
+   * Apply any values carried by subclassed psm(e.g.SSL RT column values) that override those found
+   ** by spectrum lookup
+   */
+  void SslReader::applyPsmOverrideValues(PSM* psm, SpecData& specData)
+  {
+      auto ssl = dynamic_cast<sslPSM *>(psm);
+      if (ssl != nullptr && ssl->rtInfo.retentionTime != 0)
+      {
+          specData.retentionTime = ssl->rtInfo.retentionTime;
+          specData.startTime = ssl->rtInfo.startTime;
+          specData.endTime = ssl->rtInfo.endTime;
+      }
   }
 
   /**

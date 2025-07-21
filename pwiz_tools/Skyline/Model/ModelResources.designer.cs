@@ -1634,6 +1634,15 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Detailed Info.
+        /// </summary>
+        public static string PersistedViews_GetDefaults_Detailed_Info {
+            get {
+                return ResourceManager.GetString("PersistedViews_GetDefaults_Detailed_Info", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Main.
         /// </summary>
         public static string PersistedViews_MainGroup_Main {
@@ -2116,8 +2125,7 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to find a machine name key with a valid ProgramPath value in the
-        ///in the Windows registry key &apos;{0}&apos; from:.
+        ///   Looks up a localized string similar to Failed to find a machine name key with a valid ProgramPath value in the Windows registry key &apos;{0}&apos; from:.
         /// </summary>
         public static string ThermoDllFinder_GetSoftwareInfo_Failed_to_find_a_machine_name_key_with_a_valid_ProgramPath {
             get {
