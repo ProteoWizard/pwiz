@@ -124,8 +124,8 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         public bool HasCredentials => !string.IsNullOrWhiteSpace(ApplicationCode) && !string.IsNullOrWhiteSpace(Token);
         private ArdiaAccount Account { get; }
         private string ApplicationCode { get; }
-        private string _encryptedToken;
-        public string Token => !_encryptedToken.IsNullOrEmpty() ? CommonTextUtil.DecryptString(_encryptedToken) : null;
+        private readonly string _encryptedToken;
+        private string Token => !_encryptedToken.IsNullOrEmpty() ? CommonTextUtil.DecryptString(_encryptedToken) : null;
         private Uri ServerUri { get; }
 
         /// <summary>
