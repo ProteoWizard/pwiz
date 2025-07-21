@@ -219,6 +219,8 @@ SynchronizedIntegrationDlg,TestSynchronizedIntegration
 BackgroundEventThreadsTestForm,TestBackgroundEventThreads
 TestPanoramaFolderBrowser, TestPanoramaClient
 ToolOptionsUI,TestAccessServer
+ToolOptionsUI.AlphaPeptDeepTab,*
+ToolOptionsUI.CarafeTab,*
 ToolOptionsUI.PanoramaTab,TestAccessServer
 ToolOptionsUI.RemoteTab,TestAccessServer
 ToolOptionsUI.LanguageTab,TestAccessServer
