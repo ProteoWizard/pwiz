@@ -2705,7 +2705,6 @@ namespace pwiz.Skyline
 
         #region Tools Menu
 
-        private ToolOptionsUI _toolOptionsUI;
         private void optionsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ShowToolOptionsUI();
@@ -2713,15 +2712,19 @@ namespace pwiz.Skyline
 
         public void ShowToolOptionsUI()
         {
-            _toolOptionsUI ??= new ToolOptionsUI(_documentUI.Settings);
-            _toolOptionsUI.ShowDialog(this);
+            using (var dlg = new ToolOptionsUI(_documentUI.Settings))
+            {
+                dlg.ShowDialog(this);
+            }
         }
 
         public void ShowToolOptionsUI(IWin32Window owner, ToolOptionsUI.TABS tab)
         {
-            _toolOptionsUI ??= new ToolOptionsUI(_documentUI.Settings);
-            _toolOptionsUI.NavigateToTab(tab);
-            _toolOptionsUI.ShowDialog(owner);
+            using (var dlg = new ToolOptionsUI(_documentUI.Settings))
+            {
+                dlg.NavigateToTab(tab);
+                dlg.ShowDialog(owner);
+            }
         }
 
         public void ShowToolOptionsUI(ToolOptionsUI.TABS tab)

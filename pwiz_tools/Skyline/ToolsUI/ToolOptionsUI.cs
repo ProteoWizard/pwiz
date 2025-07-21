@@ -18,7 +18,6 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
@@ -62,7 +61,6 @@ namespace pwiz.Skyline.ToolsUI
         public ToolOptionsUI(SrmSettings settings)
         {
             InitializeComponent();
-            EmbedAlphaPeptDeepUserSettings();
             checkBoxShowWizard.Checked = Settings.Default.ShowStartupForm;
             powerOfTenCheckBox.Checked = Settings.Default.UsePowerOfTen;
             Icon = Resources.Skyline;
@@ -637,49 +635,11 @@ namespace pwiz.Skyline.ToolsUI
                 setting => setting.ValidValues,
                 setting => setting.Name);
         }
-
-        private void EmbedAlphaPeptDeepUserSettings()
-        {
-            btnAlphaPeptDeepUserSettings.Visible = false;
-            if (AlphapeptdeepLibraryBuilder.UserParameters == null)
-                AlphapeptdeepLibraryBuilder.AlphaPeptDeepDefaultSettings();
-
-            _alphaPeptDeepParams = KeyValueGridDlg.Show(null, btnAlphaPeptDeepUserSettings.Text,
-                AlphapeptdeepLibraryBuilder.UserParameters,
-                setting => setting.Value.ToString(),
-                (value, setting) => setting.Value = value,
-                (value, setting) => setting.Validate(value),
-                setting => setting.ValidValues,
-                setting => setting.Name, AlphaPeptDeepTabControl);
-        }
-
-        private Dictionary<string, Control> _alphaPeptDeepParams;
+       
 
         public Control.ControlCollection AlphaPeptDeepTabControl
         {
             get => tabControl.TabPages[0].Controls;
-        }
-
-        private void btnOK_Click(object sender, EventArgs e)
-        {
-            var gridValues = AlphapeptdeepLibraryBuilder.UserParameters;
-            foreach (var kvp in _alphaPeptDeepParams)
-            {
-                if (kvp.Value is TextBox tb)
-                    gridValues[kvp.Key].Value = tb.Text;
-                else if (kvp.Value is CheckBox cb)
-                    gridValues [kvp.Key].Value = cb.Checked.ToString();
-                else if (kvp.Value is ComboBox cmb)
-                {
-                    if (cmb.SelectedItem != null)
-                    {
-                        gridValues[kvp.Key].Value = cmb.SelectedItem.ToString();
-                    }
-                }
-                else
-                    throw new InvalidOperationException();
-
-            }
         }
     }
 }
