@@ -1,5 +1,5 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:hardklor.blib	61	1	10
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:hardklor.blib	61	1	11
 id	RefSpectraID	position	mass
 id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobility	collisionalCrossSectionSqA	ionMobilityHighEnergyOffset	ionMobilityType	retentionTime	startTime	endTime	totalIonCurrent	moleculeName	chemicalFormula	precursorAdduct	inchiKey	otherKeys	fileID	SpecIDinFile	score	scoreType
 1	N/A	414.8407	1	N/A	-	-	1	0	0.0	0.0	0.0	0	0.3642	0.3642	0.3813	N/A	mass413.8334_RT0.3642	H43C18N5O5[+4.506951]	[M+1H]	N/A	N/A	1	N/A	0.97453351	20
@@ -63,8 +63,8 @@ id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	num
 59	N/A	815.2162	1	N/A	-	-	1	0	0.0	0.0	0.0	0	0.0731	0.0731	0.082	N/A	mass814.2088_RT0.0731	H66C36N10O11[-0.282404]	[M+1H]	N/A	N/A	1	N/A	0.90899504	20
 60	N/A	433.8856	2	N/A	-	-	1	0	0.0	0.0	0.0	0	0.2866	0.2777	0.2956	N/A	mass863.7511_RT0.2866	H86C38N10O11[+5.103336]	[M+2H]	N/A	N/A	1	N/A	1.0	20
 61	N/A	433.8858	2	N/A	-	-	1	0	0.0	0.0	0.0	0	0.1725	0.1591	0.1725	N/A	mass863.7514_RT0.1725	H86C38N10O11[+5.103661]	[M+2H]	N/A	N/A	1	N/A	0.97453351	20
-id	fileName	idFileName	cutoffScore
-1	/BiblioSpec/tests/inputs/20130311_DDA_Pit01.mzML	/BiblioSpec/tests/inputs/hardklor.hk.bs.kro	-1.0
+id	fileName	idFileName	cutoffScore	workflowType
+1	/BiblioSpec/tests/inputs/20130311_DDA_Pit01.mzML	/BiblioSpec/tests/inputs/hardklor.hk.bs.kro	-1.0	0
 id	scoreType	probabilityType
 0	UNKNOWN	NOT_A_PROBABILITY_VALUE
 1	PERCOLATOR QVALUE	PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT

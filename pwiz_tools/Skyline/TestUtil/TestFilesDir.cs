@@ -100,7 +100,7 @@ namespace pwiz.SkylineTestUtil
         {
             // record the size of the persistent directory after extracting
             var targetDir = IsExtractHere ? Path.Combine(PersistentFilesDir ?? string.Empty, DirectoryName) : PersistentFilesDir;
-            var persistentDirInfo = string.IsNullOrEmpty(PersistentFilesDir) ? null : new DirectoryInfo(targetDir);
+            var persistentDirInfo = string.IsNullOrEmpty(PersistentFilesDir) || !Directory.Exists(targetDir) ? null : new DirectoryInfo(targetDir);
             if (persistentDirInfo != null && Directory.Exists(PersistentFilesDir))
             {
                 var persistentFileInfos = persistentDirInfo.EnumerateFiles("*", SearchOption.AllDirectories).ToList();
