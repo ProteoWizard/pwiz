@@ -135,7 +135,10 @@ namespace pwiz.Skyline.ToolsUI
                 textArdiaAlias_Username.Text = remoteAccount.Username;
                 textArdiaServerURL.Text = remoteAccount.ServerUrl;
 
-                _ardiaAccount_CurrentlyLoggedIn = ardiaAccount.HasToken() ? ardiaAccount : null;
+                if (!ardiaAccount.HasAuthenticatedHttpClientFactory() && ardiaAccount.HasToken())
+                    ardiaAccount.GetAuthenticatedHttpClient();
+                if (ardiaAccount.HasAuthenticatedHttpClientFactory())
+                    _ardiaAccount_CurrentlyLoggedIn = ardiaAccount;
 
                 cbArdiaDeleteRawAfterImport.Checked = ardiaAccount.DeleteRawAfterImport;
                 
