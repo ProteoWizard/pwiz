@@ -22,6 +22,7 @@ using System.Drawing;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 

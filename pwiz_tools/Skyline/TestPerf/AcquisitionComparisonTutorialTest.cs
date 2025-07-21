@@ -32,13 +32,13 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.ToolsUI;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.BiblioSpec;
 using pwiz.Common.Chemistry;
 using pwiz.Skyline.EditUI;
 using System.Windows.Forms;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model;
 
 namespace TestPerf
@@ -390,13 +390,11 @@ namespace TestPerf
 
             WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
 
-            var importResults = importPeptideSearchDlg.ImportResultsControl as ImportResultsDIAControl;
+            var importResults = importPeptideSearchDlg.ImportResultsControl as ImportResultsControl;
             Assert.IsNotNull(importResults);
 
             var dataFolder = Path.GetDirectoryName(GetTestPath(Path.Combine(DIA_DATA_DIR, "DIA_100fmol.mzML")));
-            var openDataFiles = ShowDialog<OpenDataSourceDialog>(() => importResults.Browse(dataFolder));
-            RunUI(() => openDataFiles.SelectAllFileType(DataExt));
-            OkDialog(openDataFiles, openDataFiles.Open);
+            importResults.UpdateResultsFiles(new[] { dataFolder }, true);
 
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
             RunUI(() => Assert.AreEqual(4, importResults.FoundResultsFiles.Count));

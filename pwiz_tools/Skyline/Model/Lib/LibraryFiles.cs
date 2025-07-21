@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using pwiz.Common.Collections;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 
@@ -45,6 +46,7 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         public ImmutableList<string> FilePaths { get; }
+
         public int Count
         {
             get { return FilePaths.Count; }

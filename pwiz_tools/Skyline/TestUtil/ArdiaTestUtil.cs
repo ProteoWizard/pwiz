@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 using System;
-using pwiz.Skyline.Model.Results.RemoteApi.Ardia;
+using pwiz.CommonMsData.RemoteApi.Ardia;
 
 namespace pwiz.SkylineTestUtil
 {

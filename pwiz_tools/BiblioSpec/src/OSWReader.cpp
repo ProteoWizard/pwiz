@@ -155,7 +155,7 @@ bool OSWReader::parseFile() {
     for (map< string, vector<PSM*> >::iterator i = fileMap_.begin(); i != fileMap_.end(); i++) {
         psms_.assign(i->second.begin(), i->second.end());
         setSpecFileName(i->first.c_str(), false);
-        buildTables(GENERIC_QVALUE, i->first, false);
+        buildTables(GENERIC_QVALUE, i->first, false, DIA);
     }
 
     return true;

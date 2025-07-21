@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
+using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -31,7 +32,6 @@ using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -474,7 +474,7 @@ namespace pwiz.SkylineTestFunctional
                     var msfraggerDownloaderDlg = TryWaitForOpenForm<MsFraggerDownloadDlg>(2000);
                     if (msfraggerDownloaderDlg != null)
                     {
-                        RunUI(() => msfraggerDownloaderDlg.SetValues("Matt Chambers (testing download from Skyline)", "matt.chambers42@gmail.com", "UW"));
+                        RunUI(() => msfraggerDownloaderDlg.SetValues("Matt (testing download from Skyline)", "Chambers", "chambem2@uw.edu", "UW"));
                         OkDialog(msfraggerDownloaderDlg, msfraggerDownloaderDlg.ClickAccept);
                     }
                 }
@@ -766,7 +766,7 @@ namespace pwiz.SkylineTestFunctional
                     var msfraggerDownloaderDlg = TryWaitForOpenForm<MsFraggerDownloadDlg>(2000);
                     if (msfraggerDownloaderDlg != null)
                     {
-                        RunUI(() => msfraggerDownloaderDlg.SetValues("Matt Chambers (testing download from Skyline)", "matt.chambers42@gmail.com", "UW"));
+                        RunUI(() => msfraggerDownloaderDlg.SetValues("Matt (testing download from Skyline)", "Chambers", "chambem2@uw.edu", "UW"));
                         OkDialog(msfraggerDownloaderDlg, msfraggerDownloaderDlg.ClickAccept);
                     }
                 }

@@ -27,6 +27,7 @@ using System.Windows.Forms;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.MSGraph;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
@@ -301,7 +302,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 var newMods = DocumentUI.Settings.PeptideSettings.Modifications.StaticModsLosses;
                 var oldMods = e.DocumentPrevious.Settings.PeptideSettings.Modifications.StaticModsLosses;
-                var addedMods = newMods.ToList().FindAll(newMod => !oldMods.Contains(newMod)).ToList();
+                var addedMods = newMods.ToList().FindAll(newMod => !oldMods.Contains(newMod));
                 if (addedMods.Any())
                     Settings.Default.ShowLosses = Settings.Default.ShowLosses + @"," + addedMods.ToString(@",");
             }

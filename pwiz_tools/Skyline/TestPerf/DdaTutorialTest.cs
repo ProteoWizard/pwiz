@@ -23,6 +23,8 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
+using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
@@ -31,7 +33,6 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -275,7 +276,7 @@ namespace TestPerf
                     if (msfraggerDownloaderDlg != null)
                     {
                         PauseForScreenShot<MsFraggerDownloadDlg>("Import Peptide Search - Download MSFragger"); // Maybe someday
-                        RunUI(() => msfraggerDownloaderDlg.SetValues("Matt Chambers (testing download from Skyline)", "matt.chambers42@gmail.com", "UW"));
+                        RunUI(() => msfraggerDownloaderDlg.SetValues("Matt (testing download from Skyline)", "Chambers", "chambem2@uw.edu", "UW"));
                         OkDialog(msfraggerDownloaderDlg, msfraggerDownloaderDlg.ClickAccept);
                     }
                 }
