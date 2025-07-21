@@ -491,12 +491,12 @@ namespace pwiz.Skyline.Model.Tools
                     else if (package.Version.StartsWith(GIT))
                     {
                         arg = package.Version;
-                        arg = TextUtil.Quote(arg);
+                        arg = arg.Quote();
                     }
                     else
                     {
                         arg = package.Name + EQUALS + package.Version;
-                        arg = TextUtil.Quote(arg);
+                        arg = arg.Quote();
                     }
 
                     var cmdLine = TextUtil.SpaceSeparate(pythonExecutablePath,
@@ -1075,9 +1075,7 @@ namespace pwiz.Skyline.Model.Tools
 
         public override void DoAction(ILongWaitBroker broker)
         {
-            // CONSIDER(brendanx): Path quoting?
-            var cmdLine = TextUtil.SpaceSeparate(PythonInstaller.BasePythonExecutablePath,
-                PythonInstaller.GetPipScriptDownloadPath);
+            var cmdLine = TextUtil.SpaceSeparate(PythonInstaller.BasePythonExecutablePath.Quote(), PythonInstaller.GetPipScriptDownloadPath.Quote());
             var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, PythonInstaller.ECHO, cmdLine, PythonInstaller.CMD_PROCEEDING_SYMBOL);
             cmd += cmdLine;
             
@@ -1114,7 +1112,7 @@ namespace pwiz.Skyline.Model.Tools
         public override void DoAction(ILongWaitBroker broker)
         {
             var virtualEnvPackage = new PythonPackage { Name = PythonInstaller.VIRTUALENV, Version = null };
-            PythonInstaller.PipInstall(PythonInstaller.BasePythonExecutablePath, new [] {virtualEnvPackage}, broker);
+            PythonInstaller.PipInstall(PythonInstaller.BasePythonExecutablePath.Quote(), new [] {virtualEnvPackage}, broker);
         }
     }
 
@@ -1134,7 +1132,7 @@ namespace pwiz.Skyline.Model.Tools
         
         public override void DoAction(ILongWaitBroker broker)
         {
-            PythonInstaller.RunPythonModule(PythonInstaller.BasePythonExecutablePath, PythonInstaller.PythonVersionDir,
+            PythonInstaller.RunPythonModule(PythonInstaller.BasePythonExecutablePath.Quote(), PythonInstaller.PythonVersionDir,
                 PythonInstaller.VIRTUALENV, new[] { PythonInstaller.VirtualEnvironmentName }, broker);
         }
     }
@@ -1223,7 +1221,7 @@ namespace pwiz.Skyline.Model.Tools
         
         public override void DoAction(ILongWaitBroker broker)
         {
-            PythonInstaller.PipInstall(PythonInstaller.VirtualEnvironmentPythonExecutablePath, PythonInstaller.PythonPackages, broker);
+            PythonInstaller.PipInstall(PythonInstaller.VirtualEnvironmentPythonExecutablePath.Quote(), PythonInstaller.PythonPackages, broker);
         }
     }
     
