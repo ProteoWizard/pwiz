@@ -23,7 +23,6 @@ using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
-using pwiz.Common.SystemUtil;
 
 // BUG: now that access tokens are stored across sessions Skyline sessions, a new bug is exposed where EditRemoteAccountDlg shows
 //      the Ardia account as "not logged in" if it has not already talked with the remote API during the Skyline session.
