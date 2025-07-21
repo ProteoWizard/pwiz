@@ -28,14 +28,14 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         {
             Assume.IsNotNull(account);
 
-            return account.Token;
+            return account.EncryptedToken;
         }
 
         public static void SetToken(ArdiaAccount account, string token)
         {
             Assume.IsNotNull(account);
 
-            account.Token = token;
+            account.EncryptedToken = CommonTextUtil.EncryptString(token);
         }
 
         public static string GetApplicationCode(ArdiaAccount account)
@@ -58,11 +58,11 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         }
 
         /// <summary>
-        /// Reset the token for this account. This simple helper exists to avoid making the <see cref="ArdiaAccount.Token"/> setter public.
+        /// Reset the token for this account. This simple helper exists to avoid making the <see cref="ArdiaAccount.EncryptedToken"/> setter public.
         /// </summary>
         public static void ClearToken(ArdiaAccount account)
         {
-            account.Token = null;
+            account.EncryptedToken = null;
         }
 
         private ArdiaCredentialHelper() {}

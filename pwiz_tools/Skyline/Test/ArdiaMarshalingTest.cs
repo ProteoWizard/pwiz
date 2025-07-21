@@ -40,12 +40,12 @@ namespace pwiz.SkylineTest
             var accountListXml = stringWriter.ToString();
 
             // token's plaintext value should not be in serialized XML
-            Assert.AreEqual(-1, accountListXml.IndexOf(ardiaAccount.Token, StringComparison.Ordinal));
+            Assert.AreEqual(-1, accountListXml.IndexOf(ardiaAccount.EncryptedToken, StringComparison.Ordinal));
 
             var deserializedAccountList = (RemoteAccountList)xmlSerializer.Deserialize(new StringReader(accountListXml));
             Assert.AreEqual(remoteAccountList.Count, deserializedAccountList.Count);
             Assert.AreEqual(ardiaAccount, deserializedAccountList[0]);
-            Assert.AreEqual(ardiaAccount.Token, ((ArdiaAccount)deserializedAccountList[0]).Token);
+            Assert.AreEqual(ardiaAccount.EncryptedToken, ((ArdiaAccount)deserializedAccountList[0]).EncryptedToken);
         }
     }
 }

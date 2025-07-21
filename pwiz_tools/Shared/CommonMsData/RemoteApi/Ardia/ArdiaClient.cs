@@ -80,8 +80,8 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
                 throw new IOException(ArdiaResources.Error_InvalidToken);
             }
 
-            var token = ArdiaCredentialHelper.GetToken(account);
-            if (string.IsNullOrEmpty(token))
+            var encryptedToken = ArdiaCredentialHelper.GetToken(account);
+            if (string.IsNullOrEmpty(encryptedToken))
             {
                 throw new IOException(ArdiaResources.Error_InvalidToken);
             }
@@ -89,15 +89,15 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             var ardiaUrl = account.GetRootArdiaUrl();
             var serverUrl = ardiaUrl.ServerApiUrl;
 
-            return new ArdiaClient(account, serverUrl, applicationCode, token);
+            return new ArdiaClient(account, serverUrl, applicationCode, encryptedToken);
         }
 
-        private ArdiaClient(ArdiaAccount account, string serverUrl, string applicationCode, string token)
+        private ArdiaClient(ArdiaAccount account, string serverUrl, string applicationCode, string encryptedToken)
         {
             Account = account;
             ServerUri = new Uri(serverUrl);
             ApplicationCode = applicationCode;
-            Token = token;
+            _encryptedToken = encryptedToken;
             UploadPartSizeMBs = DEFAULT_PART_SIZE_MB;
         }
 
@@ -121,10 +121,11 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             return partSizeMBs >= 5 && partSizeMBs < 2048;
         }
 
-        public bool HasCredentials => !string.IsNullOrWhiteSpace(ApplicationCode) && !string.IsNullOrWhiteSpace(Token);
+        public bool HasCredentials => !string.IsNullOrWhiteSpace(ApplicationCode) && !string.IsNullOrWhiteSpace(_encryptedToken);
         private ArdiaAccount Account { get; }
         private string ApplicationCode { get; }
-        private string Token { get; }
+        private string _encryptedToken;
+        public string Token => !_encryptedToken.IsNullOrEmpty() ? CommonTextUtil.DecryptString(_encryptedToken) : null;
         private Uri ServerUri { get; }
 
         /// <summary>
