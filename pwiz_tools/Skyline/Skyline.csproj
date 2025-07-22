@@ -488,6 +488,9 @@
       <DependentUpon>SynchronizedIntegrationDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="EditUI\ZedGraphClipboard.cs" />
+    <Compile Include="FileUI\WatersConnectSelectMethodFileDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="FileUI\OpenFileDialogNE.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -520,6 +523,12 @@
     </Compile>
     <Compile Include="FileUI\PeptideSearch\HardklorSearchControl.cs">
       <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FileUI\WatersConnectSaveMethodFileDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\WatersConnectMethodFileDialog.cs">
+      <SubType>Form</SubType>
     </Compile>
     <Compile Include="Model\Lib\AlphaPeptDeep\AlphapeptdeepLibraryBuilder.cs" />
     <Compile Include="Model\AuditLog\EnumNames.Designer.cs">
