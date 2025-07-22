@@ -133,7 +133,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
                         UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 21).ID.Value,
                         UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 21).Name,
                         UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 21).Formula),
-                    PredictionSupport.FRAG_RT_ONLY
+                    PredictionSupport.FRAGMENTATION
                 },
                 {
                     new ModificationType(
@@ -147,7 +147,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
                         UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 121).ID.Value,
                         UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 121).Name,
                         UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 121).Formula),
-                    PredictionSupport.FRAG_RT_ONLY
+                    PredictionSupport.FRAGMENTATION
                 }
 
             };
