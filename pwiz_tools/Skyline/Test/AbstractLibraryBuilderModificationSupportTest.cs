@@ -28,9 +28,9 @@ namespace pwiz.SkylineTest
     public class AbstractLibraryBuilderModificationSupportTests : AbstractUnitTest
     {
 
-        public LibraryBuilderModificationSupport Support => new LibraryBuilderModificationSupport(TestModEL_SUPPORTED_TestModIFICATION_INDICES);
+        public LibraryBuilderModificationSupport Support => new LibraryBuilderModificationSupport(MODEL_SUPPORTED_MODIFICATION_INDICES);
 
-        private static Dictionary<ModificationType, PredictionSupport> TestModEL_SUPPORTED_TestModIFICATION_INDICES =
+        private static Dictionary<ModificationType, PredictionSupport> MODEL_SUPPORTED_MODIFICATION_INDICES =
             new Dictionary<ModificationType, PredictionSupport>
 
             {
