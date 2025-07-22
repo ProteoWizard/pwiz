@@ -29,7 +29,6 @@ using System.Threading;
 using Ionic.Zip;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
 using pwiz.Skyline.Model.Tools;
@@ -406,26 +405,6 @@ namespace pwiz.Skyline.Model.Lib.Carafe
 
         // ReSharper restore LocalizableElement
 
-
-        /// <summary>
-        /// List of UniMod Modifications available
-        /// </summary>
-        internal static readonly IList<ModificationType> UnimodModificationNames = populateUniModList();
-        private static IList<ModificationType> populateUniModList()
-        {
-            IList<ModificationType> modList = new List<ModificationType>();
-            for (int m = 0; m < UniModData.UNI_MOD_DATA.Length; m++)
-            {
-                if (!UniModData.UNI_MOD_DATA[m].ID.HasValue)
-                    continue;
-                var accession = UniModData.UNI_MOD_DATA[m].ID.Value + @":" + UniModData.UNI_MOD_DATA[m].Name;
-                var name = UniModData.UNI_MOD_DATA[m].Name;
-                var formula = UniModData.UNI_MOD_DATA[m].Formula;
-                modList.Add(new ModificationType(accession, name, formula));
-            }
-            return modList;
-        }
-
         public string ProductLibraryPath()
         {
             return CarafeOutputLibraryFilePath;
@@ -496,13 +475,6 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             }.ToDsvLine(TextUtil.SEPARATOR_TSV);
         }
 
-
-        /// <summary>
-        /// List of UniMod Modifications available
-        /// </summary>
-        public static readonly IList<ModificationType> MODIFICATION_NAMES = PopulateUniModList(null);
-
-        protected override IList<ModificationType> ModificationTypes => MODIFICATION_NAMES;
 
         public static void CarafeDefaultSettings()
         {
