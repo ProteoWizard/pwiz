@@ -66,23 +66,20 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         /// Helper function to populate the list of supported modifications
         /// </summary>
         /// <param name="supportedModifications">Mapping ModificationIndex to PredictionSupport</param>
-        private void PopulatePredictionModificationSupport(Dictionary<ModificationIndex, PredictionSupport> supportedModifications)
+        private void PopulatePredictionModificationSupport(Dictionary<ModificationType, PredictionSupport> supportedModifications)
         {
             if (supportedModifications == null)
                 return;
 
-            foreach (KeyValuePair<ModificationIndex, PredictionSupport> mod in supportedModifications)
+            foreach (KeyValuePair<ModificationType, PredictionSupport> mod in supportedModifications)
             {
-                var key = mod.Key.Modification.Accession.Split(':')[0];
-
-                if (!_predictionSupport.ContainsKey(key))
-                    _predictionSupport.Add(key, new PredictionSupport());
-
-                _predictionSupport[key] = mod.Value;
+                var key = mod.Key.Index;
+                
+                _predictionSupport[key.ToString()] = mod.Value;
             }
         }
 
-        public LibraryBuilderModificationSupport(Dictionary<ModificationIndex, PredictionSupport> supportedModifications)
+        public LibraryBuilderModificationSupport(Dictionary<ModificationType, PredictionSupport> supportedModifications)
         {
             _predictionSupport = new Dictionary<string, PredictionSupport>();
             PopulatePredictionModificationSupport(supportedModifications);
@@ -182,7 +179,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         /// - Null list means *all* in UniModData will be returned.
         /// </param>
         /// <returns></returns>
-        public static IList<ModificationType> PopulateUniModList(IList<ModificationIndex> supportedList)
+        public static IList<ModificationType> PopulateUniModList(IList<ModificationType> supportedList)
         {
             IList<ModificationType> modList = new List<ModificationType>();
             for (int m = 0; m < UniModData.UNI_MOD_DATA.Length; m++)
@@ -191,11 +188,11 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                     (supportedList != null &&
                      supportedList.FirstOrDefault(x => x.Index == UniModData.UNI_MOD_DATA[m].ID.Value) == null))
                     continue;
-
+                var index = UniModData.UNI_MOD_DATA[m].ID.Value;
                 var accession = UniModData.UNI_MOD_DATA[m].ID.Value + @":" + UniModData.UNI_MOD_DATA[m].Name;
                 var name = UniModData.UNI_MOD_DATA[m].Name;
                 var formula = UniModData.UNI_MOD_DATA[m].Formula;
-                modList.Add(new ModificationType(accession, name, formula));
+                modList.Add(new ModificationType(index, accession, name, formula));
             }
             return modList;
         }

@@ -98,12 +98,12 @@ namespace pwiz.Skyline.Model.Lib.Carafe
         public static string PythonVersionSetting => Settings.Default.PythonEmbeddableVersion;
         public static string ScriptsDir => PythonInstallerUtil.GetPythonVirtualEnvironmentScriptsDir(PythonVersionSetting, CARAFE_NAME);
 
-        private static IList<ModificationIndex> MODIFICATION_INDICES =>
+        private static IList<ModificationType> MODIFICATION_INDICES =>
             new[]
             {
-                new ModificationIndex(4, new ModificationType(@"4", @"Carbamidomethyl", @"H(3) C(2) N O")),
-                new ModificationIndex(21, new ModificationType(@"21", @"Phospho", @"H O(3) P")),
-                new ModificationIndex(35, new ModificationType(@"35", @"Oxidation", @"O"))
+                new ModificationType(4, @"4", @"Carbamidomethyl", @"H(3) C(2) N O"),
+                new ModificationType(21, @"21", @"Phospho", @"H O(3) P"),
+                new ModificationType(35, @"35", @"Oxidation", @"O")
             };
 
         /// <summary>

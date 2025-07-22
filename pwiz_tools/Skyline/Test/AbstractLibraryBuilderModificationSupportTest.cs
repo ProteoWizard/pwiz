@@ -30,42 +30,40 @@ namespace pwiz.SkylineTest
 
         public LibraryBuilderModificationSupport Support => new LibraryBuilderModificationSupport(MODEL_SUPPORTED_MODIFICATION_INDICES);
 
-        private static Dictionary<ModificationIndex, PredictionSupport> MODEL_SUPPORTED_MODIFICATION_INDICES =
-            new Dictionary<ModificationIndex, PredictionSupport>
+        private static Dictionary<ModificationType, PredictionSupport> MODEL_SUPPORTED_MODIFICATION_INDICES =
+            new Dictionary<ModificationType, PredictionSupport>
 
             {
                 {
-                    new ModificationIndex(1,
-                        new ModificationType("001:MOD1", "TestMod1", "TestOnly")), PredictionSupport.ALL
+                    new ModificationType(1,"001:MOD1", "TestMod1", "TestOnly"), PredictionSupport.ALL
                 },
                 {
-                    new ModificationIndex(2,
-                        new ModificationType("002:MOD2", "TestMod2", "TestOnly")), PredictionSupport.FRAGMENTATION
+                    new ModificationType(2,"002:MOD2", "TestMod2", "TestOnly"), PredictionSupport.FRAGMENTATION
                 },
                 {
-                    new ModificationIndex(3, new ModificationType("003:MOD3", "TestMod3", "TestOnly")), PredictionSupport.RETENTION_TIME
+                    new ModificationType(3, "003:MOD3", "TestMod3", "TestOnly"), PredictionSupport.RETENTION_TIME
                 },
                 {
-                    new ModificationIndex(4, new ModificationType("004:MOD4", "TestMod4", "TestOnly")), PredictionSupport.CCS
+                    new ModificationType(4, "004:MOD4", "TestMod4", "TestOnly"), PredictionSupport.CCS
                 }
 
             };
 
         IList<ModificationType> Ms2SupportedList => new List<ModificationType>
         {
-            new ModificationType("001:MOD1", "TestMod1", "TestOnly"),
-            new ModificationType("002:MOD2", "TestMod2", "TestOnly")
+            new ModificationType(1, "001:MOD1", "TestMod1", "TestOnly"),
+            new ModificationType(2, "002:MOD2", "TestMod2", "TestOnly")
         };
 
         IList<ModificationType> RtSupportedList => new List<ModificationType>
         {
-            new ModificationType("001:MOD1", "TestMod1", "TestOnly"),
-            new ModificationType("003:MOD3", "TestMod3", "TestOnly")
+            new ModificationType(1, "001:MOD1", "TestMod1", "TestOnly"),
+            new ModificationType(3, "003:MOD3", "TestMod3", "TestOnly")
         };
         IList<ModificationType> CcsSupportedList => new List<ModificationType>
         {
-            new ModificationType("001:MOD1", "TestMod1", "TestOnly"),
-            new ModificationType("004:MOD4", "TestMod4", "TestOnly")
+            new ModificationType(1, "001:MOD1", "TestMod1", "TestOnly"),
+            new ModificationType(4, "004:MOD4", "TestMod4", "TestOnly")
         };
        
         [TestMethod]
@@ -167,7 +165,7 @@ namespace pwiz.SkylineTest
         public void AbstractLibraryBuilderModificationSupportTests_PopulatePredictionModificationSupport_EmptyList_DoesNotThrow()
         {
             // Arrange
-            var support = new LibraryBuilderModificationSupport(new Dictionary<ModificationIndex, PredictionSupport>());
+            var support = new LibraryBuilderModificationSupport(new Dictionary<ModificationType, PredictionSupport>());
 
             // Assert
             Assert.IsNotNull(support._predictionSupport);

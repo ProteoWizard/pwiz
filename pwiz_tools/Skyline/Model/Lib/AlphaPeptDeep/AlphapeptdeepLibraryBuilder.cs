@@ -59,12 +59,14 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
     public class ModificationType
     {
-        public ModificationType(string accession, string name, string comment)
+        public ModificationType(int index, string accession, string name, string comment)
         {
+            Index = index;
             Accession = accession;
             Name = name;
             Comment = comment;
         }
+        public int Index { get; private set; }
         public string Accession { get; private set; }
         public string Name { get; private set; }
         public string Comment { get; private set; }
@@ -83,23 +85,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         }
         public override string ToString() { return string.Format(ModelsResources.BuildPrecursorTable_ModificationType, Accession, Name, Comment); }
     }
-
-    public class ModificationIndex
-    {
-        public ModificationIndex(int index, ModificationType modification)
-        {
-            Index = index;
-            Modification = modification;
-        }
-        public ModificationType Modification { get; private set; }
-        public int Index { get; private set; }
-
-        public override string ToString()
-        {
-            return Index + @":" + Modification;
-        }
-    }
-
+    
     public class AlphapeptdeepLibraryBuilder : AbstractDeepLibraryBuilder, IiRTCapableLibraryBuilder
     {
         public const string ALPHAPEPTDEEP = @"AlphaPeptDeep";
@@ -166,23 +152,21 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         protected override IList<ModificationType> ModificationTypes => MODIFICATION_NAMES;
         protected override LibraryBuilderModificationSupport libraryBuilderModificationSupport { get; }
 
-        private static Dictionary<ModificationIndex, PredictionSupport> MODEL_SUPPORTED_MODIFICATION_INDICES =
-            new Dictionary<ModificationIndex, PredictionSupport>
+        private static Dictionary<ModificationType, PredictionSupport> MODEL_SUPPORTED_MODIFICATION_INDICES =
+            new Dictionary<ModificationType, PredictionSupport>
 
             {
                 {
-                    new ModificationIndex(4,
-                        new ModificationType(@"4", @"Carbamidomethyl", @"H(3) C(2) N O")), PredictionSupport.ALL
+                    new ModificationType(4,@"4", @"Carbamidomethyl", @"H(3) C(2) N O"), PredictionSupport.ALL
                 },
                 {
-                    new ModificationIndex(21,
-                        new ModificationType(@"21", @"Phospho", @"H O(3) P")), PredictionSupport.FRAGMENTATION
+                    new ModificationType(21, @"21", @"Phospho", @"H O(3) P"), PredictionSupport.FRAGMENTATION
                 },
                 {
-                    new ModificationIndex(35, new ModificationType(@"35", @"Oxidation", @"O")), PredictionSupport.ALL
+                    new ModificationType(35, @"35", @"Oxidation", @"O"), PredictionSupport.ALL
                 },
                 {
-                    new ModificationIndex(121, new ModificationType(@"121", @"GG", @"H(6) C(4) N(2) O(2)")), PredictionSupport.FRAGMENTATION
+                    new ModificationType(121, @"121", @"GG", @"H(6) C(4) N(2) O(2)"), PredictionSupport.FRAGMENTATION
                 }
 
             };
