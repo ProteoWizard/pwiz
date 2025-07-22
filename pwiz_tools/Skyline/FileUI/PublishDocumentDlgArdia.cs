@@ -18,7 +18,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Windows.Forms;
@@ -93,13 +92,6 @@ namespace pwiz.Skyline.FileUI
             return nodes.Cast<TreeNode>().FirstOrDefault(node => string.Equals(node.Text, name, StringComparison.CurrentCulture));
         }
 
-        internal override void HandleDialogOk()
-        {
-            DestinationPath = GetFolderPath(treeViewFolders.SelectedNode);
-
-            DialogResult = DialogResult.OK;
-        }
-
         internal override void HandleDialogLoad()
         {
             // Do not show, Ardia does not support anon servers
@@ -139,7 +131,7 @@ namespace pwiz.Skyline.FileUI
                 treeViewFolders.Nodes[0].Expand();
             }
 
-            lblServerFolders.Text = $@"{ArdiaResources.FileUpload_ServerFolders}:";
+            lblServerFolders.Text = $@"{ArdiaResources.FileUpload_ServerFolders}";
             lblAvailableStorage.Visible = false;
 
             // In the background, ask the server for its available storage
@@ -170,6 +162,13 @@ namespace pwiz.Skyline.FileUI
                     lblAvailableStorage.Visible = true;
                 });
             });
+        }
+
+        internal override void HandleDialogOk()
+        {
+            DestinationPath = GetFolderPath(treeViewFolders.SelectedNode);
+
+            DialogResult = DialogResult.OK;
         }
 
         // CONSIDER: if the previously selected item is unavailable, set focus to top node (better than
@@ -261,25 +260,11 @@ namespace pwiz.Skyline.FileUI
             });
         }
 
-        private static string[] GatherLocalZipFiles(string fileName)
+        public void Upload(Control parent, SrmDocumentArchive archive)
         {
-            var directory = Path.GetDirectoryName(fileName);
-            if (directory == null)
-                return new string[] {};
+            Assume.IsNotNull(archive);
 
-            var tmp = Directory.GetFiles(directory);
-
-            var paths = new List<string>(tmp);
-            return paths.ToArray();
-        }
-
-        public void Upload(Control parent, string fileName)
-        {
-            // TODO: add an abstraction to contain details about the upload file(s), # of parts, part sizes, total size
-            var paths = GatherLocalZipFiles(fileName);
-            var uploadSize = paths.Select(path => new FileInfo(path)).Select(fileInfo => fileInfo.Length).Sum();
-
-            if (ServerStorageInfo != null && !ServerStorageInfo.HasAvailableStorageFor(uploadSize))
+            if (ServerStorageInfo != null && !ServerStorageInfo.HasAvailableStorageFor(archive.TotalSize))
             {
                 MessageDlg.Show(parent, ArdiaResources.FileUpload_Error_DocumentTooLargeForServer);
                 return;
@@ -293,7 +278,7 @@ namespace pwiz.Skyline.FileUI
             waitDlg.Text = UtilResources.PublishDocumentDlg_UploadSharedZipFile_Uploading_File;
             waitDlg.PerformWork(parent, 1000, longWaitBroker =>
             {
-                result = Client.PublishDocument(DestinationPath, paths, longWaitBroker);
+                result = Client.PublishDocument(archive, DestinationPath, longWaitBroker);
 
                 isCanceled = longWaitBroker.IsCanceled;
             });

@@ -239,29 +239,25 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
 
         /// <summary>
         /// Upload a Skyline document archive to the Ardia API. The archive must be created by SrmDocumentSharing prior to calling this method and will contain 
-        /// many files including .sky, .sky.view, .skyl, .skyd, and more. <see cref="localZipFilePaths"/> contains paths to the pieces of the .zip file. Skyline
+        /// many files including .sky, .sky.view, .skyl, .skyd, and more. <see cref="SrmDocumentArchive"/> contains paths to the pieces of the .zip file. Skyline
         /// documents smaller than <see cref="DEFAULT_PART_SIZE_BYTES"/> will be a single .sky.zip file (aka: one "part"). Skyline document archives larger than
         /// <see cref="DEFAULT_PART_SIZE_BYTES"/> will be multipart .zip archives and could be split across many (> 1,000) parts.
-        ///
+        /// 
         /// Callers are responsible for cleaning up temporary files or directories created when archiving the Skyline document.
         /// </summary>
+        /// <param name="srmDocumentArchive">Info about the Skyline document archive</param>
         /// <param name="destinationFolderPath">Absolute path to a destination folder on the Ardia Platform</param>
-        /// <param name="localZipFilePaths">Absolute path to a local zip file to upload</param>
         /// <param name="progressMonitor">Progress monitor reporting what could be a long process (> 1hr) uploading the archive.</param>
         /// <returns>an <see cref="ArdiaResult"/>. If successful, the value is a <see cref="CreateDocumentResponse"/>. If failure, the value is null and the result includes info about the error.</returns>
-        public ArdiaResult<CreateDocumentResponse> PublishDocument(string destinationFolderPath, string[] localZipFilePaths, IProgressMonitor progressMonitor)
+        public ArdiaResult<CreateDocumentResponse> PublishDocument(SrmDocumentArchive srmDocumentArchive, string destinationFolderPath, IProgressMonitor progressMonitor)
         {
             Assume.IsTrue(destinationFolderPath.StartsWith("/"));
-            Assume.IsTrue(localZipFilePaths.Length > 0);
-
-            var partSizes = localZipFilePaths.Select(path => new FileInfo(path)).Select(fileInfo => fileInfo.Length).ToList();
-            var totalUploadSize = partSizes.Sum();
-            var destinationFileName = Path.GetFileName(localZipFilePaths.Last());
+            Assume.IsTrue(srmDocumentArchive.PartCount > 0);
 
             IProgressStatus progressStatus = new ProgressStatus(); 
 
             // Step 1 of 4: Ardia API - Create Staged Multi-part Document
-            var document = StageDocumentRequest.Create(totalUploadSize, UploadPartSizeMBs);
+            var document = StageDocumentRequest.Create(srmDocumentArchive.TotalSize, UploadPartSizeMBs);
             var resultStaging = CreateStagedDocument(document);
 
             if (progressMonitor.IsCanceled)
@@ -275,9 +271,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
 
             // Step 2 of 4: AWS - Upload 1 or more files to AWS
             var presignedUrls = resultStaging.Value.Pieces[0].PresignedUrls;
-
-            var uploadRequest = UploadPartsRequest.Create(localZipFilePaths, partSizes, presignedUrls);
-            var resultUpload = UploadParts(uploadRequest, progressMonitor, progressStatus);
+            var resultUpload = UploadParts(srmDocumentArchive, presignedUrls, progressMonitor, progressStatus);
 
             if (progressMonitor.IsCanceled)
             {
@@ -292,7 +286,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             progressMonitor.UpdateProgress(progressStatus);
 
             // Step 3 of 4: Ardia API - Complete multipart upload
-            if (uploadRequest.IsMultipart)
+            if (srmDocumentArchive.IsMultipart)
             {
                 var storagePath = resultStaging.Value.Pieces[0].StoragePath;
                 var multiPartId = resultStaging.Value.Pieces[0].MultiPartId;
@@ -317,7 +311,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             {
                 UploadId = resultStaging.Value.UploadId,
                 Size = uploadedBytes,
-                FileName = destinationFileName,
+                FileName = srmDocumentArchive.ArchiveFileName,
                 FilePath = destinationFolderPath
             };
 
@@ -365,26 +359,28 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         }
 
         // CONSIDER: upload parts in parallel?
-        private static ArdiaResult<UploadPartsResponse> UploadParts(UploadPartsRequest uploadRequest, IProgressMonitor progressMonitor, IProgressStatus progressStatus)
+        private static ArdiaResult<UploadPartsResponse> UploadParts(SrmDocumentArchive srmDocumentArchive, IList<string> presignedUrls, IProgressMonitor progressMonitor, IProgressStatus progressStatus)
         {
+            Assume.IsTrue(srmDocumentArchive.PartCount == presignedUrls.Count);
+
             var uploadResponse = UploadPartsResponse.Create();
 
             using var awsHttpClient = new HttpClient();
 
-            foreach (var part in uploadRequest.Parts)
+            foreach (var part in srmDocumentArchive.Parts)
             {
-                var segmentProgressMonitor = SegmentProgressMonitor.Create(progressMonitor, uploadResponse.UploadedBytes, part.FileSize, uploadRequest.TotalBytes);
+                var segmentProgressMonitor = SegmentProgressMonitor.Create(progressMonitor, uploadResponse.UploadedBytes, part.SizeInBytes, srmDocumentArchive.TotalSize);
 
-                var uri = new Uri(part.PresignedUrl);
+                var uri = new Uri(presignedUrls[part.Index]);
 
                 HttpStatusCode? statusCode = null;
 
                 var stopwatch = new Stopwatch();
                 try
                 {
-                    using var request = new HttpRequestMessage(HttpMethod.Put, part.PresignedUrl);
+                    using var request = new HttpRequestMessage(HttpMethod.Put, uri);
 
-                    using var fileStream = File.OpenRead(part.LocalFilePath);
+                    using var fileStream = File.OpenRead(part.FilePath);
                     using var progressStream = new ProgressStream(fileStream);
                     progressStream.SetProgressMonitor(segmentProgressMonitor, progressStatus, false);
 
@@ -399,15 +395,22 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
 
                     if (statusCode == HttpStatusCode.OK)
                     {
-                        var uploadPartResponse = UploadPartResponse.Create(progressStream.Position, response.Headers.ETag.Tag);
-                        uploadResponse.Parts.Add(uploadPartResponse);
+                        var partResponse = UploadPartResponse.Create(progressStream.Position, response.Headers.ETag.Tag);
+                        uploadResponse.Parts.Add(partResponse);
                     }
                     else
                     {
                         var responseBody = response.Content.ReadAsStringAsync().Result;
 
-                        // CONSIDER: include more info about the upload here? Ex: part # of N, part size, etc.
-                        var message = ErrorMessageBuilder.Create(ArdiaResources.Error_StatusCode_Unexpected).ErrorDetailFromResponseBody(responseBody).Uri(uri).StatusCode(statusCode);
+                        var message = ErrorMessageBuilder.Create(ArdiaResources.Error_StatusCode_Unexpected).
+                            ErrorDetailFromResponseBody(responseBody).Uri(uri).StatusCode(statusCode).
+                            ErrorDetail(@"Request - timeout: {0}s", awsHttpClient.Timeout.Seconds).
+                            ErrorDetail(@"Request - part {0} of {1}", part.ReadableIndex, srmDocumentArchive.PartCount).
+                            ErrorDetail(@"Request - part size: {0:N0} bytes", part.SizeInBytes).
+                            ErrorDetail(@"Request - uploaded: {0:N0} bytes", segmentProgressMonitor.BytesWritten).
+                            ErrorDetail(@"Request - elapsed time: {0:F2}s", stopwatch.ElapsedMilliseconds / (decimal)1000).
+                            ErrorDetail(@"Request - upload speed {0:N1} MB / s", segmentProgressMonitor.BytesWritten / (decimal)(1024 * 1024) / stopwatch.ElapsedMilliseconds * 1000);
+
                         return ArdiaResult<UploadPartsResponse>.Failure(message.ToString(), statusCode, null);
                     }
                 }
@@ -419,8 +422,8 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
                     var message = ErrorMessageBuilder.Create(ArdiaResources.Error_ProblemCommunicatingWithServer).
                         ErrorDetailFromException(e).Uri(uri).StatusCode(statusCode).
                         ErrorDetail(@"Request - timeout: {0}s", awsHttpClient.Timeout.Seconds).
-                        ErrorDetail(@"Request - part {0} of {1}", part.ReadableIndex, uploadRequest.Parts.Count).
-                        ErrorDetail(@"Request - part size: {0:N0} bytes", part.FileSize).
+                        ErrorDetail(@"Request - part {0} of {1}", part.ReadableIndex, srmDocumentArchive.PartCount).
+                        ErrorDetail(@"Request - part size: {0:N0} bytes", part.SizeInBytes).
                         ErrorDetail(@"Request - uploaded: {0:N0} bytes", segmentProgressMonitor.BytesWritten).
                         ErrorDetail(@"Request - elapsed time: {0:F2}s", stopwatch.ElapsedMilliseconds / (decimal)1000).
                         ErrorDetail(@"Request - upload speed {0:N1} MB / s", segmentProgressMonitor.BytesWritten / (decimal)(1024*1024) / stopwatch.ElapsedMilliseconds*1000);

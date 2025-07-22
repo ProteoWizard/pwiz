@@ -133,7 +133,7 @@
     <value>4, 0, 4, 0</value>
   </data>
   <data name="lblServerFolders.Size" type="System.Drawing.Size, System.Drawing">
-    <value>143, 20</value>
+    <value>44, 13</value>
   </data>
   <data name="lblServerFolders.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -178,7 +178,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;treeViewFolders.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>7</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -208,7 +208,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="btnOK.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -238,7 +238,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnOK.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="lblFile.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -250,7 +250,7 @@
     <value>4, 0, 4, 0</value>
   </data>
   <data name="lblFile.Size" type="System.Drawing.Size, System.Drawing">
-    <value>38, 20</value>
+    <value>26, 13</value>
   </data>
   <data name="lblFile.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -268,7 +268,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;lblFile.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="tbFilePath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -280,7 +280,7 @@
     <value>4, 5, 4, 5</value>
   </data>
   <data name="tbFilePath.Size" type="System.Drawing.Size, System.Drawing">
-    <value>547, 26</value>
+    <value>547, 20</value>
   </data>
   <data name="tbFilePath.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -295,13 +295,13 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;tbFilePath.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="btnBrowse.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
   <data name="btnBrowse.Location" type="System.Drawing.Point, System.Drawing">
-    <value>580, 35</value>
+    <value>580, 30</value>
   </data>
   <data name="btnBrowse.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>4, 5, 4, 5</value>
@@ -325,8 +325,11 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnBrowse.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
+  <metadata name="toolTipShowAnonymous.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>176, 17</value>
+  </metadata>
   <data name="cbAnonymousServers.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
   </data>
@@ -334,13 +337,13 @@
     <value>True</value>
   </data>
   <data name="cbAnonymousServers.Location" type="System.Drawing.Point, System.Drawing">
-    <value>22, 460</value>
+    <value>22, 465</value>
   </data>
   <data name="cbAnonymousServers.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>4, 5, 4, 5</value>
   </data>
   <data name="cbAnonymousServers.Size" type="System.Drawing.Size, System.Drawing">
-    <value>216, 24</value>
+    <value>147, 17</value>
   </data>
   <data name="cbAnonymousServers.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
@@ -348,9 +351,6 @@
   <data name="cbAnonymousServers.Text" xml:space="preserve">
     <value>Show anonymous servers</value>
   </data>
-  <metadata name="toolTipShowAnonymous.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>232, 17</value>
-  </metadata>
   <data name="cbAnonymousServers.ToolTip" xml:space="preserve">
     <value>Anonymous servers are not associated with a user account. A user account is required to upload documents to a server.</value>
   </data>
@@ -367,14 +367,17 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbAnonymousServers.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
+  </data>
+  <metadata name="toolTipShowAnonymous.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>176, 17</value>
+  </metadata>
+  <data name="createRemoteFolder.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
   </data>
   <data name="createRemoteFolder.Location" type="System.Drawing.Point, System.Drawing">
-    <value>22, 454</value>
+    <value>22, 455</value>
   </data>
-  <data name="createRemoteFolder.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-      <value>Bottom, Left</value>
-  </data>    
   <data name="createRemoteFolder.Size" type="System.Drawing.Size, System.Drawing">
     <value>129, 36</value>
   </data>
@@ -399,6 +402,9 @@
   <data name="&gt;&gt;createRemoteFolder.ZOrder" xml:space="preserve">
     <value>9</value>
   </data>
+  <data name="lblAvailableStorage.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
   <data name="lblAvailableStorage.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -406,22 +412,19 @@
     <value>NoControl</value>
   </data>
   <data name="lblAvailableStorage.Location" type="System.Drawing.Point, System.Drawing">
-    <value>832, 128</value>
+    <value>555, 83</value>
   </data>
   <data name="lblAvailableStorage.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>6, 0, 6, 0</value>
   </data>
   <data name="lblAvailableStorage.Size" type="System.Drawing.Size, System.Drawing">
-    <value>201, 20</value>
+    <value>93, 13</value>
   </data>
   <data name="lblAvailableStorage.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
   </data>
   <data name="lblAvailableStorage.Text" xml:space="preserve">
-    <value>Available Storage: XYZ GB</value>
-  </data>
-  <data name="lblAvailableStorage.Visible" type="System.Boolean, mscorlib">
-    <value>False</value>
+    <value>Available Storage:</value>
   </data>
   <data name="&gt;&gt;lblAvailableStorage.Name" xml:space="preserve">
     <value>lblAvailableStorage</value>
@@ -457,7 +460,7 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=25.1.1.153, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=25.1.1.182, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;toolTipShowAnonymous.Name" xml:space="preserve">
     <value>toolTipShowAnonymous</value>
@@ -469,6 +472,6 @@
     <value>PublishDocumentDlgBase</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=25.1.1.153, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=25.1.1.182, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
