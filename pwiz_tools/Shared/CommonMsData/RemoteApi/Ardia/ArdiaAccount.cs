@@ -199,7 +199,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
 
         public bool HasToken()
         {
-            return !EncryptedToken.IsNullOrEmpty(Token);
+            return !Token.IsNullOrEmpty();
         }
 
         #region Implementation of IXmlSerializable
@@ -232,7 +232,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             base.WriteXml(writer);
             writer.WriteAttributeString(ATTR.delete_after_import.ToString(), DeleteRawAfterImport.ToString(CultureInfo.InvariantCulture).ToLowerInvariant());
 
-            if (!EncryptedToken.IsNullOrEmpty(Token))
+            if (!Token.IsNullOrEmpty())
             {
                 writer.WriteAttributeString(ATTR.token.ToString(), Token.Encrypted);
             }

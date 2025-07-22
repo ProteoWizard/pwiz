@@ -81,7 +81,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             }
 
             var token = ArdiaCredentialHelper.GetToken(account);
-            if (EncryptedToken.IsNullOrEmpty(token))
+            if (token.IsNullOrEmpty())
             {
                 throw new IOException(ArdiaResources.Error_InvalidToken);
             }
@@ -121,7 +121,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             return partSizeMBs >= 5 && partSizeMBs < 2048;
         }
 
-        public bool HasCredentials => !string.IsNullOrWhiteSpace(ApplicationCode) && !EncryptedToken.IsNullOrEmpty(Token);
+        public bool HasCredentials => !string.IsNullOrWhiteSpace(ApplicationCode) && !Token.IsNullOrEmpty();
         private ArdiaAccount Account { get; }
         private string ApplicationCode { get; }
         private EncryptedToken Token { get; }

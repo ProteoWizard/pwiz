@@ -294,7 +294,7 @@ namespace pwiz.Skyline.Alerts
             {
                 var sessionCookie = ArdiaCredentialHelper.GetToken(Account);
 
-                if (!EncryptedToken.IsNullOrEmpty(sessionCookie))
+                if (!sessionCookie.IsNullOrEmpty())
                 {
                     _bffCookie = new Cookie(@"Bff-Host", sessionCookie.Decrypted);
                     AuthenticatedHttpClientFactory = GetFactory();

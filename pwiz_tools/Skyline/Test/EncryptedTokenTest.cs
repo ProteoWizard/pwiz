@@ -15,17 +15,29 @@
  */
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CommonMsData.RemoteApi.Ardia;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest
 {
     [TestClass]
-    public class EncryptedTokenTest : AbstractUnitTestEx
+    public class EncryptedTokenTest : AbstractUnitTest
     {
         [TestMethod]
         public void TestEncryptedToken()
         {
+            const string tokenString = "token value";
+            var tokenFromDecrypted = EncryptedToken.FromString(tokenString);
+            Assert.AreEqual(tokenString, tokenFromDecrypted.Decrypted);
+            Assert.IsFalse(tokenFromDecrypted.IsNullOrEmpty());
 
+            var tokenFromEncrypted = EncryptedToken.FromEncryptedString(tokenFromDecrypted.Encrypted);
+            Assert.AreEqual(tokenString, tokenFromEncrypted.Decrypted);
+            Assert.IsFalse(tokenFromEncrypted.IsNullOrEmpty());
+            
+            EncryptedToken nullToken = null;
+            Assert.IsTrue(nullToken.IsNullOrEmpty());
+            Assert.IsTrue(EncryptedToken.Empty.IsNullOrEmpty());
         }
     }
 }

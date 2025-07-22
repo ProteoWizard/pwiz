@@ -22,8 +22,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
     public class EncryptedToken
     {
         public string Encrypted { get; }
-        public string Decrypted => !IsNullOrEmpty(this) ? CommonTextUtil.DecryptString(Encrypted) : string.Empty;
-        public static bool IsNullOrEmpty(EncryptedToken token) => token == null || token.Encrypted.IsNullOrEmpty();
+        public string Decrypted => !this.IsNullOrEmpty() ? CommonTextUtil.DecryptString(Encrypted) : string.Empty;
 
         private EncryptedToken(string encryptedToken)
         {
@@ -35,5 +34,13 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         public static EncryptedToken FromEncryptedString(string encryptedToken) => new EncryptedToken(encryptedToken);
 
         public static EncryptedToken Empty => new EncryptedToken(string.Empty);
+    }
+
+    public static class Extensions
+    {
+        public static bool IsNullOrEmpty(this EncryptedToken token)
+        {
+            return token == null || token.Encrypted.IsNullOrEmpty();
+        }
     }
 }
