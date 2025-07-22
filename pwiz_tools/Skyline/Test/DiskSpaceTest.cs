@@ -28,7 +28,7 @@ namespace pwiz.SkylineTest
     [TestClass]
     public class DiskSpaceTest : AbstractUnitTest
     {
-        private const long MIN_SPACE_BYTES = 20_000_000_000;
+        private const long MIN_SPACE_BYTES = 20*1024*1024*1024L;
 
         // Name changed so that test is fired early in test process.
         [TestMethod]
