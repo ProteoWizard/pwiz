@@ -1713,7 +1713,7 @@ namespace pwiz.Skyline.Model.Results
                     chromCollector = new ChromCollector(chromIndex, IsSingleTime, spectrum.MassErrors != null);
                     // If more than a single ion scan, add any zeros necessary
                     // to make this new chromatogram have an entry for each time.
-                    if (ionScanCount > 1 && lenTimes > 1)
+                    if (ionScanCount > 1 && lenTimes > 1 && !IsSingleTime)
                     {
                         chromCollector.FillZeroes(chromIndex, lenTimes - 1, _blockWriter);
                     }
@@ -1747,6 +1747,8 @@ namespace pwiz.Skyline.Model.Results
                     var chromIndex = chromatograms.ProductFilterIdToId(productFilter.FilterId);
                     if (chromCollector.Count < lenTimes)
                     {
+                        if (IsSingleTime)
+                            chromCollector.AddTime(chromIndex, time, _blockWriter);
                         chromCollector.AddPoint(chromIndex, 0, 0, _blockWriter);
                     }
                 }
