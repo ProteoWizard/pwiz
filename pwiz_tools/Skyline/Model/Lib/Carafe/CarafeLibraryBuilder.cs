@@ -98,19 +98,6 @@ namespace pwiz.Skyline.Model.Lib.Carafe
         public static string PythonVersionSetting => Settings.Default.PythonEmbeddableVersion;
         public static string ScriptsDir => PythonInstallerUtil.GetPythonVirtualEnvironmentScriptsDir(PythonVersionSetting, CARAFE_NAME);
 
-        private static IList<ModificationType> MODIFICATION_INDICES =>
-            new[]
-            {
-                new ModificationType(4, @"4", @"Carbamidomethyl", @"H(3) C(2) N O"),
-                new ModificationType(21, @"21", @"Phospho", @"H O(3) P"),
-                new ModificationType(35, @"35", @"Oxidation", @"O")
-            };
-
-        /// <summary>
-        /// List of UniMod Modifications supported by Carafe/AlphaPeptDeep
-        /// </summary>
-        internal static readonly IList<ModificationType> MODIFICATION_NAMES = PopulateUniModList(MODIFICATION_INDICES);
-
         protected override IEnumerable<string> GetHeaderColumnNames(bool training)
         {
             return training ? TrainingTableColumnNamesCarafe : PrecursorTableColumnNamesCarafe;
@@ -156,7 +143,6 @@ namespace pwiz.Skyline.Model.Lib.Carafe
         }
 
         protected override string ToolName => CARAFE;
-        protected override IList<ModificationType> ModificationTypes => MODIFICATION_NAMES;
         protected override LibraryBuilderModificationSupport libraryBuilderModificationSupport { get; }
         public LibrarySpec LibrarySpec { get; private set; }
         private string PythonVersion { get; }

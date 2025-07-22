@@ -26,6 +26,7 @@ using System.Linq;
 using pwiz.BiblioSpec;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.Model.Tools;
@@ -59,10 +60,10 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
     public class ModificationType
     {
-        public ModificationType(int index, string accession, string name, string comment)
+        public ModificationType(int index, string name, string comment)
         {
             Index = index;
-            Accession = accession;
+            Accession = index + @":" + name;
             Name = name;
             Comment = comment;
         }
@@ -142,31 +143,40 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             return new PythonInstaller(packages, writer, AlphapeptdeepLibraryBuilder.ALPHAPEPTDEEP);
         }
 
-        /// <summary>
-        /// List of UniMod Modifications available in https://github.com/MannLabs/alphabase/blob/main/alphabase/constants/const_files/modification.tsv
-        /// </summary>
-        public static readonly IList<ModificationType> MODIFICATION_NAMES = PopulateUniModList(null);
-
         protected override string ToolName => ALPHAPEPTDEEP;
-
-        protected override IList<ModificationType> ModificationTypes => MODIFICATION_NAMES;
         protected override LibraryBuilderModificationSupport libraryBuilderModificationSupport { get; }
 
-        private static Dictionary<ModificationType, PredictionSupport> MODEL_SUPPORTED_MODIFICATION_INDICES =
+        internal static Dictionary<ModificationType, PredictionSupport> MODEL_SUPPORTED_UNIMODS =
             new Dictionary<ModificationType, PredictionSupport>
 
             {
                 {
-                    new ModificationType(4,@"4", @"Carbamidomethyl", @"H(3) C(2) N O"), PredictionSupport.ALL
+                    new ModificationType(
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 4).ID.Value ,
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 4).Name,
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 4).Formula),
+                    PredictionSupport.ALL
                 },
                 {
-                    new ModificationType(21, @"21", @"Phospho", @"H O(3) P"), PredictionSupport.FRAGMENTATION
+                    new ModificationType(
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 21).ID.Value ,
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 21).Name,
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 21).Formula),
+                    PredictionSupport.FRAGMENTATION
                 },
                 {
-                    new ModificationType(35, @"35", @"Oxidation", @"O"), PredictionSupport.ALL
+                    new ModificationType(
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 35).ID.Value ,
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 35).Name,
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 35).Formula),
+                    PredictionSupport.ALL
                 },
                 {
-                    new ModificationType(121, @"121", @"GG", @"H(6) C(4) N(2) O(2)"), PredictionSupport.FRAGMENTATION
+                    new ModificationType(
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 121).ID.Value ,
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 121).Name,
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 121).Formula),
+                    PredictionSupport.FRAGMENTATION
                 }
 
             };
@@ -242,7 +252,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             SrmDocument document, IrtStandard irtStandard) : base(document, irtStandard)
         {
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
-            libraryBuilderModificationSupport = new LibraryBuilderModificationSupport(MODEL_SUPPORTED_MODIFICATION_INDICES);
+            libraryBuilderModificationSupport = new LibraryBuilderModificationSupport(MODEL_SUPPORTED_UNIMODS);
             string rootProcessingDir = Path.GetDirectoryName(libOutPath);
             if (string.IsNullOrEmpty(rootProcessingDir))
                 throw new ArgumentException($@"AlphapeptdeepLibraryBuilder libOutputPath {libOutPath} must be a full path.");
