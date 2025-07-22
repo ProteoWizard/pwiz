@@ -174,6 +174,7 @@
     <Compile Include="CmdLineAssociateProteinsTest.cs" />
     <Compile Include="CommandLineThermoMethodTest.cs" />
     <Compile Include="ElibQuantifiableTransitionTest.cs" />
+    <Compile Include="EncryptedTokenTest.cs" />
     <Compile Include="ErrorIfPersistentFilesDirModifiedTest.cs" />
     <Compile Include="FastaSequenceTest.cs" />
     <Compile Include="FilteredMessageWriterTest.cs" />

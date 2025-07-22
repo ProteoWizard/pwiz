@@ -292,11 +292,11 @@ namespace pwiz.Skyline.Alerts
         {
             try
             {
-                var sessionCookieString = ArdiaCredentialHelper.GetToken(Account);
+                var sessionCookie = ArdiaCredentialHelper.GetToken(Account);
 
-                if (!string.IsNullOrEmpty(sessionCookieString))
+                if (!sessionCookie.IsNullOrEmpty())
                 {
-                    _bffCookie = new Cookie(@"Bff-Host", sessionCookieString);
+                    _bffCookie = new Cookie(@"Bff-Host", sessionCookie.Decrypted);
                     AuthenticatedHttpClientFactory = GetFactory();
 
                     // Check that cookie is still valid by calling the remote API and checking for a successful response

@@ -90,6 +90,7 @@
     <Compile Include="RemoteApi\Ardia\CompleteMultiPartUploadRequest.cs" />
     <Compile Include="RemoteApi\Ardia\CreateFolderRequest.cs" />
     <Compile Include="RemoteApi\Ardia\CreateDocumentRequest.cs" />
+    <Compile Include="RemoteApi\Ardia\EncryptedToken.cs" />
     <Compile Include="RemoteApi\Ardia\GetParentFolderResponse.cs" />
     <Compile Include="RemoteApi\Ardia\SrmDocumentArchive.cs" />
     <Compile Include="RemoteApi\Ardia\StageDocumentRequest.cs" />
