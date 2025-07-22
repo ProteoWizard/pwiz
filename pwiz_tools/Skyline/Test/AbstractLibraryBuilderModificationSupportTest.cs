@@ -50,7 +50,7 @@ namespace pwiz.SkylineTest
             };
        
         [TestMethod]
-        public void AbstractLibraryBuilderModificationSupportTests_Constructor_PopulatesPredictionSupport_Correctly()
+        public void PredictionSupportTest()
         {
             // Assert
             Assert.IsNotNull(Support._predictionSupport);
@@ -71,105 +71,53 @@ namespace pwiz.SkylineTest
             Assert.IsFalse(Support._predictionSupport["4"].Fragmentation);
             Assert.IsFalse(Support._predictionSupport["4"].RetentionTime);
             Assert.IsTrue(Support._predictionSupport["4"].Ccs);
+
+            var support = new LibraryBuilderModificationSupport(new Dictionary<ModificationType, PredictionSupport>());
+
+            Assert.IsNotNull(support._predictionSupport);
+            Assert.AreEqual(support._predictionSupport.Count, 0);
         }
 
         [TestMethod]
-        public void AbstractLibraryBuilderModificationSupportTests_IsMs2SupportedMod_ValidAccession_ReturnsCorrectSupport()
+        public void SupportedModsTest()
         {
             // Act & Assert
             Assert.IsTrue(Support.IsMs2SupportedMod("1:TestMod1"));
             Assert.IsTrue(Support.IsMs2SupportedMod("2:TestMod2"));
             Assert.IsFalse(Support.IsMs2SupportedMod("3:TestMod3"));
             Assert.IsFalse(Support.IsMs2SupportedMod("999:UNKNOWN"));
-        }
 
-        [TestMethod]
-        public void AbstractLibraryBuilderModificationSupportTests_IsRtSupportedMod_ValidAccession_ReturnsCorrectSupport()
-        {
-            // Act & Assert
             Assert.IsTrue(Support.IsRtSupportedMod("1:TestMod1"));
-            Assert.IsTrue(Support.IsRtSupportedMod("3:TestMod3"));
             Assert.IsFalse(Support.IsRtSupportedMod("2:TestMod2"));
+            Assert.IsTrue(Support.IsRtSupportedMod("3:TestMod3"));
             Assert.IsFalse(Support.IsRtSupportedMod("999:UNKNOWN"));
-        }
-
-        [TestMethod]
-        public void AbstractLibraryBuilderModificationSupportTests_IsCcsSupportedMod_ValidAccession_ReturnsCorrectSupport()
-        {
-            // Act & Assert
+  
             Assert.IsTrue(Support.IsCcsSupportedMod("1:TestMod1"));
-            Assert.IsTrue(Support.IsCcsSupportedMod("4:TestMod4"));
             Assert.IsFalse(Support.IsCcsSupportedMod("2:TestMod2"));
+            Assert.IsTrue(Support.IsCcsSupportedMod("4:TestMod4"));
             Assert.IsFalse(Support.IsCcsSupportedMod("999:UNKNOWN"));
-        }
-
-        [TestMethod]
-        public void AbstractLibraryBuilderModificationSupportTests_AreAllModelsSupported_ValidAccession_ReturnsCorrectSupport()
-        {
-            // Act & Assert
+   
             Assert.IsTrue(Support.AreAllModelsSupported("1:TestMod1")); // Supports all
             Assert.IsFalse(Support.AreAllModelsSupported("2:TestMod2")); // Only MS2
             Assert.IsFalse(Support.AreAllModelsSupported("3:TestMod3")); // Only RT
             Assert.IsFalse(Support.AreAllModelsSupported("4:TestMod4")); // Only CCS
             Assert.IsFalse(Support.AreAllModelsSupported("999:UNKNOWN"));
-        }
-
-        [TestMethod]
-        public void AbstractLibraryBuilderModificationSupportTests_PeptideHasOnlyMs2SupportedMod_ValidPeptide_ReturnsCorrectSupport()
-        {
-            // Act & Assert
+  
             Assert.IsTrue(Support.PeptideHasOnlyMs2SupportedMod("PEPTIDE[TestMod1:1]R[TestMod2:2]")); // Both MS2 supported
             Assert.IsFalse(Support.PeptideHasOnlyMs2SupportedMod("PEPTIDE[TestMod3:3]")); // TestMod3 not MS2 supported
             Assert.IsFalse(Support.PeptideHasOnlyMs2SupportedMod("PEPTIDE[UNKNOWN:999]")); // Unknown mod
             Assert.IsTrue(Support.PeptideHasOnlyMs2SupportedMod("PEPTIDE")); // No mods
-        }
-
-        [TestMethod]
-        public void AbstractLibraryBuilderModificationSupportTests_PeptideHasOnlyRtSupportedMod_ValidPeptide_ReturnsCorrectSupport()
-        {
-            // Act & Assert
+ 
             Assert.IsTrue(Support.PeptideHasOnlyRtSupportedMod("PEPTIDE[TestMod1:1]R[TestMod3:3]")); // Both RT supported
             Assert.IsFalse(Support.PeptideHasOnlyRtSupportedMod("PEPTIDE[TestMod2:2]")); // TestMod2 not RT supported
             Assert.IsFalse(Support.PeptideHasOnlyRtSupportedMod("PEPTIDE[UNKNOWN:999]")); // Unknown mod
             Assert.IsTrue(Support.PeptideHasOnlyRtSupportedMod("PEPTIDE")); // No mods
-        }
-
-        [TestMethod]
-        public void AbstractLibraryBuilderModificationSupportTests_PeptideHasOnlyCcsSupportedMod_ValidPeptide_ReturnsCorrectSupport()
-        {
-            // Act & Assert
+ 
             Assert.IsTrue(Support.PeptideHasOnlyCcsSupportedMod("PEPTIDE[TestMod1:1]R[TestMod4:4]")); // Both CCS supported
             Assert.IsFalse(Support.PeptideHasOnlyCcsSupportedMod("PEPTIDE[TestMod2:2]")); // TestMod2 not CCS supported
             Assert.IsFalse(Support.PeptideHasOnlyCcsSupportedMod("PEPTIDE[UNKNOWN:999]")); // Unknown mod
             Assert.IsTrue(Support.PeptideHasOnlyCcsSupportedMod("PEPTIDE")); // No mods
-        }
 
-        [TestMethod]
-        public void AbstractLibraryBuilderModificationSupportTests_PopulatePredictionModificationSupport_EmptyList_DoesNotThrow()
-        {
-            // Arrange
-            var support = new LibraryBuilderModificationSupport(new Dictionary<ModificationType, PredictionSupport>());
-
-            // Assert
-            Assert.IsNotNull(support._predictionSupport);
-            Assert.AreEqual(support._predictionSupport.Count, 0);
-        }
-
-        [TestMethod]
-        public void AbstractLibraryBuilderModificationSupportTests_PopulatePredictionModificationSupport_NullList_HandlesGracefully()
-        {
-            // Arrange
-            var support = new LibraryBuilderModificationSupport(null);
-
-            // Assert
-            Assert.IsNotNull(support._predictionSupport);
-            Assert.AreEqual(support._predictionSupport.Count, 0);
-        }
-
-        [TestMethod]
-        public void AbstractLibraryBuilderModificationSupportTests_PeptideHasOnlyMs2SupportedMod_MalformedPeptide_ReturnsFalse()
-        {
-            // Act & Assert
             Assert.IsTrue(Support.PeptideHasOnlyMs2SupportedMod("PEPTIDE[INVALID]")); // No valid numeric accession
             Assert.IsTrue(Support.PeptideHasOnlyMs2SupportedMod("PEPTIDE[]")); // Empty brackets
         }
