@@ -69,6 +69,7 @@ namespace pwiz.Skyline.FileUI
 
         private ArdiaAccount Account { get; }
         private ArdiaClient Client { get; }
+        private StorageInfoResponse ServerStorageInfo { get; set; }
 
         /// <summary>
         /// If publishing succeeded, this is a <see cref="CreateDocumentResponse"/> representing the new Ardia document.
@@ -79,12 +80,7 @@ namespace pwiz.Skyline.FileUI
         /// Used in tests.
         /// </summary>
         public TreeView FoldersTree => treeViewFolders;
-
-        // TODO: remove when re-enabling publishing
-        /// <summary>
-        /// Used in tests to skip publishing the current Skyline document to a remote server. Does not skip any other read or write network operations.
-        /// </summary>
-        public bool SkipPublish { get; set; } = false;
+        public Label AvailableStorageLabel => lblAvailableStorage;
 
         /// <summary>
         /// Used in tests to find a <see cref="TreeNode"/> by name.
@@ -142,6 +138,38 @@ namespace pwiz.Skyline.FileUI
             {
                 treeViewFolders.Nodes[0].Expand();
             }
+
+            lblServerFolders.Text = $@"{ArdiaResources.FileUpload_ServerFolders}:";
+            lblAvailableStorage.Visible = false;
+
+            // In the background, ask the server for its available storage
+            Assume.IsTrue(IsHandleCreated);
+            CommonActionUtil.RunAsync(() =>
+            {
+                var result = Client.GetServerStorageInfo();
+
+                ServerStorageInfo = result.IsSuccess ? result.Value : null;
+
+                if (ServerStorageInfo == null)
+                    return;
+
+                CommonActionUtil.SafeBeginInvoke(this, () =>
+                {
+                    Assume.IsNotNull(ServerStorageInfo);
+
+                    if (ServerStorageInfo is { IsUnlimited: true })
+                    {
+                        lblAvailableStorage.Text = ArdiaResources.FileUpload_AvailableStorage_Unlimited;
+                    }
+                    else
+                    {
+                        var size = ServerStorageInfo.AvailableFreeSpace / 1024 * 1024 * 1024;
+                        lblAvailableStorage.Text = string.Format(ArdiaResources.FileUpload_AvailableStorage_SizeInGB, size);
+                    }
+
+                    lblAvailableStorage.Visible = true;
+                });
+            });
         }
 
         // CONSIDER: if the previously selected item is unavailable, set focus to top node (better than
@@ -233,7 +261,6 @@ namespace pwiz.Skyline.FileUI
             });
         }
 
-        // TODO: re-work how files are read from the temp directory
         private static string[] GatherLocalZipFiles(string fileName)
         {
             var directory = Path.GetDirectoryName(fileName);
@@ -248,24 +275,28 @@ namespace pwiz.Skyline.FileUI
 
         public void Upload(Control parent, string fileName)
         {
+            // TODO: add an abstraction to contain details about the upload file(s), # of parts, part sizes, total size
+            var paths = GatherLocalZipFiles(fileName);
+            var uploadSize = paths.Select(path => new FileInfo(path)).Select(fileInfo => fileInfo.Length).Sum();
+
+            if (ServerStorageInfo != null && !ServerStorageInfo.HasAvailableStorageFor(uploadSize))
+            {
+                MessageDlg.Show(parent, ArdiaResources.FileUpload_Error_DocumentTooLargeForServer);
+                return;
+            }
+
             var result = ArdiaResult<CreateDocumentResponse>.Default;
 
             var isCanceled = false;
 
-            if (!SkipPublish)
+            using var waitDlg = new LongWaitDlg();
+            waitDlg.Text = UtilResources.PublishDocumentDlg_UploadSharedZipFile_Uploading_File;
+            waitDlg.PerformWork(parent, 1000, longWaitBroker =>
             {
-                var paths = GatherLocalZipFiles(fileName);
+                result = Client.PublishDocument(DestinationPath, paths, longWaitBroker);
 
-                using var waitDlg = new LongWaitDlg();
-                waitDlg.Text = UtilResources.PublishDocumentDlg_UploadSharedZipFile_Uploading_File;
-                waitDlg.PerformWork(parent, 1000, longWaitBroker =>
-                {
-                    result = Client.PublishDocument(DestinationPath, paths, longWaitBroker);
-
-                    isCanceled = longWaitBroker.IsCanceled;
-                });
-            }
-            else result = ArdiaResult<CreateDocumentResponse>.Success(new CreateDocumentResponse());
+                isCanceled = longWaitBroker.IsCanceled;
+            });
 
             if (isCanceled)
                 return;
@@ -275,22 +306,6 @@ namespace pwiz.Skyline.FileUI
                 PublishedDocument = result.Value;
 
                 MessageDlg.Show(parent, ArdiaResources.FileUpload_Success);
-
-                /*
-                string successMessage = ArdiaResources.FileUpload_Success_Open_DataExplorer;
-                if (MultiButtonMsgDlg.Show(parent, successMessage, MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false)
-                        == DialogResult.Yes)
-                {
-                    var getUrlResult = Client.GetParentFolderByPath(DestinationPath);
-                    if (getUrlResult.IsSuccess)
-                    {
-                        Process.Start(getUrlResult.Value.Url.ToString());
-                    }
-                    else
-                    {
-                        MessageDlg.ShowWithExceptionAndNetworkDetail(parent, ArdiaResources.Error_StatusCode_Unexpected, getUrlResult.ErrorMessage, getUrlResult.ErrorException);
-                    }
-                }*/
             }
             else
             {

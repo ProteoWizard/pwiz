@@ -410,7 +410,7 @@ namespace pwiz.SkylineTestFunctional
 
             // 2. PublishDocumentDlgBase should NOT display the "Show anonymous servers" checkbox
             var publishDocDlg = ShowDialog<PublishDocumentDlgPanorama>(editServerDlg.OkDialog);
-            RunUI( () => Assert.IsFalse(publishDocDlg.CbAnonymousServersVisible));
+            RunUI( () => Assert.IsFalse(publishDocDlg.AnonymousServersCheckboxVisible));
             OkDialog(publishDocDlg, publishDocDlg.CancelDialog);
 
 
@@ -424,7 +424,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 // 1. PublishDocumentDlgBase should display the "Show anonymous servers" checkbox
-                Assert.IsTrue(publishDocDlg.CbAnonymousServersVisible);
+                Assert.IsTrue(publishDocDlg.AnonymousServersCheckboxVisible);
 
                 var servers = publishDocDlg.GetServers();
                 Assert.AreEqual(1, servers.Count);

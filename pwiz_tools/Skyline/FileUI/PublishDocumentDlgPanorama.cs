@@ -73,7 +73,6 @@ namespace pwiz.Skyline.FileUI
         public IPanoramaPublishClient PanoramaPublishClient { get; set; }
         public ShareType ShareType { get; private set; }
         public bool ShowAnonymousServers { get { return cbAnonymousServers.Checked; } set { cbAnonymousServers.Checked = value; } }
-        public bool CbAnonymousServersVisible => cbAnonymousServers.Visible;
 
         internal override string LoadExpansionAndSelection()
         {
@@ -112,6 +111,9 @@ namespace pwiz.Skyline.FileUI
                 if (serverFolder.FoldersJson != null)
                     AddSubFolders(server, treeNode, serverFolder.FoldersJson);
             }
+
+            lblServerFolders.Text = FileUIResources.PublishDocumentDlg_Panorama_ServerFolders;
+            lblAvailableStorage.Visible = false;
         }
 
         internal override void HandleDialogOk()

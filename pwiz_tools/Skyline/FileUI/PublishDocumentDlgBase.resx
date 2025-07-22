@@ -121,37 +121,37 @@
     <value>17, 17</value>
   </metadata>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="lblPanoramaFolders.AutoSize" type="System.Boolean, mscorlib">
+  <data name="lblServerFolders.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="lblPanoramaFolders.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="lblServerFolders.Location" type="System.Drawing.Point, System.Drawing">
     <value>18, 83</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="lblPanoramaFolders.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+  <data name="lblServerFolders.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>4, 0, 4, 0</value>
   </data>
-  <data name="lblPanoramaFolders.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="lblServerFolders.Size" type="System.Drawing.Size, System.Drawing">
     <value>143, 20</value>
   </data>
-  <data name="lblPanoramaFolders.TabIndex" type="System.Int32, mscorlib">
+  <data name="lblServerFolders.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
   </data>
-  <data name="lblPanoramaFolders.Text" xml:space="preserve">
-    <value>Panorama Folders:</value>
+  <data name="lblServerFolders.Text" xml:space="preserve">
+    <value>Folders:</value>
   </data>
-  <data name="&gt;&gt;lblPanoramaFolders.Name" xml:space="preserve">
-    <value>lblPanoramaFolders</value>
+  <data name="&gt;&gt;lblServerFolders.Name" xml:space="preserve">
+    <value>lblServerFolders</value>
   </data>
-  <data name="&gt;&gt;lblPanoramaFolders.Type" xml:space="preserve">
+  <data name="&gt;&gt;lblServerFolders.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;lblPanoramaFolders.Parent" xml:space="preserve">
+  <data name="&gt;&gt;lblServerFolders.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;lblPanoramaFolders.ZOrder" xml:space="preserve">
-    <value>7</value>
+  <data name="&gt;&gt;lblServerFolders.ZOrder" xml:space="preserve">
+    <value>8</value>
   </data>
   <data name="treeViewFolders.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -397,7 +397,43 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;createRemoteFolder.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>9</value>
+  </data>
+  <data name="lblAvailableStorage.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblAvailableStorage.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="lblAvailableStorage.Location" type="System.Drawing.Point, System.Drawing">
+    <value>832, 128</value>
+  </data>
+  <data name="lblAvailableStorage.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 0, 6, 0</value>
+  </data>
+  <data name="lblAvailableStorage.Size" type="System.Drawing.Size, System.Drawing">
+    <value>201, 20</value>
+  </data>
+  <data name="lblAvailableStorage.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="lblAvailableStorage.Text" xml:space="preserve">
+    <value>Available Storage: XYZ GB</value>
+  </data>
+  <data name="lblAvailableStorage.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;lblAvailableStorage.Name" xml:space="preserve">
+    <value>lblAvailableStorage</value>
+  </data>
+  <data name="&gt;&gt;lblAvailableStorage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblAvailableStorage.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;lblAvailableStorage.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
