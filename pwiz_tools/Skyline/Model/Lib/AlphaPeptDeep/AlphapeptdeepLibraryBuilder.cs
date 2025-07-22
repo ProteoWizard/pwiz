@@ -593,5 +593,31 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             }
             File.Delete(incompleteBlibPath);
         }
+
+        public override string GetWarning()
+        {
+            var (noMs2SupportWarningMods, noRtSupportWarningMods, noCcsSupportWarningMods) = GetWarningMods();
+            if (noMs2SupportWarningMods.Count == 0 && noRtSupportWarningMods.Count == 0 && noCcsSupportWarningMods.Count == 0)
+                return null;
+
+            string warningModificationString;
+            if (noMs2SupportWarningMods.Count > 0)
+            {
+                warningModificationString = string.Join(Environment.NewLine, noMs2SupportWarningMods.Select(w => w.Indent(1)));
+                return string.Format(ModelResources.Alphapeptdeep_Warn_unknown_modification,
+                    warningModificationString);
+            }
+
+            if (noRtSupportWarningMods.Count > 0)
+            {
+                warningModificationString = string.Join(Environment.NewLine, noRtSupportWarningMods.Select(w => w.Indent(1)));
+                return string.Format(ModelResources.Alphapeptdeep_Warn_limited_modification,
+                    warningModificationString);
+            }
+            warningModificationString = string.Join(Environment.NewLine, noCcsSupportWarningMods.Select(w => w.Indent(1)));
+            return string.Format(ModelResources.Alphapeptdeep_Warn_limited_modification,
+                warningModificationString);
+
+        }
     }
 }

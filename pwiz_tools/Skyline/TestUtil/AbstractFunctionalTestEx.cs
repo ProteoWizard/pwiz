@@ -136,8 +136,8 @@ namespace pwiz.SkylineTestUtil
 
             var newDocFileName =
                 SkylineWindow.DocumentFilePath.Contains(BiblioSpecLiteSpec.DotConvertedToSmallMolecules) ?
-                SkylineWindow.DocumentFilePath :
-                SkylineWindow.DocumentFilePath.Replace(".sky", BiblioSpecLiteSpec.DotConvertedToSmallMolecules + ".sky");
+                    SkylineWindow.DocumentFilePath :
+                    SkylineWindow.DocumentFilePath.Replace(".sky", BiblioSpecLiteSpec.DotConvertedToSmallMolecules + ".sky");
             RunUI(() => SkylineWindow.SaveDocument(newDocFileName));
             WaitForCondition(() => File.Exists(newDocFileName));
             RunUI(() => SkylineWindow.OpenFile(newDocFileName));

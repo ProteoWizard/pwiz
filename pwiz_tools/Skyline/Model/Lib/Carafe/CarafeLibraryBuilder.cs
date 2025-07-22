@@ -29,6 +29,7 @@ using System.Threading;
 using Ionic.Zip;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
 using pwiz.Skyline.Model.Tools;
@@ -115,6 +116,42 @@ namespace pwiz.Skyline.Model.Lib.Carafe
         public ISkylineProcessRunnerWrapper SkylineProcessRunner { get; set; }
 
         private string PythonVirtualEnvironmentScriptsDir { get; }
+
+        internal static Dictionary<ModificationType, PredictionSupport> MODEL_SUPPORTED_UNIMODS =
+            new Dictionary<ModificationType, PredictionSupport>
+
+            {
+                {
+                    new ModificationType(
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 4).ID.Value,
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 4).Name,
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 4).Formula),
+                    PredictionSupport.FRAG_RT_ONLY
+                },
+                {
+                    new ModificationType(
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 21).ID.Value,
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 21).Name,
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 21).Formula),
+                    PredictionSupport.FRAG_RT_ONLY
+                },
+                {
+                    new ModificationType(
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 35).ID.Value,
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 35).Name,
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 35).Formula),
+                    PredictionSupport.FRAG_RT_ONLY
+                },
+                {
+                    new ModificationType(
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 121).ID.Value,
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 121).Name,
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 121).Formula),
+                    PredictionSupport.FRAG_RT_ONLY
+                }
+
+            };
+
         public LibrarySpec LibrarySpec { get; private set; }
 
         public static string PythonVersion => Settings.Default.PythonEmbeddableVersion;
@@ -416,6 +453,29 @@ namespace pwiz.Skyline.Model.Lib.Carafe
                 return string.Empty;
             return Path.GetFileName(ExperimentDataFilePath);
         }
+
+        public override string GetWarning()
+        {
+            var (noMs2SupportWarningMods, noRtSupportWarningMods, noCcsSupportWarningMods) = GetWarningMods();
+            if (noMs2SupportWarningMods.Count == 0 && noRtSupportWarningMods.Count == 0 && noCcsSupportWarningMods.Count == 0)
+                return null;
+
+            string warningModificationString;
+            if (noMs2SupportWarningMods.Count > 0)
+            {
+                warningModificationString = string.Join(Environment.NewLine, noMs2SupportWarningMods.Select(w => w.Indent(1)));
+                return string.Format(ModelResources.Alphapeptdeep_Warn_unknown_modification,
+                    warningModificationString);
+            }
+            if (noRtSupportWarningMods.Count > 0)
+            {
+                warningModificationString = string.Join(Environment.NewLine, noRtSupportWarningMods.Select(w => w.Indent(1)));
+                return string.Format(ModelResources.Carafe_Warn_limited_modification,
+                    warningModificationString);
+            }
+            return String.Empty;
+        }
+
         protected override IEnumerable<string> GetHeaderColumnNames(bool training)
         {
             if (!training)
@@ -538,7 +598,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
                 CarafeLibraryBuilder.LibraryParameters == null)
                 CarafeLibraryBuilder.CarafeDefaultSettings();
 
-            libraryBuilderModificationSupport = new LibraryBuilderModificationSupport(null);
+            libraryBuilderModificationSupport = new LibraryBuilderModificationSupport(MODEL_SUPPORTED_UNIMODS);
         }
 
         public CarafeLibraryBuilder(
@@ -566,7 +626,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             EnsureWorkDir(Path.GetDirectoryName(libOutPath), PREFIX_WORKDIR);
             Directory.CreateDirectory(JavaDir);
             Directory.CreateDirectory(CarafeJavaDir);
-            libraryBuilderModificationSupport = new LibraryBuilderModificationSupport(null);
+            libraryBuilderModificationSupport = new LibraryBuilderModificationSupport(MODEL_SUPPORTED_UNIMODS);
         }
 
         public bool BuildLibrary(IProgressMonitor progress)
@@ -984,7 +1044,6 @@ namespace pwiz.Skyline.Model.Lib.Carafe
                 throw new Exception(ModelResources.Carafe_failed_to_complete, ex);
             }
         }
-
         private void ImportSpectralLibrary(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
             progress.UpdateProgress(progressStatus = progressStatus

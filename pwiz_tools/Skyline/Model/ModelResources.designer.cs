@@ -380,10 +380,11 @@ namespace pwiz.Skyline.Model {
         public static string AlphaPeptDeep_Settings {
             get {
                 return ResourceManager.GetString("AlphaPeptDeep_Settings", resourceCulture);
-	    }
-	}
-
-	///   Looks up a localized string similar to Warning: The predicted library might be of poor quality, due to the following modifications detected with limited support in the default predictive model: 
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: The predicted library might be of poor quality, due to the following modifications detected with limited support in the default predictive model: 
         ///
         ///{0}
         ///
@@ -586,6 +587,19 @@ namespace pwiz.Skyline.Model {
         public static string Carafe_failed_to_complete {
             get {
                 return ResourceManager.GetString("Carafe_failed_to_complete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: The predicted library might be of poor quality, due to the following modifications detected with limited support in the default predictive model: 
+        ///
+        ///{0}
+        ///
+        ///Would you like to continue building this predicted library?.
+        /// </summary>
+        public static string Carafe_Warn_limited_modification {
+            get {
+                return ResourceManager.GetString("Carafe_Warn_limited_modification", resourceCulture);
             }
         }
         

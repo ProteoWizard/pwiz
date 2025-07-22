@@ -414,32 +414,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             return mod.AlphaNameWithAminoAcid(unmodifiedSequence, modIndexAA);
         }
 
-        public string GetWarning()
-        {
-            var (noMs2SupportWarningMods, noRtSupportWarningMods, noCcsSupportWarningMods) = GetWarningMods();
-            if (noMs2SupportWarningMods.Count == 0 && noRtSupportWarningMods.Count == 0 && noCcsSupportWarningMods.Count == 0)
-                return null;
-
-            string warningModString;
-            if (noMs2SupportWarningMods.Count > 0)
-            {
-                warningModString = string.Join(Environment.NewLine, noMs2SupportWarningMods.Select(w => w.Indent(1)));
-                return string.Format(ModelResources.Alphapeptdeep_Warn_unknown_modification,
-                    warningModString);
-            }
-
-            if (noRtSupportWarningMods.Count > 0)
-            {
-                warningModString = string.Join(Environment.NewLine, noRtSupportWarningMods.Select(w => w.Indent(1)));
-                return string.Format(ModelResources.Alphapeptdeep_Warn_limited_modification,
-                    warningModString);
-            }
-            warningModString = string.Join(Environment.NewLine, noCcsSupportWarningMods.Select(w => w.Indent(1)));
-            return string.Format(ModelResources.Alphapeptdeep_Warn_limited_modification,
-                warningModString);
-
-
-        }
+        public abstract string GetWarning();
         
         public (IList<string>,IList<string>,IList<string>) GetWarningMods()
         {
