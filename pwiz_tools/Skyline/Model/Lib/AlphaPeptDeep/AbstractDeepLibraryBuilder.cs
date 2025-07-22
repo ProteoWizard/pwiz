@@ -66,23 +66,20 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         /// Helper function to populate the list of supported modifications
         /// </summary>
         /// <param name="supportedModifications">Mapping ModificationIndex to PredictionSupport</param>
-        private void PopulatePredictionModificationSupport(Dictionary<ModificationIndex, PredictionSupport> supportedModifications)
+        private void PopulatePredictionModificationSupport(Dictionary<ModificationType, PredictionSupport> supportedModifications)
         {
             if (supportedModifications == null)
                 return;
 
-            foreach (KeyValuePair<ModificationIndex, PredictionSupport> mod in supportedModifications)
+            foreach (KeyValuePair<ModificationType, PredictionSupport> mod in supportedModifications)
             {
-                var key = mod.Key.Modification.Accession.Split(':')[0];
-
-                if (!_predictionSupport.ContainsKey(key))
-                    _predictionSupport.Add(key, new PredictionSupport());
-
-                _predictionSupport[key] = mod.Value;
+                var key = mod.Key.Index;
+                
+                _predictionSupport[key.ToString()] = mod.Value;
             }
         }
 
-        public LibraryBuilderModificationSupport(Dictionary<ModificationIndex, PredictionSupport> supportedModifications)
+        public LibraryBuilderModificationSupport(Dictionary<ModificationType, PredictionSupport> supportedModifications)
         {
             _predictionSupport = new Dictionary<string, PredictionSupport>();
             PopulatePredictionModificationSupport(supportedModifications);
@@ -174,32 +171,6 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
     /// </summary>
     public abstract class AbstractDeepLibraryBuilder : ILibraryBuildWarning
     {
-        /// <summary>
-        /// Populate a list of ModificationTypes from those available in UniModData.
-        /// </summary>
-        /// <param name="supportedList">List of modifications.
-        /// - Empty list means *none* will be returned.
-        /// - Null list means *all* in UniModData will be returned.
-        /// </param>
-        /// <returns></returns>
-        public static IList<ModificationType> PopulateUniModList(IList<ModificationIndex> supportedList)
-        {
-            IList<ModificationType> modList = new List<ModificationType>();
-            for (int m = 0; m < UniModData.UNI_MOD_DATA.Length; m++)
-            {
-                if (!UniModData.UNI_MOD_DATA[m].ID.HasValue ||
-                    (supportedList != null &&
-                     supportedList.FirstOrDefault(x => x.Index == UniModData.UNI_MOD_DATA[m].ID.Value) == null))
-                    continue;
-
-                var accession = UniModData.UNI_MOD_DATA[m].ID.Value + @":" + UniModData.UNI_MOD_DATA[m].Name;
-                var name = UniModData.UNI_MOD_DATA[m].Name;
-                var formula = UniModData.UNI_MOD_DATA[m].Formula;
-                modList.Add(new ModificationType(accession, name, formula));
-            }
-            return modList;
-        }
-
         private DateTime _nowTime = DateTime.Now;
         private IList<string> _noMs2SupportWarningMods;
         private IList<string> _noRtSupportWarningMods;
@@ -329,9 +300,6 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
         protected abstract string ToolName { get; }
 
-        protected abstract IList<ModificationType> ModificationTypes { get; }
-        //protected abstract IList<ModificationType> FullSupportModificationTypes { get; }
-
         protected abstract LibraryBuilderModificationSupport libraryBuilderModificationSupport { get; }
 
         /// <summary>
@@ -423,9 +391,9 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                     }
                 }
 
-                var modNames = ModificationTypes.Where(m => unimodIdWithName.Contains(m.Accession)).ToArray();
+                var modNames = UniModData.UNI_MOD_DATA.Where(m => unimodIdWithName.Contains(m.Name)).ToArray();
                 Assume.IsTrue(modNames.Length != 0);    // The warningMods test above should guarantee the mod is supported
-                string modName = GetModName(modNames.Single(), modifiedSequence.GetUnmodifiedSequence(), mod.IndexAA);
+                string modName = GetModName(new ModificationType( modNames.Single().ID.Value, modNames.Single().Name, modNames.Single().Formula), modifiedSequence.GetUnmodifiedSequence(), mod.IndexAA);
                 modsBuilder.Append(modName);
                 modSitesBuilder.Append((mod.IndexAA + 1).ToString()); // + 1 because alphapeptdeep mod_site number starts from 1 as the first amino acid
                 if (i != modifiedSequence.ExplicitMods.Count - 1)

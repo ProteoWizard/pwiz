@@ -52,17 +52,6 @@ namespace pwiz.SkylineTest
 
         public string LogOutput => TestContext.GetTestResultsPath("TestConsole.log");
 
-        [TestMethod]
-        public void AlphapeptdeepModificationInfoTest()
-        {
-            var groupedByAccession = AlphapeptdeepLibraryBuilder.MODIFICATION_NAMES
-                .GroupBy(item => item.Accession);
-            foreach (var group in groupedByAccession)
-            {
-                Assert.AreEqual(1, group.Count(), "Duplicate accession {0}", group.Key);
-            }
-        }
-
         /// <summary>
         /// This library never gets built, but its work directory does get created and used.
         /// </summary>
