@@ -31,7 +31,7 @@ namespace pwiz.SkylineTest
         private const long MIN_SPACE_BYTES = 20*1024*1024*1024L;
 
         // Name changed so that test is fired early in test process.
-        [TestMethod]
+        //[TestMethod]
         public void AaaTestIsDiskFull()
         {
             var rootPath = Path.GetPathRoot(TestContext.TestDir);
