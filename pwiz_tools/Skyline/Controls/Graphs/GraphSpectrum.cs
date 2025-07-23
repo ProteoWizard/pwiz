@@ -137,6 +137,9 @@ namespace pwiz.Skyline.Controls.Graphs
         private class ToolTipImplementation : ITipProvider
         {
             LibraryRankedSpectrumInfo.RankedMI _peakRMI;
+            private TableDesc _table;       // Used for test support
+            public TableDesc Table => _table;
+
             public ToolTipImplementation(LibraryRankedSpectrumInfo.RankedMI peakRMI)
             {
                 _peakRMI = peakRMI;
@@ -153,18 +156,19 @@ namespace pwiz.Skyline.Controls.Graphs
                         table.AddDetailRow(GraphsResources.GraphSpectrum_ToolTip_mz,
                               _peakRMI.ObservedMz.ToString(Formats.Mz, CultureInfo.CurrentCulture), rt);
                         table.AddDetailRow(GraphsResources.GraphSpectrum_ToolTip_Intensity,
-                            _peakRMI.Intensity.ToString(@"##.###", CultureInfo.CurrentCulture), rt);
+                            _peakRMI.Intensity.ToString(@"##", CultureInfo.CurrentCulture), rt);
                         if (_peakRMI.Rank > 0)
                             table.AddDetailRow(GraphsResources.GraphSpectrum_ToolTip_Rank, 
                                 string.Format(@"{0}",  _peakRMI.Rank), rt);
                         if (_peakRMI.MatchedIons != null && _peakRMI.MatchedIons.Count > 0)
                         {
-                            table.AddDetailRow(GraphsResources.GraphSpectrum_ToolTip_MatchedIons, "", rt);
+                            table.AddDetailRow(GraphsResources.GraphSpectrum_ToolTip_MatchedIons, GraphsResources.ToolTipImplementation_RenderTip_Calculated_Mass, rt, true);
                             foreach (var mfi in _peakRMI.MatchedIons)
-                                table.AddDetailRow(AbstractSpectrumGraphItem.GetLabel(mfi, _peakRMI.Rank, true, false),
+                                table.AddDetailRow(AbstractSpectrumGraphItem.GetLabel(mfi, _peakRMI.Rank, false, false),
+                                    mfi.PredictedMz.ToString(Formats.Mz, CultureInfo.CurrentCulture) + @"  " +
                                     AbstractSpectrumGraphItem.GetMassErrorString(_peakRMI, mfi), rt);
                         }
-                        
+                        _table = table;
                         var size = table.CalcDimensions(g);
                         if (draw)
                             table.Draw(g);
@@ -1792,14 +1796,27 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void DisplayTooltip(MouseEventArgs e)
         {
+            LibraryRankedSpectrumInfo.RankedMI peakRmi = null;
+            using (var g = Graphics.FromHwnd(IntPtr.Zero))
+            {
+                // Check if the mouse is over a label
+                if (GraphPane.FindNearestObject(e.Location, g, out var nearestObject, out var index) && nearestObject is TextObj label)
+                {
+                    var screenRect = GraphPane.GetRectScreen(label, g);
+                    GraphPane.FindClosestCurve(GraphPane.CurveList, e.Location, (int)(screenRect.Width + screenRect.Height) , out var curve, out var closestPoint);
+                    if (curve.Tag is SpectrumGraphItem graphItem)
+                    {
+                        peakRmi = graphItem.SpectrumInfo.PeaksMatched.FirstOrDefault(rmi => graphItem.GetLabel(rmi).Equals(label.Text));
+                    }
+                }
+            }
+            // Check if the mouse is over a stick
             if (GraphPane.FindNearestStick(e.Location, out var nearestCurve, out var nearestIndex))
             {
                 if (nearestCurve != null)
                 {
                     if (nearestIndex >= 0 && nearestIndex < nearestCurve.NPts)
                     {
-                        if (_toolTip == null)
-                            _toolTip = new NodeTip(this) { Parent = graphControl };
                         var hasNegativePeaks = Enumerable.Range(0, nearestCurve.NPts)
                             .Select(i => nearestCurve.Points[i]).Any(pt => pt.Y < 0);
                         SpectrumGraphItem gItem = null;
@@ -1810,10 +1827,17 @@ namespace pwiz.Skyline.Controls.Graphs
                         // nearestIndex is in graph points. Need to convert it into the ranked spectrum index
                         var spectrumIndex = Enumerable.Range(0, gItem.SpectrumInfo.Peaks.Count).FirstOrDefault(i =>
                             gItem.SpectrumInfo.Peaks[i].ObservedMz == nearestCurve.Points[nearestIndex].X);
-                        _toolTip.SetTipProvider(new ToolTipImplementation(gItem.SpectrumInfo.Peaks[spectrumIndex]), new Rectangle(e.Location, new Size()), e.Location);
+                        peakRmi = gItem.SpectrumInfo.Peaks[spectrumIndex];
                     }
-                    return;
                 }
+            }
+
+            if (peakRmi != null)
+            {
+                if (_toolTip == null)
+                    _toolTip = new NodeTip(this) { Parent = graphControl };
+                _toolTip.SetTipProvider(new ToolTipImplementation(peakRmi), new Rectangle(e.Location, new Size()), e.Location);
+                return;
             }
             _toolTip?.HideTip();
             _toolTip = null;

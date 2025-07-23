@@ -1199,20 +1199,20 @@ namespace pwiz.Skyline.Controls.SeqNode
         public const int COL_SPACING = 2;
         public const int TABLE_SPACING = 6;
 
-        public void AddDetailRow(string name, string value, RenderTools rt, StringAlignment dataAlign)
+        public void AddDetailRow(string name, string value, RenderTools rt, StringAlignment dataAlign, bool allBold = false)
         {
             var row = new RowDesc
                 {
                     new CellDesc(name, rt) { Font = rt.FontBold },
-                    new CellDesc(value, rt) { Align = dataAlign }
+                    new CellDesc(value, rt) { Align = dataAlign, Font = allBold ? rt.FontBold : rt.FontNormal}
                 };
             row.ColumnSpacing = COL_SPACING;
             Add(row);
         }
 
-        public void AddDetailRow(string name, string value, RenderTools rt)
+        public void AddDetailRow(string name, string value, RenderTools rt, bool allBold = false)
         {
-            AddDetailRow(name, value, rt, StringAlignment.Near);
+            AddDetailRow(name, value, rt, StringAlignment.Near, allBold);
         }
 
         private const string X80 =

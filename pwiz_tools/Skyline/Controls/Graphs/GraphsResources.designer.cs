@@ -1392,7 +1392,7 @@ namespace pwiz.Skyline.Controls.Graphs {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to M/z:.
+        ///   Looks up a localized string similar to Observed M/z:.
         /// </summary>
         public static string GraphSpectrum_ToolTip_mz {
             get {
@@ -1956,6 +1956,15 @@ namespace pwiz.Skyline.Controls.Graphs {
         public static string SummaryReplicateGraphPane_SummaryReplicateGraphPane_Replicate {
             get {
                 return ResourceManager.GetString("SummaryReplicateGraphPane_SummaryReplicateGraphPane_Replicate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calculated M/z.
+        /// </summary>
+        public static string ToolTipImplementation_RenderTip_Calculated_Mass {
+            get {
+                return ResourceManager.GetString("ToolTipImplementation_RenderTip_Calculated_Mass", resourceCulture);
             }
         }
         

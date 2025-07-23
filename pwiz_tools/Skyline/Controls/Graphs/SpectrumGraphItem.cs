@@ -312,7 +312,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
        
-        private string GetLabel(LibraryRankedSpectrumInfo.RankedMI rmi)
+        public string GetLabel(LibraryRankedSpectrumInfo.RankedMI rmi)
         {
             // Show the m/z values in the labels, if multiple should be visible, and
             // they have different display values.
