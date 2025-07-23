@@ -1236,6 +1236,7 @@ namespace SkylineNightly
 
         private void DeleteRecursive(string fileOrDir)
         {
+            fileOrDir = fileOrDir.ToLongPath();  // Make sure to use the long path syntax since the paths to files inside Python in the Skyline Tools folder can get very long
             if (File.Exists(fileOrDir))
             {
                 File.SetAttributes(fileOrDir, FileAttributes.Normal);   // Protect against failing on read-only files
