@@ -1817,4 +1817,7 @@
   <data name="TransitionFilterAndLibrariesSettings_SpectrumFilter" xml:space="preserve">
     <value>Spectrum Filter</value>
   </data>
+  <data name="AnnotationDef_Lookup" xml:space="preserve">
+    <value>Lookup</value>
+  </data>
 </root>

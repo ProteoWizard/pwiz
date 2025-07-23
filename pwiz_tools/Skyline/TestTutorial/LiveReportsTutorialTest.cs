@@ -17,15 +17,15 @@
  * limitations under the License.
  */
 
+using System;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Controls.Editor;
-using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.AuditLog;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
@@ -66,9 +66,9 @@ namespace pwiz.SkylineTestTutorial
             });
             var auditLogForm = FindOpenForm<AuditLogForm>();
             Assert.IsNotNull(auditLogForm);
-            PauseForScreenShot<AuditLogForm>("Audit log before enabling audit logging");
+            PauseForScreenShot(auditLogForm);
             RunUI(()=>auditLogForm.EnableAuditLogging(true));
-            PauseForScreenShot<AuditLogForm>("Audit log after enabling audit logging");
+            PauseForScreenShot(auditLogForm);
             OkDialog(auditLogForm, auditLogForm.Close);
             PauseForScreenShot("Status bar", null, ClipSelectionStatus);
             RunUI(() =>
@@ -77,7 +77,7 @@ namespace pwiz.SkylineTestTutorial
             });
             var documentGrid = FindOpenForm<DocumentGridForm>();
             ShowReportsDropdown(Resources.SkylineViewContext_GetDocumentGridRowSources_Proteins);
-            PauseForScreenShot<DocumentGridForm>("Document Grid Reports Menu");
+            PauseForScreenShot(documentGrid);
             HideReportsDropdown();
             RunUI(()=>
             {
@@ -86,14 +86,14 @@ namespace pwiz.SkylineTestTutorial
                         .SkylineViewContext_GetDocumentGridRowSources_Proteins));
             });
             WaitForCondition(() => documentGrid.IsComplete);
-            PauseForScreenShot<DocumentGridForm>("Proteins report");
+            PauseForScreenShot(documentGrid);
             RunUI(() =>
             {
                 documentGrid.DataGridView.CurrentCell = documentGrid.DataGridView.Rows[3].Cells[0];
                 documentGrid.DataGridView.ClickCurrentCell();
                 Assert.AreEqual(SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.MoleculeGroups, 3), SkylineWindow.SelectedPath);
             });
-            PauseForScreenShot<SequenceTreeForm>("Targets view");
+            PauseForScreenShot(SkylineWindow.SequenceTree);
             PauseForScreenShot("Status bar", null, ClipSelectionStatus);
             PauseForScreenShot(documentGrid.NavBar, processShot:bmp=>ClipControl(documentGrid.NavBar, bmp));
             RunUI(()=>
@@ -102,14 +102,14 @@ namespace pwiz.SkylineTestTutorial
                     ViewGroup.BUILT_IN.Id.ViewName(Resources.SkylineViewContext_GetDocumentGridRowSources_Replicates));
             });
             WaitForCondition(() => documentGrid.IsComplete);
-            PauseForScreenShot<DocumentGridForm>("Replicates report");
+            PauseForScreenShot(documentGrid);
             RunLongDlg<DocumentSettingsDlg>(()=>SkylineWindow.ShowDocumentSettingsDialog(), documentSettingsDlg =>
             {
                 RunUI(()=>documentSettingsDlg.SelectTab(DocumentSettingsDlg.TABS.annotations));
-                PauseForScreenShot<DocumentSettingsDlg>("Initial document settings dialog");
+                PauseForScreenShot(documentSettingsDlg);
                 RunLongDlg<DefineAnnotationDlg>(documentSettingsDlg.AddAnnotation, defineAnnotationDlg =>
                 {
-                    PauseForScreenShot<DefineAnnotationDlg>("Blank define annotation dialog");
+                    PauseForScreenShot(defineAnnotationDlg);
                     RunUI(()=>
                     {
                         defineAnnotationDlg.AnnotationName = "Cohort";
@@ -118,9 +118,9 @@ namespace pwiz.SkylineTestTutorial
                         defineAnnotationDlg.AnnotationTargets =
                             AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.replicate);
                     });
-                    PauseForScreenShot<DefineAnnotationDlg>("Cohort annotation");
+                    PauseForScreenShot(defineAnnotationDlg);
                 }, defineAnnotationDlg=>defineAnnotationDlg.OkDialog());
-                PauseForScreenShot<DocumentSettingsDlg>("Document settings dialog with one annotation");
+                PauseForScreenShot(documentSettingsDlg);
                 RunLongDlg<DefineAnnotationDlg>(documentSettingsDlg.AddAnnotation, defineAnnotationDlg =>
                 {
                     RunUI(() =>
@@ -130,22 +130,22 @@ namespace pwiz.SkylineTestTutorial
                         defineAnnotationDlg.AnnotationTargets =
                             AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.replicate);
                     });
-                    PauseForScreenShot<DefineAnnotationDlg>("SubjectID annotation");
+                    PauseForScreenShot(defineAnnotationDlg);
                 }, defineAnnotationDlg => defineAnnotationDlg.OkDialog());
-                PauseForScreenShot<DocumentSettingsDlg>("Document settings dialog with two annotations");
+                PauseForScreenShot(documentSettingsDlg);
             }, documentSettingsDlg=>documentSettingsDlg.OkDialog());
             WaitForCondition(() => documentGrid.IsComplete);
             RunUI(()=>
             {
                 documentGrid.Activate();
                 var cohortColumn = documentGrid.DataboundGridControl.FindColumn(
-                    PropertyPath.Root.Property(AnnotationDef.ANNOTATION_PREFIX + "Cohort"));
+                    PropertyPath.Root.Property(AnnotationDef.GetColumnName("Cohort")));
                 Assert.IsNotNull(cohortColumn);
                 documentGrid.DataGridView.CurrentCell = documentGrid.DataGridView.Rows[0].Cells[cohortColumn.Index];
             });
             using (new GridTester(documentGrid.DataGridView).ShowComboBox())
             {
-                PauseForScreenShot<DocumentGridForm>("Document grid with two annotations");
+                PauseForScreenShot(documentGrid);
             }
             RunLongDlg<DocumentSettingsDlg>(()=>SkylineWindow.ShowDocumentSettingsDialog(), documentSettingsDlg =>
             {
@@ -154,21 +154,21 @@ namespace pwiz.SkylineTestTutorial
                 {
                     RunLongDlg<MetadataRuleEditor>(()=>metadataRuleSetEditor.EditRule(0), metadataRuleEditor =>
                     {
-                        PauseForScreenShot<MetadataRuleEditor>("Rule Editor");
+                        PauseForScreenShot(metadataRuleEditor);
                         RunUI(() =>
                         {
                             metadataRuleEditor.MetadataRule = metadataRuleEditor.MetadataRule.ChangePattern("D")
                                 .ChangeReplacement("Diseased").ChangeTarget(PropertyPath.Root
                                     .Property(nameof(ResultFile.Replicate))
-                                    .Property(AnnotationDef.ANNOTATION_PREFIX + "Cohort"));
+                                    .Property(AnnotationDef.GetColumnName("Cohort")));
                         });
-                        PauseForScreenShot<MetadataRuleEditor>("Diseased rule");
+                        PauseForScreenShot(metadataRuleEditor);
                         RunUI(() =>metadataRuleEditor.PreviewGrid.FirstDisplayedScrollingRowIndex = 17);
-                        PauseForScreenShot<MetadataRuleEditor>("Diseased rule scrolled down");
+                        PauseForScreenShot(metadataRuleEditor);
 
                     }, metadataRuleEditor=>metadataRuleEditor.OkDialog());
                     RunUI(()=>metadataRuleSetEditor.DataGridViewSteps.CurrentCell = metadataRuleSetEditor.DataGridViewSteps.Rows[1].Cells[0]);
-                    PauseForScreenShot<MetadataRuleSetEditor>("Rule Set Editor with one rule");
+                    PauseForScreenShot(metadataRuleSetEditor);
                     RunLongDlg<MetadataRuleEditor>(() => metadataRuleSetEditor.EditRule(1), metadataRuleEditor =>
                     {
                         RunUI(() =>
@@ -176,12 +176,23 @@ namespace pwiz.SkylineTestTutorial
                             metadataRuleEditor.MetadataRule = metadataRuleEditor.MetadataRule.ChangePattern("H")
                                 .ChangeReplacement("Healthy").ChangeTarget(PropertyPath.Root
                                     .Property(nameof(ResultFile.Replicate))
-                                    .Property(AnnotationDef.ANNOTATION_PREFIX + "Cohort"));
+                                    .Property(AnnotationDef.GetColumnName("Cohort")));
                         });
-                        PauseForScreenShot<MetadataRuleEditor>("Healthy rule");
+                        PauseForScreenShot(metadataRuleEditor);
                     }, metadataRuleEditor => metadataRuleEditor.OkDialog());
                     RunUI(() => metadataRuleSetEditor.DataGridViewSteps.CurrentCell = metadataRuleSetEditor.DataGridViewSteps.Rows[2].Cells[0]);
-                    PauseForScreenShot<MetadataRuleSetEditor>("Rule Set Editor with two rules");
+                    PauseForScreenShot(metadataRuleSetEditor);
+                    RunLongDlg<MetadataRuleEditor>(()=>metadataRuleSetEditor.EditRule(2), metadataRuleEditor =>
+                    {
+                        RunUI(() =>
+                        {
+                            metadataRuleEditor.MetadataRule = metadataRuleEditor.MetadataRule.ChangePattern("(.)_(...)").ChangeReplacement("$1$2").ChangeTarget(PropertyPath.Root
+                                .Property(nameof(ResultFile.Replicate))
+                                .Property(AnnotationDef.GetColumnName("SubjectID")));
+                        });
+                        PauseForScreenShot(metadataRuleEditor);
+                    }, metadataRuleEditor=>metadataRuleEditor.OkDialog());
+                    PauseForScreenShot(metadataRuleSetEditor);
                     RunUI(() =>
                     {
                         metadataRuleSetEditor.RuleName = "Cohort and SubjectID";
@@ -189,7 +200,7 @@ namespace pwiz.SkylineTestTutorial
                 }, metadataRuleSetEditor => metadataRuleSetEditor.OkDialog());
             }, documentSettingsDlg=>documentSettingsDlg.OkDialog());
             WaitForCondition(() => documentGrid.IsComplete);
-            PauseForScreenShot<DocumentGridForm>("Document Grid with populated Cohort and SubjectID");
+            PauseForScreenShot(documentGrid);
             RunLongDlg<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog, documentSettingsDlg =>
             {
                 RunUI(() =>
@@ -198,7 +209,7 @@ namespace pwiz.SkylineTestTutorial
                 });
                 RunLongDlg<ListDesigner>(documentSettingsDlg.AddList, listDesigner =>
                 {
-                    PauseForScreenShot<ListDesigner>("Blank list designer");
+                    PauseForScreenShot(listDesigner);
                     RunUI(() =>
                     {
                         listDesigner.ListName = "Samples";
@@ -215,20 +226,54 @@ namespace pwiz.SkylineTestTutorial
                     gridTester.SetCellValue(3, 1, ListPropertyType.GetAnnotationTypeName(AnnotationDef.AnnotationType.text));
                     RunUI(() =>
                     {
+                        listDesigner.ListPropertiesGrid.CurrentCell = listDesigner.ListPropertiesGrid.Rows[4].Cells[0];
                         listDesigner.IdProperty = "SubjectID";
                         listDesigner.DisplayProperty = "Name";
                     });
-                    PauseForScreenShot<ListDesigner>("Completed Samples list definition");
+                    PauseForScreenShot(listDesigner);
                 }, listDesigner => listDesigner.OkDialog());
             }, documentSettingsDlg=>documentSettingsDlg.OkDialog());
+            var listData = SkylineWindow.Document.Settings.DataSettings.Lists.FirstOrDefault();
+            Assert.IsNotNull(listData);
+            Assert.AreEqual("SubjectID", listData.ListDef.IdProperty);
+            Assert.AreEqual("Name", listData.ListDef.DisplayProperty);
+            Assert.AreEqual("SubjectID,Sex,Weight,Name", String.Join(",", listData.ListDef.Properties.Select(p=>p.Name)));
             RunUI(() => SkylineWindow.ShowList("Samples"));
             var listGridForm = FindOpenForm<ListGridForm>();
             Assert.IsNotNull(listGridForm);
-            PauseForScreenShot<ListGridForm>("Empty samples list");
-            SetClipboardText(TextUtil.LineSeparate(File.ReadAllLines(TestFilesDir.GetTestPath("SampleInfo.txt")).Skip(1)));
-            RunUI(()=>listGridForm.DataGridView.SendPaste());
-            PauseForScreenShot<ListGridForm>("Completed samples list");
-
+            WaitForConditionUI(() => listGridForm.IsComplete && listGridForm.DataGridView.Rows.Count > 0);
+            PauseForScreenShot(listGridForm);
+            var sampleInfoTsvLines = File.ReadAllLines(TestFilesDir.GetTestPath("SampleInfo.txt")).Skip(1).ToList();
+            Assert.AreEqual(14, sampleInfoTsvLines.Count);
+            SetClipboardText(TextUtil.LineSeparate(sampleInfoTsvLines));
+            RunUI(() =>
+            {
+                listGridForm.DataGridView.CurrentCell = listGridForm.DataGridView.Rows[0].Cells[0];
+                listGridForm.DataGridView.SendPaste();
+                Assert.AreEqual(15, listGridForm.RowCount);
+            });
+            PauseForScreenShot(listGridForm);
+            RunLongDlg<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog, documentSettingsDlg =>
+            {
+                RunUI(()=>
+                {
+                    documentSettingsDlg.SelectTab(DocumentSettingsDlg.TABS.annotations);
+                });
+                RunLongDlg<EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef>>(
+                    documentSettingsDlg.EditAnnotationList,
+                    ediListDlg =>
+                    {
+                        RunUI(() =>
+                        {
+                            ediListDlg.SelectItem("SubjectID");
+                        });
+                        RunLongDlg<DefineAnnotationDlg>(ediListDlg.EditItem, defineAnnotationDlg =>
+                        {
+                            RunUI(()=>defineAnnotationDlg.ListPropertyType = new ListPropertyType(AnnotationDef.AnnotationType.text, "Samples"));
+                            PauseForScreenShot(defineAnnotationDlg);
+                        }, defineAnnotationDlg=>defineAnnotationDlg.OkDialog());
+                    }, editListDlg => editListDlg.OkDialog());
+            }, documentSettingsDlg=>documentSettingsDlg.OkDialog());
             RunUI(()=>
             {
                 documentGrid.Activate();
@@ -259,7 +304,8 @@ namespace pwiz.SkylineTestTutorial
                 PauseForScreenShot(viewEditor);
                 RunUI(()=>viewEditor.ViewName = "Peptide Areas");
             }, viewEditor=>viewEditor.OkDialog());
-            PauseForScreenShot<DocumentGridForm>("Document Grid: Peptide Areas");
+            WaitForCondition(() => documentGrid.IsComplete);
+            PauseForScreenShot(documentGrid);
             RunLongDlg<ViewEditor>(documentGrid.DataboundGridControl.NavBar.CustomizeView, viewEditor =>
             {
                 PauseForScreenShot(viewEditor);
@@ -270,6 +316,7 @@ namespace pwiz.SkylineTestTutorial
                     pivotWidget.SetPivotReplicate(true);
                 });
             }, viewEditor => viewEditor.OkDialog());
+            WaitForCondition(() => documentGrid.IsComplete);
             RunUI(() =>
             {
                 documentGrid.FloatingPane.FloatingWindow.Width = 1500;
@@ -300,6 +347,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(()=>viewEditor.ChooseColumnsTab.AddSelectedColumn());
                 PauseForScreenShot(viewEditor);
             }, viewEditor=>viewEditor.OkDialog());
+            WaitForCondition(() => documentGrid.IsComplete);
             RunUI(()=>documentGrid.Activate());
             PauseForScreenShot(documentGrid);
             RunDlg<ChooseFormatDlg>(
@@ -310,7 +358,119 @@ namespace pwiz.SkylineTestTutorial
                     chooseFormatDlg.DialogResult = DialogResult.OK;
                 });
             PauseForScreenShot(documentGrid);
-            PauseTest();
+
+            RunUI(() =>
+            {
+                var columnCaption = TextUtil.SpaceSeparate("D_102_REP2", ColumnCaptions.NormalizedArea);
+                var column = documentGrid.DataGridView.Columns.Cast<DataGridViewColumn>()
+                    .FirstOrDefault(col => col.HeaderText == columnCaption);
+                Assert.IsNotNull(column, "Unable to find column {0}", columnCaption);
+                documentGrid.DataGridView.CurrentCell = documentGrid.DataGridView.Rows[9].Cells[column.Index];
+            });
+            PauseForScreenShot(documentGrid, "Hover over the cell so that the tooltip is displayed");
+            RunUI(()=>
+            {
+                documentGrid.DataGridView.CurrentCell = documentGrid.DataGridView.Rows[0].Cells[0];
+                documentGrid.DataGridView.ClickCurrentCell();
+                documentGrid.DataboundGridControl.ReplicatePivotDataGridView.CurrentCell =
+                    documentGrid.DataboundGridControl.ReplicatePivotDataGridView.Rows[0].Cells[2];
+                documentGrid.DataboundGridControl.ReplicatePivotDataGridView.ClickCurrentCell();
+            });
+            PauseForScreenShot(SkylineWindow);
+            RunLongDlg<ViewEditor>(documentGrid.DataboundGridControl.NavBar.CustomizeView, viewEditor =>
+            {
+                RunUI(() =>
+                {
+                    viewEditor.ChooseColumnsTab.ActivateColumn(6);
+                    viewEditor.ActiveAvailableFieldsTree.SelectedNode.Expand();
+                    foreach (TreeNode node in viewEditor.ActiveAvailableFieldsTree.SelectedNode.Nodes)
+                    {
+                        viewEditor.ActiveAvailableFieldsTree.SelectedNode = node;
+                        viewEditor.ChooseColumnsTab.AddSelectedColumn();
+                    }
+                });
+            }, viewEditor => viewEditor.OkDialog());
+            WaitForCondition(() => documentGrid.IsComplete);
+            RunUI(() => documentGrid.Activate());
+            PauseForScreenShot(documentGrid);
+            RunDlg<ViewEditor>(documentGrid.DataboundGridControl.NavBar.CustomizeView, viewEditor =>
+            {
+                var pivotWidget = viewEditor.ViewEditorWidgets.OfType<PivotReplicateAndIsotopeLabelWidget>()
+                    .FirstOrDefault();
+                Assert.IsNotNull(pivotWidget);
+                pivotWidget.SetPivotReplicate(false);
+                viewEditor.OkDialog();
+            });
+            WaitForCondition(() => documentGrid.IsComplete);
+            RunDlg<PivotEditor>(()=>documentGrid.DataboundGridControl.NavBar.ShowPivotDialog(true), pivotEditor =>
+            {
+                SelectPivotEditorColumns(pivotEditor, nameof(ColumnCaptions.NormalizedAreaRaw),
+                    nameof(ColumnCaptions.NormalizedAreaStrict));
+                Assert.AreEqual(2, pivotEditor.AvailableColumnList.SelectedIndices.Count);
+                pivotEditor.SelectAggregateOperation(AggregateOperation.Mean);
+                pivotEditor.AddValue();
+                pivotEditor.OkDialog();
+            });
+            PauseForScreenShot(documentGrid);
+            RunUI(() =>
+            {
+                documentGrid.NavBar.GroupButton.DropDown.Closing += DenyMenuClosing;
+                documentGrid.NavBar.GroupButton.ShowDropDown();
+                var transformMenuItem = documentGrid.NavBar.GroupButton.DropDown.Items
+                    .OfType<ToolStripMenuItem>().FirstOrDefault(item =>
+                        item.Text == Common.Properties.Resources.NavBar_UpdateGroupTotalDropdown_Transforms);
+                Assert.IsNotNull(transformMenuItem);
+                transformMenuItem.DropDown.Closing += DenyMenuClosing;
+            });
+            PauseForScreenShot(documentGrid);
+
+            RunUI(() => {
+                var transformMenuItem = documentGrid.NavBar.GroupButton.DropDown.Items
+                    .OfType<ToolStripMenuItem>().FirstOrDefault(item =>
+                        item.Text == Common.Properties.Resources.NavBar_UpdateGroupTotalDropdown_Transforms);
+                Assert.IsNotNull(transformMenuItem);
+                transformMenuItem.DropDown.Items[transformMenuItem.DropDown.Items.Count - 1].PerformClick();
+                documentGrid.NavBar.GroupButton.DropDown.Closing -= DenyMenuClosing;
+            });
+            PauseForScreenShot(documentGrid);
+            RunLongDlg<ViewEditor>(documentGrid.NavBar.CustomizeView, viewEditor =>
+            {
+                var ppSubjectID = PropertyPath.Root.Property(nameof(SkylineDocument.Replicates)).LookupAllItems()
+                    .Property(AnnotationDef.GetColumnName("SubjectID"));
+                RunUI(()=>
+                {
+                    viewEditor.ChooseColumnsTab.AvailableFieldsTree.SelectColumn(ppSubjectID);
+                    viewEditor.ChooseColumnsTab.AddSelectedColumn();
+                });
+                PauseForScreenShot(viewEditor);
+            }, viewEditor=>viewEditor.OkDialog());
+            PauseForScreenShot(documentGrid);
+            RunLongDlg<PivotEditor>(()=>documentGrid.NavBar.ShowPivotDialog(true), pivotEditor =>
+            {
+                PauseForScreenShot(pivotEditor);
+                RunUI(()=>
+                {
+                    SelectPivotEditorColumns(pivotEditor, nameof(ColumnCaptions.Peptide));
+                    pivotEditor.AddRowHeader();
+                    SelectPivotEditorColumns(pivotEditor, "SubjectID");
+                    pivotEditor.AddColumnHeader();
+                    SelectPivotEditorColumns(pivotEditor, nameof(ColumnCaptions.NormalizedAreaRaw));
+                    pivotEditor.SelectAggregateOperation(AggregateOperation.Cv);
+                    pivotEditor.AddValue();
+                });
+                PauseForScreenShot(pivotEditor);
+            }, pivotEditor=>pivotEditor.OkDialog());
+            WaitForCondition(() => documentGrid.IsComplete);
+            PauseForScreenShot(documentGrid);
+            RunUI(() =>
+            {
+                var captionDrizzleNormalizedArea =
+                    TextUtil.SpaceSeparate("Drizzle", AggregateOperation.Cv.QualifyColumnCaption(new ColumnCaption(ColumnCaptions.NormalizedAreaRaw)).GetCaption(SkylineDataSchema.GetLocalizedSchemaLocalizer()));
+                var colDrizzleNormalizedArea = documentGrid.DataGridView.Columns.OfType<DataGridViewColumn>()
+                    .FirstOrDefault(col => col.HeaderText == captionDrizzleNormalizedArea);
+                Assert.IsNotNull(colDrizzleNormalizedArea, "Unable to find column named {0}", captionDrizzleNormalizedArea);
+
+            });
         }
 
         public Bitmap ClipControl(Control control, Bitmap bmp)
@@ -324,6 +484,17 @@ namespace pwiz.SkylineTestTutorial
                         controlScreenRect.Top - parentWindowRect.Top, controlScreenRect.Width,
                         controlScreenRect.Height));
             });
+        }
+
+        private void SelectPivotEditorColumns(PivotEditor pivotEditor, params string[] invariantCaptionNames)
+        {
+            for (int i = 0; i < pivotEditor.AvailableProperties.Count; i++)
+            {
+                var invariantCaption = pivotEditor.AvailableProperties[i].ColumnCaption
+                    .GetCaption(DataSchemaLocalizer.INVARIANT);
+                bool selected = invariantCaptionNames.Contains(invariantCaption);
+                pivotEditor.AvailableColumnList.Items[i].Selected = selected;
+            }
         }
     }
 }

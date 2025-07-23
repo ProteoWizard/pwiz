@@ -299,12 +299,12 @@
         with the 3 digits that follow the first underscore.
     </p>
     <p>
-        To accomplish this, the pattern that we are going to use is <b>(.)_(…)</b> The parentheses denote regular expression groups, which
+        To accomplish this, the pattern that we are going to use is <b>(.)_(...)</b> The parentheses denote regular expression groups, which
         are parts of the matched expression which can be referred back to in the Replacement text with “$1” and “$2”. The period character (dot) will
         match any character, and the underscore character will only match an underscore
     </p>
     <ul>
-        <li>In the <b>Pattern</b> textbox, enter <b>(.)_(…)</b></li>
+        <li>In the <b>Pattern</b> textbox, enter <b>(.)_(...)</b></li>
         <li>In the <b>Replacement</b> textbox, enter <b>$1$2</b></li>
         <li>In the <b>Target</b> dropdown, choose <b>SubjectID</b>.</li>
     </ul>
@@ -434,20 +434,7 @@
     <ul>
         <li>Click the <b>OK</b> button on the <b>Define Annotation</b> dialog</li>
         <li>Click the <b>OK</b> button on the <b>Define Annotations</b> dialog</li>
-    </ul>
-    <p>
-        Currently there is a bug in Skyline-daily that prevents lookup annotations from working with Result File Rules. The following two steps will
-        not be necessary in the future
-    </p>
-    <ul>
-        <li>Select the <b>Result Files</b> tab in the <b>Document Settings</b> dialog</li>
-        <li>Uncheck the checkbox next to <b>Cohort and SubjectID</b></li>
-    </ul>
-    <p>
-        After that has been done you can continue with:
-    </p>
-    <ul>
-        <li>Click the OK button in the Document Settings dialog</li>
+        <li>Click the <b>OK</b> button in the <b>Document Settings</b> dialog</li>
     </ul>
     <p>
         Notice that in the Document Grid, the values displayed in the “SubjectID” column are now the names of rats from the Samples list. For each row
@@ -726,7 +713,7 @@
     </p>
     <ul>
         <li>In the <b>Reports</b> dropdown at the top of the Document Grid choose <b>Edit Report</b></li>
-        <li>Click the “+” button next to “Replicates” at the bottom to expand it and then click the checkbox next to SampleID</li>
+        <li>Click the “+” button next to “Replicates” at the bottom to expand it and then click the checkbox next to SubjectID</li>
     </ul>
     <p>
         <img src="s-50.png" />
@@ -735,7 +722,7 @@
         <li>Click the <b>OK</b> button in the Customize Report dialog</li>
     </ul>
     <p>
-        This adds the SampleID column to the report
+        This adds the SubjectID column to the report
     </p>
     <p>
         <img src="s-51.png" />
@@ -748,7 +735,7 @@
     </p>
     <ul>
         <li>Click on the <b>Peptide</b> item in the list box on the left and then press the <b>Add Row Header</b> button</li>
-        <li>Click on the <b>SampleID</b> item in the list box on the left and press the <b>Add Column Header</b> button</li>
+        <li>Click on the <b>SubjectID</b> item in the list box on the left and press the <b>Add Column Header</b> button</li>
         <li>Click on the <b>Normalized Area Raw</b> button on the left</li>
         <li>Choose <b>Coefficient of Variation</b> in the dropdown below the <b>Add Value</b> button</li>
         <li>Click on the <b>Add Value</b> button</li>
