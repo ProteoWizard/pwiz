@@ -28,7 +28,6 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
-using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
@@ -58,61 +57,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         public override string ToString() { return TextUtil.SpaceSeparate(Dash + Name, Value); }
     }
 
-    public class ModificationType : IEquatable<ModificationType>
-    {
-        public ModificationType(int index, string name, string comment)
-        {
-            Index = index;
-            Accession = index + @":" + name;
-            Name = name;
-            Comment = comment;
-        }
-        public int Index { get; private set; }
-        public string Accession { get; private set; }
-        public string Name { get; private set; }
-        public string Comment { get; private set; }
-
-        public string AlphaNameWithAminoAcid(string unmodifiedSequence, int index)
-        {
-            string modification = Name.Replace(@"(", "").Replace(@")", "").Replace(@" ", @"@").Replace(@"Acetyl@N-term", @"Acetyl@Protein_N-term");
-            char delimiter = '@';
-            string[] name = modification.Split(delimiter);
-            string alphaName = name[0] + @"@" + unmodifiedSequence[index];
-            if (index == 0 && modification.EndsWith(@"term"))
-            {
-                alphaName = modification;
-            }
-            return alphaName;
-        }
-        public override string ToString() { return string.Format(ModelsResources.BuildPrecursorTable_ModificationType, Accession, Name, Comment); }
-
-        public bool Equals(ModificationType other)
-        {
-            if (other is null) return false;
-            if (ReferenceEquals(this, other)) return true;
-            return Index == other.Index && Accession == other.Accession && Name == other.Name && Comment == other.Comment;
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (obj is null) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != GetType()) return false;
-            return Equals((ModificationType)obj);
-        }
-
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                var hashCode = Index;
-                hashCode = (hashCode * 397) ^ (Accession != null ? Accession.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (Name != null ? Name.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (Comment != null ? Comment.GetHashCode() : 0);
-                return hashCode;
-            }
-        }
-    }
+ 
     
     public class AlphapeptdeepLibraryBuilder : AbstractDeepLibraryBuilder, IiRTCapableLibraryBuilder
     {
@@ -171,39 +116,40 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         }
 
         protected override string ToolName => ALPHAPEPTDEEP;
+
         protected override LibraryBuilderModificationSupport libraryBuilderModificationSupport { get; }
 
-        internal static Dictionary<ModificationType, PredictionSupport> MODEL_SUPPORTED_UNIMODS =
-            new Dictionary<ModificationType, PredictionSupport>
+        internal static List<ModificationType> MODEL_SUPPORTED_UNIMODS =
+            new List<ModificationType>
 
             {
                 {
                     new ModificationType(
                         UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 4).ID.Value ,
                         UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 4).Name,
-                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 4).Formula),
-                    PredictionSupport.ALL
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 4).Formula,
+                        PredictionSupport.ALL)
                 },
                 {
                     new ModificationType(
                         UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 21).ID.Value ,
                         UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 21).Name,
-                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 21).Formula),
-                    PredictionSupport.FRAGMENTATION
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 21).Formula,
+                    PredictionSupport.FRAGMENTATION)
                 },
                 {
                     new ModificationType(
                         UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 35).ID.Value ,
                         UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 35).Name,
-                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 35).Formula),
-                    PredictionSupport.ALL
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 35).Formula,
+                    PredictionSupport.ALL)
                 },
                 {
                     new ModificationType(
                         UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 121).ID.Value ,
                         UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 121).Name,
-                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 121).Formula),
-                    PredictionSupport.FRAGMENTATION
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 121).Formula,
+                    PredictionSupport.FRAGMENTATION)
                 }
 
             };

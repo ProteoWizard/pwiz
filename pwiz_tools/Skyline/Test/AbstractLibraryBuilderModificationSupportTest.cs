@@ -18,6 +18,7 @@
  */
 
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
 using pwiz.SkylineTestUtil;
@@ -28,23 +29,23 @@ namespace pwiz.SkylineTest
     public class AbstractLibraryBuilderModificationSupportTests : AbstractUnitTest
     {
 
-        public LibraryBuilderModificationSupport Support => new LibraryBuilderModificationSupport(MODEL_SUPPORTED_MODIFICATION_INDICES);
+        public LibraryBuilderModificationSupport Support => new LibraryBuilderModificationSupport(MODEL_SUPPORTED_MODS);
 
-        private static Dictionary<ModificationType, PredictionSupport> MODEL_SUPPORTED_MODIFICATION_INDICES =
-            new Dictionary<ModificationType, PredictionSupport>
+        private static List<ModificationType> MODEL_SUPPORTED_MODS =
+            new List<ModificationType>
 
             {
                 {
-                    new ModificationType(1,"TestMod1", "TestOnly"), PredictionSupport.ALL
+                    new ModificationType(1,"TestMod1", "TestOnly", PredictionSupport.ALL)
                 },
                 {
-                    new ModificationType(2, "TestMod2", "TestOnly"), PredictionSupport.FRAGMENTATION
+                    new ModificationType(2, "TestMod2", "TestOnly", PredictionSupport.FRAGMENTATION)
                 },
                 {
-                    new ModificationType(3, "TestMod3", "TestOnly"), PredictionSupport.RETENTION_TIME
+                    new ModificationType(3, "TestMod3", "TestOnly", PredictionSupport.RETENTION_TIME)
                 },
                 {
-                    new ModificationType(4, "TestMod4", "TestOnly"), PredictionSupport.CCS
+                    new ModificationType(4, "TestMod4", "TestOnly", PredictionSupport.CCS)
                 }
 
             };
@@ -56,23 +57,38 @@ namespace pwiz.SkylineTest
             Assert.IsNotNull(Support._predictionSupport);
             Assert.AreEqual(Support._predictionSupport.Count, 4); // TestMod1, TestMod2, TestMod3, TestMod4
 
-            Assert.IsTrue(Support._predictionSupport["1"].Fragmentation);
-            Assert.IsTrue(Support._predictionSupport["1"].RetentionTime);
-            Assert.IsTrue(Support._predictionSupport["1"].Ccs);
+            var nullId = 0;
+            var supportNull = Support._predictionSupport.FirstOrDefault(source => source.Id == nullId);
 
-            Assert.IsTrue(Support._predictionSupport["2"].Fragmentation);
-            Assert.IsFalse(Support._predictionSupport["2"].RetentionTime);
-            Assert.IsFalse(Support._predictionSupport["2"].Ccs);
+            Assert.IsNull(supportNull);
 
-            Assert.IsFalse(Support._predictionSupport["3"].Fragmentation);
-            Assert.IsTrue(Support._predictionSupport["3"].RetentionTime);
-            Assert.IsFalse(Support._predictionSupport["3"].Ccs);
+            var support0 = Support._predictionSupport.FirstOrDefault(source => source.Id == MODEL_SUPPORTED_MODS[0].Id);
+            var support1 = Support._predictionSupport.FirstOrDefault(source => source.Id == MODEL_SUPPORTED_MODS[1].Id);
+            var support2 = Support._predictionSupport.FirstOrDefault(source => source.Id == MODEL_SUPPORTED_MODS[2].Id);
+            var support3 = Support._predictionSupport.FirstOrDefault(source => source.Id == MODEL_SUPPORTED_MODS[3].Id);
 
-            Assert.IsFalse(Support._predictionSupport["4"].Fragmentation);
-            Assert.IsFalse(Support._predictionSupport["4"].RetentionTime);
-            Assert.IsTrue(Support._predictionSupport["4"].Ccs);
+            Assert.IsNotNull(support0);
+            Assert.IsNotNull(support1);
+            Assert.IsNotNull(support2);
+            Assert.IsNotNull(support3);
+            
+            Assert.IsTrue(support0!.SupportedModels.Fragmentation);
+            Assert.IsTrue(support0!.SupportedModels.RetentionTime);
+            Assert.IsTrue(support0!.SupportedModels.Ccs);
 
-            var support = new LibraryBuilderModificationSupport(new Dictionary<ModificationType, PredictionSupport>());
+            Assert.IsTrue(support1!.SupportedModels.Fragmentation);
+            Assert.IsFalse(support1!.SupportedModels.RetentionTime);
+            Assert.IsFalse(support1!.SupportedModels.Ccs);
+
+            Assert.IsFalse(support2!.SupportedModels.Fragmentation);
+            Assert.IsTrue(support2!.SupportedModels.RetentionTime);
+            Assert.IsFalse(support2!.SupportedModels.Ccs);
+
+            Assert.IsFalse(support3!.SupportedModels.Fragmentation);
+            Assert.IsFalse(support3!.SupportedModels.RetentionTime);
+            Assert.IsTrue(support3!.SupportedModels.Ccs);
+
+            var support = new LibraryBuilderModificationSupport(new List<ModificationType>());
 
             Assert.IsNotNull(support._predictionSupport);
             Assert.AreEqual(support._predictionSupport.Count, 0);
@@ -81,27 +97,37 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void SupportedModsTest()
         {
-            // Act & Assert
-            Assert.IsTrue(Support.IsMs2SupportedMod("1:TestMod1"));
-            Assert.IsTrue(Support.IsMs2SupportedMod("2:TestMod2"));
-            Assert.IsFalse(Support.IsMs2SupportedMod("3:TestMod3"));
-            Assert.IsFalse(Support.IsMs2SupportedMod("999:UNKNOWN"));
+            Assert.IsFalse(Support.IsMs2SupportedMod(null));
+            Assert.IsFalse(Support.IsRtSupportedMod(null));
+            Assert.IsFalse(Support.IsCcsSupportedMod(null));
+            Assert.IsFalse(Support.AreAllModelsSupported(null));
 
-            Assert.IsTrue(Support.IsRtSupportedMod("1:TestMod1"));
-            Assert.IsFalse(Support.IsRtSupportedMod("2:TestMod2"));
-            Assert.IsTrue(Support.IsRtSupportedMod("3:TestMod3"));
-            Assert.IsFalse(Support.IsRtSupportedMod("999:UNKNOWN"));
+            var nullId = 0;
+            Assert.IsFalse(Support.IsMs2SupportedMod(nullId));
+            Assert.IsFalse(Support.IsRtSupportedMod(nullId));
+            Assert.IsFalse(Support.IsCcsSupportedMod(nullId));
+            Assert.IsFalse(Support.AreAllModelsSupported(nullId));
+
+            Assert.IsTrue(Support.IsMs2SupportedMod(1));
+            Assert.IsTrue(Support.IsMs2SupportedMod(2));
+            Assert.IsFalse(Support.IsMs2SupportedMod(3));
+            Assert.IsFalse(Support.IsMs2SupportedMod(999));
+
+            Assert.IsTrue(Support.IsRtSupportedMod(1));
+            Assert.IsFalse(Support.IsRtSupportedMod(2));
+            Assert.IsTrue(Support.IsRtSupportedMod(3));
+            Assert.IsFalse(Support.IsRtSupportedMod(999));
   
-            Assert.IsTrue(Support.IsCcsSupportedMod("1:TestMod1"));
-            Assert.IsFalse(Support.IsCcsSupportedMod("2:TestMod2"));
-            Assert.IsTrue(Support.IsCcsSupportedMod("4:TestMod4"));
-            Assert.IsFalse(Support.IsCcsSupportedMod("999:UNKNOWN"));
+            Assert.IsTrue(Support.IsCcsSupportedMod(1));
+            Assert.IsFalse(Support.IsCcsSupportedMod(2));
+            Assert.IsTrue(Support.IsCcsSupportedMod(4));
+            Assert.IsFalse(Support.IsCcsSupportedMod(999));
    
-            Assert.IsTrue(Support.AreAllModelsSupported("1:TestMod1")); // Supports all
-            Assert.IsFalse(Support.AreAllModelsSupported("2:TestMod2")); // Only MS2
-            Assert.IsFalse(Support.AreAllModelsSupported("3:TestMod3")); // Only RT
-            Assert.IsFalse(Support.AreAllModelsSupported("4:TestMod4")); // Only CCS
-            Assert.IsFalse(Support.AreAllModelsSupported("999:UNKNOWN"));
+            Assert.IsTrue(Support.AreAllModelsSupported(1)); // Supports all
+            Assert.IsFalse(Support.AreAllModelsSupported(2)); // Only MS2
+            Assert.IsFalse(Support.AreAllModelsSupported(3)); // Only RT
+            Assert.IsFalse(Support.AreAllModelsSupported(4)); // Only CCS
+            Assert.IsFalse(Support.AreAllModelsSupported(999));
   
             Assert.IsTrue(Support.PeptideHasOnlyMs2SupportedMod("PEPTIDE[TestMod1:1]R[TestMod2:2]")); // Both MS2 supported
             Assert.IsFalse(Support.PeptideHasOnlyMs2SupportedMod("PEPTIDE[TestMod3:3]")); // TestMod3 not MS2 supported
