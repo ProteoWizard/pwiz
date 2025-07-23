@@ -135,12 +135,7 @@ namespace pwiz.Skyline.ToolsUI
                 textArdiaAlias_Username.Text = remoteAccount.Username;
                 textArdiaServerURL.Text = remoteAccount.ServerUrl;
 
-                if (!ardiaAccount.HasAuthenticatedHttpClientFactory() && ardiaAccount.HasToken())
-                {
-                    ardiaAccount.GetAuthenticatedHttpClient();
-                }
-
-                if (ardiaAccount.HasAuthenticatedHttpClientFactory())
+                if (TestLoggedInArdiaAccount(ardiaAccount))
                 {
                     _ardiaAccount_CurrentlyLoggedIn = ardiaAccount;
                 }
@@ -197,7 +192,6 @@ namespace pwiz.Skyline.ToolsUI
                 if (_ardiaAccount_CurrentlyLoggedIn != null
                     && _ardiaAccount_CurrentlyLoggedIn.ServerUrl.Equals(ardiaAccount.ServerUrl))
                 {
-                    ardiaAccount.SetAuthenticatedHttpClientFactory(_ardiaAccount_CurrentlyLoggedIn);
                     ardiaAccount = ardiaAccount.ChangeToken(_ardiaAccount_CurrentlyLoggedIn.Token);
                 }
 
@@ -225,10 +219,6 @@ namespace pwiz.Skyline.ToolsUI
         private async void logoutArdia_UsingSystemDefaultBrowser()
         {
             var logoutUrl = await GetBrowserLogoutUrl();
-
-            // Remove AuthenticatedHttpClientFactory from _ardiaAccount_PassedIntoEdit since is now logged out.
-            //   Getting removed regardless of what the user does in the child window
-            _ardiaAccount_CurrentlyLoggedIn.ResetAuthenticatedHttpClientFactory();
 
             _ardiaAccount_CurrentlyLoggedIn = null;
 
@@ -464,40 +454,46 @@ namespace pwiz.Skyline.ToolsUI
 
         private bool TestArdiaAccount(ArdiaAccount ardiaAccount)
         {
-            using (var ardiaSession = new ArdiaSession(ardiaAccount))
+            if (_ardiaAccount_CurrentlyLoggedIn == null)
             {
                 try
                 {
-                    var authenticatedHttpClient = ardiaAccount.GetAuthenticatedHttpClient();
-                    if (authenticatedHttpClient == null)
-                    {
-                        return false;
-                    }
+                    RemoteSession.RemoteAccountUserInteraction.UserLogin(ardiaAccount);
                 }
-                catch (OperationCanceledException)
+                catch (Exception)
                 {
-                    MessageDlg.Show(this, ToolsUIResources.EditRemoteAccountDlg_TestArdiaAccount_Login_was_canceled);
+                    MessageDlg.Show(this, ToolsUIResources.EditRemoteAccountDlg_TestSettings_Account_credentials_not_valid);
                     return false;
                 }
-                catch (Exception e)
-                {
-                    MessageDlg.ShowWithException(this, ToolsUIResources.EditRemoteAccountDlg_TestUnifiAccount_An_error_occurred_while_trying_to_authenticate_, e);
-                    textArdiaServerURL.Focus();
-                    return false;
-                }
-
-                var testResults = TestAccount(ardiaSession);
-
-                if (testResults && ardiaAccount.HasAuthenticatedHttpClientFactory())
-                {
-                    _ardiaAccount_CurrentlyLoggedIn = ardiaAccount;
-                }
-
-                process_ardiaAccount_CurrentlyLoggedIn_EnableDisableControls();
-
-
-                return testResults;
             }
+
+            var testResult = TestLoggedInArdiaAccount(ardiaAccount);
+
+            _ardiaAccount_CurrentlyLoggedIn = testResult ? ardiaAccount : null;
+            process_ardiaAccount_CurrentlyLoggedIn_EnableDisableControls();
+            var message = testResult ? ToolsUIResources.EditRemoteAccountDlg_TestSettings_Settings_are_correct : ToolsUIResources.EditRemoteAccountDlg_TestSettings_Account_credentials_not_valid;
+            MessageDlg.Show(this, message);
+            return testResult;
+        }
+
+        private bool TestLoggedInArdiaAccount(ArdiaAccount ardiaAccount)
+        {
+            using var longWaitDlg = new LongWaitDlg();
+            longWaitDlg.Text = ToolsUIResources.EditRemoteAccountDlg_TestAccount_Testing_remote_account_connection;
+            var authenticationResult = ArdiaResult.Default;
+            try
+            {
+                longWaitDlg.PerformWork(this, 1000, (ILongWaitBroker broker) =>
+                {
+                    authenticationResult = ardiaAccount.CheckAuthentication();
+                });
+            }
+            catch (OperationCanceledException)
+            {
+                return false;
+            }
+
+            return !longWaitDlg.IsCanceled && authenticationResult.IsSuccess;
         }
 
         private bool TestAccount(RemoteSession session)

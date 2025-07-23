@@ -16,14 +16,14 @@
  * limitations under the License.
  */
 
+using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using System;
 using System.Globalization;
 using System.Net.Http;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
-using pwiz.Common.Collections;
-using pwiz.Common.SystemUtil;
 
 // BUG: now that access tokens are stored across sessions Skyline sessions, a new bug is exposed where EditRemoteAccountDlg shows
 //      the Ardia account as "not logged in" if it has not already talked with the remote API during the Skyline session.
@@ -90,16 +90,6 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
 
         private Func<HttpClient> _authenticatedHttpClientFactory;
 
-        public void SetAuthenticatedHttpClientFactory(ArdiaAccount ardiaAccount)
-        {
-            _authenticatedHttpClientFactory = ardiaAccount._authenticatedHttpClientFactory;
-        }
-
-        public bool HasAuthenticatedHttpClientFactory()
-        {
-            return _authenticatedHttpClientFactory != null;
-        }
-
         public HttpClient GetAuthenticatedHttpClient()
         {
             if (_authenticatedHttpClientFactory != null)
@@ -131,6 +121,19 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             return _authenticatedHttpClientFactory();
         }
 
+        public ArdiaResult CheckAuthentication()
+        {
+            try
+            {
+                var client = ArdiaClient.Create(this);
+                return client.CheckSession();
+            }
+            catch (Exception e)
+            {
+                return ArdiaResult.Failure(ArdiaResources.Error_InvalidToken, null, e);
+            }
+        }
+
         /// <summary>
         /// Checks whether an HttpClient configured using this account can successfully call the Ardia API. This
         /// makes a real request requiring authentication.
@@ -142,12 +145,6 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         {
             var response = httpClient.GetAsync(GetFolderContentsUrl()).Result;
             response.EnsureSuccessStatusCode();
-        }
-
-        // testing only
-        public void ResetAuthenticatedHttpClientFactory()
-        {
-            _authenticatedHttpClientFactory = null;
         }
 
         public override RemoteSession CreateSession()
