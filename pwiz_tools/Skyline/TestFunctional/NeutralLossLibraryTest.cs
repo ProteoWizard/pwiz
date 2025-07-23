@@ -349,14 +349,13 @@ namespace pwiz.SkylineTestFunctional
             //find all annotations with losses
             var lossLabelMatch = new Regex(precursors ? $"({IonType.precursor.GetLocalizedString()}) -([^ +]+).*" : @"(\D)(\d+) -([^ +]+).*");
             var ionLabelsWithLoss = SkylineWindow.GraphSpectrum.IonLabels
-                .Select(label => lossLabelMatch.Match(label)).ToList().FindAll(m => m.Success).ToList();
+                .Select(label => lossLabelMatch.Match(label)).ToList().FindAll(m => m.Success);
             Assert.AreEqual(lossLabelCount, ionLabelsWithLoss.Count);
 
             //get matched peaks with losses from the currently displayed spectrum
             var showLossesProperty = SkylineWindow.GraphSpectrumSettings.ShowLosses;
             var ionsWithLosses = SkylineWindow.GraphSpectrum.DisplayedSpectrum.PeaksMatched
-                .SelectMany(p => p.MatchedIons).ToList().FindAll(ion => ion.Losses != null && ion.HasVisibleLoss(showLossesProperty))
-                .ToList();
+                .SelectMany(p => p.MatchedIons).ToList().FindAll(ion => ion.Losses != null && ion.HasVisibleLoss(showLossesProperty));
 
             Assert.AreEqual(lossSpectrumPeaksCount, ionsWithLosses.Count);
 

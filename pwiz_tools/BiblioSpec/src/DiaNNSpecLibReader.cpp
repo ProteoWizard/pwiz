@@ -829,6 +829,8 @@ class DiaNNSpecLibReader::Impl
                 t = strArray->Value(rowIndex_);
             }
 
+            void read_row_helper(std::size_t i) const {}
+
             template<class T, class ...ColType>
             void read_row_helper(std::size_t i, T& t, ColType&...cols) const
             {
@@ -1028,6 +1030,9 @@ bool DiaNNSpecLibReader::parseFile()
         }
     }
 
+    string diannStatsFilepath;
+    map<string, string> diannFilenameByRun;
+
     /*if (diannReportFilepath == impl_->specLibFile_)
         throw BlibException(true, "unable to determine DIA-NN report filename for '%s': speclib must end in -lib.tsv.speclib and report must end in -report.tsv", impl_->specLibFile_);
     if (!bfs::exists(diannReportFilepath))
@@ -1041,7 +1046,7 @@ bool DiaNNSpecLibReader::parseFile()
         vector<bfs::path> siblingFiles;
         siblingFiles.insert(siblingFiles.end(), siblingParquetFiles.begin(), siblingParquetFiles.end());
         siblingFiles.insert(siblingFiles.end(), siblingTsvFiles.begin(), siblingTsvFiles.end());
-        map<size_t, vector<bfs::path>, std::greater<int>> tsvFilepathBySharedPrefixLength;
+        map<size_t, vector<bfs::path>, std::greater<size_t>> tsvFilepathBySharedPrefixLength;
         auto speclibFilename = bfs::path(impl_->specLibFile_).filename().string();
         for (const auto& tsvFilepath : siblingFiles)
         {
@@ -1049,6 +1054,11 @@ bool DiaNNSpecLibReader::parseFile()
                 continue;
             if (bal::contains(tsvFilepath.filename().string(), "first-pass") && !bal::contains(speclibFilename, "first-pass"))
                 continue;
+            if (bal::ends_with(tsvFilepath.string(), ".stats.tsv"))
+            {
+                diannStatsFilepath = tsvFilepath.string();
+                continue;
+            }
             size_t sharedPrefixLength = 0, i;
             auto tsvFilename = tsvFilepath.filename().string();
             for (i = 0; i < tsvFilename.length() && i < speclibFilename.length(); ++i)
@@ -1079,6 +1089,47 @@ bool DiaNNSpecLibReader::parseFile()
         if (diannReportFilepath.empty())
             throw BlibException(true, "unable to determine DIA-NN report filename for '%s': the Parquet or TSV report is required to read speclib files and must be in the same directory as the speclib and share some leading characters (e.g. somedata-tsv.speclib and somedata-report.parquet)",
                 impl_->specLibFile_);
+    }
+    else
+    {
+        // iterate all TSV files in the same directory as the speclib, looking for stats.tsv
+        vector<bfs::path> siblingTsvFiles;
+        pwiz::util::expand_pathmask(bfs::path(impl_->specLibFile_).parent_path() / "*.stats.tsv", siblingTsvFiles);
+        for (const auto& tsvFilepath : siblingTsvFiles)
+        {
+            if (!bfs::is_regular_file(tsvFilepath))
+                continue;
+            if (bal::contains(tsvFilepath.filename().string(), "first-pass") && !bal::contains(diannReportFilepath, "first-pass"))
+                continue;
+            if (bal::ends_with(tsvFilepath.string(), ".stats.tsv"))
+            {
+                diannStatsFilepath = tsvFilepath.string();
+                break;
+            }
+        }
+    }
+
+    if (!diannStatsFilepath.empty())
+    {
+        try
+        {
+            Verbosity::debug("Reading filenames from stats.tsv: %s", diannStatsFilepath.c_str());
+            Impl::Reader<3> reader;
+            reader.open_file(diannStatsFilepath);
+            reader.read_header(io::ignore_extra_column, "File.Name", "Precursors.Identified", "Proteins.Identified");
+            string fileName, id1, id2;
+            while (reader.read_row(fileName, id1, id2))
+            {
+                string runName = bfs::path(fileName).filename().replace_extension("").string();
+                fileName = bfs::path(fileName).filename().string();
+                diannFilenameByRun[runName] = fileName;
+                Verbosity::debug("%s -> %s", runName.c_str(), fileName.c_str());
+            }
+        }
+        catch (std::exception& e)
+        {
+            Verbosity::warn("error reading filepaths from stats report \"%s\": %s", diannStatsFilepath.c_str(), e.what());
+        }
     }
 
     auto& speclib = impl_->specLib;
@@ -1140,8 +1191,13 @@ bool DiaNNSpecLibReader::parseFile()
         auto& retentionTimes = retentionTimesByPrecursorId[precursorIdStr];
         if (rowPassesFilter)
         {
+            string spectrumFilepath = currentRunFilename;
+            auto findItr2 = diannFilenameByRun.find(currentRunFilename);
+            if (findItr2 != diannFilenameByRun.end())
+                spectrumFilepath = findItr2->second;
+
             retentionTimes.emplace_back(redundantPSM);
-            retentionTimes.back().fileId = insertSpectrumFilename(currentRunFilename, true);
+            retentionTimes.back().fileId = insertSpectrumFilename(spectrumFilepath, true, DIA);
             ++redundantPsmCount;
         }
 
