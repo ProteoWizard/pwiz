@@ -516,7 +516,7 @@ namespace pwiz.SkylineTestTutorial
 
             ValidatePeakRanks(1, 176, true);
 
-            if(AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)  
+            if (AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)  
                 TestLibraryMatchPropertySheet();
 
             if (!AsSmallMoleculeMasses)

@@ -231,6 +231,7 @@
   </data>
   <data name="MirrorTotalIC">
     <value>Mirror Total Ion Current</value>
+  </data>
   <data name="KoinaDotpMatch" xml:space="preserve">
     <value>Koina dot product</value>
   </data>
