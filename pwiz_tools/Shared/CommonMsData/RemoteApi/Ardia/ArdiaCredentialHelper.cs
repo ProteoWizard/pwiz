@@ -24,7 +24,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
     {
         private static readonly IDictionary<string, string> CACHE = new Dictionary<string, string>();
 
-        public static string GetToken(ArdiaAccount account)
+        public static EncryptedToken GetToken(ArdiaAccount account)
         {
             Assume.IsNotNull(account);
 
@@ -35,7 +35,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         {
             Assume.IsNotNull(account);
 
-            account.Token = token;
+            account.Token = EncryptedToken.FromString(token);
         }
 
         public static string GetApplicationCode(ArdiaAccount account)

@@ -3550,18 +3550,22 @@ namespace pwiz.Skyline
                     return;
                 }
 
-                var fileName = publishDlg.FileName;
-                var shareType = shareTypeDlg.ShareType;
+                var archiveFileName = publishDlg.FileName;
 
-                // TODO: add an abstraction (UploadFileBundle?) dealing with temp directory, file name, multi-part upload, etc
+                // CONSIDER: move TemporaryDirectory to CommonMsData so it's available to SrmDocumentArchive
                 // TemporaryDirectory automatically cleans up .zip files uploaded to Ardia
-                using var tempDir = new TemporaryDirectory(null, Path.GetFileNameWithoutExtension(fileName));
-                
-                var tempFileName = Path.Combine(tempDir.DirPath, Path.GetFileName(fileName));
+                using var archiveFileDir = new TemporaryDirectory(null, Path.GetFileNameWithoutExtension(archiveFileName));
 
-                if (ShareDocument(tempFileName, shareType, false, publishDlg.MaxPartSize))
+                var srmDocumentArchive = SrmDocumentArchive.Create(archiveFileDir.DirPath, archiveFileName);
+
+                var shareType = shareTypeDlg.ShareType;
+                if (ShareDocument(srmDocumentArchive.ArchiveFilePath, shareType, false, publishDlg.MaxPartSize))
                 {
-                    publishDlg.Upload(this, tempFileName);
+                    // NB: this must be called *after* ShareDocument so the archive has been created and 1 or more
+                    //     parts are available locally
+                    srmDocumentArchive.Init();
+                    
+                    publishDlg.Upload(this, srmDocumentArchive);
                 }
             }
             catch (Exception e)
