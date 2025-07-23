@@ -280,6 +280,7 @@
     <Compile Include="SSRCalc3Test.cs" />
     <Compile Include="StatisticsTest.cs" />
     <Compile Include="StringHelpersTest.cs" />
+    <Compile Include="DiskSpaceTest.cs" />
     <Compile Include="TestSerializeIsolationScheme.cs" />
     <Compile Include="TextUtilTest.cs" />
     <Compile Include="TimeIntervalsTest.cs" />
