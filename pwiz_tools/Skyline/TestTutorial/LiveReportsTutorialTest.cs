@@ -17,11 +17,6 @@
  * limitations under the License.
  */
 
-using System;
-using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
@@ -29,16 +24,29 @@ using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Skyline.Controls.AuditLog;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Controls.Lists;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
-using pwiz.Skyline.Properties;
-using pwiz.SkylineTestUtil;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using pwiz.SkylineTestUtil;
+using System;
+using System.ComponentModel;
+using System.Drawing;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Windows.Forms;
+using static pwiz.Skyline.Controls.GroupComparison.FoldChangeBindingSource;
+using DatabindingResources = pwiz.Skyline.Controls.Databinding.DatabindingResources;
 using Peptide = pwiz.Skyline.Model.Databinding.Entities.Peptide;
 
 namespace pwiz.SkylineTestTutorial
@@ -431,6 +439,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsNotNull(transformMenuItem);
                 transformMenuItem.DropDown.Items[transformMenuItem.DropDown.Items.Count - 1].PerformClick();
                 documentGrid.NavBar.GroupButton.DropDown.Closing -= DenyMenuClosing;
+                documentGrid.NavBar.GroupButton.HideDropDown();
             });
             PauseForScreenShot(documentGrid);
             RunLongDlg<ViewEditor>(documentGrid.NavBar.CustomizeView, viewEditor =>
@@ -462,14 +471,188 @@ namespace pwiz.SkylineTestTutorial
             }, pivotEditor=>pivotEditor.OkDialog());
             WaitForCondition(() => documentGrid.IsComplete);
             PauseForScreenShot(documentGrid);
+            var captionDrizzleNormalizedArea =
+                TextUtil.SpaceSeparate("Drizzle", AggregateOperation.Cv.QualifyColumnCaption(new ColumnCaption(ColumnCaptions.NormalizedAreaRaw)).GetCaption(SkylineDataSchema.GetLocalizedSchemaLocalizer()));
+            SetSortDirection(documentGrid.DataboundGridControl, captionDrizzleNormalizedArea, ListSortDirection.Ascending);
             RunUI(() =>
             {
-                var captionDrizzleNormalizedArea =
-                    TextUtil.SpaceSeparate("Drizzle", AggregateOperation.Cv.QualifyColumnCaption(new ColumnCaption(ColumnCaptions.NormalizedAreaRaw)).GetCaption(SkylineDataSchema.GetLocalizedSchemaLocalizer()));
-                var colDrizzleNormalizedArea = documentGrid.DataGridView.Columns.OfType<DataGridViewColumn>()
+                documentGrid.DataGridView.CurrentCell = documentGrid.DataGridView.Rows[0].Cells[0];
+                documentGrid.DataGridView.ClickCurrentCell();
+                AssertPeptideSelected("SVVDIGLIK");
+            });
+            WaitForGraphs();
+            peakAreaReplicateComparisonGraphSummary = FindGraphSummaryByGraphType<AreaReplicateGraphPane>();
+            PauseForScreenShot(peakAreaReplicateComparisonGraphSummary);
+            SetSortDirection(documentGrid.DataboundGridControl, captionDrizzleNormalizedArea, ListSortDirection.Descending);
+            RunUI(() =>
+            {
+                documentGrid.DataGridView.CurrentCell = documentGrid.DataGridView.Rows[0].Cells[0];
+                documentGrid.DataGridView.ClickCurrentCell();
+                AssertPeptideSelected("AGSWQITMK");
+            });
+            WaitForGraphs();
+            PauseForScreenShot(peakAreaReplicateComparisonGraphSummary);
+            RunLongDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, peptideSettingsUi =>
+            {
+                RunUI(() =>
+                {
+                    peptideSettingsUi.SelectedTab = PeptideSettingsUI.TABS.Quantification;
+                    peptideSettingsUi.QuantNormalizationMethod = NormalizationMethod.GLOBAL_STANDARDS;
+                });
+                PauseForScreenShot(peptideSettingsUi);
+            }, peptideSettingsUi=>peptideSettingsUi.OkDialog());
+            SetSortDirection(documentGrid.DataboundGridControl, captionDrizzleNormalizedArea, ListSortDirection.Ascending);
+            RunUI(() =>
+            {
+                documentGrid.DataGridView.CurrentCell = documentGrid.DataGridView.Rows[0].Cells[0];
+                documentGrid.DataGridView.ClickCurrentCell();
+                AssertPeptideSelected("VVLSGSDATLAYSAFK");
+                var colCvNormalizedArea = documentGrid.DataGridView.Columns.OfType<DataGridViewColumn>()
                     .FirstOrDefault(col => col.HeaderText == captionDrizzleNormalizedArea);
-                Assert.IsNotNull(colDrizzleNormalizedArea, "Unable to find column named {0}", captionDrizzleNormalizedArea);
-
+                Assert.IsNotNull(colCvNormalizedArea);
+                var cv = (double) documentGrid.DataGridView.Rows[0].Cells[colCvNormalizedArea.Index].Value;
+                Assert.AreEqual(0.0, cv, 1e-6);
+            });
+            RunLongDlg<ViewEditor>(documentGrid.NavBar.CustomizeView, viewEditor =>
+            {
+                RunUI(() =>
+                {
+                    int indexStandardType = viewEditor.ViewSpec.Columns
+                        .IndexOf(col => col.PropertyPath.Name == nameof(Peptide.StandardType));
+                    Assert.AreNotEqual(-1, indexStandardType);
+                    viewEditor.ChooseColumnsTab.ActivateColumn(indexStandardType);
+                    viewEditor.TabControl.SelectTab(1);
+                    viewEditor.FilterTab.AddSelectedColumn();
+                    viewEditor.FilterTab.SetFilterOperation(0, FilterOperations.OP_IS_BLANK);
+                });
+                PauseForScreenShot(viewEditor);
+            }, viewEditor=>viewEditor.OkDialog());
+            WaitForCondition(() => documentGrid.IsComplete);
+            const string groupComparisonName = "Peptide Group Comparison";
+            RunLongDlg<EditGroupComparisonDlg>(SkylineWindow.AddGroupComparison, editGroupComparisonDlg =>
+            {
+                RunUI(() =>
+                {
+                    editGroupComparisonDlg.GroupComparisonDef = GroupComparisonDef.EMPTY
+                        .ChangeControlAnnotation("Cohort")
+                        .ChangeControlValue("Healthy")
+                        .ChangeCaseValue("Diseased")
+                        .ChangeIdentityAnnotation("SubjectID")
+                        .ChangeNormalizeOption(NormalizeOption.DEFAULT);
+                    editGroupComparisonDlg.TextBoxName.Text = groupComparisonName;
+                });
+            }, editGroupComparisonDlg => editGroupComparisonDlg.OkDialog());
+            RunUI(() =>
+            {
+                SkylineWindow.ShowGroupComparisonWindow(groupComparisonName);
+            });
+            var groupComparisonGrid = FindOpenForm<FoldChangeGrid>();
+            Assert.IsNotNull(groupComparisonGrid);
+            PauseForScreenShot(groupComparisonGrid);
+            WaitForCondition(() => groupComparisonGrid.IsComplete);
+            RunUI(() =>
+            {
+                groupComparisonGrid.ShowGraph();
+                groupComparisonGrid.FloatingPane.FloatingWindow.Width = 1000;
+            });
+            SetSortDirection(groupComparisonGrid.DataboundGridControl, ColumnCaptions.FoldChangeResult, ListSortDirection.Ascending);
+            PauseForScreenShot(groupComparisonGrid.FloatingPane);
+            RunUI(() =>
+            {
+                groupComparisonGrid.DataboundGridControl.DataGridView.CurrentCell =
+                    groupComparisonGrid.DataboundGridControl.DataGridView.Rows[0].Cells[1];
+                groupComparisonGrid.DataboundGridControl.DataGridView.ClickCurrentCell();
+                AssertPeptideSelected("WWGQEITELAQGPGR");
+            });
+            WaitForGraphs();
+            PauseForScreenShot(peakAreaReplicateComparisonGraphSummary);
+            RunLongDlg<QuickFilterForm>(()=>groupComparisonGrid.DataboundGridControl.QuickFilter(groupComparisonGrid.DataboundGridControl.DataGridView.Columns[3]),
+                quickFilterForm =>
+                {
+                    Assert.AreEqual(ColumnCaptions.AdjustedPValue, quickFilterForm.PropertyDescriptor.DisplayName);
+                    RunUI(() =>
+                    {
+                        quickFilterForm.SetFilterOperation(0, FilterOperations.OP_IS_LESS_THAN);
+                        quickFilterForm.SetFilterOperand(0, 0.5.ToString(CultureInfo.CurrentCulture));
+                    });
+                    PauseForScreenShot(quickFilterForm);
+                }, quickFilterForm=>quickFilterForm.OkDialog());
+            WaitForCondition(() => groupComparisonGrid.IsComplete);
+            PauseForScreenShot(groupComparisonGrid.FloatingPane.FloatingWindow);
+            RunUI(() =>
+            {
+                var barGraph = FindOpenForm<FoldChangeBarGraph>();
+                Assert.IsNotNull(barGraph);
+                barGraph.Close();
+            });
+            RunDlg<ViewEditor>(groupComparisonGrid.DataboundGridControl.NavBar.CustomizeView, viewEditor =>
+            {
+                viewEditor.ViewName = "Replicate Abundances";
+                viewEditor.ChooseColumnsTab.AddColumn(PropertyPath.Root.Property(nameof(FoldChangeBindingSource.FoldChangeRow.ReplicateAbundances)).DictionaryValues().Property(nameof(ReplicateRow.Abundance)));
+                viewEditor.OkDialog();
+            });
+            WaitForCondition(() => groupComparisonGrid.IsComplete);
+            PauseForScreenShot(groupComparisonGrid);
+            RunUI(() =>
+            {
+                var clusterSplitButton = groupComparisonGrid.DataboundGridControl.NavBar.ClusterSplitButton;
+                clusterSplitButton.DropDown.Closing += DenyMenuClosing;
+                clusterSplitButton.ShowDropDown();
+                var showHeatMapItem = clusterSplitButton.DropDown.Items.OfType<ToolStripMenuItem>()
+                    .FirstOrDefault(item => item.Text == DatabindingResources.DataboundGridControl_DataboundGridControl_Show_Heat_Map);
+                Assert.IsNotNull(showHeatMapItem);
+                showHeatMapItem.Select();
+            });
+            PauseForScreenShot(groupComparisonGrid);
+            RunUI(() =>
+            {
+                var clusterSplitButton = groupComparisonGrid.DataboundGridControl.NavBar.ClusterSplitButton;
+                clusterSplitButton.DropDown.Closing -= DenyMenuClosing;
+                clusterSplitButton.HideDropDown();
+            });
+            RunUI(() =>
+            {
+                groupComparisonGrid.DataboundGridControl.ShowHeatMap();
+            });
+            RunLongDlg<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog, documentSettingsDlg =>
+            {
+                RunUI(() =>
+                {
+                    documentSettingsDlg.SelectTab(DocumentSettingsDlg.TABS.reports);
+                });
+                PauseForScreenShot(documentSettingsDlg);
+                
+                RunUI(()=>
+                {
+                    var mainGroup = PersistedViews.MainGroup.Id;
+                    documentSettingsDlg.ChooseViewsControl.CheckedViews = new[]
+                    {
+                        mainGroup.ViewName("Peptide Areas"),
+                        mainGroup.ViewName("Replicate Abundances")
+                    };
+                });
+            }, documentSettingsDlg=>documentSettingsDlg.OkDialog());
+            RunUI(()=>SkylineWindow.ShowAuditLog());
+            auditLogForm = FindOpenForm<AuditLogForm>();
+            Assert.IsNotNull(auditLogForm);
+            WaitForCondition(() => auditLogForm.IsComplete);
+            PauseForScreenShot(auditLogForm);
+            RunUI(() =>
+            {
+                auditLogForm.ChooseView(AuditLogStrings.AuditLogForm_MakeAuditLogForm_Summary);
+            });
+            WaitForCondition(() => auditLogForm.IsComplete);
+            PauseForScreenShot(auditLogForm);
+            RunLongDlg<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog, exportReportDlg =>
+            {
+                PauseForScreenShot(exportReportDlg);
+            }, exportReportDlg=>exportReportDlg.Close());
+            RunUI(() =>
+            {
+                documentGrid.Close();
+                auditLogForm.Close();
+                listGridForm.Close();
+                groupComparisonGrid.Close();
             });
         }
 
@@ -495,6 +678,30 @@ namespace pwiz.SkylineTestTutorial
                 bool selected = invariantCaptionNames.Contains(invariantCaption);
                 pivotEditor.AvailableColumnList.Items[i].Selected = selected;
             }
+        }
+
+        private void SetSortDirection(DataboundGridControl databoundGridControl, string columnCaption,
+            ListSortDirection sortDirection)
+        {
+            RunUI(() =>
+            {
+                var column = databoundGridControl.DataGridView.Columns.OfType<DataGridViewColumn>()
+                    .FirstOrDefault(col => col.HeaderText == columnCaption);
+                Assert.IsNotNull(column, "Unable to find column named {0}", columnCaption);
+                var propertyDescriptor =
+                    databoundGridControl.BindingListSource.ItemProperties.FindByName(column.DataPropertyName);
+                Assert.IsNotNull(propertyDescriptor);
+                databoundGridControl.SetSortDirection(propertyDescriptor, sortDirection);
+            });
+            WaitForCondition(() => databoundGridControl.IsComplete);
+        }
+
+        private void AssertPeptideSelected(string expectedSequence)
+        {
+            var selectedPath = SkylineWindow.SelectedPath;
+            Assert.IsInstanceOfType(selectedPath.Child, typeof(pwiz.Skyline.Model.Peptide));
+            var peptide = (pwiz.Skyline.Model.Peptide)selectedPath.Child;
+            Assert.AreEqual(expectedSequence, peptide.Sequence);
         }
     }
 }
