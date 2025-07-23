@@ -58,7 +58,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         public override string ToString() { return TextUtil.SpaceSeparate(Dash + Name, Value); }
     }
 
-    public class ModificationType
+    public class ModificationType : IEquatable<ModificationType>
     {
         public ModificationType(int index, string name, string comment)
         {
@@ -85,6 +85,33 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             return alphaName;
         }
         public override string ToString() { return string.Format(ModelsResources.BuildPrecursorTable_ModificationType, Accession, Name, Comment); }
+
+        public bool Equals(ModificationType other)
+        {
+            if (other is null) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Index == other.Index && Accession == other.Accession && Name == other.Name && Comment == other.Comment;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is null) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((ModificationType)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = Index;
+                hashCode = (hashCode * 397) ^ (Accession != null ? Accession.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Name != null ? Name.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Comment != null ? Comment.GetHashCode() : 0);
+                return hashCode;
+            }
+        }
     }
     
     public class AlphapeptdeepLibraryBuilder : AbstractDeepLibraryBuilder, IiRTCapableLibraryBuilder
