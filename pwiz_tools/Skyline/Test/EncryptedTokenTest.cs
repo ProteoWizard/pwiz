@@ -35,8 +35,7 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(tokenString, tokenFromEncrypted.Decrypted);
             Assert.IsFalse(tokenFromEncrypted.IsNullOrEmpty());
             
-            EncryptedToken nullToken = null;
-            Assert.IsTrue(nullToken.IsNullOrEmpty());
+            Assert.IsTrue(((EncryptedToken)null).IsNullOrEmpty());
             Assert.IsTrue(EncryptedToken.Empty.IsNullOrEmpty());
         }
     }
