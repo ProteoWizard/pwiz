@@ -117,37 +117,37 @@ namespace pwiz.Skyline.Model.Lib.Carafe
 
         private string PythonVirtualEnvironmentScriptsDir { get; }
 
-        internal static Dictionary<ModificationType, PredictionSupport> MODEL_SUPPORTED_UNIMODS =
-            new Dictionary<ModificationType, PredictionSupport>
+        internal static List<ModificationType> MODEL_SUPPORTED_UNIMODS =
+            new List<ModificationType>
 
             {
                 {
                     new ModificationType(
                         UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 4).ID.Value,
                         UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 4).Name,
-                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 4).Formula),
-                    PredictionSupport.FRAG_RT_ONLY
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 4).Formula,
+                    PredictionSupport.FRAG_RT_ONLY)
                 },
                 {
                     new ModificationType(
                         UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 21).ID.Value,
                         UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 21).Name,
-                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 21).Formula),
-                    PredictionSupport.FRAGMENTATION
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 21).Formula,
+                    PredictionSupport.FRAGMENTATION)
                 },
                 {
                     new ModificationType(
                         UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 35).ID.Value,
                         UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 35).Name,
-                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 35).Formula),
-                    PredictionSupport.FRAG_RT_ONLY
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 35).Formula,
+                    PredictionSupport.FRAG_RT_ONLY)
                 },
                 {
                     new ModificationType(
                         UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 121).ID.Value,
                         UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 121).Name,
-                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 121).Formula),
-                    PredictionSupport.FRAGMENTATION
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 121).Formula,
+                    PredictionSupport.FRAGMENTATION)
                 }
 
             };

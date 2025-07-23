@@ -303,7 +303,6 @@ namespace TestPerf
                 FileStreamManager.Default.CloseAllStreams();
             });
             WaitForCondition(() => !FileStreamManager.Default.HasPooledStreams); 
-            TestFilesDir.CheckForFileLocks(TestFilesDir.FullPath);
             
             var expected = LibrarySpec.CreateFromPath("answer", TestFilesDir.GetTestPath(@"test_res_fine_tuned_bySky_iRT.blib")); 
             var result = LibrarySpec.CreateFromPath("testBuilt", builtLibraryBySkyIrt); 
@@ -316,6 +315,7 @@ namespace TestPerf
             expected = LibrarySpec.CreateFromPath("answer", TestFilesDir.GetTestPath(@"test_res_fine_tuned_bySky.blib"));
             result = LibrarySpec.CreateFromPath("testBuilt", builtLibraryBySky);
             AssertEx.LibraryEquals(expected, result);
+            TestFilesDir.CheckForFileLocks(TestFilesDir.FullPath);
         }
 
         protected void DoTestBACK()

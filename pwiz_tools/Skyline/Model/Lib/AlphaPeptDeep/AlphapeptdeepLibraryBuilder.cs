@@ -28,7 +28,6 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
-using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
@@ -58,34 +57,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         public override string ToString() { return TextUtil.SpaceSeparate(Dash + Name, Value); }
     }
 
-    public class ModificationType
-    {
-        public ModificationType(int index, string name, string comment)
-        {
-            Index = index;
-            Accession = index + @":" + name;
-            Name = name;
-            Comment = comment;
-        }
-        public int Index { get; private set; }
-        public string Accession { get; private set; }
-        public string Name { get; private set; }
-        public string Comment { get; private set; }
-
-        public string AlphaNameWithAminoAcid(string unmodifiedSequence, int index)
-        {
-            string modification = Name.Replace(@"(", "").Replace(@")", "").Replace(@" ", @"@").Replace(@"Acetyl@N-term", @"Acetyl@Protein_N-term");
-            char delimiter = '@';
-            string[] name = modification.Split(delimiter);
-            string alphaName = name[0] + @"@" + unmodifiedSequence[index];
-            if (index == 0 && modification.EndsWith(@"term"))
-            {
-                alphaName = modification;
-            }
-            return alphaName;
-        }
-        public override string ToString() { return string.Format(ModelsResources.BuildPrecursorTable_ModificationType, Accession, Name, Comment); }
-    }
+ 
     
     public class AlphapeptdeepLibraryBuilder : AbstractDeepLibraryBuilder, IiRTCapableLibraryBuilder
     {
@@ -150,39 +122,40 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         }
 
         protected override string ToolName => ALPHAPEPTDEEP;
+
         protected override LibraryBuilderModificationSupport libraryBuilderModificationSupport { get; }
 
-        internal static Dictionary<ModificationType, PredictionSupport> MODEL_SUPPORTED_UNIMODS =
-            new Dictionary<ModificationType, PredictionSupport>
+        internal static List<ModificationType> MODEL_SUPPORTED_UNIMODS =
+            new List<ModificationType>
 
             {
                 {
                     new ModificationType(
                         UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 4).ID.Value ,
                         UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 4).Name,
-                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 4).Formula),
-                    PredictionSupport.ALL
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 4).Formula,
+                        PredictionSupport.ALL)
                 },
                 {
                     new ModificationType(
                         UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 21).ID.Value ,
                         UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 21).Name,
-                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 21).Formula),
-                    PredictionSupport.FRAGMENTATION
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 21).Formula,
+                    PredictionSupport.FRAGMENTATION)
                 },
                 {
                     new ModificationType(
                         UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 35).ID.Value ,
                         UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 35).Name,
-                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 35).Formula),
-                    PredictionSupport.ALL
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 35).Formula,
+                    PredictionSupport.ALL)
                 },
                 {
                     new ModificationType(
                         UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 121).ID.Value ,
                         UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 121).Name,
-                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 121).Formula),
-                    PredictionSupport.FRAGMENTATION
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 121).Formula,
+                    PredictionSupport.FRAGMENTATION)
                 }
 
             };

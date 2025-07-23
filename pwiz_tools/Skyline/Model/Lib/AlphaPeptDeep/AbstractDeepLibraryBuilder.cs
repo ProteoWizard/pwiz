@@ -30,7 +30,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 {
-    public class PredictionSupport : Immutable
+    public class PredictionSupport : Immutable, IEquatable<PredictionSupport>
     {
         public static readonly PredictionSupport ALL = new PredictionSupport()
             { Fragmentation = true, RetentionTime = true, Ccs = true };
@@ -57,68 +57,142 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         public bool Fragmentation { get; private set; }
         public bool RetentionTime { get; private set; }
         public bool Ccs { get; private set; }
+
+        public bool Equals(PredictionSupport other)
+        {
+            if (other is null) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Fragmentation == other.Fragmentation && RetentionTime == other.RetentionTime && Ccs == other.Ccs;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is null) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((PredictionSupport)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = Fragmentation.GetHashCode();
+                hashCode = (hashCode * 397) ^ RetentionTime.GetHashCode();
+                hashCode = (hashCode * 397) ^ Ccs.GetHashCode();
+                return hashCode;
+            }
+        }
     };
+    public class ModificationType : IEquatable<ModificationType>
+    {
+        public ModificationType(int id, string name, string comment, PredictionSupport supportedModels = null)
+        {
+            Id = id;
+            Accession = id + @":" + name;
+            Name = name;
+            Comment = comment;
+            SupportedModels = supportedModels;
+        }
+        public int Id { get; private set; }
+        public string Accession { get; private set; }
+        public string Name { get; private set; }
+        public string Comment { get; private set; }
+        public PredictionSupport SupportedModels { get; private set; }
+
+        public string AlphaNameWithAminoAcid(string unmodifiedSequence, int index)
+        {
+            string modification = Name.Replace(@"(", "").Replace(@")", "").Replace(@" ", @"@").Replace(@"Acetyl@N-term", @"Acetyl@Protein_N-term");
+            char delimiter = '@';
+            string[] name = modification.Split(delimiter);
+            string alphaName = name[0] + @"@" + unmodifiedSequence[index];
+            if (index == 0 && modification.EndsWith(@"term"))
+            {
+                alphaName = modification;
+            }
+            return alphaName;
+        }
+        public override string ToString() { return string.Format(ModelsResources.BuildPrecursorTable_ModificationType, Accession, Name, Comment); }
+
+        public bool Equals(ModificationType other)
+        {
+            if (other is null) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Id == other.Id && Accession == other.Accession && Name == other.Name && Comment == other.Comment && SupportedModels.Equals(other.SupportedModels);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is null) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((ModificationType)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = Id;
+                hashCode = (hashCode * 397) ^ (Accession != null ? Accession.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Name != null ? Name.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Comment != null ? Comment.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (SupportedModels != null ? SupportedModels.GetHashCode() : 0);
+                return hashCode;
+            }
+        }
+    }
     public class LibraryBuilderModificationSupport
     {
-        internal Dictionary<string, PredictionSupport> _predictionSupport; //key is ModificationType.Accession
+        internal List<ModificationType> _predictionSupport; //key is ModificationType.Index
 
-        /// <summary>
-        /// Helper function to populate the list of supported modifications
-        /// </summary>
-        /// <param name="supportedModifications">Mapping ModificationIndex to PredictionSupport</param>
-        private void PopulatePredictionModificationSupport(Dictionary<ModificationType, PredictionSupport> supportedModifications)
+        public LibraryBuilderModificationSupport(List<ModificationType> supportedModifications)
         {
-            if (supportedModifications == null)
-                return;
-
-            foreach (KeyValuePair<ModificationType, PredictionSupport> mod in supportedModifications)
-            {
-                var key = mod.Key.Index;
-                
-                _predictionSupport[key.ToString()] = mod.Value;
-            }
+            _predictionSupport = supportedModifications;
         }
 
-        public LibraryBuilderModificationSupport(Dictionary<ModificationType, PredictionSupport> supportedModifications)
+        public bool AreAllModelsSupported(int? id)
         {
-            _predictionSupport = new Dictionary<string, PredictionSupport>();
-            PopulatePredictionModificationSupport(supportedModifications);
+            if (id == null)
+                return false;
+            return IsMs2SupportedMod(id) && IsRtSupportedMod(id) && IsCcsSupportedMod(id);
         }
 
-        public bool AreAllModelsSupported(string accession)
+        public bool IsMs2SupportedMod(int? id)
         {
-            return IsMs2SupportedMod(accession) && IsRtSupportedMod(accession) && IsCcsSupportedMod(accession);
-        }
-
-        public bool IsMs2SupportedMod(string accession)
-        {
-            var key = accession.Split(':')[0];
-            if (!_predictionSupport.ContainsKey(key))
+            if (id == null)
+                return false;
+            var type = _predictionSupport.FirstOrDefault(mod => mod.Id == id);
+            if (type == null)
             {
                 return false;
             }
 
-            return _predictionSupport[key].Fragmentation;
+            return type.SupportedModels.Fragmentation;
         }
-        public bool IsRtSupportedMod(string accession)
+        public bool IsRtSupportedMod(int? id)
         {
-            var key = accession.Split(':')[0];
-            if (!_predictionSupport.ContainsKey(key))
+            if (id == null)
+                return false;
+            var type = _predictionSupport.FirstOrDefault(mod => mod.Id == id);
+            if (type == null)
             {
                 return false;
             }
 
-            return _predictionSupport[key].RetentionTime;
+            return type.SupportedModels.RetentionTime;
         }
-        public bool IsCcsSupportedMod(string accession)
+        public bool IsCcsSupportedMod(int? id)
         {
-            var key = accession.Split(':')[0];
-            if (!_predictionSupport.ContainsKey(key))
+            if (id == null)
+                return false;
+            var type = _predictionSupport.FirstOrDefault(mod => mod.Id == id);
+            if (type == null)
             {
                 return false;
             }
 
-            return _predictionSupport[key].Ccs;
+            return type.SupportedModels.Ccs;
         }
 
 
@@ -130,7 +204,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             {
                 if (int.TryParse(part, out int intResult))
                 {
-                    supported = supported && IsMs2SupportedMod(part);
+                    supported = supported && IsMs2SupportedMod(intResult);
                 }
             }
 
@@ -144,7 +218,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             {
                 if (int.TryParse(part, out int intResult))
                 {
-                    supported = supported && IsRtSupportedMod(part);
+                    supported = supported && IsRtSupportedMod(intResult);
                 }
             }
 
@@ -158,7 +232,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             {
                 if (int.TryParse(part, out int intResult))
                 {
-                    supported = supported && IsCcsSupportedMod(part);
+                    supported = supported && IsCcsSupportedMod(intResult);
                 }
             }
 
@@ -454,9 +528,9 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                         }
                     }
 
-                    var unimodIdWithName = mod.UnimodIdWithName;
-
-                    if (!libraryBuilderModificationSupport.IsMs2SupportedMod(unimodIdWithName))
+                    var unimodId = mod.UnimodId;
+                    
+                    if (!libraryBuilderModificationSupport.IsMs2SupportedMod(unimodId))
                     {
                         var haveMod = _noMs2SupportWarningMods.FirstOrDefault(m => m == mod.Name);
                         if (haveMod == null)
@@ -464,7 +538,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                             _noMs2SupportWarningMods.Add(mod.Name);
                         }
                     }
-                    if (!libraryBuilderModificationSupport.IsRtSupportedMod(unimodIdWithName))
+                    if (!libraryBuilderModificationSupport.IsRtSupportedMod(unimodId))
                     {
                         var haveMod = _noRtSupportWarningMods.FirstOrDefault(m => m == mod.Name);
                         if (haveMod == null)
@@ -472,7 +546,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                             _noRtSupportWarningMods.Add(mod.Name);
                         }
                     }
-                    if (!libraryBuilderModificationSupport.IsCcsSupportedMod(unimodIdWithName))
+                    if (!libraryBuilderModificationSupport.IsCcsSupportedMod(unimodId))
                     {
                         var haveMod = _noCcsSupportWarningMods.FirstOrDefault(m => m == mod.Name);
                         if (haveMod == null)
