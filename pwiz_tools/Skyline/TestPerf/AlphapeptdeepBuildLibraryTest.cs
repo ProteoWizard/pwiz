@@ -237,9 +237,9 @@ namespace TestPerf
             WaitForCondition(() => File.Exists(builtLibraryPath));
 
             AssertEx.IsFalse(alphaPeptDeepBuilder.FractionOfExpectedOutputLinesGenerated > 2,
-                @"TestAlphaPeptDeepBuildLibrary: Total count of generated output is more than twice of the expected count ... ");
+                $@"TestAlphaPeptDeepBuildLibrary: Total count of generated output ({alphaPeptDeepBuilder.TotalGeneratedLinesOfOutput} lines) is more than twice of the expected count ({alphaPeptDeepBuilder.TotalExpectedLinesOfOutput} lines) ... ");
             AssertEx.IsFalse(alphaPeptDeepBuilder.FractionOfExpectedOutputLinesGenerated < 0.5,
-                @"TestAlphaPeptDeepBuildLibrary: Total count of generated output is less than half of the expected count ... ");
+                $@"TestAlphaPeptDeepBuildLibrary: Total count of generated output ({alphaPeptDeepBuilder.TotalGeneratedLinesOfOutput} lines) less than half of the expected count ({alphaPeptDeepBuilder.TotalExpectedLinesOfOutput} lines) ... ");
             
             TestResultingLibByValues(TestFilesDir.GetTestPath(answerFile), builtLibraryPath);
         }

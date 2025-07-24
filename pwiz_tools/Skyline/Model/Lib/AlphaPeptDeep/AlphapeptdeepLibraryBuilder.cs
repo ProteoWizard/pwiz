@@ -433,7 +433,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 };
 
                 pr.SilenceStatusMessageUpdates = true;  // Use FilteredUserMessageWriter to write process output instead of ProgressStatus.ChangeMessage()
-                pr.ExpectedOutputLinesCount = 200;
+                pr.ExpectedOutputLinesCount = 80;
                 timer.Start();
                 pr.Run(psi, string.Empty, progress, ref progressStatus, 
                     new FilteredUserMessageWriter(filterStrings), ProcessPriorityClass.BelowNormal, true);

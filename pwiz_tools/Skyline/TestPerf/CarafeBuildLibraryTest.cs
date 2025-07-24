@@ -461,7 +461,8 @@ namespace TestPerf
             }
 
             WaitForClosedForm<BuildLibraryDlg>();
-            WaitForCondition(() => buildLibraryDlgFinished);
+            //Wait up to 30 minutes in case there is no GPU on the test node
+            WaitForCondition(30 * 60 * 1000, () => buildLibraryDlgFinished);
 
             var carafeLibraryBuilder = (CarafeLibraryBuilder)buildLibraryDlg.Builder;
             string builtLibraryPath = carafeLibraryBuilder.CarafeOutputLibraryFilePath;
