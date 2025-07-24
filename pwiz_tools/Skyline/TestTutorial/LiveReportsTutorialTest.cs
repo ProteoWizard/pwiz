@@ -204,6 +204,7 @@ namespace pwiz.SkylineTestTutorial
                         });
                         PauseForScreenShot(metadataRuleEditor);
                     }, metadataRuleEditor=>metadataRuleEditor.OkDialog());
+                    RunUI(()=>metadataRuleSetEditor.DataGridViewSteps.CurrentCell = metadataRuleSetEditor.DataGridViewSteps.Rows[3].Cells[0]);
                     PauseForScreenShot(metadataRuleSetEditor);
                     RunUI(() =>
                     {
@@ -390,7 +391,6 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsNotNull(column, "Unable to find column {0}", columnCaption);
                 documentGrid.DataGridView.CurrentCell = documentGrid.DataGridView.Rows[9].Cells[column.Index];
             });
-            PauseForScreenShot(documentGrid, "Hover over the cell so that the tooltip is displayed");
             RunUI(()=>
             {
                 documentGrid.DataGridView.CurrentCell = documentGrid.DataGridView.Rows[9].Cells[0];
@@ -450,6 +450,7 @@ namespace pwiz.SkylineTestTutorial
                     .OfType<ToolStripMenuItem>().FirstOrDefault(item =>
                         item.Text == Common.Properties.Resources.NavBar_UpdateGroupTotalDropdown_Transforms);
                 Assert.IsNotNull(transformMenuItem);
+                transformMenuItem.Select();
                 transformMenuItem.DropDown.Closing += DenyMenuClosing;
                 transformMenuItem.ShowDropDown();
             });
