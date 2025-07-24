@@ -39,13 +39,15 @@ using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
-using static pwiz.Skyline.Controls.GroupComparison.FoldChangeBindingSource;
+using DigitalRune.Windows.Docking;
+using pwiz.Common.SystemUtil;
 using DatabindingResources = pwiz.Skyline.Controls.Databinding.DatabindingResources;
 using Peptide = pwiz.Skyline.Model.Databinding.Entities.Peptide;
 
@@ -101,9 +103,11 @@ namespace pwiz.SkylineTestTutorial
                 documentGrid.DataGridView.ClickCurrentCell();
                 Assert.AreEqual(SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.MoleculeGroups, 3), SkylineWindow.SelectedPath);
             });
+            var windowLocations = HideFloatingWindows();
             PauseForScreenShot(SkylineWindow.SequenceTree);
             PauseForScreenShot("Status bar", null, ClipSelectionStatus);
-            PauseForScreenShot(documentGrid.NavBar, processShot:bmp=>ClipControl(documentGrid.NavBar, bmp));
+            RestoreFloatingWindows(windowLocations);
+            PauseForScreenShot(documentGrid.NavBar, processShot:ClipControl(documentGrid.NavBar));
             RunUI(()=>
             {
                 documentGrid.DataboundGridControl.ChooseView(
@@ -257,6 +261,11 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 listGridForm.DataGridView.CurrentCell = listGridForm.DataGridView.Rows[0].Cells[0];
+            });
+            PauseForScreenShot(listGridForm);
+            RunUI(() =>
+            {
+                listGridForm.DataGridView.CurrentCell = listGridForm.DataGridView.Rows[0].Cells[0];
                 listGridForm.DataGridView.SendPaste();
                 Assert.AreEqual(15, listGridForm.RowCount);
             });
@@ -282,9 +291,15 @@ namespace pwiz.SkylineTestTutorial
                         }, defineAnnotationDlg=>defineAnnotationDlg.OkDialog());
                     }, editListDlg => editListDlg.OkDialog());
             }, documentSettingsDlg=>documentSettingsDlg.OkDialog());
-            RunUI(()=>
+            RunUI(() =>
             {
                 documentGrid.Activate();
+                documentGrid.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Replicates);
+            });
+            WaitForCondition(() => documentGrid.IsComplete);
+            PauseForScreenShot(documentGrid);
+            RunUI(()=>
+            {
                 documentGrid.DataboundGridControl.ChooseView(ViewGroup.BUILT_IN.Id.ViewName(Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides));
             });
             WaitForCondition(() => documentGrid.IsComplete);
@@ -378,13 +393,17 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot(documentGrid, "Hover over the cell so that the tooltip is displayed");
             RunUI(()=>
             {
-                documentGrid.DataGridView.CurrentCell = documentGrid.DataGridView.Rows[0].Cells[0];
+                documentGrid.DataGridView.CurrentCell = documentGrid.DataGridView.Rows[9].Cells[0];
                 documentGrid.DataGridView.ClickCurrentCell();
+                AssertPeptideSelected("TGTNLMDFLSR");
                 documentGrid.DataboundGridControl.ReplicatePivotDataGridView.CurrentCell =
                     documentGrid.DataboundGridControl.ReplicatePivotDataGridView.Rows[0].Cells[2];
                 documentGrid.DataboundGridControl.ReplicatePivotDataGridView.ClickCurrentCell();
+                Assert.AreEqual("D_102_REP2", SkylineWindow.ResultNameCurrent);
             });
+            windowLocations = HideFloatingWindows();
             PauseForScreenShot(SkylineWindow);
+            RestoreFloatingWindows(windowLocations);
             RunLongDlg<ViewEditor>(documentGrid.DataboundGridControl.NavBar.CustomizeView, viewEditor =>
             {
                 RunUI(() =>
@@ -409,7 +428,10 @@ namespace pwiz.SkylineTestTutorial
                 pivotWidget.SetPivotReplicate(false);
                 viewEditor.OkDialog();
             });
+            RunUI(()=>documentGrid.FloatingPane.FloatingWindow.Size = new Size(450, 200));
             WaitForCondition(() => documentGrid.IsComplete);
+            PauseForScreenShot(documentGrid,
+                processShot: ClipToolStripItem(documentGrid.DataboundGridControl.NavBar.GroupButton));
             RunDlg<PivotEditor>(()=>documentGrid.DataboundGridControl.NavBar.ShowPivotDialog(true), pivotEditor =>
             {
                 SelectPivotEditorColumns(pivotEditor, nameof(ColumnCaptions.NormalizedAreaRaw),
@@ -429,6 +451,7 @@ namespace pwiz.SkylineTestTutorial
                         item.Text == Common.Properties.Resources.NavBar_UpdateGroupTotalDropdown_Transforms);
                 Assert.IsNotNull(transformMenuItem);
                 transformMenuItem.DropDown.Closing += DenyMenuClosing;
+                transformMenuItem.ShowDropDown();
             });
             PauseForScreenShot(documentGrid);
 
@@ -438,8 +461,15 @@ namespace pwiz.SkylineTestTutorial
                         item.Text == Common.Properties.Resources.NavBar_UpdateGroupTotalDropdown_Transforms);
                 Assert.IsNotNull(transformMenuItem);
                 transformMenuItem.DropDown.Items[transformMenuItem.DropDown.Items.Count - 1].PerformClick();
+                transformMenuItem.DropDown.Closing -= DenyMenuClosing;
+                transformMenuItem.HideDropDown();
                 documentGrid.NavBar.GroupButton.DropDown.Closing -= DenyMenuClosing;
                 documentGrid.NavBar.GroupButton.HideDropDown();
+            });
+            RunUI(()=>
+            {
+                documentGrid.FloatingPane.FloatingWindow.Size = new Size(1100, 500);
+                documentGrid.DataGridView.CurrentCell = documentGrid.DataGridView.Rows[0].Cells[0];
             });
             PauseForScreenShot(documentGrid);
             RunLongDlg<ViewEditor>(documentGrid.NavBar.CustomizeView, viewEditor =>
@@ -453,6 +483,8 @@ namespace pwiz.SkylineTestTutorial
                 });
                 PauseForScreenShot(viewEditor);
             }, viewEditor=>viewEditor.OkDialog());
+            RunUI(() => documentGrid.FloatingPane.FloatingWindow.Size = new Size(1200, 500));
+            WaitForCondition(() => documentGrid.IsComplete);
             PauseForScreenShot(documentGrid);
             RunLongDlg<PivotEditor>(()=>documentGrid.NavBar.ShowPivotDialog(true), pivotEditor =>
             {
@@ -470,10 +502,12 @@ namespace pwiz.SkylineTestTutorial
                 PauseForScreenShot(pivotEditor);
             }, pivotEditor=>pivotEditor.OkDialog());
             WaitForCondition(() => documentGrid.IsComplete);
+            RunUI(()=>documentGrid.DataGridView.CurrentCell = documentGrid.DataGridView.Rows[0].Cells[0]);
             PauseForScreenShot(documentGrid);
             var captionDrizzleNormalizedArea =
                 TextUtil.SpaceSeparate("Drizzle", AggregateOperation.Cv.QualifyColumnCaption(new ColumnCaption(ColumnCaptions.NormalizedAreaRaw)).GetCaption(SkylineDataSchema.GetLocalizedSchemaLocalizer()));
             SetSortDirection(documentGrid.DataboundGridControl, captionDrizzleNormalizedArea, ListSortDirection.Ascending);
+            PauseForScreenShot(documentGrid);
             RunUI(() =>
             {
                 documentGrid.DataGridView.CurrentCell = documentGrid.DataGridView.Rows[0].Cells[0];
@@ -502,11 +536,9 @@ namespace pwiz.SkylineTestTutorial
                 PauseForScreenShot(peptideSettingsUi);
             }, peptideSettingsUi=>peptideSettingsUi.OkDialog());
             SetSortDirection(documentGrid.DataboundGridControl, captionDrizzleNormalizedArea, ListSortDirection.Ascending);
+            PauseForScreenShot(documentGrid);
             RunUI(() =>
             {
-                documentGrid.DataGridView.CurrentCell = documentGrid.DataGridView.Rows[0].Cells[0];
-                documentGrid.DataGridView.ClickCurrentCell();
-                AssertPeptideSelected("VVLSGSDATLAYSAFK");
                 var colCvNormalizedArea = documentGrid.DataGridView.Columns.OfType<DataGridViewColumn>()
                     .FirstOrDefault(col => col.HeaderText == captionDrizzleNormalizedArea);
                 Assert.IsNotNull(colCvNormalizedArea);
@@ -573,7 +605,7 @@ namespace pwiz.SkylineTestTutorial
                     RunUI(() =>
                     {
                         quickFilterForm.SetFilterOperation(0, FilterOperations.OP_IS_LESS_THAN);
-                        quickFilterForm.SetFilterOperand(0, 0.5.ToString(CultureInfo.CurrentCulture));
+                        quickFilterForm.SetFilterOperand(0, 0.05.ToString(CultureInfo.CurrentCulture));
                     });
                     PauseForScreenShot(quickFilterForm);
                 }, quickFilterForm=>quickFilterForm.OkDialog());
@@ -588,7 +620,9 @@ namespace pwiz.SkylineTestTutorial
             RunDlg<ViewEditor>(groupComparisonGrid.DataboundGridControl.NavBar.CustomizeView, viewEditor =>
             {
                 viewEditor.ViewName = "Replicate Abundances";
-                viewEditor.ChooseColumnsTab.AddColumn(PropertyPath.Root.Property(nameof(FoldChangeBindingSource.FoldChangeRow.ReplicateAbundances)).DictionaryValues().Property(nameof(ReplicateRow.Abundance)));
+                viewEditor.ChooseColumnsTab.AddColumn(PropertyPath.Root
+                    .Property(nameof(FoldChangeBindingSource.FoldChangeRow.ReplicateAbundances)).DictionaryValues()
+                    .Property(nameof(FoldChangeBindingSource.ReplicateRow.Abundance)));
                 viewEditor.OkDialog();
             });
             WaitForCondition(() => groupComparisonGrid.IsComplete);
@@ -656,9 +690,9 @@ namespace pwiz.SkylineTestTutorial
             });
         }
 
-        public Bitmap ClipControl(Control control, Bitmap bmp)
+        public Func<Bitmap, Bitmap> ClipControl(Control control)
         {
-            return CallUI(() =>
+            return bmp=>CallUI(() =>
             {
                 var parentWindowRect = ScreenshotManager.GetFramedWindowBounds(control);
                 var controlScreenRect = control.RectangleToScreen(new Rectangle(0, 0, control.Width, control.Height));
@@ -668,6 +702,20 @@ namespace pwiz.SkylineTestTutorial
                         controlScreenRect.Height));
             });
         }
+
+        public Func<Bitmap, Bitmap> ClipToolStripItem(ToolStripItem menuItem)
+        {
+            return bmp => CallUI(() =>
+            {
+                var toolStrip = menuItem.GetCurrentParent();
+                var parentWindowRect = ScreenshotManager.GetFramedWindowBounds(toolStrip);
+                var menuItemScreenRect = toolStrip.RectangleToScreen(menuItem.Bounds);
+                return ClipBitmap(bmp, new Rectangle(menuItemScreenRect.Left - parentWindowRect.Left,
+                    menuItemScreenRect.Top - parentWindowRect.Top, menuItemScreenRect.Width,
+                    menuItemScreenRect.Height));
+            });
+        }
+       
 
         private void SelectPivotEditorColumns(PivotEditor pivotEditor, params string[] invariantCaptionNames)
         {
@@ -702,6 +750,39 @@ namespace pwiz.SkylineTestTutorial
             Assert.IsInstanceOfType(selectedPath.Child, typeof(pwiz.Skyline.Model.Peptide));
             var peptide = (pwiz.Skyline.Model.Peptide)selectedPath.Child;
             Assert.AreEqual(expectedSequence, peptide.Sequence);
+        }
+
+        /// <summary>
+        /// Moves all the FloatingWindow's off the screen so they are not in the way of the
+        /// main Skyline window's screenshots.
+        /// </summary>
+        /// <returns>A list of the original locations of the windows that were moved</returns>
+        private List<Tuple<FloatingWindow, Rectangle>> HideFloatingWindows()
+        {
+            var list = new List<Tuple<FloatingWindow, Rectangle>>();
+            RunUI(() =>
+            {
+                foreach (var floatingWindow in FormUtil.OpenForms.OfType<FloatingWindow>())
+                {
+                    list.Add(Tuple.Create(floatingWindow, floatingWindow.Bounds));
+                    floatingWindow.Location = FormEx.GetOffscreenPoint();
+                }
+            });
+            return list;
+        }
+
+        /// <summary>
+        /// Move the windows back to their original locations
+        /// </summary>
+        private void RestoreFloatingWindows(List<Tuple<FloatingWindow, Rectangle>> list)
+        {
+            RunUI(() =>
+            {
+                foreach (var tuple in list)
+                {
+                    tuple.Item1.Bounds = tuple.Item2;
+                }
+            });
         }
     }
 }
