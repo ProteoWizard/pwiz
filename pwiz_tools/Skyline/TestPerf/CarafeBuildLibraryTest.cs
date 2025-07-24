@@ -122,10 +122,16 @@ namespace TestPerf
 
         private void DownloadTestDataPackage(IProgressMonitor progressMonitor)
         {
-
             using var webClient = TestDownloadClient ?? new MultiFileAsynchronousDownloadClient(progressMonitor, 1);
-            if (!webClient.DownloadFileAsync(TestDataPackageUri, TestFilesZip, out var downloadException))
-                throw new ToolExecutionException(@"TestData package download failed...", downloadException);
+
+            Console.WriteLine("");
+            Console.WriteLine(@"TestCarafeBuildLibrary: Attempting TestData package download ...");
+            TryHelper.TryTwice(() =>
+            {
+                if (!webClient.DownloadFileAsync(TestDataPackageUri, TestFilesZip, out var downloadException))
+                    throw new ToolExecutionException(@"TestData package download failed...", downloadException);
+            });
+            Console.WriteLine(@"TestCarafeBuildLibrary: TestData package download success!");
         }
 
 
@@ -558,7 +564,7 @@ namespace TestPerf
             if (IsVerboseMode)
             {
                 Console.WriteLine();
-                Console.WriteLine(@"TestAlphaPeptDeepBuildLibrary: Start TestCancelPython() test ... ");
+                Console.WriteLine(@"TestCarafeBuildLibrary: Start TestCancelPython() test ... ");
             }
             // Test the control path where Python is not installed, and the user is prompted to deal with admin access
             PythonInstaller.SimulatedInstallationState =
@@ -581,13 +587,13 @@ namespace TestPerf
 
             CancelDialog(needAdminDlg, needAdminDlg.CancelDialog);
             if (IsVerboseMode)
-                Console.WriteLine(@"TestAlphaPeptDeepBuildLibrary: Finish TestCancelPython() test ... ");
+                Console.WriteLine(@"TestCarafeBuildLibrary: Finish TestCancelPython() test ... ");
         }
 
         public MessageDlg TestNvidiaInstallPython(BuildLibraryDlg buildLibraryDlg)
         {
             if (IsVerboseMode)
-                Console.WriteLine(@"TestAlphaPeptDeepBuildLibrary: Start TestNvidiaInstallPython() test ... ");
+                Console.WriteLine(@"TestCarafeBuildLibrary: Start TestNvidiaInstallPython() test ... ");
             // Test the control path where Nvidia Card is Available and Nvidia Libraries are not installed, and the user is prompted to deal with Nvidia
             // Test for LongPaths not set and admin
             if (PythonInstaller.IsRunningElevated() && !PythonInstaller.ValidateEnableLongpaths())
@@ -639,7 +645,7 @@ namespace TestPerf
 
             var pythonConfirm = WaitForOpenForm<MessageDlg>(WAIT_TIME * 4); // 12 minutes - successful completion message
             if (IsVerboseMode)
-                Console.WriteLine(@"TestAlphaPeptDeepBuildLibrary: Finish TestNvidiaInstallPython() test ... ");
+                Console.WriteLine(@"TestCarafeBuildLibrary: Finish TestNvidiaInstallPython() test ... ");
             return pythonConfirm;
         }
 
