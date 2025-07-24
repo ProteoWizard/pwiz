@@ -60,8 +60,7 @@ namespace pwiz.SkylineTestTutorial
         public void TestLiveReportsTutorial()
         {
             CoverShotName = "LiveReports";
-            TestFilesZip =
-                @"TestTutorial\LiveReportsTutorial.zip";
+            TestFilesZip = "https://skyline.ms/tutorials/LiveReports.zip";
             AuditLogList.IgnoreTestChecks = true;
             RunFunctionalTest();
             AuditLogList.IgnoreTestChecks = false;
