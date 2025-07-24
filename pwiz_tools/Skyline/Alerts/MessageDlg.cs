@@ -45,6 +45,22 @@ namespace pwiz.Skyline.Alerts
             new MessageDlg(message, ignoreModeUI) { Exception = exception }.ShowAndDispose(parent);
         }
 
+        // Display a MessageDlg and add additional, caller-provided information about a network failure to the More Info section
+        public static void ShowWithExceptionAndNetworkDetail(IWin32Window parent, string message, string networkDetailMessage, Exception exception, bool ignoreModeUI = false)
+        {
+            var dlg = new MessageDlg(message, ignoreModeUI)
+            {
+                Exception = exception
+            };
+
+            dlg.DetailMessage = 
+                networkDetailMessage +
+                Environment.NewLine + Environment.NewLine +
+                dlg.DetailMessage;
+            
+            dlg.ShowAndDispose(parent);
+        }
+
         private MessageDlg(string message, bool ignoreModeUI, MessageBoxButtons buttons = MessageBoxButtons.OK) : base(message, buttons)
         {
             GetModeUIHelper().IgnoreModeUI = ignoreModeUI; // May not want any "peptide"->"molecule" translation

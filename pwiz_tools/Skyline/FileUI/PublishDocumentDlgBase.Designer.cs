@@ -1,0 +1,147 @@
+namespace pwiz.Skyline.FileUI
+{
+    partial class PublishDocumentDlgBase
+    {
+        /// <summary>
+        /// Required designer variable.
+        /// </summary>
+        private System.ComponentModel.IContainer components = null;
+
+        /// <summary>
+        /// Clean up any resources being used.
+        /// </summary>
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && (components != null))
+            {
+                components.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
+        #region Windows Form Designer generated code
+
+        /// <summary>
+        /// Required method for Designer support - do not modify
+        /// the contents of this method with the code editor.
+        /// </summary>
+        private void InitializeComponent()
+        {
+            this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PublishDocumentDlgBase));
+            this.lblServerFolders = new System.Windows.Forms.Label();
+            this.treeViewFolders = new System.Windows.Forms.TreeView();
+            this.btnCancel = new System.Windows.Forms.Button();
+            this.btnOK = new System.Windows.Forms.Button();
+            this.lblFile = new System.Windows.Forms.Label();
+            this.tbFilePath = new System.Windows.Forms.TextBox();
+            this.btnBrowse = new System.Windows.Forms.Button();
+            this.cbAnonymousServers = new System.Windows.Forms.CheckBox();
+            this.toolTipShowAnonymous = new System.Windows.Forms.ToolTip(this.components);
+            this.createRemoteFolder = new System.Windows.Forms.Button();
+            this.lblAvailableStorage = new System.Windows.Forms.Label();
+            this.SuspendLayout();
+            // 
+            // lblServerFolders
+            // 
+            resources.ApplyResources(this.lblServerFolders, "lblServerFolders");
+            this.lblServerFolders.Name = "lblServerFolders";
+            // 
+            // treeViewFolders
+            // 
+            resources.ApplyResources(this.treeViewFolders, "treeViewFolders");
+            this.treeViewFolders.HideSelection = false;
+            this.treeViewFolders.Name = "treeViewFolders";
+            this.treeViewFolders.DoubleClick += new System.EventHandler(this.treeViewFolders_DoubleClick);
+            // 
+            // btnCancel
+            // 
+            resources.ApplyResources(this.btnCancel, "btnCancel");
+            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.btnCancel.Name = "btnCancel";
+            this.btnCancel.UseVisualStyleBackColor = true;
+            // 
+            // btnOK
+            // 
+            resources.ApplyResources(this.btnOK, "btnOK");
+            this.btnOK.Name = "btnOK";
+            this.btnOK.UseVisualStyleBackColor = true;
+            this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
+            // 
+            // lblFile
+            // 
+            resources.ApplyResources(this.lblFile, "lblFile");
+            this.lblFile.Name = "lblFile";
+            // 
+            // tbFilePath
+            // 
+            resources.ApplyResources(this.tbFilePath, "tbFilePath");
+            this.tbFilePath.Name = "tbFilePath";
+            // 
+            // btnBrowse
+            // 
+            resources.ApplyResources(this.btnBrowse, "btnBrowse");
+            this.btnBrowse.Name = "btnBrowse";
+            this.btnBrowse.UseVisualStyleBackColor = true;
+            this.btnBrowse.Click += new System.EventHandler(this.btnBrowse_Click);
+            // 
+            // cbAnonymousServers
+            // 
+            resources.ApplyResources(this.cbAnonymousServers, "cbAnonymousServers");
+            this.cbAnonymousServers.Name = "cbAnonymousServers";
+            this.toolTipShowAnonymous.SetToolTip(this.cbAnonymousServers, resources.GetString("cbAnonymousServers.ToolTip"));
+            this.cbAnonymousServers.UseVisualStyleBackColor = true;
+            // 
+            // createRemoteFolder
+            // 
+            resources.ApplyResources(this.createRemoteFolder, "createRemoteFolder");
+            this.createRemoteFolder.Name = "createRemoteFolder";
+            this.createRemoteFolder.UseVisualStyleBackColor = true;
+            // 
+            // lblAvailableStorage
+            // 
+            resources.ApplyResources(this.lblAvailableStorage, "lblAvailableStorage");
+            this.lblAvailableStorage.Name = "lblAvailableStorage";
+            // 
+            // PublishDocumentDlgBase
+            // 
+            this.AcceptButton = this.btnOK;
+            resources.ApplyResources(this, "$this");
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.lblAvailableStorage);
+            this.Controls.Add(this.cbAnonymousServers);
+            this.Controls.Add(this.btnBrowse);
+            this.Controls.Add(this.tbFilePath);
+            this.Controls.Add(this.lblFile);
+            this.Controls.Add(this.btnOK);
+            this.Controls.Add(this.btnCancel);
+            this.Controls.Add(this.treeViewFolders);
+            this.Controls.Add(this.lblServerFolders);
+            this.Controls.Add(this.createRemoteFolder);
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
+            this.Name = "PublishDocumentDlgBase";
+            this.ShowInTaskbar = false;
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.PublishDocumentDlg_FormClosing);
+            this.Load += new System.EventHandler(this.PublishDocumentDlg_Load);
+            this.ResumeLayout(false);
+            this.PerformLayout();
+
+        }
+
+        #endregion
+        internal System.Windows.Forms.TreeView treeViewFolders;
+        private System.Windows.Forms.Button btnCancel;
+        private System.Windows.Forms.Button btnOK;
+        private System.Windows.Forms.Label lblFile;
+        private System.Windows.Forms.Button btnBrowse;
+        internal System.Windows.Forms.CheckBox cbAnonymousServers;
+        private System.Windows.Forms.ToolTip toolTipShowAnonymous;
+        internal System.Windows.Forms.Button createRemoteFolder;
+        internal System.Windows.Forms.TextBox tbFilePath;
+        internal System.Windows.Forms.Label lblServerFolders;
+        public System.Windows.Forms.Label lblAvailableStorage;
+    }
+}
