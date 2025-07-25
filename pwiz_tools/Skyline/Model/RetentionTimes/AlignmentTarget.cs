@@ -252,13 +252,20 @@ namespace pwiz.Skyline.Model.RetentionTimes
                     return false;
                 }
 
-                // TODO: use actual regression type
-                var regressionType = RegressionMethodRT.kde;
+                
+                var regressionType = RegressionMethodRT.linear;
                 if (irtCalculator.RegressionType == IrtRegressionType.LOWESS)
                 {
                     regressionType = RegressionMethodRT.loess;
                 }
-
+                if (irtCalculator.RegressionType == IrtRegressionType.LOGARITHMIC)
+                {
+                    regressionType = RegressionMethodRT.log;
+                }
+                if (irtCalculator.RegressionType == IrtRegressionType.LOWESS)
+                {
+                    regressionType = RegressionMethodRT.loess;
+                }
                 alignmentTarget = new Irt(regressionType, irtCalculator);
                 return true;
             }
