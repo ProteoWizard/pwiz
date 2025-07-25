@@ -1618,6 +1618,7 @@ PWIZ_API_DECL void read(std::istream& is, ScanList& scanList)
 // BinaryData
 //
 
+#ifndef WITHOUT_MZMLB
 template <typename BinaryDataArrayType>
 void writeMzMLbExtra(stream<Connection_mzMLb>* mzMLb_os, string& dataset, size_t& offset, const string& encoded, XMLWriter& writer, const BinaryDataArrayType& binaryDataArray, const BinaryDataEncoder::Config& usedConfig)
 {
@@ -1626,8 +1627,6 @@ void writeMzMLbExtra(stream<Connection_mzMLb>* mzMLb_os, string& dataset, size_t
 template <>
 void writeMzMLbExtra<BinaryDataArray>(stream<Connection_mzMLb>* mzMLb_os, string& dataset, size_t& offset, const string& encoded, XMLWriter& writer, const BinaryDataArray& binaryDataArray, const BinaryDataEncoder::Config& usedConfig)
 {
-#ifndef WITHOUT_MZMLB
-
     size_t encoded_size = encoded.size();
 
     // mzMLb, including truncation and prediction, from andrew.dowsey@bristol.ac.uk
@@ -1813,14 +1812,11 @@ void writeMzMLbExtra<BinaryDataArray>(stream<Connection_mzMLb>* mzMLb_os, string
             (*mzMLb_os)->write(dataset, &double_data[0], double_data.size());
         }
     }
-#endif
 }
 
 template <>
 void writeMzMLbExtra<IntegerDataArray>(stream<Connection_mzMLb>* mzMLb_os, string& dataset, size_t& offset, const string& encoded, XMLWriter& writer, const IntegerDataArray& binaryDataArray, const BinaryDataEncoder::Config& usedConfig)
 {
-#ifndef WITHOUT_MZMLB
-
     size_t encoded_size = encoded.size();
 
     if (mzMLb_os)
@@ -1848,8 +1844,8 @@ void writeMzMLbExtra<IntegerDataArray>(stream<Connection_mzMLb>* mzMLb_os, strin
             (*mzMLb_os)->write(dataset, &int_data[0], int_data.size());
         }
     }
-#endif
 }
+#endif
 
 template <typename BinaryDataArrayType>
 void writeBinaryDataArray(minimxml::XMLWriter& writer, const BinaryDataArrayType& binaryDataArray, const BinaryDataEncoder::Config& config)
@@ -1893,8 +1889,10 @@ void writeBinaryDataArray(minimxml::XMLWriter& writer, const BinaryDataArrayType
     size_t encoded_size = encoded.size();
 
     string dataset;
+#ifndef WITHOUT_MZMLB
     size_t offset;
     writeMzMLbExtra(mzMLb_os, dataset, offset, encoded, writer, binaryDataArray, usedConfig);
+#endif
 
     // primary array types can never override the default array length
     if (!binaryDataArray.hasCVParam(MS_m_z_array) &&
@@ -2364,7 +2362,11 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
         //            when numpress is off, it is used to indicate the original array type
 
         // if numpress is on, make sure Numpress PIC arrays are directed to BinaryDataArray instead of IntegerDataArray
+#ifdef WITHOUT_MZMLB
+        auto mzMLb_is = false;
+#else
         auto mzMLb_is = dynamic_cast<stream<Connection_mzMLb>*>(is_);
+#endif
         if (BinaryDataEncoder::Numpress_None != config.numpress && !mzMLb_is)
             switch (cvidBinaryDataType)
             {
