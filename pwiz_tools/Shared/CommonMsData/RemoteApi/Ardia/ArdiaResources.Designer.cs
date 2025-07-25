@@ -260,11 +260,47 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Available Storage: {0:F1} GB.
+        /// </summary>
+        public static string FileUpload_AvailableStorage_SizeInGB {
+            get {
+                return ResourceManager.GetString("FileUpload_AvailableStorage_SizeInGB", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Available Storage: Unlimited.
+        /// </summary>
+        public static string FileUpload_AvailableStorage_Unlimited {
+            get {
+                return ResourceManager.GetString("FileUpload_AvailableStorage_Unlimited", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unable to publish the document. A problem occurred communicating with the server..
         /// </summary>
         public static string FileUpload_Error {
             get {
                 return ResourceManager.GetString("FileUpload_Error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to publish the document. The document is larger than the available storage space on the server..
+        /// </summary>
+        public static string FileUpload_Error_DocumentTooLargeForServer {
+            get {
+                return ResourceManager.GetString("FileUpload_Error_DocumentTooLargeForServer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ardia Folders:.
+        /// </summary>
+        public static string FileUpload_ServerFolders {
+            get {
+                return ResourceManager.GetString("FileUpload_ServerFolders", resourceCulture);
             }
         }
         

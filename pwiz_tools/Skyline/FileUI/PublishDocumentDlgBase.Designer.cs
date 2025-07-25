@@ -30,7 +30,7 @@ namespace pwiz.Skyline.FileUI
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PublishDocumentDlgBase));
-            this.lblPanoramaFolders = new System.Windows.Forms.Label();
+            this.lblServerFolders = new System.Windows.Forms.Label();
             this.treeViewFolders = new System.Windows.Forms.TreeView();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
@@ -40,12 +40,13 @@ namespace pwiz.Skyline.FileUI
             this.cbAnonymousServers = new System.Windows.Forms.CheckBox();
             this.toolTipShowAnonymous = new System.Windows.Forms.ToolTip(this.components);
             this.createRemoteFolder = new System.Windows.Forms.Button();
+            this.lblAvailableStorage = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
-            // lblPanoramaFolders
+            // lblServerFolders
             // 
-            resources.ApplyResources(this.lblPanoramaFolders, "lblPanoramaFolders");
-            this.lblPanoramaFolders.Name = "lblPanoramaFolders";
+            resources.ApplyResources(this.lblServerFolders, "lblServerFolders");
+            this.lblServerFolders.Name = "lblServerFolders";
             // 
             // treeViewFolders
             // 
@@ -98,12 +99,18 @@ namespace pwiz.Skyline.FileUI
             this.createRemoteFolder.Name = "createRemoteFolder";
             this.createRemoteFolder.UseVisualStyleBackColor = true;
             // 
+            // lblAvailableStorage
+            // 
+            resources.ApplyResources(this.lblAvailableStorage, "lblAvailableStorage");
+            this.lblAvailableStorage.Name = "lblAvailableStorage";
+            // 
             // PublishDocumentDlgBase
             // 
             this.AcceptButton = this.btnOK;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.lblAvailableStorage);
             this.Controls.Add(this.cbAnonymousServers);
             this.Controls.Add(this.btnBrowse);
             this.Controls.Add(this.tbFilePath);
@@ -111,7 +118,7 @@ namespace pwiz.Skyline.FileUI
             this.Controls.Add(this.btnOK);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.treeViewFolders);
-            this.Controls.Add(this.lblPanoramaFolders);
+            this.Controls.Add(this.lblServerFolders);
             this.Controls.Add(this.createRemoteFolder);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
@@ -125,8 +132,6 @@ namespace pwiz.Skyline.FileUI
         }
 
         #endregion
-
-        private System.Windows.Forms.Label lblPanoramaFolders;
         internal System.Windows.Forms.TreeView treeViewFolders;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnOK;
@@ -136,5 +141,7 @@ namespace pwiz.Skyline.FileUI
         private System.Windows.Forms.ToolTip toolTipShowAnonymous;
         internal System.Windows.Forms.Button createRemoteFolder;
         internal System.Windows.Forms.TextBox tbFilePath;
+        internal System.Windows.Forms.Label lblServerFolders;
+        public System.Windows.Forms.Label lblAvailableStorage;
     }
 }

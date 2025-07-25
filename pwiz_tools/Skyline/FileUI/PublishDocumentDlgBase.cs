@@ -55,6 +55,8 @@ namespace pwiz.Skyline.FileUI
 
         public bool IsLoaded { get; set; }
         public string FileName => tbFilePath.Text;
+        public bool AnonymousServersCheckboxVisible => cbAnonymousServers.Visible;
+
         internal TreeViewStateRestorer ServerTreeStateRestorer { get; set; }
         internal IDocumentUIContainer DocumentUIContainer { get; }
         internal DocumentFormat? DocumentFormat { get; }

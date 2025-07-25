@@ -84,5 +84,18 @@ namespace pwiz.Common.SystemUtil
         {
             return Encoding.UTF8.GetString(ProtectedData.Unprotect(Convert.FromBase64String(str), null, DataProtectionScope.CurrentUser));
         }
+        public static bool IsUtf8(byte[] bytes)
+        {
+            try
+            {
+                var encoding = new UTF8Encoding(false, true);
+                _ = encoding.GetCharCount(bytes);
+                return true;
+            }
+            catch (ArgumentException)
+            {
+                return false;
+            }
+        }
     }
 }

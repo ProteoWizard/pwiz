@@ -271,7 +271,7 @@ namespace pwiz.Skyline.ToolsUI
             using var httpClient = new HttpClient(handler);
             httpClient.BaseAddress = baseUri;
             // Add the Bff-Host cookie to the cookie container
-            cookieContainer.Add(apiBaseUri, new Cookie(@"Bff-Host", ArdiaCredentialHelper.GetToken(_ardiaAccount_CurrentlyLoggedIn)));
+            cookieContainer.Add(apiBaseUri, new Cookie(@"Bff-Host", ArdiaCredentialHelper.GetToken(_ardiaAccount_CurrentlyLoggedIn).Decrypted));
             // Add the required headers to the request
             httpClient.DefaultRequestHeaders.Add(@"Accept", @"application/json");
             httpClient.DefaultRequestHeaders.Add(@"applicationCode", applicationCode);

@@ -1,5 +1,5 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:maxquant-rpal-raw.blib	8	1	10
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:maxquant-rpal-raw.blib	8	1	11
 id	RefSpectraID	position	mass
 id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobility	collisionalCrossSectionSqA	ionMobilityHighEnergyOffset	ionMobilityType	retentionTime	startTime	endTime	totalIonCurrent	moleculeName	chemicalFormula	precursorAdduct	inchiKey	otherKeys	fileID	SpecIDinFile	score	scoreType
 1	AAADAVAK	716.39941406	1	AAADAVAK	-	-	1	200	0.0	0.0	0.0	0	13.11134	N/A	N/A	3778423.12	N/A	N/A	N/A	N/A	N/A	1	350	0.022801	13
@@ -10,8 +10,8 @@ id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	num
 6	AAEQELK	788.42199707	1	AAEQELK	-	-	1	184	0.0	0.0	0.0	0	11.35517833	N/A	N/A	521071.29	N/A	N/A	N/A	N/A	N/A	1	285	0.00064	13
 7	AAGEAIAK	730.41540527	1	AAGEAIAK	-	-	1	116	0.0	0.0	0.0	0	9.72871	N/A	N/A	188821.80	N/A	N/A	N/A	N/A	N/A	1	240	0.006732	13
 8	AAGEAIAK	730.41577148	1	AAGEAIAK	-	-	1	151	0.0	0.0	0.0	0	12.70434333	N/A	N/A	780274.61	N/A	N/A	N/A	N/A	N/A	1	330	0.0063618	13
-id	fileName	idFileName	cutoffScore
-1	Rpal_Std_2d_FullMS_Orbi30k_MSMS_Orbi7k_Centroid_Run1_102006_01.mz5	/BiblioSpec/tests/inputs/rpal-raw-msms.txt	-1.0
+id	fileName	idFileName	cutoffScore	workflowType
+1	Rpal_Std_2d_FullMS_Orbi30k_MSMS_Orbi7k_Centroid_Run1_102006_01.mz5	/BiblioSpec/tests/inputs/rpal-raw-msms.txt	-1.0	0
 id	scoreType	probabilityType
 0	UNKNOWN	NOT_A_PROBABILITY_VALUE
 1	PERCOLATOR QVALUE	PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT
@@ -33,3 +33,4 @@ id	scoreType	probabilityType
 17	BYONIC SCORE	PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT
 18	PEPTIDE SHAKER CONFIDENCE	PROBABILITY_THAT_IDENTIFICATION_IS_CORRECT
 19	GENERIC Q-VALUE	PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT
+20	HARDKLOR IDOTP	PROBABILITY_THAT_IDENTIFICATION_IS_CORRECT
