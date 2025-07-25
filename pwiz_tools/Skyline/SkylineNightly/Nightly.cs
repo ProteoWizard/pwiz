@@ -35,6 +35,7 @@ using System.Windows.Forms;
 using System.Xml.Linq;
 using Ionic.Zip;
 using Microsoft.Win32.TaskScheduler;
+using pwiz.Common.SystemUtil;
 using SkylineNightly.Properties;
 
 namespace SkylineNightly
@@ -248,7 +249,7 @@ namespace SkylineNightly
             StartLog(_runMode);
 
             // Clean-up and create a place to run the tests
-            Delete(skylineNightlySkytr);
+            Delete(skylineNightlySkytr.ToLongPath());
             CreateSkylineTesterDirectory();
 
             Log("buildRoot is " + PwizDir);
@@ -371,7 +372,7 @@ namespace SkylineNightly
 
                     // Try deleting it, if it does exist
                     Log("Deleting SkylineTester folder " + nextDir);
-                    Delete(nextDir);
+                    Delete(nextDir.ToLongPath());
                 }
                 catch (Exception e)
                 {
@@ -1219,7 +1220,7 @@ namespace SkylineNightly
             {
                 try
                 {
-                    DeleteRecursive(fileOrDir);
+                    DeleteRecursive(fileOrDir.ToLongPath());
                     break;
                 }
                 catch (Exception ex)
@@ -1244,7 +1245,7 @@ namespace SkylineNightly
             {
                 foreach (var entry in Directory.EnumerateFileSystemEntries(fileOrDir))
                 {
-                    DeleteRecursive(entry);
+                    DeleteRecursive(entry.ToLongPath());
                 }
                 Directory.Delete(fileOrDir, true);
             }
