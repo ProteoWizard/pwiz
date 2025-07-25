@@ -69,7 +69,6 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         private const string PATH_STORAGE_INFO               = @"/session-management/bff/raw-data/api/v1/rawdata/storageInfo";
         private const string PATH_SESSION_COOKIE             = @"/session-management/bff/session-management/api/v1/SessionManagement/sessioncookie";
         private const string PATH_GET_PARENT_BY_PATH         = @"/session-management/bff/navigation/api/v1/navigation/path";
-        private const string PATH_DATA_EXPLORER              = @"/app/data-explorer";
 
         // CONSIDER: throw IOException as a placeholder for improving the experience of editing Remote Account settings. It should
         //           not be possible to exit the settings editor when the account is invalid.
