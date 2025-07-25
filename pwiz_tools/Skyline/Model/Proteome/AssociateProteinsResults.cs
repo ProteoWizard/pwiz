@@ -16,12 +16,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Threading;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
@@ -29,6 +23,12 @@ using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace pwiz.Skyline.Model.Proteome
 {
@@ -175,47 +175,19 @@ namespace pwiz.Skyline.Model.Proteome
                 Parameters parameter,
                 IDictionary<WorkOrder, object> inputs)
             {
-                var stringSearch = inputs.Values.OfType<StringSearch>().First();
-                return ProduceResults(productionMonitor, parameter, stringSearch);
+                var preliminaryResults = inputs.Values.OfType<ParsimonyIndependentResults>().First();
+                return ProduceResults(productionMonitor, parameter, preliminaryResults);
             }
 
-            public AssociateProteinsResults ProduceResults(ProductionMonitor productionMonitor, Parameters parameter, StringSearch stringSearch) 
+            public AssociateProteinsResults ProduceResults(ProductionMonitor productionMonitor, Parameters parameter, ParsimonyIndependentResults parsimonyIndependentResults) 
             {
-                var results = new AssociateProteinsResults(parameter);
-                var proteinAssociation =
-                    new ProteinAssociation(parameter.Document, stringSearch);
-                if (!string.IsNullOrEmpty(parameter.FastaFilePath))
-                {
-                    if (!File.Exists(parameter.FastaFilePath))
-                    {
-                        return results.ChangeError(string.Format(
-                            Resources.ChromCacheBuilder_BuildNextFileInner_The_file__0__does_not_exist,
-                            parameter.FastaFilePath), null);
-                    }
-                    try
-                    {
-                        proteinAssociation.UseFastaFile(parameter.FastaFilePath, new ProgressImpl(productionMonitor, 0, 30));
-                    }
-                    catch (Exception ex)
-                    {
-                        return results.ChangeError(TextUtil.LineSeparate(
-                            Resources
-                                .AssociateProteinsDlg_UseFastaFile_An_error_occurred_during_protein_association_,
-                            ex.Message), ex);
-                    }
-                }
-
-                else if (parameter.BackgroundProteome != null)
-                {
-                    proteinAssociation.UseBackgroundProteome(
-                        parameter.BackgroundProteome, new ProgressImpl(productionMonitor, 0, 30));
-                }
-                else
+                var results = new AssociateProteinsResults(parameter).ChangeError(parsimonyIndependentResults.ErrorMessage, parsimonyIndependentResults.ErrorException);
+                if (results.IsErrorResult)
                 {
                     return results;
                 }
-
-                if (proteinAssociation.AssociatedProteins == null)
+                var proteinAssociation = parsimonyIndependentResults.GetProteinAssociation();
+                if (proteinAssociation?.AssociatedProteins == null)
                 {
                     return results;
                 }
@@ -250,11 +222,14 @@ namespace pwiz.Skyline.Model.Proteome
 
             public override IEnumerable<WorkOrder> GetInputs(Parameters parameter)
             {
-                var document = parameter.Document;
-                var peptideSequences = document.Peptides.Select(peptide => peptide.Target.Sequence).ToImmutable();
-                yield return _stringSearchProducer.MakeWorkOrder(peptideSequences);
+                yield return PRELIMINARY_RESULTS_PRODUCER.MakeWorkOrder(new ParsimonyIndependentParameters(parameter.Document,
+                    parameter.FastaFilePath, parameter.BackgroundProteome));
             }
         }
+
+        private static readonly Producer<ParsimonyIndependentParameters, ParsimonyIndependentResults> PRELIMINARY_RESULTS_PRODUCER =
+            Producer.FromFunction<ParsimonyIndependentParameters, ParsimonyIndependentResults>(ProduceParsimonyIndependentResults);
+
 
         private class ProgressImpl : ILongWaitBroker, IProgressMonitor
         {
@@ -330,5 +305,109 @@ namespace pwiz.Skyline.Model.Proteome
         private static readonly Producer<ImmutableList<string>, StringSearch> _stringSearchProducer =
             Producer.FromFunction<ImmutableList<string>, StringSearch>((productionMonitor, peptides) =>
                 new StringSearch(peptides, productionMonitor.CancellationToken));
+
+        private class ParsimonyIndependentParameters
+        {
+            public ParsimonyIndependentParameters(SrmDocument document, string fastaFilePath, BackgroundProteome backgroundProteome)
+            {
+                Document = document;
+                FastaFilePath = fastaFilePath;
+                BackgroundProteome = backgroundProteome;
+            }
+
+            public SrmDocument Document { get; }
+            public string FastaFilePath { get; }
+            public BackgroundProteome BackgroundProteome { get; }
+
+            protected bool Equals(ParsimonyIndependentParameters other)
+            {
+                return ReferenceEquals(Document, other.Document) && FastaFilePath == other.FastaFilePath && Equals(BackgroundProteome, other.BackgroundProteome);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (obj is null) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != GetType()) return false;
+                return Equals((ParsimonyIndependentParameters)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    int hashCode = RuntimeHelpers.GetHashCode(Document);
+                    hashCode = (hashCode * 397) ^ (FastaFilePath != null ? FastaFilePath.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ (BackgroundProteome != null ? BackgroundProteome.GetHashCode() : 0);
+                    return hashCode;
+                }
+            }
+        }
+
+        private class ParsimonyIndependentResults : Immutable
+        {
+            private ProteinAssociation _proteinAssociation;
+            public ParsimonyIndependentResults ChangeProteinAssociation(ProteinAssociation proteinAssociation)
+            {
+                return ChangeProp(ImClone(this), im => im._proteinAssociation = proteinAssociation);
+            }
+
+            public ProteinAssociation GetProteinAssociation()
+            {
+                return _proteinAssociation?.Clone();
+            }
+
+            public string ErrorMessage { get; private set; }
+            public Exception ErrorException { get; private set; }
+            public ParsimonyIndependentResults ChangeError(string errorMessage, Exception exception)
+            {
+                return ChangeProp(ImClone(this), im =>
+                {
+                    im.ErrorMessage = errorMessage ?? exception?.Message;
+                    im.ErrorException = exception;
+                });
+            }
+        }
+
+        private static ParsimonyIndependentResults ProduceParsimonyIndependentResults(ProductionMonitor productionMonitor, ParsimonyIndependentParameters parameter)
+        {
+            var document = parameter.Document;
+            var stringSearch = new StringSearch(document.Peptides.Select(peptide => peptide.Target.Sequence));
+            var proteinAssociation =
+                new ProteinAssociation(parameter.Document, stringSearch);
+            var results = new ParsimonyIndependentResults();
+            if (!string.IsNullOrEmpty(parameter.FastaFilePath))
+            {
+                if (!File.Exists(parameter.FastaFilePath))
+                {
+                    return results.ChangeError(string.Format(
+                        Resources.ChromCacheBuilder_BuildNextFileInner_The_file__0__does_not_exist,
+                        parameter.FastaFilePath), null);
+                }
+                try
+                {
+                    proteinAssociation.UseFastaFile(parameter.FastaFilePath, new ProgressImpl(productionMonitor, 0, 30));
+                }
+                catch (Exception ex)
+                {
+                    return results.ChangeError(TextUtil.LineSeparate(
+                        Resources
+                            .AssociateProteinsDlg_UseFastaFile_An_error_occurred_during_protein_association_,
+                        ex.Message), ex);
+                }
+            }
+
+            else if (parameter.BackgroundProteome != null)
+            {
+                proteinAssociation.UseBackgroundProteome(
+                    parameter.BackgroundProteome, new ProgressImpl(productionMonitor, 0, 30));
+            }
+            else
+            {
+                return results;
+            }
+
+            return results.ChangeProteinAssociation(proteinAssociation);
+        }
     }
 }
