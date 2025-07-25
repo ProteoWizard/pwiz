@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+using System.Runtime.Serialization;
 using Newtonsoft.Json;
 
 namespace pwiz.CommonMsData.RemoteApi.Ardia
@@ -22,12 +23,29 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
     {
         public static StorageInfoResponse Create(string json)
         {
-            return JsonConvert.DeserializeObject<StorageInfoResponse>(json);
+            var result = JsonConvert.DeserializeObject<StorageInfoResponse>(json);
+
+            return result;
         }
 
         private StorageInfoResponse() { }
         
-        // public long TotalSpace { get; }
-        // public long AvailableFreeSpace { get; }
+        public long? TotalSpace { get; set; }
+        public long? AvailableFreeSpace { get; set; }
+        public bool IsUnlimited { get; private set; }
+
+        public bool HasAvailableStorageFor(long sizeInBytes)
+        {
+            return IsUnlimited || sizeInBytes < AvailableFreeSpace;
+        }
+
+        [OnDeserialized]
+        internal void OnDeserialized(StreamingContext context)
+        {
+            if (TotalSpace == null && AvailableFreeSpace == null)
+            {
+                IsUnlimited = true;
+            }
+        }
     }
 }

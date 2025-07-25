@@ -71,7 +71,7 @@ namespace pwiz.SkylineTestConnected
             Assert.AreEqual(1, Settings.Default.RemoteAccountList.Count);
 
             account = (ArdiaAccount)Settings.Default.RemoteAccountList[0];
-            AssertEx.IsTrue(!string.IsNullOrEmpty(account.Token), "Ardia account does not have a token.");
+            AssertEx.IsTrue(!account.Token.IsNullOrEmpty(), "Ardia account does not have a token.");
 
             // Test scenarios 
             TestGetFolderPath();
@@ -84,6 +84,8 @@ namespace pwiz.SkylineTestConnected
             Test_StageDocument_Request_LargeDocument();
             Test_StageDocument_Response();
             Test_StageDocument_Request_CompleteMultipartUpload();
+
+            Test_StorageInfo_Response();
 
             // Test scenarios making remote API calls
             var client = ArdiaClient.Create(account);
@@ -214,6 +216,26 @@ namespace pwiz.SkylineTestConnected
             Assert.AreEqual($@"{{""Pieces"":[{{""PieceName"":""[SingleDocument]"",""IsMultiPart"":true,""Size"":6451738112,""PartSize"":{ArdiaClient.DEFAULT_PART_SIZE_MB}}}]}}", json);
         }
 
+        private static void Test_StorageInfo_Response()
+        {
+            var json = @"{}";
+            var model = StorageInfoResponse.Create(json);
+
+            Assert.IsNull(model.TotalSpace);
+            Assert.IsNull(model.AvailableFreeSpace);
+            Assert.IsTrue(model.IsUnlimited);
+            Assert.IsTrue(model.HasAvailableStorageFor(long.MaxValue));
+
+            json = @"{totalSpace: 999999999, availableFreeSpace: 999999}";
+            model = StorageInfoResponse.Create(json);
+
+            Assert.AreEqual(999999999, model.TotalSpace);
+            Assert.AreEqual(999999, model.AvailableFreeSpace);
+            Assert.IsFalse(model.IsUnlimited);
+            Assert.IsTrue(model.HasAvailableStorageFor(100000L));
+            Assert.IsFalse(model.HasAvailableStorageFor(999000001));
+        }
+
         private static void TestCreateArdiaError()
         {
             var message = ErrorMessageBuilder.ReadErrorMessageFromResponse(ERROR_MESSAGE_JSON);
@@ -321,9 +343,13 @@ namespace pwiz.SkylineTestConnected
             }
 
             WaitForConditionUI(() => publishDlg.IsLoaded);
+            WaitForConditionUI(() => publishDlg.AvailableStorageLabel.Visible);
 
             RunUI(() =>
             {
+                Assert.IsFalse(publishDlg.AnonymousServersCheckboxVisible);
+                Assert.AreEqual(ArdiaResources.FileUpload_AvailableStorage_Unlimited, publishDlg.AvailableStorageLabel.Text);
+
                 publishDlg.FoldersTree.Nodes[0].Expand();
 
                 var treeNode = publishDlg.FindByName(publishDlg.FoldersTree.Nodes[0].Nodes, folderPath[0]);

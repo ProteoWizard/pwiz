@@ -30,7 +30,7 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestArdiaAccountUserConfigSettings()
         {
-            var ardiaAccount = new ArdiaAccount("https://ardiaserver.example.com", "ardia_username", "ardia password", "ardia token value");
+            var ardiaAccount = new ArdiaAccount("https://ardiaserver.example.com", "ardia_username", "ardia password", EncryptedToken.FromString("ardia token value"));
 
             var remoteAccountList = new RemoteAccountList { ardiaAccount };
 
@@ -40,12 +40,12 @@ namespace pwiz.SkylineTest
             var accountListXml = stringWriter.ToString();
 
             // token's plaintext value should not be in serialized XML
-            Assert.AreEqual(-1, accountListXml.IndexOf(ardiaAccount.Token, StringComparison.Ordinal));
+            Assert.AreEqual(-1, accountListXml.IndexOf(ardiaAccount.Token.Decrypted, StringComparison.Ordinal), $"{accountListXml}");
 
             var deserializedAccountList = (RemoteAccountList)xmlSerializer.Deserialize(new StringReader(accountListXml));
             Assert.AreEqual(remoteAccountList.Count, deserializedAccountList.Count);
             Assert.AreEqual(ardiaAccount, deserializedAccountList[0]);
-            Assert.AreEqual(ardiaAccount.Token, ((ArdiaAccount)deserializedAccountList[0]).Token);
+            Assert.AreEqual(ardiaAccount.Token.Encrypted, ((ArdiaAccount)deserializedAccountList[0]).Token.Encrypted);
         }
     }
 }
