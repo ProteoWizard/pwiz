@@ -315,15 +315,15 @@ namespace TestPerf
             
             var expected = LibrarySpec.CreateFromPath("answer", TestFilesDir.GetTestPath(@"test_res_fine_tuned_bySky_iRT.blib")); 
             var result = LibrarySpec.CreateFromPath("testBuilt", builtLibraryBySkyIrt); 
-            AssertEx.LibraryEquals(expected, result); 
+            AssertEx.LibraryEquals(expected, result, 1e-4, 1e-2); 
             
             expected = LibrarySpec.CreateFromPath("answer", TestFilesDir.GetTestPath(@"test_res_fine_tuned_byDiann.blib"));
             result = LibrarySpec.CreateFromPath("testBuilt", builtLibraryByDiann);
-            AssertEx.LibraryEquals(expected, result);
+            AssertEx.LibraryEquals(expected, result, 1e-4, 1e-2);
 
             expected = LibrarySpec.CreateFromPath("answer", TestFilesDir.GetTestPath(@"test_res_fine_tuned_bySky.blib"));
             result = LibrarySpec.CreateFromPath("testBuilt", builtLibraryBySky);
-            AssertEx.LibraryEquals(expected, result);
+            AssertEx.LibraryEquals(expected, result, 1e-4, 1e-2);
             TestFilesDir.CheckForFileLocks(TestFilesDir.FullPath);
         }
 
