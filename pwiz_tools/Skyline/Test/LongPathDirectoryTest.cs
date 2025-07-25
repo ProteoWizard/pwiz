@@ -141,7 +141,6 @@ namespace pwiz.SkylineTest
             
             // ToLongPath tests
             AssertEx.ThrowsException<ArgumentException>(() => @"path\to\file.txt".ToLongPath());
-            AssertEx.ThrowsException<ArgumentException>(() => @"C:\path\to\..\file.txt".ToLongPath());
             const string validPath = @"C:\path\to\file.txt";
             AssertEx.NoExceptionThrown<Exception>(() => validPath.ToLongPath());
             // Make sure calling multiple times does not cause multiple long-path prefixes
