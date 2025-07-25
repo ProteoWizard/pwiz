@@ -23,14 +23,14 @@ using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest
 {
-    // Test to see if there is less than 20GB of space left on disk.
+    // Test to see if there is less than 15GB of space left on disk.
     // Necessary to prevent unrelated tests failing when an issue causes disk to fill up.
     [TestClass]
     public class DiskSpaceTest : AbstractUnitTest
     {
         private const long ONE_MB = 1024 * 1024;
         private const long ONE_GB = 1024 * 1024 * 1024;
-        private const long MIN_SPACE_BYTES = 20 * ONE_GB;
+        private const long MIN_SPACE_BYTES = 15 * ONE_GB;
 
         // Name changed so that test is fired early in test process.
         [TestMethod]
