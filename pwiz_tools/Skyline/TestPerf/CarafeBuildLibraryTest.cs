@@ -101,11 +101,14 @@ namespace TestPerf
                 AssertEx.IsTrue(PythonInstaller.DeleteToolsPythonDirectory());
 
             string currentDirectory = Directory.GetCurrentDirectory();
-            TestFilesZip = $@"{currentDirectory}\{TESTDATA_DIR}\{TESTDATA_FILE}";
+            //TestFilesZip = $@"{currentDirectory}\{TESTDATA_DIR}\{TESTDATA_FILE}";
 
             Directory.CreateDirectory(TESTDATA_DIR);
-
-            DownloadTestDataPackage(new SilentProgressMonitor());
+            TestFilesZipPaths = new[]
+            {
+                GetPerfTestDataURL($@"{TESTDATA_FILE}")
+            };
+            //DownloadTestDataPackage(new SilentProgressMonitor());
 
             var originalInstallationState = PythonInstaller.SimulatedInstallationState;
             try
