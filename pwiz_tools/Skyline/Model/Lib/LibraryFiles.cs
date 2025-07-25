@@ -46,6 +46,7 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         public ImmutableList<string> FilePaths { get; }
+
         public int Count
         {
             get { return FilePaths.Count; }
