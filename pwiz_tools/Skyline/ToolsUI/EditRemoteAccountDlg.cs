@@ -460,9 +460,10 @@ namespace pwiz.Skyline.ToolsUI
                 {
                     RemoteSession.RemoteAccountUserInteraction.UserLogin(ardiaAccount);
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
-                    MessageDlg.Show(this, ToolsUIResources.EditRemoteAccountDlg_TestSettings_Account_credentials_not_valid);
+                    MessageDlg.ShowWithException(this, ToolsUIResources.EditRemoteAccountDlg_TestSettings_Account_credentials_not_valid, e);
+                    textArdiaServerURL.Focus();
                     return false;
                 }
             }
