@@ -111,12 +111,12 @@ namespace pwiz.Skyline.Controls.Databinding
             foreach (var property in itemProperties.OfType<ColumnPropertyDescriptor>())
             {
                 var columnDescriptor = property.DisplayColumn.ColumnDescriptor;
-                while (columnDescriptor.Parent != null)
+                while (columnDescriptor?.Parent != null)
                 {
                     columnDescriptor = columnDescriptor.Parent;
                 }
 
-                return columnDescriptor.PropertyType;
+                return columnDescriptor?.PropertyType ?? typeof(object);
             }
 
             return typeof(object);

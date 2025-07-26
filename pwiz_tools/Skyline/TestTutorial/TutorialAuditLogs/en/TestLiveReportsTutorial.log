@@ -1,0 +1,169 @@
+Undo Redo : Start of audit log for already existing document
+Summary   : Start of audit log for already existing document
+All Info  :
+Start of audit log for already existing document
+Document > Protein count is "48"
+Document > Peptide count is "125"
+Document > Precursor count is "125"
+Document > Transition count is "721"
+Settings > Peptide Settings -- Prediction > Time window changed from "2" to "5"
+Settings > Peptide Settings -- Filter > Exclude N-terminal AAs changed from "25" to "2"
+Settings > Peptide Settings -- Filter > Min length changed from "8" to "6"
+Settings > Peptide Settings -- Filter > Max length changed from "25" to "30"
+Settings > Peptide Settings -- Filter > Auto-select all matching peptides changed from True to False
+Settings > Peptide Settings -- Library > Pick from changed from "Library" to "Filter"
+Settings > Peptide Settings -- Library > Libraries : "Rat (NIST) (Rat_plasma2) (Rat_plasma)" was added
+Settings > Peptide Settings -- Library > Libraries > "Rat (NIST) (Rat_plasma2) (Rat_plasma)" > Path is "rat_consensus_final_true_lib.blib"
+Settings > Peptide Settings -- Library > Libraries : "Rat (GPM) (Rat_plasma2) (Rat_plasma)" was added
+Settings > Peptide Settings -- Library > Libraries > "Rat (GPM) (Rat_plasma2) (Rat_plasma)" > Path is "rat_cmp_20.blib"
+Settings > Peptide Settings -- Modifications > Structural modifications : "Carbamidomethyl (C)" was removed
+Settings > Peptide Settings -- Modifications > Structural modifications : "Carbamidomethyl Cysteine" was added
+Settings > Peptide Settings -- Modifications > Structural modifications > "Carbamidomethyl Cysteine" > Amino acid is "C"
+Settings > Peptide Settings -- Modifications > Structural modifications > "Carbamidomethyl Cysteine" > Chemical formula is "C2H3ON"
+Settings > Peptide Settings -- Modifications > Structural modifications > "Carbamidomethyl Cysteine" > Monoisotopic mass is "57.021464"
+Settings > Peptide Settings -- Modifications > Structural modifications > "Carbamidomethyl Cysteine" > Average mass is "57.05162"
+Settings > Transition Settings -- Prediction > Collision energy changed from "None" to "Thermo"
+Settings > Transition Settings -- Prediction > Collision energy > Regression parameters : contains { Charge = "2", Slope = "0.034", Intercept = "3.314" }
+Settings > Transition Settings -- Prediction > Collision energy > Regression parameters : contains { Charge = "3", Slope = "0.044", Intercept = "3.314" }
+Settings > Transition Settings -- Filter > Molecule Precursor adducts changed from "[M+H]" to "[M-H], [M-], [M-2H], [M-3H], [M+], [M+H], [M+2H], [M+3H]"
+Settings > Transition Settings -- Filter > Molecule Fragment adducts changed from "[M+]" to "[M-], [M-2], [M-3], [M+], [M+2], [M+3]"
+Settings > Transition Settings -- Filter > Product ion selection start changed from "m/z > precursor" to "ion 3"
+Settings > Transition Settings -- Filter > Product ion selection end changed from "3 ions" to "last ion - 1"
+Settings > Transition Settings -- Filter > Special ions: removed all
+Settings > Transition Settings -- Filter > Auto-select all matching transitions changed from True to False
+Settings > Transition Settings -- Library > Product ions changed from "3" to "4"
+Settings > Transition Settings -- Library > Pick changed from "From filtered ion charges and types" to "None"
+Settings > Transition Settings -- Library > If a library spectrum is available, pick its most intense ions changed from True to False
+Settings > Transition Settings -- Integration > Integrate All changed from False to True
+Extra Info: Protein count = "48",
+Peptide count = "125",
+Precursor count = "125",
+Transition count = "721"
+
+Undo Redo : Annotations changed
+Summary   : Settings > Document Settings -- Annotations changed
+All Info  :
+Annotations changed
+Settings > Document Settings -- Annotations : "Cohort" was added
+Settings > Document Settings -- Annotations > "Cohort" > Applies to is "replicate"
+Settings > Document Settings -- Annotations > "Cohort" > Type is "Value List"
+Settings > Document Settings -- Annotations > "Cohort" > Values : contains "Healthy"
+Settings > Document Settings -- Annotations > "Cohort" > Values : contains "Diseased"
+Settings > Document Settings -- Annotations : "SubjectID" was added
+Settings > Document Settings -- Annotations > "SubjectID" > Applies to is "replicate"
+Settings > Document Settings -- Annotations > "SubjectID" > Type is "Text"
+
+Undo Redo : Document Settings > Rule sets changed
+Summary   : Settings > Document Settings > Rule sets changed
+All Info  :
+Document Settings > Rule sets changed
+Settings > Document Settings > Rule sets : { Name = "Cohort and SubjectID", Row source = "pwiz.Skyline.Model.Databinding.Entities.ResultFile", Rules = [ { Pattern = "D", Replacement = "Diseased" }, { Pattern = "H", Replacement = "Healthy" }, { Pattern = "(.)_(...)", Replacement = "$1$2" } ] } was added
+
+Undo Redo : Document Settings -- Lists : "Samples" was added
+Summary   : Settings > Document Settings -- Lists : "Samples" was added
+All Info  :
+Document Settings -- Lists : "Samples" was added
+Settings > Document Settings -- Lists : "Samples" was added
+Settings > Document Settings -- Lists > "Samples" > Properties : contains "SubjectID"
+Settings > Document Settings -- Lists > "Samples" > Properties > "SubjectID" > Type is "Text"
+Settings > Document Settings -- Lists > "Samples" > Properties : contains "Sex"
+Settings > Document Settings -- Lists > "Samples" > Properties > "Sex" > Type is "Text"
+Settings > Document Settings -- Lists > "Samples" > Properties : contains "Weight"
+Settings > Document Settings -- Lists > "Samples" > Properties > "Weight" > Type is "Number"
+Settings > Document Settings -- Lists > "Samples" > Properties : contains "Name"
+Settings > Document Settings -- Lists > "Samples" > Properties > "Name" > Type is "Text"
+Settings > Document Settings -- Lists > "Samples" > ID property is "SubjectID"
+Settings > Document Settings -- Lists > "Samples" > Display property is "Name"
+Settings > Document Settings -- Lists > "Samples" > Rows is Empty
+
+Undo Redo : Pasted 13 values into the document grid
+Summary   : Pasted 13 values into the document grid
+All Info  :
+Pasted 13 values into the document grid
+Document grid > Report name is "default"
+Set Add new item to list 'Samples' of Samples to 
+Set Add new item to list 'Samples' of Samples to 
+Set Add new item to list 'Samples' of Samples to 
+Set Add new item to list 'Samples' of Samples to 
+Set Add new item to list 'Samples' of Samples to 
+Set Add new item to list 'Samples' of Samples to 
+Set Add new item to list 'Samples' of Samples to 
+Set Add new item to list 'Samples' of Samples to 
+Set Add new item to list 'Samples' of Samples to 
+Set Add new item to list 'Samples' of Samples to 
+Set Add new item to list 'Samples' of Samples to 
+Set Add new item to list 'Samples' of Samples to 
+Set Add new item to list 'Samples' of Samples to 
+Extra Info: D102	M	190	Drizzle
+D103	F	245	Sniffles
+D108	F	182	Mumbles
+D138	M	210	Rattle
+D154	M	228	Fumble
+D172	F	175	Wheezy
+D196	F	195	Wobbles
+H146	M	250	Squeaks
+H147	F	240	Nibbles
+H148	M	202	Zippy
+H159	F	220	Whiskers
+H160	M	215	Skipper
+H161	F	255	Pippin
+H162	M	235	Scamper
+
+Report name = "default"
+
+Undo Redo : Annotation > "SubjectID" > Lookup changed to "Samples"
+Summary   : Settings > Document Settings -- Annotations > "SubjectID" > Lookup changed to "Samples"
+All Info  :
+Annotation > "SubjectID" > Lookup changed to "Samples"
+Settings > Document Settings -- Annotations > "SubjectID" > Lookup changed from Missing to "Samples"
+
+Undo Redo : Peptide Settings -- Quantification > Normalization method changed from "None" to "Ratio to Global Standards"
+Summary   : Settings > Peptide Settings -- Quantification > Normalization method changed from "None" to "Ratio to Global Standards"
+All Info  :
+Peptide Settings -- Quantification > Normalization method changed from "None" to "Ratio to Global Standards"
+Settings > Peptide Settings -- Quantification > Normalization method changed from "None" to "Ratio to Global Standards"
+
+Undo Redo : Group Comparison : "Peptide Group Comparison" was added
+Summary   : Settings > Document Settings -- Group Comparisons : "Peptide Group Comparison" was added
+All Info  :
+Group Comparison : "Peptide Group Comparison" was added
+Settings > Document Settings -- Group Comparisons : "Peptide Group Comparison" was added
+Settings > Document Settings -- Group Comparisons > "Peptide Group Comparison" > Control group annotation is "Cohort"
+Settings > Document Settings -- Group Comparisons > "Peptide Group Comparison" > Control group value is "Healthy"
+Settings > Document Settings -- Group Comparisons > "Peptide Group Comparison" > Value to compare against is "Diseased"
+Settings > Document Settings -- Group Comparisons > "Peptide Group Comparison" > Identity Annotation is "SubjectID"
+Settings > Document Settings -- Group Comparisons > "Peptide Group Comparison" > Normalization method is "Default Normalization Method"
+Settings > Document Settings -- Group Comparisons > "Peptide Group Comparison" > Summary method is "Sum of transition areas"
+Settings > Document Settings -- Group Comparisons > "Peptide Group Comparison" > Confidence level is "95"
+Settings > Document Settings -- Group Comparisons > "Peptide Group Comparison" > Protein scope is False
+Settings > Document Settings -- Group Comparisons > "Peptide Group Comparison" > Use zero for missing peaks is False
+Settings > Document Settings -- Group Comparisons > "Peptide Group Comparison" > Q-value cutoff is Missing
+Settings > Document Settings -- Group Comparisons > "Peptide Group Comparison" > Formatting rows is Empty
+
+Undo Redo : Reports changed
+Summary   : Settings > Document Settings > Reports changed
+All Info  :
+Reports changed
+Settings > Document Settings > Reports : "Peptide Areas" was added
+Settings > Document Settings > Reports > "Peptide Areas" > Columns : contains "Peptide"
+Settings > Document Settings > Reports > "Peptide Areas" > Columns : contains "Protein"
+Settings > Document Settings > Reports > "Peptide Areas" > Columns : contains "Modified Sequence"
+Settings > Document Settings > Reports > "Peptide Areas" > Columns : contains "Standard Type"
+Settings > Document Settings > Reports > "Peptide Areas" > Columns : contains "Replicate"
+Settings > Document Settings > Reports > "Peptide Areas" > Columns : contains "Total Area"
+Settings > Document Settings > Reports > "Peptide Areas" > Columns : contains "Raw"
+Settings > Document Settings > Reports > "Peptide Areas" > Columns : contains "Strict"
+Settings > Document Settings > Reports > "Peptide Areas" > Columns : contains "Message"
+Settings > Document Settings > Reports > "Peptide Areas" > Columns : contains "Normalized Area"
+Settings > Document Settings > Reports > "Peptide Areas" > Columns : contains "annotation_SubjectID"
+Settings > Document Settings > Reports > "Peptide Areas" > Filters : contains { Column = "Standard Type", Operation = "Is Blank", Value = Missing }
+Settings > Document Settings > Reports > "Peptide Areas" > Default Layout Name is Missing
+Settings > Document Settings > Reports : "Replicate Abundances" was added
+Settings > Document Settings > Reports > "Replicate Abundances" > Columns : contains "Protein"
+Settings > Document Settings > Reports > "Replicate Abundances" > Columns : contains "Peptide"
+Settings > Document Settings > Reports > "Replicate Abundances" > Columns : contains "Fold Change Result"
+Settings > Document Settings > Reports > "Replicate Abundances" > Columns : contains "Adjusted P-Value"
+Settings > Document Settings > Reports > "Replicate Abundances" > Columns : contains "Abundance"
+Settings > Document Settings > Reports > "Replicate Abundances" > Filters is Empty
+Settings > Document Settings > Reports > "Replicate Abundances" > Default Layout Name is Missing
+

@@ -1,0 +1,169 @@
+Undo Redo : 现有文档的审计日志开始
+Summary   : 现有文档的审计日志开始
+All Info  :
+现有文档的审计日志开始
+文档 > 蛋白质计数 是 "48"
+文档 > 肽段计数 是 "125"
+文档 > 母离子计数 是 "125"
+文档 > 离子对计数 是 "721"
+设置 > 肽段设置 -- 预测 > 时间窗口 从 "2" 更改到 "5"
+设置 > 肽段设置 -- 过滤器 > 排除 N-末端氨基酸 从 "25" 更改到 "2"
+设置 > 肽段设置 -- 过滤器 > 最小长度 从 "8" 更改到 "6"
+设置 > 肽段设置 -- 过滤器 > 最大长度 从 "25" 更改到 "30"
+设置 > 肽段设置 -- 过滤器 > 自动选择所有匹配的肽段 从 真 更改到 假
+设置 > 肽段设置 -- 库 > 挑选自 从 "库" 更改到 "过滤器"
+设置 > 肽段设置 -- 库 > 库 : "Rat (NIST) (Rat_plasma2) (Rat_plasma)" 已添加
+设置 > 肽段设置 -- 库 > 库 > "Rat (NIST) (Rat_plasma2) (Rat_plasma)" > 路径 是 "rat_consensus_final_true_lib.blib"
+设置 > 肽段设置 -- 库 > 库 : "Rat (GPM) (Rat_plasma2) (Rat_plasma)" 已添加
+设置 > 肽段设置 -- 库 > 库 > "Rat (GPM) (Rat_plasma2) (Rat_plasma)" > 路径 是 "rat_cmp_20.blib"
+设置 > 肽段设置 -- 修饰 > 结构的修饰 : "Carbamidomethyl (C)" 已删除
+设置 > 肽段设置 -- 修饰 > 结构的修饰 : "Carbamidomethyl Cysteine" 已添加
+设置 > 肽段设置 -- 修饰 > 结构的修饰 > "Carbamidomethyl Cysteine" > 氨基酸 是 "C"
+设置 > 肽段设置 -- 修饰 > 结构的修饰 > "Carbamidomethyl Cysteine" > 化学式 是 "C2H3ON"
+设置 > 肽段设置 -- 修饰 > 结构的修饰 > "Carbamidomethyl Cysteine" > 单一同位素质量 是 "57.021464"
+设置 > 肽段设置 -- 修饰 > 结构的修饰 > "Carbamidomethyl Cysteine" > 平均质量 是 "57.05162"
+设置 > 离子对设置 -- 预测 > 碰撞能量 从 "无" 更改到 "Thermo"
+设置 > 离子对设置 -- 预测 > 碰撞能量 > 回归参数 : 包含 { 电荷 = "2", 斜率 = "0.034", 截距 = "3.314" }
+设置 > 离子对设置 -- 预测 > 碰撞能量 > 回归参数 : 包含 { 电荷 = "3", 斜率 = "0.044", 截距 = "3.314" }
+设置 > 离子对设置 -- 过滤器 > 分子母离子加合物 从 "[M+H]" 更改到 "[M-H], [M-], [M-2H], [M-3H], [M+], [M+H], [M+2H], [M+3H]"
+设置 > 离子对设置 -- 过滤器 > 分子片段加合物 从 "[M+]" 更改到 "[M-], [M-2], [M-3], [M+], [M+2], [M+3]"
+设置 > 离子对设置 -- 过滤器 > 子离子选择开始 从 "质荷比 > 母离子" 更改到 "离子 3"
+设置 > 离子对设置 -- 过滤器 > 子离子选择结束 从 "3 个离子" 更改到 "最后一个离子 - 1"
+设置 > 离子对设置 -- 过滤器 > 特殊离子: 已删除所有
+设置 > 离子对设置 -- 过滤器 > 自动选择所有匹配的离子对 从 真 更改到 假
+设置 > 离子对设置 -- 库 > 子离子 从 "3" 更改到 "4"
+设置 > 离子对设置 -- 库 > 选择 从 "从已过滤的离子电荷和类型" 更改到 "无"
+设置 > 离子对设置 -- 库 > 如果库谱图可用，则选择其最强的离子 从 真 更改到 假
+设置 > 离子对设置 -- 整合 > 全部整合 从 假 更改到 真
+Extra Info: 蛋白质计数 = "48",
+肽段计数 = "125",
+母离子计数 = "125",
+离子对计数 = "721"
+
+Undo Redo : 注释 已更改
+Summary   : 设置 > 文档设置 -- 注释 已更改
+All Info  :
+注释 已更改
+设置 > 文档设置 -- 注释 : "Cohort" 已添加
+设置 > 文档设置 -- 注释 > "Cohort" > 应用于 是 "replicate"
+设置 > 文档设置 -- 注释 > "Cohort" > 类型 是 "值列表"
+设置 > 文档设置 -- 注释 > "Cohort" > 值 : 包含 "Healthy"
+设置 > 文档设置 -- 注释 > "Cohort" > 值 : 包含 "Diseased"
+设置 > 文档设置 -- 注释 : "SubjectID" 已添加
+设置 > 文档设置 -- 注释 > "SubjectID" > 应用于 是 "replicate"
+设置 > 文档设置 -- 注释 > "SubjectID" > 类型 是 "文本"
+
+Undo Redo : 文档设置 > 规则集 已更改
+Summary   : 设置 > 文档设置 > 规则集 已更改
+All Info  :
+文档设置 > 规则集 已更改
+设置 > 文档设置 > 规则集 : { 名称 = "Cohort and SubjectID", 行来源 = "pwiz.Skyline.Model.Databinding.Entities.ResultFile", 规则 = [ { 模式 = "D", 替换 = "Diseased" }, { 模式 = "H", 替换 = "Healthy" }, { 模式 = "(.)_(...)", 替换 = "$1$2" } ] } 已添加
+
+Undo Redo : 文档设置 -- 列表 : "Samples" 已添加
+Summary   : 设置 > 文档设置 -- 列表 : "Samples" 已添加
+All Info  :
+文档设置 -- 列表 : "Samples" 已添加
+设置 > 文档设置 -- 列表 : "Samples" 已添加
+设置 > 文档设置 -- 列表 > "Samples" > 属性 : 包含 "SubjectID"
+设置 > 文档设置 -- 列表 > "Samples" > 属性 > "SubjectID" > 类型 是 "文本"
+设置 > 文档设置 -- 列表 > "Samples" > 属性 : 包含 "Sex"
+设置 > 文档设置 -- 列表 > "Samples" > 属性 > "Sex" > 类型 是 "文本"
+设置 > 文档设置 -- 列表 > "Samples" > 属性 : 包含 "Weight"
+设置 > 文档设置 -- 列表 > "Samples" > 属性 > "Weight" > 类型 是 "编号"
+设置 > 文档设置 -- 列表 > "Samples" > 属性 : 包含 "Name"
+设置 > 文档设置 -- 列表 > "Samples" > 属性 > "Name" > 类型 是 "文本"
+设置 > 文档设置 -- 列表 > "Samples" > ID 属性 是 "SubjectID"
+设置 > 文档设置 -- 列表 > "Samples" > 显示属性 是 "Name"
+设置 > 文档设置 -- 列表 > "Samples" > 行 是 空
+
+Undo Redo : 已将 13 值粘贴到文档网格
+Summary   : 已将 13 值粘贴到文档网格
+All Info  :
+已将 13 值粘贴到文档网格
+文档网格 > 报告名称 是 "default"
+将 Samples 的 将新项目添加到列表“Samples”中 设定为 
+将 Samples 的 将新项目添加到列表“Samples”中 设定为 
+将 Samples 的 将新项目添加到列表“Samples”中 设定为 
+将 Samples 的 将新项目添加到列表“Samples”中 设定为 
+将 Samples 的 将新项目添加到列表“Samples”中 设定为 
+将 Samples 的 将新项目添加到列表“Samples”中 设定为 
+将 Samples 的 将新项目添加到列表“Samples”中 设定为 
+将 Samples 的 将新项目添加到列表“Samples”中 设定为 
+将 Samples 的 将新项目添加到列表“Samples”中 设定为 
+将 Samples 的 将新项目添加到列表“Samples”中 设定为 
+将 Samples 的 将新项目添加到列表“Samples”中 设定为 
+将 Samples 的 将新项目添加到列表“Samples”中 设定为 
+将 Samples 的 将新项目添加到列表“Samples”中 设定为 
+Extra Info: D102	M	190	Drizzle
+D103	F	245	Sniffles
+D108	F	182	Mumbles
+D138	M	210	Rattle
+D154	M	228	Fumble
+D172	F	175	Wheezy
+D196	F	195	Wobbles
+H146	M	250	Squeaks
+H147	F	240	Nibbles
+H148	M	202	Zippy
+H159	F	220	Whiskers
+H160	M	215	Skipper
+H161	F	255	Pippin
+H162	M	235	Scamper
+
+报告名称 = "default"
+
+Undo Redo : 注释 > "SubjectID" > Lookup 已更改为 "Samples"
+Summary   : 设置 > 文档设置 -- 注释 > "SubjectID" > Lookup 已更改为 "Samples"
+All Info  :
+注释 > "SubjectID" > Lookup 已更改为 "Samples"
+设置 > 文档设置 -- 注释 > "SubjectID" > Lookup 从 缺失 更改到 "Samples"
+
+Undo Redo : 肽段设置 -- 定量 > 归一化方法 从 "无" 更改到 "相对于总体标准品比率"
+Summary   : 设置 > 肽段设置 -- 定量 > 归一化方法 从 "无" 更改到 "相对于总体标准品比率"
+All Info  :
+肽段设置 -- 定量 > 归一化方法 从 "无" 更改到 "相对于总体标准品比率"
+设置 > 肽段设置 -- 定量 > 归一化方法 从 "无" 更改到 "相对于总体标准品比率"
+
+Undo Redo : 群组比较 : "Peptide Group Comparison" 已添加
+Summary   : 设置 > 文档设置 -- 群组比较 : "Peptide Group Comparison" 已添加
+All Info  :
+群组比较 : "Peptide Group Comparison" 已添加
+设置 > 文档设置 -- 群组比较 : "Peptide Group Comparison" 已添加
+设置 > 文档设置 -- 群组比较 > "Peptide Group Comparison" > 控制群组注释 是 "Cohort"
+设置 > 文档设置 -- 群组比较 > "Peptide Group Comparison" > 控制群组值 是 "Healthy"
+设置 > 文档设置 -- 群组比较 > "Peptide Group Comparison" > 比较值 是 "Diseased"
+设置 > 文档设置 -- 群组比较 > "Peptide Group Comparison" > 身份注释 是 "SubjectID"
+设置 > 文档设置 -- 群组比较 > "Peptide Group Comparison" > 归一化方法 是 "默认归一化方法"
+设置 > 文档设置 -- 群组比较 > "Peptide Group Comparison" > 总结方法 是 "离子对面积总和"
+设置 > 文档设置 -- 群组比较 > "Peptide Group Comparison" > 置信水平 是 "95"
+设置 > 文档设置 -- 群组比较 > "Peptide Group Comparison" > 蛋白质范围 是 假
+设置 > 文档设置 -- 群组比较 > "Peptide Group Comparison" > 用零作为缺失峰值 是 假
+设置 > 文档设置 -- 群组比较 > "Peptide Group Comparison" > Q 值截止 是 缺失
+设置 > 文档设置 -- 群组比较 > "Peptide Group Comparison" > 格式化行 是 空
+
+Undo Redo : 报告 已更改
+Summary   : 设置 > 文档设置 > 报告 已更改
+All Info  :
+报告 已更改
+设置 > 文档设置 > 报告 : "Peptide Areas" 已添加
+设置 > 文档设置 > 报告 > "Peptide Areas" > 列 : 包含 "肽段"
+设置 > 文档设置 > 报告 > "Peptide Areas" > 列 : 包含 "蛋白质"
+设置 > 文档设置 > 报告 > "Peptide Areas" > 列 : 包含 "修改的序列"
+设置 > 文档设置 > 报告 > "Peptide Areas" > 列 : 包含 "标准类型"
+设置 > 文档设置 > 报告 > "Peptide Areas" > 列 : 包含 "重复测定"
+设置 > 文档设置 > 报告 > "Peptide Areas" > 列 : 包含 "总面积"
+设置 > 文档设置 > 报告 > "Peptide Areas" > 列 : 包含 "原始"
+设置 > 文档设置 > 报告 > "Peptide Areas" > 列 : 包含 "精确"
+设置 > 文档设置 > 报告 > "Peptide Areas" > 列 : 包含 "消息"
+设置 > 文档设置 > 报告 > "Peptide Areas" > 列 : 包含 "校准后面积"
+设置 > 文档设置 > 报告 > "Peptide Areas" > 列 : 包含 "annotation_SubjectID"
+设置 > 文档设置 > 报告 > "Peptide Areas" > 过滤器 : 包含 { 列 = "标准类型", 操作 = "为空白", 值 = 缺失 }
+设置 > 文档设置 > 报告 > "Peptide Areas" > 默认布局名称 是 缺失
+设置 > 文档设置 > 报告 : "Replicate Abundances" 已添加
+设置 > 文档设置 > 报告 > "Replicate Abundances" > 列 : 包含 "蛋白质"
+设置 > 文档设置 > 报告 > "Replicate Abundances" > 列 : 包含 "肽段"
+设置 > 文档设置 > 报告 > "Replicate Abundances" > 列 : 包含 "倍数变化结果"
+设置 > 文档设置 > 报告 > "Replicate Abundances" > 列 : 包含 "已调整的 P 值"
+设置 > 文档设置 > 报告 > "Replicate Abundances" > 列 : 包含 "丰度"
+设置 > 文档设置 > 报告 > "Replicate Abundances" > 过滤器 是 空
+设置 > 文档设置 > 报告 > "Replicate Abundances" > 默认布局名称 是 缺失
+

@@ -116,7 +116,8 @@ namespace pwiz.Skyline.Controls.Lists
         {
             
             var listDef = new ListDef(tbxListName.Text);
-            listDef = listDef.ChangeProperties(_listProperties.Select(prop => prop.AnnotationDef));
+            listDef = listDef.ChangeProperties(_listProperties.Select(prop => prop.AnnotationDef)
+                .Where(a => !string.IsNullOrEmpty(a.Name)));
             listDef = listDef.ChangeIdProperty(comboIdProperty.SelectedItem as string);
             listDef = listDef.ChangeDisplayProperty(comboDisplayProperty.SelectedItem as string);
             if (_listDefOriginal == null || _listDefOriginal.RowCount == 0)
@@ -139,10 +140,10 @@ namespace pwiz.Skyline.Controls.Lists
                 OriginalName = annotationDef.Name;
             }
 
-            public string Name { get { return AnnotationDef.Name; } set
-                {
-                    AnnotationDef = (AnnotationDef) AnnotationDef.ChangeName(value);
-                }
+            public string Name
+            {
+                get { return AnnotationDef.Name; }
+                set { AnnotationDef = (AnnotationDef)AnnotationDef.ChangeName(value); }
             }
 
             public ListPropertyType ListPropertyType
@@ -177,7 +178,18 @@ namespace pwiz.Skyline.Controls.Lists
             var propertyNames = new HashSet<string>();
             for (int i = 0; i < _listProperties.Count; i++)
             {
-                if (!propertyNames.Add(_listProperties[i].Name))
+                var listProperty = _listProperties[i];
+                if (Equals(AnnotationDef.EMPTY, listProperty.AnnotationDef))
+                {
+                    continue;
+                }
+                var propertyName = listProperty.Name;
+                if (string.IsNullOrEmpty(propertyName))
+                {
+                    MessageDlg.Show(this, Model.Lists.ListsResources.ListDesigner_OkDialog_Name_cannot_be_blank);
+                    dataGridViewProperties.CurrentCell = dataGridViewProperties.Rows[i].Cells[colPropertyName.Index];
+                }
+                if (!propertyNames.Add(propertyName))
                 {
                     MessageDlg.Show(this, ListsResources.ListDesigner_OkDialog_Duplicate_property_name);
                     dataGridViewProperties.CurrentCell = dataGridViewProperties.Rows[i].Cells[colPropertyName.Index];
