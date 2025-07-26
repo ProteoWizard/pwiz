@@ -353,7 +353,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 var newMods = DocumentUI.Settings.PeptideSettings.Modifications.StaticModsLosses;
                 var oldMods = e.DocumentPrevious.Settings.PeptideSettings.Modifications.StaticModsLosses;
-                var addedMods = newMods.ToList().FindAll(newMod => !oldMods.Contains(newMod)).ToList();
+                var addedMods = newMods.ToList().FindAll(newMod => !oldMods.Contains(newMod));
                 if (addedMods.Any())
                     Settings.Default.ShowLosses = Settings.Default.ShowLosses + @"," + addedMods.ToString(@",");
             }

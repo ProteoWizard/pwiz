@@ -235,6 +235,11 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
         double bpi = row.get<double>(++idx);
         double tic = row.get<double>(++idx);
 
+        int numScans = row.get<int>(++idx);
+        int numPeaks = row.get<int>(++idx);
+        if (numPeaks == 0)
+            continue;
+
         tic_->times.push_back(rt);
         bpc_->times.push_back(rt);
         tic_->intensities.push_back(tic);
@@ -247,11 +252,6 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
             ticMs1_->intensities.push_back(tic);
             bpcMs1_->intensities.push_back(bpi);
         }
-
-        int numScans = row.get<int>(++idx);
-        int numPeaks = row.get<int>(++idx);
-        if (numPeaks == 0)
-            continue;
 
         maxNumScans = max(maxNumScans, numScans);
 
