@@ -241,6 +241,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Count Distinct.
+        /// </summary>
+        public static string CountDistinctImpl_CountDistinct {
+            get {
+                return ResourceManager.GetString("CountDistinctImpl_CountDistinct", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Count.
         /// </summary>
         public static string CountImpl_Count {
@@ -970,7 +979,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Coefficent Of Variation.
+        ///   Looks up a localized string similar to Coefficient Of Variation.
         /// </summary>
         public static string NumericAggregate_Cv {
             get {
@@ -984,6 +993,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string NumericAggregate_Mean {
             get {
                 return ResourceManager.GetString("NumericAggregate_Mean", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Median.
+        /// </summary>
+        public static string NumericAggregate_Median {
+            get {
+                return ResourceManager.GetString("NumericAggregate_Median", resourceCulture);
             }
         }
         

@@ -21,7 +21,6 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -35,6 +34,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Util.Extensions;
 
@@ -70,7 +70,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             AddAdditionalSetting(COMET_SETTINGS, new Setting("clip_nterm_methionine", 0, 0, 1));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("digest_mass_range", "600.0 5000.0"));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("equal_I_and_L", 1, 0, 1));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("explicit_deltacn", "0"));
+            //AddAdditionalSetting(COMET_SETTINGS, new Setting("explicit_deltacn", "0"));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("fragment_bin_offset", 0.4, 0.0));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("isotope_error", 0, 0, 5)); // 0=off, 1=0/1 (C13 error), 2=0/1/2, 3=0/1/2/3, 4=--8/-4/0/4/8 (for +4/+8 labeling), 5=-1/0/1/2/3.
             AddAdditionalSetting(COMET_SETTINGS, new Setting("mass_offsets", ""));
@@ -78,9 +78,9 @@ namespace pwiz.Skyline.Model.DdaSearch
             AddAdditionalSetting(COMET_SETTINGS, new Setting("mass_type_parent", 1, 0, 1));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("max_duplicate_proteins", 20, 0));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("max_fragment_charge", 3, 1));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("max_index_runtime", "0"));
+            //AddAdditionalSetting(COMET_SETTINGS, new Setting("max_index_runtime", "0"));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("max_precursor_charge", 6, 1, 9));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("max_variable_mods_in_peptide", 5, 0));
+            //AddAdditionalSetting(COMET_SETTINGS, new Setting("max_variable_mods_in_peptide", 5, 0));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("minimum_intensity", 0.0, 0.0));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("minimum_peaks", 10, 0));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("ms_level", 2, 2));
@@ -88,7 +88,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             AddAdditionalSetting(COMET_SETTINGS, new Setting("num_output_lines", 5, 1));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("num_results", 50, 1));
             //AddAdditionalSetting(COMET_SETTINGS, new Setting("num_threads", "0"));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("old_mods_encoding", 0, 0, 1));
+            //AddAdditionalSetting(COMET_SETTINGS, new Setting("old_mods_encoding", 0, 0, 1));
             /*AddAdditionalSetting(COMET_SETTINGS, new Setting("output_mzidentmlfile", "0"));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("output_pepxmlfile", "1"));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("output_percolatorfile", "0"));
@@ -97,23 +97,23 @@ namespace pwiz.Skyline.Model.DdaSearch
             AddAdditionalSetting(COMET_SETTINGS, new Setting("output_suffix", ""));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("output_txtfile", "1"));*/
             AddAdditionalSetting(COMET_SETTINGS, new Setting("override_charge", 0, 0, 1));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("peff_format", 0, 0, 1));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("peff_obo", ""));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("peff_verbose_output", 0, 0, 1));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("peptide_length_range", "1 63"));
+            //AddAdditionalSetting(COMET_SETTINGS, new Setting("peff_format", 0, 0, 1));
+            //AddAdditionalSetting(COMET_SETTINGS, new Setting("peff_obo", ""));
+            //AddAdditionalSetting(COMET_SETTINGS, new Setting("peff_verbose_output", 0, 0, 1));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("peptide_length_range", "6 50"));
             //AddAdditionalSetting(COMET_SETTINGS, new Setting("peptide_mass_tolerance", 3.0, 0));
             //AddAdditionalSetting(COMET_SETTINGS, new Setting("peptide_mass_units", 0, 0, 1));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("precursor_NL_ions", ""));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("precursor_charge", "0 0"));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("precursor_tolerance_type", 1, 0, 1));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("print_expect_score", "1"));
+            //AddAdditionalSetting(COMET_SETTINGS, new Setting("print_expect_score", "1"));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("remove_precursor_peak", 0, 0, 1));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("remove_precursor_tolerance", 1.5, 0.0));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("require_variable_mod", 0, 0, 1));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("scan_range", "0 0"));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("search_enzyme2_number", "0"));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("show_fragment_ions", 0, 0, 1));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("skip_researching", 1, 0, 1));
+            //AddAdditionalSetting(COMET_SETTINGS, new Setting("search_enzyme2_number", "0"));
+            //AddAdditionalSetting(COMET_SETTINGS, new Setting("show_fragment_ions", 0, 0, 1));
+            //AddAdditionalSetting(COMET_SETTINGS, new Setting("skip_researching", 1, 0, 1));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("spectrum_batch_size", 0, 0));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("text_file_extension", ""));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("theoretical_fragment_ions", 1, 0, 1));
@@ -151,7 +151,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             @"c,z1",
         };
 
-        static string CRUX_FILENAME = @"crux-4.2";
+        static string CRUX_FILENAME = @"crux-4.3";
         static Uri CRUX_URL = new Uri($@"https://noble.gs.washington.edu/crux-downloads/{CRUX_FILENAME}/{CRUX_FILENAME}.Windows.AMD64.zip");
         public static string CruxDirectory => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), CRUX_FILENAME);
         public static string CruxBinary => Path.Combine(CruxDirectory, $@"{CRUX_FILENAME}.Windows.AMD64", @"bin", @"crux");
@@ -443,7 +443,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         private void GetPercolatorScores(string percolatorTsvFilepath, Dictionary<string, double> qvalueByPsmId)
         {
-            var percolatorTargetPsmsReader = new DsvFileReader(percolatorTsvFilepath, TextUtil.SEPARATOR_TSV);
+            using var percolatorTargetPsmsReader = new DsvFileReader(percolatorTsvFilepath, TextUtil.SEPARATOR_TSV);
             int psmIdColumn = percolatorTargetPsmsReader.GetFieldIndex(@"PSMId");
             int qvalueColumn = percolatorTargetPsmsReader.GetFieldIndex(@"q-value");
             int psmIdStartIndex = Path.GetDirectoryName(Path.GetDirectoryName(percolatorTsvFilepath))?.Length + 1 ?? 0; // trim off the directory name

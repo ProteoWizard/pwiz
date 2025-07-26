@@ -107,37 +107,6 @@ namespace BiblioSpec {
         SslReader::addDataLine(data);
     }
 
-    bool HardklorReader::getSpectrum(PSM* psm,
-        SPEC_ID_TYPE findBy,
-        SpecData& returnData,
-        bool getPeaks)
-    {
-        bool isMS1 = psm->isPrecursorOnly();
-        if (isMS1)
-        {
-            getPeaks = false;
-            if (psm->specKey < 0 && findBy == SPEC_ID_TYPE::SCAN_NUM_ID)
-            {
-                findBy = NAME_ID; // Look up by constructed ID since there's no actual spectrum associated
-            }
-        }
-        bool success = !getPeaks;
-        if (getPeaks)
-        {
-            switch (findBy) {
-            case NAME_ID:
-                success = SslReader::getSpectrum(psm->specName, returnData, getPeaks);
-                break;
-            case SCAN_NUM_ID:
-                success = SslReader::getSpectrum(psm->specKey, returnData, findBy, getPeaks);
-                break;
-            case INDEX_ID:
-                success = SslReader::getSpectrum(psm->specIndex, returnData, findBy, getPeaks);
-                break;
-            }
-        }
-        return success;
-    };
     
 } // namespace
 

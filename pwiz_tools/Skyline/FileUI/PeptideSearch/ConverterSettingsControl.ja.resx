@@ -228,9 +228,15 @@
   <data name="cbDiaUmpire.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
   </data>
+  <data name="cbDiaUmpire.Text" xml:space="preserve">
+    <value>DIA-UmpireからDIAファイルを実行</value>
+  </data>
   <metadata name="toolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
+  <data name="cbDiaUmpire.ToolTip" xml:space="preserve">
+    <value>DIA-Umpireで疑似DDAスペクトルを作成 (DDA検索エンジンの使用が可能になります)</value>
+  </data>
   <data name="&gt;&gt;cbDiaUmpire.Name" xml:space="preserve">
     <value>cbDiaUmpire</value>
   </data>
@@ -262,8 +268,7 @@
     <value>15</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>Running DIA-Umpire on your DIA files allows you to use any of the available DDA search engines. Only MSFragger supports searching raw DIA spectra.</value>
-    <comment>Needs Review:Missing translation</comment>
+    <value>DIAファイルでDIA-Umpireを実行すると、利用可能なDDA検索エンジンのいずれかを使用できるようになります。生データのDIAスペクトルの検索をサポートしているのは、MSFraggerだけです。</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -443,7 +448,7 @@
     <value>converterTabControl</value>
   </data>
   <data name="&gt;&gt;converterTabControl.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=24.1.1.277, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.WizardPages, Skyline, Version=1.0.0.0 Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;converterTabControl.Parent" xml:space="preserve">
     <value>$this</value>

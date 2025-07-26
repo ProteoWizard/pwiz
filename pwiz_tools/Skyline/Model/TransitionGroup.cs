@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
@@ -777,7 +778,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private readonly struct LossId : IComparable
+        private readonly struct LossId : IComparable, IEquatable<LossId>
         {
             public LossId(IonType ionType, double mass, int charge)
             {

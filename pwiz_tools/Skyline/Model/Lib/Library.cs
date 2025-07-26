@@ -31,6 +31,7 @@ using pwiz.BiblioSpec;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
@@ -605,7 +606,22 @@ namespace pwiz.Skyline.Model.Lib
         LibrarySpec LibrarySpec { get; }
     }
 
+    /// <summary>
+    /// Extra interface that can be added to an <see cref="ILibraryBuilder"/> class to provide
+    /// a warning to the users before the build begins and possibly to decide not to build.
+    /// </summary>
+    public interface ILibraryBuildWarning
+    {
+        string GetWarning();
+    }
+
     public enum LibraryRedundancy { best, all, all_redundant }
+
+    public enum WorkflowType
+    {
+        DDA = 0,
+        DIA
+    }
 
     public abstract class Library : XmlNamedElement
     {
@@ -3085,10 +3101,11 @@ namespace pwiz.Skyline.Model.Lib
 
     public class SpectrumSourceFileDetails
     {
-        public SpectrumSourceFileDetails(string filePath, string idFilePath = null)
+        public SpectrumSourceFileDetails(string filePath, string idFilePath = null, WorkflowType workflowType = WorkflowType.DDA)
         {
             FilePath = filePath;
             IdFilePath = idFilePath;
+            WorkflowType = workflowType;
             ScoreThresholds = new Dictionary<ScoreType, double?>();
             BestSpectrum = 0;
             MatchedSpectrum = 0;
@@ -3096,6 +3113,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public string FilePath { get; private set; }
         public string IdFilePath { get; set; }
+        public WorkflowType WorkflowType { get; }
         public Dictionary<ScoreType, double?> ScoreThresholds { get; private set; }
         public int BestSpectrum { get; set; }
         public int MatchedSpectrum { get; set; }

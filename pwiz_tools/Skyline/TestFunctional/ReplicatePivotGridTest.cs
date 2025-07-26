@@ -43,7 +43,8 @@ namespace pwiz.SkylineTestFunctional
         private const string expectedDefaultFrozenColumn = "COLUMN_Peptide.Protein";
         private const int randomSeed = 1000;
 
-        [TestMethod]
+        // TODO(wardough): Fix the issue or switch to a generalized string in TestExclusionReason
+        [TestMethod, NoParallelTesting("VerifyColumnSizesAligned failing in Docker Desktop")]
         public void TestReplicatePivotGrid()
         {
             TestFilesZip = @"TestFunctional\ReplicatePivotGridTest.zip";
@@ -171,8 +172,12 @@ namespace pwiz.SkylineTestFunctional
             var replicateGridView = documentGrid.DataboundGridControl.ReplicatePivotDataGridView;
             var originalScrollBars = documentGrid.DataboundGridControl.ReplicatePivotDataGridView.ScrollBars;
             RunUI(() => documentGrid.DataboundGridControl.ReplicatePivotDataGridView.ScrollBars = ScrollBars.None);
+
+            var propertyColumnHeaderText = documentGrid.DataboundGridControl.ReplicatePropertyColumn.HeaderText;
+            Assert.AreEqual(Skyline.Model.Databinding.DatabindingResources.SkylineViewContext_WriteDataWithStatus_Property, propertyColumnHeaderText);
+
             var columnWidths = replicateGridView.Columns.Cast<DataGridViewColumn>()
-                .Where(col => !"Property".Equals(col.HeaderText) && col.Visible)
+                .Where(col => !propertyColumnHeaderText.Equals(col.HeaderText) && col.Visible)
                 // Use col.Width for non-freezable columns as they should always align.
                 .ToDictionary(col => col.HeaderText, col => col.Width);
             RunUI(() => documentGrid.DataboundGridControl.ReplicatePivotDataGridView.ScrollBars = originalScrollBars);

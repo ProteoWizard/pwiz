@@ -12,26 +12,23 @@ namespace pwiz.Skyline.Model
         void UIInvoke(Action act);
     }
 
-
-    public class ProgressMonitor
+    public class ProgressMonitor : IDisposable
     {
         // ReSharper disable once InconsistentlySynchronizedField
-        public int ProgressRaw => _progressRaw;
         public int MaxProgressRaw { get; private set; }
-        public int ReportingStep { get; private set; }
+        public int ReportingIntervalMs { get; private set; }
         public IProgressBar ProgressBar { get; private set; }
-        public int Step => _step;
 
-        private int _progressSteps;
-        private int _step;
         private int _progressRaw;
-        private object _updateAndCheckLock = new object();
+        private object _updateLock = new object();
+        private Timer _reportingTimer;
+        private bool _disposed;
 
         private static ConcurrentDictionary<CancellationToken, ProgressMonitor> _monitors =
             new ConcurrentDictionary<CancellationToken, ProgressMonitor>();
 
         //this method must be called on the UI thread
-        public static IProgressBar RegisterProgressBar(CancellationToken token, int maxProgress, int reportingStep,
+        public static IProgressBar RegisterProgressBar(CancellationToken token, int maxProgress, int reportingIntervalMs,
             IProgressBar bar)
         {
             //collection cleanup
@@ -39,7 +36,7 @@ namespace pwiz.Skyline.Model
             {
                 if (pair.Value.ProgressBar.IsDisposed())
                     if (_monitors.TryRemove(pair.Key, out var monitor))
-                        monitor.ProgressBar.Dispose();
+                        monitor.Dispose();
             });
 
             if (token.IsCancellationRequested)
@@ -59,7 +56,8 @@ namespace pwiz.Skyline.Model
 
                 if (maxProgress >= 100)
                 {
-                    _monitors.TryAdd(token, new ProgressMonitor(maxProgress, reportingStep, bar));
+                    var newMonitor = new ProgressMonitor(maxProgress, reportingIntervalMs, bar);
+                    _monitors.TryAdd(token, newMonitor);
                     return bar;
                 }
                 else return null;
@@ -70,7 +68,7 @@ namespace pwiz.Skyline.Model
         {
             if (_monitors.TryRemove(token, out var monitor))
             {
-                monitor.ProgressBar.UIInvoke(monitor.ProgressBar.Dispose);
+                monitor.ProgressBar.UIInvoke(() => monitor.Dispose());
             }
         }
 
@@ -83,49 +81,84 @@ namespace pwiz.Skyline.Model
             }
             else
             {
-                //update the progress bar
+                // Increment the progress counter
                 if (_monitors.TryGetValue(token, out ProgressMonitor monitor))
                 {
-                    if (monitor.Step > 0 && monitor.UpdateAndCheck())
-                        monitor.UpdateProgressBar();
+                    monitor.IncrementProgress();
                 }
             }
         }
 
-        private ProgressMonitor(int maxProgress, int reportingStep, IProgressBar bar)
+        private ProgressMonitor(int maxProgress, int reportingIntervalMs, IProgressBar bar)
         {
             MaxProgressRaw = maxProgress;
-            ReportingStep = reportingStep;
+            ReportingIntervalMs = reportingIntervalMs;
             ProgressBar = bar;
+            _progressRaw = 0;
 
-            _step = MaxProgressRaw / 100 * ReportingStep;
+            // Start the timer for periodic progress updates
+            _reportingTimer = new Timer(TimerCallback, null, reportingIntervalMs, reportingIntervalMs);
         }
 
-        public bool UpdateAndCheck()
+        private void IncrementProgress()
         {
-            lock (_updateAndCheckLock)
+            lock (_updateLock)
             {
-                var result = (_progressRaw == _progressSteps && ProgressRaw <= MaxProgressRaw);
-                _progressRaw++;
-                return result;
+                if (_progressRaw < MaxProgressRaw)
+                {
+                    _progressRaw++;
+                }
             }
         }
 
-        public void UpdateProgressBar()
+        private void TimerCallback(object state)
         {
+            if (_disposed || ProgressBar.IsDisposed())
+                return;
+
             try
             {
+                int currentProgress;
+                lock (_updateLock)
+                {
+                    currentProgress = _progressRaw;
+                }
+
+                // Calculate percentage (0-100)
+                int progressPercentage = Math.Min(100, (currentProgress * 100) / MaxProgressRaw);
+
                 ProgressBar.UIInvoke(() =>
+                {
+                    if (!_disposed && !ProgressBar.IsDisposed())
                     {
-                        ProgressBar.UpdateProgress(_progressSteps / _step);
-                        _progressSteps += _step;
+                        ProgressBar.UpdateProgress(progressPercentage);
                     }
-                );
+                });
             }
-            //It is possible that the graph is disposed by another thread during
-            //  the Invoke() call. This is normal and this exception does not require
-            //  any processing.
-            catch (ObjectDisposedException) { }
+            catch (ObjectDisposedException)
+            {
+                // Progress bar was disposed, stop the timer
+                Dispose();
+            }
+        }
+
+        public void Dispose()
+        {
+            if (!_disposed)
+            {
+                _disposed = true;
+                _reportingTimer?.Dispose();
+                _reportingTimer = null;
+
+                try
+                {
+                    ProgressBar?.Dispose();
+                }
+                catch (ObjectDisposedException)
+                {
+                    // Already disposed, ignore
+                }
+            }
         }
     }
 }
