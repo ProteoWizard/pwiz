@@ -1374,6 +1374,42 @@ namespace pwiz.Skyline.Controls.Graphs {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Intensity:.
+        /// </summary>
+        public static string GraphSpectrum_ToolTip_Intensity {
+            get {
+                return ResourceManager.GetString("GraphSpectrum_ToolTip_Intensity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Matched Ions.
+        /// </summary>
+        public static string GraphSpectrum_ToolTip_MatchedIons {
+            get {
+                return ResourceManager.GetString("GraphSpectrum_ToolTip_MatchedIons", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Observed M/z:.
+        /// </summary>
+        public static string GraphSpectrum_ToolTip_mz {
+            get {
+                return ResourceManager.GetString("GraphSpectrum_ToolTip_mz", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Rank:.
+        /// </summary>
+        public static string GraphSpectrum_ToolTip_Rank {
+            get {
+                return ResourceManager.GetString("GraphSpectrum_ToolTip_Rank", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failure loading spectrum. Library may be corrupted..
         /// </summary>
         public static string GraphSpectrum_UpdateUI_Failure_loading_spectrum__Library_may_be_corrupted {
@@ -1920,6 +1956,15 @@ namespace pwiz.Skyline.Controls.Graphs {
         public static string SummaryReplicateGraphPane_SummaryReplicateGraphPane_Replicate {
             get {
                 return ResourceManager.GetString("SummaryReplicateGraphPane_SummaryReplicateGraphPane_Replicate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calculated M/z.
+        /// </summary>
+        public static string ToolTipImplementation_RenderTip_Calculated_Mass {
+            get {
+                return ResourceManager.GetString("ToolTipImplementation_RenderTip_Calculated_Mass", resourceCulture);
             }
         }
         
