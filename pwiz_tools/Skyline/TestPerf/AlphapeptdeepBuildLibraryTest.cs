@@ -184,6 +184,7 @@ namespace TestPerf
                     buildLibraryDlg.IrtStandard = iRTtype;
             });
 
+
             if (simulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT) 
             {
                 // TestCancelPython always uses NAIVE state so must reset state
@@ -199,9 +200,27 @@ namespace TestPerf
                 RunUI(buildLibraryDlg.OkWizardPage);
             }
 
+            if (buildLibraryDlg.Builder == null)
+            {
+                // Recreate builder when running the test multiple times (e.g. in different lanquages)
+                RunUI(() =>
+                {
+                    PythonInstaller.SimulatedInstallationState =
+                        PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD;
+                    buildLibraryDlg.ValidateBuilder(true);
+                });
+                PythonInstaller.SimulatedInstallationState = simulatedInstallationState;
+            }
+
+            WaitForCondition(() => buildLibraryDlg.Builder != null);
+
             var alphaPeptDeepBuilder = (AlphapeptdeepLibraryBuilder) buildLibraryDlg.Builder;
+            Assert.IsNotNull(alphaPeptDeepBuilder);
             string builtLibraryPath = alphaPeptDeepBuilder.TransformedOutputSpectraLibFilepath;
 
+            var limitedModelAlert = WaitForOpenForm<AlertDlg>();
+            Assert.AreEqual(string.Format(ModelResources.Alphapeptdeep_Warn_limited_modification, @"Phospho (ST)".Indent(1)), limitedModelAlert.Message);
+            limitedModelAlert.OkDialog();
             if (iRTtype != null)
             {
                 VerifyAddIrts(WaitForOpenForm<AddIrtPeptidesDlg>());
@@ -218,9 +237,9 @@ namespace TestPerf
             WaitForCondition(() => File.Exists(builtLibraryPath));
 
             AssertEx.IsFalse(alphaPeptDeepBuilder.FractionOfExpectedOutputLinesGenerated > 2,
-                @"TestAlphaPeptDeepBuildLibrary: Total count of generated output is more than twice of the expected count ... ");
+                $@"TestAlphaPeptDeepBuildLibrary: Total count of generated output ({alphaPeptDeepBuilder.TotalGeneratedLinesOfOutput} lines) is more than twice of the expected count ({alphaPeptDeepBuilder.TotalExpectedLinesOfOutput} lines) ... ");
             AssertEx.IsFalse(alphaPeptDeepBuilder.FractionOfExpectedOutputLinesGenerated < 0.5,
-                @"TestAlphaPeptDeepBuildLibrary: Total count of generated output is less than half of the expected count ... ");
+                $@"TestAlphaPeptDeepBuildLibrary: Total count of generated output ({alphaPeptDeepBuilder.TotalGeneratedLinesOfOutput} lines) less than half of the expected count ({alphaPeptDeepBuilder.TotalExpectedLinesOfOutput} lines) ... ");
             
             TestResultingLibByValues(TestFilesDir.GetTestPath(answerFile), builtLibraryPath);
         }
@@ -229,7 +248,7 @@ namespace TestPerf
         {
             RunUI(() =>
             {
-                Assert.AreEqual(7, dlg.PeptidesCount);
+                Assert.AreEqual(6, dlg.PeptidesCount);
                 Assert.AreEqual(1, dlg.RunsConvertedCount); // Libraries now convert through internal alignment to single RT scale
                 Assert.AreEqual(0, dlg.RunsFailedCount);
             });
