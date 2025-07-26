@@ -1070,6 +1070,11 @@ namespace pwiz.SkylineTestUtil
                     var actualSpectra = actualLoaded.GetSpectra(actual, IsotopeLabelType.light, LibraryRedundancy.best);
                     var actualSpectrum = actualSpectra.First().SpectrumPeaksInfo.Peaks;
                     Assert.AreEqual(expectedSpectrum.Length, actualSpectrum.Length, "peak counts not equal");
+
+                    // Sometimes the intensities are slightly different or the order of the peaks changes so sort first
+                    Array.Sort(expectedSpectrum, (s1, s2) => s2.Mz.CompareTo(s1.Mz));
+                    Array.Sort(actualSpectrum, (s1, s2) => s2.Mz.CompareTo(s1.Mz));
+
                     for (int j = 0; j < expectedSpectrum.Length; ++j)
                     {
                         Assert.AreEqual(expectedSpectrum[j].Mz, actualSpectrum[j].Mz, mzTolerance, "peak m/z delta exceeded tolerance");
