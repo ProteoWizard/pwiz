@@ -17,17 +17,17 @@
  * limitations under the License.
  */
 using System;
-using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
-using pwiz.CommonMsData;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using ZedGraph;
 
@@ -88,6 +88,8 @@ namespace pwiz.Skyline.Menus
 
             originalPeakMenuItem.Checked = set.ShowOriginalPeak;
             menuStrip.Items.Insert(iInsert++, originalPeakMenuItem);
+            imputedPeakMenuItem.Checked = IsShowImputedPeak(DocumentUI);
+            menuStrip.Items.Insert(iInsert++, imputedPeakMenuItem);
 
             menuStrip.Items.Insert(iInsert++, retentionTimesContextMenuItem);
             if (retentionTimesContextMenuItem.DropDownItems.Count == 0)
@@ -245,41 +247,16 @@ namespace pwiz.Skyline.Menus
         /// </summary>
         private int InsertAlignmentMenuItems(ToolStripItemCollection items, ChromFileInfoId chromFileInfoId, int iInsert)
         {
-            var predictRT = Document.Settings.PeptideSettings.Prediction.RetentionTime;
-            if (predictRT != null && predictRT.IsAutoCalculated)
+            var alignmentTarget = AlignmentTarget.GetAlignmentTarget(Document);
+
+            if (alignmentTarget != null)
             {
-                var menuItem = new ToolStripMenuItem(string.Format(Resources.SkylineWindow_ShowCalculatorScoreFormat, predictRT.Calculator.Name), null,
+                var menuItem = new ToolStripMenuItem(alignmentTarget.GetAlignmentMenuItemText(), null,
                     (sender, eventArgs) => SkylineWindow.AlignToRtPrediction = !SkylineWindow.AlignToRtPrediction)
                 {
                     Checked = SkylineWindow.AlignToRtPrediction,
                 };
                 items.Insert(iInsert++, menuItem);
-            }
-            if (null != chromFileInfoId && DocumentUI.Settings.HasResults &&
-                !DocumentUI.Settings.DocumentRetentionTimes.FileAlignments.IsEmpty)
-            {
-                foreach (var chromatogramSet in DocumentUI.Settings.MeasuredResults.Chromatograms)
-                {
-                    var chromFileInfo = chromatogramSet.GetFileInfo(chromFileInfoId);
-                    if (null == chromFileInfo)
-                    {
-                        continue;
-                    }
-                    string fileItemName = Path.GetFileNameWithoutExtension(SampleHelp.GetFileName(chromFileInfo.FilePath));
-                    var menuItemText = string.Format(Resources.SkylineWindow_AlignTimesToFileFormat, fileItemName);
-                    var alignToFileItem = new ToolStripMenuItem(menuItemText);
-                    if (ReferenceEquals(chromFileInfoId, SkylineWindow.AlignToFile))
-                    {
-                        alignToFileItem.Click += (sender, eventArgs) => SkylineWindow.AlignToFile = null;
-                        alignToFileItem.Checked = true;
-                    }
-                    else
-                    {
-                        alignToFileItem.Click += (sender, eventArgs) => SkylineWindow.AlignToFile = chromFileInfoId;
-                        alignToFileItem.Checked = false;
-                    }
-                    items.Insert(iInsert++, alignToFileItem);
-                }
             }
             return iInsert;
         }
@@ -487,6 +464,11 @@ namespace pwiz.Skyline.Menus
         private void originalPeakContextMenuItem_Click(object sender, EventArgs e)
         {
             SkylineWindow.ShowOriginalPeak(originalPeakMenuItem.Checked);
+        }
+
+        private void imputedPeakMenuItem_Click(object sender, EventArgs e)
+        {
+            SkylineWindow.ShowImputedPeak(imputedPeakMenuItem.Checked);
         }
 
         private void massErrorContextMenuItem_Click(object sender, EventArgs e)
@@ -743,6 +725,17 @@ namespace pwiz.Skyline.Menus
         private void chromPropsContextMenuItem_Click(object sender, EventArgs e)
         {
             SkylineWindow.ShowChromatogramProperties();
+        }
+
+        /// <summary>
+        /// Returns true if the imputed peak boundaries should be shown for a particular document.
+        /// If <see cref="Settings.ShowImputedPeakBounds"/> is null, then the imputed bounds should
+        /// only be shown if the document has some peak imputation settings.
+        /// </summary>
+        public static bool IsShowImputedPeak(SrmDocument document)
+        {
+            return Settings.Default.ShowImputedPeakBounds ??
+                   !ImputationSettings.DEFAULT.Equals(document.Settings.PeptideSettings.Imputation);
         }
     }
 }

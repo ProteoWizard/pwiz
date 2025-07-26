@@ -523,6 +523,15 @@ boundaries.</value>
     <value>True if a MS/MS peptide identification exists for the result file at a time
 between the peak integration boundaries.</value>
   </data>
+  <data name="ImputedEndTime">
+    <value>End time of the peak from the best-scoring replicate mapped using retention time alignment to this replicate</value>
+  </data>
+  <data name="ImputedPeak">
+    <value>Peak boundaries of the best-scoring replicate mapped using retention time alignment to this replicate</value>
+  </data>
+  <data name="ImputedStartTime">
+    <value>Start time of the peak from the best-scoring replicate mapped using retention time alignment to this replicate</value>
+  </data>
   <data name="InChI" xml:space="preserve">
     <value>Standardized molecular identifier</value>
   </data>
