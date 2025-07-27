@@ -1069,6 +1069,23 @@ namespace pwiz.SkylineTestUtil
                     var expectedSpectrum = expectedSpectra.First().SpectrumPeaksInfo.Peaks;
                     var actualSpectra = actualLoaded.GetSpectra(actual, IsotopeLabelType.light, LibraryRedundancy.best);
                     var actualSpectrum = actualSpectra.First().SpectrumPeaksInfo.Peaks;
+                    if (expectedSpectrum.Length != actualSpectrum.Length)
+                    {
+                        Console.WriteLine();
+                        Console.WriteLine($@"Expected Spectrum Key Sequence: {expected.Target.ToString()}");
+                        Console.WriteLine($@"Actual Spectrum Key Sequence: {actual.Target.ToString()}");
+                        Console.WriteLine(@"Expected Spectrum:");
+                        for (int j = 0; j < expectedSpectrum.Length; ++j)
+                        {
+                            Console.WriteLine(expectedSpectrum[j].ToString());
+                        }
+                        Console.WriteLine(@"Actual Spectrum:");
+                        for (int j = 0; j < actualSpectrum .Length; ++j)
+                        {
+                            Console.WriteLine(actualSpectrum[j].ToString());
+                        }
+
+                    }
                     Assert.AreEqual(expectedSpectrum.Length, actualSpectrum.Length, "peak counts not equal");
 
                     // Sometimes the intensities are slightly different or the order of the peaks changes so sort first
