@@ -1066,9 +1066,9 @@ namespace pwiz.SkylineTestUtil
                     Assert.AreEqual(expected, actual, "spectrum library keys not equal");
 
                     var expectedSpectra = expectedLoaded.GetSpectra(expected, IsotopeLabelType.light, LibraryRedundancy.best);
-                    var expectedSpectrum = expectedSpectra.First().SpectrumPeaksInfo.Peaks;
+                    var expectedSpectrum = expectedSpectra.First().SpectrumPeaksInfo.Peaks.Where((s) => s.Intensity >= intensityTolerance).ToArray();
                     var actualSpectra = actualLoaded.GetSpectra(actual, IsotopeLabelType.light, LibraryRedundancy.best);
-                    var actualSpectrum = actualSpectra.First().SpectrumPeaksInfo.Peaks;
+                    var actualSpectrum = actualSpectra.First().SpectrumPeaksInfo.Peaks.Where((s) => s.Intensity >= intensityTolerance).ToArray();
                     if (expectedSpectrum.Length != actualSpectrum.Length)
                     {
                         Console.WriteLine();

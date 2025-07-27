@@ -51,8 +51,6 @@ namespace pwiz.Common.SystemUtil
         public bool ShowCommandAndArgs { get; set; }
         private readonly List<string> _messageLog = new List<string>();
         private string _tmpDirForCleanup;
-
-        public bool EnableImmediateLog { get; set; }
         public string[] FilterStrings { get; set; }
 
         public bool EnableRunningTimeMessage { get; set; }
@@ -195,13 +193,11 @@ namespace pwiz.Common.SystemUtil
                     }
 
                     string lineLower = line.ToLowerInvariant();
-                    if (progress == null || lineLower.StartsWith(@"error") || lineLower.StartsWith(@"warning"))
+                    if (progress == null || lineLower.StartsWith(@"error") || lineLower.StartsWith(@"warning") || lineLower.Contains(@"futurewarning"))
                     {
                         sbError.AppendLine(line);
-                        if (EnableImmediateLog && writer != null)
-                            writer.WriteLineAsync(line);
                     }
-                    else // if (progress != null)
+                    else //if (progress != null)
                     {
                         if (progress.IsCanceled)
                         {
@@ -242,8 +238,6 @@ namespace pwiz.Common.SystemUtil
                             var statusOld = status;
                             if (!SilenceStatusMessageUpdates)
                                 status = status.ChangeMessage(line);
-                            else if (EnableImmediateLog)
-                                writer.WriteLineAsync(line);
 
                             if (updateProgressPercentage && ExpectedOutputLinesCount > 0)
                             {

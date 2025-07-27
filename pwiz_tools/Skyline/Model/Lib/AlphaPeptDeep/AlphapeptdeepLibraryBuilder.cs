@@ -429,6 +429,8 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                     @"  / ____/  __/ /_/ / /_/ /_/ /  __/  __/ /_/ /",
                     @" /_/    \___/ .___/\__/_____/\___/\___/ .___/",
                     @"           /_/                       /_/",
+                    @"s/^.*AlphaPeptDeep\\\\lib\\\\site-packages\\\\torch\\\\nn\\\\modules\\\\module.py:1762.*$//",
+                    @"s/^  return forward_call.*$//",
                     @"s/^  [0-9]%.*$//",
                     @"s/^ [0-9][0-9]%.*$//",
                     @"s/DiaNN\/Spectronaut/Skyline/"    // Replace DiaNN/Spectronaut with Skyline

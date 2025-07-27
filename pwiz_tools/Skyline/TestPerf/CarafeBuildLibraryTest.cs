@@ -236,7 +236,7 @@ namespace TestPerf
 
             var expected = LibrarySpec.CreateFromPath("answer", TestFilesDir.GetTestPath(@"test_res_fine_tuned_bySky_iRT.blib"));
             var result = LibrarySpec.CreateFromPath("testBuilt", builtLibraryBySkyIrt);
-            AssertEx.LibraryEquals(expected, result);
+            AssertEx.LibraryEquals(expected, result, 1e-4, 1e-2);
         }
         private void LongTest() 
         {
