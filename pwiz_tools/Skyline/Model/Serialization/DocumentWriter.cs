@@ -649,7 +649,7 @@ namespace pwiz.Skyline.Model.Serialization
             }
         }
 
-        private static void WriteTransitionGroupChromInfo(XmlWriter writer, TransitionGroupChromInfo chromInfo)
+        private void WriteTransitionGroupChromInfo(XmlWriter writer, TransitionGroupChromInfo chromInfo)
         {
             if (chromInfo.OptimizationStep != 0)
                 writer.WriteAttribute(ATTR.step, chromInfo.OptimizationStep);
@@ -678,6 +678,30 @@ namespace pwiz.Skyline.Model.Serialization
             writer.WriteAttributeNullable(ATTR.zscore, chromInfo.ZScore);
             writer.WriteAttribute(ATTR.user_set, chromInfo.UserSet);
             WriteAnnotations(writer, chromInfo.Annotations);
+            WriteScoredPeak(writer, EL.original_peak, chromInfo.OriginalPeak, chromInfo);
+            WriteScoredPeak(writer, EL.reintegrated_peak, chromInfo.ReintegratedPeak, chromInfo);
+        }
+
+        private void WriteScoredPeak(XmlWriter writer, string el, ScoredPeak scoredPeak, TransitionGroupChromInfo chromInfo)
+        {
+            if (scoredPeak == null || DocumentFormat < DocumentFormat.PEAK_IMPUTATION)
+            {
+                return;
+            }
+            writer.WriteStartElement(el);
+            writer.WriteAttribute(ATTR.zscore, scoredPeak.Score);
+            if (!Equals(scoredPeak.ApexTime, chromInfo.RetentionTime))
+            {
+                writer.WriteAttribute(ATTR.retention_time, scoredPeak.ApexTime);
+            }
+            if (!Equals(scoredPeak.StartTime, chromInfo.StartRetentionTime))
+            {
+                writer.WriteAttribute(ATTR.start_time, scoredPeak.StartTime);
+            }
+            if (!Equals(scoredPeak.EndTime, chromInfo.EndRetentionTime))
+            {
+                writer.WriteAttribute(ATTR.end_time, scoredPeak.EndTime);
+            }
         }
 
         /// <summary>

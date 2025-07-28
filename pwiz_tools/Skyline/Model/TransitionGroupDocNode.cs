@@ -35,6 +35,7 @@ using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using ScoredPeak = pwiz.Skyline.Model.Results.ScoredPeak;
 
 namespace pwiz.Skyline.Model
 {
@@ -2430,8 +2431,8 @@ namespace pwiz.Skyline.Model
                                                                           step,
                                                                           TransitionCount,
                                                                           chromInfoGroup,
-                                                                          GetReintegratePeak(fileId, step), 
                                                                           explicitPeakBounds);
+
                         calc.AddChromInfo(nodeTran, chromInfo);
                         Calculators.Insert(~i, calc);
                     }
@@ -2512,7 +2513,6 @@ namespace pwiz.Skyline.Model
                                                         int optimizationStep,
                                                         int transitionCount,
                                                         TransitionGroupChromInfo chromInfo,
-                                                        PeakFeatureStatistics reintegratePeak,
                                                         ExplicitPeakBounds explicitPeakBounds)
             {
                 Settings = settings;
@@ -2531,6 +2531,8 @@ namespace pwiz.Skyline.Model
                     Annotations = chromInfo.Annotations;
 
                     IonMobilityInfo = chromInfo.IonMobilityInfo;
+                    OriginalPeak = chromInfo.OriginalPeak;
+                    ReintegratedPeak = chromInfo.ReintegratedPeak;
                 }
                 else
                 {
@@ -2543,6 +2545,7 @@ namespace pwiz.Skyline.Model
                 {
                     QValue = reintegratePeak.QValue;
                     ZScore = reintegratePeak.BestScore;
+                    ReintegrateScore = reintegratePeak.BestScore;
                 }
                 ExplicitPeakBounds = explicitPeakBounds;
             }
@@ -2559,6 +2562,22 @@ namespace pwiz.Skyline.Model
             private RetentionTimeValues BestRetentionTimes { get; set; }
             private RetentionTimeValues NonQuantitativeRetentionTimes { get; set; }
             private TransitionGroupIonMobilityInfo IonMobilityInfo { get; set; }
+            private ScoredPeak OriginalPeak { get; set; }
+            private ScoredPeak ReintegratedPeak { get; set; }
+
+            public void SetReintegratedPeak(ScoredPeak peak, bool defaultScoringModel)
+            {
+                if (defaultScoringModel)
+                {
+                    OriginalPeak = peak;
+                    ReintegratedPeak = null;
+                }
+                else
+                {
+                    ReintegratedPeak = peak;
+                }
+            }
+            private float? ReintegrateScore { get; set; }
             private float? Fwhm { get; set; }
             private float? Area { get; set; } // Area of all peaks, including non-scoring peaks that don't influence RT determination
             private float? AreaMs1 { get; set; }
@@ -2702,7 +2721,7 @@ namespace pwiz.Skyline.Model
                 }
 
                 var retentionTimeValues = BestRetentionTimes ?? NonQuantitativeRetentionTimes;
-                return new TransitionGroupChromInfo(FileId,
+                var transitionGroupChromInfo = new TransitionGroupChromInfo(FileId,
                                                     OptimizationStep,
                                                     PeakCountRatio,
                                                     (float?) retentionTimeValues?.RetentionTime,
@@ -2721,7 +2740,15 @@ namespace pwiz.Skyline.Model
                                                     qValue,
                                                     ZScore,
                                                     Annotations,
-                                                    UserSet);
+                                                    UserSet).ChangeOriginalPeak(OriginalPeak).ChangeReintegratedPeak(ReintegratedPeak);
+                if (ReintegrateScore != null)
+                {
+                    transitionGroupChromInfo =
+                        transitionGroupChromInfo.ChangeReintegratedPeak(
+                            transitionGroupChromInfo.MakeScoredPeak(ReintegrateScore.Value));
+                }
+
+                return transitionGroupChromInfo;
             }
         }
 

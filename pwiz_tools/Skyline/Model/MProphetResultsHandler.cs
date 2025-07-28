@@ -30,6 +30,7 @@ using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.RetentionTimes.PeakImputation;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using ScoredPeak = pwiz.Skyline.Model.Results.ScoredPeak;
 
 namespace pwiz.Skyline.Model
 {
@@ -175,7 +176,7 @@ namespace pwiz.Skyline.Model
             using (settingsChangeMonitor)
             {
                 var settingsNew = Document.Settings.ChangePeptideIntegration(integration =>
-                    integration.ChangeResultsHandler(new ReintegrateResultsHandler(this, new PeakBoundaryImputer(Document, this))));
+                    integration.ChangeResultsHandler(new ReintegrateResultsHandler(this, new PeakBoundaryImputer(Document))));
                 // Only update the document if anything has changed
                 var docNew = Document.ChangeSettings(settingsNew, settingsChangeMonitor);
                 if (!Equals(docNew.Settings.PeptideSettings.Integration, Document.Settings.PeptideSettings.Integration) ||
@@ -353,16 +354,20 @@ namespace pwiz.Skyline.Model
             PValues = pvalues;
             BestPeakIndex = features.PeakGroupFeatures[bestScoreIndex].OriginalPeakIndex;
             BestScoreIndex = bestScoreIndex;
-            BestScore = bestScore;
             QValue = qValue;
-            BestFeatureScores = features.PeakGroupFeatures[bestScoreIndex].FeatureScores;
+            var bestPeakGroupFeatures = features.PeakGroupFeatures[bestScoreIndex];
+            BestScoredPeak = new ScoredPeak(bestPeakGroupFeatures.RetentionTime, bestPeakGroupFeatures.StartTime, bestPeakGroupFeatures.EndTime, bestScore);
+            BestFeatureScores = bestPeakGroupFeatures.FeatureScores;
         }
 
         public IList<float> MprophetScores { get; private set; }
         public IList<float> PValues { get; private set; }
         public int BestPeakIndex { get; private set; }
         public int BestScoreIndex { get; private set; }
-        public float BestScore { get; private set; }
+        public ScoredPeak BestScoredPeak { get; }
+
+        public float BestScore { get { return BestScoredPeak.Score; } }
+
         public float? QValue { get; internal set; }
         public FeatureScores BestFeatureScores { get; }
     }

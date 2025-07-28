@@ -1,0 +1,53 @@
+﻿using pwiz.Common.PeakFinding;
+using pwiz.Common.SystemUtil;
+
+namespace pwiz.Skyline.Model.Results
+{
+    public class ScoredPeak : Immutable
+    {
+        public ScoredPeak(float apexTime, float startTime, float endTime, float score)
+        {
+            ApexTime = apexTime;
+            StartTime = startTime;
+            EndTime = endTime;
+            Score = score;
+        }
+
+        public float ApexTime { get; }
+        public float StartTime { get; }
+        public float EndTime { get; }
+        public float Score { get; }
+
+        public PeakBounds PeakBounds
+        {
+            get
+            {
+                return new PeakBounds(StartTime, EndTime);
+            }
+        }
+
+        protected bool Equals(ScoredPeak other)
+        {
+            return StartTime.Equals(other.StartTime) && EndTime.Equals(other.EndTime) && Score.Equals(other.Score);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is null) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((ScoredPeak)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = StartTime.GetHashCode();
+                hashCode = (hashCode * 397) ^ EndTime.GetHashCode();
+                hashCode = (hashCode * 397) ^ Score.GetHashCode();
+                return hashCode;
+            }
+        }
+    }
+}

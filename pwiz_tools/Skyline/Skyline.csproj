@@ -589,6 +589,7 @@
     <Compile Include="Model\ReintegrateResultsHandler.cs" />
     <Compile Include="Model\Lib\LibraryFiles.cs" />
     <Compile Include="Model\Results\LcPeakIonMetrics.cs" />
+    <Compile Include="Model\Results\ScoredPeak.cs" />
     <Compile Include="Model\Results\Scoring\ReintegrateDlgSettings.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\BinnedSpectrum.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\SimilarityGrid.cs" />

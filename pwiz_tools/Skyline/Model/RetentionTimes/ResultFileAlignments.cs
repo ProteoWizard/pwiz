@@ -173,12 +173,12 @@ namespace pwiz.Skyline.Model.RetentionTimes
                     {
                         foreach (var transitionGroup in molecule.TransitionGroups)
                         {
-                            var transitionGroupChromInfo =
-                                transitionGroup.GetChromInfo(iReplicate, chromFileInfo.FileId);
-                            if (null != transitionGroupChromInfo?.RetentionTime)
+                            var originalPeak = transitionGroup.GetChromInfo(iReplicate, chromFileInfo.FileId)
+                                ?.OriginalPeak;
+                            if (null != originalPeak)
                             {
                                 fileTargets.Add(document.Settings.GetTargets(molecule).ToImmutable());
-                                retentionTimes.Add(transitionGroupChromInfo.RetentionTime.Value);
+                                retentionTimes.Add(originalPeak.ApexTime);
                                 break;
                             }
                         }

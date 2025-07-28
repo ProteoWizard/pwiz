@@ -43,7 +43,8 @@ namespace pwiz.Skyline.Model.Results
         Sixteen = 16, // Skewness and Kurtosis
         Seventeen = 17, // Adds optimization step to ChromTransition
         Eighteen = 18, // Add Spectrum Class Filter to ChromGroupHeaderInfo
-        CURRENT = Eighteen,
+        Nineteen = 19, // Add max peak score to ChromGroupHeaderInfo
+        CURRENT = Nineteen,
     }
     
     [StructLayout(LayoutKind.Sequential, Pack = 4)]

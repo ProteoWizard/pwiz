@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System.Security;
 using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.Serialization
@@ -82,6 +84,8 @@ namespace pwiz.Skyline.Model.Serialization
             public const string crosslinks = "crosslinks";
             public const string crosslink = "crosslink";
             public const string site = "site";
+            public const string original_peak = "original_peak";
+            public const string reintegrated_peak = "reintegrated_peak";
             // ReSharper restore LocalizableElement
         }
 

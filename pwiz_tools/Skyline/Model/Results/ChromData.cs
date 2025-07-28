@@ -300,7 +300,14 @@ namespace pwiz.Skyline.Model.Results
         public float[] IntensitiesSmooth { get; private set; }
 
         public IList<ChromPeak> Peaks { get; private set; }
-        public int MaxPeakIndex { get; set; }
+        public int MaxPeakIndex { get; private set; }
+        public float? MaxPeakScore { get; private set; }
+
+        public void SetMaxPeak(int index, float score)
+        {
+            MaxPeakIndex = index;
+            MaxPeakScore = score;
+        }
         public int OptimizationStep => Key.OptimizationStep;
         public ChromKey PrimaryKey
         {

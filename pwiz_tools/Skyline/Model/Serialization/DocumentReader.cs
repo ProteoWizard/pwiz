@@ -40,6 +40,7 @@ using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using ScoredPeak = pwiz.Skyline.Model.Results.ScoredPeak;
 
 namespace pwiz.Skyline.Model.Serialization
 {
@@ -145,7 +146,7 @@ namespace pwiz.Skyline.Model.Serialization
             const UserSet userSet = UserSet.FALSE;
             var transitionGroupIonMobilityInfo = TransitionGroupIonMobilityInfo.GetTransitionGroupIonMobilityInfo(ccs,
                 ionMobilityMS1, ionMobilityFragment, ionMobilityWindow, ionMobilityUnits);
-            return new TransitionGroupChromInfo(fileInfo.FileId,
+            var transitionGroupChromInfo = new TransitionGroupChromInfo(fileInfo.FileId,
                 optimizationStep,
                 peakCountRatio,
                 retentionTime,
@@ -165,6 +166,29 @@ namespace pwiz.Skyline.Model.Serialization
                 zscore,
                 annotations,
                 userSet);
+
+            transitionGroupChromInfo = transitionGroupChromInfo.ChangeOriginalPeak(
+                ReadScoredPeak(reader, EL.original_peak, transitionGroupChromInfo));
+            transitionGroupChromInfo = transitionGroupChromInfo.ChangeReintegratedPeak(
+                ReadScoredPeak(reader, EL.reintegrated_peak, transitionGroupChromInfo));
+            return transitionGroupChromInfo;
+        }
+
+        private ScoredPeak ReadScoredPeak(XmlReader reader, string el, TransitionGroupChromInfo chromInfo)
+        {
+            if (!reader.IsStartElement(el))
+            {
+                return null;
+            }
+
+            var score = reader.GetFloatAttribute(ATTR.zscore);
+            var apexTime = reader.GetNullableFloatAttribute(ATTR.retention_time) ?? chromInfo.RetentionTime;
+            var startTime = reader.GetNullableFloatAttribute(ATTR.start_time) ?? chromInfo.StartRetentionTime;
+            var endTime = reader.GetNullableFloatAttribute(ATTR.end_time) ?? chromInfo.EndRetentionTime;
+            
+            var scoredPeak = new ScoredPeak(apexTime.Value, startTime.Value, endTime.Value, score);
+            reader.Skip();
+            return scoredPeak;
         }
 
         private static eIonMobilityUnits GetAttributeMobilityUnits(XmlReader reader, string attrName, ChromFileInfo fileInfo)

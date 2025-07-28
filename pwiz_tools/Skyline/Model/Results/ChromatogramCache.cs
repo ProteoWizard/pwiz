@@ -1586,6 +1586,7 @@ namespace pwiz.Skyline.Model.Results
                             peakCount,
                             scoreCount,
                             lastEntry.MaxPeakIndex,
+                            lastEntry.MaxPeakScore,
                             lastEntry.NumPoints,
                             lastEntry.CompressedSize,
                             lastEntry.UncompressedSize,

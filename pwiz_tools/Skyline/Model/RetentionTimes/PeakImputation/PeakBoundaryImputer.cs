@@ -31,7 +31,6 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Model.Results.Scoring;
 
 namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
 {
@@ -40,8 +39,6 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
         private readonly Dictionary<LibraryInfoKey, LibraryInfo> _libraryInfos = new Dictionary<LibraryInfoKey, LibraryInfo>();
         private readonly Dictionary<MsDataFileUri, AlignmentFunction> _alignmentFunctions =
             new Dictionary<MsDataFileUri, AlignmentFunction>();
-        private readonly Dictionary<IdentityPath, Dictionary<MsDataFileUri, ScoredPeak>> _scoredPeaks =
-            new Dictionary<IdentityPath, Dictionary<MsDataFileUri, ScoredPeak>>();
 
         public PeakBoundaryImputer(SrmDocument document) : this(document, null)
         {
@@ -177,7 +174,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
                     return null;
                 }
 
-                return new ExemplaryPeak(Library, bestFile, new PeakBounds(bestPeakBounds.StartTime, bestPeakBounds.EndTime));
+                return new ExemplaryPeak(Library, bestFile, bestPeakBounds.PeakBounds);
             }
 
             public LibraryInfo ChangeAlignment(Alignments alignments)
@@ -490,13 +487,13 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
         private KeyValuePair<MsDataFileUri, ScoredPeak> GetBestScoredPeak(IdentityPath identityPath, IList<string> batchNames, bool noRecalculateScores)
         {
             Dictionary<MsDataFileUri, ScoredPeak> scoredPeaks;
-            if (noRecalculateScores)
+            if (MProphetResultsHandler == null)
             {
-                scoredPeaks = GetScoredPeaksNoRecalculate(identityPath);
+                scoredPeaks = GetScoredPeaks(identityPath);
             }
             else
             {
-                scoredPeaks = GetScoredPeaks(identityPath);
+                scoredPeaks = GetReintegratedPeaks(identityPath);
             }
             if (scoredPeaks == null || scoredPeaks.Count == 0)
             {
@@ -547,60 +544,91 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
 
         private Dictionary<MsDataFileUri, ScoredPeak> GetScoredPeaks(IdentityPath identityPath)
         {
-            lock (_scoredPeaks)
-            {
-                if (_scoredPeaks.TryGetValue(identityPath, out var scoredPeaks))
-                {
-                    return scoredPeaks;
-                }
-
-                scoredPeaks = CalculateScoredPeaks(identityPath);
-                _scoredPeaks[identityPath] = scoredPeaks;
-                return scoredPeaks;
-            }
-        }
-
-        private Dictionary<MsDataFileUri, ScoredPeak> GetScoredPeaksNoRecalculate(IdentityPath identityPath)
-        {
             var result = new Dictionary<MsDataFileUri, ScoredPeak>();
-            var measuredResults = Document.MeasuredResults;
-            if (measuredResults == null)
-            {
-                return result;
-            }
-
             var peptideDocNode = (PeptideDocNode)Document.FindNode(identityPath);
             if (peptideDocNode == null)
             {
                 return result;
             }
 
-            for (int iReplicate = 0; iReplicate < measuredResults.Chromatograms.Count; iReplicate++)
+            bool anyReintegrated = peptideDocNode.TransitionGroups.SelectMany(tg => tg.Results).SelectMany(list => list)
+                .Any(c => c.ReintegratedPeak != null);
+
+            var measuredResults = Document.Settings.MeasuredResults;
+            if (measuredResults == null)
             {
-                foreach (var chromFileInfo in measuredResults.Chromatograms[iReplicate].MSDataFileInfos)
+                return result;
+            }
+
+            for (int replicateIndex = 0; replicateIndex < measuredResults.Chromatograms.Count; replicateIndex++)
+            {
+                var chromatogramSet = measuredResults.Chromatograms[replicateIndex];
+                foreach (var transitionGroup in peptideDocNode.TransitionGroups)
                 {
-                    if (result.ContainsKey(chromFileInfo.FilePath))
+                    foreach (var transitionGroupChromInfo in transitionGroup.GetSafeChromInfo(replicateIndex))
                     {
-                        continue;
-                    }
-                    foreach (var transitionGroupDocNode in peptideDocNode.TransitionGroups)
-                    {
-                        var transitionGroupChromInfo =
-                            transitionGroupDocNode.GetChromInfo(iReplicate, chromFileInfo.FileId);
-                        if (transitionGroupChromInfo is { ZScore: { }, StartRetentionTime: { }, EndRetentionTime: { } })
+                        if (transitionGroupChromInfo.UserSet == UserSet.TRUE ||
+                            transitionGroupChromInfo.OptimizationStep != 0)
                         {
-                            result.Add(chromFileInfo.FilePath, new ScoredPeak(
-                                new PeakBounds(transitionGroupChromInfo.StartRetentionTime.Value,
-                                    transitionGroupChromInfo.EndRetentionTime.Value),
-                                transitionGroupChromInfo.ZScore.Value));
-                            break;
+                            continue;
                         }
+
+                        var scoredPeak = anyReintegrated ? transitionGroupChromInfo.ReintegratedPeak : transitionGroupChromInfo.OriginalPeak;
+                        if (scoredPeak == null)
+                        {
+                            continue;
+                        }
+
+                        var fileInfo = chromatogramSet.GetFileInfo(transitionGroupChromInfo.FileId);
+                        if (result.ContainsKey(fileInfo.FilePath))
+                        {
+                            continue;
+                        }
+
+                        result[fileInfo.FilePath] = scoredPeak;
                     }
                 }
             }
 
             return result;
         }
+        private Dictionary<MsDataFileUri, ScoredPeak> GetReintegratedPeaks(IdentityPath identityPath)
+        {
+            var result = new Dictionary<MsDataFileUri, ScoredPeak>();
+            var peptideDocNode = (PeptideDocNode)Document.FindNode(identityPath);
+            if (peptideDocNode == null)
+            {
+                return result;
+            }
+            var measuredResults = Document.Settings.MeasuredResults;
+            for (int replicateIndex = 0; replicateIndex < measuredResults.Chromatograms.Count; replicateIndex++)
+            {
+                var chromatogramSet = measuredResults.Chromatograms[replicateIndex];
+                foreach (var chromFileInfo in chromatogramSet.MSDataFileInfos)
+                {
+                    if (result.ContainsKey(chromFileInfo.FilePath))
+                    {
+                        continue;
+                    }
+
+                    var peakFeatureStatistics = MProphetResultsHandler.GetPeakFeatureStatistics(peptideDocNode.Peptide, chromFileInfo.FileId);
+                    if (peakFeatureStatistics == null || peakFeatureStatistics.BestPeakIndex < 0)
+                    {
+                        continue;
+                    }
+
+                    if (peakFeatureStatistics.BestPeakIndex < 0)
+                    {
+                        continue;
+                    }
+
+                    result.Add(chromFileInfo.FilePath, peakFeatureStatistics.BestScoredPeak);
+                }
+            }
+
+            return result;
+        }
+
 
         private AlignmentFunction GetAlignmentFunction(CancellationToken cancellationToken, MsDataFileUri filePath)
         {
@@ -620,146 +648,6 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
 
                 return alignmentFunction;
             }
-        }
-
-        private Dictionary<MsDataFileUri, ScoredPeak> CalculateScoredPeaks(IdentityPath identityPath)
-        {
-            if (MProphetResultsHandler != null)
-            {
-                return GetReintegratedPeaks(identityPath);
-            }
-
-            var result = new Dictionary<MsDataFileUri, ScoredPeak>();
-            var measuredResults = Document.Settings.MeasuredResults;
-            if (measuredResults == null)
-            {
-                return result;
-            }
-
-            var peptideDocNode = (PeptideDocNode)Document.FindNode(identityPath);
-            if (peptideDocNode == null)
-            {
-                return result;
-            }
-
-            var scoringModel = GetScoringModel();
-            for (int replicateIndex = 0; replicateIndex < measuredResults.Chromatograms.Count; replicateIndex++)
-            {
-                var chromatogramSet = measuredResults.Chromatograms[replicateIndex];
-                foreach (var chromFileInfo in chromatogramSet.MSDataFileInfos)
-                {
-                    if (result.ContainsKey(chromFileInfo.FilePath))
-                    {
-                        continue;
-                    }
-
-                    var onDemandFeatureCalculator = new OnDemandFeatureCalculator(
-                        scoringModel.PeakFeatureCalculators,
-                        Document.Settings, peptideDocNode, replicateIndex, chromFileInfo);
-                    var bestPeak = peptideDocNode.TransitionGroups.SelectMany(tg =>
-                        onDemandFeatureCalculator.GetCandidatePeakGroups(tg.TransitionGroup)).OrderByDescending(peak=>peak.Score.ModelScore).FirstOrDefault();
-                    if (bestPeak?.Score?.ModelScore != null)
-                    {
-                        result.Add(chromFileInfo.FilePath, new ScoredPeak(new PeakBounds(bestPeak.MinStartTime, bestPeak.MaxEndTime), bestPeak.Score.ModelScore.Value));
-                    }
-                }
-            }
-
-            return result;
-        }
-
-        private Dictionary<MsDataFileUri, ScoredPeak> GetReintegratedPeaks(IdentityPath identityPath)
-        {
-            var result = new Dictionary<MsDataFileUri, ScoredPeak>();
-            var peptideDocNode = (PeptideDocNode) Document.FindNode(identityPath);
-            if (peptideDocNode == null)
-            {
-                return result;
-            }
-            var measuredResults = Document.Settings.MeasuredResults;
-            Dictionary<MsDataFileUri, ChromatogramGroupInfo> chromatogramGroupInfos = null;
-            for (int replicateIndex = 0; replicateIndex < measuredResults.Chromatograms.Count; replicateIndex++)
-            {
-                var chromatogramSet = measuredResults.Chromatograms[replicateIndex];
-                foreach (var chromFileInfo in chromatogramSet.MSDataFileInfos)
-                {
-                    if (result.ContainsKey(chromFileInfo.FilePath))
-                    {
-                        continue;
-                    }
-
-                    var peakFeatureStatistics = MProphetResultsHandler.GetPeakFeatureStatistics(peptideDocNode.Peptide, chromFileInfo.FileId);
-                    if (peakFeatureStatistics == null || peakFeatureStatistics.BestPeakIndex < 0)
-                    {
-                        continue;
-                    }
-
-                    chromatogramGroupInfos ??= LoadChromatogramGroupInfos(peptideDocNode);
-                    if (!chromatogramGroupInfos.TryGetValue(chromFileInfo.FilePath, out var chromatogramGroupInfo))
-                    {
-                        continue;
-                    }
-
-                    if (peakFeatureStatistics.BestPeakIndex < 0 ||
-                        peakFeatureStatistics.BestPeakIndex >= chromatogramGroupInfo.NumPeaks)
-                    {
-                        continue;
-                    }
-
-                    var chromPeak = chromatogramGroupInfo.GetTransitionPeak(0, peakFeatureStatistics.BestPeakIndex);
-                    if (chromPeak.IsEmpty)
-                    {
-                        continue;
-                    }
-
-                    result.Add(chromFileInfo.FilePath,
-                        new ScoredPeak(new PeakBounds(chromPeak.StartTime, chromPeak.EndTime),
-                            peakFeatureStatistics.BestScore));
-                }
-            }
-
-            return result;
-        }
-
-        private Dictionary<MsDataFileUri, ChromatogramGroupInfo> LoadChromatogramGroupInfos(
-            PeptideDocNode peptideDocNode)
-        {
-            var result = new Dictionary<MsDataFileUri, ChromatogramGroupInfo>();
-            float tolerance = (float) Document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
-            foreach (var transitionGroupDocNode in peptideDocNode.TransitionGroups)
-            {
-                foreach (var chromatogram in Document.Settings.MeasuredResults.LoadChromatogramsForAllReplicates(
-                             peptideDocNode,
-                             transitionGroupDocNode, tolerance).SelectMany(list=>list))
-                {
-                    result[chromatogram.FilePath] = chromatogram;
-                }
-            }
-
-            return result;
-        }
-
-        private PeakScoringModelSpec GetScoringModel()
-        {
-            var scoringModel = Document.Settings.PeptideSettings.Integration.PeakScoringModel;
-            if (true == scoringModel?.IsTrained)
-            {
-                return scoringModel;
-            }
-            return LegacyScoringModel.DEFAULT_MODEL;
-        }
-
-
-        private class ScoredPeak
-        {
-            public ScoredPeak(PeakBounds peakBounds, double score)
-            {
-                PeakBounds = peakBounds;
-                Score = score;
-            }
-
-            public PeakBounds PeakBounds { get; }
-            public double Score { get; }
         }
 
         private IdentityPath GetIdentityPath(PeptideDocNode peptideDocNode)

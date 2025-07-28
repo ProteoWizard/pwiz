@@ -48,5 +48,16 @@ namespace pwiz.SkylineTestData.Results
             Assert.AreEqual(36, ChromPeak.GetStructSize(CacheFormatVersion.Twelve));
             Assert.AreEqual(Marshal.SizeOf<ChromPeak>(), ChromPeak.GetStructSize(CacheFormatVersion.CURRENT));
         }
+
+        [TestMethod]
+        public void TestCurrentStructSizes()
+        {
+            Assert.AreEqual(Marshal.SizeOf<ChromGroupHeaderInfo>(), ChromGroupHeaderInfo.SizeOf);
+            Assert.AreEqual(Marshal.SizeOf<ChromGroupHeaderInfo>(), ChromGroupHeaderInfo.GetStructSize(CacheFormatVersion.CURRENT));
+            Assert.AreEqual(Marshal.SizeOf<ChromPeak>(), ChromPeak.SizeOf);
+            Assert.AreEqual(Marshal.SizeOf<ChromPeak>(), ChromPeak.GetStructSize(CacheFormatVersion.CURRENT));
+            Assert.AreEqual(Marshal.SizeOf<ChromTransition>(), ChromTransition.SizeOf);
+            Assert.AreEqual(Marshal.SizeOf<ChromTransition>(), ChromTransition.GetStructSize(CacheFormatVersion.CURRENT));
+        }
     }
 }

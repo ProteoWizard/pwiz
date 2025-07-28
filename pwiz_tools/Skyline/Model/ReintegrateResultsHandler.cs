@@ -1,4 +1,6 @@
-﻿using pwiz.Common.PeakFinding;
+﻿using System.Collections.Generic;
+using pwiz.Common.PeakFinding;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes.PeakImputation;

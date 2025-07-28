@@ -550,6 +550,22 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        [ChildDisplayName("Exemplary{0}")]
+        public ExemplaryPeakBounds ExemplaryPeak
+        {
+            get
+            {
+                var peakImputer = DataSchema.PeakBoundaryImputer;
+                var imputedPeak = peakImputer.GetImputedPeakQuick(Peptide.IdentityPath, null, null);
+                if (imputedPeak == null)
+                {
+                    return null;
+                }
+                return new ExemplaryPeakBounds(imputedPeak.PeakBounds.StartTime, imputedPeak.PeakBounds.EndTime,
+                    imputedPeak.ExemplaryPeak.SpectrumSourceFile, null, imputedPeak.ExemplaryPeak.Library?.Name);
+            }
+        }
+
         [InvariantDisplayName("PrecursorLocator")]
         public string Locator { get { return GetLocator(); } }
 
@@ -581,7 +597,27 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return owner.MakeChromInfoResultsMap(owner.DocNode.Results, file => new PrecursorResult(owner, file));
             }
         }
+        public class ExemplaryPeakBounds
+        {
+            public ExemplaryPeakBounds(double startTime, double endTime, string filePath, string replicateName, string library)
+            {
+                StartTime = startTime;
+                EndTime = endTime;
+                FilePath = filePath;
+                ReplicateName = replicateName;
+                LibraryName = library;
+            }
+
+            [Format(Formats.RETENTION_TIME)]
+            public double StartTime { get; }
+            [Format(Formats.RETENTION_TIME)]
+            public double EndTime { get; }
+            public string FilePath { get; }
+            public string ReplicateName { get; }
+            public string LibraryName { get; }
+        }
     }
+
 
     public class PrecursorResultSummary : SkylineObject
     {
