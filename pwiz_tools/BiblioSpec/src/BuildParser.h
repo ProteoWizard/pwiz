@@ -120,9 +120,9 @@ class BuildParser : protected SAXHandler{
   void verifySequences();
   double getScoreThreshold(BUILD_INPUT fileType);
   void findScanIndexFromName(const std::map<PSM*, double>& precursorMap);
-  sqlite3_int64 insertSpectrumFilename(string& filename, bool insertAsIs = false);
+  sqlite3_int64 insertSpectrumFilename(string& filename, bool insertAsIs = false, WORKFLOW_TYPE workflowType = DDA);
   sqlite3_int64 insertProtein(const Protein* protein);
-  void buildTables(PSM_SCORE_TYPE score_type, string specfilename = "", bool showSpecProgress = true);
+  void buildTables(PSM_SCORE_TYPE score_type, string specfilename = "", bool showSpecProgress = true, WORKFLOW_TYPE workflowType = DDA);
 
   void OptionalSort(PSM_SCORE_TYPE scoreType); // Sort the psms if needed
 
@@ -145,6 +145,7 @@ class BuildParser : protected SAXHandler{
   virtual ~BuildParser();
   virtual bool parseFile() = 0; // pure virtual, force subclass to define
   virtual std::vector<PSM_SCORE_TYPE> getScoreTypes() = 0; // pure virtual, force subclass to define
+  virtual void applyPsmOverrideValues(PSM* psm, SpecData& specData); // Apply any values carried by subclassed PSM (e.g.SSL RT column values) that override those found by spectrum lookup
 
   const string& getFileName();
   const string& getSpecFileName();

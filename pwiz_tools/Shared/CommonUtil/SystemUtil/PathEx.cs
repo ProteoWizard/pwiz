@@ -163,7 +163,6 @@ namespace pwiz.Common.SystemUtil
             }
         }
 
-
         public const string PREFIX_LONG_PATH = @"\\?\";
 
         /// <summary>
