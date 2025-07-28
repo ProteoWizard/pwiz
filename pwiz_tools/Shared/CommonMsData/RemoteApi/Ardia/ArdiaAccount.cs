@@ -129,15 +129,8 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         /// <returns>Returns a result indicating whether the authentication succeeded.</returns>
         public ArdiaResult CheckAuthentication()
         {
-            try
-            {
-                var client = ArdiaClient.Create(this);
-                return client.CheckSession();
-            }
-            catch (Exception e)
-            {
-                return ArdiaResult.Failure(ArdiaResources.Error_InvalidToken, null, e);
-            }
+            var client = ArdiaClient.Create(this);
+            return client.CheckSession();
         }
 
         /// <summary>
