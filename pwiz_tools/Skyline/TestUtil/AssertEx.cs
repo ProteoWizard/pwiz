@@ -1096,16 +1096,15 @@ namespace pwiz.SkylineTestUtil
                     {
                         Assert.AreEqual(expectedSpectrum[j].Mz, actualSpectrum[j].Mz, mzTolerance, "peak m/z delta exceeded tolerance");
 
-                        if (Math.Abs(expectedSpectrum[j].Intensity - actualSpectrum[j].Intensity) > mzTolerance)
+                        if (Math.Abs(expectedSpectrum[j].Intensity - actualSpectrum[j].Intensity) > intensityTolerance)
                         {
                             Console.WriteLine();
                             Console.WriteLine($@"Expected Spectrum Key Sequence: {expected.Target.ToString()}");
                             Console.WriteLine($@"Actual Spectrum Key Sequence: {actual.Target.ToString()}");
                             Console.WriteLine(@"Expected Spectrum:");
                             Console.WriteLine(expectedSpectrum[j].ToString());
-                            Console.WriteLine(@"Actual Spectrum:"); 
+                            Console.WriteLine(@"Actual Spectrum:");
                             Console.WriteLine(actualSpectrum[j].ToString());
-                            
                         }
 
                         Assert.AreEqual(expectedSpectrum[j].Intensity, actualSpectrum[j].Intensity, intensityTolerance, "peak intensity delta exceeded tolerance");
