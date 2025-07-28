@@ -36,6 +36,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
@@ -233,6 +234,25 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get
             {
                 return _cachedValues.GetValue2(this)?.Item2;
+            }
+        }
+
+        [ChildDisplayName("Original{0}")]
+        [Format(Formats.RETENTION_TIME)]
+        public ScoredPeakValue OriginalPeak {
+            get
+            {
+                return ScoredPeakValue.FromScoredPeak(ChromInfo.OriginalPeak);
+            }
+        }
+
+        [ChildDisplayName("Reintegrated{0}")]
+        [Format(Formats.RETENTION_TIME)]
+        public ScoredPeakValue ReintegratedPeak
+        {
+            get
+            {
+                return ScoredPeakValue.FromScoredPeak(ChromInfo.ReintegratedPeak);
             }
         }
 

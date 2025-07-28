@@ -2384,7 +2384,7 @@ namespace pwiz.Skyline.Model
             {
                 if (ReintegrateResults != null && step == 0)
                 {
-                    int i = ReintegrateFileIds.IndexOf(id => id.GlobalIndex == fileId.GlobalIndex);
+                    int i = ReintegrateFileIds.IndexOf(id => ReferenceEquals(id, fileId));
                     if (i != -1)
                         return ReintegratePeaks[i];
                 }
@@ -2432,7 +2432,14 @@ namespace pwiz.Skyline.Model
                                                                           TransitionCount,
                                                                           chromInfoGroup,
                                                                           explicitPeakBounds);
-
+                        if (ReintegrateResults != null)
+                        {
+                            var reintegratedPeak = GetReintegratePeak(fileId, step);
+                            if (reintegratedPeak != null)
+                            {
+                                calc.SetReintegratedPeak(reintegratedPeak, ReintegrateResults.IsDefaultScoringModel());
+                            }
+                        }
                         calc.AddChromInfo(nodeTran, chromInfo);
                         Calculators.Insert(~i, calc);
                     }
@@ -2540,13 +2547,6 @@ namespace pwiz.Skyline.Model
 
                     IonMobilityInfo = TransitionGroupIonMobilityInfo.EMPTY; 
                 }
-
-                if (reintegratePeak != null)
-                {
-                    QValue = reintegratePeak.QValue;
-                    ZScore = reintegratePeak.BestScore;
-                    ReintegrateScore = reintegratePeak.BestScore;
-                }
                 ExplicitPeakBounds = explicitPeakBounds;
             }
 
@@ -2565,19 +2565,22 @@ namespace pwiz.Skyline.Model
             private ScoredPeak OriginalPeak { get; set; }
             private ScoredPeak ReintegratedPeak { get; set; }
 
-            public void SetReintegratedPeak(ScoredPeak peak, bool defaultScoringModel)
+            public void SetReintegratedPeak(PeakFeatureStatistics reintegratedPeak, bool defaultScoringModel)
             {
                 if (defaultScoringModel)
                 {
-                    OriginalPeak = peak;
+                    OriginalPeak = reintegratedPeak.BestScoredPeak;
+                    ZScore = reintegratedPeak.BestScore;
+                    QValue = null;
                     ReintegratedPeak = null;
                 }
                 else
                 {
-                    ReintegratedPeak = peak;
+                    ReintegratedPeak = reintegratedPeak.BestScoredPeak;
+                    ZScore = reintegratedPeak.BestScore;
+                    QValue = reintegratedPeak.QValue;
                 }
             }
-            private float? ReintegrateScore { get; set; }
             private float? Fwhm { get; set; }
             private float? Area { get; set; } // Area of all peaks, including non-scoring peaks that don't influence RT determination
             private float? AreaMs1 { get; set; }
@@ -2741,13 +2744,6 @@ namespace pwiz.Skyline.Model
                                                     ZScore,
                                                     Annotations,
                                                     UserSet).ChangeOriginalPeak(OriginalPeak).ChangeReintegratedPeak(ReintegratedPeak);
-                if (ReintegrateScore != null)
-                {
-                    transitionGroupChromInfo =
-                        transitionGroupChromInfo.ChangeReintegratedPeak(
-                            transitionGroupChromInfo.MakeScoredPeak(ReintegrateScore.Value));
-                }
-
                 return transitionGroupChromInfo;
             }
         }

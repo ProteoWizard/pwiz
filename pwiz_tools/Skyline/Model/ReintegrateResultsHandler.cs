@@ -3,6 +3,7 @@ using pwiz.Common.PeakFinding;
 using pwiz.CommonMsData;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.RetentionTimes.PeakImputation;
 
 namespace pwiz.Skyline.Model
@@ -117,6 +118,11 @@ namespace pwiz.Skyline.Model
                 flags = ChromPeak.FlagValues.time_normalized;
             return chromatogramInfo.CalcPeak(peakGroupIntegrator, (float)imputedPeak.PeakBounds.StartTime,
                 (float)imputedPeak.PeakBounds.EndTime, flags);
+        }
+
+        public bool IsDefaultScoringModel()
+        {
+            return Equals(LegacyScoringModel.DEFAULT_MODEL, MProphetResultsHandler.ScoringModel);
         }
     }
 }

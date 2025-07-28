@@ -17,9 +17,6 @@
  * limitations under the License.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Attributes;
@@ -32,6 +29,10 @@ using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
@@ -597,7 +598,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return owner.MakeChromInfoResultsMap(owner.DocNode.Results, file => new PrecursorResult(owner, file));
             }
         }
-        public class ExemplaryPeakBounds
+        public class ExemplaryPeakBounds : IFormattable
         {
             public ExemplaryPeakBounds(double startTime, double endTime, string filePath, string replicateName, string library)
             {
@@ -615,6 +616,17 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             public string FilePath { get; }
             public string ReplicateName { get; }
             public string LibraryName { get; }
+            public override string ToString()
+            {
+                return ToString(Formats.RETENTION_TIME, CultureInfo.CurrentCulture);
+            }
+
+            public string ToString(string format, IFormatProvider formatProvider)
+            {
+                return string.Format(EntitiesResources.CandidatePeakGroup_ToString___0___1__,
+                    StartTime.ToString(format, formatProvider), EndTime.ToString(format, formatProvider));
+            }
+
         }
     }
 

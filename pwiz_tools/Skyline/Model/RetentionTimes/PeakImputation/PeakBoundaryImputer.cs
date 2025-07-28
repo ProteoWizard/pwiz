@@ -275,12 +275,12 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
         public ImputedPeak GetImputedPeakBounds(CancellationToken cancellationToken, IdentityPath identityPath,
             ChromatogramSet chromatogramSet, MsDataFileUri filePath)
         {
-            return GetImputedPeakBounds(cancellationToken, identityPath, chromatogramSet, filePath, false, false);
+            return GetImputedPeakBounds(cancellationToken, identityPath, chromatogramSet, filePath, false);
         }
 
         private ImputedPeak GetImputedPeakBounds(CancellationToken cancellationToken, IdentityPath identityPath,
             ChromatogramSet chromatogramSet,
-            MsDataFileUri filePath, bool explicitBoundsOnly, bool noRecalculateScores)
+            MsDataFileUri filePath, bool explicitBoundsOnly)
         {
             var peptideDocNode = (PeptideDocNode)Document.FindNode(identityPath);
             if (peptideDocNode == null)
@@ -332,7 +332,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
                 return null;
             }
 
-            return GetImputedPeakFromDocument(cancellationToken, batchNames, identityPath, filePath, noRecalculateScores);
+            return GetImputedPeakFromDocument(cancellationToken, batchNames, identityPath, filePath);
         }
 
         private ImputedPeak GetImputedPeakFromLibraryPeak(CancellationToken cancellationToken, LibraryInfo libraryInfo, ExemplaryPeak exemplaryPeak,
@@ -408,7 +408,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
             {
                 return explicitPeakBounds;
             }
-            var imputedPeak = GetImputedPeakBounds(CancellationToken.None, identityPath, chromatogramSet, filePath, true, false);
+            var imputedPeak = GetImputedPeakBounds(CancellationToken.None, identityPath, chromatogramSet, filePath, true);
             if (imputedPeak == null)
             {
                 return explicitPeakBounds;
@@ -453,9 +453,9 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
         }
 
         private ImputedPeak GetImputedPeakFromDocument(CancellationToken cancellationToken, List<string> batchNames, IdentityPath identityPath,
-            MsDataFileUri filePath, bool noRecalculateScores)
+            MsDataFileUri filePath)
         {
-            var bestKeyValuePair = GetBestScoredPeak(identityPath, batchNames, noRecalculateScores);
+            var bestKeyValuePair = GetBestScoredPeak(identityPath, batchNames);
             var bestPeak = bestKeyValuePair.Value;
             if (bestPeak == null)
             {
@@ -484,7 +484,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
             return MakeImputedPeak(sourceAlignment, exemplaryPeak, targetAlignment);
         }
 
-        private KeyValuePair<MsDataFileUri, ScoredPeak> GetBestScoredPeak(IdentityPath identityPath, IList<string> batchNames, bool noRecalculateScores)
+        private KeyValuePair<MsDataFileUri, ScoredPeak> GetBestScoredPeak(IdentityPath identityPath, IList<string> batchNames)
         {
             Dictionary<MsDataFileUri, ScoredPeak> scoredPeaks;
             if (MProphetResultsHandler == null)
@@ -632,7 +632,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
 
         private AlignmentFunction GetAlignmentFunction(CancellationToken cancellationToken, MsDataFileUri filePath)
         {
-            if (AlignmentTarget == null)
+            if (AlignmentTarget == null || filePath == null)
             {
                 return AlignmentFunction.IDENTITY;
             }
@@ -699,7 +699,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
         public ImputedPeak GetImputedPeakQuick(IdentityPath peptideIdentityPath, ChromatogramSet chromatogramSet, 
             MsDataFileUri filePath)
         {
-            return GetImputedPeakBounds(CancellationToken.None, peptideIdentityPath, chromatogramSet, filePath, false, true);
+            return GetImputedPeakBounds(CancellationToken.None, peptideIdentityPath, chromatogramSet, filePath, false);
         }
 
         public SrmDocument ImputePeak(CancellationToken cancellationToken, SrmDocument document, IdentityPath peptideIdentityPath)

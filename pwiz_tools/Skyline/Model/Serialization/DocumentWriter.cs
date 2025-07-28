@@ -702,6 +702,7 @@ namespace pwiz.Skyline.Model.Serialization
             {
                 writer.WriteAttribute(ATTR.end_time, scoredPeak.EndTime);
             }
+            writer.WriteEndElement();
         }
 
         /// <summary>

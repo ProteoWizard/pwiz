@@ -190,7 +190,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                         //           It may be possible to save even more by using a smaller struct
                         //           when times are not required, which they are only for export
                         float retentionTime = 0, startTime = 0, endTime = 0;
-                        if (verbose)
+                        if (verbose || true)
                         {
                             var peakTimes = summaryPeakData.RetentionTimeStatistics;
                             retentionTime = peakTimes.RetentionTime;
@@ -774,7 +774,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             FeatureScores features) : this()
         {
             OriginalPeakIndex = peakIndex;
-            // CONSIDER: This impacts memory consumption for large-scale DIA, and it is not clear anyone uses these
+            // These retention times are used by peak imputation
             RetentionTime = retentionTime;
             StartTime = startTime;
             EndTime = endTime;
