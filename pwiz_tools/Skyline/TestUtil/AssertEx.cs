@@ -1042,7 +1042,7 @@ namespace pwiz.SkylineTestUtil
             NoDiff(file1, file2, null, columnTolerances, ignorePathDifferences);
         }
 
-        public static void LibraryEquals(LibrarySpec libraryExpected, LibrarySpec libraryActual, double mzTolerance = 1e-8, double intensityTolerance = 1e-5)
+        public static void LibraryEquals(LibrarySpec libraryExpected, LibrarySpec libraryActual, double mzTolerance = 1e-8, double intensityTolerance = 1e-5, double intensityMinimum = 1e-5)
         {
             Library expectedLoaded = null, actualLoaded = null;
             try
@@ -1066,9 +1066,9 @@ namespace pwiz.SkylineTestUtil
                     Assert.AreEqual(expected, actual, "spectrum library keys not equal");
 
                     var expectedSpectra = expectedLoaded.GetSpectra(expected, IsotopeLabelType.light, LibraryRedundancy.best);
-                    var expectedSpectrum = expectedSpectra.First().SpectrumPeaksInfo.Peaks.Where((s) => s.Intensity >= intensityTolerance).ToArray();
+                    var expectedSpectrum = expectedSpectra.First().SpectrumPeaksInfo.Peaks.Where((s) => s.Intensity >= intensityMinimum).ToArray();
                     var actualSpectra = actualLoaded.GetSpectra(actual, IsotopeLabelType.light, LibraryRedundancy.best);
-                    var actualSpectrum = actualSpectra.First().SpectrumPeaksInfo.Peaks.Where((s) => s.Intensity >= intensityTolerance).ToArray();
+                    var actualSpectrum = actualSpectra.First().SpectrumPeaksInfo.Peaks.Where((s) => s.Intensity >= intensityMinimum).ToArray();
                     if (expectedSpectrum.Length != actualSpectrum.Length)
                     {
                         Console.WriteLine();
