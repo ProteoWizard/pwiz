@@ -88,8 +88,8 @@ namespace pwiz.Skyline.Menus
 
             originalPeakMenuItem.Checked = set.ShowOriginalPeak;
             menuStrip.Items.Insert(iInsert++, originalPeakMenuItem);
-            imputedPeakMenuItem.Checked = IsShowImputedPeak(DocumentUI);
-            menuStrip.Items.Insert(iInsert++, imputedPeakMenuItem);
+            exemplaryPeakMenuItem.Checked = IsShowImputedPeak(DocumentUI);
+            menuStrip.Items.Insert(iInsert++, exemplaryPeakMenuItem);
 
             menuStrip.Items.Insert(iInsert++, retentionTimesContextMenuItem);
             if (retentionTimesContextMenuItem.DropDownItems.Count == 0)
@@ -466,9 +466,9 @@ namespace pwiz.Skyline.Menus
             SkylineWindow.ShowOriginalPeak(originalPeakMenuItem.Checked);
         }
 
-        private void imputedPeakMenuItem_Click(object sender, EventArgs e)
+        private void exemplaryPeakMenuItem_Click(object sender, EventArgs e)
         {
-            SkylineWindow.ShowImputedPeak(imputedPeakMenuItem.Checked);
+            SkylineWindow.ShowExemplaryPeak(exemplaryPeakMenuItem.Checked);
         }
 
         private void massErrorContextMenuItem_Click(object sender, EventArgs e)
@@ -729,12 +729,12 @@ namespace pwiz.Skyline.Menus
 
         /// <summary>
         /// Returns true if the imputed peak boundaries should be shown for a particular document.
-        /// If <see cref="Settings.ShowImputedPeakBounds"/> is null, then the imputed bounds should
+        /// If <see cref="Settings.ShowExemplaryPeakBounds"/> is null, then the imputed bounds should
         /// only be shown if the document has some peak imputation settings.
         /// </summary>
         public static bool IsShowImputedPeak(SrmDocument document)
         {
-            return Settings.Default.ShowImputedPeakBounds ??
+            return Settings.Default.ShowExemplaryPeakBounds ??
                    !ImputationSettings.DEFAULT.Equals(document.Settings.PeptideSettings.Imputation);
         }
     }

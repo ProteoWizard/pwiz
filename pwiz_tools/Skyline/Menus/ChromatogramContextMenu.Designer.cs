@@ -90,7 +90,7 @@
             this.toolStripSeparator19 = new System.Windows.Forms.ToolStripSeparator();
             this.zoomChromContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator26 = new System.Windows.Forms.ToolStripSeparator();
-            this.imputedPeakMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exemplaryPeakMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuChromatogram.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -108,7 +108,7 @@
             this.legendChromContextMenuItem,
             this.peakBoundariesContextMenuItem,
             this.originalPeakMenuItem,
-            this.imputedPeakMenuItem,
+            this.exemplaryPeakMenuItem,
             this.massErrorContextMenuItem,
             this.retentionTimesContextMenuItem,
             this.retentionTimePredContextMenuItem,
@@ -519,10 +519,10 @@
             // 
             // imputedPeakMenuItem
             // 
-            this.imputedPeakMenuItem.CheckOnClick = true;
-            this.imputedPeakMenuItem.Name = "imputedPeakMenuItem";
-            resources.ApplyResources(this.imputedPeakMenuItem, "imputedPeakMenuItem");
-            this.imputedPeakMenuItem.Click += new System.EventHandler(this.imputedPeakMenuItem_Click);
+            this.exemplaryPeakMenuItem.CheckOnClick = true;
+            this.exemplaryPeakMenuItem.Name = "exemplaryPeakMenuItem";
+            resources.ApplyResources(this.exemplaryPeakMenuItem, "exemplaryPeakMenuItem");
+            this.exemplaryPeakMenuItem.Click += new System.EventHandler(this.exemplaryPeakMenuItem_Click);
             // 
             // ChromatogramContextMenu
             // 
@@ -596,6 +596,6 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator26;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripMenuItem synchronizeIntegrationContextMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem imputedPeakMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem exemplaryPeakMenuItem;
     }
 }

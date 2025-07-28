@@ -1586,9 +1586,9 @@ namespace pwiz.Skyline
             UpdateChromGraphs();
         }
 
-        public void ShowImputedPeak(bool show)
+        public void ShowExemplaryPeak(bool show)
         {
-            Settings.Default.ShowImputedPeakBounds = show;
+            Settings.Default.ShowExemplaryPeakBounds = show;
             UpdateChromGraphs();
         }
 

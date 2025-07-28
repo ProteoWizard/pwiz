@@ -31,7 +31,6 @@ using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
@@ -552,18 +551,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [ChildDisplayName("Exemplary{0}")]
-        public ExemplaryPeakBounds ExemplaryPeak
+        public SourcedPeakValue ExemplaryPeak
         {
             get
             {
-                var peakImputer = DataSchema.PeakBoundaryImputer;
-                var imputedPeak = peakImputer.GetImputedPeakQuick(Peptide.IdentityPath, null, null);
-                if (imputedPeak == null)
-                {
-                    return null;
-                }
-                return new ExemplaryPeakBounds(imputedPeak.PeakBounds.StartTime, imputedPeak.PeakBounds.EndTime,
-                    imputedPeak.ExemplaryPeak.SpectrumSourceFile, null, imputedPeak.ExemplaryPeak.Library?.Name);
+                return SourcedPeakValue.FromSourcedPeak(DataSchema.PeakBoundaryImputer.GetImputedPeakQuick(Peptide.IdentityPath, null, null)?.ExemplaryPeak);
             }
         }
 
@@ -597,36 +589,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 return owner.MakeChromInfoResultsMap(owner.DocNode.Results, file => new PrecursorResult(owner, file));
             }
-        }
-        public class ExemplaryPeakBounds : IFormattable
-        {
-            public ExemplaryPeakBounds(double startTime, double endTime, string filePath, string replicateName, string library)
-            {
-                StartTime = startTime;
-                EndTime = endTime;
-                FilePath = filePath;
-                ReplicateName = replicateName;
-                LibraryName = library;
-            }
-
-            [Format(Formats.RETENTION_TIME)]
-            public double StartTime { get; }
-            [Format(Formats.RETENTION_TIME)]
-            public double EndTime { get; }
-            public string FilePath { get; }
-            public string ReplicateName { get; }
-            public string LibraryName { get; }
-            public override string ToString()
-            {
-                return ToString(Formats.RETENTION_TIME, CultureInfo.CurrentCulture);
-            }
-
-            public string ToString(string format, IFormatProvider formatProvider)
-            {
-                return string.Format(EntitiesResources.CandidatePeakGroup_ToString___0___1__,
-                    StartTime.ToString(format, formatProvider), EndTime.ToString(format, formatProvider));
-            }
-
         }
     }
 

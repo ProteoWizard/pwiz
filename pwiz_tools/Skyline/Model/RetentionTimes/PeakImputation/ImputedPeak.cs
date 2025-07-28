@@ -17,12 +17,13 @@
  * limitations under the License.
  */
 using pwiz.Common.PeakFinding;
+using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
 {
     public class ImputedPeak
     {
-        public ImputedPeak(PeakBounds peakBounds, ExemplaryPeak exemplaryPeak)
+        public ImputedPeak(PeakBounds peakBounds, SourcedPeak exemplaryPeak)
         {
             PeakBounds = peakBounds;
             ExemplaryPeak = exemplaryPeak;
@@ -33,6 +34,6 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
             get;
         }
 
-        public ExemplaryPeak ExemplaryPeak { get; }
+        public SourcedPeak ExemplaryPeak { get; }
     }
 }

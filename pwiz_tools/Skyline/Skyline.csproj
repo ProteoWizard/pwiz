@@ -604,7 +604,6 @@
     <Compile Include="Model\RetentionTimes\ResultFileAlignments.cs" />
     <Compile Include="Model\RetentionTimes\LibraryAlignment.cs" />
     <Compile Include="Model\RetentionTimes\PiecewiseLinearMap.cs" />
-    <Compile Include="Model\RetentionTimes\PeakImputation\ExemplaryPeak.cs" />
     <Compile Include="Model\RetentionTimes\PeakImputation\ImputedPeak.cs" />
     <Compile Include="Model\RetentionTimes\PeakImputation\PeakBoundaryImputer.cs" />
     <Compile Include="Model\RetentionTimes\RTPeptideValue.cs" />

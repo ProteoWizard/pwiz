@@ -1,5 +1,7 @@
 ﻿using pwiz.Common.PeakFinding;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
+using pwiz.Skyline.Model.Lib;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -49,5 +51,50 @@ namespace pwiz.Skyline.Model.Results
                 return hashCode;
             }
         }
+    }
+
+    public class PeakSource : Immutable
+    {
+        public PeakSource(string filePath)
+        {
+            FilePath = filePath;
+        }
+
+        public string FilePath { get;  }
+        public string LibraryName { get; private set; }
+
+        public PeakSource ChangeLibraryName(string value)
+        {
+            return ChangeProp(ImClone(this), im => im.LibraryName = value);
+        }
+
+        public string ReplicateName { get; private set; }
+
+        public PeakSource ChangeReplicateName(string value)
+        {
+            return ChangeProp(ImClone(this), im => im.ReplicateName = value);
+        }
+
+        public static PeakSource FromLibrary(Library library, string spectrumSourceFile)
+        {
+            return new PeakSource(spectrumSourceFile).ChangeLibraryName(library.Name);
+        }
+
+        public static PeakSource FromChromFile(ChromatogramSet chromatogramSet, MsDataFileUri file)
+        {
+            return new PeakSource(file.ToString()).ChangeReplicateName(chromatogramSet.Name);
+        }
+    }
+
+    public class SourcedPeak
+    {
+        public SourcedPeak(PeakSource peakSource, ScoredPeak scoredPeak)
+        {
+            Source = peakSource;
+            Peak = scoredPeak;
+        }
+
+        public PeakSource Source { get; }
+        public ScoredPeak Peak { get; }
     }
 }

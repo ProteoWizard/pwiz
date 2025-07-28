@@ -1336,15 +1336,15 @@ namespace pwiz.Skyline.Properties
         }
 
         [UserScopedSetting]
-        public bool? ShowImputedPeakBounds
+        public bool? ShowExemplaryPeakBounds
         {
             get
             {
-                return (bool?)this[nameof(ShowImputedPeakBounds)];
+                return (bool?)this[nameof(ShowExemplaryPeakBounds)];
             }
             set
             {
-                this[nameof(ShowImputedPeakBounds)] = value;
+                this[nameof(ShowExemplaryPeakBounds)] = value;
             }
         }
     }
