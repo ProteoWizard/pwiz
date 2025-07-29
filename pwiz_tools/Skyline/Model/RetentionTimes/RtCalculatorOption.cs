@@ -21,15 +21,26 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         public virtual RetentionScoreCalculatorSpec GetRetentionScoreCalculatorSpec(SrmDocument document, ImmutableList<RetentionScoreCalculatorSpec> calculators)
         {
-            return GetAlignmentTarget(document.Settings, calculators)?.AsRetentionScoreCalculator();
+            return GetAlignmentTarget(document, calculators, false)?.AsRetentionScoreCalculator();
         }
 
         protected abstract AlignmentTarget GetAlignmentTarget(SrmSettings settings, ImmutableList<RetentionScoreCalculatorSpec> calculators);
+
+        protected virtual AlignmentTarget GetAlignmentTarget(SrmDocument document,
+            ImmutableList<RetentionScoreCalculatorSpec> calculators, bool ensureCurrent)
+        {
+            return GetAlignmentTarget(document.Settings, calculators);
+        }
 
         public AlignmentTarget GetAlignmentTarget(SrmSettings settings)
         {
             return GetAlignmentTarget(settings,
                 ImmutableList.Singleton(settings.PeptideSettings.Prediction?.RetentionTime?.Calculator));
+        }
+
+        public AlignmentTarget GetAlignmentTarget(SrmDocument document, bool refresh)
+        {
+            return GetAlignmentTarget(document, ImmutableList.Singleton(document.Settings.PeptideSettings.Prediction?.RetentionTime?.Calculator), refresh);
         }
 
         public static IEnumerable<RtCalculatorOption> GetOptions(SrmDocument document)
@@ -41,27 +52,31 @@ namespace pwiz.Skyline.Model.RetentionTimes
             return result;
         }
 
-        public static RtCalculatorOption GetDefault(PeptideSettings peptideSettings)
+        public static bool TryGetDefault(PeptideSettings peptideSettings, out RtCalculatorOption option)
         {
             var calculator = peptideSettings.Prediction?.RetentionTime?.Calculator;
             if (calculator != null)
             {
-                return new Irt(calculator.Name);
+                option = new Irt(calculator.Name);
+                return true;
             }
 
+            option = null;
             foreach (var library in peptideSettings.Libraries.Libraries)
             {
                 if (library == null || !library.IsLoaded)
                 {
-                    return null;
+                    return false;
                 }
 
                 if (library.ListRetentionTimeSources().Any())
                 {
-                    return new Library(library.Name);
+                    option = new Library(library.Name);
+                    return true;
                 }
             }
-            return MedianDocRetentionTimes;
+            
+            return true;
         }
 
         private static IEnumerable<Library> GetLibraryOptions(SrmDocument document)
@@ -198,7 +213,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 return null;
             }
 
-            public override string DisplayName => "Library " + LibraryName;
+            public override string DisplayName => string.Format(RetentionTimesResources.Library_DisplayName_Library__0_, LibraryName);
         }
 
         private class MedianDocumentRetentionTimes : RtCalculatorOption
@@ -212,16 +227,18 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 return settings.DocumentRetentionTimes.ResultFileAlignments.MedianDocumentRetentionTimesTarget;
             }
 
-            public override RetentionScoreCalculatorSpec GetRetentionScoreCalculatorSpec(SrmDocument document, ImmutableList<RetentionScoreCalculatorSpec> calculators)
+            protected override AlignmentTarget GetAlignmentTarget(SrmDocument document, ImmutableList<RetentionScoreCalculatorSpec> calculators, bool ensureCurrent)
             {
-                return (document.Settings.DocumentRetentionTimes.ResultFileAlignments
-                            .MedianDocumentRetentionTimesTarget ??
-                        new AlignmentTarget.MedianDocumentRetentionTimes(document))
-                    .AsRetentionScoreCalculator();
+                AlignmentTarget target = null;
+                if (!ensureCurrent)
+                {
+                    target = GetAlignmentTarget(document.Settings, calculators);
+                }
+                target ??= new AlignmentTarget.MedianDocumentRetentionTimes(document);
+                return target;
             }
 
-
-            public override string DisplayName => "Median LC Peak Times";
+            public override string DisplayName => RetentionTimesResources.MedianDocumentRetentionTimes_DisplayName_Median_LC_Peak_Times;
         }
 
         public abstract string DisplayName { get; }

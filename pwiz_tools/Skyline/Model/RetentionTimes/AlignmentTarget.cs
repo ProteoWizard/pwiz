@@ -169,6 +169,10 @@ namespace pwiz.Skyline.Model.RetentionTimes
                         weightedPoints.Select(pt => pt.Y).ToArray(), 
                         weightedPoints.Select(pt => pt.Weight).ToArray(),
                         cancellationToken);
+                    if (smoothedYValues.Any(v => double.IsNaN(v) || double.IsInfinity(v)))
+                    {
+                        return null;
+                    }
                     return ReducePointCount(CreatePiecewiseLinearMap(xArray, smoothedYValues));
                 }
                 default:
@@ -231,8 +235,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         public static AlignmentTarget GetAlignmentTarget(SrmDocument document)
         {
-            TryGetAlignmentTarget(document.Settings, out var alignmentTarget);
-            return alignmentTarget;
+            return document.Settings.DocumentRetentionTimes.AlignmentTarget;
         }
 
         /// <summary>
@@ -254,6 +257,13 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
             var targetSpec = settings.PeptideSettings.Imputation?.AlignmentTarget ?? AlignmentTargetSpec.Default;
             return targetSpec.TryGetAlignmentTarget(settings, out alignmentTarget);
+        }
+
+        public static bool TryGetCurrentAlignmentTarget(SrmDocument document, out AlignmentTarget alignmentTarget)
+        {
+            var alignmentTargetSpec = document.Settings.PeptideSettings.Imputation?.AlignmentTarget ??
+                                      AlignmentTargetSpec.Default;
+            return alignmentTargetSpec.TryGetAlignmentTarget(document, out alignmentTarget);
         }
 
         public abstract string GetAxisTitle(RTPeptideValue rtValue);
@@ -438,8 +448,8 @@ namespace pwiz.Skyline.Model.RetentionTimes
             {
                 get
                 {
-                    return "Library " + Library.Name;
-                }
+                    return string.Format(RetentionTimesResources.Library_DisplayName_Library__0_, Library.Name);
+}
             }
             public override double ChooseUnknownScore()
             {
@@ -523,20 +533,20 @@ namespace pwiz.Skyline.Model.RetentionTimes
             {
                 if (rtPeptideValue == RTPeptideValue.Retention || rtPeptideValue == RTPeptideValue.All)
                 {
-                    return "Normalized retention time";
+                    return RetentionTimesResources.MedianDocumentRetentionTimes_GetAxisTitle_Normalized_retention_time;
                 }
 
-                return string.Format("Normalized {0}", rtPeptideValue.ToLocalizedString());
+                return string.Format(RetentionTimesResources.MedianDocumentRetentionTimes_GetAxisTitle_Normalized__0_, rtPeptideValue.ToLocalizedString());
             }
 
             public override string GetAlignmentMenuItemText()
             {
-                return string.Format("Align to Median Document Retention Times");
+                return string.Format(RetentionTimesResources.MedianDocumentRetentionTimes_GetAlignmentMenuItemText_Align_to_Median_Document_Retention_Times);
             }
 
             public override string DisplayName
             {
-                get { return "Median LC Peak Time"; }
+                get { return RetentionTimesResources.MedianDocumentRetentionTimes_DisplayName_Median_LC_Peak_Time; }
             }
 
             protected bool Equals(MedianDocumentRetentionTimes other)
@@ -564,27 +574,6 @@ namespace pwiz.Skyline.Model.RetentionTimes
             {
                 return IrtDb.ChooseUnknownScore(_dictionary.Values);
             }
-        }
-
-
-        private static IEnumerable<KeyValuePair<LibrarySpec, Library>> GetAlignableLibraries(
-            PeptideLibraries peptideLibraries)
-        {
-            for (int iLibrary = 0; iLibrary < peptideLibraries.Libraries.Count; iLibrary++)
-            {
-                var library = peptideLibraries.Libraries[iLibrary];
-                var librarySpec = peptideLibraries.LibrarySpecs[iLibrary];
-                if (CanBeAligned(librarySpec, library))
-                {
-                    yield return new KeyValuePair<LibrarySpec, Library>(librarySpec, library);
-                }
-            }
-        }
-
-        private static bool CanBeAligned(LibrarySpec librarySpec, Library library)
-        {
-            return librarySpec is BiblioSpecLiteSpec || librarySpec is EncyclopeDiaSpec ||
-                   library is BiblioSpecLiteLibrary || library is EncyclopeDiaLibrary;
         }
     }
 }

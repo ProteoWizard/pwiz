@@ -522,6 +522,8 @@ namespace pwiz.Skyline.SettingsUI
             // groupBoxPeakImputation
             // 
             resources.ApplyResources(this.groupBoxPeakImputation, "groupBoxPeakImputation");
+            this.groupBoxPeakImputation.Controls.Add(this.comboRunToRunAlignment);
+            this.groupBoxPeakImputation.Controls.Add(this.lblRunToRunAlignment);
             this.groupBoxPeakImputation.Controls.Add(this.lblPeakWidthVariationPercent);
             this.groupBoxPeakImputation.Controls.Add(this.tbxMaxPeakWidthVariation);
             this.groupBoxPeakImputation.Controls.Add(this.lblMaxPeakWidthVariation);
@@ -624,8 +626,6 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // tabPrediction
             // 
-            this.tabPrediction.Controls.Add(this.comboRunToRunAlignment);
-            this.tabPrediction.Controls.Add(this.lblRunToRunAlignment);
             this.tabPrediction.Controls.Add(this.groupBoxPeakImputation);
             this.tabPrediction.Controls.Add(this.btnUpdateCalculator);
             this.tabPrediction.Controls.Add(this.label14);
@@ -645,7 +645,6 @@ namespace pwiz.Skyline.SettingsUI
             this.comboRunToRunAlignment.FormattingEnabled = true;
             resources.ApplyResources(this.comboRunToRunAlignment, "comboRunToRunAlignment");
             this.comboRunToRunAlignment.Name = "comboRunToRunAlignment";
-            this.comboRunToRunAlignment.ValueMember = "Value";
             // 
             // lblRunToRunAlignment
             // 

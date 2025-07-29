@@ -133,4 +133,34 @@
   <data name="RetentionTimeManager_GetAlignmentDescription_Performing_alignment_on_library__0_" xml:space="preserve">
 	  <value>Performing alignment on library {0}</value>
   </data>
+  <data name="AlignmentTargetSpec_GetLabel_Default" xml:space="preserve">
+	  <value>Default</value>
+  </data>
+  <data name="AlignmentTargetSpec_GetLabel_Default___0__" xml:space="preserve">
+	  <value>Default ({0})</value>
+  </data>
+  <data name="AlignmentTargetSpec_GetLabel___Invalid__" xml:space="preserve">
+	  <value>!!Invalid!!</value>
+  </data>
+  <data name="Library_DisplayName_Library__0_" xml:space="preserve">
+	  <value>Library {0}</value>
+  </data>
+  <data name="MedianDocumentRetentionTimes_DisplayName_Median_LC_Peak_Times" xml:space="preserve">
+	  <value>Median LC Peak Times</value>
+  </data>
+  <data name="MedianDocumentRetentionTimes_GetAxisTitle_Normalized_retention_time" xml:space="preserve">
+	  <value>Normalized retention time</value>
+  </data>
+  <data name="MedianDocumentRetentionTimes_GetAxisTitle_Normalized__0_" xml:space="preserve">
+	  <value>Normalized {0}</value>
+  </data>
+  <data name="MedianDocumentRetentionTimes_GetAlignmentMenuItemText_Align_to_Median_Document_Retention_Times" xml:space="preserve">
+	  <value>Align to Median Document Retention Times</value>
+  </data>
+  <data name="MedianDocumentRetentionTimes_DisplayName_Median_LC_Peak_Time" xml:space="preserve">
+	  <value>Median LC Peak Time</value>
+  </data>
+  <data name="AlignmentTargetSpec_GetLabel_Default__None_" xml:space="preserve">
+	  <value>Default (None)</value>
+  </data>
 </root>

@@ -36,6 +36,15 @@ namespace pwiz.Skyline.Model.RetentionTimes
         public static PiecewiseLinearMap FromValues(IEnumerable<KeyValuePair<double, double>> points)
         {
             var pointList = points.Select(pt=>Tuple.Create(pt.Key, pt.Value)).OrderBy(tuple=>tuple).ToList();
+            for (int i = 0; i < pointList.Count; i++)
+            {
+                var point = pointList[i];
+                if (double.IsNaN(point.Item1) || double.IsInfinity(point.Item1) || double.IsNaN(point.Item2) ||
+                    double.IsInfinity(point.Item2))
+                {
+                    throw new ArgumentException(string.Format(@"Invalid point {0} at position {1}", point, i), nameof(points));
+                }
+            }
             return new PiecewiseLinearMap(pointList.Select(pt => pt.Item1).ToArray(),
                 pointList.Select(pt => pt.Item2).ToArray());
         }

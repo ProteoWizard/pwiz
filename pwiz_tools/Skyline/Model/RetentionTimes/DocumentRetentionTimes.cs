@@ -70,18 +70,16 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 libraryAlignmentValue.Alignments.GetAlignmentFunction(file, true) != null));
         }
 
-        private static string IsNotLoadedExplained(SrmSettings srmSettings)
+        public AlignmentTarget AlignmentTarget { get; private set; }
+
+        private static string IsNotLoadedExplained(AlignmentTarget alignmentTarget, SrmSettings srmSettings)
         {
-            if (!AlignmentTarget.TryGetAlignmentTarget(srmSettings, out _))
-            {
-                return null;
-            }
             if (!srmSettings.PeptideSettings.Libraries.IsLoaded)
             {
                 return null;
             }
 
-            if (srmSettings.DocumentRetentionTimes.UpdateFromLoadedSettings(srmSettings) != null)
+            if (srmSettings.DocumentRetentionTimes.UpdateFromLoadedSettings(alignmentTarget, srmSettings) != null)
             {
                 return nameof(DocumentRetentionTimes) + @" need to update from loaded settings";
             }
@@ -97,11 +95,12 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         public static string IsNotLoadedExplained(SrmDocument document)
         {
-            if (!AlignmentTarget.TryGetAlignmentTarget(document.Settings, out _))
+            var targetSpec = document.Settings.PeptideSettings.Imputation.AlignmentTarget ?? AlignmentTargetSpec.Default;
+            if (!targetSpec.TryGetAlignmentTarget(document, out var target))
             {
                 return null;
             }
-            var notLoaded = IsNotLoadedExplained(document.Settings);
+            var notLoaded = IsNotLoadedExplained(target, document.Settings);
             if (notLoaded != null)
             {
                 return notLoaded;
@@ -123,7 +122,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         public static bool IsReadyForChromatogramExtraction(SrmDocument document)
         {
-            return null == IsNotLoadedExplained(document.Settings);
+            return null == IsNotLoadedExplained(document);
         }
 
         public static bool IsLoaded(SrmDocument document)
@@ -139,7 +138,8 @@ namespace pwiz.Skyline.Model.RetentionTimes
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             return CollectionUtil.EqualsDeep(_libraryAlignments, other._libraryAlignments)
-                   && Equals(ResultFileAlignments, other.ResultFileAlignments);
+                   && Equals(ResultFileAlignments, other.ResultFileAlignments)
+                   && Equals(AlignmentTarget, other.AlignmentTarget);
 
         }
 
@@ -157,6 +157,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
             {
                 int result = ResultFileAlignments.GetHashCode();
                 result = (result * 397) ^ CollectionUtil.GetHashCodeDeep(_libraryAlignments);
+                result = (result * 397) ^ (AlignmentTarget?.GetHashCode() ?? 0);
                 return result;
             }
         }
@@ -368,14 +369,14 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 im => im._libraryAlignments = newEntries.ToDictionary(kvp => kvp.Key, kvp => kvp.Value));
         }
 
-        public DocumentRetentionTimes DumpStaleAlignments(SrmSettings settings)
+        public DocumentRetentionTimes DumpStaleAlignments(SrmDocument document)
         {
             if (_libraryAlignments.Count == 0)
             {
                 return this;
             }
 
-            var newParams = GetAlignmentParams(settings);
+            var newParams = GetAlignmentParams(AlignmentTarget, document.Settings);
             var newAlignments = _libraryAlignments.Where(kvp =>
                     newParams.TryGetValue(kvp.Key, out var paramValue) && false != paramValue?.Equals(kvp.Value.Param))
                 .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
@@ -389,7 +390,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         public IEnumerable<LibraryAlignmentParam> GetMissingAlignments(SrmSettings settings)
         {
-            var dictParams = GetAlignmentParams(settings);
+            var dictParams = GetAlignmentParams(AlignmentTarget, settings);
             if (dictParams == null)
             {
                 yield break;
@@ -404,12 +405,8 @@ namespace pwiz.Skyline.Model.RetentionTimes
             }
         }
 
-        public Dictionary<string, LibraryAlignmentParam> GetAlignmentParams(SrmSettings settings)
+        public Dictionary<string, LibraryAlignmentParam> GetAlignmentParams(AlignmentTarget alignmentTarget, SrmSettings settings)
         {
-            if (!AlignmentTarget.TryGetAlignmentTarget(settings, out var alignmentTarget))
-            {
-                return null;
-            }
             var dict = new Dictionary<string, LibraryAlignmentParam>();
             if (!settings.HasResults || alignmentTarget == null)
             {
@@ -561,19 +558,23 @@ namespace pwiz.Skyline.Model.RetentionTimes
             return new Alignments(null, alignmentFunctions);
         }
 
-        public DocumentRetentionTimes UpdateFromLoadedSettings(SrmSettings settings)
+        public DocumentRetentionTimes UpdateFromLoadedSettings(AlignmentTarget alignmentTarget, SrmSettings settings)
         {
-            if (_libraryAlignments.Count == 0)
+            bool anyChanges = !Equals(alignmentTarget, AlignmentTarget);
+            if (!anyChanges)
+            {
+                alignmentTarget = AlignmentTarget;
+            }
+            if (_libraryAlignments.Count == 0 && !anyChanges)
             {
                 return null;
             }
-            var newParams = GetAlignmentParams(settings);
+            var newParams = GetAlignmentParams(alignmentTarget, settings);
             if (newParams == null)
             {
                 return null;
             }
             var newLibraries = new Dictionary<string, LibraryAlignmentValue>();
-            bool anyChanges = false;
             foreach (var entry in _libraryAlignments)
             {
                 var key = entry.Key;
@@ -598,7 +599,11 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
             if (anyChanges)
             {
-                return ChangeProp(ImClone(this), im => im._libraryAlignments = newLibraries);
+                return ChangeProp(ImClone(this), im =>
+                {
+                    im.AlignmentTarget = alignmentTarget;
+                    im._libraryAlignments = newLibraries;
+                });
             }
 
             return null;

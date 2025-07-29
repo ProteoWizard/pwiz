@@ -69,7 +69,8 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             return Nullable.Equals(MaxRtShift, other.MaxRtShift) &&
                    Nullable.Equals(MaxPeakWidthVariation, other.MaxPeakWidthVariation) &&
-                   Equals(ImputeMissingPeaks, other.ImputeMissingPeaks);
+                   Equals(ImputeMissingPeaks, other.ImputeMissingPeaks) &&
+                   Equals(AlignmentTarget, other.AlignmentTarget);
         }
 
         public override bool Equals(object obj)
@@ -87,6 +88,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 var hashCode = MaxRtShift.GetHashCode();
                 hashCode = (hashCode * 397) ^ MaxPeakWidthVariation.GetHashCode();
                 hashCode = (hashCode * 397) ^ ImputeMissingPeaks.GetHashCode();
+                hashCode = (hashCode * 397) ^ (AlignmentTarget?.GetHashCode() ?? 0);
                 return hashCode;
             }
         }

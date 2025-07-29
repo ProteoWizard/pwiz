@@ -61,11 +61,56 @@ namespace pwiz.Skyline.Model.RetentionTimes {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to !!Invalid!!.
+        /// </summary>
+        internal static string AlignmentTargetSpec_GetLabel___Invalid__ {
+            get {
+                return ResourceManager.GetString("AlignmentTargetSpec_GetLabel___Invalid__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Default.
+        /// </summary>
+        internal static string AlignmentTargetSpec_GetLabel_Default {
+            get {
+                return ResourceManager.GetString("AlignmentTargetSpec_GetLabel_Default", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Default ({0}).
+        /// </summary>
+        internal static string AlignmentTargetSpec_GetLabel_Default___0__ {
+            get {
+                return ResourceManager.GetString("AlignmentTargetSpec_GetLabel_Default___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Default (None).
+        /// </summary>
+        internal static string AlignmentTargetSpec_GetLabel_Default__None_ {
+            get {
+                return ResourceManager.GetString("AlignmentTargetSpec_GetLabel_Default__None_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Aligning retention times.
         /// </summary>
         internal static string DocumentRetentionTimes_RecalculateAlignments_Aligning_retention_times {
             get {
                 return ResourceManager.GetString("DocumentRetentionTimes_RecalculateAlignments_Aligning_retention_times", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Library {0}.
+        /// </summary>
+        internal static string Library_DisplayName_Library__0_ {
+            get {
+                return ResourceManager.GetString("Library_DisplayName_Library__0_", resourceCulture);
             }
         }
         
@@ -93,6 +138,52 @@ namespace pwiz.Skyline.Model.RetentionTimes {
         internal static string LibraryTarget_GetAxisTitle_Retention_time_aligned_to_library___0__ {
             get {
                 return ResourceManager.GetString("LibraryTarget_GetAxisTitle_Retention_time_aligned_to_library___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Median LC Peak Time.
+        /// </summary>
+        internal static string MedianDocumentRetentionTimes_DisplayName_Median_LC_Peak_Time {
+            get {
+                return ResourceManager.GetString("MedianDocumentRetentionTimes_DisplayName_Median_LC_Peak_Time", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Median LC Peak Times.
+        /// </summary>
+        internal static string MedianDocumentRetentionTimes_DisplayName_Median_LC_Peak_Times {
+            get {
+                return ResourceManager.GetString("MedianDocumentRetentionTimes_DisplayName_Median_LC_Peak_Times", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Align to Median Document Retention Times.
+        /// </summary>
+        internal static string MedianDocumentRetentionTimes_GetAlignmentMenuItemText_Align_to_Median_Document_Retention_Times {
+            get {
+                return ResourceManager.GetString("MedianDocumentRetentionTimes_GetAlignmentMenuItemText_Align_to_Median_Document_Re" +
+                        "tention_Times", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Normalized {0}.
+        /// </summary>
+        internal static string MedianDocumentRetentionTimes_GetAxisTitle_Normalized__0_ {
+            get {
+                return ResourceManager.GetString("MedianDocumentRetentionTimes_GetAxisTitle_Normalized__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Normalized retention time.
+        /// </summary>
+        internal static string MedianDocumentRetentionTimes_GetAxisTitle_Normalized_retention_time {
+            get {
+                return ResourceManager.GetString("MedianDocumentRetentionTimes_GetAxisTitle_Normalized_retention_time", resourceCulture);
             }
         }
         

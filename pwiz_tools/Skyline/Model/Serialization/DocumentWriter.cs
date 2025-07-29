@@ -695,7 +695,7 @@ namespace pwiz.Skyline.Model.Serialization
                 return;
             }
             writer.WriteStartElement(el);
-            writer.WriteAttribute(ATTR.zscore, scoredPeak.Score);
+            writer.WriteAttribute(ATTR.score, scoredPeak.Score);
             writer.WriteAttribute(ATTR.retention_time, scoredPeak.ApexTime);
             writer.WriteAttribute(ATTR.start_time, scoredPeak.StartTime);
             writer.WriteAttribute(ATTR.end_time, scoredPeak.EndTime);

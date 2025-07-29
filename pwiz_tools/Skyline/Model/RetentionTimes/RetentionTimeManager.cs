@@ -33,6 +33,11 @@ namespace pwiz.Skyline.Model.RetentionTimes
     {
         protected override bool StateChanged(SrmDocument document, SrmDocument previous)
         {
+            if (AlignmentTargetSpec.ChromatogramPeaks.Type ==
+                document.Settings.PeptideSettings.Imputation.AlignmentTarget.Type)
+            {
+                return true;
+            }
             return !IsLoaded(document);
         }
 
@@ -86,12 +91,12 @@ namespace pwiz.Skyline.Model.RetentionTimes
         }
         private bool PerformNextAlignment(IDocumentContainer container, SrmDocument document, SrmDocument docCurrent)
         {
-            if (!AlignmentTarget.TryGetAlignmentTarget(docCurrent.Settings, out var alignmentTarget))
+            if (!AlignmentTarget.TryGetCurrentAlignmentTarget(document, out var alignmentTarget))
             {
                 return false;
             }
             var documentRetentionTimes = docCurrent.Settings.DocumentRetentionTimes;
-            var newDocumentRetentionTimes = documentRetentionTimes.UpdateFromLoadedSettings(docCurrent.Settings);
+            var newDocumentRetentionTimes = documentRetentionTimes.UpdateFromLoadedSettings(alignmentTarget, docCurrent.Settings);
             if (newDocumentRetentionTimes == null)
             {
                 var alignmentParam = documentRetentionTimes.GetMissingAlignments(docCurrent.Settings).FirstOrDefault();
@@ -119,11 +124,13 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 {
                     return false;
                 }
-                if (!Equals(documentRetentionTimes, docCurrent.Settings.DocumentRetentionTimes) || !Equals(alignmentTarget, AlignmentTarget.GetAlignmentTarget(docCurrent)))
+
+                if (!Equals(documentRetentionTimes, docCurrent.Settings.DocumentRetentionTimes) 
+                    || !AlignmentTarget.TryGetCurrentAlignmentTarget(docCurrent, out var currentAlignmentTarget) 
+                    || !Equals(currentAlignmentTarget, alignmentTarget))
                 {
                     return false;
                 }
-
                 docNew = docCurrent.ChangeSettings(
                     docCurrent.Settings.ChangeDocumentRetentionTimes(newDocumentRetentionTimes));
             }

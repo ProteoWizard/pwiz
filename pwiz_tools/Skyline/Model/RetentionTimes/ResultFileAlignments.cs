@@ -344,7 +344,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         protected bool Equals(ResultFileAlignments other)
         {
-            return CollectionUtil.EqualsDeep(_alignmentSources, other._alignmentSources) && CollectionUtil.EqualsDeep(_alignmentFunctions, other._alignmentFunctions) && Equals(AlignmentTarget, other.AlignmentTarget);
+            return CollectionUtil.EqualsDeep(_alignmentSources, other._alignmentSources) && CollectionUtil.EqualsDeep(_alignmentFunctions, other._alignmentFunctions) && Equals(AlignmentTarget, other.AlignmentTarget) && Equals(MedianDocumentRetentionTimesTarget, other.MedianDocumentRetentionTimesTarget);
         }
 
         public override bool Equals(object obj)

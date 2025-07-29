@@ -1732,8 +1732,8 @@
   </xs:complexType>
   <xs:complexType name="scored_peak">
 	<xs:attribute name="score" type="xs:double" use="required" />
+	<xs:attribute name="retention_time" type="xs:double" />
 	<xs:attribute name="start_time" type="xs:double" />
-	<xs:attribute name="apex_time" type="xs:double" />
 	<xs:attribute name="end_time" type="xs:double" />
   </xs:complexType>
   <xs:complexType name="modification_type">

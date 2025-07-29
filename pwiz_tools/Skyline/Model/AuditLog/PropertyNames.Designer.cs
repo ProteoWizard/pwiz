@@ -106,6 +106,33 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Name.
+        /// </summary>
+        public static string AlignmentTargetSpec_Name {
+            get {
+                return ResourceManager.GetString("AlignmentTargetSpec_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Regression Method.
+        /// </summary>
+        public static string AlignmentTargetSpec_RegressionMethod {
+            get {
+                return ResourceManager.GetString("AlignmentTargetSpec_RegressionMethod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Type.
+        /// </summary>
+        public static string AlignmentTargetSpec_Type {
+            get {
+                return ResourceManager.GetString("AlignmentTargetSpec_Type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Value.
         /// </summary>
         public static string Annotation_Value {
@@ -2037,6 +2064,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string ImportResultsSettings_Suffix {
             get {
                 return ResourceManager.GetString("ImportResultsSettings_Suffix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Alignment Target.
+        /// </summary>
+        public static string ImputationSettings_AlignmentTarget {
+            get {
+                return ResourceManager.GetString("ImputationSettings_AlignmentTarget", resourceCulture);
             }
         }
         

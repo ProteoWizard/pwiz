@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System.Security;
 using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.Serialization

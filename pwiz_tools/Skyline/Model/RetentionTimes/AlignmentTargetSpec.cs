@@ -1,4 +1,22 @@
-﻿using pwiz.Common.SystemUtil;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2025 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 using System;
 using System.Collections.Generic;
@@ -6,7 +24,6 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
-using pwiz.Common.Collections;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 
@@ -26,6 +43,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
             Type = type;
         }
 
+        [Track]
         public string Type { get; private set; }
 
         public AlignmentTargetSpec ChangeType(string value)
@@ -33,6 +51,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
             return ChangeProp(ImClone(this), im => im.Type = value);
         }
 
+        [Track(defaultValues:typeof(DefaultValuesNull))]
         public string Name { get; private set; }
 
         public AlignmentTargetSpec ChangeName(string value)
@@ -40,6 +59,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
             return ChangeProp(ImClone(this), im => im.Name = value);
         }
 
+        [Track(defaultValues: typeof(DefaultValuesNull))]
         public string RegressionMethod { get; private set; }
 
         public AlignmentTargetSpec ChangeRegressionMethod(string value)
@@ -96,6 +116,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
             Type = reader.GetAttribute(ATTR.type) ?? Default.Type;
             Name = reader.GetAttribute(ATTR.name);
             RegressionMethod = reader.GetAttribute(ATTR.regression_method);
+            reader.Skip();
         }
 
         public void WriteXml(XmlWriter writer)
@@ -132,7 +153,8 @@ namespace pwiz.Skyline.Model.RetentionTimes
         {
             if (Type == Default.Type)
             {
-                return RtCalculatorOption.GetDefault(peptideSettings);
+                RtCalculatorOption.TryGetDefault(peptideSettings, out var defaultOption);
+                return defaultOption;
             }
 
             if (Type == Library.Type)
@@ -166,13 +188,16 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
             if (Type == Default.Type)
             {
-                var defaultOption = RtCalculatorOption.GetDefault(peptideSettings);
-                if (defaultOption == null)
+                if (!RtCalculatorOption.TryGetDefault(peptideSettings, out var defaultOption))
                 {
-                    return "Default";
+                    return RetentionTimesResources.AlignmentTargetSpec_GetLabel_Default;
                 }
 
-                return string.Format("Default ({0})", defaultOption.DisplayName);
+                if (defaultOption == null)
+                {
+                    return RetentionTimesResources.AlignmentTargetSpec_GetLabel_Default__None_;
+                }
+                return string.Format(RetentionTimesResources.AlignmentTargetSpec_GetLabel_Default___0__, defaultOption.DisplayName);
             }
 
             if (Type == Library.Type)
@@ -190,7 +215,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 return RtCalculatorOption.MedianDocRetentionTimes.DisplayName;
             }
 
-            return "!!Invalid!!";
+            return RetentionTimesResources.AlignmentTargetSpec_GetLabel___Invalid__;
         }
 
         public bool TryGetAlignmentTarget(SrmSettings settings, out AlignmentTarget alignmentTarget)
@@ -208,6 +233,48 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 return false;
             }
             alignmentTarget = calculatorOption.GetAlignmentTarget(settings);
+            return alignmentTarget != null;
+        }
+
+        public bool TryGetAlignmentTarget(SrmDocument document, out AlignmentTarget alignmentTarget)
+        {
+            if (Type == None.Type)
+            {
+                alignmentTarget = null;
+                return true;
+            }
+            if (Type == ChromatogramPeaks.Type)
+            {
+                alignmentTarget = new AlignmentTarget.MedianDocumentRetentionTimes(document);
+                return true;
+            }
+
+            RtCalculatorOption option;
+            if (Type == Default.Type)
+            {
+                if (!RtCalculatorOption.TryGetDefault(document.Settings.PeptideSettings, out option))
+                {
+                    alignmentTarget = null;
+                    return false;
+                }
+            }
+            else
+            {
+                option = ToRtCalculatorOption(document.Settings.PeptideSettings);
+                if (option == null)
+                {
+                    alignmentTarget = null;
+                    return false;
+                }
+            }
+
+            if (option == null)
+            {
+                alignmentTarget = null;
+                return true;
+            }
+
+            alignmentTarget = option.GetAlignmentTarget(document.Settings);
             return alignmentTarget != null;
         }
     }

@@ -411,7 +411,8 @@ namespace pwiz.Skyline.SettingsUI
             var prediction = new PeptidePrediction(retentionTime, useMeasuredRT, measuredRTWindow);
             Helpers.AssignIfEquals(ref prediction, Prediction);
 
-            var imputation = ImputationSettings.DEFAULT.ChangeAlignmentTarget(AlignmentTarget).ChangeImputeMissing(cbxImputeMissingPeaks.Checked);
+            var imputation = ImputationSettings.DEFAULT.ChangeAlignmentTarget(AlignmentTarget)
+                .ChangeImputeMissing(ImputeMissingPeaks).ChangeAlignmentTarget(AlignmentTarget);
             if (!string.IsNullOrEmpty(tbxMaxRtShift.Text))
             {
                 if (!helper.ValidateDecimalTextBox(tbxMaxRtShift, 0, null, out var maxRtShift))
@@ -2249,11 +2250,13 @@ namespace pwiz.Skyline.SettingsUI
         {
             get
             {
-                return comboRunToRunAlignment.SelectedValue as AlignmentTargetSpec;
+                return (comboRunToRunAlignment.SelectedItem as KeyValuePair<string, AlignmentTargetSpec>?)?.Value;
             }
             set
             {
-                comboRunToRunAlignment.SelectedValue = value;
+                var options = comboRunToRunAlignment.Items.Cast<KeyValuePair<string, AlignmentTargetSpec>>()
+                    .Select(kvp => kvp.Value).ToList();
+                comboRunToRunAlignment.SelectedIndex = options.IndexOf(value);
             }
         }
     }

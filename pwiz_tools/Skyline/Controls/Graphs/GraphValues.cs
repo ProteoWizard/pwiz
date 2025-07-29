@@ -130,10 +130,7 @@ namespace pwiz.Skyline.Controls.Graphs
             public RetentionTimeAlignmentTransformOp(SrmSettings settings)
             {
                 SrmSettings = settings;
-                if (AlignmentTarget.TryGetAlignmentTarget(settings, out var alignmentTarget))
-                {
-                    AlignmentTarget = alignmentTarget;
-                }
+                AlignmentTarget = settings.DocumentRetentionTimes.AlignmentTarget;
             }
 
             public RetentionTimeAlignmentTransformOp(SrmSettings settings, AlignmentTarget alignmentTarget)

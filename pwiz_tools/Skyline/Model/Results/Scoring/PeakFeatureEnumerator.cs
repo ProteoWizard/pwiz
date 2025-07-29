@@ -186,17 +186,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
                             features[i] = summaryPeakData.GetScore(context, calcs[i]);
                         }
 
-                        // CONSIDER: Peak features can take up a lot of space in large scale DIA
-                        //           It may be possible to save even more by using a smaller struct
-                        //           when times are not required, which they are only for export
-                        float retentionTime = 0, startTime = 0, endTime = 0;
-                        if (verbose || true)
-                        {
-                            var peakTimes = summaryPeakData.RetentionTimeStatistics;
-                            retentionTime = peakTimes.RetentionTime;
-                            startTime = peakTimes.StartTime;
-                            endTime = peakTimes.EndTime;
-                        }
+                        var peakTimes = summaryPeakData.RetentionTimeStatistics;
+                        var retentionTime = peakTimes.RetentionTime;
+                        var startTime = peakTimes.StartTime;
+                        var endTime = peakTimes.EndTime;
+
                         int peakIndex = summaryPeakData.UsedBestPeakIndex
                             ? summaryPeakData.BestPeakIndex
                             : summaryPeakData.PeakIndex;
