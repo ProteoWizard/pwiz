@@ -41,6 +41,8 @@ namespace pwiz.SkylineTestConnected
     {
         private const string TEST_RESULTS_DIRECTORY = @"ZZZ-Skyline-TestResults";
 
+        private AccountType _accountType;
+
         [TestMethod]
         public void TestArdiaFileUpload()
         {
@@ -52,6 +54,22 @@ namespace pwiz.SkylineTestConnected
 
             TestFilesZip = @"TestConnected\ArdiaFileUploadTest.zip";
 
+            _accountType = AccountType.SingleRole;
+            RunFunctionalTest();
+        }
+
+        [TestMethod]
+        public void TestArdiaFileUploadMultiRole()
+        {
+            if (!EnableArdiaTests)
+            {
+                Console.Error.WriteLine("NOTE: skipping Ardia test because username/password for Ardia is not configured in environment variables");
+                return;
+            }
+
+            TestFilesZip = @"TestConnected\ArdiaFileUploadTest.zip";
+
+            _accountType = AccountType.MultiRole;
             RunFunctionalTest();
         }
 
@@ -61,8 +79,7 @@ namespace pwiz.SkylineTestConnected
             Assert.IsFalse(SkylineWindow.HasRegisteredArdiaAccount);
             Assert.AreEqual(0, Settings.Default.RemoteAccountList.Count);
 
-            // Test setup - configure Ardia account
-            var account = GetTestAccount(AccountType.SingleRole);
+            var account = GetTestAccount(_accountType);
 
             OpenDocument("Basic.sky");
 

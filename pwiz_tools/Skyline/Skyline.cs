@@ -4718,9 +4718,8 @@ namespace pwiz.Skyline
             {
                 case ArdiaAccount ardia:
                 {
-                    // This dialog may not actually appear in Skyline. The dialog
-                    // checks to see if it already has a valid, live token for
-                    // the Ardia API.
+                    // ISSUE: if ArdiaLoginDlg fails, callers receive no error. When debugging tests, use breakpoints to look at ArdiaLoginDlg before it closes.
+                    //        For example, this happens if the remote server URL cannot be found.
                     using var loginDlg = new ArdiaLoginDlg(ardia);
                     if (DialogResult.Cancel == loginDlg.ShowDialog(this))
                         throw new OperationCanceledException();
