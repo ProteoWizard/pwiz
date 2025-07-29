@@ -630,7 +630,7 @@
     <Compile Include="Model\Lib\AlphaPeptDeep\AbstractDeepLibraryBuilder.cs" />
     <Compile Include="Model\Lib\Carafe\CarafeLibraryBuilder.cs" />
     <Compile Include="Model\PropertySheets\IPropertySheetOwner.cs" />
-    <Compile Include="Model\PropertySheets\PropertyDataObject.cs" />
+    <Compile Include="Model\PropertySheets\DynamicPropertyObject.cs" />
     <Compile Include="Model\Proteome\AssociateProteinsResults.cs" />
     <Compile Include="Model\Lib\LibraryFiles.cs" />
     <Compile Include="Model\Results\LcPeakIonMetrics.cs" />
