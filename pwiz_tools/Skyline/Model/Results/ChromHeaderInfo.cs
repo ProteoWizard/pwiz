@@ -504,16 +504,15 @@ namespace pwiz.Skyline.Model.Results
             {
                 return 56;
             }
-
             if (cacheFormatVersion < CacheFormatVersion.Seventeen)
             {
                 return 72;
             }
-            if (cacheFormatVersion < CacheFormatVersion.Eighteen)
+            if (cacheFormatVersion < CacheFormatVersion.Nineteen)
             {
-                return 76;
+                return 68;
             }
-            return 80;
+            return 72;
         }
     }
 
