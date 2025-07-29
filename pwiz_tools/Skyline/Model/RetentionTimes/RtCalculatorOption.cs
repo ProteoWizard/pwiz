@@ -21,10 +21,16 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         public virtual RetentionScoreCalculatorSpec GetRetentionScoreCalculatorSpec(SrmDocument document, ImmutableList<RetentionScoreCalculatorSpec> calculators)
         {
-            return GetAlignmentTarget(document, calculators)?.AsRetentionScoreCalculator();
+            return GetAlignmentTarget(document.Settings, calculators)?.AsRetentionScoreCalculator();
         }
 
-        protected abstract AlignmentTarget GetAlignmentTarget(SrmDocument document, ImmutableList<RetentionScoreCalculatorSpec> calculators);
+        protected abstract AlignmentTarget GetAlignmentTarget(SrmSettings settings, ImmutableList<RetentionScoreCalculatorSpec> calculators);
+
+        public AlignmentTarget GetAlignmentTarget(SrmSettings settings)
+        {
+            return GetAlignmentTarget(settings,
+                ImmutableList.Singleton(settings.PeptideSettings.Prediction?.RetentionTime?.Calculator));
+        }
 
         public static IEnumerable<RtCalculatorOption> GetOptions(SrmDocument document)
         {
@@ -91,6 +97,11 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 return new Irt(str.Substring(PREFIX_IRT.Length));
             }
 
+            if (str.StartsWith(PREFIX_LIBRARY))
+            {
+                return new Library(str.Substring(PREFIX_LIBRARY.Length));
+            }
+
             // legacy settings value:
             return new Irt(str);
         }
@@ -148,9 +159,9 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 return (Name != null ? Name.GetHashCode() : 0);
             }
 
-            protected override AlignmentTarget GetAlignmentTarget(SrmDocument document, ImmutableList<RetentionScoreCalculatorSpec> calculators)
+            protected override AlignmentTarget GetAlignmentTarget(SrmSettings settings, ImmutableList<RetentionScoreCalculatorSpec> calculators)
             {
-                var calculator = GetRetentionScoreCalculatorSpec(document, calculators);
+                var calculator = GetRetentionScoreCalculatorSpec(null, calculators);
                 if (true == calculator?.IsUsable)
                 {
                     return new AlignmentTarget.Irt(calculator);
@@ -176,11 +187,9 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
             public string LibraryName { get; }
 
-            protected override AlignmentTarget GetAlignmentTarget(SrmDocument document, ImmutableList<RetentionScoreCalculatorSpec> calculators)
+            protected override AlignmentTarget GetAlignmentTarget(SrmSettings settings, ImmutableList<RetentionScoreCalculatorSpec> calculators)
             {
-                var library =
-                    document.Settings.PeptideSettings.Libraries.Libraries.FirstOrDefault(
-                        lib => lib?.Name == LibraryName);
+                var library = settings.PeptideSettings.Libraries.Libraries.FirstOrDefault(lib => lib?.Name == LibraryName);
                 if (true == library?.IsLoaded)
                 {
                     return new AlignmentTarget.LibraryTarget(RegressionMethodRT.loess, library);
@@ -198,11 +207,19 @@ namespace pwiz.Skyline.Model.RetentionTimes
             {
 
             }
-            protected override AlignmentTarget GetAlignmentTarget(SrmDocument document, ImmutableList<RetentionScoreCalculatorSpec> calculators)
+            protected override AlignmentTarget GetAlignmentTarget(SrmSettings settings, ImmutableList<RetentionScoreCalculatorSpec> calculators)
             {
-                return document.Settings.DocumentRetentionTimes.ResultFileAlignments
-                    .MedianDocumentRetentionTimesTarget ?? new AlignmentTarget.MedianDocumentRetentionTimes(document);
+                return settings.DocumentRetentionTimes.ResultFileAlignments.MedianDocumentRetentionTimesTarget;
             }
+
+            public override RetentionScoreCalculatorSpec GetRetentionScoreCalculatorSpec(SrmDocument document, ImmutableList<RetentionScoreCalculatorSpec> calculators)
+            {
+                return (document.Settings.DocumentRetentionTimes.ResultFileAlignments
+                            .MedianDocumentRetentionTimesTarget ??
+                        new AlignmentTarget.MedianDocumentRetentionTimes(document))
+                    .AsRetentionScoreCalculator();
+            }
+
 
             public override string DisplayName => "Median LC Peak Times";
         }

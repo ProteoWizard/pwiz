@@ -3347,10 +3347,11 @@ namespace pwiz.Skyline
                 chooseCalculatorContextMenuItem.DropDownItems.RemoveAt(0);
 
             //If no calculator has been picked for use in the graph, get the best one.
-            var autoItem = new ToolStripMenuItem(SkylineResources.SkylineWindow_SetupCalculatorChooser_Auto, null, delegate { ChooseCalculator(string.Empty); })
-                               {
-                                   Checked = string.IsNullOrEmpty(Settings.Default.RTCalculatorName)
-                               };
+            var autoItem = new ToolStripMenuItem(SkylineResources.SkylineWindow_SetupCalculatorChooser_Auto, null,
+                delegate { ChooseCalculator(string.Empty); })
+            {
+                Checked = string.IsNullOrEmpty(Settings.Default.RTCalculatorName)
+            };
             chooseCalculatorContextMenuItem.DropDownItems.Insert(0, autoItem);
 
             int i = 0;

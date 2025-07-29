@@ -586,12 +586,12 @@ namespace pwiz.Skyline.Model.DocSettings
             return result;
         }
 
-            /// <summary>
-            /// Calculates and returns the best regression, along with all the other regressions.
-            /// Although all regression are calculated on a separate thread, this function will wait for them to comeplete
-            /// and should therefore also be called on a non-UI thread.
-            /// </summary>
-            public static CalculateRegressionSummary CalcBestRegressionBackground(string name, IList<RetentionScoreCalculatorSpec> calculators, IList<MeasuredRetentionTime> measuredPeptides,
+        /// <summary>
+        /// Calculates and returns the best regression, along with all the other regressions.
+        /// Although all regression are calculated on a separate thread, this function will wait for them to complete
+        /// and should therefore also be called on a non-UI thread.
+        /// </summary>
+        public static CalculateRegressionSummary CalcBestRegressionBackground(string name, IList<RetentionScoreCalculatorSpec> calculators, IList<MeasuredRetentionTime> measuredPeptides,
             RetentionTimeScoreCache scoreCache,
             bool allPeptides,
             RegressionMethodRT regressionMethod,

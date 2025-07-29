@@ -6,6 +6,7 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.Common.Collections;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 
@@ -190,6 +191,24 @@ namespace pwiz.Skyline.Model.RetentionTimes
             }
 
             return "!!Invalid!!";
+        }
+
+        public bool TryGetAlignmentTarget(SrmSettings settings, out AlignmentTarget alignmentTarget)
+        {
+            if (Type == None.Type)
+            {
+                alignmentTarget = null;
+                return true;
+            }
+
+            var calculatorOption = ToRtCalculatorOption(settings.PeptideSettings);
+            if (calculatorOption == null)
+            {
+                alignmentTarget = null;
+                return false;
+            }
+            alignmentTarget = calculatorOption.GetAlignmentTarget(settings);
+            return alignmentTarget != null;
         }
     }
 }

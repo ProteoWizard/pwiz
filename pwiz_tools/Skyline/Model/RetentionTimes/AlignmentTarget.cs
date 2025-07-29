@@ -251,49 +251,9 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 alignmentTarget = null;
                 return true;
             }
-            var irtCalculator = settings.PeptideSettings.Prediction?.RetentionTime?.Calculator as RCalcIrt;
-            if (irtCalculator != null)
-            {
-                if (!irtCalculator.IsUsable)
-                {
-                    alignmentTarget = null;
-                    return false;
-                }
 
-                
-                var regressionType = RegressionMethodRT.linear;
-                if (irtCalculator.RegressionType == IrtRegressionType.LOWESS)
-                {
-                    regressionType = RegressionMethodRT.loess;
-                }
-                if (irtCalculator.RegressionType == IrtRegressionType.LOGARITHMIC)
-                {
-                    regressionType = RegressionMethodRT.log;
-                }
-                if (irtCalculator.RegressionType == IrtRegressionType.LOWESS)
-                {
-                    regressionType = RegressionMethodRT.loess;
-                }
-                alignmentTarget = new Irt(regressionType, irtCalculator);
-                return true;
-            }
-
-            var alignableLibraries = GetAlignableLibraries(settings.PeptideSettings.Libraries).ToList();
-            if (alignableLibraries.Count == 1)
-            {
-                var library = alignableLibraries[0].Value;
-                if (true != alignableLibraries[0].Value?.IsLoaded)
-                {
-                    alignmentTarget = null;
-                    return false;
-                }
-
-                alignmentTarget = new LibraryTarget(RegressionMethodRT.loess, library);
-                return true;
-            }
-
-            alignmentTarget = null;
-            return true;
+            var targetSpec = settings.PeptideSettings.Imputation?.AlignmentTarget ?? AlignmentTargetSpec.Default;
+            return targetSpec.TryGetAlignmentTarget(settings, out alignmentTarget);
         }
 
         public abstract string GetAxisTitle(RTPeptideValue rtValue);

@@ -534,7 +534,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 return ReferenceEquals(Document, other.Document) && TargetIndex == other.TargetIndex &&
                        OriginalIndex == other.OriginalIndex && BestResult == other.BestResult &&
                        Threshold.Equals(other.Threshold) && Refine == other.Refine && PointsType == other.PointsType &&
-                       RegressionMethod == other.RegressionMethod && CalculatorName == other.CalculatorName &&
+                       RegressionMethod == other.RegressionMethod && Equals(CalculatorName, other.CalculatorName) &&
                        Equals(AllCalculators, other.AllCalculators) && IsRunToRun == other.IsRunToRun;
             }
 
@@ -580,7 +580,18 @@ namespace pwiz.Skyline.Controls.Graphs
             public PointsTypeRT PointsType { get; private set; }
             public RegressionMethodRT RegressionMethod { get; private set; }
             public RtCalculatorOption CalculatorName { get; private set; }
-            public ImmutableList<RetentionScoreCalculatorSpec> AllCalculators { get; private set; }
+            private ImmutableList<RetentionScoreCalculatorSpec> AllCalculators { get; }
+            public IEnumerable<RetentionScoreCalculatorSpec> GetCalculators()
+            {
+                var singleCalculator = _calculator?.Value;
+                if (singleCalculator != null)
+                {
+                    return ImmutableList.Singleton(singleCalculator);
+                }
+
+                return AllCalculators;
+            }
+
             public bool IsRunToRun { get; private set; }
         }
 
@@ -702,7 +713,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 else
                 {
-                    var usableCalculators = RegressionSettings.AllCalculators.Where(calc => calc.IsUsable).ToList();
+                    var usableCalculators = RegressionSettings.GetCalculators().Where(calc => calc.IsUsable).ToList();
                     if (RegressionSettings.CalculatorName == null)
                     {
                         var summary = RetentionTimeRegression.CalcBestRegressionBackground(XmlNamedElement.NAME_INTERNAL, usableCalculators, targetTimes, null, true,
@@ -1323,7 +1334,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     yield break;
                 }
-                foreach (var calculator in parameter.AllCalculators.Where(calc => !calc.IsUsable))
+                foreach (var calculator in parameter.GetCalculators().Where(calc => !calc.IsUsable))
                 {
                     yield return _rtScoreInitializer.MakeWorkOrder(calculator);
                 }
