@@ -184,7 +184,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                                 transitionGroup.GetChromInfo(iReplicate, chromFileInfo.FileId);
                             var scoredPeak = anyReintegrated
                                 ? transitionGroupChromInfo?.ReintegratedPeak
-                                : transitionGroupChromInfo.OriginalPeak;
+                                : transitionGroupChromInfo?.OriginalPeak;
                             if (null != scoredPeak)
                             {
                                 fileTargets.Add(document.Settings.GetTargets(molecule).ToImmutable());

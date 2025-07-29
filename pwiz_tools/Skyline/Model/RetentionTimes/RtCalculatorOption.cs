@@ -2,6 +2,7 @@
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.RetentionTimes
@@ -50,7 +51,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
         public static bool TryGetDefault(PeptideSettings peptideSettings, out RtCalculatorOption option)
         {
             var calculator = peptideSettings.Prediction?.RetentionTime?.Calculator;
-            if (calculator != null)
+            if (calculator is RCalcIrt)
             {
                 option = new Irt(calculator.Name);
                 return true;
