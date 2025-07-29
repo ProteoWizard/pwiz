@@ -95,7 +95,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         public static string IsNotLoadedExplained(SrmDocument document)
         {
-            var targetSpec = document.Settings.PeptideSettings.Imputation.AlignmentTarget ?? AlignmentTargetSpec.Default;
+            var targetSpec = document.Settings.GetAlignmentTarget();
             if (!targetSpec.TryGetAlignmentTarget(document, out var target))
             {
                 return null;

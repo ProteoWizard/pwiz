@@ -147,6 +147,10 @@ namespace pwiz.Skyline.Model.RetentionTimes
             Dictionary<Target, PeptideDocNode> targets = new Dictionary<Target, PeptideDocNode>();
             foreach (var molecule in document.Molecules)
             {
+                if (molecule.IsDecoy)
+                {
+                    continue;
+                }
                 var target = molecule.ModifiedTarget;
                 if (molecule.HasResults && !targets.ContainsKey(target))
                 {

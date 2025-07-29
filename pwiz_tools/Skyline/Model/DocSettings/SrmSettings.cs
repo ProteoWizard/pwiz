@@ -2133,6 +2133,11 @@ namespace pwiz.Skyline.Model.DocSettings
                 Equals(chromatogramGroupInfo.FilePath, dataFilePath));
         }
 
+        public AlignmentTargetSpec GetAlignmentTarget()
+        {
+            return PeptideSettings.Imputation?.AlignmentTarget ?? AlignmentTargetSpec.Default;
+        }
+
         #region Implementation of IXmlSerializable
 
         /// <summary>

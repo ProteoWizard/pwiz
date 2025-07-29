@@ -255,14 +255,13 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 return true;
             }
 
-            var targetSpec = settings.PeptideSettings.Imputation?.AlignmentTarget ?? AlignmentTargetSpec.Default;
+            var targetSpec = settings.GetAlignmentTarget();
             return targetSpec.TryGetAlignmentTarget(settings, out alignmentTarget);
         }
 
         public static bool TryGetCurrentAlignmentTarget(SrmDocument document, out AlignmentTarget alignmentTarget)
         {
-            var alignmentTargetSpec = document.Settings.PeptideSettings.Imputation?.AlignmentTarget ??
-                                      AlignmentTargetSpec.Default;
+            var alignmentTargetSpec = document.Settings.GetAlignmentTarget();
             return alignmentTargetSpec.TryGetAlignmentTarget(document, out alignmentTarget);
         }
 

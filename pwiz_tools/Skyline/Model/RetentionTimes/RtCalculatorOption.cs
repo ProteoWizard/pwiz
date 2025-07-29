@@ -38,11 +38,6 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 ImmutableList.Singleton(settings.PeptideSettings.Prediction?.RetentionTime?.Calculator));
         }
 
-        public AlignmentTarget GetAlignmentTarget(SrmDocument document, bool refresh)
-        {
-            return GetAlignmentTarget(document, ImmutableList.Singleton(document.Settings.PeptideSettings.Prediction?.RetentionTime?.Calculator), refresh);
-        }
-
         public static IEnumerable<RtCalculatorOption> GetOptions(SrmDocument document)
         {
             var result =
@@ -224,9 +219,11 @@ namespace pwiz.Skyline.Model.RetentionTimes
             }
             protected override AlignmentTarget GetAlignmentTarget(SrmSettings settings, ImmutableList<RetentionScoreCalculatorSpec> calculators)
             {
-                return settings.DocumentRetentionTimes.ResultFileAlignments.MedianDocumentRetentionTimesTarget;
+                return settings.DocumentRetentionTimes.AlignmentTarget as
+                    AlignmentTarget.MedianDocumentRetentionTimes ?? settings.DocumentRetentionTimes
+                    .ResultFileAlignments.MedianDocumentRetentionTimesTarget;
             }
-
+ 
             protected override AlignmentTarget GetAlignmentTarget(SrmDocument document, ImmutableList<RetentionScoreCalculatorSpec> calculators, bool ensureCurrent)
             {
                 AlignmentTarget target = null;
