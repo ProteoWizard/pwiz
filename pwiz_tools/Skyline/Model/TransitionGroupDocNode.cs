@@ -35,7 +35,6 @@ using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
-using ScoredPeak = pwiz.Skyline.Model.Results.ScoredPeak;
 
 namespace pwiz.Skyline.Model
 {
@@ -2562,8 +2561,8 @@ namespace pwiz.Skyline.Model
             private RetentionTimeValues BestRetentionTimes { get; set; }
             private RetentionTimeValues NonQuantitativeRetentionTimes { get; set; }
             private TransitionGroupIonMobilityInfo IonMobilityInfo { get; set; }
-            private ScoredPeak OriginalPeak { get; set; }
-            private ScoredPeak ReintegratedPeak { get; set; }
+            private ScoredPeakBounds OriginalPeak { get; set; }
+            private ScoredPeakBounds ReintegratedPeak { get; set; }
 
             public void SetReintegratedPeak(PeakFeatureStatistics reintegratedPeak, bool defaultScoringModel)
             {

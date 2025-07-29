@@ -3639,7 +3639,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     var hashCode = RuntimeHelpers.GetHashCode(Document);
                     hashCode = (hashCode * 397) ^ IdentityPath.GetHashCode();
                     hashCode = (hashCode * 397) ^ (AlignmentTarget != null ? AlignmentTarget.GetHashCode() : 0);
-                    hashCode = (hashCode * 397) ^ FilePath?.GetHashCode() ?? 0;
+                    hashCode = (hashCode * 397) ^ (FilePath?.GetHashCode() ?? 0);
                     return hashCode;
                 }
             }

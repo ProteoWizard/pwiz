@@ -30,7 +30,6 @@ using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.RetentionTimes.PeakImputation;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
-using ScoredPeak = pwiz.Skyline.Model.Results.ScoredPeak;
 
 namespace pwiz.Skyline.Model
 {
@@ -356,7 +355,7 @@ namespace pwiz.Skyline.Model
             BestScoreIndex = bestScoreIndex;
             QValue = qValue;
             var bestPeakGroupFeatures = features.PeakGroupFeatures[bestScoreIndex];
-            BestScoredPeak = new ScoredPeak(bestPeakGroupFeatures.RetentionTime, bestPeakGroupFeatures.StartTime, bestPeakGroupFeatures.EndTime, bestScore);
+            BestScoredPeak = new ScoredPeakBounds(bestPeakGroupFeatures.RetentionTime, bestPeakGroupFeatures.StartTime, bestPeakGroupFeatures.EndTime, bestScore);
             BestFeatureScores = bestPeakGroupFeatures.FeatureScores;
         }
 
@@ -364,7 +363,7 @@ namespace pwiz.Skyline.Model
         public IList<float> PValues { get; private set; }
         public int BestPeakIndex { get; private set; }
         public int BestScoreIndex { get; private set; }
-        public ScoredPeak BestScoredPeak { get; }
+        public ScoredPeakBounds BestScoredPeak { get; }
 
         public float BestScore { get { return BestScoredPeak.Score; } }
 

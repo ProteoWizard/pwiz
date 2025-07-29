@@ -38,7 +38,7 @@ namespace pwiz.Skyline.Util
                 StartTime.ToString(format, formatProvider), EndTime.ToString(format, formatProvider));
         }
 
-        public static ScoredPeakValue FromScoredPeak(ScoredPeak scoredPeak)
+        public static ScoredPeakValue FromScoredPeak(ScoredPeakBounds scoredPeak)
         {
             if (scoredPeak == null)
             {

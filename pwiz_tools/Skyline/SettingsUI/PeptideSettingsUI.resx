@@ -457,7 +457,7 @@ used in scheduling future peptide measurements.</value>
     <value>tabPrediction</value>
   </data>
   <data name="&gt;&gt;textMeasureRTWindow.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>5</value>
   </data>
   <data name="cbUseMeasuredRT.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -488,7 +488,7 @@ to predict retention times for scheduling of future peptide measurements.</value
     <value>tabPrediction</value>
   </data>
   <data name="&gt;&gt;cbUseMeasuredRT.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>6</value>
   </data>
   <data name="comboRetentionTime.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 36</value>
@@ -513,7 +513,7 @@ times from a peptide specific hydrophobicity score.</value>
     <value>tabPrediction</value>
   </data>
   <data name="&gt;&gt;comboRetentionTime.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>8</value>
   </data>
   <data name="cbAutoSelect.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -960,7 +960,7 @@ modifications tab.</value>
     <value>tabPrediction</value>
   </data>
   <data name="&gt;&gt;btnUpdateCalculator.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>3</value>
   </data>
   <data name="comboPeakScoringModel.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 36</value>
@@ -1537,7 +1537,7 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>tabPrediction</value>
   </data>
   <data name="&gt;&gt;groupBoxPeakImputation.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>2</value>
   </data>
   <data name="tabControl1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -1680,6 +1680,54 @@ Transitions from the two precursors will not be paired with each other for the p
   <data name="&gt;&gt;tabDigestion.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="comboRunToRunAlignment.Location" type="System.Drawing.Point, System.Drawing">
+    <value>28, 365</value>
+  </data>
+  <data name="comboRunToRunAlignment.Size" type="System.Drawing.Size, System.Drawing">
+    <value>201, 21</value>
+  </data>
+  <data name="comboRunToRunAlignment.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="&gt;&gt;comboRunToRunAlignment.Name" xml:space="preserve">
+    <value>comboRunToRunAlignment</value>
+  </data>
+  <data name="&gt;&gt;comboRunToRunAlignment.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboRunToRunAlignment.Parent" xml:space="preserve">
+    <value>tabPrediction</value>
+  </data>
+  <data name="&gt;&gt;comboRunToRunAlignment.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="lblRunToRunAlignment.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblRunToRunAlignment.Location" type="System.Drawing.Point, System.Drawing">
+    <value>25, 349</value>
+  </data>
+  <data name="lblRunToRunAlignment.Size" type="System.Drawing.Size, System.Drawing">
+    <value>108, 13</value>
+  </data>
+  <data name="lblRunToRunAlignment.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="lblRunToRunAlignment.Text" xml:space="preserve">
+    <value>Run-to-run &amp;alignment:</value>
+  </data>
+  <data name="&gt;&gt;lblRunToRunAlignment.Name" xml:space="preserve">
+    <value>lblRunToRunAlignment</value>
+  </data>
+  <data name="&gt;&gt;lblRunToRunAlignment.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblRunToRunAlignment.Parent" xml:space="preserve">
+    <value>tabPrediction</value>
+  </data>
+  <data name="&gt;&gt;lblRunToRunAlignment.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
   <data name="label14.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -1705,7 +1753,7 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>tabPrediction</value>
   </data>
   <data name="&gt;&gt;label14.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>4</value>
   </data>
   <data name="label13.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1732,7 +1780,7 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>tabPrediction</value>
   </data>
   <data name="&gt;&gt;label13.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>7</value>
   </data>
   <data name="label9.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1759,7 +1807,7 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>tabPrediction</value>
   </data>
   <data name="&gt;&gt;label9.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>9</value>
   </data>
   <data name="tabPrediction.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -2875,7 +2923,7 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>3</value>
   </data>
   <metadata name="contextMenuCalculator.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>248, 17</value>
+    <value>249, 17</value>
   </metadata>
   <data name="addCalculatorContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>146, 22</value>
@@ -2916,9 +2964,6 @@ Transitions from the two precursors will not be paired with each other for the p
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
     <value>395, 541</value>
   </data>
-  <data name="$this.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
   </data>
@@ -2929,7 +2974,7 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=25.1.1.171, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=25.1.1.209, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
@@ -2959,6 +3004,6 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>PeptideSettingsUI</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=25.1.1.171, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=25.1.1.209, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

@@ -1945,6 +1945,7 @@
         <xs:attribute name="qvalue" type="xs:float"/>
         <xs:attribute name="zscore" type="xs:float"/>
         <xs:attribute name="user_set" type="user_set" use="optional"/>
+		<xs:attribute name="original_score" type="xs:float"/>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>

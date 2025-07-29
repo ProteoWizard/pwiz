@@ -677,12 +677,18 @@ namespace pwiz.Skyline.Model.Serialization
             writer.WriteAttributeNullable(ATTR.qvalue, chromInfo.QValue);
             writer.WriteAttributeNullable(ATTR.zscore, chromInfo.ZScore);
             writer.WriteAttribute(ATTR.user_set, chromInfo.UserSet);
+            var originalPeak = chromInfo.OriginalPeak;
+            if (originalPeak != null && originalPeak.StartTime.Equals(chromInfo.StartRetentionTime) && originalPeak.EndTime.Equals(chromInfo.EndRetentionTime))
+            {
+                writer.WriteAttribute(ATTR.original_score, originalPeak.Score);
+                originalPeak = null;
+            }
             WriteAnnotations(writer, chromInfo.Annotations);
-            WriteScoredPeak(writer, EL.original_peak, chromInfo.OriginalPeak, chromInfo);
-            WriteScoredPeak(writer, EL.reintegrated_peak, chromInfo.ReintegratedPeak, chromInfo);
+            WriteScoredPeak(writer, EL.original_peak, originalPeak);
+            WriteScoredPeak(writer, EL.reintegrated_peak, chromInfo.ReintegratedPeak);
         }
 
-        private void WriteScoredPeak(XmlWriter writer, string el, ScoredPeak scoredPeak, TransitionGroupChromInfo chromInfo)
+        private void WriteScoredPeak(XmlWriter writer, string el, ScoredPeakBounds scoredPeak)
         {
             if (scoredPeak == null || DocumentFormat < DocumentFormat.PEAK_IMPUTATION)
             {
@@ -690,18 +696,9 @@ namespace pwiz.Skyline.Model.Serialization
             }
             writer.WriteStartElement(el);
             writer.WriteAttribute(ATTR.zscore, scoredPeak.Score);
-            if (!Equals(scoredPeak.ApexTime, chromInfo.RetentionTime))
-            {
-                writer.WriteAttribute(ATTR.retention_time, scoredPeak.ApexTime);
-            }
-            if (!Equals(scoredPeak.StartTime, chromInfo.StartRetentionTime))
-            {
-                writer.WriteAttribute(ATTR.start_time, scoredPeak.StartTime);
-            }
-            if (!Equals(scoredPeak.EndTime, chromInfo.EndRetentionTime))
-            {
-                writer.WriteAttribute(ATTR.end_time, scoredPeak.EndTime);
-            }
+            writer.WriteAttribute(ATTR.retention_time, scoredPeak.ApexTime);
+            writer.WriteAttribute(ATTR.start_time, scoredPeak.StartTime);
+            writer.WriteAttribute(ATTR.end_time, scoredPeak.EndTime);
             writer.WriteEndElement();
         }
 

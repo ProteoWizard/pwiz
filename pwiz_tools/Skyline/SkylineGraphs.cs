@@ -16,14 +16,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
@@ -32,29 +24,37 @@ using pwiz.Common.SystemUtil.Caching;
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Controls.Databinding;
-using pwiz.Skyline.Controls.Graphs;
-using pwiz.Skyline.Controls.SeqNode;
-using pwiz.Skyline.EditUI;
-using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.DocSettings.Extensions;
-using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.AuditLog;
 using pwiz.Skyline.Controls.Clustering;
+using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.Graphs.Calibration;
 using pwiz.Skyline.Controls.GroupComparison;
+using pwiz.Skyline.Controls.SeqNode;
+using pwiz.Skyline.EditUI;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
-using ZedGraph;
 using pwiz.Skyline.Util.Extensions;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Drawing;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Windows.Forms;
+using ZedGraph;
 using PeptideDocNode = pwiz.Skyline.Model.PeptideDocNode;
 using User32 = pwiz.Common.SystemUtil.PInvoke.User32;
 
@@ -3354,21 +3354,27 @@ namespace pwiz.Skyline
             chooseCalculatorContextMenuItem.DropDownItems.Insert(0, autoItem);
 
             int i = 0;
-            foreach (var calculator in Settings.Default.RTScoreCalculatorList)
+            var document = DocumentUI;
+            foreach (var optionVariable in RtCalculatorOption.GetOptions(document))
             {
-                string calculatorName = calculator.Name;
-                var menuItem = new ToolStripMenuItem(calculatorName, null, delegate { ChooseCalculator(calculatorName);})
+                var option = optionVariable;
+                var menuItem = new ToolStripMenuItem(option.DisplayName, null, delegate { ChooseCalculator(option); })
                 {
-                    Checked = Equals(calculatorName, Settings.Default.RTCalculatorName)
+                    Checked = Equals(option, Settings.Default.RtCalculatorOption)
                 };
                 chooseCalculatorContextMenuItem.DropDownItems.Insert(i++, menuItem);
             }
         }
 
-        public void ChooseCalculator(string calculatorName)
+        public void ChooseCalculator(RtCalculatorOption option)
         {
-            Settings.Default.RTCalculatorName = calculatorName;
+            Settings.Default.RtCalculatorOption = option;
             UpdateRetentionTimeGraph();
+        }
+
+        public void ChooseCalculator(string irtCalc)
+        {
+            ChooseCalculator(new RtCalculatorOption.Irt(irtCalc));
         }
 
         private void addCalculatorContextMenuItem_Click(object sender, EventArgs e)

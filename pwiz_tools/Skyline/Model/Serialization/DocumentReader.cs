@@ -40,7 +40,6 @@ using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
-using ScoredPeak = pwiz.Skyline.Model.Results.ScoredPeak;
 
 namespace pwiz.Skyline.Model.Serialization
 {
@@ -131,6 +130,7 @@ namespace pwiz.Skyline.Model.Serialization
             float? isotopeDotProduct = reader.GetNullableFloatAttribute(ATTR.isotope_dotp);
             float? qvalue = reader.GetNullableFloatAttribute(ATTR.qvalue);
             float? zscore = reader.GetNullableFloatAttribute(ATTR.zscore);
+            float? originalScore = reader.GetNullableFloatAttribute(ATTR.original_score);
             var annotations = Annotations.EMPTY;
             if (!reader.IsEmptyElement)
             {
@@ -166,27 +166,27 @@ namespace pwiz.Skyline.Model.Serialization
                 zscore,
                 annotations,
                 userSet);
-
-            transitionGroupChromInfo = transitionGroupChromInfo.ChangeOriginalPeak(
-                ReadScoredPeak(reader, EL.original_peak, transitionGroupChromInfo));
-            transitionGroupChromInfo = transitionGroupChromInfo.ChangeReintegratedPeak(
-                ReadScoredPeak(reader, EL.reintegrated_peak, transitionGroupChromInfo));
+            var originalPeak = ReadScoredPeak(reader, EL.original_peak);
+            var reintegratedPeak = ReadScoredPeak(reader, EL.reintegrated_peak);
+            if (originalScore != null)
+            {
+                originalPeak ??= new ScoredPeakBounds(transitionGroupChromInfo.RetentionTime.Value,
+                    transitionGroupChromInfo.StartRetentionTime.Value, transitionGroupChromInfo.EndRetentionTime.Value,
+                    originalScore.Value);
+            }
+            transitionGroupChromInfo = transitionGroupChromInfo.ChangeOriginalPeak(originalPeak)
+                .ChangeReintegratedPeak(reintegratedPeak);
             return transitionGroupChromInfo;
         }
 
-        private ScoredPeak ReadScoredPeak(XmlReader reader, string el, TransitionGroupChromInfo chromInfo)
+        private ScoredPeakBounds ReadScoredPeak(XmlReader reader, string el)
         {
             if (!reader.IsStartElement(el))
             {
                 return null;
             }
 
-            var score = reader.GetFloatAttribute(ATTR.zscore);
-            var apexTime = reader.GetNullableFloatAttribute(ATTR.retention_time) ?? chromInfo.RetentionTime;
-            var startTime = reader.GetNullableFloatAttribute(ATTR.start_time) ?? chromInfo.StartRetentionTime;
-            var endTime = reader.GetNullableFloatAttribute(ATTR.end_time) ?? chromInfo.EndRetentionTime;
-            
-            var scoredPeak = new ScoredPeak(apexTime.Value, startTime.Value, endTime.Value, score);
+            var scoredPeak = new ScoredPeakBounds(reader.GetFloatAttribute(ATTR.retention_time), reader.GetFloatAttribute(ATTR.start_time), reader.GetFloatAttribute(ATTR.end_time), reader.GetFloatAttribute(ATTR.score));
             reader.Skip();
             return scoredPeak;
         }

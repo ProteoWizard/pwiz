@@ -589,7 +589,7 @@
     <Compile Include="Model\ReintegrateResultsHandler.cs" />
     <Compile Include="Model\Lib\LibraryFiles.cs" />
     <Compile Include="Model\Results\LcPeakIonMetrics.cs" />
-    <Compile Include="Model\Results\ScoredPeak.cs" />
+    <Compile Include="Model\Results\ScoredPeakBounds.cs" />
     <Compile Include="Model\Results\Scoring\ReintegrateDlgSettings.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\BinnedSpectrum.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\SimilarityGrid.cs" />
@@ -601,11 +601,13 @@
     <Compile Include="Model\RetentionTimes\AlignmentFunction.cs" />
     <Compile Include="Model\RetentionTimes\Alignments.cs" />
     <Compile Include="Model\RetentionTimes\AlignmentTarget.cs" />
+    <Compile Include="Model\RetentionTimes\AlignmentTargetSpec.cs" />
     <Compile Include="Model\RetentionTimes\ResultFileAlignments.cs" />
     <Compile Include="Model\RetentionTimes\LibraryAlignment.cs" />
     <Compile Include="Model\RetentionTimes\PiecewiseLinearMap.cs" />
     <Compile Include="Model\RetentionTimes\PeakImputation\ImputedPeak.cs" />
     <Compile Include="Model\RetentionTimes\PeakImputation\PeakBoundaryImputer.cs" />
+    <Compile Include="Model\RetentionTimes\RtCalculatorOption.cs" />
     <Compile Include="Model\RetentionTimes\RTPeptideValue.cs" />
     <Compile Include="Model\SpectrumPropertiesResx.Designer.cs">
       <AutoGen>True</AutoGen>

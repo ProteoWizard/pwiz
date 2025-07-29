@@ -1245,8 +1245,8 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ ExplicitGlobalStandardArea.GetHashCode();
                 result = (result*397) ^ TicArea.GetHashCode();
                 result = (result*397) ^ IonMobilityUnits.GetHashCode();
-                result = (result*397) ^ SampleId?.GetHashCode() ?? 0;
-                result = (result*397) ^ InstrumentSerialNumber?.GetHashCode() ?? 0;
+                result = (result*397) ^ (SampleId?.GetHashCode() ?? 0);
+                result = (result*397) ^ (InstrumentSerialNumber?.GetHashCode() ?? 0);
                 result = (result*397) ^ IsSrm.GetHashCode();
                 return result;
             }

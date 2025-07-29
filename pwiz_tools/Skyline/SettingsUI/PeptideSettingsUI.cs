@@ -36,6 +36,7 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.Midas;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.Util;
@@ -201,6 +202,7 @@ namespace pwiz.Skyline.SettingsUI
             cbxImputeMissingPeaks.Checked = _peptideSettings.Imputation.ImputeMissingPeaks;
             tbxMaxRtShift.Text = _peptideSettings.Imputation.MaxRtShift?.ToString() ?? string.Empty;
             tbxMaxPeakWidthVariation.Text = (_peptideSettings.Imputation.MaxPeakWidthVariation * 100)?.ToString() ?? string.Empty;
+            UpdateAlignmentDropdown(_peptideSettings);
         }
 
         /// <summary>
@@ -409,7 +411,7 @@ namespace pwiz.Skyline.SettingsUI
             var prediction = new PeptidePrediction(retentionTime, useMeasuredRT, measuredRTWindow);
             Helpers.AssignIfEquals(ref prediction, Prediction);
 
-            var imputation = ImputationSettings.DEFAULT.ChangeImputeMissing(cbxImputeMissingPeaks.Checked);
+            var imputation = ImputationSettings.DEFAULT.ChangeAlignmentTarget(AlignmentTarget).ChangeImputeMissing(cbxImputeMissingPeaks.Checked);
             if (!string.IsNullOrEmpty(tbxMaxRtShift.Text))
             {
                 if (!helper.ValidateDecimalTextBox(tbxMaxRtShift, 0, null, out var maxRtShift))
@@ -2227,5 +2229,32 @@ namespace pwiz.Skyline.SettingsUI
             listLibraries.SelectedItem = name;
         }
 
+        private void UpdateAlignmentDropdown(PeptideSettings peptideSettings)
+        {
+            var options = AlignmentTargetSpec.GetOptions(peptideSettings).ToList();
+            var current = AlignmentTarget ?? peptideSettings.Imputation.AlignmentTarget ?? AlignmentTargetSpec.Default;
+            if (!options.Contains(current))
+            {
+                options.Insert(0, current);
+            }
+            comboRunToRunAlignment.Items.Clear();
+            comboRunToRunAlignment.Items.AddRange(options.Select(option => (object)
+                    new KeyValuePair<string, AlignmentTargetSpec>(option.GetLabel(peptideSettings), option))
+                .ToArray());
+            comboRunToRunAlignment.SelectedIndex = options.IndexOf(current);
+            ComboHelper.AutoSizeDropDown(comboRunToRunAlignment);
+        }
+
+        public AlignmentTargetSpec AlignmentTarget
+        {
+            get
+            {
+                return comboRunToRunAlignment.SelectedValue as AlignmentTargetSpec;
+            }
+            set
+            {
+                comboRunToRunAlignment.SelectedValue = value;
+            }
+        }
     }
 }

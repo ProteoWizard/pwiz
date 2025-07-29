@@ -5,9 +5,9 @@ using pwiz.Skyline.Model.Lib;
 
 namespace pwiz.Skyline.Model.Results
 {
-    public class ScoredPeak : Immutable
+    public class ScoredPeakBounds : Immutable
     {
-        public ScoredPeak(float apexTime, float startTime, float endTime, float score)
+        public ScoredPeakBounds(float apexTime, float startTime, float endTime, float score)
         {
             ApexTime = apexTime;
             StartTime = startTime;
@@ -28,7 +28,7 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        protected bool Equals(ScoredPeak other)
+        protected bool Equals(ScoredPeakBounds other)
         {
             return StartTime.Equals(other.StartTime) && EndTime.Equals(other.EndTime) && Score.Equals(other.Score);
         }
@@ -38,7 +38,7 @@ namespace pwiz.Skyline.Model.Results
             if (obj is null) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != GetType()) return false;
-            return Equals((ScoredPeak)obj);
+            return Equals((ScoredPeakBounds)obj);
         }
 
         public override int GetHashCode()
@@ -88,13 +88,13 @@ namespace pwiz.Skyline.Model.Results
 
     public class SourcedPeak
     {
-        public SourcedPeak(PeakSource peakSource, ScoredPeak scoredPeak)
+        public SourcedPeak(PeakSource peakSource, ScoredPeakBounds scoredPeak)
         {
             Source = peakSource;
             Peak = scoredPeak;
         }
 
         public PeakSource Source { get; }
-        public ScoredPeak Peak { get; }
+        public ScoredPeakBounds Peak { get; }
     }
 }

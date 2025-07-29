@@ -22,6 +22,7 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.DocSettings
@@ -53,6 +54,15 @@ namespace pwiz.Skyline.Model.DocSettings
         public ImputationSettings ChangeImputeMissing(bool value)
         {
             return ChangeProp(ImClone(this), im => im.ImputeMissingPeaks = value);
+        }
+
+        [Track(defaultValues:typeof(DefaultValuesNull))]
+        public AlignmentTargetSpec AlignmentTarget { get; private set; }
+
+        public ImputationSettings ChangeAlignmentTarget(AlignmentTargetSpec value)
+        {
+            return ChangeProp(ImClone(this),
+                im => im.AlignmentTarget = Equals(value, AlignmentTargetSpec.Default) ? null : value);
         }
 
         protected bool Equals(ImputationSettings other)
@@ -106,6 +116,7 @@ namespace pwiz.Skyline.Model.DocSettings
             reader.Read();
             if (!empty)
             {
+                AlignmentTarget = reader.DeserializeElement<AlignmentTargetSpec>();
                 reader.ReadEndElement();
             }
         }
@@ -115,6 +126,10 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteAttributeNullable(Attr.max_rt_shift, MaxRtShift);
             writer.WriteAttributeNullable(Attr.max_peak_width_var, MaxPeakWidthVariation);
             writer.WriteAttribute(Attr.impute_missing, ImputeMissingPeaks, false);
+            if (AlignmentTarget != null)
+            {
+                writer.WriteElement(AlignmentTarget);
+            }
         }
 
         public static ImputationSettings Deserialize(XmlReader reader)

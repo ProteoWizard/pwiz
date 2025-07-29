@@ -82,9 +82,9 @@ namespace pwiz.Skyline.Model.Lib
             return string.Format(@"[{0:F04},{1:F04}]:{2:F04}", StartTime, EndTime, Score);
         }
 
-        public ScoredPeak ToScoredPeak()
+        public ScoredPeakBounds ToScoredPeak()
         {
-            return new ScoredPeak((float)(StartTime + EndTime) / 2, (float)StartTime, (float)EndTime, (float)Score);
+            return new ScoredPeakBounds((float)(StartTime + EndTime) / 2, (float)StartTime, (float)EndTime, (float)Score);
         }
     }
 

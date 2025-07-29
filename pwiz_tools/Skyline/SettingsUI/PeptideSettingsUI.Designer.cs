@@ -92,6 +92,8 @@ namespace pwiz.Skyline.SettingsUI
             this.label1 = new System.Windows.Forms.Label();
             this.label15 = new System.Windows.Forms.Label();
             this.tabPrediction = new System.Windows.Forms.TabPage();
+            this.comboRunToRunAlignment = new System.Windows.Forms.ComboBox();
+            this.lblRunToRunAlignment = new System.Windows.Forms.Label();
             this.label14 = new System.Windows.Forms.Label();
             this.label13 = new System.Windows.Forms.Label();
             this.label9 = new System.Windows.Forms.Label();
@@ -622,6 +624,8 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // tabPrediction
             // 
+            this.tabPrediction.Controls.Add(this.comboRunToRunAlignment);
+            this.tabPrediction.Controls.Add(this.lblRunToRunAlignment);
             this.tabPrediction.Controls.Add(this.groupBoxPeakImputation);
             this.tabPrediction.Controls.Add(this.btnUpdateCalculator);
             this.tabPrediction.Controls.Add(this.label14);
@@ -633,6 +637,20 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.tabPrediction, "tabPrediction");
             this.tabPrediction.Name = "tabPrediction";
             this.tabPrediction.UseVisualStyleBackColor = true;
+            // 
+            // comboRunToRunAlignment
+            // 
+            this.comboRunToRunAlignment.DisplayMember = "Key";
+            this.comboRunToRunAlignment.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboRunToRunAlignment.FormattingEnabled = true;
+            resources.ApplyResources(this.comboRunToRunAlignment, "comboRunToRunAlignment");
+            this.comboRunToRunAlignment.Name = "comboRunToRunAlignment";
+            this.comboRunToRunAlignment.ValueMember = "Value";
+            // 
+            // lblRunToRunAlignment
+            // 
+            resources.ApplyResources(this.lblRunToRunAlignment, "lblRunToRunAlignment");
+            this.lblRunToRunAlignment.Name = "lblRunToRunAlignment";
             // 
             // label14
             // 
@@ -1115,5 +1133,7 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Label lblMaxPeakWidthVariation;
         private System.Windows.Forms.Label lblPeakWidthVariationPercent;
         private System.Windows.Forms.Label lblRtDeltaMin;
+        private System.Windows.Forms.ComboBox comboRunToRunAlignment;
+        private System.Windows.Forms.Label lblRunToRunAlignment;
     }
 }

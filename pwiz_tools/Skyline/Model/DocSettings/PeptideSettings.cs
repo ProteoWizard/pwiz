@@ -312,7 +312,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result*397) ^ Integration.GetHashCode();
                 result = (result*397) ^ BackgroundProteome.GetHashCode();
                 result = (result*397) ^ Quantification.GetHashCode();
-                result = (result*397) ^ ProteinAssociationSettings?.GetHashCode() ?? 0;
+                result = (result*397) ^ (ProteinAssociationSettings?.GetHashCode() ?? 0);
                 return result;
             }
         }
