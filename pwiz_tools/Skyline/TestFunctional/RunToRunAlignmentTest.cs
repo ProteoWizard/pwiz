@@ -1,4 +1,21 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2025 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -12,6 +29,9 @@ using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
 {
+    /// <summary>
+    /// Tests the run-to-run alignment dropdown on the Peptide Settings Prediction
+    /// </summary>
     [TestClass]
     public class RunToRunAlignmentTest : AbstractFunctionalTest
     {
@@ -70,11 +90,16 @@ namespace pwiz.SkylineTestFunctional
             WaitForDocumentLoaded();
             var originalMedianRetentionTimes =
                 RtCalculatorOption.MedianDocRetentionTimes.GetAlignmentTarget(SkylineWindow.Document.Settings);
+            Assert.AreEqual(originalMedianRetentionTimes, new AlignmentTarget.MedianDocumentRetentionTimes(SkylineWindow.Document));
+            Assert.AreEqual(originalMedianRetentionTimes, new AlignmentTarget.MedianDocumentRetentionTimes(originalDocument));
+
             RunDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, peptideSettingsUi =>
             {
                 peptideSettingsUi.AlignmentTarget = AlignmentTargetSpec.Default;
                 peptideSettingsUi.OkDialog();
             });
+
+            // Train a peak scoring model
             RunLongDlg<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog, reintegrateDlg =>
             {
                 RunDlg<EditPeakScoringModelDlg>(reintegrateDlg.AddPeakScoringModel, editPeakScoringModelDlg =>
@@ -86,7 +111,9 @@ namespace pwiz.SkylineTestFunctional
             }, reintegrateDlg => reintegrateDlg.OkDialog());
             WaitForDocumentLoaded();
             var reintegratedDocument = SkylineWindow.Document;
-            var reintegratedMissing = CountMissing(reintegratedDocument).ToList();
+            var reintegratedMissingCounts = CountMissing(reintegratedDocument).ToList();
+
+            // Reintegrate with a 0.01 q-value cutoff
             RunDlg<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog, reintegrateDlg =>
             {
                 reintegrateDlg.ReintegrateAll = false;
@@ -94,9 +121,11 @@ namespace pwiz.SkylineTestFunctional
                 reintegrateDlg.OkDialog();
             });
             WaitForDocumentLoaded();
-            var reintegratedWithCutoff = SkylineWindow.Document;
-            var reintegratedWithCutoffMissing = CountMissing(reintegratedWithCutoff).ToList();
-            AssertLessThan(reintegratedMissing.Count, reintegratedWithCutoffMissing.Count);
+            var reintegratedWithCutoffDoc = SkylineWindow.Document;
+            var reintegratedWithCutoffMissingCounts = CountMissing(reintegratedWithCutoffDoc);
+            AssertLessThan(reintegratedMissingCounts.Count, reintegratedWithCutoffMissingCounts.Count);
+
+            // Set ImputeMissingPeaks = true and reintegrate with 0.01 q-value cutoff
             RunDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, peptideSettingsUi =>
             {
                 peptideSettingsUi.ImputeMissingPeaks = true;
@@ -109,9 +138,26 @@ namespace pwiz.SkylineTestFunctional
                 reintegrateDlg.OkDialog();
             });
             WaitForDocumentLoaded();
-            var reintegratedWithCutoffImpute = SkylineWindow.Document;
-            var reintegratedWithCutoffImputeMissingCount = CountMissing(reintegratedWithCutoffImpute);
-            AssertLessThan(reintegratedWithCutoffImputeMissingCount.Count, reintegratedWithCutoffMissing.Count);
+            var reintegratedWithCutoffImputeDoc = SkylineWindow.Document;
+
+            // Should be fewer missing peaks because impute missing
+            var reintegratedWithCutoffImputeMissingCounts = CountMissing(reintegratedWithCutoffImputeDoc);
+            AssertLessThan(reintegratedWithCutoffImputeMissingCounts.Values.Sum(), reintegratedWithCutoffMissingCounts.Values.Sum());
+            CollectionAssert.IsSubsetOf(reintegratedWithCutoffImputeMissingCounts.Keys, reintegratedWithCutoffMissingCounts.Keys);
+
+            var reintegratedMedianRetentionTimes =
+                new AlignmentTarget.MedianDocumentRetentionTimes(reintegratedDocument);
+            Assert.AreNotEqual(originalMedianRetentionTimes, reintegratedMedianRetentionTimes);
+            
+            // Q-value cutoff changes median retention times
+            var reintegratedWithCutoffMedianRetentionTimes =
+                new AlignmentTarget.MedianDocumentRetentionTimes(reintegratedWithCutoffDoc);
+            Assert.AreNotEqual(reintegratedMedianRetentionTimes, reintegratedWithCutoffMedianRetentionTimes);
+
+            // Impute missing does not change median retention times because median retention times are based on pre-imputation peaks
+            var reintegratedWithCutoffImputeRetentionTimes =
+                new AlignmentTarget.MedianDocumentRetentionTimes(reintegratedWithCutoffImputeDoc);
+            Assert.AreEqual(reintegratedWithCutoffImputeRetentionTimes, reintegratedWithCutoffImputeRetentionTimes);
         }
 
         public static RTLinearRegressionGraphPane GetScoreToRunGraphPane()
@@ -127,7 +173,7 @@ namespace pwiz.SkylineTestFunctional
             
             foreach (var moleculeGroup in document.MoleculeGroups)
             {
-                foreach (var molecule in document.Molecules)
+                foreach (var molecule in moleculeGroup.Molecules)
                 {
                     int countMissing = Enumerable.Range(0, replicateCount).Count(replicateIndex =>
                         molecule.TransitionGroups.Any(tg =>

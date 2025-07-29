@@ -144,7 +144,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
             {
                 return result;
             }
-            Dictionary<Target, PeptideDocNode> targets = new Dictionary<Target, PeptideDocNode>();
+            Dictionary<Target, Tuple<PeptideDocNode, bool>> targets = new Dictionary<Target, Tuple<PeptideDocNode, bool>>();
             foreach (var molecule in document.Molecules)
             {
                 if (molecule.IsDecoy)
@@ -154,7 +154,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 var target = molecule.ModifiedTarget;
                 if (molecule.HasResults && !targets.ContainsKey(target))
                 {
-                    targets.Add(target, molecule);
+                    targets.Add(target, Tuple.Create(molecule, molecule.AnyReintegratedPeaks()));
                 }
             }
 
@@ -176,16 +176,19 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
                     var fileTargets = new List<ImmutableList<Target>>();
                     var retentionTimes = new List<float>();
-                    foreach (var molecule in orderedMolecules)
+                    foreach (var (molecule, anyReintegrated) in orderedMolecules)
                     {
                         foreach (var transitionGroup in molecule.TransitionGroups)
                         {
-                            var originalPeak = transitionGroup.GetChromInfo(iReplicate, chromFileInfo.FileId)
-                                ?.OriginalPeak;
-                            if (null != originalPeak)
+                            var transitionGroupChromInfo =
+                                transitionGroup.GetChromInfo(iReplicate, chromFileInfo.FileId);
+                            var scoredPeak = anyReintegrated
+                                ? transitionGroupChromInfo?.ReintegratedPeak
+                                : transitionGroupChromInfo.OriginalPeak;
+                            if (null != scoredPeak)
                             {
                                 fileTargets.Add(document.Settings.GetTargets(molecule).ToImmutable());
-                                retentionTimes.Add(originalPeak.ApexTime);
+                                retentionTimes.Add(scoredPeak.ApexTime);
                                 break;
                             }
                         }

@@ -2436,7 +2436,7 @@ namespace pwiz.Skyline.Model
                             var reintegratedPeak = GetReintegratePeak(fileId, step);
                             if (reintegratedPeak != null)
                             {
-                                calc.SetReintegratedPeak(reintegratedPeak, ReintegrateResults.IsDefaultScoringModel());
+                                calc.SetReintegratedPeak(reintegratedPeak, ReintegrateResults);
                             }
                         }
                         calc.AddChromInfo(nodeTran, chromInfo);
@@ -2564,9 +2564,9 @@ namespace pwiz.Skyline.Model
             private ScoredPeakBounds OriginalPeak { get; set; }
             private ScoredPeakBounds ReintegratedPeak { get; set; }
 
-            public void SetReintegratedPeak(PeakFeatureStatistics reintegratedPeak, bool defaultScoringModel)
+            public void SetReintegratedPeak(PeakFeatureStatistics reintegratedPeak, ReintegrateResultsHandler reintegrateResultsHandler)
             {
-                if (defaultScoringModel)
+                if (reintegrateResultsHandler.IsDefaultScoringModel())
                 {
                     OriginalPeak = reintegratedPeak.BestScoredPeak;
                     ZScore = reintegratedPeak.BestScore;
@@ -2575,9 +2575,16 @@ namespace pwiz.Skyline.Model
                 }
                 else
                 {
-                    ReintegratedPeak = reintegratedPeak.BestScoredPeak;
                     ZScore = reintegratedPeak.BestScore;
                     QValue = reintegratedPeak.QValue;
+                    if (reintegratedPeak.QValue >= reintegrateResultsHandler.QValueCutoff)
+                    {
+                        ReintegratedPeak = null;
+                    }
+                    else
+                    {
+                        ReintegratedPeak = reintegratedPeak.BestScoredPeak;
+                    }
                 }
             }
             private float? Fwhm { get; set; }

@@ -547,8 +547,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
                 return result;
             }
 
-            bool anyReintegrated = peptideDocNode.TransitionGroups.SelectMany(tg => tg.Results).SelectMany(list => list)
-                .Any(c => c.ReintegratedPeak != null);
+            bool anyReintegrated = peptideDocNode.AnyReintegratedPeaks();
 
             var measuredResults = Document.Settings.MeasuredResults;
             if (measuredResults == null)

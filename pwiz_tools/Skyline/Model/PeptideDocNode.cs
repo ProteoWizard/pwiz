@@ -2045,6 +2045,11 @@ namespace pwiz.Skyline.Model
             return ChangeOriginalMoleculeTarget(old.ChromatogramTarget);
         }
 
+        public bool AnyReintegratedPeaks()
+        {
+            return TransitionGroups.Any(tg => tg.Results?.Any(chromInfoList => chromInfoList.Any(transitionGroupChromInfo => transitionGroupChromInfo.ReintegratedPeak != null)) ?? false);
+        }
+
         #region object overrides
 
         public bool Equals(PeptideDocNode other)
