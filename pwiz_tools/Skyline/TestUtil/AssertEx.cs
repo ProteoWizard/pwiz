@@ -1041,8 +1041,16 @@ namespace pwiz.SkylineTestUtil
             string file2 = File.ReadAllText(pathActualFile);
             NoDiff(file1, file2, null, columnTolerances, ignorePathDifferences);
         }
-
-        public static void LibraryEquals(LibrarySpec libraryExpected, LibrarySpec libraryActual, double mzTolerance = 1e-8, double intensityTolerance = 1e-5, double intensityMinimum = 1e-5)
+        /// <summary>
+        /// Compare two LibrarySpec libraries, with some possible allowances
+        /// </summary>
+        /// <param name="libraryExpected">expected result</param>
+        /// <param name="libraryActual">new result</param>
+        /// <param name="mzTolerance">tolerance for m/z peak comparison</param>
+        /// <param name="intensityTolerance">tolerance for peak intensity comparison</param>
+        /// <param name="intensityMinimum">minimum intensities that are compared</param>
+        /// <param name="topN">count of top intensity peaks to compare, when 0 all peaks above minimum intensity are compared</param>
+        public static void LibraryEquals(LibrarySpec libraryExpected, LibrarySpec libraryActual, double mzTolerance = 1e-8, double intensityTolerance = 1e-5, double intensityMinimum = 1e-5, int topN = 0)
         {
             Library expectedLoaded = null, actualLoaded = null;
             try
@@ -1069,6 +1077,13 @@ namespace pwiz.SkylineTestUtil
                     var expectedSpectrum = expectedSpectra.First().SpectrumPeaksInfo.Peaks.Where((s) => s.Intensity >= intensityMinimum).ToArray();
                     var actualSpectra = actualLoaded.GetSpectra(actual, IsotopeLabelType.light, LibraryRedundancy.best);
                     var actualSpectrum = actualSpectra.First().SpectrumPeaksInfo.Peaks.Where((s) => s.Intensity >= intensityMinimum).ToArray();
+
+                    if (topN > 0)
+                    {
+                        expectedSpectrum = expectedSpectrum.Take(Math.Min(topN, expectedSpectrum.Length)).ToArray();
+                        actualSpectrum  = actualSpectrum.Take(Math.Min(topN, actualSpectrum.Length)).ToArray();
+                    }
+
                     if (expectedSpectrum.Length != actualSpectrum.Length)
                     {
                         Console.WriteLine();

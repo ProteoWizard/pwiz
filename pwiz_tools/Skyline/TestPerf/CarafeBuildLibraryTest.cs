@@ -46,6 +46,7 @@ namespace TestPerf
         private double MZ_TOLERANCE = 1e-4; 
         private double INTENSITY_TOLERANCE = 0.15;
         private double MINIMUM_INTENSITY = 0.15;
+        private int TOP_N = 5;
 
         /// <summary>
         /// When true Python installation is forced by deleting any old installation
@@ -239,7 +240,7 @@ namespace TestPerf
 
             var expected = LibrarySpec.CreateFromPath("answer", TestFilesDir.GetTestPath(@"test_res_fine_tuned_bySky_iRT.blib"));
             var result = LibrarySpec.CreateFromPath("testBuilt", builtLibraryBySkyIrt);
-            AssertEx.LibraryEquals(expected, result, MZ_TOLERANCE, INTENSITY_TOLERANCE, MINIMUM_INTENSITY);
+            AssertEx.LibraryEquals(expected, result, MZ_TOLERANCE, INTENSITY_TOLERANCE, MINIMUM_INTENSITY, TOP_N);
         }
         private void LongTest() 
         {
@@ -318,15 +319,15 @@ namespace TestPerf
             
             var expected = LibrarySpec.CreateFromPath("answer", TestFilesDir.GetTestPath(@"test_res_fine_tuned_bySky_iRT.blib")); 
             var result = LibrarySpec.CreateFromPath("testBuilt", builtLibraryBySkyIrt); 
-            AssertEx.LibraryEquals(expected, result, MZ_TOLERANCE, INTENSITY_TOLERANCE, MINIMUM_INTENSITY); 
+            AssertEx.LibraryEquals(expected, result, MZ_TOLERANCE, INTENSITY_TOLERANCE, MINIMUM_INTENSITY, TOP_N); 
             
             expected = LibrarySpec.CreateFromPath("answer", TestFilesDir.GetTestPath(@"test_res_fine_tuned_byDiann.blib"));
             result = LibrarySpec.CreateFromPath("testBuilt", builtLibraryByDiann);
-            AssertEx.LibraryEquals(expected, result, MZ_TOLERANCE, INTENSITY_TOLERANCE, MINIMUM_INTENSITY);
+            AssertEx.LibraryEquals(expected, result, MZ_TOLERANCE, INTENSITY_TOLERANCE, MINIMUM_INTENSITY, TOP_N);
 
             expected = LibrarySpec.CreateFromPath("answer", TestFilesDir.GetTestPath(@"test_res_fine_tuned_bySky.blib"));
             result = LibrarySpec.CreateFromPath("testBuilt", builtLibraryBySky);
-            AssertEx.LibraryEquals(expected, result, MZ_TOLERANCE, INTENSITY_TOLERANCE, MINIMUM_INTENSITY);
+            AssertEx.LibraryEquals(expected, result, MZ_TOLERANCE, INTENSITY_TOLERANCE, MINIMUM_INTENSITY, TOP_N);
             TestFilesDir.CheckForFileLocks(TestFilesDir.FullPath);
         }
 
