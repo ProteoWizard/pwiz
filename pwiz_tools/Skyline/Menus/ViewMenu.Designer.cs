@@ -48,6 +48,7 @@
             this.mixedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.viewFilesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.viewPropertiesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator41 = new System.Windows.Forms.ToolStripSeparator();
             this.liveReportsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.documentGridMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -157,6 +158,7 @@
             this.userInterfaceToolStripMenuItem,
             this.toolStripSeparator1,
             this.viewFilesMenuItem,
+            this.viewPropertiesMenuItem,
             this.toolStripSeparator41,
             this.liveReportsMenuItem,
             this.librariesMenuItem,
@@ -307,6 +309,13 @@
             this.viewFilesMenuItem.Name = "viewFilesMenuItem";
             resources.ApplyResources(this.viewFilesMenuItem, "viewFilesMenuItem");
             this.viewFilesMenuItem.Click += new System.EventHandler(this.viewFilesMenuItem_Click);
+            // 
+            // viewPropertiesMenuItem
+            // 
+            this.viewPropertiesMenuItem.CheckOnClick = true;
+            this.viewPropertiesMenuItem.Name = "viewPropertiesMenuItem";
+            resources.ApplyResources(this.viewPropertiesMenuItem, "viewPropertiesMenuItem");
+            this.viewPropertiesMenuItem.Click += new System.EventHandler(this.viewPropertiesMenuItem_Click);
             // 
             // toolStripSeparator41
             // 
@@ -1045,5 +1054,6 @@
         private System.Windows.Forms.ToolStripMenuItem librariesMenuItem;
         private System.Windows.Forms.ToolStripMenuItem viewFilesMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripMenuItem viewPropertiesMenuItem;
     }
 }

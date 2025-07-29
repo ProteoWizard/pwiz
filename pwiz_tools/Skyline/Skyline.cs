@@ -74,6 +74,7 @@ using pwiz.Skyline.Model.Koina.Communication;
 using pwiz.Skyline.Model.Koina.Models;
 using pwiz.CommonMsData.RemoteApi;
 using pwiz.CommonMsData.RemoteApi.Ardia;
+using pwiz.Skyline.Model.PropertySheets;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.SettingsUI;
@@ -106,6 +107,7 @@ namespace pwiz.Skyline
     {
         private SequenceTreeForm _sequenceTreeForm;
         private FilesTreeForm _filesTreeForm;
+        private PropertiesForm _propertiesForm;
         private ImmediateWindow _immediateWindow;
 
         private SrmDocument _document;
@@ -3195,6 +3197,56 @@ namespace pwiz.Skyline
             {
                 _filesTreeForm.Close();
                 _filesTreeForm = null;
+            }
+        }
+
+        #endregion
+
+        #region Properties
+
+        public PropertiesForm PropertiesForm => _propertiesForm;
+        public bool PropertiesFormIsVisible => _propertiesForm is { Visible: true };
+        public bool PropertiesFormIsActivated => _propertiesForm is { IsActivated: true };
+
+        public void ShowPropertiesForm(bool show, string persistentState = null)
+        {
+            if (show)
+            {
+                _propertiesForm ??= CreatePropertiesForm(persistentState);
+                _propertiesForm.Show(dockPanel, DockState.DockRight);
+            }
+            else
+            {
+                _propertiesForm.Hide();
+            }
+        }
+
+        private PropertiesForm CreatePropertiesForm(string persistentString)
+        {
+            _propertiesForm = new PropertiesForm(this);
+            return _propertiesForm;
+        }
+
+        public void DestroyPropertiesForm()
+        {
+            if (_propertiesForm != null)
+            {
+                _propertiesForm.Close();
+                _propertiesForm = null;
+            }
+        }
+
+        public void PotentialPropertySheetOwnerGotFocus(object sender, EventArgs e)
+        {
+            if ( !(_propertiesForm is { Visible: true }) ) return;
+
+            if (sender is IPropertySheetOwner owner)
+            {
+                _propertiesForm.PropertyGrid.SelectedObject = owner.GetProperties();
+            }
+            else
+            {
+                _propertiesForm.PropertyGrid.SelectedObject = null;
             }
         }
 
