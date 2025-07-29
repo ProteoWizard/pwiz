@@ -289,11 +289,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             phosphorylation
         };
 
-        public enum DeviceTypes
-        {
-            gpu,
-            cpu
-        };
+
 
         public enum LibraryFormats
         {
@@ -349,7 +345,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
                     { ModelResources.CarafeModel_model_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeModel_model_long, "general", Enum.GetNames(typeof(ModelTypes))) },
                     { ModelResources.CarafeModel_nce_short,  new AbstractDdaSearchEngine.Setting(ModelResources.CarafeModel_nce_long) },
                     { ModelResources.CarafeModel_instrument_short,  new AbstractDdaSearchEngine.Setting(ModelResources.CarafeModel_instrument_long) },
-                    { ModelResources.CarafeModel_device_short,  new AbstractDdaSearchEngine.Setting(ModelResources.CarafeModel_device_long, "gpu", Enum.GetNames(typeof(DeviceTypes))) }
+                    { ModelResources.CarafeModel_device_short,  new AbstractDdaSearchEngine.Setting(ModelResources.CarafeModel_device_long, DeviceTypes.gpu.ToString(), Enum.GetNames(typeof(DeviceTypes))) }
                 });
 
         public static AbstractDdaSearchEngine.Setting FixedModSetting =
@@ -717,7 +713,10 @@ namespace pwiz.Skyline.Model.Lib.Carafe
                 }
                 else if (dataParam.Key == ModelResources.CarafeModel_device_short)
                 {
-                    readyArgs.Add(new ArgumentAndValue(@"device", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                    if (PythonInstaller.SimulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NONE)
+                        readyArgs.Add(new ArgumentAndValue(@"device", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                    else
+                        readyArgs.Add(new ArgumentAndValue(@"device", DefaultTestDevice.ToString(), TextUtil.HYPHEN));
                 }
             }
 

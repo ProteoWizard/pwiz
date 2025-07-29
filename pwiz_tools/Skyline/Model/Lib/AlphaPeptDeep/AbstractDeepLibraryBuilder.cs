@@ -253,12 +253,14 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         {
             Document = document;
             IrtStandard = irtStandard;
+            DefaultTestDevice = DeviceTypes.cpu;
         }
         protected AbstractDeepLibraryBuilder(SrmDocument document, SrmDocument trainingDocument, IrtStandard irtStandard)
         {
             Document = document;
             TrainingDocument = trainingDocument;
             IrtStandard = irtStandard;
+            DefaultTestDevice = DeviceTypes.cpu;
         }
         public SrmDocument Document { get; private set; }
 
@@ -274,7 +276,19 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         public string TimeStamp => _nowTime.ToString(@"yyyy-MM-dd_HH-mm-ss");
 
         public string WorkDir { get; private set; }
-        
+
+        public enum DeviceTypes
+        {
+            gpu,
+            cpu
+        };
+
+        public static DeviceTypes DefaultTestDevice
+        {
+            get;
+            protected set;
+        }
+
         public void EnsureWorkDir(string path, string tool)
         {
             if (WorkDir == null)

@@ -203,9 +203,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 new ArgumentAndValue(@"library--output_tsv--enabled", @"True"),
                 new ArgumentAndValue(@"library--output_tsv--translate_mod_to_unimod_id", @"True"),
                 new ArgumentAndValue(@"library--rt_to_irt", @"True"),
-                new ArgumentAndValue(@"library--decoy", @"diann"),
-                new ArgumentAndValue(@"torch_device--device_type",
-                    PythonInstaller.SimulatedInstallationState != PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD ? @"gpu" : @"cpu")
+                new ArgumentAndValue(@"library--decoy", @"diann")
             };
 
         private static readonly ImmutableDictionary<string, AbstractDdaSearchEngine.Setting> DefaultUserExposedParameters =
@@ -251,7 +249,11 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                     {
                         ModelResources.AlphaPeptDeep_keep_k_highest_peaks_short,
                         new AbstractDdaSearchEngine.Setting(ModelResources.AlphaPeptDeep_keep_k_highest_peaks_long, 12, 1)
-                    }
+                    },
+                    {
+                        ModelResources.AlphaPeptDeep_device_short,
+                        new AbstractDdaSearchEngine.Setting(ModelResources.AlphaPeptDeep_device_long, DeviceTypes.gpu.ToString(), Enum.GetNames(typeof(DeviceTypes)))
+                    },
                 });
 
         private Dictionary<string, string> OpenSwathAssayLikeColName =>
@@ -286,6 +288,11 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             EnsureWorkDir(rootProcessingDir, PREFIX_WORKDIR);
             if (AlphapeptdeepLibraryBuilder.UserParameters == null) 
                 AlphapeptdeepLibraryBuilder.AlphaPeptDeepDefaultSettings();
+
+            if (PythonInstaller.SimulatedInstallationState != PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD)
+                DefaultTestDevice = DeviceTypes.gpu;
+            else
+                DefaultTestDevice = DeviceTypes.cpu;
         }
 
         public bool BuildLibrary(IProgressMonitor progress)
@@ -346,8 +353,14 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 {
                     readyArgs.Add(new ArgumentAndValue(@"library--output_tsv--keep_higest_k_peaks", arg.Value.Value.ToString()));
                 }
+                else if (arg.Key == ModelResources.AlphaPeptDeep_device_short)
+                {
+                    if (PythonInstaller.SimulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NONE) 
+                        readyArgs.Add(new ArgumentAndValue(@"torch_device--device_type", arg.Value.Value.ToString()));
+                    else
+                        readyArgs.Add(new ArgumentAndValue(@"torch_device--device_type", DefaultTestDevice.ToString()));
+                }
             }
-
             return readyArgs;
         }
 

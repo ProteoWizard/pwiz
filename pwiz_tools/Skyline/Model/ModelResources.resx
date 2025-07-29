@@ -243,6 +243,12 @@
 	<data name="AlphaPeptDeep_keep_k_highest_peaks_long" xml:space="preserve">
     <value>Keep k of the highest intensity fragment peaks in the predicted library.</value>
   </data>
+	<data name="AlphaPeptDeep_device_short" xml:space="preserve">
+    <value>Computational Device</value>
+  </data>
+	<data name="AlphaPeptDeep_device_long" xml:space="preserve">
+    <value>Computational Device (cpu or gpu) to use for model prediction.</value>
+  </data>
 	<data name="AlphaPeptDeep_Settings" xml:space="preserve">
   <value>AlphaPeptDeep Settings ...</value>
   </data>

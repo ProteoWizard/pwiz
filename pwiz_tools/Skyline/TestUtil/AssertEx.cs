@@ -1041,6 +1041,25 @@ namespace pwiz.SkylineTestUtil
             string file2 = File.ReadAllText(pathActualFile);
             NoDiff(file1, file2, null, columnTolerances, ignorePathDifferences);
         }
+
+        private static void LogSpectrumPeaks(string expectedSpecKey, string actualSpecKey, SpectrumPeaksInfo.MI[] expectedSpectrum,
+            SpectrumPeaksInfo.MI[] actualSpectrum)
+        {
+            Console.WriteLine();
+            Console.WriteLine($@"Expected Spectrum Key Sequence: {expectedSpecKey}");
+            Console.WriteLine($@"Actual Spectrum Key Sequence: {actualSpecKey}");
+            Console.WriteLine(@"Expected Spectrum:");
+            for (int j = 0; j < expectedSpectrum.Length; ++j)
+            {
+                Console.WriteLine(expectedSpectrum[j].ToString());
+            }
+            Console.WriteLine(@"Actual Spectrum:");
+            for (int j = 0; j < actualSpectrum.Length; ++j)
+            {
+                Console.WriteLine(actualSpectrum[j].ToString());
+            }
+        }
+
         /// <summary>
         /// Compare two LibrarySpec libraries, with some possible allowances
         /// </summary>
@@ -1086,20 +1105,7 @@ namespace pwiz.SkylineTestUtil
 
                     if (expectedSpectrum.Length != actualSpectrum.Length)
                     {
-                        Console.WriteLine();
-                        Console.WriteLine($@"Expected Spectrum Key Sequence: {expected.Target.ToString()}");
-                        Console.WriteLine($@"Actual Spectrum Key Sequence: {actual.Target.ToString()}");
-                        Console.WriteLine(@"Expected Spectrum:");
-                        for (int j = 0; j < expectedSpectrum.Length; ++j)
-                        {
-                            Console.WriteLine(expectedSpectrum[j].ToString());
-                        }
-                        Console.WriteLine(@"Actual Spectrum:");
-                        for (int j = 0; j < actualSpectrum .Length; ++j)
-                        {
-                            Console.WriteLine(actualSpectrum[j].ToString());
-                        }
-
+                        LogSpectrumPeaks(expected.Target.ToString(), actual.Target.ToString(), expectedSpectrum, actualSpectrum);
                     }
                     Assert.AreEqual(expectedSpectrum.Length, actualSpectrum.Length, "peak counts not equal");
 
@@ -1109,17 +1115,16 @@ namespace pwiz.SkylineTestUtil
 
                     for (int j = 0; j < expectedSpectrum.Length; ++j)
                     {
+                        if (Math.Abs(expectedSpectrum[j].Mz - actualSpectrum[j].Mz) > mzTolerance)
+                        {
+                            LogSpectrumPeaks(expected.Target.ToString(), actual.Target.ToString(), expectedSpectrum, actualSpectrum);
+                        }
+
                         Assert.AreEqual(expectedSpectrum[j].Mz, actualSpectrum[j].Mz, mzTolerance, "peak m/z delta exceeded tolerance");
 
                         if (Math.Abs(expectedSpectrum[j].Intensity - actualSpectrum[j].Intensity) > intensityTolerance)
                         {
-                            Console.WriteLine();
-                            Console.WriteLine($@"Expected Spectrum Key Sequence: {expected.Target.ToString()}");
-                            Console.WriteLine($@"Actual Spectrum Key Sequence: {actual.Target.ToString()}");
-                            Console.WriteLine(@"Expected Spectrum:");
-                            Console.WriteLine(expectedSpectrum[j].ToString());
-                            Console.WriteLine(@"Actual Spectrum:");
-                            Console.WriteLine(actualSpectrum[j].ToString());
+                            LogSpectrumPeaks(expected.Target.ToString(), actual.Target.ToString(), expectedSpectrum, actualSpectrum);
                         }
 
                         Assert.AreEqual(expectedSpectrum[j].Intensity, actualSpectrum[j].Intensity, intensityTolerance, "peak intensity delta exceeded tolerance");

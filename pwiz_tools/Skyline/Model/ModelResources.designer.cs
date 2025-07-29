@@ -213,6 +213,24 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Computational Device (cpu or gpu) to use for model prediction..
+        /// </summary>
+        public static string AlphaPeptDeep_device_long {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_device_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Computational Device.
+        /// </summary>
+        public static string AlphaPeptDeep_device_short {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_device_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Keep k of the highest intensity fragment peaks in the predicted library..
         /// </summary>
         public static string AlphaPeptDeep_keep_k_highest_peaks_long {

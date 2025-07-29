@@ -35,7 +35,7 @@
     <AssemblyName Condition=" '$(MSBuildAssemblyName)' != '' ">$(MSBuildAssemblyName)</AssemblyName>
     <MascotParserPath>..\..\libraries\msparser_3_1_0_x86_win64</MascotParserPath>
     <RuntimeIdentifiers>win</RuntimeIdentifiers>
-	<PublishUrl>T:\www\site\skyline.ms\html\software\Skyline-daily13-64\</PublishUrl>
+    <PublishUrl>T:\www\site\skyline.ms\html\software\Skyline-daily13-64\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
     <UpdateEnabled>false</UpdateEnabled>
@@ -589,6 +589,11 @@
     <Compile Include="Model\Lib\AlphaPeptDeep\AbstractDeepLibraryBuilder.cs" />
     <Compile Include="Model\Lib\Carafe\CarafeLibraryBuilder.cs" />
     <Compile Include="Model\Lib\Carafe\CarafeSupportedModifications.cs" />
+    <Compile Include="Model\ModelResources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ModelResources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Model\Proteome\AssociateProteinsResults.cs" />
     <Compile Include="Model\Lib\LibraryFiles.cs" />
     <Compile Include="Model\Results\LcPeakIonMetrics.cs" />
@@ -886,11 +891,6 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>ListsResources.resx</DependentUpon>
-    </Compile>
-    <Compile Include="Model\ModelResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ModelResources.resx</DependentUpon>
     </Compile>
     <Compile Include="FileUI\FileUIResources.Designer.cs">
       <AutoGen>True</AutoGen>
