@@ -3647,41 +3647,17 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private ImputedPeak ProduceImputedPeak(ProductionMonitor productionMonitor, ImputedBoundsParameter imputedBoundsParameter)
         {
-            try
+            PeakBoundaryImputer peakBoundaryImputer;
+            lock (this)
             {
-                PeakBoundaryImputer peakBoundaryImputer;
-                lock (this)
-                {
-                    peakBoundaryImputer = _peakBoundaryImputer =
-                        _peakBoundaryImputer?.ChangeDocument(imputedBoundsParameter.Document) ??
-                        new PeakBoundaryImputer(imputedBoundsParameter.Document);
-                }
-
-                return peakBoundaryImputer!.GetImputedPeakBounds(productionMonitor.CancellationToken,
-                    imputedBoundsParameter.IdentityPath, imputedBoundsParameter.ChromatogramSet,
-                    imputedBoundsParameter.FilePath);
+                peakBoundaryImputer = _peakBoundaryImputer =
+                    _peakBoundaryImputer?.ChangeDocument(imputedBoundsParameter.Document) ??
+                    new PeakBoundaryImputer(imputedBoundsParameter.Document);
             }
-            finally
-            {
-                var oldMeasuredResults = imputedBoundsParameter.Document.MeasuredResults;
-                var newMeasuredResults = _documentContainer.Document.MeasuredResults;
-                if (oldMeasuredResults != null && !ReferenceEquals(oldMeasuredResults, newMeasuredResults))
-                {
-                    var newStreams = new HashSet<ReferenceValue<IPooledStream>>();
-                    if (newMeasuredResults != null)
-                    {
-                        newStreams.UnionWith(newMeasuredResults.ReadStreams.Select(ReferenceValue.Of));
-                    }
 
-                    foreach (var stream in oldMeasuredResults.ReadStreams)
-                    {
-                        if (!newStreams.Contains(ReferenceValue.Of(stream)))
-                        {
-                            stream.CloseStream();
-                        }
-                    }
-                }
-            }
+            return peakBoundaryImputer!.GetImputedPeakBounds(productionMonitor.CancellationToken,
+                imputedBoundsParameter.IdentityPath, imputedBoundsParameter.ChromatogramSet,
+                imputedBoundsParameter.FilePath);
         }
 
 

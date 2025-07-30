@@ -175,7 +175,7 @@ namespace pwiz.Skyline.Model
             using (settingsChangeMonitor)
             {
                 var settingsNew = Document.Settings.ChangePeptideIntegration(integration =>
-                    integration.ChangeResultsHandler(new ReintegrateResultsHandler(this, new PeakBoundaryImputer(Document))));
+                    integration.ChangeResultsHandler(new ReintegrateResultsHandler(this, new PeakBoundaryImputer(Document, this))));
                 // Only update the document if anything has changed
                 var docNew = Document.ChangeSettings(settingsNew, settingsChangeMonitor);
                 if (!Equals(docNew.Settings.PeptideSettings.Integration, Document.Settings.PeptideSettings.Integration) ||

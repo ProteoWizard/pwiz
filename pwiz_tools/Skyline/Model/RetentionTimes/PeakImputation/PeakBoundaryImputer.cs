@@ -42,8 +42,8 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
 
         public PeakBoundaryImputer(SrmDocument document) : this(document, null)
         {
-
         }
+
         public PeakBoundaryImputer(SrmDocument document, MProphetResultsHandler mProphetResultsHandler)
         {
             Document = document;
