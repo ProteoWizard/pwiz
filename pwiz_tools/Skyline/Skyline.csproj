@@ -449,11 +449,11 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Controls\Lists\ListViewContext.cs" />
-    <Compile Include="Controls\PropertyForm.cs">
+    <Compile Include="Controls\PropertiesForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Controls\PropertyForm.Designer.cs">
-      <DependentUpon>PropertyForm.cs</DependentUpon>
+    <Compile Include="Controls\PropertiesForm.Designer.cs">
+      <DependentUpon>PropertiesForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\SeqNode\PeptideFormatter.cs" />
     <Compile Include="Controls\KoinaUIHelpers.cs" />
@@ -629,12 +629,6 @@
     <Compile Include="Model\IdPeptideDocNode.cs" />
     <Compile Include="Model\Lib\AlphaPeptDeep\AbstractDeepLibraryBuilder.cs" />
     <Compile Include="Model\Lib\Carafe\CarafeLibraryBuilder.cs" />
-    <Compile Include="Model\PropertySheets\PropertyAttribute.cs" />
-    <Compile Include="Model\PropertySheets\PropertySheetResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>PropertySheetResources.resx</DependentUpon>
-    </Compile>
     <Compile Include="Model\PropertySheets\IPropertySheetOwner.cs" />
     <Compile Include="Model\PropertySheets\DynamicPropertyObject.cs" />
     <Compile Include="Model\Proteome\AssociateProteinsResults.cs" />
@@ -2974,8 +2968,8 @@
     <EmbeddedResource Include="Controls\Lists\ListDesigner.zh-CHS.resx">
       <DependentUpon>ListDesigner.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Controls\PropertyForm.resx">
-      <DependentUpon>PropertyForm.cs</DependentUpon>
+    <EmbeddedResource Include="Controls\PropertiesForm.resx">
+      <DependentUpon>PropertiesForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Spectra\SpectrumGridForm.ja.resx">
       <DependentUpon>SpectrumGridForm.cs</DependentUpon>
@@ -3778,11 +3772,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Model\FullScanPropertiesRes.zh-CHS.resx">
       <DependentUpon>FullScanPropertiesRes.resx</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Model\PropertySheets\PropertySheetResources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>PropertySheetResources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\RetentionTimes\RetentionTimesResources.ja.resx">

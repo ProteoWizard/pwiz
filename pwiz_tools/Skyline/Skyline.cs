@@ -107,7 +107,7 @@ namespace pwiz.Skyline
     {
         private SequenceTreeForm _sequenceTreeForm;
         private FilesTreeForm _filesTreeForm;
-        private PropertyForm _propertyForm;
+        private PropertiesForm _propertiesForm;
         private ImmediateWindow _immediateWindow;
 
         private SrmDocument _document;
@@ -3204,40 +3204,49 @@ namespace pwiz.Skyline
 
         #region Properties
 
-        public PropertyForm PropertyForm => _propertyForm;
-        public bool PropertyFormIsVisible => _propertyForm is { Visible: true };
-        public bool PropertyFormIsActivated => _propertyForm is { IsActivated: true };
+        public PropertiesForm PropertiesForm => _propertiesForm;
+        public bool PropertiesFormIsVisible => _propertiesForm is { Visible: true };
+        public bool PropertiesFormIsActivated => _propertiesForm is { IsActivated: true };
 
-        public void ShowPropertyForm(bool show, string persistentState = null)
+        public void ShowPropertiesForm(bool show, string persistentState = null)
         {
             if (show)
             {
-                _propertyForm ??= CreatePropertyForm(persistentState);
-                _propertyForm.Show(dockPanel, DockState.DockRight);
+                _propertiesForm ??= CreatePropertiesForm(persistentState);
+                _propertiesForm.Show(dockPanel, DockState.DockRight);
             }
             else
             {
-                _propertyForm.Hide();
+                _propertiesForm.Hide();
             }
         }
 
-        private PropertyForm CreatePropertyForm(string persistentString)
+        private PropertiesForm CreatePropertiesForm(string persistentString)
         {
-            _propertyForm = new PropertyForm(this);
-            return _propertyForm;
+            _propertiesForm = new PropertiesForm(this);
+            return _propertiesForm;
+        }
+
+        public void DestroyPropertiesForm()
+        {
+            if (_propertiesForm != null)
+            {
+                _propertiesForm.Close();
+                _propertiesForm = null;
+            }
         }
 
         public void PotentialPropertySheetOwnerGotFocus(object sender, EventArgs e)
         {
-            if ( !(_propertyForm is { Visible: true }) ) return;
+            if ( !(_propertiesForm is { Visible: true }) ) return;
 
             if (sender is IPropertySheetOwner owner)
             {
-                _propertyForm.PropertyGrid.SelectedObject = owner.GetProperties();
+                _propertiesForm.PropertyGrid.SelectedObject = owner.GetProperties();
             }
             else
             {
-                _propertyForm.PropertyGrid.SelectedObject = null;
+                _propertiesForm.PropertyGrid.SelectedObject = null;
             }
         }
 

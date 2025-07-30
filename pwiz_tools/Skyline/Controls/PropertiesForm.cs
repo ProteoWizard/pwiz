@@ -23,15 +23,15 @@ using System.Windows.Forms;
 
 namespace pwiz.Skyline.Controls
 {
-    public partial class PropertyForm : DockableFormEx
+    public partial class PropertiesForm : DockableFormEx
     {
-        private PropertyForm()
+        private PropertiesForm()
         {
             InitializeComponent();
             HideOnClose = true; // Hide the form when closed, but do not dispose it
         }
 
-        public PropertyForm(SkylineWindow skylineWindow) : this()
+        public PropertiesForm(SkylineWindow skylineWindow) : this()
         {
             SkylineWindow = skylineWindow;
         }

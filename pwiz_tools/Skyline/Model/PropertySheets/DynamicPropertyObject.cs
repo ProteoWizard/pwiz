@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Reflection;
 
 namespace pwiz.Skyline.Model.PropertySheets
 {
@@ -40,52 +39,23 @@ namespace pwiz.Skyline.Model.PropertySheets
         private readonly List<PropertyDescriptor> _propertyDescriptors = new List<PropertyDescriptor>();
         private readonly Dictionary<string, object> _values = new Dictionary<string, object>(StringComparer.Ordinal);
 
-        public void AddProperty(
+        private void AddProperty(
             string name,
             Type type,
             object initialValue = null,
             string category = null,
-            string displayName = null)
+            string displayName = null,
+            string description = null)
         {
             var descriptor = new DynamicPropertyDescriptor(
                 name,
                 type,
                 category,
-                displayName);
+                displayName,
+                description);
 
             _propertyDescriptors.Add(descriptor);
             _values[name] = initialValue;
-        }
-
-        private const string DISPLAYNAME_PREFIX = "DisplayName_";
-        public void AddPropertiesFromAnnotatedObject(object source)
-        {
-            var sourceType = source.GetType();
-            var props = sourceType.GetProperties(BindingFlags.Instance | BindingFlags.Public);
-
-            foreach (var prop in props)
-            {
-                if (prop.GetCustomAttribute<ContainsViewablePropertiesAttribute>() != null)
-                    AddPropertiesFromAnnotatedObject(prop.GetValue(source));
-
-                var attr = prop.GetCustomAttribute<PropertyAttribute>();
-                if (attr == null)
-                    continue;
-
-                var typeAttr = prop.GetCustomAttribute<PropertyTypeAttribute>();
-
-                var value = prop.GetValue(source);
-
-                var displayName = PropertySheetResources.ResourceManager.GetString(DISPLAYNAME_PREFIX + prop.Name);
-
-                AddProperty(
-                    name: prop.Name,
-                    type: typeAttr != null ? typeAttr.Type : prop.PropertyType,
-                    initialValue: typeAttr != null ? typeAttr.GetValue(value) : value,
-                    category: attr.Category,
-                    displayName: displayName
-                );
-            }
         }
 
         public object GetValue(string propertyName) =>
@@ -127,17 +97,20 @@ namespace pwiz.Skyline.Model.PropertySheets
         private readonly Type _propertyType;
         private readonly string _category;
         private readonly string _displayName;
+        private readonly string _description;
 
         public DynamicPropertyDescriptor(
             string name,
             Type propertyType,
             string category = null,
-            string displayName = null)
+            string displayName = null,
+            string description = null)
             : base(name, null)
         {
             _propertyType = propertyType;
             _category = category;
             _displayName = displayName;
+            _description = description;
         }
 
         // Required overrides for PropertyDescriptor.
@@ -146,7 +119,7 @@ namespace pwiz.Skyline.Model.PropertySheets
         public override object GetValue(object component)
             => ((DynamicPropertyObject)component).GetValue(Name);
 
-        public override bool IsReadOnly => true;
+        public override bool IsReadOnly => false;
         public override Type PropertyType => _propertyType;
 
         public override void ResetValue(object component) { }
@@ -161,5 +134,6 @@ namespace pwiz.Skyline.Model.PropertySheets
 
         public override string Category => _category ?? base.Category;
         public override string DisplayName => _displayName ?? Name;
+        public override string Description => _description ?? base.Description;
     }
 }
