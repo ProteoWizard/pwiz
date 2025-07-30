@@ -208,6 +208,10 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         public ResultFileAlignments ChangeDocument(AlignmentTarget target, SrmDocument newDocument, ICollection<MsDataFileUri> dataFiles, ILoadMonitor loadMonitor, ref IProgressStatus status)
         {
+            if (!newDocument.Settings.HasResults)
+            {
+                return EMPTY;
+            }
             var result = ChangeProp(ImClone(this), im =>
             {
                 im.AlignmentTarget = target;
