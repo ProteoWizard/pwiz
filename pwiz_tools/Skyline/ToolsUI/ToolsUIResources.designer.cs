@@ -434,6 +434,15 @@ namespace pwiz.Skyline.ToolsUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Account could not be authenticated, please check credentials and try again..
+        /// </summary>
+        public static string EditRemoteAccountDlg_TestSettings_Account_credentials_not_valid {
+            get {
+                return ResourceManager.GetString("EditRemoteAccountDlg_TestSettings_Account_credentials_not_valid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Settings are correct.
         /// </summary>
         public static string EditRemoteAccountDlg_TestSettings_Settings_are_correct {
