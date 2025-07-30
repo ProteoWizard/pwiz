@@ -17,6 +17,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Net;
@@ -285,14 +286,8 @@ namespace pwiz.Skyline.FileUI
 
             if (isCanceled)
                 return;
-
-            if (result.IsSuccess)
-            {
-                PublishedDocument = result.Value;
-
-                MessageDlg.Show(parent, ArdiaResources.FileUpload_Success);
-            }
-            else
+            
+            if (result.IsFailure)
             {
                 string message;
                 if (result.ErrorStatusCode == HttpStatusCode.Unauthorized)
@@ -300,7 +295,24 @@ namespace pwiz.Skyline.FileUI
                 else message = ArdiaResources.FileUpload_Error;
 
                 MessageDlg.ShowWithExceptionAndNetworkDetail(parent, message, result.ErrorMessage, result.ErrorException);
+                return;
             }
+
+            PublishedDocument = result.Value;
+
+            var successMessage = ArdiaResources.FileUpload_Success_OpenDataExplorer;
+            if (MultiButtonMsgDlg.Show(parent, successMessage, MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false) == DialogResult.No)
+                return;
+
+            var getUrlResult = Client.GetFolderByGetParentFolderByPath(DestinationPath);
+            if (getUrlResult.IsFailure)
+            {
+                var message = result.ErrorStatusCode == HttpStatusCode.Unauthorized ? ArdiaResources.Error_InvalidToken : ArdiaResources.Error_StatusCode_Unexpected;
+                MessageDlg.ShowWithExceptionAndNetworkDetail(parent, message, getUrlResult.ErrorMessage, getUrlResult.ErrorException);
+                return;
+            }
+
+            Process.Start(getUrlResult.Value.Url.ToString());
         }
 
         public TreeNode CreateFolder()
