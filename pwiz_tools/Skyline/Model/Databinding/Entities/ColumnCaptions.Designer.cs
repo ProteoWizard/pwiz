@@ -934,6 +934,78 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Exemplary End Time.
+        /// </summary>
+        public static string ExemplaryEndTime {
+            get {
+                return ResourceManager.GetString("ExemplaryEndTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exemplary File Path.
+        /// </summary>
+        public static string ExemplaryFilePath {
+            get {
+                return ResourceManager.GetString("ExemplaryFilePath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exemplary Library Name.
+        /// </summary>
+        public static string ExemplaryLibraryName {
+            get {
+                return ResourceManager.GetString("ExemplaryLibraryName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exemplary Peak.
+        /// </summary>
+        public static string ExemplaryPeak {
+            get {
+                return ResourceManager.GetString("ExemplaryPeak", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exemplary Replicate Name.
+        /// </summary>
+        public static string ExemplaryReplicateName {
+            get {
+                return ResourceManager.GetString("ExemplaryReplicateName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exemplary Retention Time.
+        /// </summary>
+        public static string ExemplaryRetentionTime {
+            get {
+                return ResourceManager.GetString("ExemplaryRetentionTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exemplary Score.
+        /// </summary>
+        public static string ExemplaryScore {
+            get {
+                return ResourceManager.GetString("ExemplaryScore", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exemplary Start Time.
+        /// </summary>
+        public static string ExemplaryStartTime {
+            get {
+                return ResourceManager.GetString("ExemplaryStartTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Explicit Analyte Concentration.
         /// </summary>
         public static string ExplicitAnalyteConcentration {
@@ -2581,6 +2653,51 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Original End Time.
+        /// </summary>
+        public static string OriginalEndTime {
+            get {
+                return ResourceManager.GetString("OriginalEndTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Original Peak.
+        /// </summary>
+        public static string OriginalPeak {
+            get {
+                return ResourceManager.GetString("OriginalPeak", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Original Retention Time.
+        /// </summary>
+        public static string OriginalRetentionTime {
+            get {
+                return ResourceManager.GetString("OriginalRetentionTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Original Score.
+        /// </summary>
+        public static string OriginalScore {
+            get {
+                return ResourceManager.GetString("OriginalScore", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Original Start Time.
+        /// </summary>
+        public static string OriginalStartTime {
+            get {
+                return ResourceManager.GetString("OriginalStartTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Peak Group End Time.
         /// </summary>
         public static string PeakGroupEndTime {
@@ -3558,6 +3675,51 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string Reason {
             get {
                 return ResourceManager.GetString("Reason", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reintegrated End Time.
+        /// </summary>
+        public static string ReintegratedEndTime {
+            get {
+                return ResourceManager.GetString("ReintegratedEndTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reintegrated Peak.
+        /// </summary>
+        public static string ReintegratedPeak {
+            get {
+                return ResourceManager.GetString("ReintegratedPeak", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reintegrated Retention Time.
+        /// </summary>
+        public static string ReintegratedRetentionTime {
+            get {
+                return ResourceManager.GetString("ReintegratedRetentionTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reintegrated Score.
+        /// </summary>
+        public static string ReintegratedScore {
+            get {
+                return ResourceManager.GetString("ReintegratedScore", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reintegrated Start Time.
+        /// </summary>
+        public static string ReintegratedStartTime {
+            get {
+                return ResourceManager.GetString("ReintegratedStartTime", resourceCulture);
             }
         }
         
