@@ -139,39 +139,6 @@ namespace pwiz.SkylineTestConnected
             RunFunctionalTest();
         }
 
-        /*[TestMethod]
-        public void ConsoleArdiaImportTest()
-        {
-            TestFilesZip = @"TestConnected\ArdiaFunctionalTest.zip";
-            TestFilesDirs = new[] { new TestFilesDir(TestContext, TestFilesZip) };
-
-            string docPath = TestFilesDir.GetTestPath("small.sky");
-
-            _account = ArdiaTestUtil.GetTestAccount();
-            Settings.Default.RemoteAccountList.Add(_account);
-            _openPaths = SmallPaths;
-            var file1 = new ArdiaUrl(
-                "ardia:path=Skyline%2FSmall%2520Files%2FUracil_Caffeine%2528Water%2529_Inj_Det_2_04&server=https%3A%2F%2Fhyperbridge.cmdtest.thermofisher.com&username=chambem2%40uw.edu&id=71b1450c-5edf-4ba9-9b61-0a0a1f14c8d7&resourceKey=sequences%2F6cfd3b36-3d31-4142-8d05-b5437f3740ec&storageId=2024%2F04%2F10%2Ff22f87fc-b61e-4c95-8a04-ce288138989f.raw&rawName=Uracil_Caffeine%28Water%29_Inj_Det_2_04.raw&rawSize=208048");
-            var file2 = new ArdiaUrl(
-                "ardia:path=Skyline%2FSmall%2520Files%2FReserpine_10%2520pg_%25C2%25B5L_2_08&server=https%3A%2F%2Fhyperbridge.cmdtest.thermofisher.com&username=chambem2%40uw.edu&id=455ea870-b57b-4a12-8c2b-eb814c38c12b&resourceKey=sequences%2F6cfd3b36-3d31-4142-8d05-b5437f3740ec&storageId=2024%2F04%2F10%2Fa24d9ecf-679b-4363-b934-4b8a88bfbcd9.raw&rawName=Reserpine_10%20pg_%C2%B5L_2_08.raw&rawSize=130452");
-
-            // arguments that would normally be quoted on the command-line shouldn't be quoted here
-            var settings = new[]
-            {
-                "--in=" + docPath,
-                "--import-file=" + file1,
-                "--import-file=" + file2,
-                "--save"
-            };
-
-            string output = RunCommand(settings);
-            StringAssert.Contains(output, "Imported file ____");
-
-            SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
-            foreach(var path in _openPaths.Last())
-                Assert.IsTrue(doc.MeasuredResults.MSDataFilePaths.Any(p => p.GetFileName() == path));
-        }*/
-
         protected override void DoTest()
         {
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("caffeicquinic acid.sky")));
@@ -184,8 +151,6 @@ namespace pwiz.SkylineTestConnected
             var testSuccessfulDlg = ShowDialog<MessageDlg>(() => editAccountDlg.TestSettings());
             OkDialog(testSuccessfulDlg, testSuccessfulDlg.OkDialog);
             OkDialog(editAccountDlg, editAccountDlg.OkDialog);
-
-            // PauseTest();
 
             foreach (var paths in _openPaths)
                 OpenFile(openDataSourceDialog, paths);
