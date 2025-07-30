@@ -40,7 +40,9 @@ namespace pwiz.SkylineTestConnected
     /// root directory:
     ///
     ///     perftests/TestConnected-ArdiaImportResultsTest.zip
-    /// 
+    ///
+    /// Use Ardia's "Upload Files" button to upload the Small/ directory. This creates the Small
+    /// sequence and also uploads two files - BSA_min_21 and caffeicquinic acid MSMS.
     /// </summary>
     [TestClass]
     public class ArdiaImportResultsTest : AbstractFunctionalTestEx
