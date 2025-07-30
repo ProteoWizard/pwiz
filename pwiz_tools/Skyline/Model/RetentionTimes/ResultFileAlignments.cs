@@ -132,9 +132,6 @@ namespace pwiz.Skyline.Model.RetentionTimes
             }
         }
 
-        public AlignmentTarget.MedianDocumentRetentionTimes MedianDocumentRetentionTimesTarget { get; private set; }
-
-
         public static Dictionary<MsDataFileUri, AlignmentSource> GetAlignmentSources(SrmDocument document, ICollection<MsDataFileUri> dataFileUris)
         {
             var result = new Dictionary<MsDataFileUri, AlignmentSource>();
@@ -217,17 +214,12 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 im._documentKey = new DocumentKey(newDocument);
             });
             var newSources = target == null ? new Dictionary<MsDataFileUri, AlignmentSource>() : GetAlignmentSources(newDocument, dataFiles);
-            var medianRetentionTimesTarget = MedianDocumentRetentionTimesTarget;
             if (CollectionUtil.EqualsDeep(_alignmentSources, newSources))
             {
                 if (Equals(target, AlignmentTarget))
                 {
                     return result;
                 }
-            }
-            else
-            {
-                medianRetentionTimesTarget = new AlignmentTarget.MedianDocumentRetentionTimes(newSources.Values);
             }
             var missingSources = new List<AlignmentSource>();
             var newAlignmentFunctions = new Dictionary<AlignmentSource, PiecewiseLinearMap>();
@@ -250,16 +242,14 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 }
             }
 
-            if (missingSources.Count == 0)
+            if (missingSources.Count == 0 || target == null)
             {
                 return ChangeProp(result, im =>
                 {
                     im._alignmentSources = newSources;
                     im._alignmentFunctions = newAlignmentFunctions;
-                    im.MedianDocumentRetentionTimesTarget = medianRetentionTimesTarget;
                 });
             }
-            target ??= medianRetentionTimesTarget;
 
             using var cancellationTokenSource = new PollingCancellationToken(() => loadMonitor.IsCanceled)
             {
@@ -284,7 +274,6 @@ namespace pwiz.Skyline.Model.RetentionTimes
             {
                 im._alignmentSources = newSources;
                 im._alignmentFunctions = newAlignmentFunctions;
-                im.MedianDocumentRetentionTimesTarget = medianRetentionTimesTarget;
             });
         }
 
@@ -336,6 +325,10 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         public bool IsUpToDate(SrmDocument document)
         {
+            if (!document.Settings.HasResults)
+            {
+                return Equals(EMPTY);
+            }
             var newAlignmentTarget = AlignmentTarget.GetAlignmentTarget(document);
             if (!Equals(newAlignmentTarget, AlignmentTarget))
             {
@@ -351,7 +344,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         protected bool Equals(ResultFileAlignments other)
         {
-            return CollectionUtil.EqualsDeep(_alignmentSources, other._alignmentSources) && CollectionUtil.EqualsDeep(_alignmentFunctions, other._alignmentFunctions) && Equals(AlignmentTarget, other.AlignmentTarget) && Equals(MedianDocumentRetentionTimesTarget, other.MedianDocumentRetentionTimesTarget);
+            return CollectionUtil.EqualsDeep(_alignmentSources, other._alignmentSources) && CollectionUtil.EqualsDeep(_alignmentFunctions, other._alignmentFunctions) && Equals(AlignmentTarget, other.AlignmentTarget);
         }
 
         public override bool Equals(object obj)

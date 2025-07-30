@@ -53,7 +53,8 @@ namespace pwiz.SkylineTestFunctional
                 peptideSettingsUi.OkDialog();
             });
             WaitForDocumentLoaded();
-            Assert.AreEqual(null, SkylineWindow.Document.Settings.DocumentRetentionTimes.AlignmentTarget);
+            Assert.IsTrue(SkylineWindow.Document.Settings.TryGetAlignmentTarget(out var alignmentTarget));
+            Assert.IsNull(alignmentTarget);
 
             RunDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, peptideSettingsUi =>
             {
@@ -61,8 +62,7 @@ namespace pwiz.SkylineTestFunctional
                 peptideSettingsUi.OkDialog();
             });
             WaitForDocumentLoaded();
-            var alignmentTarget = SkylineWindow.Document.Settings.DocumentRetentionTimes.AlignmentTarget;
-            Assert.IsNotNull(alignmentTarget);
+            Assert.IsTrue(SkylineWindow.Document.Settings.TryGetAlignmentTarget(out alignmentTarget));
             Assert.IsInstanceOfType(alignmentTarget, typeof(AlignmentTarget.LibraryTarget));
 
             RunDlg<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog, reintegrateDlg =>

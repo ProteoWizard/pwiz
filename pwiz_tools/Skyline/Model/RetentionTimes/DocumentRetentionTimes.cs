@@ -70,7 +70,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 libraryAlignmentValue.Alignments.GetAlignmentFunction(file, true) != null));
         }
 
-        public AlignmentTarget AlignmentTarget { get; private set; }
+        public AlignmentTarget.MedianDocumentRetentionTimes MedianDocumentRetentionTimes { get; private set; }
 
         private static string IsNotLoadedExplained(AlignmentTarget alignmentTarget, SrmSettings srmSettings)
         {
@@ -95,7 +95,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         public static string IsNotLoadedExplained(SrmDocument document)
         {
-            var targetSpec = document.Settings.GetAlignmentTarget();
+            var targetSpec = document.Settings.GetAlignmentTargetSpec();
             if (!targetSpec.TryGetAlignmentTarget(document, out var target))
             {
                 return null;
@@ -139,7 +139,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
             if (ReferenceEquals(this, other)) return true;
             return CollectionUtil.EqualsDeep(_libraryAlignments, other._libraryAlignments)
                    && Equals(ResultFileAlignments, other.ResultFileAlignments)
-                   && Equals(AlignmentTarget, other.AlignmentTarget);
+                   && Equals(MedianDocumentRetentionTimes, other.MedianDocumentRetentionTimes);
 
         }
 
@@ -157,7 +157,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
             {
                 int result = ResultFileAlignments.GetHashCode();
                 result = (result * 397) ^ CollectionUtil.GetHashCodeDeep(_libraryAlignments);
-                result = (result * 397) ^ (AlignmentTarget?.GetHashCode() ?? 0);
+                result = (result * 397) ^ (MedianDocumentRetentionTimes?.GetHashCode() ?? 0);
                 return result;
             }
         }
@@ -369,28 +369,9 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 im => im._libraryAlignments = newEntries.ToDictionary(kvp => kvp.Key, kvp => kvp.Value));
         }
 
-        public DocumentRetentionTimes DumpStaleAlignments(SrmDocument document)
-        {
-            if (_libraryAlignments.Count == 0)
-            {
-                return this;
-            }
-
-            var newParams = GetAlignmentParams(AlignmentTarget, document.Settings);
-            var newAlignments = _libraryAlignments.Where(kvp =>
-                    newParams.TryGetValue(kvp.Key, out var paramValue) && false != paramValue?.Equals(kvp.Value.Param))
-                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-            if (newAlignments.Count == _libraryAlignments.Count)
-            {
-                return this;
-            }
-
-            return ChangeProp(ImClone(this), im => im._libraryAlignments = newAlignments);
-        }
-
         public IEnumerable<LibraryAlignmentParam> GetMissingAlignments(SrmSettings settings)
         {
-            var dictParams = GetAlignmentParams(AlignmentTarget, settings);
+            var dictParams = GetAlignmentParams(null, settings);
             if (dictParams == null)
             {
                 yield break;
@@ -407,6 +388,10 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         public Dictionary<string, LibraryAlignmentParam> GetAlignmentParams(AlignmentTarget alignmentTarget, SrmSettings settings)
         {
+            if (!TryGetAlignmentTarget(settings, ref alignmentTarget))
+            {
+                return null;
+            }
             var dict = new Dictionary<string, LibraryAlignmentParam>();
             if (!settings.HasResults || alignmentTarget == null)
             {
@@ -435,6 +420,22 @@ namespace pwiz.Skyline.Model.RetentionTimes
             }
 
             return dict;
+        }
+
+        private bool TryGetAlignmentTarget(SrmSettings settings, ref AlignmentTarget alignmentTarget)
+        {
+            if (alignmentTarget != null)
+            {
+                return true;
+            }
+            var targetSpec = settings.GetAlignmentTargetSpec();
+            if (targetSpec.IsChromatogramPeaks)
+            {
+                alignmentTarget = MedianDocumentRetentionTimes;
+                return alignmentTarget != null;
+            }
+
+            return targetSpec.TryGetAlignmentTarget(settings, out alignmentTarget);
         }
 
         public class LibraryAlignmentParam : Immutable
@@ -560,11 +561,14 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         public DocumentRetentionTimes UpdateFromLoadedSettings(AlignmentTarget alignmentTarget, SrmSettings settings)
         {
-            bool anyChanges = !Equals(alignmentTarget, AlignmentTarget);
-            if (!anyChanges)
+            var newMedianDocumentRetentionTimes = alignmentTarget as AlignmentTarget.MedianDocumentRetentionTimes;
+            if (Equals(newMedianDocumentRetentionTimes, MedianDocumentRetentionTimes))
             {
-                alignmentTarget = AlignmentTarget;
+                newMedianDocumentRetentionTimes = MedianDocumentRetentionTimes;
+                alignmentTarget = newMedianDocumentRetentionTimes ?? alignmentTarget;
             }
+
+            bool anyChanges = !ReferenceEquals(newMedianDocumentRetentionTimes, MedianDocumentRetentionTimes);
             if (_libraryAlignments.Count == 0 && !anyChanges)
             {
                 return null;
@@ -601,7 +605,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
             {
                 return ChangeProp(ImClone(this), im =>
                 {
-                    im.AlignmentTarget = alignmentTarget;
+                    im.MedianDocumentRetentionTimes = newMedianDocumentRetentionTimes;
                     im._libraryAlignments = newLibraries;
                 });
             }
@@ -617,7 +621,15 @@ namespace pwiz.Skyline.Model.RetentionTimes
             }
             return ChangeProp(ImClone(this), im =>
             {
-                im.ResultFileAlignments = new ResultFileAlignments(document, _deserializedAlignmentFunctions, GetDataFilesWithoutLibraryAlignments(document.MeasuredResults).ToHashSet());
+                if (document.Settings.HasResults)
+                {
+                    im.ResultFileAlignments = new ResultFileAlignments(document, _deserializedAlignmentFunctions,
+                        GetDataFilesWithoutLibraryAlignments(document.MeasuredResults).ToHashSet());
+                }
+                else
+                {
+                    im.ResultFileAlignments = ResultFileAlignments.EMPTY;
+                }
                 im._deserializedAlignmentFunctions = null;
             });
         }

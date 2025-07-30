@@ -235,7 +235,8 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         public static AlignmentTarget GetAlignmentTarget(SrmDocument document)
         {
-            return document.Settings.DocumentRetentionTimes.AlignmentTarget;
+            document.Settings.GetAlignmentTargetSpec().TryGetAlignmentTarget(document, out var target);
+            return target;
         }
 
         /// <summary>
@@ -249,19 +250,12 @@ namespace pwiz.Skyline.Model.RetentionTimes
         /// </summary>
         public static bool TryGetAlignmentTarget(SrmSettings settings, out AlignmentTarget alignmentTarget)
         {
-            if (!settings.HasResults)
-            {
-                alignmentTarget = null;
-                return true;
-            }
-
-            var targetSpec = settings.GetAlignmentTarget();
-            return targetSpec.TryGetAlignmentTarget(settings, out alignmentTarget);
+            return settings.TryGetAlignmentTarget(out alignmentTarget);
         }
 
         public static bool TryGetCurrentAlignmentTarget(SrmDocument document, out AlignmentTarget alignmentTarget)
         {
-            var alignmentTargetSpec = document.Settings.GetAlignmentTarget();
+            var alignmentTargetSpec = document.Settings.GetAlignmentTargetSpec();
             return alignmentTargetSpec.TryGetAlignmentTarget(document, out alignmentTarget);
         }
 

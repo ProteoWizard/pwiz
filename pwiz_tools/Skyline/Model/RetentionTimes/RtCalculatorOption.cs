@@ -220,9 +220,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
             }
             protected override AlignmentTarget GetAlignmentTarget(SrmSettings settings, ImmutableList<RetentionScoreCalculatorSpec> calculators)
             {
-                return settings.DocumentRetentionTimes.AlignmentTarget as
-                    AlignmentTarget.MedianDocumentRetentionTimes ?? settings.DocumentRetentionTimes
-                    .ResultFileAlignments.MedianDocumentRetentionTimesTarget;
+                return settings.DocumentRetentionTimes.MedianDocumentRetentionTimes;
             }
  
             protected override AlignmentTarget GetAlignmentTarget(SrmDocument document, ImmutableList<RetentionScoreCalculatorSpec> calculators, bool ensureCurrent)

@@ -277,5 +277,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
             alignmentTarget = option.GetAlignmentTarget(document.Settings);
             return alignmentTarget != null;
         }
+
+        public bool IsChromatogramPeaks => Type == ChromatogramPeaks.Type;
     }
 }

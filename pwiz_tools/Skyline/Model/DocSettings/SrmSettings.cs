@@ -2133,9 +2133,21 @@ namespace pwiz.Skyline.Model.DocSettings
                 Equals(chromatogramGroupInfo.FilePath, dataFilePath));
         }
 
-        public AlignmentTargetSpec GetAlignmentTarget()
+        public AlignmentTargetSpec GetAlignmentTargetSpec()
         {
             return PeptideSettings.Imputation?.AlignmentTarget ?? AlignmentTargetSpec.Default;
+        }
+
+        public bool TryGetAlignmentTarget(out AlignmentTarget alignmentTarget)
+        {
+            var spec = GetAlignmentTargetSpec();
+            if (spec.IsChromatogramPeaks)
+            {
+                alignmentTarget = DocumentRetentionTimes.MedianDocumentRetentionTimes;
+                return alignmentTarget != null;
+            }
+
+            return spec.TryGetAlignmentTarget(this, out alignmentTarget);
         }
 
         #region Implementation of IXmlSerializable

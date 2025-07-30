@@ -33,7 +33,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
     {
         protected override bool StateChanged(SrmDocument document, SrmDocument previous)
         {
-            if (AlignmentTargetSpec.ChromatogramPeaks.Type == document.Settings.GetAlignmentTarget().Type)
+            if (document.Settings.GetAlignmentTargetSpec().IsChromatogramPeaks)
             {
                 return true;
             }
