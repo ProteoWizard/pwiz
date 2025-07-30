@@ -158,7 +158,6 @@
             this.userInterfaceToolStripMenuItem,
             this.toolStripSeparator1,
             this.viewFilesMenuItem,
-            this.viewPropertiesMenuItem,
             this.toolStripSeparator41,
             this.liveReportsMenuItem,
             this.librariesMenuItem,
@@ -176,6 +175,7 @@
             this.massErrorsMenuItem,
             this.calibrationCurveMenuItem,
             this.toolStripSeparator36,
+            this.viewPropertiesMenuItem,
             this.toolBarToolStripMenuItem,
             this.statusToolStripMenuItem});
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";

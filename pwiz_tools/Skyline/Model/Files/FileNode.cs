@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.IO;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.PropertySheets;
 
 /*
   (1) How to check whether a file exists in a separate thread? Where to store file states?
@@ -81,16 +82,22 @@ namespace pwiz.Skyline.Model.Files
 
         internal IDocumentContainer DocumentContainer { get; }
         internal SrmDocument Document => DocumentContainer.Document;
-        internal string DocumentPath => DocumentContainer.DocumentFilePath;
+        [FileProperty]
+        public string DocumentPath => DocumentContainer.DocumentFilePath;
 
         public IdentityPath IdentityPath { get; }
         public virtual bool IsBackedByFile => false;
         public virtual bool RequiresSavedSkylineDocument => false;
 
         public abstract Immutable Immutable { get; }
+        [FileProperty]
         public abstract string Name { get; }
+        [FileProperty]
         public abstract string FilePath { get; }
+        [FileProperty]
         public virtual string FileName => Path.GetFileName(FilePath);
+        [FileProperty]
+        public string FileType => GetType().Name;
 
         public ImageId ImageAvailable { get; }
         public ImageId ImageMissing { get; }

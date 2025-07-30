@@ -19,6 +19,7 @@ using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.PropertySheets;
 using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.Files
@@ -160,7 +161,8 @@ namespace pwiz.Skyline.Model.Files
             return ReferenceEquals(ChromatogramSet, replicate.ChromatogramSet);
         }
 
-        private ChromatogramSet ChromatogramSet
+        [ContainsViewableProperties]
+        public ChromatogramSet ChromatogramSet
         {
             get
             {

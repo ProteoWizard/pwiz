@@ -16,25 +16,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
+using pwiz.CommonMsData.RemoteApi;
+using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
+using pwiz.Skyline.Model.DocSettings.MetadataExtraction;
+using pwiz.Skyline.Model.IonMobility;
+using pwiz.Skyline.Model.PropertySheets;
+using pwiz.Skyline.Model.RetentionTimes;
+using pwiz.Skyline.Model.Serialization;
+using pwiz.Skyline.Util;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
-using pwiz.Common.Chemistry;
-using pwiz.Common.Collections;
-using pwiz.Common.SystemUtil;
-using pwiz.CommonMsData;
-using pwiz.ProteowizardWrapper;
-using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
-using pwiz.Skyline.Model.DocSettings.MetadataExtraction;
-using pwiz.Skyline.Model.IonMobility;
-using pwiz.CommonMsData.RemoteApi;
-using pwiz.Skyline.Model.RetentionTimes;
-using pwiz.Skyline.Model.Serialization;
-using pwiz.Skyline.Util;
 using Array = System.Array;
 
 namespace pwiz.Skyline.Model.Results
@@ -500,12 +501,17 @@ namespace pwiz.Skyline.Model.Results
             return (ChromFileInfoId) (ordinalIndex != -1 ? MSDataFileInfos[ordinalIndex].Id : null);
         }
 
+        [ChromatogramProperty]
         public double? AnalyteConcentration { get; private set; }
 
+        [ChromatogramProperty]
         public double SampleDilutionFactor { get; private set; }
 
+        [ChromatogramProperty]
+        [StringPropertyType]
         public SampleType SampleType { get; private set; }
 
+        [ChromatogramProperty]
         public string BatchName { get; private set; }
 
         #region Property change methods

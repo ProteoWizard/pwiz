@@ -915,7 +915,7 @@ namespace pwiz.Skyline.Menus
         {
             viewTargetsMenuItem.Checked = SkylineWindow.SequenceTreeFormIsVisible;
             viewFilesMenuItem.Checked = SkylineWindow.FilesTreeFormIsVisible;
-            viewPropertiesMenuItem.Checked = SkylineWindow.PropertiesFormIsVisible;
+            viewPropertiesMenuItem.Checked = SkylineWindow.PropertyFormIsVisible;
             viewModificationsMenuItem.DropDownItems.Clear();
             var currentOption = DisplayModificationOption.Current;
             foreach (var opt in DisplayModificationOption.All)
@@ -1099,12 +1099,12 @@ namespace pwiz.Skyline.Menus
 
             var isChecked = toolStripMenuItem.Checked;
 
-            ShowPropertiesWindow(isChecked);
+            ShowPropertyWindow(isChecked);
         }
 
-        private void ShowPropertiesWindow(bool isChecked)
+        private void ShowPropertyWindow(bool isChecked)
         {
-            SkylineWindow.ShowPropertiesForm(isChecked);
+            SkylineWindow.ShowPropertyForm(isChecked);
         }
     }
 }
