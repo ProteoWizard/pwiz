@@ -163,4 +163,10 @@
   <data name="AlignmentTargetSpec_GetLabel_Default__None_" xml:space="preserve">
 	  <value>Default (None)</value>
   </data>
+  <data name="AlignmentTargetSpec_GetLabel_Retention_time_calculator" xml:space="preserve">
+	  <value>Retention time calculator</value>
+  </data>
+  <data name="AlignmentTargetSpec_GetLabel_RT_calculator__0_" xml:space="preserve">
+	  <value>RT calculator {0}</value>
+  </data>
 </root>

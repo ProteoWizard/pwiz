@@ -207,7 +207,13 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
             if (Type == Calculator.Type)
             {
-                return new RtCalculatorOption.Irt(Name).DisplayName;
+                var name = Name ?? peptideSettings.Prediction.RetentionTime?.Calculator?.Name;
+                if (string.IsNullOrEmpty(name))
+                {
+                    return RetentionTimesResources.AlignmentTargetSpec_GetLabel_Retention_time_calculator;
+                }
+
+                return string.Format(RetentionTimesResources.AlignmentTargetSpec_GetLabel_RT_calculator__0_, name);
             }
 
             if (Type == ChromatogramPeaks.Type)

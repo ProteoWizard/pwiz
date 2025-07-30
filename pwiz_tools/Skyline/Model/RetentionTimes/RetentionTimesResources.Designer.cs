@@ -97,6 +97,24 @@ namespace pwiz.Skyline.Model.RetentionTimes {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Retention time calculator.
+        /// </summary>
+        internal static string AlignmentTargetSpec_GetLabel_Retention_time_calculator {
+            get {
+                return ResourceManager.GetString("AlignmentTargetSpec_GetLabel_Retention_time_calculator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to RT calculator {0}.
+        /// </summary>
+        internal static string AlignmentTargetSpec_GetLabel_RT_calculator__0_ {
+            get {
+                return ResourceManager.GetString("AlignmentTargetSpec_GetLabel_RT_calculator__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Aligning retention times.
         /// </summary>
         internal static string DocumentRetentionTimes_RecalculateAlignments_Aligning_retention_times {
