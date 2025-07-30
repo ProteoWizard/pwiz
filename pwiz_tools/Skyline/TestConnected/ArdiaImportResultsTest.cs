@@ -32,8 +32,18 @@ using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestConnected
 {
+    /// <summary>
+    /// This test expects specific files exist on a remote Ardia server and the test will fail
+    /// if the files cannot be found.
+    ///
+    /// If the files go missing and need to be uploaded again, unzip this archive in the remote server's
+    /// root directory:
+    ///
+    ///     perftests/TestConnected-ArdiaImportResultsTest.zip
+    /// 
+    /// </summary>
     [TestClass]
-    public class ArdiaTest : AbstractFunctionalTestEx
+    public class ArdiaImportResultsTest : AbstractFunctionalTestEx
     {
         private ArdiaAccount _account;
         private List<string[]> _openPaths;
