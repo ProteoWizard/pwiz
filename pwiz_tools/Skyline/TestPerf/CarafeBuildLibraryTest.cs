@@ -45,8 +45,8 @@ namespace TestPerf
     {
         private double MZ_TOLERANCE = 1e-4; 
         private double INTENSITY_TOLERANCE = 1e-1;
-        private double MINIMUM_INTENSITY = 1e-2;
-        private int TOP_N = 0;
+        private double MINIMUM_INTENSITY = 1e-1;
+        private int TOP_N = 5;
         
         /// <summary>
         /// When true Python installation is forced by deleting any old installation
