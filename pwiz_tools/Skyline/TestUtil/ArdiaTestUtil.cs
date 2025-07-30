@@ -26,7 +26,7 @@ namespace pwiz.SkylineTestUtil
     /// </summary>
     public static class ArdiaTestUtil
     {
-        public const string BASE_URL = "https://ardia-core-int.cmdtest.thermofisher.com/";
+        private const string BASE_URL = "https://ardia-core-int.cmdtest.thermofisher.com/";
 
         public enum AccountType
         {

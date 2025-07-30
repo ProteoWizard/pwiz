@@ -41,8 +41,8 @@ namespace pwiz.SkylineTestConnected
         private readonly List<string[]> SmallPaths = new List<string[]>
         {
             new[] { "Skyline" },
-            new[] { "Small Files" },
-            new[] { "Reserpine_10 pg_µL_2_08", "Uracil_Caffeine(Water)_Inj_Det_2_04" }
+            new[] { "Small" },
+            new[] { "BSA_min_21", "caffeicquinic acid MSMS" }
         };
 
         private readonly List<string[]> LargePaths = new List<string[]>
@@ -162,7 +162,7 @@ namespace pwiz.SkylineTestConnected
 
         protected override void DoTest()
         {
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("small.sky")));
+            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("caffeicquinic acid.sky")));
             var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
             var openDataSourceDialog = ShowDialog<OpenDataSourceDialog>(importResultsDlg.OkDialog);
             var editAccountDlg = ShowDialog<EditRemoteAccountDlg>(() => openDataSourceDialog.CurrentDirectory = RemoteUrl.EMPTY);
@@ -193,7 +193,7 @@ namespace pwiz.SkylineTestConnected
             }
 
             RunUI(() => SkylineWindow.SaveDocument());
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("small.sky")));
+            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("caffeicquinic acid.sky")));
 
             if (!_account.DeleteRawAfterImport)
             {
@@ -203,9 +203,20 @@ namespace pwiz.SkylineTestConnected
             }
             
             WaitForDocumentLoaded();
-            RunUI(() => SkylineWindow.SelectElement(ElementRefs.FromObjectReference(ElementLocator.Parse("Molecule:/Molecules/Reserpine"))));
 
-            ClickChromatogram(0.5, 33000);
+            RunUI(() => SkylineWindow.SelectElement(ElementRefs.FromObjectReference(ElementLocator.Parse("Molecule:/Molecules/Caffeicquinic acid"))));
+
+            // Switch to the second Chromatogram graph
+            var graphChrom = SkylineWindow.GetGraphChrom("caffeicquinic acid MSMS");
+            RunUI(() =>
+            {
+                graphChrom.Activate();
+                graphChrom.Focus();
+            });
+
+            // Must pass name here, otherwise ClickChromatogram always chooses the first graph
+            ClickChromatogram(@"caffeicquinic acid MSMS", 0.0092, 3900000);
+
             GraphFullScan graphFullScan = FindOpenForm<GraphFullScan>();
             Assert.IsNotNull(graphFullScan);
             RunUI(() => graphFullScan.Close());
