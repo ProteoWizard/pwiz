@@ -110,6 +110,9 @@ namespace TestPerf
             {
                 GetPerfTestDataURL($@"{TESTDATA_FILE}")
             };
+
+            FreshenTestDataDownloads();
+
             //DownloadTestDataPackage(new SilentProgressMonitor());
 
             var originalInstallationState = PythonInstaller.SimulatedInstallationState;
