@@ -55,6 +55,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             filesTree.LabelEdit = true;
             filesTree.AllowDrop = true;
             filesTree.NodeMouseDoubleClick += FilesTree_TreeNodeMouseDoubleClick;
+            filesTree.NodeMouseClick += FilesTree_NodeMouseClick;
             filesTree.MouseMove += FilesTree_MouseMove;
             filesTree.LostFocus += FilesTree_LostFocus;
             filesTree.BeforeLabelEdit += FilesTree_BeforeLabelEdit;
@@ -414,6 +415,12 @@ namespace pwiz.Skyline.Controls.FilesTree
                     OpenEditBackgroundProteomeDialog(filesTreeNode);
                     break;
             }
+        }
+
+        private void FilesTree_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
+        {
+            var clickedNode = e.Node;
+            SkylineWindow.PotentialPropertySheetOwnerGotFocus(clickedNode, e);
         }
 
         private void FilesTree_OpenContainingFolderMenuItem(object sender, EventArgs e)

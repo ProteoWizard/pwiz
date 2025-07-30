@@ -23,6 +23,8 @@ using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.Files;
+using pwiz.Skyline.Model.PropertySheets;
+using pwiz.Skyline.Model.Results;
 
 // ReSharper disable WrongIndentSize
 namespace pwiz.Skyline.Controls.FilesTree
@@ -34,7 +36,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         not_initialized
     }
 
-    public class FilesTreeNode : TreeNodeMS, ITipProvider
+    public class FilesTreeNode : TreeNodeMS, ITipProvider, IPropertySheetOwner
     {
         private FileNode _model;
 
@@ -298,6 +300,14 @@ namespace pwiz.Skyline.Controls.FilesTree
                 return FileState != FileState.not_initialized;
             // Nodes not backed by files are considered initialized by default
             else return true;
+        }
+
+        public DynamicPropertyObject GetProperties()
+        {
+            var props = new DynamicPropertyObject();
+            props.AddPropertiesFromAnnotatedObject(Model);
+
+            return props;
         }
     }
 }
