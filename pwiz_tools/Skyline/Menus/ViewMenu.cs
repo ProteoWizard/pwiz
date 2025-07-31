@@ -1099,10 +1099,10 @@ namespace pwiz.Skyline.Menus
 
             var isChecked = toolStripMenuItem.Checked;
 
-            ShowPropertyWindow(isChecked);
+            ShowPropertiesWindow(isChecked);
         }
 
-        private void ShowPropertyWindow(bool isChecked)
+        private void ShowPropertiesWindow(bool isChecked)
         {
             SkylineWindow.ShowPropertyForm(isChecked);
         }
