@@ -385,6 +385,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to EI.
+        /// </summary>
+        public static string FullScanAcquisitionMethod_EI {
+            get {
+                return ResourceManager.GetString("FullScanAcquisitionMethod_EI", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to None.
         /// </summary>
         public static string FullScanAcquisitionMethod_None {
