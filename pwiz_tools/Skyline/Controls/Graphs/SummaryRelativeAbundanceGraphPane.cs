@@ -771,7 +771,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 Protein = protein;
                 IdentityPath = protein.IdentityPath;
                 ReplicateAreas = protein.GetProteinAbundances()
-                    .ToLookup(kvp => kvp.Key, kvp => kvp.Value.TransitionSummed);
+                    .ToLookup(kvp => kvp.Key, kvp => kvp.Value.Raw);
             }
 
             public GraphPointData(Peptide peptide)

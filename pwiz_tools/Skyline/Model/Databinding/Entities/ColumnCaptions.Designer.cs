@@ -2248,6 +2248,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Molecule List Abundance Raw.
+        /// </summary>
+        public static string MoleculeListAbundanceRaw {
+            get {
+                return ResourceManager.GetString("MoleculeListAbundanceRaw", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Molecule List Abundance Strict.
         /// </summary>
         public static string MoleculeListAbundanceStrict {
@@ -3216,6 +3225,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string ProteinAbundanceMessage {
             get {
                 return ResourceManager.GetString("ProteinAbundanceMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Protein Abundance Raw.
+        /// </summary>
+        public static string ProteinAbundanceRaw {
+            get {
+                return ResourceManager.GetString("ProteinAbundanceRaw", resourceCulture);
             }
         }
         

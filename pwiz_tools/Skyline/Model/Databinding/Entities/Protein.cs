@@ -19,6 +19,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
@@ -258,7 +260,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
 
             var proteinAbundanceRecords = new Dictionary<int, AbundanceValue>();
-            int transitionCount = DocNode.TransitionCount;
             for (int iReplicate = 0; iReplicate < replicateCount; iReplicate++)
             {
                 var rawAbundance = PeptideQuantifier.SumTransitionQuantities(allTransitionIdentityPaths, replicateQuantities[iReplicate],
@@ -273,29 +274,25 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return proteinAbundanceRecords;
         }
 
+#pragma warning disable CS0612 // Type or member is obsolete
+        [TypeConverter(typeof(TypeConverterImpl))]
         public class AbundanceValue : IAnnotatedValue, IFormattable
         {
-            public AbundanceValue(double transitionAveraged, double transitionSummed, string message)
+            public AbundanceValue(double raw, double transitionSummedTimesNumberOfTransitions, string message)
             {
                 Message = message;
-                TransitionAveraged = transitionAveraged;
-                TransitionSummed = transitionSummed;
-                if (Message == null)
+                Raw = raw;
+                if (message == null)
                 {
-                    Strict = transitionAveraged;
+                    Strict = raw;
                 }
+                TransitionAveraged = raw;
+                TransitionSummed = transitionSummedTimesNumberOfTransitions;
             }
-            [InvariantDisplayName("MoleculeListAbundanceTransitionAveraged")]
-            [ProteomicDisplayName("ProteinAbundanceTransitionAveraged")]
+            [InvariantDisplayName("MoleculeListAbundanceRaw")]
+            [ProteomicDisplayName("ProteinAbundanceRaw")]
             [Format(Formats.GLOBAL_STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
-            public double TransitionAveraged
-            {
-                get; private set;
-            }
-            [InvariantDisplayName("MoleculeListAbundanceTransitionSummed")]
-            [ProteomicDisplayName("ProteinAbundanceTransitionSummed")]
-            [Format(Formats.GLOBAL_STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
-            public double TransitionSummed { get; private set; }
+            public double Raw { get; private set; }
 
             [InvariantDisplayName("MoleculeListAbundanceStrict")]
             [ProteomicDisplayName("ProteinAbundanceStrict")]
@@ -314,16 +311,45 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return Message;
             }
 
+            [InvariantDisplayName("MoleculeListAbundanceTransitionAveraged")]
+            [ProteomicDisplayName("ProteinAbundanceTransitionAveraged")]
+            [Format(Formats.GLOBAL_STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
+            [Obsolete]
+            public double TransitionAveraged
+            {
+                get; private set;
+            }
+            [InvariantDisplayName("MoleculeListAbundanceTransitionSummed")]
+            [ProteomicDisplayName("ProteinAbundanceTransitionSummed")]
+            [Format(Formats.GLOBAL_STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
+            [Obsolete]
+            public double TransitionSummed { get; private set; }
+
             public override string ToString()
             {
-                return AnnotatedDouble.GetPrefix(Message) + TransitionAveraged;
+                return AnnotatedDouble.GetPrefix(Message) + Raw;
             }
 
             public string ToString(string format, IFormatProvider formatProvider)
             {
-                return AnnotatedDouble.GetPrefix(Message) + TransitionAveraged.ToString(format, formatProvider);
+                return AnnotatedDouble.GetPrefix(Message) + Raw.ToString(format, formatProvider);
+            }
+            private class TypeConverterImpl : TypeConverter
+            {
+                private TypeConverter doubleTypeConverter = TypeDescriptor.GetConverter(typeof(double));
+                public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType)
+                {
+                    return doubleTypeConverter.CanConvertTo(context, destinationType);
+                }
+
+                public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
+                {
+                    var doubleValue = ((AnnotatedDouble)value).Raw;
+                    return doubleTypeConverter.ConvertTo(context, culture, doubleValue, destinationType);
+                }
             }
         }
+#pragma warning restore CS0612 // Type or member is obsolete
         private class CachedValues 
             : CachedValues<Protein, ImmutableList<Peptide>, IDictionary<ResultKey, ProteinResult>, IDictionary<int, AbundanceValue>>
         {
