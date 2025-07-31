@@ -1099,6 +1099,9 @@ namespace pwiz.SkylineTestUtil
 
                     if (topN > 0)
                     {
+                        Array.Sort(expectedSpectrum, (s1, s2) => s2.Intensity.CompareTo(s1.Intensity));
+                        Array.Sort(actualSpectrum, (s1, s2) => s2.Intensity.CompareTo(s1.Intensity));
+
                         expectedSpectrum = expectedSpectrum.Take(Math.Min(topN, expectedSpectrum.Length)).ToArray();
                         actualSpectrum  = actualSpectrum.Take(Math.Min(topN, actualSpectrum.Length)).ToArray();
                     }
