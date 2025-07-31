@@ -256,6 +256,11 @@ namespace pwiz.Skyline.Model.RetentionTimes
         public static bool TryGetCurrentAlignmentTarget(SrmDocument document, out AlignmentTarget alignmentTarget)
         {
             var alignmentTargetSpec = document.Settings.GetAlignmentTargetSpec();
+            if (alignmentTargetSpec.IsChromatogramPeaks)
+            {
+                alignmentTarget = new MedianDocumentRetentionTimes(document);
+                return true;
+            }
             return alignmentTargetSpec.TryGetAlignmentTarget(document, out alignmentTarget);
         }
 
