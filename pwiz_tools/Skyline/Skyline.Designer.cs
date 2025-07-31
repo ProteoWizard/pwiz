@@ -523,11 +523,13 @@ namespace pwiz.Skyline
             // 
             // expandSelectionContextMenuItem
             // 
-            this.expandSelectionContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.expandSelectionNoneContextMenuItem,
-            this.expandSelectionProteinsContextMenuItem,
-            this.expandSelectionPeptidesContextMenuItem,
-            this.expandSelectionPrecursorsContextMenuItem});
+            this.expandSelectionContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[]
+            {
+                this.expandSelectionNoneContextMenuItem,
+                this.expandSelectionProteinsContextMenuItem,
+                this.expandSelectionPeptidesContextMenuItem,
+                this.expandSelectionPrecursorsContextMenuItem
+            });
             this.expandSelectionContextMenuItem.Name = "expandSelectionContextMenuItem";
             resources.ApplyResources(this.expandSelectionContextMenuItem, "expandSelectionContextMenuItem");
             // 
@@ -535,29 +537,29 @@ namespace pwiz.Skyline
             // 
             this.expandSelectionNoneContextMenuItem.Name = "expandSelectionNoneContextMenuItem";
             resources.ApplyResources(this.expandSelectionNoneContextMenuItem, "expandSelectionNoneContextMenuItem");
-            this.expandSelectionNoneContextMenuItem.Tag = typeof(pwiz.Skyline.Controls.SeqNode.SrmTreeNodeParent);
             this.expandSelectionNoneContextMenuItem.Click += new System.EventHandler(this.expandSelectionNoneContextMenuItem_Click);
+            this.expandSelectionNoneContextMenuItem.Tag = typeof(SrmTreeNodeParent);
             // 
             // expandSelectionProteinsContextMenuItem
             // 
             this.expandSelectionProteinsContextMenuItem.Name = "expandSelectionProteinsContextMenuItem";
             resources.ApplyResources(this.expandSelectionProteinsContextMenuItem, "expandSelectionProteinsContextMenuItem");
-            this.expandSelectionProteinsContextMenuItem.Tag = typeof(pwiz.Skyline.Controls.SeqNode.PeptideGroupTreeNode);
             this.expandSelectionProteinsContextMenuItem.Click += new System.EventHandler(this.expandSelectionProteinsContextMenuItem_Click);
+            this.expandSelectionProteinsContextMenuItem.Tag = typeof(PeptideGroupTreeNode);
             // 
             // expandSelectionPeptidesContextMenuItem
             // 
             this.expandSelectionPeptidesContextMenuItem.Name = "expandSelectionPeptidesContextMenuItem";
             resources.ApplyResources(this.expandSelectionPeptidesContextMenuItem, "expandSelectionPeptidesContextMenuItem");
-            this.expandSelectionPeptidesContextMenuItem.Tag = typeof(pwiz.Skyline.Controls.SeqNode.PeptideTreeNode);
             this.expandSelectionPeptidesContextMenuItem.Click += new System.EventHandler(this.expandSelectionPeptidesContextMenuItem_Click);
+            this.expandSelectionPeptidesContextMenuItem.Tag = typeof(PeptideTreeNode);
             // 
             // expandSelectionPrecursorsContextMenuItem
             // 
             this.expandSelectionPrecursorsContextMenuItem.Name = "expandSelectionPrecursorsContextMenuItem";
             resources.ApplyResources(this.expandSelectionPrecursorsContextMenuItem, "expandSelectionPrecursorsContextMenuItem");
-            this.expandSelectionPrecursorsContextMenuItem.Tag = typeof(pwiz.Skyline.Controls.SeqNode.TransitionGroupTreeNode);
             this.expandSelectionPrecursorsContextMenuItem.Click += new System.EventHandler(this.expandSelectionPrecursorsContextMenuItem_Click);
+            this.expandSelectionPrecursorsContextMenuItem.Tag = typeof(TransitionGroupTreeNode);
             // 
             // toggleQuantitativeContextMenuItem
             // 
