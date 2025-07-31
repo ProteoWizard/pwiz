@@ -2860,10 +2860,12 @@ namespace pwiz.Skyline.Model.DocSettings
             // If the results changed, then update the results information which has changed
             DiffResults = !EqualExceptAnnotations(settingsNew.MeasuredResults, settingsOld.MeasuredResults);
             // If the integration strategy has changed, then force a full update of all results
-            if (newTran.Integration.IsIntegrateAll != oldTran.Integration.IsIntegrateAll)
+            if (newTran.Integration.IsIntegrateAll != oldTran.Integration.IsIntegrateAll
+                || !Equals(settingsNew.PeptideSettings.Imputation, settingsOld.PeptideSettings.Imputation)
+                || !Equals(settingsNew.DocumentRetentionTimes, settingsOld.DocumentRetentionTimes))
+            {
                 DiffResults = DiffResultsAll = true;
-            if (!Equals(settingsNew.PeptideSettings.Imputation, settingsOld.PeptideSettings.Imputation))
-                DiffResults = DiffResultsAll = true;
+            }
             // If the match tolerance has changed, then force a full update of all results
             if (newTran.Instrument.MzMatchTolerance != oldTran.Instrument.MzMatchTolerance)
                 DiffResults = DiffResultsAll = true;
