@@ -927,7 +927,7 @@ namespace pwiz.Skyline.Menus
             {
                 var originalDocument = DocumentUI;
                 var imputationSettings = DocumentUI.Settings.PeptideSettings.Imputation;
-                if (ImputationSettings.DEFAULT.Equals(imputationSettings))
+                if (!imputationSettings.HasImputation)
                 {
                     MessageDlg.Show(SkylineWindow,
                         MenusResources.EditMenu_ImputePeakBoundaries_);

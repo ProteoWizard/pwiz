@@ -93,7 +93,7 @@ namespace pwiz.Skyline.Model
             }
 
             var imputationSettings = PeakBoundaryImputer?.Document.Settings.PeptideSettings.Imputation ?? ImputationSettings.DEFAULT;
-            if (Equals(ImputationSettings.DEFAULT, imputationSettings))
+            if (!imputationSettings.HasImputation)
             {
                 return bestIndex < 0 ? ChromPeak.EMPTY : chromatogramInfo.GetPeak(bestIndex);
             }

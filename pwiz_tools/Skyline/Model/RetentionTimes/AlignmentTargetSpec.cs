@@ -251,7 +251,8 @@ namespace pwiz.Skyline.Model.RetentionTimes
             }
             if (Type == ChromatogramPeaks.Type)
             {
-                alignmentTarget = new AlignmentTarget.MedianDocumentRetentionTimes(document);
+                alignmentTarget = document.Settings.DocumentRetentionTimes?.MedianDocumentRetentionTimes ??
+                                  new AlignmentTarget.MedianDocumentRetentionTimes(document);
                 return true;
             }
 

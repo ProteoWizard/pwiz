@@ -65,6 +65,14 @@ namespace pwiz.Skyline.Model.DocSettings
                 im => im.AlignmentTarget = Equals(value, AlignmentTargetSpec.Default) ? null : value);
         }
 
+        public bool HasImputation
+        {
+            get
+            {
+                return ImputeMissingPeaks || MaxPeakWidthVariation.HasValue || MaxRtShift.HasValue;
+            }
+        }
+
         protected bool Equals(ImputationSettings other)
         {
             return Nullable.Equals(MaxRtShift, other.MaxRtShift) &&

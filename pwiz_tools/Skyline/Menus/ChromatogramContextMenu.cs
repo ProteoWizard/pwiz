@@ -735,7 +735,7 @@ namespace pwiz.Skyline.Menus
         public static bool IsShowImputedPeak(SrmDocument document)
         {
             return Settings.Default.ShowExemplaryPeakBounds ??
-                   !ImputationSettings.DEFAULT.Equals(document.Settings.PeptideSettings.Imputation);
+                   document.Settings.PeptideSettings.Imputation.HasImputation;
         }
     }
 }
