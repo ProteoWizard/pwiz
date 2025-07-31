@@ -128,6 +128,21 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         public override Brush SelectionBrush => IsCurrentDropTarget() ? new SolidBrush(BackColorMS) : base.SelectionBrush;
 
+        public new Rectangle Bounds
+        {
+            get
+            {
+                var boundsModified = base.Bounds;
+                // Keep this check in-sync with TreeViewMS.WidthCustom
+                if (_widthCustom > 0)
+                {
+                    boundsModified.Width = _widthCustom;
+                }
+        
+                return boundsModified;
+            }
+        }
+
         protected override void DrawFocus(Graphics g)
         {
             if (IsCurrentDropTarget())
