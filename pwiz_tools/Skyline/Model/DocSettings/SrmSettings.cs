@@ -2862,6 +2862,8 @@ namespace pwiz.Skyline.Model.DocSettings
             // If the integration strategy has changed, then force a full update of all results
             if (newTran.Integration.IsIntegrateAll != oldTran.Integration.IsIntegrateAll)
                 DiffResults = DiffResultsAll = true;
+            if (!Equals(settingsNew.PeptideSettings.Imputation, settingsOld.PeptideSettings.Imputation))
+                DiffResults = DiffResultsAll = true;
             // If the match tolerance has changed, then force a full update of all results
             if (newTran.Instrument.MzMatchTolerance != oldTran.Instrument.MzMatchTolerance)
                 DiffResults = DiffResultsAll = true;

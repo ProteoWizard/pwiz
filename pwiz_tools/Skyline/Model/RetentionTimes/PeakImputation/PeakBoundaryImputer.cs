@@ -40,64 +40,31 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
         private readonly Dictionary<MsDataFileUri, AlignmentFunction> _alignmentFunctions =
             new Dictionary<MsDataFileUri, AlignmentFunction>();
 
-        public PeakBoundaryImputer(SrmDocument document) : this(document, null)
+        public PeakBoundaryImputer(SrmSettings settings) : this(settings, null)
+        {
+            
+        }
+        
+        public PeakBoundaryImputer(SrmDocument document) : this(document.Settings, null)
         {
         }
 
-        public PeakBoundaryImputer(SrmDocument document, MProphetResultsHandler mProphetResultsHandler)
+        public PeakBoundaryImputer(SrmSettings settings, MProphetResultsHandler mProphetResultsHandler)
         {
-            Document = document;
-            AlignmentTarget = AlignmentTarget.GetAlignmentTarget(document);
+            Settings = settings;
             MProphetResultsHandler = mProphetResultsHandler;
+            settings.TryGetAlignmentTarget(out var alignmentTarget);
+            AlignmentTarget = alignmentTarget;
+        }
+        
+        public PeakBoundaryImputer(SrmDocument document, MProphetResultsHandler mProphetResultsHandler) : this(document.Settings, mProphetResultsHandler)
+        {
         }
 
-        public SrmDocument Document { get; }
+        public SrmSettings Settings { get; }
         public AlignmentTarget AlignmentTarget { get; }
 
         public MProphetResultsHandler MProphetResultsHandler { get; }
-
-        public PeakBoundaryImputer ChangeDocument(SrmDocument newDocument)
-        {
-            if (ReferenceEquals(newDocument, Document))
-            {
-                return this;
-            }
-
-            var result = new PeakBoundaryImputer(newDocument);
-            IList<KeyValuePair<LibraryInfoKey, LibraryInfo>> libraryInfos;
-            lock (_libraryInfos)
-            {
-                libraryInfos = _libraryInfos.ToList();
-            }
-            var libraries = newDocument.Settings.PeptideSettings.Libraries;
-            foreach (var entry in libraryInfos)
-            {
-                var libraryInfo = entry.Value;
-                var newLibrary = libraries.Libraries.FirstOrDefault(lib => lib?.Name == libraryInfo.Library.Name);
-                if (newLibrary == null || !Equals(newLibrary, libraryInfo.Library))
-                {
-                    continue;
-                }
-
-                if (entry.Key.BatchName != null)
-                {
-                    var newLibraryFiles = new LibraryFiles(newDocument.Settings.GetSpectrumSourceFilesInBatch(newLibrary.LibraryFiles, entry.Key.BatchName));
-                    if (!newLibraryFiles.SequenceEqual(entry.Value.LibraryFiles))
-                    {
-                        continue;
-                    }
-                }
-
-                var newLibraryInfo = libraryInfo.ChangeAlignment(newDocument.Settings.DocumentRetentionTimes
-                    .GetLibraryAlignment(libraryInfo.Library.Name)?.Alignments);
-                if (newLibraryInfo != null)
-                {
-                    result._libraryInfos.Add(entry.Key, newLibraryInfo);
-                }
-            }
-
-            return result;
-        }
 
         private class LibraryInfo
         {
@@ -256,7 +223,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
                     }
                 }
 
-                libraryInfo = new LibraryInfo(library, GetLibraryFilesForBatch(library, batchName), Document.Settings.DocumentRetentionTimes.GetLibraryAlignment(library.Name)?.Alignments);
+                libraryInfo = new LibraryInfo(library, GetLibraryFilesForBatch(library, batchName), Settings.DocumentRetentionTimes.GetLibraryAlignment(library.Name)?.Alignments);
                 _libraryInfos[key] = libraryInfo;
                 return libraryInfo;
             }
@@ -269,20 +236,19 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
                 return library.LibraryFiles;
             }
 
-            return new LibraryFiles(Document.Settings.GetSpectrumSourceFilesInBatch(library.LibraryFiles, batchName));
+            return new LibraryFiles(Settings.GetSpectrumSourceFilesInBatch(library.LibraryFiles, batchName));
         }
 
-        public ImputedPeak GetImputedPeakBounds(CancellationToken cancellationToken, IdentityPath identityPath,
+        public ImputedPeak GetImputedPeakBounds(CancellationToken cancellationToken, PeptideDocNode peptideDocNode,
             ChromatogramSet chromatogramSet, MsDataFileUri filePath)
         {
-            return GetImputedPeakBounds(cancellationToken, identityPath, chromatogramSet, filePath, false);
+            return GetImputedPeakBounds(cancellationToken, peptideDocNode, chromatogramSet, filePath, false);
         }
 
-        private ImputedPeak GetImputedPeakBounds(CancellationToken cancellationToken, IdentityPath identityPath,
+        private ImputedPeak GetImputedPeakBounds(CancellationToken cancellationToken, PeptideDocNode peptideDocNode,
             ChromatogramSet chromatogramSet,
             MsDataFileUri filePath, bool explicitBoundsOnly)
         {
-            var peptideDocNode = (PeptideDocNode)Document.FindNode(identityPath);
             if (peptideDocNode == null)
             {
                 return null;
@@ -298,10 +264,10 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
                 batchNames.Add(chromatogramSet.BatchName);
             }
 
-            var targets = Document.Settings.GetTargets(peptideDocNode).ToImmutable();
+            var targets = Settings.GetTargets(peptideDocNode).ToImmutable();
             foreach (var batchName in batchNames)
             {
-                foreach (var library in Document.Settings.PeptideSettings.Libraries.Libraries)
+                foreach (var library in Settings.PeptideSettings.Libraries.Libraries)
                 {
                     if (library == null)
                     {
@@ -332,7 +298,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
                 return null;
             }
 
-            return GetImputedPeakFromDocument(cancellationToken, batchNames, identityPath, filePath);
+            return GetImputedPeakFromDocument(cancellationToken, batchNames, peptideDocNode, filePath);
         }
 
         private ImputedPeak GetImputedPeakFromLibraryPeak(CancellationToken cancellationToken, LibraryInfo libraryInfo, SourcedPeak exemplaryPeak,
@@ -386,12 +352,12 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
 
         public ExplicitPeakBounds GetExplicitPeakBounds(PeptideDocNode peptideDocNode, ChromatogramSet chromatogramSet, MsDataFileUri filePath)
         {
-            var explicitPeakBounds = Document.Settings.GetExplicitPeakBounds(peptideDocNode, filePath);
+            var explicitPeakBounds = Settings.GetExplicitPeakBounds(peptideDocNode, filePath);
             if (explicitPeakBounds == null)
             {
                 return null;
             }
-            var imputationSettings = Document.Settings.PeptideSettings.Imputation;
+            var imputationSettings = Settings.PeptideSettings.Imputation;
             if (Equals(imputationSettings, ImputationSettings.DEFAULT))
             {
                 return explicitPeakBounds;
@@ -403,12 +369,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
                 return explicitPeakBounds;
             }
 
-            var identityPath = GetIdentityPath(peptideDocNode);
-            if (identityPath == null)
-            {
-                return explicitPeakBounds;
-            }
-            var imputedPeak = GetImputedPeakBounds(CancellationToken.None, identityPath, chromatogramSet, filePath, true);
+            var imputedPeak = GetImputedPeakBounds(CancellationToken.None, peptideDocNode, chromatogramSet, filePath, true);
             if (imputedPeak == null)
             {
                 return explicitPeakBounds;
@@ -452,10 +413,21 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
             return true;
         }
 
-        private ImputedPeak GetImputedPeakFromDocument(CancellationToken cancellationToken, List<string> batchNames, IdentityPath identityPath,
+        public bool IsAcceptable(ChromPeak chromPeak, ImputedPeak imputedPeak)
+        {
+            if (!Settings.PeptideSettings.Imputation.HasImputation)
+            {
+                return true;
+            }
+
+            var peakBounds = chromPeak.IsEmpty ? null : new PeakBounds(chromPeak.StartTime, chromPeak.EndTime);
+            return IsAcceptable(Settings.PeptideSettings.Imputation, peakBounds, imputedPeak);
+        }
+
+        private ImputedPeak GetImputedPeakFromDocument(CancellationToken cancellationToken, List<string> batchNames, PeptideDocNode peptideDocNode,
             MsDataFileUri filePath)
         {
-            var bestPeak = GetBestScoredPeak(identityPath, batchNames);
+            var bestPeak = GetBestScoredPeak(peptideDocNode, batchNames);
             if (bestPeak == null)
             {
                 return null;
@@ -481,16 +453,16 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
             return MakeImputedPeak(sourceAlignment, bestPeak, targetAlignment);
         }
 
-        private SourcedPeak GetBestScoredPeak(IdentityPath identityPath, IList<string> batchNames)
+        private SourcedPeak GetBestScoredPeak(PeptideDocNode peptideDocNode, IList<string> batchNames)
         {
             Dictionary<MsDataFileUri, SourcedPeak> scoredPeaks;
             if (MProphetResultsHandler == null)
             {
-                scoredPeaks = GetScoredPeaks(identityPath);
+                scoredPeaks = GetScoredPeaks(peptideDocNode);
             }
             else
             {
-                scoredPeaks = GetReintegratedPeaks(identityPath);
+                scoredPeaks = GetReintegratedPeaks(peptideDocNode);
             }
             if (scoredPeaks == null || scoredPeaks.Count == 0)
             {
@@ -529,19 +501,18 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
 
         private IEnumerable<MsDataFileUri> GetFilesInBatch(string batch)
         {
-            if (Document.MeasuredResults == null)
+            if (Settings.MeasuredResults == null)
             {
                 return Array.Empty<MsDataFileUri>();
             }
 
-            return Document.Settings.MeasuredResults.Chromatograms.Where(chrom => batch == chrom.BatchName)
+            return Settings.MeasuredResults.Chromatograms.Where(chrom => batch == chrom.BatchName)
                 .SelectMany(chrom => chrom.MSDataFilePaths);
         }
 
-        private Dictionary<MsDataFileUri, SourcedPeak> GetScoredPeaks(IdentityPath identityPath)
+        private Dictionary<MsDataFileUri, SourcedPeak> GetScoredPeaks(PeptideDocNode peptideDocNode)
         {
             var result = new Dictionary<MsDataFileUri, SourcedPeak>();
-            var peptideDocNode = (PeptideDocNode)Document.FindNode(identityPath);
             if (peptideDocNode == null)
             {
                 return result;
@@ -549,7 +520,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
 
             bool anyReintegrated = peptideDocNode.AnyReintegratedPeaks();
 
-            var measuredResults = Document.Settings.MeasuredResults;
+            var measuredResults = Settings.MeasuredResults;
             if (measuredResults == null)
             {
                 return result;
@@ -588,15 +559,14 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
 
             return result;
         }
-        private Dictionary<MsDataFileUri, SourcedPeak> GetReintegratedPeaks(IdentityPath identityPath)
+        private Dictionary<MsDataFileUri, SourcedPeak> GetReintegratedPeaks(PeptideDocNode peptideDocNode)
         {
             var result = new Dictionary<MsDataFileUri, SourcedPeak>();
-            var peptideDocNode = (PeptideDocNode)Document.FindNode(identityPath);
             if (peptideDocNode == null)
             {
                 return result;
             }
-            var measuredResults = Document.Settings.MeasuredResults;
+            var measuredResults = Settings.MeasuredResults;
             for (int replicateIndex = 0; replicateIndex < measuredResults.Chromatograms.Count; replicateIndex++)
             {
                 var chromatogramSet = measuredResults.Chromatograms[replicateIndex];
@@ -639,8 +609,8 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
             {
                 if (!_alignmentFunctions.TryGetValue(filePath, out var alignmentFunction))
                 {
-                    alignmentFunction = Document.Settings.DocumentRetentionTimes.GetAlignmentFunction(
-                        Document.Settings.PeptideSettings.Libraries, filePath, true);
+                    alignmentFunction = Settings.DocumentRetentionTimes.GetAlignmentFunction(
+                        Settings.PeptideSettings.Libraries, filePath, true);
                     _alignmentFunctions[filePath] = alignmentFunction;
                 }
 
@@ -648,45 +618,21 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
             }
         }
 
-        private IdentityPath GetIdentityPath(PeptideDocNode peptideDocNode)
-        {
-            if (peptideDocNode.Peptide.FastaSequence != null &&
-                Document.FindNodeIndex(peptideDocNode.Peptide.FastaSequence) >= 0)
-            {
-                return new IdentityPath(peptideDocNode.Peptide.FastaSequence, peptideDocNode.Peptide);
-            }
-
-            var moleculeGroup =
-                Document.MoleculeGroups.FirstOrDefault(mg => mg.FindNodeIndex(peptideDocNode.Peptide) >= 0);
-            if (moleculeGroup == null)
-            {
-                return null;
-            }
-
-            return new IdentityPath(moleculeGroup.PeptideGroup, peptideDocNode.Peptide);
-        }
-
         public ImputedPeak GetImputedPeak(PeptideDocNode peptideDocNode, ChromatogramSet chromatogramSet, MsDataFileUri filePath, PeakBounds candidatePeak)
         {
-            var identityPath = GetIdentityPath(peptideDocNode);
-            if (identityPath == null)
-            {
-                return null;
-            }
-
-            return GetImputedPeak(CancellationToken.None, identityPath, chromatogramSet, filePath, candidatePeak);
+            return GetImputedPeak(CancellationToken.None, peptideDocNode, chromatogramSet, filePath, candidatePeak);
         }
 
-        public ImputedPeak GetImputedPeak(CancellationToken cancellationToken, IdentityPath peptideIdentityPath, ChromatogramSet chromatogramSet, MsDataFileUri filePath,
+        public ImputedPeak GetImputedPeak(CancellationToken cancellationToken, PeptideDocNode peptideDocNode, ChromatogramSet chromatogramSet, MsDataFileUri filePath,
             PeakBounds candidatePeak)
         {
-            var imputedPeak = GetImputedPeakBounds(cancellationToken, peptideIdentityPath, chromatogramSet, filePath);
+            var imputedPeak = GetImputedPeakBounds(cancellationToken, peptideDocNode, chromatogramSet, filePath);
             if (imputedPeak == null)
             {
                 return null;
             }
 
-            if (IsAcceptable(Document.Settings.PeptideSettings.Imputation, candidatePeak, imputedPeak))
+            if (IsAcceptable(Settings.PeptideSettings.Imputation, candidatePeak, imputedPeak))
             {
                 return null;
             }
@@ -694,10 +640,15 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
             return imputedPeak;
         }
 
-        public ImputedPeak GetImputedPeakQuick(IdentityPath peptideIdentityPath, ChromatogramSet chromatogramSet, 
+        public ImputedPeak GetImputedPeakQuick(PeptideDocNode peptideDocNode, ChromatogramSet chromatogramSet, 
             MsDataFileUri filePath)
         {
-            return GetImputedPeakBounds(CancellationToken.None, peptideIdentityPath, chromatogramSet, filePath, false);
+            return GetImputedPeakBounds(CancellationToken.None, peptideDocNode, chromatogramSet, filePath, false);
+        }
+
+        public SourcedPeak GetExemplaryPeak(PeptideDocNode peptideDocNode)
+        {
+            return GetImputedPeakBounds(CancellationToken.None, peptideDocNode, null, null)?.ExemplaryPeak;
         }
 
         public SrmDocument ImputePeak(CancellationToken cancellationToken, SrmDocument document, IdentityPath peptideIdentityPath)
@@ -719,7 +670,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
                 foreach (var chromFileInfo in chromatogramSet.MSDataFileInfos)
                 {
                     var peakBounds = GetPeakBounds(peptideDocNode, iReplicate, chromFileInfo.FileId);
-                    var imputedPeak = GetImputedPeak(cancellationToken, peptideIdentityPath, chromatogramSet, chromFileInfo.FilePath, peakBounds);
+                    var imputedPeak = GetImputedPeak(cancellationToken, peptideDocNode, chromatogramSet, chromFileInfo.FilePath, peakBounds);
                     if (imputedPeak != null)
                     {
                         foreach (var transitionGroupDocNode in peptideDocNode.TransitionGroups)
@@ -769,11 +720,11 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
             return new PeakBounds(minStartTime, maxEndTime);
         }
 
-        public ModifiedDocument ImputePeakBoundaries(ProductionMonitor productionMonitor, List<IdentityPath> peptidePaths)
+        public ModifiedDocument ImputePeakBoundaries(SrmDocument document, ProductionMonitor productionMonitor, List<IdentityPath> peptidePaths)
         {
-            var originalDocument = Document;
+            var originalDocument = document;
             var changedPaths = new List<PropertyName>();
-            var document = Document.BeginDeferSettingsChanges();
+            document = document.BeginDeferSettingsChanges();
             for (int iPeptide = 0; iPeptide < peptidePaths.Count; iPeptide++)
             {
                 productionMonitor.CancellationToken.ThrowIfCancellationRequested();

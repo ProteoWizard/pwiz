@@ -949,7 +949,7 @@ namespace pwiz.Skyline.Menus
                 {
                     var productionMonitor = new ProductionMonitor(longWaitBroker.CancellationToken,
                         progress => longWaitBroker.ProgressValue = progress);
-                    modifiedDocument = peakImputer.ImputePeakBoundaries(productionMonitor, peptidePaths);
+                    modifiedDocument = peakImputer.ImputePeakBoundaries(originalDocument, productionMonitor, peptidePaths);
                 });
                 if (longWait.IsCanceled || modifiedDocument == null)
                 {

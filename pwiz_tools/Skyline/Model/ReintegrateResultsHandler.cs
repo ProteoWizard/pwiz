@@ -92,7 +92,7 @@ namespace pwiz.Skyline.Model
                 }
             }
 
-            var imputationSettings = PeakBoundaryImputer?.Document.Settings.PeptideSettings.Imputation ?? ImputationSettings.DEFAULT;
+            var imputationSettings = PeakBoundaryImputer?.Settings.PeptideSettings.Imputation ?? ImputationSettings.DEFAULT;
             if (!imputationSettings.HasImputation)
             {
                 return bestIndex < 0 ? ChromPeak.EMPTY : chromatogramInfo.GetPeak(bestIndex);
@@ -125,7 +125,7 @@ namespace pwiz.Skyline.Model
             }
 
             userSet = UserSet.REINTEGRATED;
-            var settings = PeakBoundaryImputer.Document.Settings;
+            var settings = PeakBoundaryImputer.Settings;
             peakGroupIntegrator ??=
                 transitionGroupDocNode.MakePeakGroupIntegrator(settings, chromatogramSet,
                     chromatogramInfo.GroupInfo);

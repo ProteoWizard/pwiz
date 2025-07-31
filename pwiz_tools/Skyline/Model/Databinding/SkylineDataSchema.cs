@@ -50,13 +50,13 @@ namespace pwiz.Skyline.Model.Databinding
         private readonly CachedValue<IDictionary<ResultFileKey, ResultFile>> _resultFiles;
         private readonly CachedValue<AnnotationCalculator> _annotationCalculator;
         private readonly CachedValue<NormalizedValueCalculator> _normalizedValueCalculator;
-        private PeakBoundaryImputer _peakBoundaryImputer;
+        private readonly CachedValue<PeakBoundaryImputer> _peakBoundaryImputer;
         private ElementRefs _elementRefCache;
 
         private BatchChangesState _batchChangesState;
 
         private SrmDocument _document;
-        public SkylineDataSchema(IDocumentContainer documentContainer, DataSchemaLocalizer dataSchemaLocalizer, PeakBoundaryImputer peakBoundaryImputer = null) : base(dataSchemaLocalizer)
+        public SkylineDataSchema(IDocumentContainer documentContainer, DataSchemaLocalizer dataSchemaLocalizer) : base(dataSchemaLocalizer)
         {
             _documentContainer = documentContainer;
             _document = _documentContainer.Document;
@@ -66,7 +66,7 @@ namespace pwiz.Skyline.Model.Databinding
             _resultFiles = CachedValue.Create(this, CreateResultFileList);
             _annotationCalculator = CachedValue.Create(this, () => new AnnotationCalculator(this));
             _normalizedValueCalculator = CachedValue.Create(this, () => new NormalizedValueCalculator(Document));
-            _peakBoundaryImputer = peakBoundaryImputer;
+            _peakBoundaryImputer = CachedValue.Create(this, ()=>new PeakBoundaryImputer(Document));
         }
 
         public override string DefaultUiMode
@@ -609,11 +609,7 @@ namespace pwiz.Skyline.Model.Databinding
         {
             get
             {
-                if (!ReferenceEquals(_peakBoundaryImputer?.Document, Document))
-                {
-                    _peakBoundaryImputer = new PeakBoundaryImputer(Document);
-                }
-                return _peakBoundaryImputer;
+                return _peakBoundaryImputer.Value;
             }
         }
 

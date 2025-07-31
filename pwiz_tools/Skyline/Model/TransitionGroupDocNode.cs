@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding.Filtering;
 using pwiz.Common.SystemUtil;
@@ -33,6 +34,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Model.RetentionTimes;
+using pwiz.Skyline.Model.RetentionTimes.PeakImputation;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -1473,6 +1475,14 @@ namespace pwiz.Skyline.Model
             PeakFeatureStatistics[] reintegratePeaks = resultsHandler != null
                 ? new PeakFeatureStatistics[countGroupInfos]
                 : null;
+            ImputedPeak[] imputedPeaks = null;
+            PeakBoundaryImputer peakBoundaryImputer = null;
+            if (resultsHandler == null && settingsNew.PeptideSettings.Imputation.HasImputation)
+            {
+                peakBoundaryImputer = new PeakBoundaryImputer(settingsNew);
+                imputedPeaks = new ImputedPeak[countGroupInfos];
+            }
+
             for (int j = 0; j < countGroupInfos; j++)
             {
                 var fileId = chromatograms.FindFile(chromGroupInfos[j]);
@@ -1482,6 +1492,12 @@ namespace pwiz.Skyline.Model
                 if (resultsHandler != null)
                 {
                     reintegratePeaks[j] = resultsHandler.GetPeakFeatureStatistics(nodePep.Peptide, fileId);
+                }
+
+                if (peakBoundaryImputer != null)
+                {
+                    imputedPeaks[j] = peakBoundaryImputer.GetImputedPeakBounds(CancellationToken.None, nodePep,
+                        chromatograms, chromGroupInfos[j].FilePath);
                 }
             }
             resultsCalc.AddReintegrateInfo(resultsHandler, fileIds, reintegratePeaks);
@@ -1585,6 +1601,14 @@ namespace pwiz.Skyline.Model
                                     int bestIndex = info.BestPeakIndex;
                                     if (bestIndex != -1)
                                         peak = info.GetPeak(bestIndex);
+                                    var imputedPeak = imputedPeaks?[j];
+                                    if (imputedPeak != null && !peakBoundaryImputer.IsAcceptable(peak, imputedPeak))
+                                    {
+                                        peakGroupIntegrator ??= MakePeakGroupIntegrator(settingsNew, chromatograms, chromGroupInfo);
+                                        peak = CalcPeak(settingsNew, peakGroupIntegrator, info,
+                                            (float)imputedPeak.PeakBounds.StartTime,
+                                            (float)imputedPeak.PeakBounds.EndTime);
+                                    }
                                 }
                                 ionMobility = info.GetIonMobilityFilter();
                             }
@@ -1730,6 +1754,11 @@ namespace pwiz.Skyline.Model
             {
                 return false;
             }
+
+            if (!Equals(settingsNew.PeptideSettings.Imputation, settingsOld.PeptideSettings.Imputation))
+            {
+                return false;
+            }
             if (measuredResults.HasNewChromatogramData(chromIndex))
             {
                 return false;
@@ -1804,11 +1833,19 @@ namespace pwiz.Skyline.Model
                 return ChromPeak.EMPTY;
             }
 
+            return CalcPeak(settingsNew, peakGroupIntegrator, info, chromInfoBest.StartRetentionTime,
+                chromInfoBest.EndRetentionTime);
+        }
+
+        private static ChromPeak CalcPeak(SrmSettings settingsNew, PeakGroupIntegrator peakGroupIntegrator, ChromatogramInfo info,
+            float startTime, float endTime)
+        {
             ChromPeak.FlagValues flags = 0;
             if (settingsNew.MeasuredResults.IsTimeNormalArea)
                 flags = ChromPeak.FlagValues.time_normalized;
-            return info.CalcPeak(peakGroupIntegrator, chromInfoBest.StartRetentionTime, chromInfoBest.EndRetentionTime,
+            return info.CalcPeak(peakGroupIntegrator, startTime, endTime,
                 flags);
+
         }
 
         private static ChromPeak CalcMatchingPeak(SrmSettings settingsNew,

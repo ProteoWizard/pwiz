@@ -555,7 +555,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                return SourcedPeakValue.FromSourcedPeak(DataSchema.PeakBoundaryImputer.GetImputedPeakQuick(Peptide.IdentityPath, null, null)?.ExemplaryPeak);
+                return SourcedPeakValue.FromSourcedPeak(DataSchema.PeakBoundaryImputer.GetExemplaryPeak(Peptide.DocNode));
             }
         }
 

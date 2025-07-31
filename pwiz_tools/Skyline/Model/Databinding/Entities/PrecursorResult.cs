@@ -310,7 +310,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get
             {
                 return ImputedPeakBounds.FromPeakBounds(DataSchema.PeakBoundaryImputer
-                    .GetImputedPeakQuick(PeptideResult.Peptide.IdentityPath,
+                    .GetImputedPeakQuick(PeptideResult.Peptide.DocNode,
                         GetResultFile().Replicate.ChromatogramSet, GetResultFile().ChromFileInfo.FilePath)?.PeakBounds);
             }
         }

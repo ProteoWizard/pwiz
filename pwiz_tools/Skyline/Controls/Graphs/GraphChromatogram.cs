@@ -59,7 +59,6 @@ namespace pwiz.Skyline.Controls.Graphs
     public partial class GraphChromatogram : DockableFormEx, IGraphContainer
     {
         private Receiver<ImputedBoundsParameter, ImputedPeak> _imputedBoundsReceiver;
-        private PeakBoundaryImputer _peakBoundaryImputer;
         private ImputedPeak _imputedPeak;
         public const double DEFAULT_PEAK_RELATIVE_WINDOW = 3.4;
 
@@ -3647,16 +3646,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private ImputedPeak ProduceImputedPeak(ProductionMonitor productionMonitor, ImputedBoundsParameter imputedBoundsParameter)
         {
-            PeakBoundaryImputer peakBoundaryImputer;
-            lock (this)
-            {
-                peakBoundaryImputer = _peakBoundaryImputer =
-                    _peakBoundaryImputer?.ChangeDocument(imputedBoundsParameter.Document) ??
-                    new PeakBoundaryImputer(imputedBoundsParameter.Document);
-            }
-
-            return peakBoundaryImputer!.GetImputedPeakBounds(productionMonitor.CancellationToken,
-                imputedBoundsParameter.IdentityPath, imputedBoundsParameter.ChromatogramSet,
+            PeakBoundaryImputer peakBoundaryImputer = new PeakBoundaryImputer(imputedBoundsParameter.Document);
+            return peakBoundaryImputer.GetImputedPeakBounds(productionMonitor.CancellationToken,
+                (PeptideDocNode) imputedBoundsParameter.Document.FindNode(imputedBoundsParameter.IdentityPath), imputedBoundsParameter.ChromatogramSet,
                 imputedBoundsParameter.FilePath);
         }
 

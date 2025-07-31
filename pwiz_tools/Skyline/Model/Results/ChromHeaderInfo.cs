@@ -2870,6 +2870,8 @@ namespace pwiz.Skyline.Model.Results
             var peakIntegrator = MakePeakIntegrator(peakGroupIntegrator);
             return peakIntegrator.IntegratePeak(startTime, endTime, flags);
         }
+        
+        
 
         public PeakIntegrator MakePeakIntegrator(PeakGroupIntegrator peakGroupIntegrator)
         {
