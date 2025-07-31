@@ -35,7 +35,7 @@
     <software id="micrOTOFcontrol" version="5.0.2.528-10700-vc110">
       <cvParam cvRef="MS" accession="MS:1000726" name="micrOTOFcontrol" value=""/>
     </software>
-    <software id="pwiz_Reader_Bruker" version="3.0.25078">
+    <software id="pwiz_Reader_Bruker" version="3.0.25209">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
@@ -1682,49 +1682,49 @@
       </spectrum>
     </spectrumList>
     <chromatogramList count="2" defaultDataProcessingRef="pwiz_Reader_Bruker_conversion">
-      <chromatogram index="0" id="TIC" defaultArrayLength="6">
+      <chromatogram index="0" id="TIC" defaultArrayLength="15">
         <cvParam cvRef="MS" accession="MS:1000235" name="total ion current chromatogram" value=""/>
         <binaryDataArrayList count="3">
-          <binaryDataArray encodedLength="72">
+          <binaryDataArray encodedLength="152">
             <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000595" name="time array" value="" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
-            <binary>eJxbpR+x1FRhjUO/97H8AiCtt6nZbxWQXhV/af0TIH1lf5eCvOIaB11VN9dIIA0AAdEUMA==</binary>
-          </binaryDataArray>
-          <binaryDataArray encodedLength="56">
-            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
-            <binary>eJxjYGBg2MSk6AikGFK6IPSGm7JgOkYBQlvs4AbRCZ5OZY4AsjEIBg==</binary>
-          </binaryDataArray>
-          <binaryDataArray arrayLength="6" encodedLength="20">
-            <cvParam cvRef="MS" accession="MS:1000522" name="64-bit integer" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000786" name="non-standard data array" value="ms level" unitCvRef="UO" unitAccession="UO:0000186" unitName="dimensionless unit"/>
-            <binary>eJxjYoAAJiJpAAGAAA0=</binary>
-          </binaryDataArray>
-        </binaryDataArrayList>
-      </chromatogram>
-      <chromatogram index="1" id="BPC" defaultArrayLength="6">
-        <cvParam cvRef="MS" accession="MS:1000628" name="basepeak chromatogram" value=""/>
-        <binaryDataArrayList count="3">
-          <binaryDataArray encodedLength="72">
-            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000595" name="time array" value="" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
-            <binary>eJxbpR+x1FRhjUO/97H8AiCtt6nZbxWQXhV/af0TIH1lf5eCvOIaB11VN9dIIA0AAdEUMA==</binary>
+            <binary>eJybY9vPFaywxqHf+1h+AZA+ksu6qxlI/+x3YZkOpPU2NfutAtJrp3kc2Quktat5rS4C6VXxl9Y/AdI76ndp/QDSx+YvWsqtuMbhyv4uBXkgfVP+xjxVIH23XlVWB0g/ul802whI66q6uUYCaQB9szQl</binary>
           </binaryDataArray>
           <binaryDataArray encodedLength="48">
             <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
-            <binary>eJxjYACCJVMcQBSDRweEftAAoQNqIbRBIZhusLjmAACtlAfl</binary>
+            <binary>eJxjYGBgaGB47MAAAn6rIDRDIYRe0UoL8QRPpzJHAALHEdY=</binary>
           </binaryDataArray>
-          <binaryDataArray arrayLength="6" encodedLength="20">
+          <binaryDataArray arrayLength="15" encodedLength="24">
             <cvParam cvRef="MS" accession="MS:1000522" name="64-bit integer" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000786" name="non-standard data array" value="ms level" unitCvRef="UO" unitAccession="UO:0000186" unitName="dimensionless unit"/>
-            <binary>eJxjYoAAJiJpAAGAAA0=</binary>
+            <binary>eJxjYoAAJjrRjFAaAAfwAB4=</binary>
+          </binaryDataArray>
+        </binaryDataArrayList>
+      </chromatogram>
+      <chromatogram index="1" id="BPC" defaultArrayLength="15">
+        <cvParam cvRef="MS" accession="MS:1000628" name="basepeak chromatogram" value=""/>
+        <binaryDataArrayList count="3">
+          <binaryDataArray encodedLength="152">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000595" name="time array" value="" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
+            <binary>eJybY9vPFaywxqHf+1h+AZA+ksu6qxlI/+x3YZkOpPU2NfutAtJrp3kc2Quktat5rS4C6VXxl9Y/AdI76ndp/QDSx+YvWsqtuMbhyv4uBXkgfVP+xjxVIH23XlVWB0g/ul802whI66q6uUYCaQB9szQl</binary>
+          </binaryDataArray>
+          <binaryDataArray encodedLength="48">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+            <binary>eJxjYGBgaGB47MAAAn6rIDRDIYRe0UoT8QaLaw4AAmQSAg==</binary>
+          </binaryDataArray>
+          <binaryDataArray arrayLength="15" encodedLength="24">
+            <cvParam cvRef="MS" accession="MS:1000522" name="64-bit integer" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000786" name="non-standard data array" value="ms level" unitCvRef="UO" unitAccession="UO:0000186" unitName="dimensionless unit"/>
+            <binary>eJxjYoAAJjrRjFAaAAfwAB4=</binary>
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
