@@ -523,6 +523,8 @@ namespace pwiz.Skyline
             // 
             // expandSelectionContextMenuItem
             // 
+            this.expandSelectionContextMenuItem.Name = "expandSelectionContextMenuItem";
+            resources.ApplyResources(this.expandSelectionContextMenuItem, "expandSelectionContextMenuItem");
             this.expandSelectionContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[]
             {
                 this.expandSelectionNoneContextMenuItem,
@@ -530,8 +532,6 @@ namespace pwiz.Skyline
                 this.expandSelectionPeptidesContextMenuItem,
                 this.expandSelectionPrecursorsContextMenuItem
             });
-            this.expandSelectionContextMenuItem.Name = "expandSelectionContextMenuItem";
-            resources.ApplyResources(this.expandSelectionContextMenuItem, "expandSelectionContextMenuItem");
             // 
             // expandSelectionNoneContextMenuItem
             // 
