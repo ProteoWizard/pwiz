@@ -1638,6 +1638,10 @@ namespace pwiz.Skyline.Model
             foreach (var transition in Transitions)
             {
                 var chromatogramInfo = chromGroupInfo.GetTransitionInfo(transition, tolerance, TransformChrom.raw);
+                if (chromatogramInfo == null)
+                {
+                    continue;
+                }
                 var peak = chromatogramInfo.GetPeak(bestPeakIndex);
                 if (!peak.IsEmpty)
                 {

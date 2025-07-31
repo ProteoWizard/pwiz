@@ -1909,7 +1909,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public struct TransitionKey
+        public readonly struct TransitionKey : IEquatable<TransitionKey>
         {
             private readonly IonType _ionType;
             private readonly string _customIonEquivalenceTestValue; // Derived from formula, or name, or an mz sort
@@ -1972,7 +1972,7 @@ namespace pwiz.Skyline.Model
 
             #region object overrides
 
-            private bool Equals(TransitionKey other)
+            public bool Equals(TransitionKey other)
             {
                 return Equals(other._ionType, _ionType) &&
                        Equals(_customIonEquivalenceTestValue, other._customIonEquivalenceTestValue) &&
