@@ -1608,6 +1608,7 @@ namespace pwiz.Skyline.Model
                         }
                     }
                 }
+
                 if (firstChromInfo == null)
                     resultsCalc.AddTransitionChromInfo(iTran, null);
                 else if (listTranInfo == null)
@@ -1615,6 +1616,47 @@ namespace pwiz.Skyline.Model
                 else
                     resultsCalc.AddTransitionChromInfo(iTran, listTranInfo);
             }
+            for (int j = 0; j < chromGroupInfos.Count; j++)
+            {
+                resultsCalc.SetOriginalPeak(fileIds[j], GetOriginalPeak(chromGroupInfos[j], mzMatchTolerance));
+            }
+        }
+
+        private ScoredPeakBounds GetOriginalPeak(ChromatogramGroupInfo chromGroupInfo, float tolerance)
+        {
+            var score = chromGroupInfo.Header.MaxPeakScore;
+            if (!score.HasValue)
+            {
+                return null;
+            }
+
+            var minStartTime = float.MaxValue;
+            var maxEndTime = float.MinValue;
+            float? apexTime = null;
+            float maxHeight = float.MinValue;
+            int bestPeakIndex = chromGroupInfo.BestPeakIndex;
+            foreach (var transition in Transitions)
+            {
+                var chromatogramInfo = chromGroupInfo.GetTransitionInfo(transition, tolerance, TransformChrom.raw);
+                var peak = chromatogramInfo.GetPeak(bestPeakIndex);
+                if (!peak.IsEmpty)
+                {
+                    minStartTime = Math.Min(minStartTime, peak.StartTime);
+                    maxEndTime = Math.Max(maxEndTime, peak.EndTime);
+                    if (!apexTime.HasValue || maxHeight < peak.Height)
+                    {
+                        apexTime = peak.RetentionTime;
+                        maxHeight = peak.Height;
+                    }
+                }
+            }
+
+            if (minStartTime >= maxEndTime || !apexTime.HasValue)
+            {
+                return null;
+            }
+
+            return new ScoredPeakBounds(apexTime.Value, minStartTime, maxEndTime, score.Value);
         }
 
         public PeakGroupIntegrator MakePeakGroupIntegrator(SrmSettings settings, ChromatogramSet chromatogramSet, ChromatogramGroupInfo chromatogramGroupInfo)
@@ -2014,6 +2056,11 @@ namespace pwiz.Skyline.Model
 
                 // Add the iNext entry
                 _listResultCalcs[iNext].AddChromInfoList(nodeTran, info);
+            }
+
+            public void SetOriginalPeak(ChromFileInfoId fileId, ScoredPeakBounds originalPeak)
+            {
+                _listResultCalcs.Last().SetOriginalPeak(fileId, originalPeak);
             }
 
             private int GetOldPosition(int iResult)
@@ -2509,6 +2556,15 @@ namespace pwiz.Skyline.Model
                 }
                 return ~i;
             }
+
+            public void SetOriginalPeak(ChromFileInfoId fileId, ScoredPeakBounds originalPeak)
+            {
+                var iCalc = IndexOfCalc(fileId, 0);
+                if (iCalc >= 0)
+                {
+                    Calculators[iCalc].SetOriginalPeak(originalPeak);
+                }
+            }
         }
 
         private sealed class TransitionGroupChromInfoCalculator
@@ -2568,7 +2624,7 @@ namespace pwiz.Skyline.Model
             {
                 if (reintegrateResultsHandler.IsDefaultScoringModel())
                 {
-                    OriginalPeak = reintegratedPeak.BestScoredPeak;
+                    SetOriginalPeak(reintegratedPeak.BestScoredPeak);
                     ZScore = reintegratedPeak.BestScore;
                     QValue = null;
                     ReintegratedPeak = null;
@@ -2586,6 +2642,11 @@ namespace pwiz.Skyline.Model
                         ReintegratedPeak = reintegratedPeak.BestScoredPeak;
                     }
                 }
+            }
+
+            public void SetOriginalPeak(ScoredPeakBounds peak)
+            {
+                OriginalPeak = peak;
             }
             private float? Fwhm { get; set; }
             private float? Area { get; set; } // Area of all peaks, including non-scoring peaks that don't influence RT determination

@@ -2012,7 +2012,11 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         public bool HasAlignedTimes()
         {
-            return AlignmentTarget.TryGetAlignmentTarget(this, out _);
+            if (!AlignmentTarget.TryGetAlignmentTarget(this, out var target))
+            {
+                return false;
+            }
+            return target != null;
         }
 
         /// <summary>
