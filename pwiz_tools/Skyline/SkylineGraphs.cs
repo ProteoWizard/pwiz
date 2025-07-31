@@ -30,6 +30,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
 using pwiz.Common.SystemUtil.PInvoke;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
@@ -4494,7 +4495,6 @@ namespace pwiz.Skyline
 
         public void ShowPeakAreaRelativeAbundanceGraph()
         {
-            ShowTotalTransitions();
             Settings.Default.AreaGraphTypes.Insert(0, GraphTypeSummary.abundance);
             ShowGraphPeakArea(true, GraphTypeSummary.abundance);
             UpdatePeakAreaGraph();

@@ -427,7 +427,7 @@
     </ul>
     <h2>Specify the analyte concentrations of the external standards:</h2>
     <ul>
-        <li>On the <b>View</b> menu, click <b>Document Grid</b>.</li>
+        <li>On the <b>View</b> menu, choose <b>Live Reports</b>, and click <b>Document Grid</b> (Alt-3).</li>
         <li>In the top left of the <b>Document Grid</b>, click the <b>Reports</b> dropdown list and choose
             <b>Replicates</b>.</li>
         <li>Copy the following data and paste it into the <b>Document Grid</b> to set each of the “Standard_#” replicates <b>Sample
@@ -494,7 +494,10 @@
         standard <b>y = m * x + b</b> equation 
     </p>
     <p>
-        <i>(concentration = slope * ratio + intercept)</i>
+        <i>ratio = slope * concentration + intercept</i>
+    </p>
+    <p>
+        <i>concentration = (ratio - intercept) / slope</i>
     </p>
     <p>
         Also, calculated concentration of the currently selected replicate is displayed on the calibration form. Here the concentration of the unknown

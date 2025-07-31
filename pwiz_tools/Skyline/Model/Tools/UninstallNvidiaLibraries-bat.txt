@@ -1,0 +1,77 @@
+@echo off
+setlocal enabledelayedexpansion
+
+:: Set paths and variables (must match the original script)
+set "CudaVersion={{0}}"
+set "CudaInstaller=cuda_%CudaVersion%_windows_network.exe"
+set "CudaDownloadPath=%USERPROFILE%\Downloads\%CudaInstaller%"
+
+set "CuDNNVersion={{1}}"
+set "CuDNNArchive=cudnn-windows-x86_64-%CuDNNVersion%-archive"
+set "CuDNNDownloadPath=%USERPROFILE%\Downloads\%CuDNNArchive%.zip"
+set "CuDNNVersionDir=%USERPROFILE%\Downloads\cudnn\%CuDNNVersion%"
+set "CuDNNInstallDir=C:\Program Files\NVIDIA\CUDNN\v9.x"
+set "CuDNNInstallRoot=C:\Program Files\NVIDIA"
+
+
+:: Notify user about CUDA uninstallation
+echo The CUDA installer (%CudaInstaller%) was executed in the original script.
+echo To fully uninstall CUDA, please use the Windows Control Panel (Programs and Features)
+echo or run the CUDA uninstaller manually, as silent uninstallation depends on the installer.
+echo.
+echo Attempting to delete the downloaded CUDA installer...
+if exist "%CudaDownloadPath%" (
+    del /F /Q "%CudaDownloadPath%"
+    echo Deleted %CudaDownloadPath%
+) else (
+    echo CUDA installer not found at %CudaDownloadPath%
+)
+
+:: Delete cuDNN downloaded archive
+echo Deleting cuDNN archive...
+if exist "%CuDNNDownloadPath%" (
+    del /F /Q "%CuDNNDownloadPath%"
+    echo Deleted %CuDNNDownloadPath%
+) else (
+    echo cuDNN archive not found at %CuDNNDownloadPath%
+)
+
+:: Delete extracted cuDNN files
+echo Deleting extracted cuDNN files...
+if exist "%CuDNNVersionDir%" (
+    rmdir /S /Q "%CuDNNVersionDir%"
+    echo Deleted %CuDNNVersionDir%
+) else (
+    echo cuDNN extracted directory not found at %CuDNNVersionDir%
+)
+
+:: Delete installed cuDNN files
+echo Deleting installed cuDNN files...
+if exist "%CuDNNInstallDir%" (
+    rmdir /S /Q "%CuDNNInstallDir%"
+    echo Deleted %CuDNNInstallDir%
+) else (
+    echo cuDNN installation directory not found at %CuDNNInstallDir%
+)
+
+:: Delete installed cuDNN root directory
+echo Deleting installed cuDNN files...
+if exist "%CuDNNInstallRoot%" (
+    rmdir /S /Q "%CuDNNInstallRoot%"
+    echo Deleted %CuDNNInstallRoot%
+) else (
+    echo cuDNN installation root directory not found at %CuDNNInstallRoot%
+)
+   
+
+:: Remove cuDNN bin directory from system PATH
+echo Removing %CuDNNInstallDir%\bin from system PATH...
+set "PS_COMMAND=$oldPath = [Environment]::GetEnvironmentVariable('Path', [System.EnvironmentVariableTarget]::Machine) -split ';' | Where-Object { $_ -ne '%CuDNNInstallDir%\bin' }; $newPath = $oldPath -join ';'; [Environment]::SetEnvironmentVariable('Path', $newPath, [System.EnvironmentVariableTarget]::Machine)"
+
+:: Run PowerShell to update PATH
+powershell -NoLogo -NoProfile -Command "%PS_COMMAND%"
+
+echo Uninstallation complete! Please check the Control Panel to uninstall CUDA if needed.
+
+endlocal
+exit

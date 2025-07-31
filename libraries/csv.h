@@ -954,6 +954,11 @@ namespace io{
                 }
 
                 template<class overflow_policy>
+                void parse(char* col, std::string_view& x) {
+                    x = col;
+                }
+
+                template<class overflow_policy>
                 void parse(char*col, const char*&x){
                         x = col;
                 }

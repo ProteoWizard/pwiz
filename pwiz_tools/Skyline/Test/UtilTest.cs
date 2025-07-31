@@ -168,7 +168,7 @@ namespace pwiz.SkylineTest
 
         // Test the code to compare strings with same files on different paths
         [TestMethod]
-        public static void TestNoDiffIgnoringPathDifferences()
+        public void TestNoDiffIgnoringPathDifferences()
         {
             // No quotes, tab separated
             var line1 = "C:\\Dev\\FeatureFinding\\pwiz_tools\\Skyline\\SkylineTester Results\\HardklorFeatureDetectionTest\\MS1FilteringMzml_2\\Ms1FilteringMzml\\100803_0001_MCF7_TiB_L.mzML\t4056\t4065\t10\t2\t1223.5398\t612.7772\t6858\tc:\\tmp\\greeble\t21379\t36.4559\t36.9732\t36.6144\t0.9993\t_\t4057\tH104C54N15O16[+4.761216]\tc:\\tmp\\blorf";
@@ -459,6 +459,19 @@ namespace pwiz.SkylineTest
                         AssertEx.ThrowsException<IOException>(testFilesDir.Cleanup, x => AssertEx.Contains(x.Message, fileName));
                         DesiredCleanupLevel = DesiredCleanupLevel.all;  // Folders deleted
                         AssertEx.ThrowsException<IOException>(testFilesDir.Cleanup, x => AssertEx.Contains(x.Message, fileName));
+                        
+                        // Test FileLockingProcessFinder utility
+                        VerifyDeleteDirectoryWithFileLockingDetails(testFilesDir.FullPath, filePath);
+                        
+                        // Make sure it works recursively
+                        var subfolderPath = testFilesDir.GetTestPath(@"sub1\sub2\sub3");
+                        Directory.CreateDirectory(subfolderPath);
+                        var filePathDeep = Path.Combine(subfolderPath, "lock.txt");
+                        File.WriteAllText(filePathDeep, @"test");
+                        using (new StreamReader(filePathDeep))
+                        {
+                            VerifyDeleteDirectoryWithFileLockingDetails(testFilesDir.GetTestPath("sub1"), filePathDeep);
+                        }
                     }
                 }
                 // Now test successful cleanup
@@ -476,6 +489,14 @@ namespace pwiz.SkylineTest
             {
                 DesiredCleanupLevel = cleanupLevel;
             }
+        }
+
+        private static void VerifyDeleteDirectoryWithFileLockingDetails(string dirPath, string lockedFile)
+        {
+            // NB: We really do not want to see the error "was locked but has since been deleted"
+            //     since we know the file is locked and cannot have been deleted.
+            AssertEx.ThrowsException<IOException>(() => FileLockingProcessFinder.DeleteDirectoryWithFileLockingDetails(dirPath),
+                x => AssertEx.Contains(x.Message, lockedFile, "this process"));
         }
     }
 }

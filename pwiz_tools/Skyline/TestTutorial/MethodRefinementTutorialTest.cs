@@ -25,13 +25,13 @@ using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -219,7 +219,7 @@ namespace pwiz.SkylineTestTutorial
             RunDlg<EditRTDlg>(SkylineWindow.CreateRegression, editRTDlg =>
             {
                 Assert.AreEqual(146, editRTDlg.PeptideCount);
-                Assert.AreEqual(15.7, editRTDlg.Regression.TimeWindow, 0.05);
+                Assert.AreEqual(15.76, editRTDlg.Regression.TimeWindow, 0.05);
                 editRTDlg.OkDialog();
             });
 
@@ -525,7 +525,7 @@ namespace pwiz.SkylineTestTutorial
             RunDlg<ExportMethodScheduleGraph>(exportMethodDlg1.ShowSchedulingGraph, dlg =>
             {
                 WaitForCondition(() => dlg.GraphControl.GraphPane.CurveList.Count > 0);
-                Assert.AreEqual(48, GetMaxPoint(dlg.GraphControl.GraphPane.CurveList[0]));
+                Assert.AreEqual(45, GetMaxPoint(dlg.GraphControl.GraphPane.CurveList[0]));
                 dlg.Close();
             });
 

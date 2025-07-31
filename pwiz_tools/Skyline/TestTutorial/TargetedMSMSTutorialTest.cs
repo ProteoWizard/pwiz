@@ -29,6 +29,7 @@ using DigitalRune.Windows.Docking;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
@@ -250,8 +251,8 @@ namespace pwiz.SkylineTestTutorial
                 ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.Method));
             RunUI(() =>
             {
-                exportMethodDlg.SetInstrument("Thermo LTQ");
-                Assert.AreEqual("Thermo LTQ", exportMethodDlg.InstrumentType);
+                exportMethodDlg.SetInstrument(ExportInstrumentType.THERMO_LTQ);
+                Assert.AreEqual(ExportInstrumentType.THERMO_LTQ, exportMethodDlg.InstrumentType);
                 exportMethodDlg.SetMethodType(ExportMethodType.Standard);
                 exportMethodDlg.SetTemplateFile(GetTestPath(@"Low Res\TargetedMSMS_template.meth"), true);
             });

@@ -1,0 +1,253 @@
+Undo Redo : Peptide Settings -- Library > Libraries : "PROCAL" was added
+Summary   : Settings > Peptide Settings -- Library > Libraries : "PROCAL" was added
+All Info  :
+Peptide Settings -- Library > Libraries : "PROCAL" was added
+Settings > Peptide Settings -- Library > Libraries : "PROCAL" was added
+Settings > Peptide Settings -- Library > Libraries > "PROCAL" > Path is "PROCAL.blib"
+
+Undo Redo : Imported FASTA from "PROCAL.FASTA"
+Summary   : Imported FASTA from "PROCAL.FASTA"
+All Info  :
+Imported FASTA from "PROCAL.FASTA"
+
+Undo Redo : Transition Settings changed
+Summary   : Settings > Transition Settings changed
+All Info  :
+Transition Settings changed
+Settings > Transition Settings -- Filter > Ion types changed from "y" to "y, b, p"
+Settings > Transition Settings -- Filter > Molecule Ion types changed from "f" to "f, p"
+Settings > Transition Settings -- Filter > Product ion selection start changed from "m/z > precursor" to "ion 2"
+Settings > Transition Settings -- Filter > Product ion selection end changed from "3 ions" to "last ion"
+Settings > Transition Settings -- Filter > Special ions: removed all
+Settings > Transition Settings -- Library > Minimum product ions changed from "0" to "6"
+Settings > Transition Settings -- Library > Product ions changed from "3" to "6"
+Settings > Transition Settings -- Library > Pick changed from "From filtered ion charges and types" to "From filtered product ions"
+Settings > Transition Settings -- Integration > Integrate All changed from False to True
+Settings > Transition Settings -- Instrument > Min m/z changed from "50" to "350"
+Settings > Transition Settings -- Full-Scan > Isotope peaks included changed from "None" to "Count"
+Settings > Transition Settings -- Full-Scan > Peaks changed from Missing to "3"
+Settings > Transition Settings -- Full-Scan > Precursor mass analyzer changed from "None" to "Centroided"
+Settings > Transition Settings -- Full-Scan > Mass accuracy changed from Missing to "10"
+Settings > Transition Settings -- Full-Scan > Isotope labeling enrichment changed from Missing to "Default"
+
+Undo Redo : Transition Settings -- Full-Scan changed
+Summary   : Settings > Transition Settings -- Full-Scan changed
+All Info  :
+Transition Settings -- Full-Scan changed
+Settings > Transition Settings -- Full-Scan > Acquisition method changed from "None" to "PRM"
+Settings > Transition Settings -- Full-Scan > Product mass analyzer changed from "None" to "Centroided"
+Settings > Transition Settings -- Full-Scan > Mass accuracy changed from Missing to "10"
+Settings > Transition Settings -- Full-Scan > Retention time filter type changed from "Use only scans within time frame of MS/MS IDs" to "Include all matching scans"
+Settings > Transition Settings -- Full-Scan > Retention time filter length changed from "5" to "0"
+
+Undo Redo : Imported results from 4 files
+Summary   : Imported results from 4 files
+All Info  :
+Imported results from 4 files
+Import results settings > File names : contains "PRM_01fmol.mzML"
+Import results settings > File names : contains "PRM_1fmol.mzML"
+Import results settings > File names : contains "PRM_10fmol.mzML"
+Import results settings > File names : contains "PRM_100fmol.mzML"
+Import results settings > Add single-injection replicates in files is True
+Import results settings > Files to import simultaneously is "Many"
+Extra Info: File names = 
+[
+    "PRM_01fmol.mzML",
+    "PRM_1fmol.mzML",
+    "PRM_10fmol.mzML",
+    "PRM_100fmol.mzML"
+],
+Add single-injection replicates in files = True,
+Files to import simultaneously = "Many"
+
+Undo Redo : Added spectral library "Tutorial_DIA"
+Summary   : Added spectral library "Tutorial_DIA"
+All Info  :
+Added spectral library "Tutorial_DIA"
+Build Spectral Library > Search files : contains { File = "DIA_PROCAL.tsv.speclib", Score type = "q-value", Score threshold = "0,01" }
+Build Spectral Library > iRT standard peptides is None
+Build Spectral Library > Include ambiguous matches is False
+Build Spectral Library > Filter for document peptides is False
+Build Spectral Library > Workflow is "DIA"
+Build Spectral Library > Input File Type is "Search results (build library directly)"
+Extra Info: Search files = 
+[
+    {
+        File = "DIA_PROCAL.tsv.speclib",
+        Score type = "q-value",
+        Score threshold = "0,01"
+    }
+],
+iRT standard peptides = None,
+Include ambiguous matches = False,
+Filter for document peptides = False,
+Workflow = "DIA",
+Input File Type = "Search results (build library directly)"
+
+Undo Redo : Imported a peptide search
+Summary   : Imported a peptide search
+All Info  :
+Imported a peptide search
+Import Peptide Search > Extract Chromatograms > Found results files : contains "DIA_01fmol.mzML"
+Import Peptide Search > Extract Chromatograms > Found results files : contains "DIA_1fmol.mzML"
+Import Peptide Search > Extract Chromatograms > Found results files : contains "DIA_10fmol.mzML"
+Import Peptide Search > Extract Chromatograms > Found results files : contains "DIA_100fmol.mzML"
+Import Peptide Search > Extract Chromatograms > Files to import simultaneously is "Many"
+Import Peptide Search > Configure Transition Settings > Precursor charges is "2, 3"
+Import Peptide Search > Configure Transition Settings > Ion match tolerance is "0,05" m/z
+Import Peptide Search > Configure Transition Settings > Pick min product ions is "3"
+Import Peptide Search > Configure Transition Settings > Max ion m/z is "2000"
+Import Peptide Search > Configure Full-Scan Settings > Acquisition method is "DIA"
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme is "DIA_40windows"
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Isolation width is "Results"
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows is Empty
+Import Peptide Search > Configure Full-Scan Settings > Isotope labeling enrichment is "Default"
+Import Peptide Search > Configure Full-Scan Settings > Retention time filter type is "Use only scans within time frame of MS/MS IDs"
+Import Peptide Search > Configure Full-Scan Settings > Retention time filter length is "5"
+Import Peptide Search > Import FASTA > FASTA file is "PROCAL.fasta"
+Import Peptide Search > Import FASTA > Decoy generation method is "Shuffle Sequence"
+Import Peptide Search > Import FASTA > Decoys per target is "1"
+Import Peptide Search > Associate Proteins > Group proteins is False
+Import Peptide Search > Associate Proteins > Find minimal protein list is False
+Import Peptide Search > Associate Proteins > Remove subset proteins is False
+Import Peptide Search > Associate Proteins > Shared peptides option is "Duplicated between proteins"
+Import Peptide Search > Associate Proteins > Min peptides per protein is "1"
+Import Peptide Search > Associate Proteins > Proteins mapped is "1"
+Import Peptide Search > Associate Proteins > Peptides mapped is "40"
+Import Peptide Search > Associate Proteins > Protein targets is "1"
+Import Peptide Search > Associate Proteins > Peptide targets is "40"
+Extra Info: Extract Chromatograms = 
+{
+    Found results files = 
+    [
+        "DIA_01fmol.mzML",
+        "DIA_1fmol.mzML",
+        "DIA_10fmol.mzML",
+        "DIA_100fmol.mzML"
+    ],
+    Files to import simultaneously = "Many"
+},
+Configure Transition Settings = 
+{
+    Precursor charges = "2, 3",
+    Ion match tolerance = "0,05" m/z,
+    Pick min product ions = "3",
+    Max ion m/z = "2000"
+},
+Configure Full-Scan Settings = 
+{
+    Acquisition method = "DIA",
+    Isolation scheme = "DIA_40windows": 
+{
+        Isolation width = "Results",
+        Prespecified isolation windows = Empty
+    },
+    Isotope labeling enrichment = "Default",
+    Retention time filter type = "Use only scans within time frame of MS/MS IDs",
+    Retention time filter length = "5"
+},
+Import FASTA = 
+{
+    FASTA file = "PROCAL.fasta",
+    Decoy generation method = "Shuffle Sequence",
+    Decoys per target = "1"
+},
+Associate Proteins = 
+{
+    Group proteins = False,
+    Find minimal protein list = False,
+    Remove subset proteins = False,
+    Shared peptides option = "Duplicated between proteins",
+    Min peptides per protein = "1",
+    Proteins mapped = "1",
+    Peptides mapped = "40",
+    Protein targets = "1",
+    Peptide targets = "40"
+}
+
+Undo Redo : Added spectral library "Tutorial_DDA"
+Summary   : Added spectral library "Tutorial_DDA"
+All Info  :
+Added spectral library "Tutorial_DDA"
+Build Spectral Library > Search files : contains { File = "msms.txt", Score type = "MaxQuant PEP", Score threshold = "0,05" }
+Build Spectral Library > iRT standard peptides is None
+Build Spectral Library > Include ambiguous matches is False
+Build Spectral Library > Filter for document peptides is False
+Build Spectral Library > Workflow is "DDA with MS1 filtering"
+Build Spectral Library > Input File Type is "Search results (build library directly)"
+Extra Info: Search files = 
+[
+    {
+        File = "msms.txt",
+        Score type = "MaxQuant PEP",
+        Score threshold = "0,05"
+    }
+],
+iRT standard peptides = None,
+Include ambiguous matches = False,
+Filter for document peptides = False,
+Workflow = "DDA with MS1 filtering",
+Input File Type = "Search results (build library directly)"
+
+Undo Redo : Imported a peptide search
+Summary   : Imported a peptide search
+All Info  :
+Imported a peptide search
+Import Peptide Search > Extract Chromatograms > Found results files : contains "DDA_01fmol.mzML"
+Import Peptide Search > Extract Chromatograms > Found results files : contains "DDA_1fmol.mzML"
+Import Peptide Search > Extract Chromatograms > Found results files : contains "DDA_10fmol.mzML"
+Import Peptide Search > Extract Chromatograms > Found results files : contains "DDA_100fmol.mzML"
+Import Peptide Search > Extract Chromatograms > Files to import simultaneously is "Many"
+Import Peptide Search > Configure Full-Scan Settings > Acquisition method is "None"
+Import Peptide Search > Configure Full-Scan Settings > Product mass analyzer is "None"
+Import Peptide Search > Configure Full-Scan Settings > {0:TransitionFullScan_} is Missing
+Import Peptide Search > Configure Full-Scan Settings > Isotope labeling enrichment is "Default"
+Import Peptide Search > Configure Full-Scan Settings > Retention time filter type is "Use only scans within time frame of MS/MS IDs"
+Import Peptide Search > Configure Full-Scan Settings > Retention time filter length is "5"
+Import Peptide Search > Import FASTA > FASTA file is "PROCAL.fasta"
+Import Peptide Search > Associate Proteins > Group proteins is False
+Import Peptide Search > Associate Proteins > Find minimal protein list is False
+Import Peptide Search > Associate Proteins > Remove subset proteins is False
+Import Peptide Search > Associate Proteins > Shared peptides option is "Duplicated between proteins"
+Import Peptide Search > Associate Proteins > Min peptides per protein is "1"
+Import Peptide Search > Associate Proteins > Proteins mapped is "1"
+Import Peptide Search > Associate Proteins > Peptides mapped is "40"
+Import Peptide Search > Associate Proteins > Protein targets is "1"
+Import Peptide Search > Associate Proteins > Peptide targets is "40"
+Extra Info: Extract Chromatograms = 
+{
+    Found results files = 
+    [
+        "DDA_01fmol.mzML",
+        "DDA_1fmol.mzML",
+        "DDA_10fmol.mzML",
+        "DDA_100fmol.mzML"
+    ],
+    Files to import simultaneously = "Many"
+},
+Configure Full-Scan Settings = 
+{
+    Acquisition method = "None",
+    Product mass analyzer = "None",
+    {0:TransitionFullScan_} = Missing,
+    Isotope labeling enrichment = "Default",
+    Retention time filter type = "Use only scans within time frame of MS/MS IDs",
+    Retention time filter length = "5"
+},
+Import FASTA = 
+{
+    FASTA file = "PROCAL.fasta"
+},
+Associate Proteins = 
+{
+    Group proteins = False,
+    Find minimal protein list = False,
+    Remove subset proteins = False,
+    Shared peptides option = "Duplicated between proteins",
+    Min peptides per protein = "1",
+    Proteins mapped = "1",
+    Peptides mapped = "40",
+    Protein targets = "1",
+    Peptide targets = "40"
+}
+

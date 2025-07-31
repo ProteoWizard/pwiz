@@ -196,6 +196,24 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to https://skyline.ms/wiki/home/software/Skyline/page.view?name=tutorial_dia_umpire_ttof.
+        /// </summary>
+        internal static string DIA_Umpire_TTOF_pdf {
+            get {
+                return ResourceManager.GetString("DIA_Umpire_TTOF_pdf", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to https://skyline.ms/tutorials/DIA-TTOF.zip.
+        /// </summary>
+        internal static string DIA_Umpire_TTOF_zip {
+            get {
+                return ResourceManager.GetString("DIA_Umpire_TTOF_zip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to https://skyline.ms/tutorials/DIASmall.zip.
         /// </summary>
         internal static string DIA_zip {
@@ -453,6 +471,24 @@ namespace pwiz.Skyline.Controls.Startup {
         internal static string PeakPicking_zip {
             get {
                 return ResourceManager.GetString("PeakPicking_zip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to https://skyline.ms/wiki/home/software/Skyline/page.view?name=tutorial_prm_orbi.
+        /// </summary>
+        internal static string PRMOrbitrap_pdf {
+            get {
+                return ResourceManager.GetString("PRMOrbitrap_pdf", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to https://skyline.ms/tutorials/PRMOrbitrap.zip.
+        /// </summary>
+        internal static string PRMOrbitrap_zip {
+            get {
+                return ResourceManager.GetString("PRMOrbitrap_zip", resourceCulture);
             }
         }
         

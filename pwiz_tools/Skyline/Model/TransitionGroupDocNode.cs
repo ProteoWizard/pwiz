@@ -2300,7 +2300,7 @@ namespace pwiz.Skyline.Model
                 public List<IList<TransitionChromInfo>> ChromInfoLists { get; private set; }
             }
 
-            private struct FileStep
+            private struct FileStep : IEquatable<FileStep>
             {
                 public FileStep(ChromFileInfoId fileId, int optimizationStep) : this()
                 {
@@ -2313,10 +2313,9 @@ namespace pwiz.Skyline.Model
 
                 #region object overrides
                 
-                private bool Equals(FileStep other)
+                public bool Equals(FileStep other)
                 {
-                    return ReferenceEquals(other.FileId, FileId) &&
-                        other.OptimizationStep == OptimizationStep;
+                    return ReferenceEquals(other.FileId, FileId) && other.OptimizationStep == OptimizationStep;
                 }
 
                 public override bool Equals(object obj)

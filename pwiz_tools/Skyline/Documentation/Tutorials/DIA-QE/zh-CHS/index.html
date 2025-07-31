@@ -8,9 +8,11 @@
 
 <body onload="skylineOnload();">
     <h1 class="document-title">Skyline 中的 DIA/SWATH 数据分析</h1>
-    <p>
-        注意：本教程使用的数据采集于 Thermo Q-Exactive Plus 仪器。如果使用的数据采集于 Sciex TripleTOF 6600，请参阅本教程的另一版本 Skyline DIA TTOF。 
-    </p>
+    <table>
+        <tr>
+            <td>注意：本教程使用的数据来自于 Thermo Q-Exactive Plus 仪器。如果您想使用来自于 Sciex TripleTOF 6600 的数据，请参阅标题为 Skyline DIA TTOF 的教程版本。</td>
+        </tr>
+    </table>
     <p>
         本教程使用的数据是一个SWATH-MS 数据集，它通过使用18个可变宽度窗口母离子分离方案（Bruderer R. 等人，MCP 2015）和 1 小时梯度，采集于QqOrbi 仪器（Q-Exactive Plus、Thermo）。通过本教程，您将了解如何使用
         Skyline对肽段以及推断的蛋白质检测和定量进行靶向分析。 
@@ -89,8 +91,7 @@
         运行以从中提取色谱图，接着指定各种设置，最后指定您想查询的目标本身。
     </p>
     <p>
-        您将对每个 A 和 B 样品进行一次 DDA 运行分析来构建谱图库。我们已使用 Comet 搜索引擎执行了 DDA 搜索，并使用 PeptideProphet 进行了后续处理 - 请参阅此链接，了解 Skyline 所支持的更多 DDA 搜索：<a
-            href="https://skyline.ms/wiki/home/software/Skyline/page.view?name=building_spectral_libraries"><u>https://skyline.ms/wiki/home/software/Skyline/page.view?name=building_spectral_libraries</u></a>。您将从PeptideProphet
+        您将对每个 A 和 B 样品进行一次 DDA 运行分析来构建谱图库。我们已使用 Comet 搜索引擎执行了 DDA 搜索，并使用 PeptideProphet 进行了后续处理 - 请参阅此链接，了解 Skyline 所支持的更多 DDA 搜索：<a href="https://skyline.ms/wiki/home/software/Skyline/page.view?name=building_spectral_libraries"><u>https://skyline.ms/wiki/home/software/Skyline/page.view?name=building_spectral_libraries</u></a>。您将从PeptideProphet
         的输出文件interact.pep.xml开始，该文件包含这两个 DDA 文件的数据库搜索结果。
     </p>
     <p>
@@ -108,14 +109,11 @@
         <li>在<b>文件名</b>字段中键入 "DIA-QE-tutorial"。</li>
         <li>单击<b>保存</b>按钮。</li>
     </ul>
-    <p>
+    <p class="keep-next">
         <b>导入肽段搜索</b>向导应显示如下：
     </p>
     <p>
         <img src="s-01.png" />
-    </p>
-    <p>
-        注意：0.95 是DDA 数据库搜索中每个肽段谱图匹配度计算的 PeptideProphet 概率阈值 - 在这个特定的数据集中，这相当于 0.2% 的 PSM 错误发现率，但此值在不同数据集中会有所不同，因此应在此处输入您要使用的错误发现率的概率阈值。
     </p>
     <ul>
         <li>单击<b>添加文件</b>按钮。</li>
@@ -124,11 +122,14 @@
         <li>在 <b>iRT 标准肽段</b>下拉列表中，单击 "Biognosys-11 (iRT-C18)"。</li>
         <li>在<b>工作流程</b>框中，单击 <b>DIA</b> 选项。</li>
     </ul>
-    <p>
+    <p class="keep-next">
         向导中的<b>谱图库</b>页面现在应显示如下：
     </p>
     <p>
         <img src="s-02.png" />
+    </p>
+    <p>
+        注意：0.95 是DDA 数据库搜索中每个肽段谱图匹配度计算的 PeptideProphet 概率阈值 - 在这个特定的数据集中，这相当于 0.2% 的 PSM 错误发现率，但此值在不同数据集中会有所不同，因此应在此处输入您要使用的错误发现率的概率阈值。
     </p>
     <ul>
         <li>单击<b>下一步</b>按钮。</li>
@@ -169,7 +170,7 @@
         <li>在 DIA-QE 文件夹中，双击 DIA 子文件夹。</li>
         <li>将此文件夹中的 6 个文件全部选中。</li>
     </ul>
-    <p>
+    <p class="keep-next">
         <b>浏览结果文件</b>应显示如下：
     </p>
     <p>
@@ -178,7 +179,7 @@
     <ul>
         <li>单击<b>打开</b>按钮。</li>
     </ul>
-    <p>
+    <p class="keep-next">
         <b>导入肽段搜索</b>表单应显示如下：
     </p>
     <p>
@@ -214,7 +215,7 @@
     <ul>
         <li>选中<b>使用 DIA 母离子窗口进行排除</b>。</li>
     </ul>
-    <p>
+    <p class="keep-next">
         <b>导入肽段搜索</b>表单应显示如下：
     </p>
     <p>
@@ -254,7 +255,7 @@
         <li>导航到先前创建的 DIA-QE 文件夹，并进入其 DIA 子文件夹。</li>
         <li>双击文件 "collinsb_X1803_171-A.mzML"。</li>
     </ul>
-    <p>
+    <p class="keep-next">
         此时<b>编辑分离方案</b>表单应显示如下：
     </p>
     <p>
@@ -276,7 +277,7 @@
     <ul>
         <li>单击<b>图形</b>按钮。</li>
     </ul>
-    <p>
+    <p class="keep-next">
         随即显示下面这样的表单：
     </p>
     <p>
@@ -290,7 +291,7 @@
         <li>单击<b>关闭</b>按钮。</li>
         <li>单击<b>编辑分离方案</b>表单中的<b>确定</b>按钮。</li>
     </ul>
-    <p>
+    <p class="keep-next">
         <b>导入肽段搜索</b>向导现在显示如下：
     </p>
     <p>
@@ -317,7 +318,7 @@
         <li>在<b>诱饵生成方法</b>下拉列表中，单击“随机序列”。</li>
         <li>选中<b>自动训练 mProphet 模型</b>。</li>
     </ul>
-    <p>
+    <p class="keep-next">
         <b>导入肽段搜索</b>向导现在显示如下：
     </p>
     <p>
@@ -326,20 +327,29 @@
     <ul>
         <li>单击<b>完成</b>按钮。</li>
     </ul>
-    <p>
+    <p class="keep-next">
         此时应当显示一张表单，其中描述了根据您的设置和所提供的 FASTA 序列文本计算得出的目标，如下所示：
     </p>
     <p>
         <img src="s-12.png" />
     </p>
     <p>
-        可以发现，<b>每个蛋白质的最少肽段数</b>过滤器设置为 "1" 时，FASTA 文件中的 13 个蛋白质产生的<b>剩余</b>蛋白质为 12 个。这是因为有 1
-        个蛋白质没有在谱图库中找到肽段。如果单击<b>保留全部</b>，您会看到警告“将添加 1 个空蛋白质”，但请先切换回去，以避免将空蛋白质添加到目标列表中。
+        可以发现，<b>每个蛋白质的最少肽段数</b>过滤器设置为“1”时，FASTA 文件中的 12 个蛋白质产生了 11 个“映射”
+        蛋白质。这是因为有 1 个“未映射”蛋白质没有在谱图库中找到肽段。
     </p>
+    <table>
+        <tr>
+            <td>
+                注意：最终文档中会包含一个“Biognosys 标准品”肽段列表（用于 iRT 肽段）和一个“诱饵”肽段列表（用于指定的
+                诱饵）。此外还会添加 11 个 iRT 肽段和 130 个诱饵肽段。在上表中，母离子和
+                离子对计数体现了添加情况，但蛋白质和肽段计数则未体现出这一点。
+            </td>
+        </tr>
+    </table>
     <ul>
         <li>单击<b>确定</b>按钮。</li>
     </ul>
-    <p>
+    <p class="keep-next">
         Skyline 开始提取色谱图，在标准的 i7 4 核处理器上显示如下：
     </p>
     <p>
@@ -348,7 +358,7 @@
     <p>
         在 6 核及以上的处理器中，所有文件将并行处理；在大多数配备双核处理器的笔记本电脑上，导入过程中一次处理 2 个文件。
     </p>
-    <p>
+    <p class="keep-next">
         导入完成后，Skyline 将显示您在<b>导入肽段搜索</b>向导中的<b>导入 FASTA</b> 页面上请求的 mProphet 模型。其显示如下：
     </p>
     <p>
@@ -373,7 +383,7 @@
     <p>
         在此实验中有两个条件：Condition A - 样本中蛋白质组组成为 20％ 的大肠杆菌、15％ 的酵母和 65％ 的人类蛋白质，Condition B - 其组成为 5％ 的大肠杆菌、30％ 的酵母和65％ 的人类蛋白质。
     </p>
-    <p>
+    <p class="keep-next">
         <b>定义注释</b>窗口应如下所示：
     </p>
     <p>
@@ -397,7 +407,7 @@
         现在，您可以为导入的重复测定添加注释：
     </p>
     <ul>
-        <li>在<b>视图</b>菜单上，选择<b>文档网格</b> (Alt-3)。</li>
+        <li>在“<b>视图</b>”菜单中选择“<b>实时报告</b>”，然后点击“ <b>文档网格”</b>(Alt-3)。</li>
     </ul>
     <p>
         随即打开<b>文档网格</b>窗口，如果您以前从未用过它，则会显示<b>蛋白质</b>报告：
@@ -405,7 +415,7 @@
     <ul>
         <li>在<b>文档网格：蛋白质</b>窗口中，单击<b>报告</b>菜单，然后单击<b>重复测定</b>。</li>
     </ul>
-    <p>
+    <p class="keep-next">
         如下面的截屏中所示，使用键盘上的 A，B，1、2、3、Enter 和方向键对样品进行注释：
     </p>
     <p>
@@ -461,7 +471,7 @@
             </td>
         </tr>
     </table>
-    <ul>
+    <ul class="keep-next">
         <li>以同样的方式停靠<b>峰面积：重复测定比较</b>和<b>库匹配</b>窗口，以便轻松查看所有信息，如下所示： </li>
     </ul>
     <p>
@@ -479,7 +489,7 @@
     <ul>
         <li>选择此蛋白质中的 LPQVEGTGGDVQPSQDLVR 肽段。</li>
     </ul>
-    <p>
+    <p class="keep-next">
         您将在所有这些视图中获得该肽段的特定信息，如下所示：
     </p>
     <p>
@@ -590,7 +600,7 @@
         要在 Skyline 中执行简单的成对群组比较，请执行以下操作：
     </p>
     <ul>
-        <li>在<b>视图</b>菜单中选择<b>其他网格</b>，然后选择<b>群组比较</b>，最后单击<b>添加</b>。</li>
+        <li>在“<b>视图</b>”菜单中选择“<b>实时报告</b>”，然后选择“<b>分组比较</b>”，并点击“<b>添加</b>”。</li>
         <li>在<b>名称</b>字段中输入 "By Condition"。</li>
         <li>为<b>控制群组注释</b>字段选择 "Condition"。</li>
         <li>为<b>控制群组值</b>字段选择 "A"。</li>
@@ -611,7 +621,7 @@
         要查看刚刚创建的群组比较：
     </p>
     <ul>
-        <li>在<b>视图</b>菜单中选择<b>其他网格</b>，然后选择<b>群组比较</b>，最后单击 <b>By Condition</b>。</li>
+        <li>在“<b>视图</b>”菜单中选择“<b>实时报告</b>”，然后选择“<b>群组比较</b>”，并点击“<b>按条件</b>”。</li>
     </ul>
     <p>
         这时会出现一个表格，显示肽段水平的倍数变化以及已调整的 p 值（错误发现率 - FDR 的估计值），这些值用于 A、B 样品混合物之间的比较。 
@@ -654,7 +664,7 @@
         <li>选择橙色，针对 "YEAS" 再次执行上述过程。</li>
         <li>选择绿色，针对 "HUMAN" 再次执行上述过程。</li>
     </ul>
-    <p>
+    <p class="keep-next">
         <b>火山图格式</b>表单应显示如下：
     </p>
     <p>

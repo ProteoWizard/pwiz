@@ -97,7 +97,7 @@
     <ul>
         <li>Select the first peptide (YLGAYLLATLGGNASPSAQDVLK) in the <b>Targets</b> view.</li>
         <li>On the <b>View</b> menu, choose <b>Auto-Zoom</b>, and click <b>Best Peak</b>.</li>
-        <li>On the <b>View</b> menu, choose <b>Ion Types</b>, and click <b>B</b>.</li>
+        <li>On the <b>View</b> menu, choose <b>Libraries</b>, then <b>Ion Types</b>, and click <b>B</b>.</li>
     </ul>
     <p>
         Skyline should present graphs showing both a corresponding MS/MS spectrum from a library and time-intensity chromatogram data measured for
@@ -110,7 +110,7 @@
         Note that the MS/MS library spectrum associated with each peptide was derived from experiments conducted on an ion trap mass spectrometer.
     </p>
     <p>
-        In the peptide view on the left, Skyline displays green, yellow, and red dots left of the peptide sequences. There are peak quality icons, and
+        In the peptide view on the left, Skyline displays green circle (with a white check), yellow triangle (with a white dash), and red circle (with a white X) icons left of the peptide sequences. There are peak quality icons, and
         they indicate:
     </p>
     <ul>
@@ -364,7 +364,7 @@
         <img src="s-08.png" />
     </p>
     <p>
-        The absence of even a red dot peak quality icon indicates that no measurements were present for these 7 peptides in the RAW files imported into
+        The absence of even a red circle peak quality icon indicates that no measurements were present for these 7 peptides in the RAW files imported into
         this document. That was certainly a surprise when we first imported the RAW files into this document. There are 39 transition lists and 39 RAW
         files. What happened?
     </p>
@@ -567,6 +567,7 @@
         This should remove all of the unrefined results and the chromatogram graph.
     </p>
     <ul>
+        <li>On the <b>File</b> menu, click <b>Save</b>.</li>
         <li>On the <b>File</b> menu, choose <b>Import</b>, and click <b>Results</b>.</li>
         <li>Choose <b>Add multi-injection replicates in directories</b>.</li>
         <li>Click the <b>OK</b> button.</li>
@@ -724,6 +725,7 @@
         This should remove the unscheduled replicates and their chromatogram graphs.
     </p>
     <ul>
+        <li>On the <b>File</b> menu, click <b>Save</b>.</li>
         <li>On the <b>File</b> menu, choose <b>Import</b>, and click <b>Results</b>.</li>
         <li>Choose <b>Add single-injection replicates in files</b> (default).</li>
         <li>Click the <b>OK</b> button.</li>
@@ -739,7 +741,7 @@
     </p>
     <p>
         When the import is complete, you can see that some of the peptides measured in the unscheduled runs were removed for these scheduled runs
-        because they lack the colored dots. Again, you can reduce the document to just the peptides that were measured by doing the following:
+        because they lack the colored peak quality icons. Again, you can reduce the document to just the peptides that were measured by doing the following:
     </p>
     <ul>
         <li>On the <b>Refine menu</b>, click <b>Remove Missing Results</b>.</li>

@@ -54,7 +54,9 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.AuditLog;
@@ -2082,41 +2084,39 @@ namespace pwiz.Skyline.Model
         public IEnumerable<ChromatogramSet> GetSynchronizeIntegrationChromatogramSets()
         {
             if (!Settings.HasResults)
-                yield break;
+                return Array.Empty<ChromatogramSet>();
 
             if (Settings.TransitionSettings.Integration.SynchronizedIntegrationAll)
             {
-                // Synchronize all
-                foreach (var chromSet in MeasuredResults.Chromatograms)
-                    yield return chromSet;
-                yield break;
+                return MeasuredResults.Chromatograms;
             }
 
             var targets = Settings.TransitionSettings.Integration.SynchronizedIntegrationTargets?.ToHashSet();
             if (targets == null || targets.Count == 0)
             {
                 // Synchronize none
-                yield break;
+                return Array.Empty<ChromatogramSet>();
             }
 
             var groupBy = Settings.TransitionSettings.Integration.SynchronizedIntegrationGroupBy;
             if (string.IsNullOrEmpty(groupBy))
             {
                 // Synchronize individual replicates
-                foreach (var chromSet in MeasuredResults.Chromatograms.Where(chromSet => targets.Contains(chromSet.Name)))
-                    yield return chromSet;
-                yield break;
+                return MeasuredResults.Chromatograms.Where(chromSet => targets.Contains(chromSet.Name));
+            }
+            ReplicateValue replicateValue = ReplicateValue.FromPersistedString(Settings, Settings.TransitionSettings.Integration.SynchronizedIntegrationGroupBy);
+            if (replicateValue == null)
+            {
+                // Annotation no longer exists
+                return Array.Empty<ChromatogramSet>();
             }
 
             // Synchronize by annotation
-            var replicateValue = ReplicateValue.FromPersistedString(Settings, groupBy);
             var annotationCalculator = new AnnotationCalculator(this);
-            foreach (var chromSet in MeasuredResults.Chromatograms)
-            {
-                var value = replicateValue.GetValue(annotationCalculator, chromSet);
-                if (targets.Contains(Convert.ToString(value ?? string.Empty, CultureInfo.InvariantCulture)))
-                    yield return chromSet;
-            }
+            return MeasuredResults.Chromatograms.Where(chromatogramSet =>
+                targets.Contains(Convert.ToString(
+                    replicateValue.GetValue(annotationCalculator, chromatogramSet) ?? string.Empty,
+                    CultureInfo.InvariantCulture)));
         }
 
         private object _referenceId = new object();
@@ -2270,7 +2270,7 @@ namespace pwiz.Skyline.Model
                 auditLog.WriteToFile(auditLogPath, hash, skylineVersion.SrmDocumentVersion);
             }
             else if (File.Exists(auditLogPath))
-                Helpers.TryTwice(() => File.Delete(auditLogPath));
+                TryHelper.TryTwice(() => File.Delete(auditLogPath));
         }
 
         public string Serialize(XmlTextWriter writer, string displayName, SkylineVersion skylineVersion, IProgressMonitor progressMonitor)
@@ -2332,7 +2332,7 @@ namespace pwiz.Skyline.Model
             TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, CollisionEnergyRegression regression, int step)
         {
             var ce = GetExplicitCollisionEnergy(nodeGroup, nodeTran);
-            if (regression != null)
+            if (regression != null && !Equals(regression, CollisionEnergyList.NONE))
             {
                 // If still no explicit CE value found the CE is calculated using the provided regression, if any.
                 if (!ce.HasValue)

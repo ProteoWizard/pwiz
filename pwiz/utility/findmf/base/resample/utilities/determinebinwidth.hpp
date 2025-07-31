@@ -36,7 +36,7 @@ namespace ralab
       namespace utilities{
 
         template<class T>
-        struct meanfunctor : std::binary_function<T,T,T>{
+        struct meanfunctor{
           T operator()(const T & x, const T& y){
             return (x+y)/2.;
           }

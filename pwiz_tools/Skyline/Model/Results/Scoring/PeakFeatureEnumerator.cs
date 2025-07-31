@@ -25,6 +25,7 @@ using System.Text;
 using System.Threading;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 
@@ -698,7 +699,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         }
     }
 
-    public struct PeakTransitionGroupIdKey
+    public readonly struct PeakTransitionGroupIdKey : IEquatable<PeakTransitionGroupIdKey>
     {
         public PeakTransitionGroupIdKey(Peptide peptide, ChromFileInfoId fileId) : this()
         {

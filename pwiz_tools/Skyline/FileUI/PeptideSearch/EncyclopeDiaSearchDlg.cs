@@ -27,13 +27,13 @@ using System.Windows.Forms;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Koina.Models;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -410,7 +410,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             SkylineWindow.ModifyDocument(PeptideSearchResources.EncyclopeDiaSearchDlg_ImportEncyclopediaLibrary_Ran_EncyclopeDIA_Search,
                 doc => doc.ChangeSettings(doc.Settings.ChangePeptideSettings(
                     doc.Settings.PeptideSettings.ChangeLibraries(
-                        doc.Settings.PeptideSettings.Libraries.ChangeLibrarySpecs(librarySpecs).ChangeLibraries(libraries)))),
+                        doc.Settings.PeptideSettings.Libraries.ChangeLibraries(librarySpecs, libraries)))),
                 FormSettings.EntryCreator.Create);
 
             using var importPeptideSearchDlg = new ImportPeptideSearchDlg(SkylineWindow, _libraryManager, ImportPeptideSearchDlg.Workflow.dia,
@@ -542,7 +542,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void btnAdditionalSettings_Click(object sender, EventArgs e)
         {
-            KeyValueGridDlg.Show(PeptideSearchResources.SearchSettingsControl_Additional_Settings,
+            KeyValueGridDlg.Show(this, PeptideSearchResources.SearchSettingsControl_Additional_Settings,
                 EncyclopeDiaConfig.Parameters,
                 setting => setting.Value.ToString(),
                 (value, setting) => setting.Value = value,
