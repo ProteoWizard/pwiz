@@ -734,12 +734,12 @@ void BlibMaker::transferSpectrumFiles(const char* schemaTmp){ //i.e. db name
         return;
     }
 
-    string cutoffSelect = tableColumnExists(schemaTmp, "SpectrumSourceFiles", "cutoffScore") ? "cutoffScore" : "-1";
-    string idFileSelect = tableColumnExists(schemaTmp, "SpectrumSourceFiles", "idFileName") ? "idFileName" : "fileName";
+    string cutoffSelect = tableColumnExists(schemaTmp, "SpectrumSourceFiles", "cutoffScore") ? "IFNULL(cutoffScore, -1)" : "-1";
+    string idFileSelect = tableColumnExists(schemaTmp, "SpectrumSourceFiles", "idFileName") ? "IFNULL(idFileName, fileName)" : "fileName";
     string workflowTypeSelect = tableColumnExists(schemaTmp, "SpectrumSourceFiles", "workflowType") ? "workflowType" : "0";
     snprintf(zSql, ZSQLBUFLEN, "SELECT id, fileName, %s, %s, %s FROM %s.SpectrumSourceFiles", idFileSelect.c_str(), cutoffSelect.c_str(), workflowTypeSelect.c_str(), schemaTmp);
     smart_stmt pStmt;
-    int rc = sqlite3_prepare(db, zSql, -1, &pStmt, 0);
+    int rc = sqlite3_prepare_v2(db, zSql, -1, &pStmt, 0);
     check_rc(rc, zSql, "Failed selecting file names from tmp db.");
     rc = sqlite3_step(pStmt);
     while( rc == SQLITE_ROW ){
