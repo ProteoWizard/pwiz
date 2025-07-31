@@ -1106,17 +1106,14 @@ namespace pwiz.SkylineTestUtil
                         actualSpectrum  = actualSpectrum.Take(Math.Min(topN, actualSpectrum.Length)).ToArray();
                     }
 
-                    if (expectedSpectrum.Length != actualSpectrum.Length)
-                    {
-                        LogSpectrumPeaks(expected.Target.ToString(), actual.Target.ToString(), expectedSpectrum, actualSpectrum);
-                    }
-                    Assert.AreEqual(expectedSpectrum.Length, actualSpectrum.Length, "peak counts not equal");
-
                     // Sometimes the intensities are slightly different or the order of the peaks changes so sort first
                     Array.Sort(expectedSpectrum, (s1, s2) => s2.Mz.CompareTo(s1.Mz));
                     Array.Sort(actualSpectrum, (s1, s2) => s2.Mz.CompareTo(s1.Mz));
 
-                    for (int j = 0; j < expectedSpectrum.Length; ++j)
+                    // We are comparing peaks directly below, and when the length are unequal we can make sure the missing m/z have intensity lower than allowed tolerance
+                    // Assert.AreEqual(expectedSpectrum.Length, actualSpectrum.Length, "peak counts not equal");
+                    int j;
+                    for (j = 0; j < Math.Min(expectedSpectrum.Length, actualSpectrum.Length); ++j)
                     {
                         if (Math.Abs(expectedSpectrum[j].Mz - actualSpectrum[j].Mz) > mzTolerance)
                         {
@@ -1132,6 +1129,32 @@ namespace pwiz.SkylineTestUtil
 
                         Assert.AreEqual(expectedSpectrum[j].Intensity, actualSpectrum[j].Intensity, intensityTolerance, "peak intensity delta exceeded tolerance");
                     }
+                    //      Compare any remaining peaks against intensity 0
+                    for (; j < Math.Max(expectedSpectrum.Length, actualSpectrum.Length); ++j)
+                    {
+                        if (j < expectedSpectrum.Length)
+                        {
+                            if (expectedSpectrum[j].Intensity > intensityTolerance)
+                            {
+                                LogSpectrumPeaks(expected.Target.ToString(), actual.Target.ToString(), expectedSpectrum,
+                                    actualSpectrum);
+                            }
+
+                            Assert.AreEqual(expectedSpectrum[j].Intensity, 0,
+                                intensityTolerance, "peak intensity delta exceeded tolerance");
+                        }
+                        else
+                        {
+
+                            if (actualSpectrum[j].Intensity > intensityTolerance)
+                            {
+                                LogSpectrumPeaks(expected.Target.ToString(), actual.Target.ToString(), expectedSpectrum, actualSpectrum);
+                            }
+
+                            Assert.AreEqual(0, actualSpectrum[j].Intensity, intensityTolerance, "peak intensity delta exceeded tolerance");
+                        }
+                    }
+
                 }
             }
             finally
