@@ -98,13 +98,10 @@ namespace TestPerf
                 PrintEnvironment();
             }
 
-
             if (IsCleanPythonMode)
                 AssertEx.IsTrue(PythonInstaller.DeleteToolsPythonDirectory());
 
             string currentDirectory = Directory.GetCurrentDirectory();
-            //TestFilesZip = $@"{currentDirectory}\{TESTDATA_DIR}\{TESTDATA_FILE}";
-
             Directory.CreateDirectory(TESTDATA_DIR);
             TestFilesZipPaths = new[]
             {
@@ -112,8 +109,6 @@ namespace TestPerf
             };
 
             FreshenTestDataDownloads();
-
-            //DownloadTestDataPackage(new SilentProgressMonitor());
 
             var originalInstallationState = PythonInstaller.SimulatedInstallationState;
             try
@@ -162,11 +157,8 @@ namespace TestPerf
 
         string DiannFineTuneFile => TestFilesDir.GetTestPath(@"report.tsv");
         string MzMLFile => TestFilesDir.GetTestPath(@"Lumos_8mz_staggered_reCID_human_small\Crucios_20240320_CH_15_HeLa_CID_27NCE_01.mzML");
-        private string SkyFineTuneFile => SkyTestFile; //TestFilesDir.GetTestPath(@"Lumos_8mz_staggered_reCID_human\Lumos_8mz_staggered_reCID_human.sky");
-
+        private string SkyFineTuneFile => SkyTestFile;
         private string SkyTestFile => TestFilesDir.GetTestPath(@"Lumos_8mz_staggered_reCID_human_small\Lumos_8mz_staggered_reCID_human.sky");
-
-
         string ProteinDatabase => TestFilesDir.GetTestPath(@"UP000005640_9606_small.fasta");
 
         protected override void DoTest()
@@ -179,18 +171,10 @@ namespace TestPerf
 
         private void ShortTest()
         {
-
-            //TestEmptyDocumentMessage();
-
-            //TestCarafeBuildLibrary();
             DirectoryEx.SafeDelete(TestContext.GetTestPath(@"TestCarafeBuildLibrary\"));
             Directory.CreateDirectory(TestContext.GetTestPath(@"TestCarafeBuildLibrary\"));
 
             OpenDocument(TestFilesDir.GetTestPath(SkyTestFile));
-
-            //var fullTestFilePath = ResultsUtil.ResourceToTestFile(typeof(ResultsUtil), "Lumos_8mz_staggered_reCID_human_small.sky", SkyTestFile);
-
-            //OpenDocument(fullTestFilePath);
 
             const string answerWithoutIrt = "without_iRT/predict_transformed.speclib.tsv";
             const string libraryWithoutIrt = "CarafeLibraryWithoutIrt";
@@ -199,10 +183,6 @@ namespace TestPerf
             const string answerWithIrt = "with_iRT/predict_transformed.speclib.tsv";
 
             var peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
-
-
-            //RunUI(()=>MessageDlg.Show(peptideSettings, $@"Current Directory: {Environment.CurrentDirectory}\nPATH: {Environment.GetEnvironmentVariable("PATH")}"));
-
 
             var simulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT; // Simulates not having Nvidia library but having the GPU
 
@@ -294,7 +274,6 @@ namespace TestPerf
             OkDialog(addRtStdDlg, addRtStdDlg.CancelDialog);
 
             var spectralLibraryViewer = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
-
             RunUI(() =>
             {
                 spectralLibraryViewer.ChangeSelectedLibrary(LibraryPathTunedBySky);
@@ -369,13 +348,6 @@ namespace TestPerf
             // test with iRT
             peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
             CarafeBuildLibrary(peptideSettings, libraryTunedByThis, LibraryTunedByThis, mzMLFile, proteinDatabase, "", BuildLibraryDlg.BuildLibraryTargetOptions.currentSkylineDocument, BuildLibraryDlg.LearningOptions.this_doc, "test_res_fine_tuned_bySky_iRT.csv", PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD, IrtStandard.BIOGNOSYS_11);
-
-            //  var expected = LibrarySpec.CreateFromPath("answer", answerFile);
-            //  var result = LibrarySpec.CreateFromPath("testBuilt", builtLibraryPath);
-            //  AssertEx.LibraryEquals(expected, result);
-
-            //OkDialog(spectralLibraryViewer, spectralLibraryViewer.Close);
-            //PauseTest();
         }
 
         /// <summary>
