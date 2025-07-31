@@ -127,6 +127,9 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Bruker::chromatogram(size_t index
 
     result->setTimeIntensityArrays(cd->times, cd->intensities, UO_second, MS_number_of_detector_counts);
 
+    if ((format_ != Reader_Bruker_Format_TDF || config_.combineIonMobilitySpectra) && cd->times.size() != compassDataPtr_->getMSSpectrumCount())
+        throw runtime_error("[ChromatogramList_Bruker] number of chromatogram times does not match spectrum count");
+
     if (format_ != Reader_Bruker_Format_FID && format_ != Reader_Bruker_Format_U2)
     {
         auto msLevelArray = boost::make_shared<IntegerDataArray>();
