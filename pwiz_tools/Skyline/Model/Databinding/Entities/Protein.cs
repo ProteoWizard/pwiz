@@ -19,6 +19,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
@@ -276,25 +278,21 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [TypeConverter(typeof(TypeConverterImpl))]
         public class AbundanceValue : IAnnotatedValue, IFormattable
         {
-            public AbundanceValue(double transitionSummed, double transitionSummedTimesNumberOfTransitions, string message)
+            public AbundanceValue(double raw, double transitionSummedTimesNumberOfTransitions, string message)
             {
                 Message = message;
-                TransitionAveraged = transitionSummed;
+                Raw = raw;
+                if (message == null)
+                {
+                    Strict = raw;
+                }
+                TransitionAveraged = raw;
                 TransitionSummed = transitionSummedTimesNumberOfTransitions;
             }
-            [InvariantDisplayName("MoleculeListAbundanceTransitionAveraged")]
-            [ProteomicDisplayName("ProteinAbundanceTransitionAveraged")]
+            [InvariantDisplayName("MoleculeListAbundanceRaw")]
+            [ProteomicDisplayName("ProteinAbundanceRaw")]
             [Format(Formats.GLOBAL_STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
-            [Obsolete]
-            public double TransitionAveraged
-            {
-                get; private set;
-            }
-            [InvariantDisplayName("MoleculeListAbundanceTransitionSummed")]
-            [ProteomicDisplayName("ProteinAbundanceTransitionSummed")]
-            [Format(Formats.GLOBAL_STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
-            [Obsolete]
-            public double TransitionSummed { get; private set; }
+            public double Raw { get; private set; }
 
             [InvariantDisplayName("MoleculeListAbundanceStrict")]
             [ProteomicDisplayName("ProteinAbundanceStrict")]
@@ -313,14 +311,28 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return Message;
             }
 
+            [InvariantDisplayName("MoleculeListAbundanceTransitionAveraged")]
+            [ProteomicDisplayName("ProteinAbundanceTransitionAveraged")]
+            [Format(Formats.GLOBAL_STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
+            [Obsolete]
+            public double TransitionAveraged
+            {
+                get; private set;
+            }
+            [InvariantDisplayName("MoleculeListAbundanceTransitionSummed")]
+            [ProteomicDisplayName("ProteinAbundanceTransitionSummed")]
+            [Format(Formats.GLOBAL_STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
+            [Obsolete]
+            public double TransitionSummed { get; private set; }
+
             public override string ToString()
             {
-                return AnnotatedDouble.GetPrefix(Message) + TransitionAveraged;
+                return AnnotatedDouble.GetPrefix(Message) + Raw;
             }
 
             public string ToString(string format, IFormatProvider formatProvider)
             {
-                return AnnotatedDouble.GetPrefix(Message) + TransitionAveraged.ToString(format, formatProvider);
+                return AnnotatedDouble.GetPrefix(Message) + Raw.ToString(format, formatProvider);
             }
             private class TypeConverterImpl : TypeConverter
             {
@@ -362,7 +374,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 return owner.CalculateProteinAbundances();
             }
-
         }
     }
 }
