@@ -98,46 +98,10 @@
 	<resheader name="writer">
 		<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
 	</resheader>
-  <data name="Category_FileProperties" xml:space="preserve">
+	<data name="FileProperties" xml:space="preserve">
     <value>File Properties</value>
   </data>
-	<data name="Category_ChromatogramSet" xml:space="preserve">
+	<data name="ChromatogramSet" xml:space="preserve">
     <value>Chromatogram Set</value>
-  </data>
-	<data name="Category_Instrument" xml:space="preserve">
-    <value>Instrument</value>
-  </data>
-	<data name="DisplayName_Name" xml:space="preserve">
-    <value>Name</value>
-  </data>
-	<data name="DisplayName_FileName" xml:space="preserve">
-    <value>File Name</value>
-  </data>
-	<data name="DisplayName_FilePath" xml:space="preserve">
-    <value>File Path</value>
-  </data>
-	<data name="DisplayName_DocumentPath" xml:space="preserve">
-    <value>Document Path</value>
-  </data>
-	<data name="DisplayName_FileType" xml:space="preserve">
-    <value>File Type</value>
-  </data>
-	<data name="DisplayName_FileCount" xml:space="preserve">
-    <value>File Count</value>
-  </data>
-	<data name="DisplayName_AnalyteConcentration" xml:space="preserve">
-    <value>Analyte Concentration</value>
-  </data>
-	<data name="DisplayName_BatchName" xml:space="preserve">
-    <value>Batch Name</value>
-  </data>
-	<data name="DisplayName_SampleDilutionFactor" xml:space="preserve">
-    <value>Sample Dilution Factor</value>
-  </data>
-	<data name="DisplayName_SampleType" xml:space="preserve">
-    <value>Sample Type</value>
-  </data>
-	<data name="DisplayName_Note" xml:space="preserve">
-    <value>Annotation Note</value>
   </data>
 </root>

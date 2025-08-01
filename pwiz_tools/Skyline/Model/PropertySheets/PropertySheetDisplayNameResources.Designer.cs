@@ -22,14 +22,14 @@ namespace pwiz.Skyline.Model.PropertySheets {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class PropertySheetResources {
+    internal class PropertySheetDisplayNameResources {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
         private static global::System.Globalization.CultureInfo resourceCulture;
         
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal PropertySheetResources() {
+        internal PropertySheetDisplayNameResources() {
         }
         
         /// <summary>
@@ -39,7 +39,7 @@ namespace pwiz.Skyline.Model.PropertySheets {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("pwiz.Skyline.Model.PropertySheets.PropertySheetResources", typeof(PropertySheetResources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("pwiz.Skyline.Model.PropertySheets.PropertySheetDisplayNameResources", typeof(PropertySheetDisplayNameResources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -61,128 +61,101 @@ namespace pwiz.Skyline.Model.PropertySheets {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Chromatogram Set.
-        /// </summary>
-        internal static string Category_ChromatogramSet {
-            get {
-                return ResourceManager.GetString("Category_ChromatogramSet", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to File Properties.
-        /// </summary>
-        internal static string Category_FileProperties {
-            get {
-                return ResourceManager.GetString("Category_FileProperties", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Instrument.
-        /// </summary>
-        internal static string Category_Instrument {
-            get {
-                return ResourceManager.GetString("Category_Instrument", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Analyte Concentration.
         /// </summary>
-        internal static string DisplayName_AnalyteConcentration {
+        internal static string AnalyteConcentration {
             get {
-                return ResourceManager.GetString("DisplayName_AnalyteConcentration", resourceCulture);
+                return ResourceManager.GetString("AnalyteConcentration", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Batch Name.
         /// </summary>
-        internal static string DisplayName_BatchName {
+        internal static string BatchName {
             get {
-                return ResourceManager.GetString("DisplayName_BatchName", resourceCulture);
+                return ResourceManager.GetString("BatchName", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Document Path.
         /// </summary>
-        internal static string DisplayName_DocumentPath {
+        internal static string DocumentPath {
             get {
-                return ResourceManager.GetString("DisplayName_DocumentPath", resourceCulture);
+                return ResourceManager.GetString("DocumentPath", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to File Count.
         /// </summary>
-        internal static string DisplayName_FileCount {
+        internal static string FileCount {
             get {
-                return ResourceManager.GetString("DisplayName_FileCount", resourceCulture);
+                return ResourceManager.GetString("FileCount", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to File Name.
         /// </summary>
-        internal static string DisplayName_FileName {
+        internal static string FileName {
             get {
-                return ResourceManager.GetString("DisplayName_FileName", resourceCulture);
+                return ResourceManager.GetString("FileName", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to File Path.
         /// </summary>
-        internal static string DisplayName_FilePath {
+        internal static string FilePath {
             get {
-                return ResourceManager.GetString("DisplayName_FilePath", resourceCulture);
+                return ResourceManager.GetString("FilePath", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to File Type.
         /// </summary>
-        internal static string DisplayName_FileType {
+        internal static string FileType {
             get {
-                return ResourceManager.GetString("DisplayName_FileType", resourceCulture);
+                return ResourceManager.GetString("FileType", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Name.
         /// </summary>
-        internal static string DisplayName_Name {
+        internal static string Name {
             get {
-                return ResourceManager.GetString("DisplayName_Name", resourceCulture);
+                return ResourceManager.GetString("Name", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Annotation Note.
         /// </summary>
-        internal static string DisplayName_Note {
+        internal static string Note {
             get {
-                return ResourceManager.GetString("DisplayName_Note", resourceCulture);
+                return ResourceManager.GetString("Note", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Sample Dilution Factor.
         /// </summary>
-        internal static string DisplayName_SampleDilutionFactor {
+        internal static string SampleDilutionFactor {
             get {
-                return ResourceManager.GetString("DisplayName_SampleDilutionFactor", resourceCulture);
+                return ResourceManager.GetString("SampleDilutionFactor", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Sample Type.
         /// </summary>
-        internal static string DisplayName_SampleType {
+        internal static string SampleType {
             get {
-                return ResourceManager.GetString("DisplayName_SampleType", resourceCulture);
+                return ResourceManager.GetString("SampleType", resourceCulture);
             }
         }
     }

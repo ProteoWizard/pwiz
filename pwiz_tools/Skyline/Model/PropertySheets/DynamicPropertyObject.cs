@@ -60,7 +60,6 @@ namespace pwiz.Skyline.Model.PropertySheets
             _values[name] = initialValue;
         }
 
-        private const string DISPLAYNAME_PREFIX = "DisplayName_";
         public void AddPropertiesFromAnnotatedObject(object source)
         {
             var sourceType = source.GetType();
@@ -82,8 +81,7 @@ namespace pwiz.Skyline.Model.PropertySheets
 
                 if (propAttr != null)
                 {
-                    
-                    var displayName = PropertySheetResources.ResourceManager.GetString(DISPLAYNAME_PREFIX + prop.Name);
+                    var displayName = PropertySheetDisplayNameResources.ResourceManager.GetString(prop.Name);
 
                     AddProperty(
                         name: prop.Name,
@@ -103,7 +101,7 @@ namespace pwiz.Skyline.Model.PropertySheets
                     {
                         var propertyItem = new DynamicPropertyObject();
                         propertyItem.AddPropertiesFromAnnotatedObject(sourceItem);
-                        var displayName = PropertySheetResources.ResourceManager.GetString(DISPLAYNAME_PREFIX + prop.Name);
+                        var displayName = PropertySheetDisplayNameResources.ResourceManager.GetString(prop.Name);
 
                         AddProperty(
                             name: prop.Name,
