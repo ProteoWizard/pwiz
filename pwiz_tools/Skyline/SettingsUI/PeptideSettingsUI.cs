@@ -36,6 +36,7 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.Midas;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.Util;
@@ -198,6 +199,10 @@ namespace pwiz.Skyline.SettingsUI
             tbxIonRatioThreshold.Text = _peptideSettings.Quantification.QualitativeIonRatioThreshold.ToString();
             cbxSimpleRatios.Checked = _peptideSettings.Quantification.SimpleRatios;
             UpdateComboNormalizationMethod();
+            cbxImputeMissingPeaks.Checked = _peptideSettings.Imputation.ImputeMissingPeaks;
+            tbxMaxRtShift.Text = _peptideSettings.Imputation.MaxRtShift?.ToString() ?? string.Empty;
+            tbxMaxPeakWidthVariation.Text = (_peptideSettings.Imputation.MaxPeakWidthVariation * 100)?.ToString() ?? string.Empty;
+            UpdateAlignmentDropdown(_peptideSettings);
         }
 
         /// <summary>
@@ -406,6 +411,22 @@ namespace pwiz.Skyline.SettingsUI
             var prediction = new PeptidePrediction(retentionTime, useMeasuredRT, measuredRTWindow);
             Helpers.AssignIfEquals(ref prediction, Prediction);
 
+            var imputation = ImputationSettings.DEFAULT.ChangeAlignmentTarget(AlignmentTarget)
+                .ChangeImputeMissing(ImputeMissingPeaks).ChangeAlignmentTarget(AlignmentTarget);
+            if (!string.IsNullOrEmpty(tbxMaxRtShift.Text))
+            {
+                if (!helper.ValidateDecimalTextBox(tbxMaxRtShift, 0, null, out var maxRtShift))
+                    return null;
+                imputation = imputation.ChangeMaxRtShift(maxRtShift);
+            }
+
+            if (!string.IsNullOrEmpty(tbxMaxPeakWidthVariation.Text))
+            {
+                if (!helper.ValidateDecimalTextBox(tbxMaxPeakWidthVariation, 0, null, out var maxPeakWidthVariation))
+                    return null;
+                imputation = imputation.ChangeMaxPeakWidthVariation(maxPeakWidthVariation / 100);
+            }
+
             // Validate and hold filter settings
             int excludeNTermAAs;
             if (!helper.ValidateNumberTextBox(textExcludeAAs,
@@ -567,7 +588,7 @@ namespace pwiz.Skyline.SettingsUI
             quantification = quantification.ChangeSimpleRatios(cbxSimpleRatios.Checked);
 
             return new PeptideSettings(enzyme, digest, prediction, filter, libraries, modifications, integration, backgroundProteome, _peptideSettings.ProteinAssociationSettings)
-                    .ChangeAbsoluteQuantification(quantification);
+                .ChangeAbsoluteQuantification(quantification).ChangeImputation(imputation);
         }
 
         public void OkDialog()
@@ -1768,6 +1789,42 @@ namespace pwiz.Skyline.SettingsUI
             set { comboLodMethod.SelectedItem = value; }
         }
 
+        public bool ImputeMissingPeaks
+        {
+            get
+            {
+                return cbxImputeMissingPeaks.Checked;
+            }
+            set
+            {
+                cbxImputeMissingPeaks.Checked = value;
+            }
+        }
+
+        public double? MaxRtShift
+        {
+            get
+            {
+                return string.IsNullOrEmpty(tbxMaxRtShift.Text) ? (double?) null : double.Parse(tbxMaxRtShift.Text);
+            }
+            set
+            {
+                tbxMaxRtShift.Text = value.ToString();
+            }
+        }
+
+        public double? MaxPeakWidthVariation
+        {
+            get
+            {
+                return string.IsNullOrEmpty(tbxMaxPeakWidthVariation.Text) ? (double?)null : double.Parse(tbxMaxPeakWidthVariation.Text);
+            }
+            set
+            {
+                tbxMaxPeakWidthVariation.Text = value.ToString();
+            }
+        }
+
         #endregion
 
         public sealed class LabelTypeComboDriver
@@ -2171,6 +2228,36 @@ namespace pwiz.Skyline.SettingsUI
         public void SetSelectedLibrary(string name)
         {
             listLibraries.SelectedItem = name;
+        }
+
+        private void UpdateAlignmentDropdown(PeptideSettings peptideSettings)
+        {
+            var options = AlignmentTargetSpec.GetOptions(peptideSettings).ToList();
+            var current = AlignmentTarget ?? peptideSettings.Imputation.AlignmentTarget ?? AlignmentTargetSpec.Default;
+            if (!options.Contains(current))
+            {
+                options.Insert(0, current);
+            }
+            comboRunToRunAlignment.Items.Clear();
+            comboRunToRunAlignment.Items.AddRange(options.Select(option => (object)
+                    new KeyValuePair<string, AlignmentTargetSpec>(option.GetLabel(peptideSettings), option))
+                .ToArray());
+            comboRunToRunAlignment.SelectedIndex = options.IndexOf(current);
+            ComboHelper.AutoSizeDropDown(comboRunToRunAlignment);
+        }
+
+        public AlignmentTargetSpec AlignmentTarget
+        {
+            get
+            {
+                return (comboRunToRunAlignment.SelectedItem as KeyValuePair<string, AlignmentTargetSpec>?)?.Value;
+            }
+            set
+            {
+                var options = comboRunToRunAlignment.Items.Cast<KeyValuePair<string, AlignmentTargetSpec>>()
+                    .Select(kvp => kvp.Value).ToList();
+                comboRunToRunAlignment.SelectedIndex = options.IndexOf(value);
+            }
         }
     }
 }

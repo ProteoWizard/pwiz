@@ -1106,7 +1106,21 @@ namespace pwiz.Skyline.Model
             if (diff.DiffResults || ChangedResults(nodeResult))
                 nodeResult = nodeResult.UpdateResults(settingsNew /*, diff*/);
 
+            if (settingsNew.PeptideSettings.Imputation.HasImputation &&
+                nodeResult.CountOriginalPeaks() > CountOriginalPeaks())
+            {
+                // If the resulting peptide had more original peaks, then update the results again so that peak imputation
+                // can operate on the complete set of data
+                return nodeResult.ChangeSettings(settingsNew, new SrmSettingsDiff(settingsNew, true));
+            }
+
             return nodeResult;
+        }
+
+        public int CountOriginalPeaks()
+        {
+            return TransitionGroups.Sum(tg=>tg.Results?.SelectMany(chromInfoList => chromInfoList)
+                .Count(chromInfo => chromInfo.OriginalPeak != null) ?? 0);
         }
 
         public IEnumerable<TransitionGroup> GetTransitionGroups(SrmSettings settings, ExplicitMods explicitMods, bool useFilter)
@@ -2043,6 +2057,11 @@ namespace pwiz.Skyline.Model
                 return this;
             }
             return ChangeOriginalMoleculeTarget(old.ChromatogramTarget);
+        }
+
+        public bool AnyReintegratedPeaks()
+        {
+            return TransitionGroups.Any(tg => tg.Results?.Any(chromInfoList => chromInfoList.Any(transitionGroupChromInfo => transitionGroupChromInfo.ReintegratedPeak != null)) ?? false);
         }
 
         #region object overrides

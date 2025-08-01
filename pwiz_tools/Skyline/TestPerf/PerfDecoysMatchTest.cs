@@ -145,9 +145,13 @@ namespace TestPerf
                     {
                         Assert.IsNull(graphChromatogram.RetentionMsMs);
                         Assert.IsNull(graphChromatogram.AlignedRetentionMsMs);
-                        Assert.IsNotNull(graphChromatogram.UnalignedRetentionMsMs);
-                        Assert.AreNotEqual(0, graphChromatogram.UnalignedRetentionMsMs.Length);
-                        ValidateTimeRange(graphChromatogram, graphChromatogram.UnalignedRetentionMsMs, 8, 120);
+                        if (false)
+                        {
+                            // TODO(nicksh): alignment is now performed between all replicates so there are no unaligned IDs
+                            Assert.IsNotNull(graphChromatogram.UnalignedRetentionMsMs);
+                            Assert.AreNotEqual(0, graphChromatogram.UnalignedRetentionMsMs.Length);
+                            ValidateTimeRange(graphChromatogram, graphChromatogram.UnalignedRetentionMsMs, 8, 120);
+                        }
                     }
 
                     SkylineWindow.SequenceTree.SelectedNode = SkipInvalidNodes(SkylineWindow.SequenceTree.SelectedNode.NextNode);

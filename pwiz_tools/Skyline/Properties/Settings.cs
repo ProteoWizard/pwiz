@@ -1334,6 +1334,35 @@ namespace pwiz.Skyline.Properties
                 this[nameof(ArdiaRegistrationCodeEntries)] = value;
             }
         }
+
+        [UserScopedSetting]
+        public bool? ShowExemplaryPeakBounds
+        {
+            get
+            {
+                return (bool?)this[nameof(ShowExemplaryPeakBounds)];
+            }
+            set
+            {
+                this[nameof(ShowExemplaryPeakBounds)] = value;
+            }
+        }
+        public RtCalculatorOption RtCalculatorOption
+        {
+            get
+            {
+                var calcName = RTCalculatorName;
+                if (string.IsNullOrEmpty(calcName))
+                {
+                    return null;
+                }
+                return RtCalculatorOption.FromPersistentString(calcName);
+            }
+            set
+            {
+                RTCalculatorName = value?.ToPersistentString();
+            }
+        }
     }
 
     [Serializable]

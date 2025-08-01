@@ -37,6 +37,15 @@ namespace pwiz.Common.Collections
 
         public static bool EqualsDeep<TKey,TValue>(IDictionary <TKey,TValue> dict1, IDictionary<TKey,TValue> dict2)
         {
+            if (ReferenceEquals(dict1, dict2))
+            {
+                return true;
+            }
+
+            if (dict1 == null || dict2 == null)
+            {
+                return false;
+            }
             if (dict1.Count != dict2.Count)
             {
                 return false;
