@@ -64,7 +64,7 @@ namespace pwiz.SkylineTestUtil
         /// set to true for TeamCity, where the VMs start clean every time, tests only get run
         /// once, and limiting VM disk space is cost effective.
         /// </summary>
-        protected virtual DesiredCleanupLevel DesiredCleanupLevel
+        protected DesiredCleanupLevel DesiredCleanupLevel
         {
             get { return TestContext.GetEnumValue("DesiredCleanupLevel", DesiredCleanupLevel.none); }  // Return none if unspecified
             set { TestContext.Properties["DesiredCleanupLevel"] = value.ToString(); }

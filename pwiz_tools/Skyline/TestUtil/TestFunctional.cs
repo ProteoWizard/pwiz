@@ -2002,11 +2002,33 @@ namespace pwiz.SkylineTestUtil
             WaitForClosedForm(form);
         }
 
+        private void PrintDriveInfo()
+        {
+            Console.WriteLine("");
+            foreach (DriveInfo driveInfo in DriveInfo.GetDrives())
+            {
+                if (driveInfo.IsReady) // Check if drive is accessible
+                {
+                    string driveName = driveInfo.Name; // e.g., "C:\"
+                    long freeSpace = driveInfo.AvailableFreeSpace; // Bytes
+                    double freeSpaceGB = freeSpace / (1024.0 * 1024 * 1024); // Convert to GB
+                    long totalSpace = driveInfo.TotalSize; // Bytes
+                    double totalSpaceGB = totalSpace / (1024.0 * 1024 * 1024); // Convert to GB
+
+                    Console.WriteLine($@"[INFO] Drive: {driveName}");
+                    Console.WriteLine($@"[INFO]  Available Free Space: {freeSpaceGB:F2} GB");
+                    Console.WriteLine($@"[INFO]  Total Space: {totalSpaceGB:F2} GB");
+                    Console.WriteLine($@"[INFO]  Used Space: {(totalSpaceGB - freeSpaceGB):F2} GB");
+                }
+            }
+        }
+
         /// <summary>
         /// Starts up Skyline, and runs the <see cref="DoTest"/> test method.
         /// </summary>
         protected void RunFunctionalTest(string defaultUiMode = UiModes.PROTEOMIC)
         {
+            PrintDriveInfo();
             if (IsPerfTest && !RunPerfTests)
             {
                 return; // Don't want to run this lengthy test right now
@@ -2054,6 +2076,7 @@ namespace pwiz.SkylineTestUtil
                 //Log<AbstractFunctionalTest>.Fail(@"Functional test did not complete");
                 Assert.Fail("Functional test did not complete");
             }
+            PrintDriveInfo();
         }
 
         private void RunFunctionalTestAttempt(string defaultUiMode)
@@ -2517,7 +2540,7 @@ namespace pwiz.SkylineTestUtil
             {
                 RunUI(() => Clipboard.SetText(clipboardCheckText));
             }
-
+           
             DoTest();
 
             Assert.IsFalse(IsRecordMode, "Set IsRecordMode to false before commit");   // Avoid merging code with record mode left on.
