@@ -61,7 +61,6 @@ namespace pwiz.Skyline.Controls.FilesTree
             filesTree.BeforeLabelEdit += FilesTree_BeforeLabelEdit;
             filesTree.AfterLabelEdit += FilesTree_AfterLabelEdit;
             filesTree.AfterNodeEdit += FilesTree_AfterLabelEdit;
-            filesTree.ItemDrag += FilesTree_ItemDrag;
             filesTree.DragEnter += FilesTree_DragEnter;
             filesTree.DragLeave += FilesTree_DragLeave;
             filesTree.DragOver += FilesTree_DragOver;
@@ -465,10 +464,15 @@ namespace pwiz.Skyline.Controls.FilesTree
             RemoveSelected(selection);
         }
 
-        // FilesTree => display ToolTip
+        // FilesTree => initiate drag-and-drop, hide tooltips 
         private void FilesTree_MouseMove(object sender, MouseEventArgs e)
         {
-            FilesTree_MouseMove(e.Location);
+            FilesTree_MouseMove(e.Location, e.Button);
+        }
+
+        private void FilesTree_MouseDown(object sender, MouseEventArgs e)
+        {
+            _moveThreshold.Location = e.Location;
         }
 
         private void FilesTree_LostFocus(object sender, EventArgs e)
@@ -476,11 +480,13 @@ namespace pwiz.Skyline.Controls.FilesTree
             _nodeTip?.HideTip();
         }
 
-        private void FilesTree_MouseMove(Point location)
+        private void FilesTree_MouseMove(Point location, MouseButtons button)
         {
+            // Skip if the mouse hasn't moved enough to do stuff
             if (!_moveThreshold.Moved(location))
                 return;
 
+            // Ok, mouse moved enough - reset previous location
             _moveThreshold.Location = null;
 
             var node = FilesTree.GetNodeAt(location) as TreeNodeMS;
@@ -500,6 +506,63 @@ namespace pwiz.Skyline.Controls.FilesTree
             else
             {
                 _nodeTip?.HideTip();
+            }
+
+            // Trigger drag-and-drop. The advanced approach is needed because the ItemDrag event does not trigger correctly
+            // when users set a custom font - despite calculating the custom width for a given font size on FilesTreeNode.
+            if (button == MouseButtons.Left)
+            {
+                var selectedNode = FilesTree.SelectedNode;
+                var selectedNodes = FilesTree.SelectedNodes.Cast<FilesTreeNode>().ToList();
+            
+                if (selectedNode == null || selectedNodes.Count == 0)
+                    return;
+            
+                _nodeTip?.HideTip();
+            
+                // Warning - order matters! Do this first to either short-circuit if attempting to
+                // select an un-draggable node or collect nodes to drag
+                var draggedNodes = new List<FilesTreeNode>();
+                foreach (var item in selectedNodes)
+                {
+                    if (item.IsDraggable())
+                    {
+                        draggedNodes.Add(item);
+                    }
+                    // Cannot drag the .sky file and need to prevent running the next check on Root
+                    else if (ReferenceEquals(item, FilesTree.Root))
+                    {
+                        return;
+                    }
+                    else if (((FilesTreeNode)item.Parent).IsDraggable() && selectedNodes.Contains(item.Parent))
+                    {
+                        /* ignore node and keep going - node's parent is selected and will be added to draggedNodes */
+                    }
+                    else return;
+                }
+            
+                // Clear selection of dragged nodes, which omits the light blue selection color
+                filesTree.SelectedNodes.Clear();
+            
+                // Set the location for the remove drop target based on the tree's SelectedNode. This
+                // deliberately ignore window resize events. They cancel an active drag-and-drop operation.
+                // No need to do extra work handling them.
+                if (!_dropTargetRemove.Visible)
+                {
+                    // Vertically center the drop target on the SelectNode's midline
+                    var x = FilesTree.Bounds.X + FilesTree.ClientSize.Width - _dropTargetRemove.Width - 10 /* extra padding */;
+                    var y = FilesTree.SelectedNode.Bounds.Y + FilesTree.SelectedNode.Bounds.Height / 2 - _dropTargetRemove.Height / 2;
+            
+                    _dropTargetRemove.Location = new Point(x, y);
+                }
+            
+                ShowRemoveDropTarget();
+            
+                var dataObj = new DataObject();
+                dataObj.SetData(typeof(PrimarySelectedNode), selectedNode);
+                dataObj.SetData(typeof(FilesTreeNode), draggedNodes);
+            
+                filesTree.DoDragDrop(dataObj, DragDropEffects.Move);
             }
         }
 
@@ -581,61 +644,6 @@ namespace pwiz.Skyline.Controls.FilesTree
                 e.Effect = DragDropEffects.Move;
 
             ShowRemoveDropTarget();
-        }
-
-        private void FilesTree_ItemDrag(object sender, ItemDragEventArgs e)
-        {
-            var selectedNode = FilesTree.SelectedNode;
-            var selectedNodes = FilesTree.SelectedNodes.Cast<FilesTreeNode>().ToList();
-
-            if (selectedNode == null || selectedNodes.Count == 0)
-                return;
-
-            _nodeTip.HideTip();
-
-            // Warning - order matters! Do this first to either short-circuit if attempting to
-            // select an un-draggable node or collect nodes to drag
-            var draggedNodes = new List<FilesTreeNode>();
-            foreach (var node in selectedNodes)
-            {
-                if (node.IsDraggable())
-                {
-                    draggedNodes.Add(node);
-                }
-                // Cannot drag the .sky file and need to prevent running the next check on Root
-                else if (ReferenceEquals(node, FilesTree.Root))
-                {
-                    return;
-                }
-                else if (((FilesTreeNode)node.Parent).IsDraggable() && selectedNodes.Contains(node.Parent))
-                {
-                    /* ignore node and keep going - node's parent is selected and will be added to draggedNodes */
-                }
-                else return;
-            }
-
-            // Clear selection of dragged nodes, which omits the light blue selection color
-            filesTree.SelectedNodes.Clear();
-
-            // Set the location for the remove drop target based on the tree's SelectedNode. This
-            // deliberately ignore window resize events. They cancel an active drag-and-drop operation.
-            // No need to do extra work handling them.
-            if (!_dropTargetRemove.Visible)
-            {
-                // Vertically center the drop target on the SelectNode's midline
-                var x = FilesTree.Bounds.X + FilesTree.ClientSize.Width - _dropTargetRemove.Width - 10 /* extra padding */;
-                var y = FilesTree.SelectedNode.Bounds.Y + FilesTree.SelectedNode.Bounds.Height / 2 - _dropTargetRemove.Height / 2;
-
-                _dropTargetRemove.Location = new Point(x, y);
-            }
-
-            ShowRemoveDropTarget();
-
-            var dataObj = new DataObject();
-            dataObj.SetData(typeof(PrimarySelectedNode), selectedNode);
-            dataObj.SetData(typeof(FilesTreeNode), draggedNodes);
-
-            filesTree.DoDragDrop(dataObj, DragDropEffects.Move);
         }
 
         private void FilesTree_DragDrop(object sender, DragEventArgs e)

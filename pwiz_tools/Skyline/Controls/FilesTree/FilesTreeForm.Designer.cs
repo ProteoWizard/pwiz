@@ -33,7 +33,6 @@ namespace pwiz.Skyline.Controls.FilesTree
                 FilesTree.BeforeLabelEdit -= FilesTree_BeforeLabelEdit;
                 FilesTree.AfterLabelEdit -= FilesTree_AfterLabelEdit;
                 FilesTree.AfterNodeEdit -= FilesTree_AfterLabelEdit;
-                FilesTree.ItemDrag -= FilesTree_ItemDrag;
                 FilesTree.DragEnter -= FilesTree_DragEnter;
                 FilesTree.DragLeave -= FilesTree_DragLeave;
                 FilesTree.DragOver -= FilesTree_DragOver;
