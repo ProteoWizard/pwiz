@@ -79,11 +79,47 @@ namespace pwiz.Skyline.Model.PropertySheets {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Instrument.
+        /// </summary>
+        internal static string Category_Instrument {
+            get {
+                return ResourceManager.GetString("Category_Instrument", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Analyte Concentration.
+        /// </summary>
+        internal static string DisplayName_AnalyteConcentration {
+            get {
+                return ResourceManager.GetString("DisplayName_AnalyteConcentration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Batch Name.
+        /// </summary>
+        internal static string DisplayName_BatchName {
+            get {
+                return ResourceManager.GetString("DisplayName_BatchName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Document Path.
         /// </summary>
         internal static string DisplayName_DocumentPath {
             get {
                 return ResourceManager.GetString("DisplayName_DocumentPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File Count.
+        /// </summary>
+        internal static string DisplayName_FileCount {
+            get {
+                return ResourceManager.GetString("DisplayName_FileCount", resourceCulture);
             }
         }
         
@@ -120,6 +156,33 @@ namespace pwiz.Skyline.Model.PropertySheets {
         internal static string DisplayName_Name {
             get {
                 return ResourceManager.GetString("DisplayName_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Annotation Note.
+        /// </summary>
+        internal static string DisplayName_Note {
+            get {
+                return ResourceManager.GetString("DisplayName_Note", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sample Dilution Factor.
+        /// </summary>
+        internal static string DisplayName_SampleDilutionFactor {
+            get {
+                return ResourceManager.GetString("DisplayName_SampleDilutionFactor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sample Type.
+        /// </summary>
+        internal static string DisplayName_SampleType {
+            get {
+                return ResourceManager.GetString("DisplayName_SampleType", resourceCulture);
             }
         }
     }

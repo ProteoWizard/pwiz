@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
@@ -45,13 +46,15 @@ namespace pwiz.Skyline.Model.PropertySheets
             Type type,
             object initialValue = null,
             string category = null,
-            string displayName = null)
+            string displayName = null,
+            bool isNested = false)
         {
             var descriptor = new DynamicPropertyDescriptor(
                 name,
                 type,
                 category,
-                displayName);
+                displayName,
+                isNested ? new ExpandableObjectConverter() : null);
 
             _propertyDescriptors.Add(descriptor);
             _values[name] = initialValue;
@@ -65,26 +68,53 @@ namespace pwiz.Skyline.Model.PropertySheets
 
             foreach (var prop in props)
             {
-                if (prop.GetCustomAttribute<ContainsViewablePropertiesAttribute>() != null)
-                    AddPropertiesFromAnnotatedObject(prop.GetValue(source));
+                var propAttr = prop.GetCustomAttribute<PropertyAttribute>();
+                var typeAttr = prop.GetCustomAttribute<PropertyTypeAttribute>();
+                var recurseAttr = prop.GetCustomAttribute<ContainsViewablePropertiesAttribute>();
+                var listAttr = prop.GetCustomAttribute<ListContainsViewablePropertiesAttribute>();
 
-                var attr = prop.GetCustomAttribute<PropertyAttribute>();
-                if (attr == null)
+                if (propAttr == null && typeAttr == null && recurseAttr == null && listAttr == null)
                     continue;
 
-                var typeAttr = prop.GetCustomAttribute<PropertyTypeAttribute>();
-
                 var value = prop.GetValue(source);
+                if (typeAttr != null)
+                    value = typeAttr.GetValue(value);
 
-                var displayName = PropertySheetResources.ResourceManager.GetString(DISPLAYNAME_PREFIX + prop.Name);
+                if (propAttr != null)
+                {
+                    
+                    var displayName = PropertySheetResources.ResourceManager.GetString(DISPLAYNAME_PREFIX + prop.Name);
 
-                AddProperty(
-                    name: prop.Name,
-                    type: typeAttr != null ? typeAttr.Type : prop.PropertyType,
-                    initialValue: typeAttr != null ? typeAttr.GetValue(value) : value,
-                    category: attr.Category,
-                    displayName: displayName
-                );
+                    AddProperty(
+                        name: prop.Name,
+                        type: typeAttr != null ? typeAttr.Type : prop.PropertyType,
+                        initialValue: typeAttr != null ? typeAttr.GetValue(value) : value,
+                        category: propAttr.Category,
+                        displayName: displayName
+                    );
+                }
+
+                if (recurseAttr != null)
+                    AddPropertiesFromAnnotatedObject(value);
+
+                if (listAttr != null && value is IEnumerable list)
+                {
+                    foreach (var sourceItem in list)
+                    {
+                        var propertyItem = new DynamicPropertyObject();
+                        propertyItem.AddPropertiesFromAnnotatedObject(sourceItem);
+                        var displayName = PropertySheetResources.ResourceManager.GetString(DISPLAYNAME_PREFIX + prop.Name);
+
+                        AddProperty(
+                            name: prop.Name,
+                            type: typeof(DynamicPropertyObject),
+                            initialValue: propertyItem,
+                            displayName: displayName,
+                            category: listAttr.Category,
+                            isNested: true
+                        );
+                    }
+                }
             }
         }
 
@@ -94,6 +124,11 @@ namespace pwiz.Skyline.Model.PropertySheets
         public void SetValue(string propertyName, object value)
         {
             _values[propertyName] = value;
+        }
+
+        public override string ToString()
+        {
+            return ""; // or something concise and neutral like "..."
         }
 
         #region ICustomTypeDescriptor Implementation
@@ -127,17 +162,20 @@ namespace pwiz.Skyline.Model.PropertySheets
         private readonly Type _propertyType;
         private readonly string _category;
         private readonly string _displayName;
+        private readonly TypeConverter _typeConverter;
 
         public DynamicPropertyDescriptor(
             string name,
             Type propertyType,
             string category = null,
-            string displayName = null)
+            string displayName = null,
+            TypeConverter typeConverter = null)
             : base(name, null)
         {
             _propertyType = propertyType;
             _category = category;
             _displayName = displayName;
+            _typeConverter = typeConverter;
         }
 
         // Required overrides for PropertyDescriptor.
@@ -161,5 +199,15 @@ namespace pwiz.Skyline.Model.PropertySheets
 
         public override string Category => _category ?? base.Category;
         public override string DisplayName => _displayName ?? Name;
+        public override AttributeCollection Attributes
+        {
+            get
+            {
+                var attributes = new List<Attribute>();
+                if (_typeConverter != null)
+                    attributes.Add(new TypeConverterAttribute(_typeConverter.GetType()));
+                return new AttributeCollection(attributes.ToArray());
+            }
+        }
     }
 }

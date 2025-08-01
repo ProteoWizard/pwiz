@@ -400,6 +400,7 @@ namespace pwiz.Skyline.Model.Results
 
         public string FilePath { get; }
 
+        [ListContainsViewableProperties(category: "Files")]
         public IList<ChromFileInfo> MSDataFileInfos
         {
             get { return _msDataFileInfo; }
@@ -421,6 +422,7 @@ namespace pwiz.Skyline.Model.Results
             return false;
         }
 
+        [ChromatogramProperty]
         public int FileCount { get { return _msDataFileInfo.Count; } }
 
         public IEnumerable<MsDataFileUri> MSDataFilePaths { get { return MSDataFileInfos.Select(info => info.FilePath); } }
@@ -441,6 +443,7 @@ namespace pwiz.Skyline.Model.Results
             return IsLoaded ? string.Empty : @"No ChromFileInfo.FileWriteTime for " + string.Join(@",", MSDataFileInfos.Where(info => !info.FileWriteTime.HasValue).Select(f => f.FilePath.GetFilePath()));
         }
 
+        [ContainsViewableProperties]
         public Annotations Annotations { get; private set; }
 
         public OptimizableRegression OptimizationFunction { get; private set; }
@@ -1022,7 +1025,9 @@ namespace pwiz.Skyline.Model.Results
         public DateTime? FileWriteTime { get; private set; }
         public DateTime? RunStartTime { get; private set; }
         public DateTime? ImportTime { get; private set; }
+        [FileProperty]
         public double MaxRetentionTime { get; private set; }
+        [FileProperty]
         public double MaxIntensity { get; private set; }
         public bool HasMidasSpectra { get; private set; }
         // Only used for File > Share to older versions, use ChromCachedFile versions instead in other cases
@@ -1036,6 +1041,7 @@ namespace pwiz.Skyline.Model.Results
         public string InstrumentSerialNumber { get; private set; }
         public bool IsSrm { get; private set; }
 
+        [ListContainsViewableProperties("Files")]
         public IList<MsInstrumentConfigInfo> InstrumentInfoList
         {
             get { return _instrumentInfoList; }

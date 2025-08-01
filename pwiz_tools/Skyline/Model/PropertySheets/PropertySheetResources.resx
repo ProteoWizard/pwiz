@@ -104,6 +104,9 @@
 	<data name="Category_ChromatogramSet" xml:space="preserve">
     <value>Chromatogram Set</value>
   </data>
+	<data name="Category_Instrument" xml:space="preserve">
+    <value>Instrument</value>
+  </data>
 	<data name="DisplayName_Name" xml:space="preserve">
     <value>Name</value>
   </data>
@@ -118,5 +121,23 @@
   </data>
 	<data name="DisplayName_FileType" xml:space="preserve">
     <value>File Type</value>
+  </data>
+	<data name="DisplayName_FileCount" xml:space="preserve">
+    <value>File Count</value>
+  </data>
+	<data name="DisplayName_AnalyteConcentration" xml:space="preserve">
+    <value>Analyte Concentration</value>
+  </data>
+	<data name="DisplayName_BatchName" xml:space="preserve">
+    <value>Batch Name</value>
+  </data>
+	<data name="DisplayName_SampleDilutionFactor" xml:space="preserve">
+    <value>Sample Dilution Factor</value>
+  </data>
+	<data name="DisplayName_SampleType" xml:space="preserve">
+    <value>Sample Type</value>
+  </data>
+	<data name="DisplayName_Note" xml:space="preserve">
+    <value>Annotation Note</value>
   </data>
 </root>

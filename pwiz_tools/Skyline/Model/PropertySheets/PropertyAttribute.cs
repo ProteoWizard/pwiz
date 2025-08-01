@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 
 namespace pwiz.Skyline.Model.PropertySheets
 {
@@ -47,18 +46,16 @@ namespace pwiz.Skyline.Model.PropertySheets
     #endregion
 
     [AttributeUsage(AttributeTargets.Property)]
-    public class ContainsViewablePropertiesAttribute : Attribute
+    public class ContainsViewablePropertiesAttribute : Attribute { }
+
+    [AttributeUsage(AttributeTargets.Property)]
+    public class ListContainsViewablePropertiesAttribute : Attribute
     {
-        public Func<Type, bool> IsRelevantToType;
+        public string Category { get; }
 
-        public ContainsViewablePropertiesAttribute()
+        public ListContainsViewablePropertiesAttribute(string category)
         {
-            IsRelevantToType = (type) => true;
-        }
-
-        public ContainsViewablePropertiesAttribute(params Type[] relevantTypes)
-        {
-            IsRelevantToType = (type) => relevantTypes.Any(relevantType => relevantType.IsAssignableFrom(type));
+            Category = category;
         }
     }
 }
