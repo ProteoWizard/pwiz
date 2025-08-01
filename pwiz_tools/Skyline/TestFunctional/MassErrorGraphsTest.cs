@@ -216,7 +216,10 @@ namespace pwiz.SkylineTestFunctional
             {
                 var pane = GetHistogramGraphPane();
                 // TODO(nicksh): figure out the correct number here
-                // Assert.AreEqual(83, pane.GetTotalBars());
+                if (false)
+                {
+                    Assert.AreEqual(83, pane.GetTotalBars());
+                }
                 Assert.AreEqual(pane.GetMin(), 1);
                 Assert.AreEqual(pane.GetMax(), 10);
             });
