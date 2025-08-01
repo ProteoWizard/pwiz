@@ -22,6 +22,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
+using pwiz.Common.Collections;
 
 namespace pwiz.Skyline.Model.PropertySheets
 {
@@ -82,6 +83,11 @@ namespace pwiz.Skyline.Model.PropertySheets
                 if (propAttr != null)
                 {
                     var displayName = PropertySheetDisplayNameResources.ResourceManager.GetString(prop.Name);
+                    if (displayName.IsNullOrEmpty())
+                        throw new InvalidOperationException(string.Format(
+                            PropertySheetDisplayNameResources.Error_NoDisplayNameFound,
+                            prop.Name,
+                            sourceType.Name));
 
                     AddProperty(
                         name: prop.Name,
@@ -102,6 +108,11 @@ namespace pwiz.Skyline.Model.PropertySheets
                         var propertyItem = new DynamicPropertyObject();
                         propertyItem.AddPropertiesFromAnnotatedObject(sourceItem);
                         var displayName = PropertySheetDisplayNameResources.ResourceManager.GetString(prop.Name);
+                        if (displayName.IsNullOrEmpty())
+                            throw new InvalidOperationException(string.Format(
+                                PropertySheetDisplayNameResources.Error_NoDisplayNameFound,
+                                prop.Name,
+                                sourceType.Name));
 
                         AddProperty(
                             name: prop.Name,
