@@ -99,7 +99,7 @@
 		<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
 	</resheader>
 	<data name="Error_NoDisplayNameFound" xml:space="preserve">
-    <value>No display name found for property '{0}' in {1}. Ensure that there is an associated display name in PropertySheetDisplayNameResources.resx for the property '{0}'. </value>
+    <value>No display name found for property '{0}' in {1}. Ensure that there is an associated display name in PropertySheetDisplayNameResources.resx for the property '{0}'. (Was the property name changed?)</value>
   </data>
 	<data name="Name" xml:space="preserve">
     <value>Name</value>

@@ -88,7 +88,7 @@ namespace pwiz.Skyline.Model.PropertySheets {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to No display name found for property &apos;{0}&apos; in {1}. Ensure that there is an associated display name in PropertySheetDisplayNameResources.resx for the property &apos;{0}&apos;. .
+        ///   Looks up a localized string similar to No display name found for property &apos;{0}&apos; in {1}. Ensure that there is an associated display name in PropertySheetDisplayNameResources.resx for the property &apos;{0}&apos;. (Was the property name changed?).
         /// </summary>
         internal static string Error_NoDisplayNameFound {
             get {
