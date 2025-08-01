@@ -3,7 +3,7 @@
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
  * Copyright 2009 University of Washington - Seattle, WA
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,12 +26,13 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
+using pwiz.CommonMsData.RemoteApi;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.DocSettings.MetadataExtraction;
 using pwiz.Skyline.Model.IonMobility;
-using pwiz.CommonMsData.RemoteApi;
+using pwiz.Skyline.Model.PropertySheets;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Util;
@@ -399,6 +400,7 @@ namespace pwiz.Skyline.Model.Results
 
         public string FilePath { get; }
 
+        [ListContainsViewableProperties(category: "Files")]
         public IList<ChromFileInfo> MSDataFileInfos
         {
             get { return _msDataFileInfo; }
@@ -420,6 +422,7 @@ namespace pwiz.Skyline.Model.Results
             return false;
         }
 
+        [ChromatogramProperty]
         public int FileCount { get { return _msDataFileInfo.Count; } }
 
         public IEnumerable<MsDataFileUri> MSDataFilePaths { get { return MSDataFileInfos.Select(info => info.FilePath); } }
@@ -440,6 +443,7 @@ namespace pwiz.Skyline.Model.Results
             return IsLoaded ? string.Empty : @"No ChromFileInfo.FileWriteTime for " + string.Join(@",", MSDataFileInfos.Where(info => !info.FileWriteTime.HasValue).Select(f => f.FilePath.GetFilePath()));
         }
 
+        [ContainsViewableProperties]
         public Annotations Annotations { get; private set; }
 
         public OptimizableRegression OptimizationFunction { get; private set; }
@@ -500,12 +504,17 @@ namespace pwiz.Skyline.Model.Results
             return (ChromFileInfoId) (ordinalIndex != -1 ? MSDataFileInfos[ordinalIndex].Id : null);
         }
 
+        [ChromatogramProperty]
         public double? AnalyteConcentration { get; private set; }
 
+        [ChromatogramProperty]
         public double SampleDilutionFactor { get; private set; }
 
+        [ChromatogramProperty]
+        [StringPropertyType]
         public SampleType SampleType { get; private set; }
 
+        [ChromatogramProperty]
         public string BatchName { get; private set; }
 
         #region Property change methods
@@ -1016,7 +1025,9 @@ namespace pwiz.Skyline.Model.Results
         public DateTime? FileWriteTime { get; private set; }
         public DateTime? RunStartTime { get; private set; }
         public DateTime? ImportTime { get; private set; }
+        [FileProperty]
         public double MaxRetentionTime { get; private set; }
+        [FileProperty]
         public double MaxIntensity { get; private set; }
         public bool HasMidasSpectra { get; private set; }
         // Only used for File > Share to older versions, use ChromCachedFile versions instead in other cases
@@ -1030,6 +1041,7 @@ namespace pwiz.Skyline.Model.Results
         public string InstrumentSerialNumber { get; private set; }
         public bool IsSrm { get; private set; }
 
+        [ListContainsViewableProperties("Files")]
         public IList<MsInstrumentConfigInfo> InstrumentInfoList
         {
             get { return _instrumentInfoList; }
