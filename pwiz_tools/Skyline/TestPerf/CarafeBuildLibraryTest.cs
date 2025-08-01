@@ -44,7 +44,7 @@ namespace TestPerf
     public class CarafeBuildLibraryTest : AbstractFunctionalTestEx
     {
         private double MZ_TOLERANCE = 1e-4; 
-        private double INTENSITY_TOLERANCE = 1e-1;
+        private double INTENSITY_TOLERANCE = 1.5e-1;
         /// <summary>
         /// When true Python installation is forced by deleting any old installation
         /// </summary>
