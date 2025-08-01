@@ -224,16 +224,16 @@ namespace TestPerf
 
             // var expected = LibrarySpec.CreateFromPath("answer", TestFilesDir.GetTestPath(@"cpu_test_res_fine_tuned_bySky_iRT.blib"));
             // var result = LibrarySpec.CreateFromPath("testBuilt", builtLibraryBySkyIrt);
-            // AssertEx.LibraryEquals(expected, result, MZ_TOLERANCE, INTENSITY_TOLERANCE, MINIMUM_INTENSITY, TOP_N);
+            // AssertEx.LibraryEquivalent(expected, result, MZ_TOLERANCE, INTENSITY_TOLERANCE, MINIMUM_INTENSITY, TOP_N);
 
 
             //var expected = LibrarySpec.CreateFromPath("answer", TestFilesDir.GetTestPath(@"cpu_test_res_fine_tuned_byDiann.blib"));
             //var result = LibrarySpec.CreateFromPath("testBuilt", builtLibraryByDiann);
-            //AssertEx.LibraryEquals(expected, result, MZ_TOLERANCE, INTENSITY_TOLERANCE, MINIMUM_INTENSITY, TOP_N);
+            //AssertEx.LibraryEquivalent(expected, result, MZ_TOLERANCE, INTENSITY_TOLERANCE, MINIMUM_INTENSITY, TOP_N);
 
             var expected = LibrarySpec.CreateFromPath("answer", TestFilesDir.GetTestPath(@"cpu_test_res_fine_tuned_bySky.blib"));
             var result = LibrarySpec.CreateFromPath("testBuilt", builtLibraryBySky);
-            AssertEx.LibraryEquals(expected, result, MZ_TOLERANCE, INTENSITY_TOLERANCE);
+            AssertEx.LibraryEquivalent(expected, result, MZ_TOLERANCE, INTENSITY_TOLERANCE);
             TestFilesDir.CheckForFileLocks(TestFilesDir.FullPath);
         }
         private void LongTest() 
@@ -294,15 +294,15 @@ namespace TestPerf
             
             var expected = LibrarySpec.CreateFromPath("answer", TestFilesDir.GetTestPath(@"cpu_test_res_fine_tuned_bySky_iRT.blib")); 
             var result = LibrarySpec.CreateFromPath("testBuilt", builtLibraryBySkyIrt); 
-            AssertEx.LibraryEquals(expected, result, MZ_TOLERANCE, INTENSITY_TOLERANCE); 
+            AssertEx.LibraryEquivalent(expected, result, MZ_TOLERANCE, INTENSITY_TOLERANCE); 
             
             expected = LibrarySpec.CreateFromPath("answer", TestFilesDir.GetTestPath(@"cpu_test_res_fine_tuned_byDiann.blib"));
             result = LibrarySpec.CreateFromPath("testBuilt", builtLibraryByDiann);
-            AssertEx.LibraryEquals(expected, result, MZ_TOLERANCE, INTENSITY_TOLERANCE);
+            AssertEx.LibraryEquivalent(expected, result, MZ_TOLERANCE, INTENSITY_TOLERANCE);
 
             expected = LibrarySpec.CreateFromPath("answer", TestFilesDir.GetTestPath(@"cpu_test_res_fine_tuned_bySky.blib"));
             result = LibrarySpec.CreateFromPath("testBuilt", builtLibraryBySky);
-            AssertEx.LibraryEquals(expected, result, MZ_TOLERANCE, INTENSITY_TOLERANCE);
+            AssertEx.LibraryEquivalent(expected, result, MZ_TOLERANCE, INTENSITY_TOLERANCE);
             TestFilesDir.CheckForFileLocks(TestFilesDir.FullPath);
         }
 
