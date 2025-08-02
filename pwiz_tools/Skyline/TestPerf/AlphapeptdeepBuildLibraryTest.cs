@@ -135,6 +135,9 @@ namespace TestPerf
             OkDialog(saveChangesDlg, saveChangesDlg.ClickNo);
 
             TestFilesDir.CheckForFileLocks(TestFilesDir.FullPath);
+
+            if (IsCleanPythonMode)
+                AssertEx.IsTrue(PythonInstaller.DeleteToolsPythonDirectory());
         }
 
         private void TestEmptyDocumentMessage()

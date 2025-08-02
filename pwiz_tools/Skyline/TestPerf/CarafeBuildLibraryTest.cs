@@ -164,6 +164,9 @@ namespace TestPerf
                 LongTest();
             else
                 ShortTest();
+
+            if (IsCleanPythonMode)
+                AssertEx.IsTrue(PythonInstaller.DeleteToolsPythonDirectory());
         }
 
         private void ShortTest()
