@@ -391,9 +391,29 @@ namespace TestRunnerLib
                 throw new ApplicationException("Can't find path to TestRunner.exe");
             return Path.Combine(runnerExeDirectory, assembly);
         }
+        private void LogDriveInfo()
+        {
+            foreach (DriveInfo driveInfo in DriveInfo.GetDrives())
+            {
+                if (driveInfo.IsReady) // Check if drive is accessible
+                {
+                    string driveName = driveInfo.Name; // e.g., "C:\"
+                    long freeSpace = driveInfo.AvailableFreeSpace; // Bytes
+                    double freeSpaceGB = freeSpace / (1024.0 * 1024 * 1024); // Convert to GB
+                    long totalSpace = driveInfo.TotalSize; // Bytes
+                    double totalSpaceGB = totalSpace / (1024.0 * 1024 * 1024); // Convert to GB
 
+                    Log("[INFO] Drive: {0}", driveName);
+                    Log("[INFO]  Available Free Space: {0:F2} GB", freeSpaceGB);
+                    Log("[INFO]  Total Space: {0:F2} GB", totalSpaceGB);
+                    Log("[INFO]  Used Space: {0:F2} GB", (totalSpaceGB - freeSpaceGB));
+                }
+            }
+        } 
         public bool Run(TestInfo test, int pass, int testNumber, string dmpDir, bool heapOutput)
         {
+            LogDriveInfo();
+
             TeamCityStartTest(test, pass);
 
             if (_showStatus)
@@ -673,7 +693,7 @@ namespace TestRunnerLib
                 }
 
                 TeamCityFinishTest(test, pass);
-
+                LogDriveInfo();
                 return true;
             }
 
@@ -710,6 +730,8 @@ namespace TestRunnerLib
                 test.TestMethod.Name,
                 message,
                 exception);
+
+            LogDriveInfo();
             return false;
         }
 
