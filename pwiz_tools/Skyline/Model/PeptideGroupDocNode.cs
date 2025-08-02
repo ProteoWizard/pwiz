@@ -326,6 +326,31 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        /// <summary>
+        /// Returns the possible names that could be used to look up protein metadata in the background proteome.
+        /// The returned names are in priority order and the first name for which metadata
+        /// can be found will be used. 
+        /// </summary>
+        /// <param name="metadataIndex">For protein groups, which metadata is being asked about</param>
+        public IEnumerable<string> GetProteinLookupNames(int metadataIndex)
+        {
+            var list = new List<string>();
+            if (PeptideGroup is FastaSequence fastaSequence)
+            {
+                list.Add(fastaSequence.FastaSequenceList[metadataIndex].Name);
+            }
+            else
+            {
+                list.Add(Name);
+            }
+
+            var currentProteinMetadata = ProteinMetadata.ProteinMetadataList[metadataIndex];
+            list.Add(currentProteinMetadata.Name);
+            list.Add(OriginalName);
+            list.Add(currentProteinMetadata.Accession);
+            return list.Where(name => !string.IsNullOrEmpty(name)).Distinct();
+        }
+
         public IList<DocNode> RankChildren(SrmSettings settingsNew, IList<DocNode> childrenNew)
         {
             if (PeptideGroup.Sequence != null)

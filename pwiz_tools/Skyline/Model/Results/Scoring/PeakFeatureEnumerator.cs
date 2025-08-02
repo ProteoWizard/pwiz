@@ -699,7 +699,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         }
     }
 
-    public struct PeakTransitionGroupIdKey
+    public readonly struct PeakTransitionGroupIdKey : IEquatable<PeakTransitionGroupIdKey>
     {
         public PeakTransitionGroupIdKey(Peptide peptide, ChromFileInfoId fileId) : this()
         {
