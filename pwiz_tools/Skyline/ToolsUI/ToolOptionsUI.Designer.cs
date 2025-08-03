@@ -31,7 +31,6 @@ namespace pwiz.Skyline.ToolsUI
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ToolOptionsUI));
             this.tabControl = new System.Windows.Forms.TabControl();
             this.tabAlphaPeptDeep = new System.Windows.Forms.TabPage();
-            this.btnAlphaPeptDeepUserSettings = new System.Windows.Forms.Button();
             this.tabCarafe = new System.Windows.Forms.TabPage();
             this.lnkCarafeLibraryHelp = new System.Windows.Forms.LinkLabel();
             this.lnkCarafeModelTrainingHelp = new System.Windows.Forms.LinkLabel();
@@ -75,6 +74,7 @@ namespace pwiz.Skyline.ToolsUI
             this.btnEditRemoteAccountList = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
+            this.btnAlphaPeptDeepUserSettings = new System.Windows.Forms.Button();
             this.tabControl.SuspendLayout();
             this.tabAlphaPeptDeep.SuspendLayout();
             this.tabCarafe.SuspendLayout();
@@ -107,13 +107,7 @@ namespace pwiz.Skyline.ToolsUI
             resources.ApplyResources(this.tabAlphaPeptDeep, "tabAlphaPeptDeep");
             this.tabAlphaPeptDeep.Name = "tabAlphaPeptDeep";
             this.tabAlphaPeptDeep.UseVisualStyleBackColor = true;
-            // 
-            // btnAlphaPeptDeepUserSettings
-            // 
-            resources.ApplyResources(this.btnAlphaPeptDeepUserSettings, "btnAlphaPeptDeepUserSettings");
-            this.btnAlphaPeptDeepUserSettings.Name = "btnAlphaPeptDeepUserSettings";
-            this.btnAlphaPeptDeepUserSettings.UseVisualStyleBackColor = true;
-            this.btnAlphaPeptDeepUserSettings.Click += new System.EventHandler(this.btnAlphaPeptDeepUserSettings_Click);
+            this.tabAlphaPeptDeep.Click += new System.EventHandler(this.tabAlphaPeptDeep_Click);
             // 
             // tabCarafe
             // 
@@ -419,6 +413,14 @@ namespace pwiz.Skyline.ToolsUI
             this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.btnOK.Name = "btnOK";
             this.btnOK.UseVisualStyleBackColor = true;
+            this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
+            // 
+            // btnAlphaPeptDeepUserSettings
+            // 
+            resources.ApplyResources(this.btnAlphaPeptDeepUserSettings, "btnAlphaPeptDeepUserSettings");
+            this.btnAlphaPeptDeepUserSettings.Name = "btnAlphaPeptDeepUserSettings";
+            this.btnAlphaPeptDeepUserSettings.UseVisualStyleBackColor = true;
+            this.btnAlphaPeptDeepUserSettings.Click += new System.EventHandler(this.btnAlphaPeptDeepUserSettings_Click);
             // 
             // ToolOptionsUI
             // 
