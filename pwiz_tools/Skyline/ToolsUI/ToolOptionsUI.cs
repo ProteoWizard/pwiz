@@ -662,9 +662,13 @@ namespace pwiz.Skyline.ToolsUI
 
         private void btnOK_Click(object sender, EventArgs e)
         {
+            this.ActiveControl = null;
             var gridValues = AlphapeptdeepLibraryBuilder.UserParameters;
             foreach (var kvp in _alphaPeptDeepParams)
             {
+                if (!gridValues[kvp.Key].IsValid)
+                    this.DialogResult = DialogResult.None;
+
                 if (kvp.Value is TextBox tb)
                     gridValues[kvp.Key].Value = tb.Text;
                 else if (kvp.Value is CheckBox cb)

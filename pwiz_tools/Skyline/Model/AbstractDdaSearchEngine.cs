@@ -135,6 +135,8 @@ namespace pwiz.Skyline.Model
             public object MinValue { get; }
             public object MaxValue { get; }
 
+            public bool IsValid { get; private set; }
+
             public IEnumerable<string> ValidValues { get; }
 
             private object _value;
@@ -151,9 +153,12 @@ namespace pwiz.Skyline.Model
             {
                 // incoming value must either be a string or value type must stay the same
                 Assume.IsTrue(value is string || value?.GetType() == _value?.GetType());
-
+                IsValid = false;
                 if (value == null)
+                {
+                    IsValid = true;
                     return null;
+                }
 
                 // CONSIDER: worth an extra case to handle incoming values that are already int/double?
                 switch (MinValue)
@@ -163,6 +168,7 @@ namespace pwiz.Skyline.Model
                             throw new ArgumentOutOfRangeException(string.Format(
                                 Resources.CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for__1___It_must_be_one_of_the_following___2_,
                                 value, Name, string.Join(@", ", ValidValues)));
+                        IsValid = true;
                         return value;
 
                     case bool b:
@@ -170,6 +176,7 @@ namespace pwiz.Skyline.Model
                             throw new ArgumentException(string.Format(
                                 ModelResources.Setting_Validate_The_value___0___is_not_valid_for_the_argument__1__which_must_be_either__True__or__False__,
                                 value, Name));
+                        IsValid = true;
                         return tmpb;
 
                     case int minValue:
@@ -181,6 +188,7 @@ namespace pwiz.Skyline.Model
                             throw new ArgumentOutOfRangeException(string.Format(
                                 Resources.ValueOutOfRangeDoubleException_ValueOutOfRangeException_The_value___0___for_the_argument__1__must_be_between__2__and__3__,
                                 value, Name, minValue, MaxValue));
+                        IsValid = true;
                         return tmpi32;
 
                     case double minValue:
@@ -192,6 +200,7 @@ namespace pwiz.Skyline.Model
                             throw new ArgumentOutOfRangeException(string.Format(
                                 Resources.ValueOutOfRangeDoubleException_ValueOutOfRangeException_The_value___0___for_the_argument__1__must_be_between__2__and__3__,
                                 value, Name, minValue, MaxValue));
+                        IsValid = true;
                         return tmpd;
 
                     default:
