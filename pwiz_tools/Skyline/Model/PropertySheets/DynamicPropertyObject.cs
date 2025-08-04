@@ -49,14 +49,16 @@ namespace pwiz.Skyline.Model.PropertySheets
             object initialValue = null,
             string category = null,
             string displayName = null,
-            bool isNested = false)
+            bool isNested = false,
+            Action<object, object> setter = null)
         {
             var descriptor = new DynamicPropertyDescriptor(
                 name,
                 type,
                 category,
                 displayName,
-                isNested ? new ExpandableObjectConverter() : null);
+                isNested ? new ExpandableObjectConverter() : null,
+                setter);
 
             _propertyDescriptors.Add(descriptor);
             _values[name] = initialValue;
@@ -73,10 +75,12 @@ namespace pwiz.Skyline.Model.PropertySheets
                 var typeAttr = prop.GetCustomAttribute<PropertyTypeAttribute>();
                 var recurseAttr = prop.GetCustomAttribute<ContainsViewablePropertiesAttribute>();
                 var listAttr = prop.GetCustomAttribute<ListContainsViewablePropertiesAttribute>();
+                var editableAttr = prop.GetCustomAttribute<EditableInPropertySheetAttribute>();
 
+                // TODO: Throw errors for incorrect or redundant use of attributes
                 if (propAttr != null)
                 {
-                    AddSingleProperty(prop, source, typeAttr, propAttr, resource, sourceType);
+                    AddSingleProperty(prop, source, typeAttr, propAttr, editableAttr, resource, sourceType);
                 }
                 else if (recurseAttr != null)
                 {
@@ -89,7 +93,7 @@ namespace pwiz.Skyline.Model.PropertySheets
             }
         }
 
-        private void AddSingleProperty(PropertyInfo prop, object source, PropertyTypeAttribute typeAttr, PropertyAttribute propAttr, ResourceManager resource, Type sourceType)
+        private void AddSingleProperty(PropertyInfo prop, object source, PropertyTypeAttribute typeAttr, PropertyAttribute propAttr, EditableInPropertySheetAttribute editableAttr, ResourceManager resource, Type sourceType)
         {
             var value = prop.GetValue(source);
             if (typeAttr != null)
@@ -102,12 +106,20 @@ namespace pwiz.Skyline.Model.PropertySheets
                     prop.Name,
                     sourceType.Name));
 
+
+            Action<object, object> setter = null;
+            if (editableAttr != null)
+            {
+                setter = (object obj, object val) => prop.SetValue(obj, val);
+            }
+
             AddProperty(
                 name: prop.Name,
                 type: typeAttr != null ? typeAttr.Type : prop.PropertyType,
-                initialValue: value,
+                initialValue: prop.GetValue(source),
                 category: propAttr.Category,
-                displayName: displayName
+                displayName: displayName,
+                setter: setter
             );
         }
 
@@ -190,35 +202,40 @@ namespace pwiz.Skyline.Model.PropertySheets
         private readonly string _category;
         private readonly string _displayName;
         private readonly TypeConverter _typeConverter;
+        private readonly Action<object, object> _setter;
 
         public DynamicPropertyDescriptor(
             string name,
             Type propertyType,
             string category = null,
             string displayName = null,
-            TypeConverter typeConverter = null)
+            TypeConverter typeConverter = null,
+            Action<object, object> setter = null)
             : base(name, null)
         {
             _propertyType = propertyType;
             _category = category;
             _displayName = displayName;
             _typeConverter = typeConverter;
+            _setter = setter;
         }
 
-        // Required overrides for PropertyDescriptor.
         public override bool CanResetValue(object component) => false;
         public override Type ComponentType => typeof(DynamicPropertyObject);
+
         public override object GetValue(object component)
             => ((DynamicPropertyObject)component).GetValue(Name);
 
-        public override bool IsReadOnly => true;
+        public override bool IsReadOnly => _setter == null;
         public override Type PropertyType => _propertyType;
 
         public override void ResetValue(object component) { }
 
         public override void SetValue(object component, object value)
         {
+            _setter?.Invoke(component, value);
             ((DynamicPropertyObject)component).SetValue(Name, value);
+
             OnValueChanged(component, EventArgs.Empty);
         }
 

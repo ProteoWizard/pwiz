@@ -91,6 +91,7 @@ namespace pwiz.Skyline.Model.Files
 
         public abstract Immutable Immutable { get; }
         [FileProperty]
+        [EditableInPropertySheet]
         public abstract string Name { get; }
         [FileProperty]
         public abstract string FilePath { get; }

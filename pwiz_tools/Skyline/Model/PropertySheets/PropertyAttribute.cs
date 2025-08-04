@@ -45,9 +45,13 @@ namespace pwiz.Skyline.Model.PropertySheets
 
     #endregion
 
+    #region Recursive property search
+
+    // Searches for properties recursively but still displays them at top level in the property sheet.
     [AttributeUsage(AttributeTargets.Property)]
     public class ContainsViewablePropertiesAttribute : Attribute { }
 
+    // Searches for properties recursively and displays them in a nested list view.
     [AttributeUsage(AttributeTargets.Property)]
     public class ListContainsViewablePropertiesAttribute : Attribute
     {
@@ -58,4 +62,13 @@ namespace pwiz.Skyline.Model.PropertySheets
             Category = category;
         }
     }
+
+    #endregion
+
+    #region Enables property editing in the property sheet
+
+    [AttributeUsage(AttributeTargets.Property)]
+    public class EditableInPropertySheetAttribute : Attribute { }
+
+    #endregion
 }
