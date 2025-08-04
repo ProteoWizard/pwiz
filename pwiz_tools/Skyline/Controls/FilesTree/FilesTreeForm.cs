@@ -67,6 +67,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             filesTree.DragDrop += FilesTree_DragDrop;
             filesTree.QueryContinueDrag += FilesTree_QueryContinueDrag;
             filesTree.KeyDown += FilesTree_KeyDown;
+            filesTree.BeforeCollapse += FilesTree_BeforeCollapse;
 
             SkylineWindow.DocumentSavedEvent += OnDocumentSavedEvent;
             SkylineWindow.DocumentUIChangedEvent += OnDocumentUIChangedEvent;
@@ -413,6 +414,17 @@ namespace pwiz.Skyline.Controls.FilesTree
                 case BackgroundProteome _:
                     OpenEditBackgroundProteomeDialog(filesTreeNode);
                     break;
+            }
+        }
+
+        private void FilesTree_BeforeCollapse(object sender, TreeViewCancelEventArgs e)
+        {
+            // CONSIDER: change FilesTree UI so the root node is a label and not
+            //           actually a TreeNode. Akin to VisualStudio's Solution Explorer.
+            // Prevent collapse of root node. 
+            if (e.Node == filesTree.Root)
+            {
+                e.Cancel = true;
             }
         }
 
