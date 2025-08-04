@@ -1371,6 +1371,7 @@ namespace TestRunner
             bool recordauditlogs = commandLineArgs.ArgAsBool("recordauditlogs"); // Replace or create audit logs for tutorial tests
             bool useVendorReaders = commandLineArgs.ArgAsBool("vendors");
             bool showStatus = commandLineArgs.ArgAsBool("status");
+            bool logDriveInfo = commandLineArgs.ArgAsBool("driveinfo");
             bool showFormNames = commandLineArgs.ArgAsBool("showformnames");
             bool qualityMode = commandLineArgs.ArgAsBool("quality");
             bool pass0 = commandLineArgs.ArgAsBool("pass0");
@@ -1461,7 +1462,7 @@ namespace TestRunner
                 runsmallmoleculeversions, recordauditlogs, teamcityTestDecoration,
                 retrydatadownloads,
                 pauseDialogs, pauseSeconds, pauseStartingScreenshot, useVendorReaders, timeoutMultiplier, 
-                results, log, verbose, clientMode);
+                results, log, verbose, clientMode, logDriveInfo);
 
             var timer = new Stopwatch();
             timer.Start();

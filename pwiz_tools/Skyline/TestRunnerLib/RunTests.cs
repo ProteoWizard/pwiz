@@ -198,6 +198,7 @@ namespace TestRunnerLib
         private readonly bool _showStatus;
         private readonly bool _buildMode;
         private readonly bool _cleanupLevelAll;
+        private readonly bool _logDriveInfo;
 
         public readonly TestRunnerContext TestContext;
         public CultureInfo Language = new CultureInfo("en-US");
@@ -299,7 +300,8 @@ namespace TestRunnerLib
             string results = null,
             StreamWriter log = null,
             bool verbose = false,
-            bool isParallelClient = false)
+            bool isParallelClient = false,
+            bool logDriveInfo = false)
         {
             _buildMode = buildMode;
             _log = log;
@@ -357,6 +359,7 @@ namespace TestRunnerLib
 
             // Disable logging.
             LogManager.GetRepository().Threshold = LogManager.GetRepository().LevelMap["OFF"];
+            _logDriveInfo = logDriveInfo;
         }
 
         private void SetTestDir(TestContext testContext, string resultsDir)
@@ -403,16 +406,17 @@ namespace TestRunnerLib
                     long totalSpace = driveInfo.TotalSize; // Bytes
                     double totalSpaceGB = totalSpace / (1024.0 * 1024 * 1024); // Convert to GB
 
-                    Log("[INFO] Drive: {0}", driveName);
-                    Log("[INFO]  Available Free Space: {0:F2} GB", freeSpaceGB);
-                    Log("[INFO]  Total Space: {0:F2} GB", totalSpaceGB);
-                    Log("[INFO]  Used Space: {0:F2} GB", (totalSpaceGB - freeSpaceGB));
+                    Log("\r\n[INFO] Drive: {0}\r\n", driveName);
+                    Log("[INFO]  Available Free Space: {0:F2} GB\r\n", freeSpaceGB);
+                    Log("[INFO]  Total Space: {0:F2} GB\r\n", totalSpaceGB);
+                    Log("[INFO]  Used Space: {0:F2} GB\r\n", (totalSpaceGB - freeSpaceGB));
                 }
             }
         } 
         public bool Run(TestInfo test, int pass, int testNumber, string dmpDir, bool heapOutput)
         {
-            LogDriveInfo();
+            if (_logDriveInfo)
+                LogDriveInfo();
 
             TeamCityStartTest(test, pass);
 
@@ -693,7 +697,8 @@ namespace TestRunnerLib
                 }
 
                 TeamCityFinishTest(test, pass);
-                LogDriveInfo();
+                if (_logDriveInfo)
+                    LogDriveInfo();
                 return true;
             }
 
@@ -730,8 +735,8 @@ namespace TestRunnerLib
                 test.TestMethod.Name,
                 message,
                 exception);
-
-            LogDriveInfo();
+            if (_logDriveInfo)
+                LogDriveInfo();
             return false;
         }
 
