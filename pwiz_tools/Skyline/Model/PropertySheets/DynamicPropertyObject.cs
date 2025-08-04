@@ -17,12 +17,13 @@
  * limitations under the License.
  */
 
+using pwiz.Common.Collections;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
-using pwiz.Common.Collections;
+using System.Resources;
 
 namespace pwiz.Skyline.Model.PropertySheets
 {
@@ -61,7 +62,7 @@ namespace pwiz.Skyline.Model.PropertySheets
             _values[name] = initialValue;
         }
 
-        public void AddPropertiesFromAnnotatedObject(object source)
+        public void AddPropertiesFromAnnotatedObject(object source, ResourceManager resource, bool testingUnpopulatedObject = false)
         {
             var sourceType = source.GetType();
             var props = sourceType.GetProperties(BindingFlags.Instance | BindingFlags.Public);
@@ -73,57 +74,74 @@ namespace pwiz.Skyline.Model.PropertySheets
                 var recurseAttr = prop.GetCustomAttribute<ContainsViewablePropertiesAttribute>();
                 var listAttr = prop.GetCustomAttribute<ListContainsViewablePropertiesAttribute>();
 
-                if (propAttr == null && typeAttr == null && recurseAttr == null && listAttr == null)
-                    continue;
-
-                var value = prop.GetValue(source);
-                if (typeAttr != null)
-                    value = typeAttr.GetValue(value);
-
                 if (propAttr != null)
                 {
-                    var displayName = PropertySheetDisplayNameResources.ResourceManager.GetString(prop.Name);
-                    if (displayName.IsNullOrEmpty())
-                        throw new InvalidOperationException(string.Format(
-                            PropertySheetDisplayNameResources.Error_NoDisplayNameFound,
-                            prop.Name,
-                            sourceType.Name));
-
-                    AddProperty(
-                        name: prop.Name,
-                        type: typeAttr != null ? typeAttr.Type : prop.PropertyType,
-                        initialValue: typeAttr != null ? typeAttr.GetValue(value) : value,
-                        category: propAttr.Category,
-                        displayName: displayName
-                    );
+                    AddSingleProperty(prop, source, typeAttr, propAttr, resource, sourceType);
                 }
-
-                if (recurseAttr != null)
-                    AddPropertiesFromAnnotatedObject(value);
-
-                if (listAttr != null && value is IEnumerable list)
+                else if (recurseAttr != null)
                 {
-                    foreach (var sourceItem in list)
-                    {
-                        var propertyItem = new DynamicPropertyObject();
-                        propertyItem.AddPropertiesFromAnnotatedObject(sourceItem);
-                        var displayName = PropertySheetDisplayNameResources.ResourceManager.GetString(prop.Name);
-                        if (displayName.IsNullOrEmpty())
-                            throw new InvalidOperationException(string.Format(
-                                PropertySheetDisplayNameResources.Error_NoDisplayNameFound,
-                                prop.Name,
-                                sourceType.Name));
-
-                        AddProperty(
-                            name: prop.Name,
-                            type: typeof(DynamicPropertyObject),
-                            initialValue: propertyItem,
-                            displayName: displayName,
-                            category: listAttr.Category,
-                            isNested: true
-                        );
-                    }
+                    AddNestedProperties(prop, source, resource, testingUnpopulatedObject);
                 }
+                else if (listAttr != null)
+                {
+                    AddListProperties(prop, source, listAttr, resource, sourceType, testingUnpopulatedObject);
+                }
+            }
+        }
+
+        private void AddSingleProperty(PropertyInfo prop, object source, PropertyTypeAttribute typeAttr, PropertyAttribute propAttr, ResourceManager resource, Type sourceType)
+        {
+            var value = prop.GetValue(source);
+            if (typeAttr != null)
+                value = typeAttr.GetValue(value);
+
+            var displayName = resource.GetString(prop.Name);
+            if (displayName.IsNullOrEmpty())
+                throw new InvalidOperationException(string.Format(
+                    PropertySheetResources.Error_NoDisplayNameFound,
+                    prop.Name,
+                    sourceType.Name));
+
+            AddProperty(
+                name: prop.Name,
+                type: typeAttr != null ? typeAttr.Type : prop.PropertyType,
+                initialValue: value,
+                category: propAttr.Category,
+                displayName: displayName
+            );
+        }
+
+        private void AddNestedProperties(PropertyInfo prop, object source, ResourceManager resource, bool testingUnpopulatedObject)
+        {
+            var value = prop.GetValue(source);
+            AddPropertiesFromAnnotatedObject(value, resource, testingUnpopulatedObject);
+        }
+
+        private void AddListProperties(PropertyInfo prop, object source, ListContainsViewablePropertiesAttribute listAttr, ResourceManager resource, Type sourceType, bool testingUnpopulatedObject)
+        {
+            var value = prop.GetValue(source);
+            if (!(value is IEnumerable list))
+                return;
+
+            foreach (var sourceItem in list)
+            {
+                var propertyItem = new DynamicPropertyObject();
+                propertyItem.AddPropertiesFromAnnotatedObject(sourceItem, resource, testingUnpopulatedObject);
+                var displayName = resource.GetString(prop.Name);
+                if (displayName.IsNullOrEmpty())
+                    throw new InvalidOperationException(string.Format(
+                        PropertySheetResources.Error_NoDisplayNameFound,
+                        prop.Name,
+                        sourceType.Name));
+
+                AddProperty(
+                    name: prop.Name,
+                    type: typeof(DynamicPropertyObject),
+                    initialValue: propertyItem,
+                    displayName: displayName,
+                    category: listAttr.Category,
+                    isNested: true
+                );
             }
         }
 

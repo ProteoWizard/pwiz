@@ -24,7 +24,6 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.Files;
 using pwiz.Skyline.Model.PropertySheets;
-using pwiz.Skyline.Model.Results;
 
 // ReSharper disable WrongIndentSize
 namespace pwiz.Skyline.Controls.FilesTree
@@ -320,8 +319,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         public DynamicPropertyObject GetProperties()
         {
             var props = new DynamicPropertyObject();
-            props.AddPropertiesFromAnnotatedObject(Model);
-
+            props.AddPropertiesFromAnnotatedObject(Model, resource: PropertySheetFileNodeResources.ResourceManager);
             return props;
         }
     }

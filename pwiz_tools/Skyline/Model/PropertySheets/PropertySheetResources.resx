@@ -58,7 +58,7 @@
 			: using a System.ComponentModel.TypeConverter
 			: and then encoded with base64 encoding.
 	-->
-	
+
 	<xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
 		<xsd:element name="root" msdata:IsDataSet="true">
 			<xsd:complexType>
@@ -101,37 +101,10 @@
 	<data name="Error_NoDisplayNameFound" xml:space="preserve">
     <value>No display name found for property '{0}' in {1}. Ensure that there is an associated display name in PropertySheetDisplayNameResources.resx for the property '{0}'. (Was the property name changed?)</value>
   </data>
-	<data name="Name" xml:space="preserve">
-    <value>Name</value>
+	<data name="FileProperties" xml:space="preserve">
+    <value>File Properties</value>
   </data>
-	<data name="FileName" xml:space="preserve">
-    <value>File Name</value>
-  </data>
-	<data name="FilePath" xml:space="preserve">
-    <value>File Path</value>
-  </data>
-	<data name="DocumentPath" xml:space="preserve">
-    <value>Document Path</value>
-  </data>
-	<data name="FileType" xml:space="preserve">
-    <value>File Type</value>
-  </data>
-	<data name="FileCount" xml:space="preserve">
-    <value>File Count</value>
-  </data>
-	<data name="AnalyteConcentration" xml:space="preserve">
-    <value>Analyte Concentration</value>
-  </data>
-	<data name="BatchName" xml:space="preserve">
-    <value>Batch Name</value>
-  </data>
-	<data name="SampleDilutionFactor" xml:space="preserve">
-    <value>Sample Dilution Factor</value>
-  </data>
-	<data name="SampleType" xml:space="preserve">
-    <value>Sample Type</value>
-  </data>
-	<data name="Note" xml:space="preserve">
-    <value>Annotation Note</value>
+	<data name="ChromatogramSet" xml:space="preserve">
+    <value>Chromatogram Set</value>
   </data>
 </root>

@@ -22,14 +22,14 @@ namespace pwiz.Skyline.Model.PropertySheets {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class PropertySheetDisplayNameResources {
+    internal class PropertySheetFileNodeResources {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
         private static global::System.Globalization.CultureInfo resourceCulture;
         
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal PropertySheetDisplayNameResources() {
+        internal PropertySheetFileNodeResources() {
         }
         
         /// <summary>
@@ -39,7 +39,7 @@ namespace pwiz.Skyline.Model.PropertySheets {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("pwiz.Skyline.Model.PropertySheets.PropertySheetDisplayNameResources", typeof(PropertySheetDisplayNameResources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("pwiz.Skyline.Model.PropertySheets.PropertySheetFileNodeResources", typeof(PropertySheetFileNodeResources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -88,15 +88,6 @@ namespace pwiz.Skyline.Model.PropertySheets {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to No display name found for property &apos;{0}&apos; in {1}. Ensure that there is an associated display name in PropertySheetDisplayNameResources.resx for the property &apos;{0}&apos;. (Was the property name changed?).
-        /// </summary>
-        internal static string Error_NoDisplayNameFound {
-            get {
-                return ResourceManager.GetString("Error_NoDisplayNameFound", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to File Count.
         /// </summary>
         internal static string FileCount {
@@ -129,6 +120,42 @@ namespace pwiz.Skyline.Model.PropertySheets {
         internal static string FileType {
             get {
                 return ResourceManager.GetString("FileType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Instrument.
+        /// </summary>
+        internal static string InstrumentInfoList {
+            get {
+                return ResourceManager.GetString("InstrumentInfoList", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Max Intensity.
+        /// </summary>
+        internal static string MaxIntensity {
+            get {
+                return ResourceManager.GetString("MaxIntensity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Max Retention Time.
+        /// </summary>
+        internal static string MaxRetentionTime {
+            get {
+                return ResourceManager.GetString("MaxRetentionTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File.
+        /// </summary>
+        internal static string MSDataFileInfos {
+            get {
+                return ResourceManager.GetString("MSDataFileInfos", resourceCulture);
             }
         }
         

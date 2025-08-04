@@ -98,10 +98,49 @@
 	<resheader name="writer">
 		<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
 	</resheader>
-	<data name="FileProperties" xml:space="preserve">
-    <value>File Properties</value>
+	<data name="Name" xml:space="preserve">
+    <value>Name</value>
   </data>
-	<data name="ChromatogramSet" xml:space="preserve">
-    <value>Chromatogram Set</value>
+	<data name="FileName" xml:space="preserve">
+    <value>File Name</value>
+  </data>
+	<data name="FilePath" xml:space="preserve">
+    <value>File Path</value>
+  </data>
+	<data name="DocumentPath" xml:space="preserve">
+    <value>Document Path</value>
+  </data>
+	<data name="FileType" xml:space="preserve">
+    <value>File Type</value>
+  </data>
+	<data name="FileCount" xml:space="preserve">
+    <value>File Count</value>
+  </data>
+	<data name="AnalyteConcentration" xml:space="preserve">
+    <value>Analyte Concentration</value>
+  </data>
+	<data name="BatchName" xml:space="preserve">
+    <value>Batch Name</value>
+  </data>
+	<data name="SampleDilutionFactor" xml:space="preserve">
+    <value>Sample Dilution Factor</value>
+  </data>
+	<data name="SampleType" xml:space="preserve">
+    <value>Sample Type</value>
+  </data>
+	<data name="Note" xml:space="preserve">
+    <value>Annotation Note</value>
+  </data>
+	<data name="MaxRetentionTime" xml:space="preserve">
+    <value>Max Retention Time</value>
+  </data>
+	<data name="MaxIntensity" xml:space="preserve">
+    <value>Max Intensity</value>
+  </data>
+	<data name="InstrumentInfoList" xml:space="preserve">
+    <value>Instrument</value>
+  </data>
+	<data name="MSDataFileInfos" xml:space="preserve">
+    <value>File</value>
   </data>
 </root>

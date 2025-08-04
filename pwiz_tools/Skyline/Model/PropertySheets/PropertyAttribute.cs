@@ -13,13 +13,13 @@ namespace pwiz.Skyline.Model.PropertySheets
     [AttributeUsage(AttributeTargets.Property)]
     public class FilePropertyAttribute : PropertyAttribute
     {
-        public override string Category => PropertySheetCategoryResources.FileProperties;
+        public override string Category => PropertySheetResources.FileProperties;
     }
 
     [AttributeUsage(AttributeTargets.Property)]
     public class ChromatogramPropertyAttribute : PropertyAttribute
     {
-        public override string Category => PropertySheetCategoryResources.ChromatogramSet;
+        public override string Category => PropertySheetResources.ChromatogramSet;
     }
 
     #endregion

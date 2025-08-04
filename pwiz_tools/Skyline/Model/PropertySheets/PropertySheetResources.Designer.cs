@@ -22,14 +22,14 @@ namespace pwiz.Skyline.Model.PropertySheets {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class PropertySheetCategoryResources {
+    internal class PropertySheetResources {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
         private static global::System.Globalization.CultureInfo resourceCulture;
         
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal PropertySheetCategoryResources() {
+        internal PropertySheetResources() {
         }
         
         /// <summary>
@@ -39,7 +39,7 @@ namespace pwiz.Skyline.Model.PropertySheets {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("pwiz.Skyline.Model.PropertySheets.PropertySheetCategoryResources", typeof(PropertySheetCategoryResources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("pwiz.Skyline.Model.PropertySheets.PropertySheetResources", typeof(PropertySheetResources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -66,6 +66,15 @@ namespace pwiz.Skyline.Model.PropertySheets {
         internal static string ChromatogramSet {
             get {
                 return ResourceManager.GetString("ChromatogramSet", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No display name found for property &apos;{0}&apos; in {1}. Ensure that there is an associated display name in PropertySheetDisplayNameResources.resx for the property &apos;{0}&apos;. (Was the property name changed?).
+        /// </summary>
+        internal static string Error_NoDisplayNameFound {
+            get {
+                return ResourceManager.GetString("Error_NoDisplayNameFound", resourceCulture);
             }
         }
         

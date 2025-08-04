@@ -630,17 +630,17 @@
     <Compile Include="Model\Lib\AlphaPeptDeep\AbstractDeepLibraryBuilder.cs" />
     <Compile Include="Model\Lib\Carafe\CarafeLibraryBuilder.cs" />
     <Compile Include="Model\PropertySheets\PropertyAttribute.cs" />
-    <Compile Include="Model\PropertySheets\PropertySheetCategoryResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>PropertySheetCategoryResources.resx</DependentUpon>
-    </Compile>
     <Compile Include="Model\PropertySheets\IPropertySheetOwner.cs" />
     <Compile Include="Model\PropertySheets\DynamicPropertyObject.cs" />
-    <Compile Include="Model\PropertySheets\PropertySheetDisplayNameResources.Designer.cs">
+    <Compile Include="Model\PropertySheets\PropertySheetFileNodeResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
-      <DependentUpon>PropertySheetDisplayNameResources.resx</DependentUpon>
+      <DependentUpon>PropertySheetFileNodeResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\PropertySheets\PropertySheetResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>PropertySheetResources.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\Proteome\AssociateProteinsResults.cs" />
     <Compile Include="Model\Lib\LibraryFiles.cs" />
@@ -3785,14 +3785,14 @@
       <DependentUpon>FullScanPropertiesRes.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Model\PropertySheets\PropertySheetCategoryResources.resx">
+    <EmbeddedResource Include="Model\PropertySheets\PropertySheetFileNodeResources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>PropertySheetCategoryResources.Designer.cs</LastGenOutput>
+      <LastGenOutput>PropertySheetFileNodeResources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Model\PropertySheets\PropertySheetDisplayNameResources.resx">
+    <EmbeddedResource Include="Model\PropertySheets\PropertySheetResources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>PropertySheetDisplayNameResources.Designer.cs</LastGenOutput>
+      <LastGenOutput>PropertySheetResources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\RetentionTimes\RetentionTimesResources.ja.resx">
