@@ -289,10 +289,10 @@
     <value>Refine peak boundaries when using DIA data for fine-tuning.</value>
   </data>
 	<data name="CarafeTraining_RT_window_short" xml:space="preserve">
-    <value>RT Window for Peak Boundary Refinement</value>
+    <value>RT Peak Window</value>
   </data>
 	<data name="CarafeTraining_RT_window_long" xml:space="preserve">
-    <value>RT Window in minutes for refining peak boundary. This is only used when refining peak detection is enabled.</value>
+    <value>RT Window in minutes for refining peak boundaries. This is only used when refining peak detection is enabled.</value>
   </data>
 	<data name="CarafeTraining_XIC_correlation_short" xml:space="preserve">
     <value>XIC Correlation</value>

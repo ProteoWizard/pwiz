@@ -63,6 +63,9 @@ namespace pwiz.Skyline.ToolsUI
         {
             InitializeComponent();
             EmbedAlphaPeptDeepUserSettings();
+            EmbedCarafeDataSettings();
+            EmbedCarafeModelSettings();
+            EmbedCarafeLibrarySettings();
             checkBoxShowWizard.Checked = Settings.Default.ShowStartupForm;
             powerOfTenCheckBox.Checked = Settings.Default.UsePowerOfTen;
             Icon = Resources.Skyline;
@@ -568,28 +571,34 @@ namespace pwiz.Skyline.ToolsUI
 
         private void btnCarafeTrainingDataGenerationSettings_Click(object sender, EventArgs e)
         {
+            this.ActiveControl = null;
+
             if (CarafeLibraryBuilder.DataParameters == null)
                 CarafeLibraryBuilder.CarafeDefaultSettings();
-            KeyValueGridDlg.Show(btnCarafeTrainingDataGenerationSettings.Text,
-                CarafeLibraryBuilder.DataParameters,
-                setting => setting.Value.ToString(),
-                (value, setting) => setting.Value = value,
-                (value, setting) => setting.Validate(value),
-                setting => setting.ValidValues,
-                setting => setting.Name);
+            if (KeyValueGridDlg.Show(this, btnCarafeTrainingDataGenerationSettings.Text,
+                    CarafeLibraryBuilder.DataParameters,
+                    setting => setting.Value.ToString(),
+                    (value, setting) => setting.Value = value,
+                    (value, setting) => setting.Validate(value),
+                    setting => setting.ValidValues,
+                    setting => setting.Name) != null)
+                this.DialogResult = DialogResult.None;
         }
 
         private void btnCarafeModelTrainingSettings_Click(object sender, EventArgs e)
         {
+            this.ActiveControl = null;
+
             if (CarafeLibraryBuilder.ModelParameters == null)
                 CarafeLibraryBuilder.CarafeDefaultSettings();
-            KeyValueGridDlg.Show(btnCarafeModelTrainingSettings.Text,
-                CarafeLibraryBuilder.ModelParameters,
-                setting => setting.Value.ToString(),
-                (value, setting) => setting.Value = value,
-                (value, setting) => setting.Validate(value),
-                setting => setting.ValidValues,
-                setting => setting.Name);
+            if (KeyValueGridDlg.Show(this, btnCarafeModelTrainingSettings.Text,
+                    CarafeLibraryBuilder.ModelParameters,
+                    setting => setting.Value.ToString(),
+                    (value, setting) => setting.Value = value,
+                    (value, setting) => setting.Validate(value),
+                    setting => setting.ValidValues,
+                    setting => setting.Name) != null)
+                this.DialogResult = DialogResult.None;
         }
 
         private void btnCarafeLibrarySettings_Click(object sender, EventArgs e)
@@ -597,12 +606,12 @@ namespace pwiz.Skyline.ToolsUI
             if (CarafeLibraryBuilder.LibraryParameters == null)
                 CarafeLibraryBuilder.CarafeDefaultSettings();
             KeyValueGridDlg.Show(btnCarafeLibraryGenerationSettings.Text,
-                CarafeLibraryBuilder.LibraryParameters,
-                setting => setting.Value.ToString(),
-                (value, setting) => setting.Value = value,
-                (value, setting) => setting.Validate(value),
-                setting => setting.ValidValues,
-                setting => setting.Name);
+                    CarafeLibraryBuilder.LibraryParameters,
+                    setting => setting.Value.ToString(),
+                    (value, setting) => setting.Value = value,
+                    (value, setting) => setting.Validate(value),
+                    setting => setting.ValidValues,
+                    setting => setting.Name);
         }
 
         private void ToolsOptionsUI_CarafeHelpButtonClicked(object sender, EventArgs e)
@@ -638,6 +647,50 @@ namespace pwiz.Skyline.ToolsUI
                 setting => setting.Name);
         }
 
+        private void EmbedCarafeDataSettings()
+        {
+            btnCarafeTrainingDataGenerationSettings.Visible = false;
+            if (CarafeLibraryBuilder.DataParameters == null)
+                CarafeLibraryBuilder.CarafeDefaultDataSettings();
+
+            _carafeDataParams = KeyValueGridDlg.Show(null, btnCarafeTrainingDataGenerationSettings.Text,
+                CarafeLibraryBuilder.DataParameters,
+                setting => setting.Value.ToString(),
+                (value, setting) => setting.Value = value,
+                (value, setting) => setting.Validate(value),
+                setting => setting.ValidValues,
+                setting => setting.Name, CarafeDataTabControl);
+        }
+
+        private void EmbedCarafeModelSettings()
+        {
+            btnCarafeModelTrainingSettings.Visible = false;
+            if (CarafeLibraryBuilder.ModelParameters == null)
+                CarafeLibraryBuilder.CarafeDefaultModelSettings();
+
+            _carafeModelParams = KeyValueGridDlg.Show(null, btnCarafeModelTrainingSettings.Text,
+                CarafeLibraryBuilder.ModelParameters,
+                setting => setting.Value.ToString(),
+                (value, setting) => setting.Value = value,
+                (value, setting) => setting.Validate(value),
+                setting => setting.ValidValues,
+                setting => setting.Name, CarafeModelTabControl);
+        }
+
+        private void EmbedCarafeLibrarySettings()
+        {
+            btnCarafeLibraryGenerationSettings.Visible = false;
+            if (CarafeLibraryBuilder.LibraryParameters == null)
+                CarafeLibraryBuilder.CarafeDefaultLibrarySettings();
+
+            _carafeLibraryParams = KeyValueGridDlg.Show(null, btnCarafeLibraryGenerationSettings.Text,
+                CarafeLibraryBuilder.LibraryParameters,
+                setting => setting.Value.ToString(),
+                (value, setting) => setting.Value = value,
+                (value, setting) => setting.Validate(value),
+                setting => setting.ValidValues,
+                setting => setting.Name, CarafeLibraryTabControl);
+        }
         private void EmbedAlphaPeptDeepUserSettings()
         {
             btnAlphaPeptDeepUserSettings.Visible = false;
@@ -654,17 +707,41 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         private Dictionary<string, Control> _alphaPeptDeepParams;
-
+        private Dictionary<string, Control> _carafeDataParams;
+        private Dictionary<string, Control> _carafeModelParams;
+        private Dictionary<string, Control> _carafeLibraryParams;
         public Control.ControlCollection AlphaPeptDeepTabControl
         {
-            get => tabControl.TabPages[0].Controls;
+            get => tabAlphaPeptDeep.Controls;
         }
-
+        public Control.ControlCollection CarafeDataTabControl
+        {
+            get => tabCarafeData.Controls;
+        }
+        public Control.ControlCollection CarafeModelTabControl
+        {
+            get => tabCarafeModel.Controls;
+        }
+        public Control.ControlCollection CarafeLibraryTabControl
+        {
+            get => tabCarafeLibrary.Controls;
+        }
         private void btnOK_Click(object sender, EventArgs e)
         {
+            if (this.ActiveControl is ComboBox)
+            {
+                this.DialogResult = DialogResult.None;
+            }
             this.ActiveControl = null;
-            var gridValues = AlphapeptdeepLibraryBuilder.UserParameters;
-            foreach (var kvp in _alphaPeptDeepParams)
+            SetParameters(AlphapeptdeepLibraryBuilder.UserParameters, _alphaPeptDeepParams);
+            SetParameters(CarafeLibraryBuilder.DataParameters, _carafeDataParams);
+            SetParameters(CarafeLibraryBuilder.ModelParameters, _carafeModelParams);
+            SetParameters(CarafeLibraryBuilder.LibraryParameters, _carafeLibraryParams);
+        }
+        private void SetParameters(IDictionary<string, AbstractDdaSearchEngine.Setting> gridValues, Dictionary<string, Control> keyValueParams)
+        {
+            this.ActiveControl = null;
+            foreach (var kvp in keyValueParams)
             {
                 if (!gridValues[kvp.Key].IsValid)
                     this.DialogResult = DialogResult.None;
@@ -685,8 +762,17 @@ namespace pwiz.Skyline.ToolsUI
 
             }
         }
-
         private void tabAlphaPeptDeep_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void lnkCarafeTrainingDataHelp_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
 
         }

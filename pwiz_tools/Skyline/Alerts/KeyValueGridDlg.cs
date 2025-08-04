@@ -115,7 +115,37 @@ namespace pwiz.Skyline.Alerts
                         comboBox.SelectedIndex = validValues.IndexOf(s => s == valueToString(kvp.Value));
                     }
 
+                    /* *************************
                     comboBox.SelectedIndexChanged += (sender, args) =>
+                    {
+                        ComboBox thisBox = sender as ComboBox;
+                        if (kvp.Value.GetType() == typeof(AbstractDdaSearchEngine.Setting) && sender is ComboBox)
+                        {
+                            AbstractDdaSearchEngine.Setting setting = kvp.Value as AbstractDdaSearchEngine.Setting;
+
+                            foreach (var other_kvp in gridValues)
+                            {
+                                AbstractDdaSearchEngine.Setting other_setting = other_kvp.Value as AbstractDdaSearchEngine.Setting;
+
+                                if (other_setting != null && setting != null && setting.OtherSettingName == other_setting.Name)
+                                {
+                                    if (setting.OtherAction != null)
+                                    {
+                                        var newText = setting.OtherAction(keyToControl[other_kvp.Key].Text, comboBox.Text);
+                                        keyToControl[other_kvp.Key].Text = newText;
+                                    }
+                                    thisBox.Text = String.Empty;
+                                    thisBox.DroppedDown = false;
+                                    thisBox.Focus();
+                                    break;
+                                }
+
+                            }
+                        }
+                    };
+                    ********************************** */
+
+                    comboBox.SelectionChangeCommitted += (sender, args) =>
                     {
                         ComboBox thisBox = sender as ComboBox;
                         if (kvp.Value.GetType() == typeof(AbstractDdaSearchEngine.Setting) && sender is ComboBox)
@@ -261,37 +291,52 @@ namespace pwiz.Skyline.Alerts
             var activeScreen = parent == null ? Screen.PrimaryScreen : Screen.FromHandle(parent.Handle); 
             int defaultHeight = Math.Min(3 * activeScreen.Bounds.Height / 4, layout.GetRowHeights().Sum() + 50);
 
-            if (control == null) 
+            if (control == null)
             {
+                var result = DialogResult.None;
                 using (var dlg = new MultiButtonMsgDlg(layout, Resources.OK, ctlTextRepresentation.ToString()))
                 {
-                    dlg.Text = title;
-                    dlg.ClientSize = new Size(400, defaultHeight);
-                    dlg.StartPosition = FormStartPosition.CenterParent;
-                    dlg.ShowInTaskbar = false;
-                    dlg.MinimumSize = dlg.Size;
-                    layout.Size = dlg.ClientSize;
-                    layout.Height -= 35;
-
-                    var result = parent == null ? dlg.ShowParentlessDialog() : dlg.ShowWithTimeout(parent, title);
-                    if (result == DialogResult.Cancel)
-                        return null;
-
-                    foreach (var kvp in keyToControl)
+                    bool invalid = true;
+                    while (invalid)
                     {
-                        if (kvp.Value is TextBox tb)
-                            stringToValue(tb.Text, gridValues[kvp.Key]);
-                        else if (kvp.Value is CheckBox cb)
-                            stringToValue(cb.Checked.ToString(), gridValues[kvp.Key]);
-                        else if (kvp.Value is ComboBox cmb)
+                        dlg.Activate();
+                        dlg.Text = title;
+                        dlg.ClientSize = new Size(400, defaultHeight);
+                        dlg.StartPosition = FormStartPosition.CenterParent;
+                        dlg.ShowInTaskbar = false;
+                        dlg.MinimumSize = dlg.Size;
+                        layout.Size = dlg.ClientSize;
+                        layout.Height -= 35;
+
+                        result = parent == null ? dlg.ShowParentlessDialog() : dlg.ShowWithTimeout(parent, title);
+                        if (result == DialogResult.Cancel)
+                            return null;
+                        invalid = false;
+                        foreach (var kvp in keyToControl)
                         {
-                            if (cmb.SelectedItem != null)
+                            if (gridValues[kvp.Key] is AbstractDdaSearchEngine.Setting)
                             {
-                                stringToValue(cmb.SelectedItem.ToString(), gridValues[kvp.Key]);
+                                if (!(gridValues[kvp.Key] as AbstractDdaSearchEngine.Setting).IsValid)
+                                {
+                                    invalid = true;
+                                    break;
+                                }
                             }
+
+                            if (kvp.Value is TextBox tb)
+                                stringToValue(tb.Text, gridValues[kvp.Key]);
+                            else if (kvp.Value is CheckBox cb)
+                                stringToValue(cb.Checked.ToString(), gridValues[kvp.Key]);
+                            else if (kvp.Value is ComboBox cmb)
+                            {
+                                if (cmb.SelectedItem != null)
+                                {
+                                    stringToValue(cmb.SelectedItem.ToString(), gridValues[kvp.Key]);
+                                }
+                            }
+                            else
+                                throw new InvalidOperationException();
                         }
-                        else
-                            throw new InvalidOperationException();
                     }
                 }
             }

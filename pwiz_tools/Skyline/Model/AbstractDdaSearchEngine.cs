@@ -135,7 +135,7 @@ namespace pwiz.Skyline.Model
             public object MinValue { get; }
             public object MaxValue { get; }
 
-            public bool IsValid { get; private set; }
+            public bool IsValid { get; private set; } = true;
 
             public IEnumerable<string> ValidValues { get; }
 

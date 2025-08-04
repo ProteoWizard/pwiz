@@ -1199,7 +1199,7 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to RT Window in minutes for refining peak boundary. This is only used when refining peak detection is enabled..
+        ///   Looks up a localized string similar to RT Window in minutes for refining peak boundaries. This is only used when refining peak detection is enabled..
         /// </summary>
         public static string CarafeTraining_RT_window_long {
             get {
@@ -1208,7 +1208,7 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to RT Window for Peak Boundary Refinement.
+        ///   Looks up a localized string similar to RT Peak Window.
         /// </summary>
         public static string CarafeTraining_RT_window_short {
             get {

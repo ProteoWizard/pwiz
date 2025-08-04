@@ -531,7 +531,24 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             }.ToDsvLine(TextUtil.SEPARATOR_TSV);
         }
 
-
+        public static void CarafeDefaultDataSettings()
+        {
+            DataParameters = new Dictionary<string, AbstractDdaSearchEngine.Setting>();
+            foreach (var kvp in DefaultDataParameters)
+                DataParameters[kvp.Key] = new AbstractDdaSearchEngine.Setting(kvp.Value);
+        }
+        public static void CarafeDefaultModelSettings()
+        {
+            ModelParameters = new Dictionary<string, AbstractDdaSearchEngine.Setting>();
+            foreach (var kvp in DefaultModelParameters)
+                ModelParameters[kvp.Key] = new AbstractDdaSearchEngine.Setting(kvp.Value);
+        }
+        public static void CarafeDefaultLibrarySettings()
+        {
+            LibraryParameters = new Dictionary<string, AbstractDdaSearchEngine.Setting>();
+            foreach (var kvp in DefaultLibraryParameters)
+                LibraryParameters[kvp.Key] = new AbstractDdaSearchEngine.Setting(kvp.Value);
+        }
         public static void CarafeDefaultSettings()
         {
             DataParameters = new Dictionary<string, AbstractDdaSearchEngine.Setting>();

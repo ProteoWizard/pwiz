@@ -180,95 +180,26 @@
   <data name="&gt;&gt;tabAlphaPeptDeep.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="lnkCarafeLibraryHelp.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="lnkCarafeLibraryHelp.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Microsoft Sans Serif, 6pt</value>
-  </data>
-  <data name="lnkCarafeLibraryHelp.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="lnkCarafeLibraryHelp.Location" type="System.Drawing.Point, System.Drawing">
-    <value>286, 169</value>
-  </data>
-  <data name="lnkCarafeLibraryHelp.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>0, 0, 3, 0</value>
-  </data>
-  <data name="lnkCarafeLibraryHelp.Size" type="System.Drawing.Size, System.Drawing">
-    <value>11, 9</value>
-  </data>
-  <data name="lnkCarafeLibraryHelp.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
-  </data>
-  <data name="lnkCarafeLibraryHelp.Text" xml:space="preserve">
-    <value>? </value>
-  </data>
-  <data name="&gt;&gt;lnkCarafeLibraryHelp.Name" xml:space="preserve">
-    <value>lnkCarafeLibraryHelp</value>
-  </data>
-  <data name="&gt;&gt;lnkCarafeLibraryHelp.Type" xml:space="preserve">
-    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lnkCarafeLibraryHelp.Parent" xml:space="preserve">
-    <value>tabCarafe</value>
-  </data>
-  <data name="&gt;&gt;lnkCarafeLibraryHelp.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="lnkCarafeModelTrainingHelp.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="lnkCarafeModelTrainingHelp.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Microsoft Sans Serif, 6pt</value>
-  </data>
-  <data name="lnkCarafeModelTrainingHelp.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="lnkCarafeModelTrainingHelp.Location" type="System.Drawing.Point, System.Drawing">
-    <value>286, 104</value>
-  </data>
-  <data name="lnkCarafeModelTrainingHelp.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>0, 0, 3, 0</value>
-  </data>
-  <data name="lnkCarafeModelTrainingHelp.Size" type="System.Drawing.Size, System.Drawing">
-    <value>11, 9</value>
-  </data>
-  <data name="lnkCarafeModelTrainingHelp.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
-  </data>
-  <data name="lnkCarafeModelTrainingHelp.Text" xml:space="preserve">
-    <value>? </value>
-  </data>
-  <data name="&gt;&gt;lnkCarafeModelTrainingHelp.Name" xml:space="preserve">
-    <value>lnkCarafeModelTrainingHelp</value>
-  </data>
-  <data name="&gt;&gt;lnkCarafeModelTrainingHelp.Type" xml:space="preserve">
-    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lnkCarafeModelTrainingHelp.Parent" xml:space="preserve">
-    <value>tabCarafe</value>
-  </data>
-  <data name="&gt;&gt;lnkCarafeModelTrainingHelp.ZOrder" xml:space="preserve">
-    <value>1</value>
+  <data name="tabControl1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
   </data>
   <data name="lnkCarafeTrainingDataHelp.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="lnkCarafeTrainingDataHelp.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Microsoft Sans Serif, 6pt</value>
+    <value>Microsoft Sans Serif, 16pt</value>
   </data>
   <data name="lnkCarafeTrainingDataHelp.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
   <data name="lnkCarafeTrainingDataHelp.Location" type="System.Drawing.Point, System.Drawing">
-    <value>286, 42</value>
+    <value>3, 3</value>
   </data>
   <data name="lnkCarafeTrainingDataHelp.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 0, 3, 0</value>
   </data>
   <data name="lnkCarafeTrainingDataHelp.Size" type="System.Drawing.Size, System.Drawing">
-    <value>11, 9</value>
+    <value>30, 26</value>
   </data>
   <data name="lnkCarafeTrainingDataHelp.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
@@ -283,10 +214,184 @@
     <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lnkCarafeTrainingDataHelp.Parent" xml:space="preserve">
-    <value>tabCarafe</value>
+    <value>tabCarafeData</value>
   </data>
   <data name="&gt;&gt;lnkCarafeTrainingDataHelp.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="tabCarafeData.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabCarafeData.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="tabCarafeData.Size" type="System.Drawing.Size, System.Drawing">
+    <value>375, 219</value>
+  </data>
+  <data name="tabCarafeData.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="tabCarafeData.Text" xml:space="preserve">
+    <value>Training Data Generation</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeData.Name" xml:space="preserve">
+    <value>tabCarafeData</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeData.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeData.Parent" xml:space="preserve">
+    <value>tabControl1</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeData.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="lnkCarafeModelTrainingHelp.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lnkCarafeModelTrainingHelp.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 16pt</value>
+  </data>
+  <data name="lnkCarafeModelTrainingHelp.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="lnkCarafeModelTrainingHelp.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 3</value>
+  </data>
+  <data name="lnkCarafeModelTrainingHelp.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 0, 3, 0</value>
+  </data>
+  <data name="lnkCarafeModelTrainingHelp.Size" type="System.Drawing.Size, System.Drawing">
+    <value>30, 26</value>
+  </data>
+  <data name="lnkCarafeModelTrainingHelp.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="lnkCarafeModelTrainingHelp.Text" xml:space="preserve">
+    <value>? </value>
+  </data>
+  <data name="&gt;&gt;lnkCarafeModelTrainingHelp.Name" xml:space="preserve">
+    <value>lnkCarafeModelTrainingHelp</value>
+  </data>
+  <data name="&gt;&gt;lnkCarafeModelTrainingHelp.Type" xml:space="preserve">
+    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lnkCarafeModelTrainingHelp.Parent" xml:space="preserve">
+    <value>tabCarafeModel</value>
+  </data>
+  <data name="&gt;&gt;lnkCarafeModelTrainingHelp.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="tabCarafeModel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabCarafeModel.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabCarafeModel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>378, 217</value>
+  </data>
+  <data name="tabCarafeModel.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="tabCarafeModel.Text" xml:space="preserve">
+    <value>Model Training</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeModel.Name" xml:space="preserve">
+    <value>tabCarafeModel</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeModel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeModel.Parent" xml:space="preserve">
+    <value>tabControl1</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeModel.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="lnkCarafeLibraryHelp.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lnkCarafeLibraryHelp.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 16pt</value>
+  </data>
+  <data name="lnkCarafeLibraryHelp.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="lnkCarafeLibraryHelp.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 3</value>
+  </data>
+  <data name="lnkCarafeLibraryHelp.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 0, 3, 0</value>
+  </data>
+  <data name="lnkCarafeLibraryHelp.Size" type="System.Drawing.Size, System.Drawing">
+    <value>30, 26</value>
+  </data>
+  <data name="lnkCarafeLibraryHelp.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="lnkCarafeLibraryHelp.Text" xml:space="preserve">
+    <value>? </value>
+  </data>
+  <data name="&gt;&gt;lnkCarafeLibraryHelp.Name" xml:space="preserve">
+    <value>lnkCarafeLibraryHelp</value>
+  </data>
+  <data name="&gt;&gt;lnkCarafeLibraryHelp.Type" xml:space="preserve">
+    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lnkCarafeLibraryHelp.Parent" xml:space="preserve">
+    <value>tabCarafeLibrary</value>
+  </data>
+  <data name="&gt;&gt;lnkCarafeLibraryHelp.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="tabCarafeLibrary.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabCarafeLibrary.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabCarafeLibrary.Size" type="System.Drawing.Size, System.Drawing">
+    <value>378, 217</value>
+  </data>
+  <data name="tabCarafeLibrary.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="tabCarafeLibrary.Text" xml:space="preserve">
+    <value>Library Generation</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeLibrary.Name" xml:space="preserve">
+    <value>tabCarafeLibrary</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeLibrary.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeLibrary.Parent" xml:space="preserve">
+    <value>tabControl1</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeLibrary.ZOrder" xml:space="preserve">
     <value>2</value>
+  </data>
+  <data name="tabControl1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 2</value>
+  </data>
+  <data name="tabControl1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>383, 245</value>
+  </data>
+  <data name="tabControl1.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="&gt;&gt;tabControl1.Name" xml:space="preserve">
+    <value>tabControl1</value>
+  </data>
+  <data name="&gt;&gt;tabControl1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabControl1.Parent" xml:space="preserve">
+    <value>tabCarafe</value>
+  </data>
+  <data name="&gt;&gt;tabControl1.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <data name="btnCarafeLibraryGenerationSettings.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
@@ -313,7 +418,7 @@
     <value>tabCarafe</value>
   </data>
   <data name="&gt;&gt;btnCarafeLibraryGenerationSettings.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>1</value>
   </data>
   <data name="btnCarafeModelTrainingSettings.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
@@ -340,7 +445,7 @@
     <value>tabCarafe</value>
   </data>
   <data name="&gt;&gt;btnCarafeModelTrainingSettings.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>2</value>
   </data>
   <data name="btnCarafeTrainingDataGenerationSettings.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
@@ -367,7 +472,7 @@
     <value>tabCarafe</value>
   </data>
   <data name="&gt;&gt;btnCarafeTrainingDataGenerationSettings.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>3</value>
   </data>
   <data name="tabCarafe.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -1396,12 +1501,12 @@ well as iRT prediction.</value>
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=25.1.1.214, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=25.1.1.215, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ToolOptionsUI</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=25.1.1.214, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=25.1.1.215, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

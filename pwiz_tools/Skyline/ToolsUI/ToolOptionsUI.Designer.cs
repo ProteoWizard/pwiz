@@ -31,10 +31,15 @@ namespace pwiz.Skyline.ToolsUI
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ToolOptionsUI));
             this.tabControl = new System.Windows.Forms.TabControl();
             this.tabAlphaPeptDeep = new System.Windows.Forms.TabPage();
+            this.btnAlphaPeptDeepUserSettings = new System.Windows.Forms.Button();
             this.tabCarafe = new System.Windows.Forms.TabPage();
-            this.lnkCarafeLibraryHelp = new System.Windows.Forms.LinkLabel();
-            this.lnkCarafeModelTrainingHelp = new System.Windows.Forms.LinkLabel();
+            this.tabControl1 = new System.Windows.Forms.TabControl();
+            this.tabCarafeData = new System.Windows.Forms.TabPage();
             this.lnkCarafeTrainingDataHelp = new System.Windows.Forms.LinkLabel();
+            this.tabCarafeModel = new System.Windows.Forms.TabPage();
+            this.lnkCarafeModelTrainingHelp = new System.Windows.Forms.LinkLabel();
+            this.tabCarafeLibrary = new System.Windows.Forms.TabPage();
+            this.lnkCarafeLibraryHelp = new System.Windows.Forms.LinkLabel();
             this.btnCarafeLibraryGenerationSettings = new System.Windows.Forms.Button();
             this.btnCarafeModelTrainingSettings = new System.Windows.Forms.Button();
             this.btnCarafeTrainingDataGenerationSettings = new System.Windows.Forms.Button();
@@ -74,10 +79,13 @@ namespace pwiz.Skyline.ToolsUI
             this.btnEditRemoteAccountList = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
-            this.btnAlphaPeptDeepUserSettings = new System.Windows.Forms.Button();
             this.tabControl.SuspendLayout();
             this.tabAlphaPeptDeep.SuspendLayout();
             this.tabCarafe.SuspendLayout();
+            this.tabControl1.SuspendLayout();
+            this.tabCarafeData.SuspendLayout();
+            this.tabCarafeModel.SuspendLayout();
+            this.tabCarafeLibrary.SuspendLayout();
             this.tabDisplay.SuspendLayout();
             this.tabKoina.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
@@ -109,11 +117,16 @@ namespace pwiz.Skyline.ToolsUI
             this.tabAlphaPeptDeep.UseVisualStyleBackColor = true;
             this.tabAlphaPeptDeep.Click += new System.EventHandler(this.tabAlphaPeptDeep_Click);
             // 
+            // btnAlphaPeptDeepUserSettings
+            // 
+            resources.ApplyResources(this.btnAlphaPeptDeepUserSettings, "btnAlphaPeptDeepUserSettings");
+            this.btnAlphaPeptDeepUserSettings.Name = "btnAlphaPeptDeepUserSettings";
+            this.btnAlphaPeptDeepUserSettings.UseVisualStyleBackColor = true;
+            this.btnAlphaPeptDeepUserSettings.Click += new System.EventHandler(this.btnAlphaPeptDeepUserSettings_Click);
+            // 
             // tabCarafe
             // 
-            this.tabCarafe.Controls.Add(this.lnkCarafeLibraryHelp);
-            this.tabCarafe.Controls.Add(this.lnkCarafeModelTrainingHelp);
-            this.tabCarafe.Controls.Add(this.lnkCarafeTrainingDataHelp);
+            this.tabCarafe.Controls.Add(this.tabControl1);
             this.tabCarafe.Controls.Add(this.btnCarafeLibraryGenerationSettings);
             this.tabCarafe.Controls.Add(this.btnCarafeModelTrainingSettings);
             this.tabCarafe.Controls.Add(this.btnCarafeTrainingDataGenerationSettings);
@@ -121,12 +134,37 @@ namespace pwiz.Skyline.ToolsUI
             this.tabCarafe.Name = "tabCarafe";
             this.tabCarafe.UseVisualStyleBackColor = true;
             // 
-            // lnkCarafeLibraryHelp
+            // tabControl1
             // 
-            resources.ApplyResources(this.lnkCarafeLibraryHelp, "lnkCarafeLibraryHelp");
-            this.lnkCarafeLibraryHelp.Name = "lnkCarafeLibraryHelp";
-            this.lnkCarafeLibraryHelp.TabStop = true;
-            this.lnkCarafeLibraryHelp.Click += new System.EventHandler(this.lnkCarafeHelp_Clicked);
+            resources.ApplyResources(this.tabControl1, "tabControl1");
+            this.tabControl1.Controls.Add(this.tabCarafeData);
+            this.tabControl1.Controls.Add(this.tabCarafeModel);
+            this.tabControl1.Controls.Add(this.tabCarafeLibrary);
+            this.tabControl1.Name = "tabControl1";
+            this.tabControl1.SelectedIndex = 0;
+            this.tabControl1.SelectedIndexChanged += new System.EventHandler(this.tabControl1_SelectedIndexChanged);
+            // 
+            // tabCarafeData
+            // 
+            this.tabCarafeData.Controls.Add(this.lnkCarafeTrainingDataHelp);
+            resources.ApplyResources(this.tabCarafeData, "tabCarafeData");
+            this.tabCarafeData.Name = "tabCarafeData";
+            this.tabCarafeData.UseVisualStyleBackColor = true;
+            // 
+            // lnkCarafeTrainingDataHelp
+            // 
+            resources.ApplyResources(this.lnkCarafeTrainingDataHelp, "lnkCarafeTrainingDataHelp");
+            this.lnkCarafeTrainingDataHelp.Name = "lnkCarafeTrainingDataHelp";
+            this.lnkCarafeTrainingDataHelp.TabStop = true;
+            this.lnkCarafeTrainingDataHelp.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.lnkCarafeTrainingDataHelp_LinkClicked);
+            this.lnkCarafeTrainingDataHelp.Click += new System.EventHandler(this.lnkCarafeHelp_Clicked);
+            // 
+            // tabCarafeModel
+            // 
+            this.tabCarafeModel.Controls.Add(this.lnkCarafeModelTrainingHelp);
+            resources.ApplyResources(this.tabCarafeModel, "tabCarafeModel");
+            this.tabCarafeModel.Name = "tabCarafeModel";
+            this.tabCarafeModel.UseVisualStyleBackColor = true;
             // 
             // lnkCarafeModelTrainingHelp
             // 
@@ -135,12 +173,19 @@ namespace pwiz.Skyline.ToolsUI
             this.lnkCarafeModelTrainingHelp.TabStop = true;
             this.lnkCarafeModelTrainingHelp.Click += new System.EventHandler(this.lnkCarafeHelp_Clicked);
             // 
-            // lnkCarafeTrainingDataHelp
+            // tabCarafeLibrary
             // 
-            resources.ApplyResources(this.lnkCarafeTrainingDataHelp, "lnkCarafeTrainingDataHelp");
-            this.lnkCarafeTrainingDataHelp.Name = "lnkCarafeTrainingDataHelp";
-            this.lnkCarafeTrainingDataHelp.TabStop = true;
-            this.lnkCarafeTrainingDataHelp.Click += new System.EventHandler(this.lnkCarafeHelp_Clicked);
+            this.tabCarafeLibrary.Controls.Add(this.lnkCarafeLibraryHelp);
+            resources.ApplyResources(this.tabCarafeLibrary, "tabCarafeLibrary");
+            this.tabCarafeLibrary.Name = "tabCarafeLibrary";
+            this.tabCarafeLibrary.UseVisualStyleBackColor = true;
+            // 
+            // lnkCarafeLibraryHelp
+            // 
+            resources.ApplyResources(this.lnkCarafeLibraryHelp, "lnkCarafeLibraryHelp");
+            this.lnkCarafeLibraryHelp.Name = "lnkCarafeLibraryHelp";
+            this.lnkCarafeLibraryHelp.TabStop = true;
+            this.lnkCarafeLibraryHelp.Click += new System.EventHandler(this.lnkCarafeHelp_Clicked);
             // 
             // btnCarafeLibraryGenerationSettings
             // 
@@ -415,13 +460,6 @@ namespace pwiz.Skyline.ToolsUI
             this.btnOK.UseVisualStyleBackColor = true;
             this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
             // 
-            // btnAlphaPeptDeepUserSettings
-            // 
-            resources.ApplyResources(this.btnAlphaPeptDeepUserSettings, "btnAlphaPeptDeepUserSettings");
-            this.btnAlphaPeptDeepUserSettings.Name = "btnAlphaPeptDeepUserSettings";
-            this.btnAlphaPeptDeepUserSettings.UseVisualStyleBackColor = true;
-            this.btnAlphaPeptDeepUserSettings.Click += new System.EventHandler(this.btnAlphaPeptDeepUserSettings_Click);
-            // 
             // ToolOptionsUI
             // 
             this.AcceptButton = this.btnOK;
@@ -439,7 +477,13 @@ namespace pwiz.Skyline.ToolsUI
             this.tabControl.ResumeLayout(false);
             this.tabAlphaPeptDeep.ResumeLayout(false);
             this.tabCarafe.ResumeLayout(false);
-            this.tabCarafe.PerformLayout();
+            this.tabControl1.ResumeLayout(false);
+            this.tabCarafeData.ResumeLayout(false);
+            this.tabCarafeData.PerformLayout();
+            this.tabCarafeModel.ResumeLayout(false);
+            this.tabCarafeModel.PerformLayout();
+            this.tabCarafeLibrary.ResumeLayout(false);
+            this.tabCarafeLibrary.PerformLayout();
             this.tabDisplay.ResumeLayout(false);
             this.tabDisplay.PerformLayout();
             this.tabKoina.ResumeLayout(false);
@@ -504,5 +548,9 @@ namespace pwiz.Skyline.ToolsUI
         private System.Windows.Forms.LinkLabel lnkCarafeLibraryHelp;
         private System.Windows.Forms.TabPage tabAlphaPeptDeep;
         private System.Windows.Forms.Button btnAlphaPeptDeepUserSettings;
+        private System.Windows.Forms.TabControl tabControl1;
+        private System.Windows.Forms.TabPage tabCarafeData;
+        private System.Windows.Forms.TabPage tabCarafeModel;
+        private System.Windows.Forms.TabPage tabCarafeLibrary;
     }
 }
