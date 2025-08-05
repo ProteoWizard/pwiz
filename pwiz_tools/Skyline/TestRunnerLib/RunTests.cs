@@ -307,6 +307,7 @@ namespace TestRunnerLib
             _log = log;
             _process = Process.GetCurrentProcess();
             _showStatus = showStatus;
+            _logDriveInfo = logDriveInfo;
             TestContext = new TestRunnerContext();
             IsParallelClient = isParallelClient;
             SetTestDir(TestContext, results);
@@ -359,7 +360,6 @@ namespace TestRunnerLib
 
             // Disable logging.
             LogManager.GetRepository().Threshold = LogManager.GetRepository().LevelMap["OFF"];
-            _logDriveInfo = logDriveInfo;
         }
 
         private void SetTestDir(TestContext testContext, string resultsDir)
