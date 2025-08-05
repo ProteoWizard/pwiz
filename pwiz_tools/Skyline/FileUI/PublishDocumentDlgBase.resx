@@ -412,7 +412,7 @@
     <value>NoControl</value>
   </data>
   <data name="lblAvailableStorage.Location" type="System.Drawing.Point, System.Drawing">
-    <value>555, 83</value>
+    <value>600, 83</value>
   </data>
   <data name="lblAvailableStorage.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>6, 0, 6, 0</value>

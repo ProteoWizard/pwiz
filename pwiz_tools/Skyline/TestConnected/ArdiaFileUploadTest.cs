@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Windows.Forms;
@@ -76,6 +77,21 @@ namespace pwiz.SkylineTestConnected
         // TODO: is there an API to verify Ardia account has permissions required to run test? Ex: upload files, delete files
         protected override void DoTest()
         {
+            //
+            // Model tests
+            //
+            TestAvailableStorageLabel();
+            TestValidateFolderName();
+            TestCreateArdiaError();
+            TestDefaultPartSize();
+            Test_StageDocument_Request_SmallDocument();
+            Test_StageDocument_Request_LargeDocument();
+            Test_StageDocument_Response();
+            Test_StageDocument_Request_CompleteMultipartUpload();
+
+            //
+            // Setup for UI, API, and end-to-end tests
+            //
             Assert.IsFalse(SkylineWindow.HasRegisteredArdiaAccount);
             Assert.AreEqual(0, Settings.Default.RemoteAccountList.Count);
 
@@ -90,21 +106,15 @@ namespace pwiz.SkylineTestConnected
             account = (ArdiaAccount)Settings.Default.RemoteAccountList[0];
             AssertEx.IsTrue(!account.Token.IsNullOrEmpty(), "Ardia account does not have a token.");
 
-            // Test scenarios 
-            TestGetFolderPath();
-            TestValidateFolderName();
+            //
+            // UI tests
+            //
             TestAccountHasCredentials(account);
-            TestCreateArdiaError();
-            TestDefaultPartSize();
+            TestGetFolderPath();
 
-            Test_StageDocument_Request_SmallDocument();
-            Test_StageDocument_Request_LargeDocument();
-            Test_StageDocument_Response();
-            Test_StageDocument_Request_CompleteMultipartUpload();
-
-            Test_StorageInfo_Response();
-
-            // Test scenarios making remote API calls
+            //
+            // API tests
+            //
             var client = ArdiaClient.Create(account);
 
             // Make sure (1) the Ardia server is available and (2) the token can be used to call the API.
@@ -116,7 +126,7 @@ namespace pwiz.SkylineTestConnected
                 return;
             }
 
-            // TODO: a folder path abstraction would be nice...
+            // CONSIDER: a folder path abstraction would be useful here...
             // Create a folder for this test run
             var folderName = $@"TestResults-{DateTime.Now:yyyy-MM-dd_HH-mm-ss}";
             var parentPath = $@"/{TEST_RESULTS_DIRECTORY}";
@@ -125,29 +135,79 @@ namespace pwiz.SkylineTestConnected
             var result = client.CreateFolder(parentPath, folderName, null);
             Assert.IsTrue(result.IsSuccess);
 
+            //
             // ArdiaClient tests
+            //
             Test_ArdiaClient_GetFolders(account, client);
             Test_ArdiaClient_CreateFolder(account, client, testResultsPath);
             Test_ArdiaClient_GetStorageInfo(account, client);
 
-            // Skyline UI tests
+            //
+            // End-to-end UI tests, including PublishDocumentDlgArdia
+            //
             TestSuccessfulUpload(account, client, new[] { TEST_RESULTS_DIRECTORY, folderName });
 
-            // Test multipart upload with max part size = 5MB
+            // Multipart upload with max part size = 5MB
             // TODO: make sure the TemporaryDirectory created during upload is cleaned up
             OpenDocument("MOBIE Quant Oct 2024_2024-10-09_13-20-22\\MOBIE Quant Oct 2024.sky");
             TestSuccessfulUpload(account, client, new[] { TEST_RESULTS_DIRECTORY, folderName }, 5);
 
-            // TODO: finish CreateFolder test
+            // TODO: CreateFolder test
             // TestCreateFolder(account, client, new[] {TEST_RESULTS_DIRECTORY, folderName, @"NewFolder01"});
             // TestSuccessfulUpload(account, client, new[] { TEST_RESULTS_DIRECTORY, folderName, @"NewFolder01" });
 
+            //
+            // Cleanup remote server data created during this test run
+            //
             // TODO: keep directory if 1+ tests fail
             // Delete test result folder, keep if 1+ tests fail (disabled for now)
             // finally
             // {
             //     client.DeleteFolder(testResultsPath);
             // }
+        }
+        
+        private static void TestAvailableStorageLabel()
+        {
+            const string jsonUnlimitedStorage = @"{}";
+            var model = StorageInfoResponse.Create(jsonUnlimitedStorage);
+            Assert.IsTrue(model.IsUnlimited);
+            Assert.IsNull(model.TotalSpace);
+            Assert.IsNull(model.AvailableFreeSpace);
+            Assert.IsNull(model.AvailableFreeSpaceGb);
+            Assert.IsTrue(model.HasAvailableStorageFor(long.MaxValue));
+            Assert.AreEqual(ArdiaResources.FileUpload_AvailableFreeSpace_Unlimited, model.AvailableFreeSpaceLabel);
+
+            const string jsonLimitedStorage = @"{""totalSpace"":86056948916224,""availableFreeSpace"":74475300380672}";
+            model = StorageInfoResponse.Create(jsonLimitedStorage);
+            Assert.IsFalse(model.IsUnlimited);
+            Assert.AreEqual(86056948916224, model.TotalSpace);
+            Assert.AreEqual(74475300380672, model.AvailableFreeSpace);
+            Assert.AreEqual(69360.53, model.AvailableFreeSpaceGb);
+            Assert.IsTrue(model.HasAvailableStorageFor(100000));
+            Assert.IsFalse(model.HasAvailableStorageFor(999999999999999));
+
+            // For now, only checking EN to have a check for formatting a number into label text
+            if(IsLanguageEN())
+                Assert.AreEqual(@"Available Storage: 69,360.53 GB", model.AvailableFreeSpaceLabel);
+
+            const string jsonZeros = @"{""totalSpace"":0,""availableFreeSpace"":0}";
+            model = StorageInfoResponse.Create(jsonZeros);
+            Assert.IsFalse(model.IsUnlimited);
+            Assert.AreEqual(0, model.TotalSpace);
+            Assert.AreEqual(0, model.AvailableFreeSpace);
+            Assert.AreEqual(0, model.AvailableFreeSpaceGb);
+            if(IsLanguageEN())
+                Assert.AreEqual(@"Available Storage: 0.00 GB", model.AvailableFreeSpaceLabel);
+
+            const string jsonSmallNumbers = @"{""totalSpace"":11,""availableFreeSpace"":2}";
+            model = StorageInfoResponse.Create(jsonSmallNumbers);
+            Assert.IsFalse(model.IsUnlimited);
+            Assert.AreEqual(11, model.TotalSpace);
+            Assert.AreEqual(2, model.AvailableFreeSpace);
+            Assert.AreEqual(0, model.AvailableFreeSpaceGb);
+            if(IsLanguageEN())
+                Assert.AreEqual(@"Available Storage: 0.00 GB", model.AvailableFreeSpaceLabel);
         }
 
         private void Test_StageDocument_Request_CompleteMultipartUpload()
@@ -231,26 +291,6 @@ namespace pwiz.SkylineTestConnected
 
             var json = requestModel.ToJson();
             Assert.AreEqual($@"{{""Pieces"":[{{""PieceName"":""[SingleDocument]"",""IsMultiPart"":true,""Size"":6451738112,""PartSize"":{ArdiaClient.DEFAULT_PART_SIZE_MB}}}]}}", json);
-        }
-
-        private static void Test_StorageInfo_Response()
-        {
-            var json = @"{}";
-            var model = StorageInfoResponse.Create(json);
-
-            Assert.IsNull(model.TotalSpace);
-            Assert.IsNull(model.AvailableFreeSpace);
-            Assert.IsTrue(model.IsUnlimited);
-            Assert.IsTrue(model.HasAvailableStorageFor(long.MaxValue));
-
-            json = @"{totalSpace: 999999999, availableFreeSpace: 999999}";
-            model = StorageInfoResponse.Create(json);
-
-            Assert.AreEqual(999999999, model.TotalSpace);
-            Assert.AreEqual(999999, model.AvailableFreeSpace);
-            Assert.IsFalse(model.IsUnlimited);
-            Assert.IsTrue(model.HasAvailableStorageFor(100000L));
-            Assert.IsFalse(model.HasAvailableStorageFor(999000001));
         }
 
         private static void TestCreateArdiaError()
@@ -365,7 +405,7 @@ namespace pwiz.SkylineTestConnected
             RunUI(() =>
             {
                 Assert.IsFalse(publishDlg.AnonymousServersCheckboxVisible);
-                Assert.AreEqual(ArdiaResources.FileUpload_AvailableStorage_Unlimited, publishDlg.AvailableStorageLabel.Text);
+                Assert.AreEqual(ArdiaResources.FileUpload_AvailableFreeSpace_Unlimited, publishDlg.AvailableStorageLabel.Text);
 
                 publishDlg.FoldersTree.Nodes[0].Expand();
 
@@ -467,6 +507,11 @@ namespace pwiz.SkylineTestConnected
             OkDialog(addAccountDlg, addAccountDlg.OkDialog);
             OkDialog(editRemoteAccountListDlg, editRemoteAccountListDlg.OkDialog);
             OkDialog(optionsDlg, optionsDlg.OkDialog);
+        }
+
+        private static bool IsLanguageEN()
+        {
+            return Equals("en", CultureInfo.CurrentCulture.TwoLetterISOLanguageName);
         }
 
         /// <summary>

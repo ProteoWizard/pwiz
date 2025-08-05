@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Runtime.Serialization;
 using Newtonsoft.Json;
 
@@ -21,11 +22,11 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
 {
     public class StorageInfoResponse
     {
+        private const long GB = 1024 * 1024 * 1024;
+
         public static StorageInfoResponse Create(string json)
         {
-            var result = JsonConvert.DeserializeObject<StorageInfoResponse>(json);
-
-            return result;
+            return JsonConvert.DeserializeObject<StorageInfoResponse>(json);
         }
 
         private StorageInfoResponse() { }
@@ -34,10 +35,25 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         public long? AvailableFreeSpace { get; set; }
         public bool IsUnlimited { get; private set; }
 
-        public bool HasAvailableStorageFor(long sizeInBytes)
+        public double? AvailableFreeSpaceGb
         {
-            return IsUnlimited || sizeInBytes < AvailableFreeSpace;
+            get
+            {
+                if (AvailableFreeSpace != null)
+                {
+                    var originalNumber = (double)AvailableFreeSpace / GB;
+                    var roundedNumber = Math.Round(originalNumber, 2);
+                    return roundedNumber;
+                }
+                else return null;
+            }
         }
+
+        public bool HasAvailableStorageFor(long sizeInBytes) => IsUnlimited || sizeInBytes < AvailableFreeSpace;
+
+        public string AvailableFreeSpaceLabel => IsUnlimited
+            ? ArdiaResources.FileUpload_AvailableFreeSpace_Unlimited
+            : string.Format(ArdiaResources.FileUpload_AvailableFreeSpace_SizeInGB, AvailableFreeSpaceGb);
 
         [OnDeserialized]
         internal void OnDeserialized(StreamingContext context)

@@ -149,15 +149,9 @@ namespace pwiz.Skyline.FileUI
                 {
                     Assume.IsNotNull(ServerStorageInfo);
 
-                    if (ServerStorageInfo is { IsUnlimited: true })
-                    {
-                        lblAvailableStorage.Text = ArdiaResources.FileUpload_AvailableStorage_Unlimited;
-                    }
-                    else
-                    {
-                        var size = ServerStorageInfo.AvailableFreeSpace / 1024 * 1024 * 1024;
-                        lblAvailableStorage.Text = string.Format(ArdiaResources.FileUpload_AvailableStorage_SizeInGB, size);
-                    }
+                    var rightEdge = lblAvailableStorage.Right;
+                    lblAvailableStorage.Text = ServerStorageInfo.AvailableFreeSpaceLabel;
+                    lblAvailableStorage.Left = rightEdge - lblAvailableStorage.Width;
 
                     lblAvailableStorage.Visible = true;
                 });
