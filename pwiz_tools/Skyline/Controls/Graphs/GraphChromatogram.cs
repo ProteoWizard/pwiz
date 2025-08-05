@@ -3837,7 +3837,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public ZoomState ZoomState { get; private set; }
     }
 
-    public struct ScaledRetentionTime
+    public struct ScaledRetentionTime : IEquatable<ScaledRetentionTime>
     {
         public static readonly ScaledRetentionTime ZERO = default(ScaledRetentionTime);
         public ScaledRetentionTime(double measuredTime) : this(measuredTime, measuredTime)
@@ -3861,6 +3861,24 @@ namespace pwiz.Skyline.Controls.Graphs
                 return MeasuredTime.ToString(CultureInfo.InvariantCulture);
             }
             return string.Format(@"{0} ({1})", MeasuredTime, DisplayTime);
+        }
+
+        public bool Equals(ScaledRetentionTime other)
+        {
+            return MeasuredTime.Equals(other.MeasuredTime) && DisplayTime.Equals(other.DisplayTime);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is ScaledRetentionTime other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (MeasuredTime.GetHashCode() * 397) ^ DisplayTime.GetHashCode();
+            }
         }
     }
 
