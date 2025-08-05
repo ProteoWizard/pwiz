@@ -658,4 +658,22 @@ Would you like to remove some or all of this suffix to shorten the names used in
   <data name="ChooseIrtStandardPeptidesDlg_ChooseIrtStandardPeptidesDlg_Unavailable__no_matching_iRT_standards_found" xml:space="preserve">
     <value>Unavailable: no matching iRT standards found</value>
   </data>
+  <data name="ExportMethodDlg_OkDialog_Instrument_Type_is_Waters_Connect_but_Template_file_is_not" xml:space="preserve">
+    <value>Instrument Type is Waters Connect but Template file is not selected from Waters Connect</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_Selected_folder_is_on_a_different_Waters_Connect_account_than_the_template" xml:space="preserve">
+    <value>Selected folder is on a different Waters Connect account than the template. Please select a folder under the same account.</value>
+  </data>
+  <data name="OpenFileDialogNEWatersConnectMethod_Select_Template" xml:space="preserve">
+    <value>Select Template for {0}</value>
+  </data>
+  <data name="OpenFileDialogNEWatersConnectMethod_CreateNewRemoteSession_remoteAccount_is_NOT_WatersConnectAccount" xml:space="preserve">
+    <value>remoteAccount is NOT WatersConnectAccount</value>
+  </data>
+  <data name="WatersConnectSaveMethodFileDialog_ItemSelected_The_method_file__0__already_exists" xml:space="preserve">
+    <value>The method file {0} already exists. Please, select different one.</value>
+  </data>
+  <data name="WatersConnectSelectMethodFileDialog_ItemSelected_Method__0__does_not_exist" xml:space="preserve">
+    <value>Method {0} does not exist on this Waters Connect server. Please, select an existing method.</value>
+  </data>
 </root>

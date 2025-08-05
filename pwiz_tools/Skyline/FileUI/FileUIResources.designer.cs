@@ -517,6 +517,16 @@ namespace pwiz.Skyline.FileUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Instrument Type is Waters Connect but Template file is not selected from Waters Connect.
+        /// </summary>
+        public static string ExportMethodDlg_OkDialog_Instrument_Type_is_Waters_Connect_but_Template_file_is_not {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_OkDialog_Instrument_Type_is_Waters_Connect_but_Template_file_is_n" +
+                        "ot", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Isolation List.
         /// </summary>
         public static string ExportMethodDlg_OkDialog_Isolation_List {
@@ -569,6 +579,16 @@ namespace pwiz.Skyline.FileUI {
                 return ResourceManager.GetString("ExportMethodDlg_OkDialog_Provide_transition_ranking_information_through_imported_" +
                         "results__a_spectral_library__or_choose_only_one_target_transition_per_precursor_" +
                         "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Selected folder is on a different Waters Connect account than the template. Please select a folder under the same account..
+        /// </summary>
+        public static string ExportMethodDlg_OkDialog_Selected_folder_is_on_a_different_Waters_Connect_account_than_the_template {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_OkDialog_Selected_folder_is_on_a_different_Waters_Connect_account" +
+                        "_than_the_template", resourceCulture);
             }
         }
         
@@ -1443,6 +1463,25 @@ namespace pwiz.Skyline.FileUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to remoteAccount is NOT WatersConnectAccount.
+        /// </summary>
+        public static string OpenFileDialogNEWatersConnectMethod_CreateNewRemoteSession_remoteAccount_is_NOT_WatersConnectAccount {
+            get {
+                return ResourceManager.GetString("OpenFileDialogNEWatersConnectMethod_CreateNewRemoteSession_remoteAccount_is_NOT_W" +
+                        "atersConnectAccount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select Template for {0}.
+        /// </summary>
+        public static string OpenFileDialogNEWatersConnectMethod_Select_Template {
+            get {
+                return ResourceManager.GetString("OpenFileDialogNEWatersConnectMethod_Select_Template", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Continue peak boundary import ignoring these charge states?.
         /// </summary>
         public static string PeakBoundaryImporter_UnrecognizedPeptidesCancel_Continue_peak_boundary_import_ignoring_these_charge_states_ {
@@ -1760,6 +1799,25 @@ namespace pwiz.Skyline.FileUI {
             get {
                 return ResourceManager.GetString("SkypSupport_ShowDownloadError_There_was_an_error_downloading_the_Skyline_document" +
                         "__0__from__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The method file {0} already exists. Please, select different one..
+        /// </summary>
+        public static string WatersConnectSaveMethodFileDialog_ItemSelected_The_method_file__0__already_exists {
+            get {
+                return ResourceManager.GetString("WatersConnectSaveMethodFileDialog_ItemSelected_The_method_file__0__already_exists" +
+                        "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Method {0} does not exist on this Waters Connect server. Please, select an existing method..
+        /// </summary>
+        public static string WatersConnectSelectMethodFileDialog_ItemSelected_Method__0__does_not_exist {
+            get {
+                return ResourceManager.GetString("WatersConnectSelectMethodFileDialog_ItemSelected_Method__0__does_not_exist", resourceCulture);
             }
         }
     }
