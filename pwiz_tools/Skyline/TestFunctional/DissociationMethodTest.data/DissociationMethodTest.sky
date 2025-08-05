@@ -1,0 +1,114 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<srm_settings format_version="25.1" software_version="Skyline (64-bit : developer build) 25.1.1.216 (4080455441)">
+  <settings_summary name="Default">
+    <peptide_settings>
+      <enzyme name="Trypsin" cut="KR" no_cut="P" sense="C" />
+      <digest_settings max_missed_cleavages="0" />
+      <peptide_prediction use_measured_rts="true" measured_rt_window="2" />
+      <peptide_filter start="25" min_length="8" max_length="25" auto_select="true">
+        <peptide_exclusions />
+      </peptide_filter>
+      <peptide_libraries pick="library" />
+      <peptide_modifications max_variable_mods="3" max_neutral_losses="1" internal_standard="none">
+        <static_modifications>
+          <static_modification name="Carbamidomethyl (C)" aminoacid="C" formula="H3C2NO" unimod_id="4" short_name="CAM" />
+        </static_modifications>
+        <heavy_modifications />
+      </peptide_modifications>
+    </peptide_settings>
+    <transition_settings>
+      <transition_prediction precursor_mass_type="Monoisotopic" fragment_mass_type="Monoisotopic" optimize_by="None">
+        <predict_collision_energy name="Small Molecules" step_size="3" step_count="5">
+          <regression_ce charge="1" slope="0.0275" intercept="10.8" />
+        </predict_collision_energy>
+      </transition_prediction>
+      <transition_filter precursor_charges="2" product_charges="1" precursor_adducts="[M+H]" product_adducts="[M+]" fragment_types="y,p" small_molecule_fragment_types="f" fragment_range_first="m/z &gt; precursor" fragment_range_last="3 ions" precursor_mz_window="0" auto_select="true">
+        <measured_ion name="N-terminal to Proline" cut="P" sense="N" min_length="3" />
+      </transition_filter>
+      <transition_libraries ion_match_tolerance="0.5" min_ion_count="0" ion_count="3" pick_from="all" />
+      <transition_integration>
+        <synchronize_integration group_by="" all="true" />
+      </transition_integration>
+      <transition_instrument min_mz="50" max_mz="1500" mz_match_tolerance="0.055" />
+      <transition_full_scan acquisition_method="PRM" product_mass_analyzer="qit" product_res="0.7" />
+    </transition_settings>
+    <data_settings document_guid="c2025f39-47b6-4eac-ba5d-20554288a3f5" />
+  </settings_summary>
+  <peptide_list label_name="SM - LipidCreator" label_description="" websearch_status="X" auto_manage_children="false">
+    <molecule neutral_formula="C41H81N2O6P" neutral_mass_average="729.071551" neutral_mass_monoisotopic="728.583226" custom_ion_name="SM 16:1;2/20:1">
+      <precursor charge="1" precursor_mz="729.590502" collision_energy="30.863739" ion_formula="C41H81N2O6P[M+H]" neutral_mass_average="729.071551" neutral_mass_monoisotopic="728.583226" custom_ion_name="SM 16:1;2/20:1">
+        <transition fragment_type="custom" ion_formula="C5H14NO4P[M+H]" neutral_mass_average="183.143471" neutral_mass_monoisotopic="183.066045" custom_ion_name="HG(PC,184)" product_charge="1">
+          <note>Interference with SM 17:1;2/19:1 [M+H]1+ HG(PC,184) and with SM 18:1;2/18:1 [M+H]1+ HG(PC,184) and with SM 19:1;2/17:1 [M+H]1+ HG(PC,184) and with SM 20:1;2/16:1 [M+H]1+ HG(PC,184)</note>
+          <precursor_mz>729.590502</precursor_mz>
+          <product_mz>184.073321</product_mz>
+          <collision_energy>30.863739</collision_energy>
+        </transition>
+        <transition fragment_type="custom" ion_formula="C16H29N[M+H]" neutral_mass_average="235.41056" neutral_mass_monoisotopic="235.23" custom_ion_name="LCB 16:1;2(-H3O2)" product_charge="1">
+          <precursor_mz>729.590502</precursor_mz>
+          <product_mz>236.237276</product_mz>
+          <collision_energy>30.863739</collision_energy>
+        </transition>
+      </precursor>
+    </molecule>
+    <molecule neutral_formula="C41H81N2O6P" neutral_mass_average="729.071551" neutral_mass_monoisotopic="728.583226" custom_ion_name="SM 17:1;2/19:1">
+      <precursor charge="1" precursor_mz="729.590502" collision_energy="30.863739" ion_formula="C41H81N2O6P[M+H]" neutral_mass_average="729.071551" neutral_mass_monoisotopic="728.583226" custom_ion_name="SM 17:1;2/19:1">
+        <transition fragment_type="custom" ion_formula="C5H14NO4P[M+H]" neutral_mass_average="183.143471" neutral_mass_monoisotopic="183.066045" custom_ion_name="HG(PC,184)" product_charge="1">
+          <note>Interference with SM 16:1;2/20:1 [M+H]1+ HG(PC,184) and with SM 18:1;2/18:1 [M+H]1+ HG(PC,184) and with SM 19:1;2/17:1 [M+H]1+ HG(PC,184) and with SM 20:1;2/16:1 [M+H]1+ HG(PC,184)</note>
+          <precursor_mz>729.590502</precursor_mz>
+          <product_mz>184.073321</product_mz>
+          <collision_energy>30.863739</collision_energy>
+        </transition>
+        <transition fragment_type="custom" ion_formula="C17H31N[M+H]" neutral_mass_average="249.43729" neutral_mass_monoisotopic="249.24565" custom_ion_name="LCB 17:1;2(-H3O2)" product_charge="1">
+          <precursor_mz>729.590502</precursor_mz>
+          <product_mz>250.252926</product_mz>
+          <collision_energy>30.863739</collision_energy>
+        </transition>
+      </precursor>
+    </molecule>
+    <molecule neutral_formula="C41H81N2O6P" neutral_mass_average="729.071551" neutral_mass_monoisotopic="728.583226" custom_ion_name="SM 18:1;2/18:1">
+      <precursor charge="1" precursor_mz="729.590502" collision_energy="30.863739" ion_formula="C41H81N2O6P[M+H]" neutral_mass_average="729.071551" neutral_mass_monoisotopic="728.583226" custom_ion_name="SM 18:1;2/18:1">
+        <transition fragment_type="custom" ion_formula="C5H14NO4P[M+H]" neutral_mass_average="183.143471" neutral_mass_monoisotopic="183.066045" custom_ion_name="HG(PC,184)" product_charge="1">
+          <note>Interference with SM 16:1;2/20:1 [M+H]1+ HG(PC,184) and with SM 17:1;2/19:1 [M+H]1+ HG(PC,184) and with SM 19:1;2/17:1 [M+H]1+ HG(PC,184) and with SM 20:1;2/16:1 [M+H]1+ HG(PC,184)</note>
+          <precursor_mz>729.590502</precursor_mz>
+          <product_mz>184.073321</product_mz>
+          <collision_energy>30.863739</collision_energy>
+        </transition>
+        <transition fragment_type="custom" ion_formula="C18H33N[M+H]" neutral_mass_average="263.46402" neutral_mass_monoisotopic="263.2613" custom_ion_name="LCB 18:1;2(-H3O2)" product_charge="1">
+          <precursor_mz>729.590502</precursor_mz>
+          <product_mz>264.268576</product_mz>
+          <collision_energy>30.863739</collision_energy>
+        </transition>
+      </precursor>
+    </molecule>
+    <molecule neutral_formula="C41H81N2O6P" neutral_mass_average="729.071551" neutral_mass_monoisotopic="728.583226" custom_ion_name="SM 19:1;2/17:1">
+      <precursor charge="1" precursor_mz="729.590502" collision_energy="30.863739" ion_formula="C41H81N2O6P[M+H]" neutral_mass_average="729.071551" neutral_mass_monoisotopic="728.583226" custom_ion_name="SM 19:1;2/17:1">
+        <transition fragment_type="custom" ion_formula="C5H14NO4P[M+H]" neutral_mass_average="183.143471" neutral_mass_monoisotopic="183.066045" custom_ion_name="HG(PC,184)" product_charge="1">
+          <note>Interference with SM 16:1;2/20:1 [M+H]1+ HG(PC,184) and with SM 17:1;2/19:1 [M+H]1+ HG(PC,184) and with SM 18:1;2/18:1 [M+H]1+ HG(PC,184) and with SM 20:1;2/16:1 [M+H]1+ HG(PC,184)</note>
+          <precursor_mz>729.590502</precursor_mz>
+          <product_mz>184.073321</product_mz>
+          <collision_energy>30.863739</collision_energy>
+        </transition>
+        <transition fragment_type="custom" ion_formula="C19H35N[M+H]" neutral_mass_average="277.49075" neutral_mass_monoisotopic="277.27695" custom_ion_name="LCB 19:1;2(-H3O2)" product_charge="1">
+          <precursor_mz>729.590502</precursor_mz>
+          <product_mz>278.284226</product_mz>
+          <collision_energy>30.863739</collision_energy>
+        </transition>
+      </precursor>
+    </molecule>
+    <molecule neutral_formula="C41H81N2O6P" neutral_mass_average="729.071551" neutral_mass_monoisotopic="728.583226" custom_ion_name="SM 20:1;2/16:1">
+      <precursor charge="1" precursor_mz="729.590502" collision_energy="30.863739" ion_formula="C41H81N2O6P[M+H]" neutral_mass_average="729.071551" neutral_mass_monoisotopic="728.583226" custom_ion_name="SM 20:1;2/16:1">
+        <transition fragment_type="custom" ion_formula="C5H14NO4P[M+H]" neutral_mass_average="183.143471" neutral_mass_monoisotopic="183.066045" custom_ion_name="HG(PC,184)" product_charge="1">
+          <note>Interference with SM 16:1;2/20:1 [M+H]1+ HG(PC,184) and with SM 17:1;2/19:1 [M+H]1+ HG(PC,184) and with SM 18:1;2/18:1 [M+H]1+ HG(PC,184) and with SM 19:1;2/17:1 [M+H]1+ HG(PC,184)</note>
+          <precursor_mz>729.590502</precursor_mz>
+          <product_mz>184.073321</product_mz>
+          <collision_energy>30.863739</collision_energy>
+        </transition>
+        <transition fragment_type="custom" ion_formula="C20H37N[M+H]" neutral_mass_average="291.51748" neutral_mass_monoisotopic="291.2926" custom_ion_name="LCB 20:1;2(-H3O2)" product_charge="1">
+          <precursor_mz>729.590502</precursor_mz>
+          <product_mz>292.299876</product_mz>
+          <collision_energy>30.863739</collision_energy>
+        </transition>
+      </precursor>
+    </molecule>
+  </peptide_list>
+</srm_settings>

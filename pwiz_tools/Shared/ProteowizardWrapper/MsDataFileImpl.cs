@@ -1205,9 +1205,10 @@ namespace pwiz.ProteowizardWrapper
                 {
                     if (msPrecursor.IsolationMz.HasValue)
                     {
-                        var spectrumPrecursor =
-                            new SpectrumPrecursor(msPrecursor.IsolationMz.Value).ChangeCollisionEnergy(msPrecursor
-                                .PrecursorCollisionEnergy);
+                        var spectrumPrecursor = new SpectrumPrecursor(msPrecursor.IsolationMz.Value)
+                            .ChangeCollisionEnergy(msPrecursor.PrecursorCollisionEnergy)
+                            .ChangeDissociationMethod(msPrecursor.DissociationMethod);
+                        
                         if (msPrecursor.IsolationWindowLower.HasValue && msPrecursor.IsolationWindowUpper.HasValue)
                         {
                             spectrumPrecursor = spectrumPrecursor.ChangeIsolationWindowWidth(
@@ -1683,7 +1684,7 @@ namespace pwiz.ProteowizardWrapper
 
         private static MsPrecursor CreatePrecursor(Precursor p, bool negativePolarity)
         {
-            return new MsPrecursor
+            var msPrecursor = new MsPrecursor
             {
                 PrecursorMz = GetPrecursorMz(p, negativePolarity),
                 PrecursorCollisionEnergy = GetPrecursorCollisionEnergy(p),
@@ -1693,6 +1694,12 @@ namespace pwiz.ProteowizardWrapper
                 IsolationWindowLower = GetIsolationWindowValue(p, CVID.MS_isolation_window_lower_offset),
                 IsolationWindowUpper = GetIsolationWindowValue(p, CVID.MS_isolation_window_upper_offset),
             };
+            var cvidDissociationMethod = GetPrecursorDissociationMethod(p);
+            if (cvidDissociationMethod.HasValue)
+            {
+                msPrecursor.DissociationMethod = CV.cvTermInfo(cvidDissociationMethod.Value).shortName();
+            }
+            return msPrecursor;
         }
 
         private static int GetMsLevel(Precursor precursor)
@@ -1782,6 +1789,12 @@ namespace pwiz.ProteowizardWrapper
             if (!term.empty())
                 return term.value;
             return null;
+        }
+
+        private static CVID? GetPrecursorDissociationMethod(Precursor precursor)
+        {
+            return precursor.activation?.cvParams
+                .FirstOrDefault(param => CV.cvIsA(param.cvid, CVID.MS_dissociation_method))?.cvid;
         }
 
         public void Write(string path)
@@ -1875,6 +1888,7 @@ namespace pwiz.ProteowizardWrapper
                 return null;
             }
         }
+        public string DissociationMethod { get; set; }
     }
 
     public sealed class MsDataSpectrum
