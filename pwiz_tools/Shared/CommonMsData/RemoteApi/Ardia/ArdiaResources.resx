@@ -136,11 +136,11 @@
   <data name="FileUpload_ServerFolders" xml:space="preserve">
     <value>Ardia Folders:</value>
   </data>
-  <data name="FileUpload_AvailableFreeSpace_SizeInGB" xml:space="preserve">
-    <value>Available Storage: {0:N2} GB</value>
-  </data>
   <data name="FileUpload_AvailableFreeSpace_Unlimited" xml:space="preserve">
     <value>Available Storage: Unlimited</value>
+  </data>
+  <data name="FileUpload_AvailableFreeSpace_WithSize" xml:space="preserve">
+    <value>Available Storage: {0}</value>
   </data>
   <data name="FileUpload_Success" xml:space="preserve">
     <value>Successfully uploaded the document to Ardia.</value>

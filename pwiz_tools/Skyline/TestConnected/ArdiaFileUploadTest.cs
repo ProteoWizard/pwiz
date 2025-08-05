@@ -174,7 +174,6 @@ namespace pwiz.SkylineTestConnected
             Assert.IsTrue(model.IsUnlimited);
             Assert.IsNull(model.TotalSpace);
             Assert.IsNull(model.AvailableFreeSpace);
-            Assert.IsNull(model.AvailableFreeSpaceGb);
             Assert.IsTrue(model.HasAvailableStorageFor(long.MaxValue));
             Assert.AreEqual(ArdiaResources.FileUpload_AvailableFreeSpace_Unlimited, model.AvailableFreeSpaceLabel);
 
@@ -183,31 +182,39 @@ namespace pwiz.SkylineTestConnected
             Assert.IsFalse(model.IsUnlimited);
             Assert.AreEqual(86056948916224, model.TotalSpace);
             Assert.AreEqual(74475300380672, model.AvailableFreeSpace);
-            Assert.AreEqual(69360.53, model.AvailableFreeSpaceGb);
             Assert.IsTrue(model.HasAvailableStorageFor(100000));
             Assert.IsFalse(model.HasAvailableStorageFor(999999999999999));
 
             // For now, only checking EN to have a check for formatting a number into label text
             if(IsLanguageEN())
-                Assert.AreEqual(@"Available Storage: 69,360.53 GB", model.AvailableFreeSpaceLabel);
+                Assert.AreEqual(@"Available Storage: 67.73 TB", model.AvailableFreeSpaceLabel);
 
             const string jsonZeros = @"{""totalSpace"":0,""availableFreeSpace"":0}";
             model = StorageInfoResponse.Create(jsonZeros);
             Assert.IsFalse(model.IsUnlimited);
             Assert.AreEqual(0, model.TotalSpace);
             Assert.AreEqual(0, model.AvailableFreeSpace);
-            Assert.AreEqual(0, model.AvailableFreeSpaceGb);
-            if(IsLanguageEN())
-                Assert.AreEqual(@"Available Storage: 0.00 GB", model.AvailableFreeSpaceLabel);
 
             const string jsonSmallNumbers = @"{""totalSpace"":11,""availableFreeSpace"":2}";
             model = StorageInfoResponse.Create(jsonSmallNumbers);
             Assert.IsFalse(model.IsUnlimited);
             Assert.AreEqual(11, model.TotalSpace);
             Assert.AreEqual(2, model.AvailableFreeSpace);
-            Assert.AreEqual(0, model.AvailableFreeSpaceGb);
-            if(IsLanguageEN())
-                Assert.AreEqual(@"Available Storage: 0.00 GB", model.AvailableFreeSpaceLabel);
+
+            // For now, only checking EN because this tests the underlying math and not language-specific formatting
+            if (IsLanguageEN())
+            {
+                // Test formatting for all supported sizes
+                Assert.AreEqual(@"0 B", StorageInfoResponse.AvailableBytesToString(0));
+                Assert.AreEqual(@"768 B", StorageInfoResponse.AvailableBytesToString(768));
+                Assert.AreEqual(@"750 KB", StorageInfoResponse.AvailableBytesToString(768204));
+                Assert.AreEqual(@"732.62 MB", StorageInfoResponse.AvailableBytesToString(768204283));
+                Assert.AreEqual(@"715.45 GB", StorageInfoResponse.AvailableBytesToString(768204283985));
+                Assert.AreEqual(@"67.73 TB", StorageInfoResponse.AvailableBytesToString(74475300380672));
+                Assert.AreEqual(@"698.68 TB", StorageInfoResponse.AvailableBytesToString(768204283985100));
+                Assert.AreEqual(@"682.30 PB", StorageInfoResponse.AvailableBytesToString(768204283985100234));
+                Assert.AreEqual(@"8,192.00 PB", StorageInfoResponse.AvailableBytesToString(long.MaxValue));
+            }
         }
 
         private void Test_StageDocument_Request_CompleteMultipartUpload()

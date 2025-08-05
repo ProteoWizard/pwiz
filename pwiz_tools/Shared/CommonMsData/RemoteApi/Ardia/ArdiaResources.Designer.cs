@@ -260,20 +260,20 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Available Storage: {0:N2} GB.
-        /// </summary>
-        public static string FileUpload_AvailableFreeSpace_SizeInGB {
-            get {
-                return ResourceManager.GetString("FileUpload_AvailableFreeSpace_SizeInGB", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Available Storage: Unlimited.
         /// </summary>
         public static string FileUpload_AvailableFreeSpace_Unlimited {
             get {
                 return ResourceManager.GetString("FileUpload_AvailableFreeSpace_Unlimited", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Available Storage: {0}.
+        /// </summary>
+        public static string FileUpload_AvailableFreeSpace_WithSize {
+            get {
+                return ResourceManager.GetString("FileUpload_AvailableFreeSpace_WithSize", resourceCulture);
             }
         }
         

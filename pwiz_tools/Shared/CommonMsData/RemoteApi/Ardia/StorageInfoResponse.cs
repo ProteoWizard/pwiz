@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 
-using System;
 using System.Runtime.Serialization;
 using Newtonsoft.Json;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.CommonMsData.RemoteApi.Ardia
 {
     public class StorageInfoResponse
     {
-        private const long GB = 1024 * 1024 * 1024;
-
         public static StorageInfoResponse Create(string json)
         {
             return JsonConvert.DeserializeObject<StorageInfoResponse>(json);
@@ -35,25 +33,29 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         public long? AvailableFreeSpace { get; set; }
         public bool IsUnlimited { get; private set; }
 
-        public double? AvailableFreeSpaceGb
-        {
-            get
-            {
-                if (AvailableFreeSpace != null)
-                {
-                    var originalNumber = (double)AvailableFreeSpace / GB;
-                    var roundedNumber = Math.Round(originalNumber, 2);
-                    return roundedNumber;
-                }
-                else return null;
-            }
-        }
-
         public bool HasAvailableStorageFor(long sizeInBytes) => IsUnlimited || sizeInBytes < AvailableFreeSpace;
 
-        public string AvailableFreeSpaceLabel => IsUnlimited
-            ? ArdiaResources.FileUpload_AvailableFreeSpace_Unlimited
-            : string.Format(ArdiaResources.FileUpload_AvailableFreeSpace_SizeInGB, AvailableFreeSpaceGb);
+        public string AvailableFreeSpaceLabel => IsUnlimited ? ArdiaResources.FileUpload_AvailableFreeSpace_Unlimited : LimitedSpaceLabel();
+
+        public string LimitedSpaceLabel()
+        {
+            var sizeString = AvailableBytesToString(AvailableFreeSpace);
+            return string.Format(ArdiaResources.FileUpload_AvailableFreeSpace_WithSize, sizeString);
+        }
+
+        public static string AvailableBytesToString(long? bytes)
+        {
+            if (bytes == null || bytes < 0)
+                return string.Empty;
+
+            // Omit decimal point if available space is measured in B or KB
+            var format = bytes < 1024 * 1024 ? @"fs0" : @"fs2";
+
+            var formatProvider = new FileSizeFormatProvider();
+            var sizeString = formatProvider.Format(format, bytes, formatProvider);
+
+            return sizeString;
+        }
 
         [OnDeserialized]
         internal void OnDeserialized(StreamingContext context)
