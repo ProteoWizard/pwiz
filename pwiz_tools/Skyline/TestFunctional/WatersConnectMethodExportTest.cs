@@ -109,7 +109,7 @@ namespace pwiz.SkylineTestFunctional
             // Check the file overwrite logic
             var fileExistsDialog = ShowDialog<MessageDlg>(() => methodFileDlg.KeyPressHandler(Keys.Enter), 1000);
             Assert.IsNotNull(fileExistsDialog);
-            RunUI(() => fileExistsDialog.OkDialog());
+            OkDialog(fileExistsDialog, fileExistsDialog.OkDialog);
             RunUI(() =>
             {
                 methodFileDlg.ListViewItems[0].Selected = false;

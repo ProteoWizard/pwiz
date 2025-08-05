@@ -161,7 +161,6 @@ namespace pwiz.Skyline.FileUI
             resources.ApplyResources(this.navToolStrip, "navToolStrip");
             this.navToolStrip.BackColor = System.Drawing.SystemColors.Control;
             this.navToolStrip.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
-            this.navToolStrip.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.navToolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.backButton,
             this.upOneLevelButton,
