@@ -63,53 +63,60 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public class Setting : IAuditLogObject
         {
-            public Setting(string name, int defaultValue, int minValue = int.MinValue, int maxValue = int.MaxValue)
+            public Setting(string name, int defaultValue, int minValue = int.MinValue, int maxValue = int.MaxValue, string description = null)
             {
                 Name = name;
+                Description = description == null ? name : description;
                 _value = DefaultValue = defaultValue;
                 MinValue = minValue;
                 MaxValue = maxValue;
             }
 
-            public Setting(string name, double defaultValue, double minValue = double.MinValue, double maxValue = double.MaxValue)
+            public Setting(string name, double defaultValue, double minValue = double.MinValue, double maxValue = double.MaxValue, string description = null)
             {
                 Name = name;
+                Description = description == null ? name : description;
                 _value = DefaultValue = defaultValue;
                 MinValue = minValue;
                 MaxValue = maxValue;
             }
 
-            public Setting(string name, bool defaultValue)
+            public Setting(string name, bool defaultValue, string description = null)
             {
                 Name = name;
+                Description = description == null ? name : description;
                 _value = DefaultValue = defaultValue;
                 MinValue = false;
                 MaxValue = true;
             }
-            public Setting(string name)
+            public Setting(string name, string description = null)
             {
                 Name = name;
+                Description = description == null ? name : description;
                 _value = string.Empty;
                 MinValue = string.Empty;
             }
-            public Setting(string name, string defaultValue)
+            public Setting(string name, string defaultValue, string description = null)
             {
                 Name = name;
+                Description = description == null ? name : description;
                 MinValue = string.Empty;
                 _value = DefaultValue = defaultValue ?? string.Empty;
             }
 
-            public Setting(string name, string defaultValue, IEnumerable<string> validValues)
+            public Setting(string name, string defaultValue, IEnumerable<string> validValues, string description = null)
             {
                 Name = name;
+                Description = description == null ? name : description;
                 MinValue = string.Empty;
                 _value = DefaultValue = defaultValue ?? string.Empty;
                 ValidValues = validValues;
             }
 
-            public Setting(string name, string defaultValue, Func<string, bool> validate)
+            public Setting(string name, string defaultValue, Func<string, bool> validate, string description = null)
             {
                 Name = name;
+                Description = description == null ? name : description;
                 MinValue = string.Empty;
                 _value = DefaultValue = defaultValue ?? string.Empty;
                 TemplateValidate = validate;
@@ -123,26 +130,28 @@ namespace pwiz.Skyline.Model
             public string OtherSettingName { get; private set; }
 
             /// <summary>
-            /// Allow to change a second Setting based on the value of this setting and the action
+            /// Allows to change another Setting based on the value of this setting and the action
             /// </summary>
             /// <param name="name"></param>
             /// <param name="defaultValue"></param>
             /// <param name="validValues"></param>
             /// <param name="otherSettingName">Second setting changed by this setting changing and applying action.</param>
-            /// <param name="doThisAction"></param>
-            public Setting(string name, string defaultValue, IEnumerable<string> validValues, string otherSettingName, Func<string, string, string> doThisAction)
+            /// <param name="otherAction"></param>
+            public Setting(string name, string defaultValue, IEnumerable<string> validValues, string otherSettingName, Func<string, string, string> otherAction, string description = null)
             {
                 Name = name;
+                Description = description == null ? name : description;
                 MinValue = string.Empty;
                 _value = DefaultValue = defaultValue ?? string.Empty;
                 ValidValues = validValues;
                 OtherSettingName = otherSettingName;
-                OtherAction = doThisAction;
+                OtherAction = otherAction;
             }
 
             public Setting(Setting other, object newValue = null)
             {
                 Name = other.Name;
+                Description = other.Description;
                 MinValue = other.MinValue;
                 MaxValue = other.MaxValue;
                 _value = DefaultValue = newValue ?? other.Value;
@@ -153,6 +162,7 @@ namespace pwiz.Skyline.Model
             }
             
             public string Name { get; }
+            public string Description { get; }
             public object MinValue { get; }
             public object MaxValue { get; }
 

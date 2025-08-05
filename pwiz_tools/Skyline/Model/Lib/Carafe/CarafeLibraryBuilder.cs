@@ -326,108 +326,102 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             new ImmutableDictionary<string, AbstractDdaSearchEngine.Setting>(
                 new Dictionary<string, AbstractDdaSearchEngine.Setting>
                 {
-                    { ModelResources.CarafeTraining_fdr_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeTraining_fdr_long, 0.01, 0, 1) },
-                    { ModelResources.CarafeTraining_ptm_site_prob_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeTraining_ptm_site_prob_long, 0.75, 0, 1) },
-                    { ModelResources.CarafeTraining_ptm_site_qvalue_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeTraining_ptm_site_qvalue_long, 0.01, 0, 1) },
-                    { ModelResources.CarafeTraining_fragment_ion_mass_tolerance_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeTraining_fragment_ion_mass_tolerance_long, 20, 0) },
+                    { ModelResources.CarafeTraining_fdr_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeTraining_fdr_short, 0.01, 0, 1, ModelResources.CarafeTraining_fdr_long) },
+                    { ModelResources.CarafeTraining_ptm_site_prob_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeTraining_ptm_site_prob_short, 0.75, 0, 1, ModelResources.CarafeTraining_ptm_site_prob_long) },
+                    { ModelResources.CarafeTraining_ptm_site_qvalue_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeTraining_ptm_site_qvalue_short, 0.01, 0, 1, ModelResources.CarafeTraining_ptm_site_qvalue_long) },
+                    { ModelResources.CarafeTraining_fragment_ion_mass_tolerance_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeTraining_fragment_ion_mass_tolerance_short, 20, 0, int.MaxValue,ModelResources.CarafeTraining_fragment_ion_mass_tolerance_long) },
                     { 
                         ModelResources.CarafeTraining_fragment_ion_mass_tolerance_units_short,
-                        new AbstractDdaSearchEngine.Setting(ModelResources.CarafeTraining_fragment_ion_mass_tolerance_units_long, "ppm", Enum.GetNames(typeof(ToleranceUnits)))
+                        new AbstractDdaSearchEngine.Setting(ModelResources.CarafeTraining_fragment_ion_mass_tolerance_units_short, "ppm", Enum.GetNames(typeof(ToleranceUnits)), ModelResources.CarafeTraining_fragment_ion_mass_tolerance_units_long)
                     },
-                    { ModelResources.CarafeTraining_refine_peak_detection_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeTraining_refine_peak_detection_long, true) },
-                    { ModelResources.CarafeTraining_RT_window_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeTraining_RT_window_long, 3, 0) },
-                    { ModelResources.CarafeTraining_XIC_correlation_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeTraining_XIC_correlation_long, 0.80, 0, 1) }, 
-                    { ModelResources.CarafeTraining_min_fragment_mz_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeTraining_min_fragment_mz_long, 200.0, 0.0) }
+                    { ModelResources.CarafeTraining_refine_peak_detection_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeTraining_refine_peak_detection_short, true, ModelResources.CarafeTraining_refine_peak_detection_long) },
+                    { ModelResources.CarafeTraining_RT_window_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeTraining_RT_window_short, 3, 0, int.MaxValue, ModelResources.CarafeTraining_RT_window_long) },
+                    { ModelResources.CarafeTraining_XIC_correlation_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeTraining_XIC_correlation_short, 0.80, 0, 1, ModelResources.CarafeTraining_XIC_correlation_long) }, 
+                    { ModelResources.CarafeTraining_min_fragment_mz_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeTraining_min_fragment_mz_short, 200.0, 0.0, double.MaxValue,ModelResources.CarafeTraining_min_fragment_mz_long) }
                 });
 
         public static readonly ImmutableDictionary<string, AbstractDdaSearchEngine.Setting> DefaultModelParameters =
             new ImmutableDictionary<string, AbstractDdaSearchEngine.Setting>(
                 new Dictionary<string, AbstractDdaSearchEngine.Setting>
                 {
-                    { ModelResources.CarafeModel_model_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeModel_model_long, "general", Enum.GetNames(typeof(ModelTypes))) },
-                    { ModelResources.CarafeModel_nce_short,  new AbstractDdaSearchEngine.Setting(ModelResources.CarafeModel_nce_long) },
-                    { ModelResources.CarafeModel_instrument_short,  new AbstractDdaSearchEngine.Setting(ModelResources.CarafeModel_instrument_long) },
-                    { ModelResources.CarafeModel_device_short,  new AbstractDdaSearchEngine.Setting(ModelResources.CarafeModel_device_long, DeviceTypes.gpu.ToString(), Enum.GetNames(typeof(DeviceTypes))) }
+                    { ModelResources.CarafeModel_model_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeModel_model_short, "general", Enum.GetNames(typeof(ModelTypes)), ModelResources.CarafeModel_model_long) },
+                    { ModelResources.CarafeModel_nce_short,  new AbstractDdaSearchEngine.Setting(ModelResources.CarafeModel_nce_short,ModelResources.CarafeModel_nce_long) },
+                    { ModelResources.CarafeModel_instrument_short,  new AbstractDdaSearchEngine.Setting(ModelResources.CarafeModel_instrument_short, ModelResources.CarafeModel_instrument_long) },
+                    { ModelResources.CarafeModel_device_short,  new AbstractDdaSearchEngine.Setting(ModelResources.CarafeModel_device_short, DeviceTypes.gpu.ToString(), Enum.GetNames(typeof(DeviceTypes)),ModelResources.CarafeModel_device_long) }
                 });
 
+        private static Func<string, string, string> BuildSelectedModString = (s1, s2) =>
+        {
+            var input = "";
+
+            s2 = s2.Split(':')[0].Trim();
+
+            if (s1 == "0" || s2 == "0")
+                return s2;
+
+            input = $"{s1},{s2}";
+
+            if (string.IsNullOrWhiteSpace(input))
+            {
+                return s1;
+            }
+
+            return string.Join(",",
+                input.Split(',')
+                    .Select(s => s.Trim())
+                    .Where(s => !string.IsNullOrEmpty(s) && int.TryParse(s, out _))
+                    .Select(s => int.Parse(s)) // Safe to parse after TryParse check
+                    .Distinct() // Removes duplicates, preserves order
+                    .Select(n => n.ToString()));
+        };
+
+        private static Func<string, bool> ValidateSelectedMods = (value) =>
+        {
+
+            if (!Regex.IsMatch(value, @"^\d+\s*(,\s*\d+\s*)*$"))
+                return false;
+            foreach (var num in value.Split(',').Select(s => s.Trim()).ToArray())
+            {
+                if (!int.TryParse(num, out int number) ||
+                    number > Enum.GetValues(typeof(CarafeSupportedModifications)).Length - 1 ||
+                    number < 0)
+                    return false;
+            }
+
+            return true;
+        }; 
+    
         public static readonly ImmutableDictionary<string, AbstractDdaSearchEngine.Setting> DefaultLibraryParameters =
             new ImmutableDictionary<string, AbstractDdaSearchEngine.Setting>(
                 new Dictionary<string, AbstractDdaSearchEngine.Setting>
                 {
-                    { ModelResources.CarafeLibrary_enzyme_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_enzyme_long, GetDescription( SupportedEnzymeTypes.TrypsinDefault ), Enum.GetValues(typeof(SupportedEnzymeTypes)).
-                        Cast<SupportedEnzymeTypes>().Select(e => GetDescription(e))) },
-                    { ModelResources.CarafeLibrary_missed_cleavage_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_missed_cleavage_long, 1, 0) },
-    
+                    { ModelResources.CarafeLibrary_enzyme_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_enzyme_short, GetDescription( SupportedEnzymeTypes.TrypsinDefault ), Enum.GetValues(typeof(SupportedEnzymeTypes)).
+                        Cast<SupportedEnzymeTypes>().Select(e => GetDescription(e)), ModelResources.CarafeLibrary_enzyme_long) },
+                    { ModelResources.CarafeLibrary_missed_cleavage_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_missed_cleavage_short, 1, 0, int.MaxValue, ModelResources.CarafeLibrary_missed_cleavage_long) },
                     { ModelResources.CarafeLibrary_fixed_modification_types_short, 
-                        new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_fixed_modification_types_long, GetDescription( CarafeSupportedModifications.MODID_1 ), 
+                        new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_fixed_modification_types_short, GetDescription( CarafeSupportedModifications.MODID_1 ), 
                             Enum.GetValues(typeof(CarafeSupportedModifications)).
-                                Cast<CarafeSupportedModifications>().Select(e => GetDescription(e)), ModelResources.CarafeLibrary_fixed_modification_long, (s1, s2) =>
-                            {
-                                var input = "";
-
-                                s2 = s2.Split(':')[0].Trim();
-
-                                if (s1 == "0" || s2 == "0")
-                                    return s2;
-                                      
-                                input = $"{s1},{s2}";
-
-                                if (string.IsNullOrWhiteSpace(input))
-                                {
-                                    return s1;
-                                }
-                                return string.Join(",",
-                                    input.Split(',')
-                                        .Select(s => s.Trim())
-                                        .Where(s => !string.IsNullOrEmpty(s) && int.TryParse(s, out _))
-                                        .Select(s => int.Parse(s)) // Safe to parse after TryParse check
-                                        .Distinct() // Removes duplicates, preserves order
-                                        .Select(n => n.ToString()));
-                            } )  },
-                
-                    { ModelResources.CarafeLibrary_fixed_modification_short,  new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_fixed_modification_long, @"1", (value) => Regex.IsMatch(value, @"^\d+\s*(,\s*\d+\s*)*$"))
+                                Cast<CarafeSupportedModifications>().Select(e => GetDescription(e)), ModelResources.CarafeLibrary_fixed_modification_short, BuildSelectedModString, ModelResources.CarafeLibrary_fixed_modification_types_long)  },
+                    { ModelResources.CarafeLibrary_fixed_modification_short,  new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_fixed_modification_short, @"1", ValidateSelectedMods, ModelResources.CarafeLibrary_fixed_modification_long)
                     },
                     { ModelResources.CarafeLibrary_variable_modification_types_short, 
-                        new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_variable_modification_types_long, GetDescription( CarafeSupportedModifications.NONE ), 
+                        new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_variable_modification_types_short, GetDescription( CarafeSupportedModifications.NONE ), 
                             Enum.GetValues(typeof(CarafeSupportedModifications)).
-                                Cast<CarafeSupportedModifications>().Select(e => GetDescription(e)), ModelResources.CarafeLibrary_variable_modification_long, (s1,s2) =>
-                            {
-                                var input = "";
-
-                                s2 = s2.Split(':')[0].Trim();
-
-                                if (s1 == "0" || s2 == "0")
-                                    return s2;
-
-                                input = $"{s1},{s2}";
-
-                                if (string.IsNullOrWhiteSpace(input))
-                                {
-                                    return s1;
-                                }
-                                return string.Join(",",
-                                    input.Split(',')
-                                        .Select(s => s.Trim())
-                                        .Where(s => !string.IsNullOrEmpty(s) && int.TryParse(s, out _))
-                                        .Select(s => int.Parse(s)) // Safe to parse after TryParse check
-                                        .Distinct() // Removes duplicates, preserves order
-                                        .Select(n => n.ToString()));
-                            } )  },
-
-                    { ModelResources.CarafeLibrary_variable_modification_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_variable_modification_long, @"0", (value) => Regex.IsMatch(value, @"^\d+\s*(,\s*\d+\s*)*$")) },
-                    { ModelResources.CarafeLibrary_max_variable_modification_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_max_variable_modification_long, 1, 0) },
-                    { ModelResources.CarafeLibrary_clip_nterm_methionine_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_clip_nterm_methionine_long, false ) },
-                    { ModelResources.CarafeLibrary_min_peptide_length_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_min_peptide_length_long, 7, 0 ) },
-                    { ModelResources.CarafeLibrary_max_peptide_length_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_max_peptide_length_long, 35, 0 ) },
-                    { ModelResources.CarafeLibrary_min_peptide_mz_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_min_peptide_mz_long, 400.0, 0.0 ) },
-                    { ModelResources.CarafeLibrary_max_peptide_mz_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_max_peptide_mz_long, 1000.0, 0.0 ) },
-                    { ModelResources.CarafeLibrary_min_peptide_charge_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_min_peptide_charge_long, 2, 1 ) },
-                    { ModelResources.CarafeLibrary_max_peptide_charge_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_max_peptide_charge_long, 4, 1 ) },
-                    { ModelResources.CarafeLibrary_min_fragment_mz_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_min_fragment_mz_long, 200.0, 0.0 ) },
-                    { ModelResources.CarafeLibrary_max_fragment_mz_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_max_fragment_mz_long, 1800.0, 0.0 ) },
-                    { ModelResources.CarafeLibrary_topN_fragments_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_topN_fragments_long, 20, 1 ) },
-                    { ModelResources.CarafeLibrary_library_format_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_library_format_long, GetDescription( LibraryFormats.skyline), Enum.GetValues(typeof(LibraryFormats)).
-                        Cast<LibraryFormats>().Select(e => GetDescription(e))) }
+                                Cast<CarafeSupportedModifications>().Select(e => GetDescription(e)), ModelResources.CarafeLibrary_variable_modification_short, BuildSelectedModString, ModelResources.CarafeLibrary_variable_modification_types_long )  },
+                    { ModelResources.CarafeLibrary_variable_modification_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_variable_modification_short, @"0", ValidateSelectedMods,ModelResources.CarafeLibrary_variable_modification_long) },
+                    { ModelResources.CarafeLibrary_max_variable_modification_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_max_variable_modification_short, 1, 0, int.MaxValue,ModelResources.CarafeLibrary_max_variable_modification_long) },
+                    { ModelResources.CarafeLibrary_clip_nterm_methionine_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_clip_nterm_methionine_short, false, ModelResources.CarafeLibrary_clip_nterm_methionine_long) },
+                    { ModelResources.CarafeLibrary_min_peptide_length_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_min_peptide_length_short, 7, 0, int.MaxValue, ModelResources.CarafeLibrary_min_peptide_length_long ) },
+                    { ModelResources.CarafeLibrary_max_peptide_length_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_max_peptide_length_short, 35, 0, int.MaxValue, ModelResources.CarafeLibrary_max_peptide_length_long ) },
+                    { ModelResources.CarafeLibrary_min_peptide_mz_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_min_peptide_mz_short, 400.0, 0.0, double.MaxValue, ModelResources.CarafeLibrary_max_peptide_mz_long ) },
+                    { ModelResources.CarafeLibrary_max_peptide_mz_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_max_peptide_mz_short, 1000.0, 0.0, double.MaxValue, ModelResources.CarafeLibrary_max_peptide_mz_long ) },
+                    { ModelResources.CarafeLibrary_min_peptide_charge_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_min_peptide_charge_short, 2, 1, int.MaxValue, ModelResources.CarafeLibrary_min_peptide_charge_long ) },
+                    { ModelResources.CarafeLibrary_max_peptide_charge_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_max_peptide_charge_short, 4, 1, int.MaxValue, ModelResources.CarafeLibrary_max_peptide_charge_long ) },
+                    { ModelResources.CarafeLibrary_min_fragment_mz_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_min_fragment_mz_short, 200.0, 0.0, double.MaxValue, ModelResources.CarafeLibrary_min_fragment_mz_long ) },
+                    { ModelResources.CarafeLibrary_max_fragment_mz_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_max_fragment_mz_short, 1800.0, 0.0, double.MaxValue, ModelResources.CarafeLibrary_max_fragment_mz_long ) },
+                    { ModelResources.CarafeLibrary_topN_fragments_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_topN_fragments_short, 20, 1, int.MaxValue, ModelResources.CarafeLibrary_topN_fragments_long ) },
+                    { ModelResources.CarafeLibrary_library_format_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_library_format_short, GetDescription( LibraryFormats.skyline), Enum.GetValues(typeof(LibraryFormats)).
+                        Cast<LibraryFormats>().Select(e => GetDescription(e)), ModelResources.CarafeLibrary_library_format_long) }
 
                 });
 

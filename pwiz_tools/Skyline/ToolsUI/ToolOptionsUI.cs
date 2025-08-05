@@ -581,7 +581,7 @@ namespace pwiz.Skyline.ToolsUI
                     (value, setting) => setting.Value = value,
                     (value, setting) => setting.Validate(value),
                     setting => setting.ValidValues,
-                    setting => setting.Name) != null)
+                    setting => setting.Description) != null)
                 this.DialogResult = DialogResult.None;
         }
 
@@ -597,7 +597,7 @@ namespace pwiz.Skyline.ToolsUI
                     (value, setting) => setting.Value = value,
                     (value, setting) => setting.Validate(value),
                     setting => setting.ValidValues,
-                    setting => setting.Name) != null)
+                    setting => setting.Description) != null)
                 this.DialogResult = DialogResult.None;
         }
 
@@ -611,7 +611,7 @@ namespace pwiz.Skyline.ToolsUI
                     (value, setting) => setting.Value = value,
                     (value, setting) => setting.Validate(value),
                     setting => setting.ValidValues,
-                    setting => setting.Name);
+                    setting => setting.Description);
         }
 
         private void ToolsOptionsUI_CarafeHelpButtonClicked(object sender, EventArgs e)
@@ -644,7 +644,7 @@ namespace pwiz.Skyline.ToolsUI
                 (value, setting) => setting.Value = value,
                 (value, setting) => setting.Validate(value),
                 setting => setting.ValidValues,
-                setting => setting.Name);
+                setting => setting.Description);
         }
 
         private void EmbedCarafeDataSettings()
@@ -659,7 +659,7 @@ namespace pwiz.Skyline.ToolsUI
                 (value, setting) => setting.Value = value,
                 (value, setting) => setting.Validate(value),
                 setting => setting.ValidValues,
-                setting => setting.Name, CarafeDataTabControl);
+                setting => setting.Description, CarafeDataTabControl);
         }
 
         private void EmbedCarafeModelSettings()
@@ -674,7 +674,7 @@ namespace pwiz.Skyline.ToolsUI
                 (value, setting) => setting.Value = value,
                 (value, setting) => setting.Validate(value),
                 setting => setting.ValidValues,
-                setting => setting.Name, CarafeModelTabControl);
+                setting => setting.Description, CarafeModelTabControl);
         }
 
         private void EmbedCarafeLibrarySettings()
@@ -689,7 +689,7 @@ namespace pwiz.Skyline.ToolsUI
                 (value, setting) => setting.Value = value,
                 (value, setting) => setting.Validate(value),
                 setting => setting.ValidValues,
-                setting => setting.Name, CarafeLibraryTabControl);
+                setting => setting.Description, CarafeLibraryTabControl);
         }
         private void EmbedAlphaPeptDeepUserSettings()
         {
@@ -703,7 +703,7 @@ namespace pwiz.Skyline.ToolsUI
                 (value, setting) => setting.Value = value,
                 (value, setting) => setting.Validate(value),
                 setting => setting.ValidValues,
-                setting => setting.Name, AlphaPeptDeepTabControl);
+                setting => setting.Description, AlphaPeptDeepTabControl);
         }
 
         private Dictionary<string, Control> _alphaPeptDeepParams;

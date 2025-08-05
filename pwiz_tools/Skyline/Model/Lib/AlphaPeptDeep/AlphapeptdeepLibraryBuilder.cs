@@ -210,49 +210,25 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             new ImmutableDictionary<string, AbstractDdaSearchEngine.Setting>(
                 new Dictionary<string, AbstractDdaSearchEngine.Setting>
                 {
-                    /*
-                    {
-                        ModelResources.AlphaPeptDeep_min_peptide_length_short,
-                        new AbstractDdaSearchEngine.Setting(ModelResources.AlphaPeptDeep_min_peptide_length_long, 7, 1)
-                    },
-                    {
-                        ModelResources.AlphaPeptDeep_max_peptide_length_short,
-                        new AbstractDdaSearchEngine.Setting(ModelResources.AlphaPeptDeep_max_peptide_length_long, 35, 1)
-                    },
-                    */
                     {
                         ModelResources.AlphaPeptDeep_min_fragment_mz_short,
-                        new AbstractDdaSearchEngine.Setting(ModelResources.AlphaPeptDeep_min_fragment_mz_long, 200, 0.0)
+                        new AbstractDdaSearchEngine.Setting(ModelResources.AlphaPeptDeep_min_fragment_mz_short, 200, 0.0, double.MaxValue, ModelResources.AlphaPeptDeep_min_fragment_mz_long)
                     },
                     {
                         ModelResources.AlphaPeptDeep_max_fragment_mz_short,
-                        new AbstractDdaSearchEngine.Setting(ModelResources.AlphaPeptDeep_max_fragment_mz_long, 2000, 0.0)
+                        new AbstractDdaSearchEngine.Setting(ModelResources.AlphaPeptDeep_max_fragment_mz_short, 2000, 0.0, double.MaxValue, ModelResources.AlphaPeptDeep_max_fragment_mz_long)
                     },
-                    /*
-                    {
-                        ModelResources.AlphaPeptDeep_max_fragment_charge_short,
-                        new AbstractDdaSearchEngine.Setting(ModelResources.AlphaPeptDeep_max_fragment_charge_long, 2, 1)
-                    },
-                    {
-                        ModelResources.AlphaPeptDeep_min_precursor_charge_short,
-                        new AbstractDdaSearchEngine.Setting(ModelResources.AlphaPeptDeep_min_precursor_charge_long, 2, 1)
-                    },
-                    {
-                        ModelResources.AlphaPeptDeep_max_precursor_charge_short,
-                        new AbstractDdaSearchEngine.Setting(ModelResources.AlphaPeptDeep_max_precursor_charge_short, 4, 1)
-                    },
-                    */
                     {
                         ModelResources.AlphaPeptDeep_min_relative_intensity_short,
-                        new AbstractDdaSearchEngine.Setting(ModelResources.AlphaPeptDeep_min_relative_intensity_long, 0.001, 0)
+                        new AbstractDdaSearchEngine.Setting(ModelResources.AlphaPeptDeep_min_relative_intensity_short, 0.001, 0, double.MaxValue, ModelResources.AlphaPeptDeep_min_relative_intensity_long)
                     },
                     {
                         ModelResources.AlphaPeptDeep_keep_k_highest_peaks_short,
-                        new AbstractDdaSearchEngine.Setting(ModelResources.AlphaPeptDeep_keep_k_highest_peaks_long, 12, 1)
+                        new AbstractDdaSearchEngine.Setting(ModelResources.AlphaPeptDeep_keep_k_highest_peaks_short, 12, 1, int.MaxValue,ModelResources.AlphaPeptDeep_keep_k_highest_peaks_long)
                     },
                     {
                         ModelResources.AlphaPeptDeep_device_short,
-                        new AbstractDdaSearchEngine.Setting(ModelResources.AlphaPeptDeep_device_long, DeviceTypes.gpu.ToString(), Enum.GetNames(typeof(DeviceTypes)))
+                        new AbstractDdaSearchEngine.Setting(ModelResources.AlphaPeptDeep_device_short, DeviceTypes.gpu.ToString(), Enum.GetNames(typeof(DeviceTypes)), ModelResources.AlphaPeptDeep_device_long)
                     },
                 });
 
