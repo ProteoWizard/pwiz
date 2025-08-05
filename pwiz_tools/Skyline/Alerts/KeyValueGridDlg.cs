@@ -160,10 +160,9 @@ namespace pwiz.Skyline.Alerts
                                 {
                                     if (setting.OtherAction != null)
                                     {
-                                        var newText = setting.OtherAction(keyToControl[other_kvp.Key].Text, comboBox.Text);
+                                        var newText = setting.OtherAction(keyToControl[other_kvp.Key].Text, thisBox.SelectedItem.ToString());
                                         keyToControl[other_kvp.Key].Text = newText;
                                     }
-                                    thisBox.Text = String.Empty;
                                     thisBox.DroppedDown = false;
                                     thisBox.Focus();
                                     break;
@@ -199,6 +198,7 @@ namespace pwiz.Skyline.Alerts
                             thisBox.SelectionLength = 0;
                             thisBox.SelectionStart = thisBox.Text.Length;
                             thisBox.DroppedDown = true;
+                            thisBox.SelectedIndex = -1;
 
                             if (thisBox.Items.Count == 0)
                             {
@@ -213,7 +213,8 @@ namespace pwiz.Skyline.Alerts
                         ComboBox thisBox = sender as ComboBox;
                         if (thisBox != null)
                         {
-                            if (args.KeyCode == Keys.Enter && thisBox.Items.Count > 0)
+                            string currentValue = thisBox.SelectedIndex != -1 ? thisBox.SelectedItem?.ToString() : thisBox.Text;
+                            if (args.KeyCode == Keys.Enter && thisBox.Items.Count > 0 && !string.IsNullOrEmpty(currentValue))
                             {
                                 args.Handled = true;
                                 thisBox.Focus();

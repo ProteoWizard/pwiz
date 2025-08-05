@@ -86,13 +86,33 @@ namespace pwiz.Skyline.Model
                 MinValue = false;
                 MaxValue = true;
             }
+            public Setting(string name)
+            {
+                Name = name;
+                _value = string.Empty;
+                MinValue = string.Empty;
+            }
+            public Setting(string name, string defaultValue)
+            {
+                Name = name;
+                MinValue = string.Empty;
+                _value = DefaultValue = defaultValue ?? string.Empty;
+            }
 
-            public Setting(string name, string defaultValue = null, IEnumerable<string> validValues = null)
+            public Setting(string name, string defaultValue, IEnumerable<string> validValues)
             {
                 Name = name;
                 MinValue = string.Empty;
                 _value = DefaultValue = defaultValue ?? string.Empty;
                 ValidValues = validValues;
+            }
+
+            public Setting(string name, string defaultValue, Func<string, bool> validate)
+            {
+                Name = name;
+                MinValue = string.Empty;
+                _value = DefaultValue = defaultValue ?? string.Empty;
+                TemplateValidate = validate;
             }
             /// <summary>
             /// First string is old value, second string is additional value, output is new setting
@@ -129,6 +149,7 @@ namespace pwiz.Skyline.Model
                 ValidValues = other.ValidValues;
                 OtherSettingName = other.OtherSettingName;
                 OtherAction = other.OtherAction;
+                TemplateValidate = other.TemplateValidate;
             }
             
             public string Name { get; }
@@ -148,7 +169,7 @@ namespace pwiz.Skyline.Model
 
             public object DefaultValue { get; }
             public bool IsDefault => Equals(DefaultValue, _value);
-
+            public Func<string, bool> TemplateValidate { get; private set; }
             public object Validate(object value)
             {
                 // incoming value must either be a string or value type must stay the same
@@ -160,6 +181,16 @@ namespace pwiz.Skyline.Model
                     return null;
                 }
 
+                if (TemplateValidate != null)
+                {
+                    if (!TemplateValidate(value.ToString()))
+                        throw new ArgumentException(string.Format(
+                            Resources.CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for__1_,
+                            value, Name));
+
+                    IsValid = true;
+                    return value;
+                }
                 // CONSIDER: worth an extra case to handle incoming values that are already int/double?
                 switch (MinValue)
                 {

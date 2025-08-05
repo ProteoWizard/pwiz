@@ -25,6 +25,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using Ionic.Zip;
 using pwiz.Common.Collections;
@@ -36,6 +37,7 @@ using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using Enum = System.Enum;
 using File = System.IO.File;
 
 [assembly: InternalsVisibleTo("TestPerf")]
@@ -348,12 +350,6 @@ namespace pwiz.Skyline.Model.Lib.Carafe
                     { ModelResources.CarafeModel_device_short,  new AbstractDdaSearchEngine.Setting(ModelResources.CarafeModel_device_long, DeviceTypes.gpu.ToString(), Enum.GetNames(typeof(DeviceTypes))) }
                 });
 
-        public static AbstractDdaSearchEngine.Setting FixedModSetting =
-            new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_fixed_modification_long, @"1");
-
-        public static AbstractDdaSearchEngine.Setting VarModSetting =
-            new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_variable_modification_long, @"0");
-
         public static readonly ImmutableDictionary<string, AbstractDdaSearchEngine.Setting> DefaultLibraryParameters =
             new ImmutableDictionary<string, AbstractDdaSearchEngine.Setting>(
                 new Dictionary<string, AbstractDdaSearchEngine.Setting>
@@ -389,7 +385,8 @@ namespace pwiz.Skyline.Model.Lib.Carafe
                                         .Select(n => n.ToString()));
                             } )  },
                 
-                    { ModelResources.CarafeLibrary_fixed_modification_short, FixedModSetting },
+                    { ModelResources.CarafeLibrary_fixed_modification_short,  new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_fixed_modification_long, @"1", (value) => Regex.IsMatch(value, @"^\d+\s*(,\s*\d+\s*)*$"))
+                    },
                     { ModelResources.CarafeLibrary_variable_modification_types_short, 
                         new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_variable_modification_types_long, GetDescription( CarafeSupportedModifications.NONE ), 
                             Enum.GetValues(typeof(CarafeSupportedModifications)).
@@ -417,7 +414,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
                                         .Select(n => n.ToString()));
                             } )  },
 
-                    { ModelResources.CarafeLibrary_variable_modification_short, VarModSetting },
+                    { ModelResources.CarafeLibrary_variable_modification_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_variable_modification_long, @"0", (value) => Regex.IsMatch(value, @"^\d+\s*(,\s*\d+\s*)*$")) },
                     { ModelResources.CarafeLibrary_max_variable_modification_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_max_variable_modification_long, 1, 0) },
                     { ModelResources.CarafeLibrary_clip_nterm_methionine_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_clip_nterm_methionine_long, false ) },
                     { ModelResources.CarafeLibrary_min_peptide_length_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_min_peptide_length_long, 7, 0 ) },

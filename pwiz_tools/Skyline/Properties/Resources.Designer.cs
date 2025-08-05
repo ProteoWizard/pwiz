@@ -1415,6 +1415,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: &quot;{0}&quot; is not a valid value for {1}..
+        /// </summary>
+        public static string CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for__1_ {
+            get {
+                return ResourceManager.GetString("CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error: &quot;{0}&quot; is not a valid value for {1}. It must be one of the following: {2}.
         /// </summary>
         public static string CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for__1___It_must_be_one_of_the_following___2_ {
