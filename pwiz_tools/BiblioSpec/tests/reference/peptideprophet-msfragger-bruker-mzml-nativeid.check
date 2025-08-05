@@ -1,5 +1,5 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:peptideprophet-msfragger-bruker-mzml-nativeid.blib	6	1	10
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:peptideprophet-msfragger-bruker-mzml-nativeid.blib	6	1	11
 id	RefSpectraID	position	mass
 id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobility	collisionalCrossSectionSqA	ionMobilityHighEnergyOffset	ionMobilityType	retentionTime	startTime	endTime	totalIonCurrent	moleculeName	chemicalFormula	precursorAdduct	inchiKey	otherKeys	fileID	SpecIDinFile	score	scoreType
 1	EGVVQGVASVAEK	636.84612	2	EGVVQGVASVAEK	-	-	1	460	0.88538516	0.0	0.0	2	1.30583274	N/A	N/A	187436.0	N/A	N/A	N/A	N/A	N/A	1	24	0.998433	2
@@ -8,8 +8,8 @@ id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	num
 4	EGVVQGVASVAEK	636.844855	2	EGVVQGVASVAEK	-	-	1	119	0.88618195	0.0	0.0	2	1.86171603	N/A	N/A	21080.0	N/A	N/A	N/A	N/A	N/A	1	83	0.999107	2
 5	EGVLYVGSK	476.262825	2	EGVLYVGSK	-	-	1	21	0.8056626	0.0	0.0	2	1.87607717	N/A	N/A	2870.0	N/A	N/A	N/A	N/A	N/A	1	87	0.985383	2
 6	QGVAEAAGK	415.72307	2	QGVAEAAGK	-	-	1	37	0.7569969	0.0	0.0	2	1.89313423	N/A	N/A	6223.0	N/A	N/A	N/A	N/A	N/A	1	89	0.995375	2
-id	fileName	idFileName	cutoffScore
-1	/BiblioSpec/tests/inputs/peptideprophet-msfragger-bruker-mzml-nativeid_calibrated.mzML	/BiblioSpec/tests/inputs/interact-peptideprophet-msfragger-bruker-mzml-nativeid.pep.xml	-1.0
+id	fileName	idFileName	cutoffScore	workflowType
+1	/BiblioSpec/tests/inputs/peptideprophet-msfragger-bruker-mzml-nativeid_calibrated.mzML	/BiblioSpec/tests/inputs/interact-peptideprophet-msfragger-bruker-mzml-nativeid.pep.xml	-1.0	0
 id	scoreType	probabilityType
 0	UNKNOWN	NOT_A_PROBABILITY_VALUE
 1	PERCOLATOR QVALUE	PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT

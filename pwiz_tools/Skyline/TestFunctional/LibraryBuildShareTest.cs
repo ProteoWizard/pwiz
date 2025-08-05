@@ -121,17 +121,23 @@ namespace pwiz.SkylineTestFunctional
                 connection.Open();
                 Assert.IsTrue(SqliteOperations.TableExists(connection, tableName));
                 minimizedLibColNames = SqliteOperations.GetColumnNamesFromTable(connection, tableName);
-                minimizedLibRows = SqliteOperations.DumpTable(connection, tableName, ", ", null, excludedCols).ToList();
+                minimizedLibColNames.Sort();
+
+                // Compare column names
+                CollectionAssert.IsSubsetOf(originalLibColNames, minimizedLibColNames,
+                    TextUtil.LineSeparate(
+                        $"Column names for table {tableName} are not the same and the original is not a superset of the minimized (new) library.",
+                        "Original library columns:", TextUtil.LineSeparate(originalLibColNames),
+                        "Minimized library columns:", TextUtil.LineSeparate(minimizedLibColNames)));
+
+                // Ignore values from new columns in the minimized library
+                var newColumnNames = new HashSet<string>(minimizedLibColNames);
+                newColumnNames.ExceptWith(originalLibColNames);
+
+                minimizedLibRows = SqliteOperations.DumpTable(connection, tableName, ", ", null, excludedCols.Concat(newColumnNames).ToArray()).ToList();
             }
-            minimizedLibColNames.Sort();
             minimizedLibRows.Sort();
 
-            // Compare column names
-            CollectionAssert.AreEqual(originalLibColNames, minimizedLibColNames,
-                TextUtil.LineSeparate(
-                    $"Column names for table {tableName} are not the same in the original and minimized libraries.",
-                    "Original library columns:", TextUtil.LineSeparate(originalLibColNames),
-                    "Minimized library columns:", TextUtil.LineSeparate(minimizedLibColNames)));
 
             // Compare row values. Minimized library can have fewer rows than the original library (e.g. ScoreTypes table)
             foreach (var minimizedLibRow in minimizedLibRows)

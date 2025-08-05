@@ -9,6 +9,7 @@ createTime TEXT, -- local creation time in ctime() format e.g. Thu Nov 16 17:02:
 numSpecs INTEGER, -- number of spectra in this library (-1 means not yet counted)
 majorVersion INTEGER, -- revision number for this library (count starts at 1)
 minorVersion INTEGER -- Schema version number:
+-- Version 11 adds Workflow as a column in SpectrumSourceFile
 -- Version 10 adds TIC as a column
 -- Version 9 adds Proteins and RefSpectraProteins tables
 -- Version 8 adds startTime and endTime
@@ -20,7 +21,7 @@ minorVersion INTEGER -- Schema version number:
 -- Version 2 added ion mobility information
 )
 
-INSERT INTO LibInfo values('urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:example','Fri Apr 14 09:57:02 2023',-1,0,10)
+INSERT INTO LibInfo values('urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:example','Mon May 12 16:33:36 2025',-1,0,11)
 
 CREATE TABLE RefSpectra ( -- spectrum metadata - actual mz/intensity pairs in RefSpectraPeaks
 id INTEGER primary key autoincrement not null, -- lookup key for RefSpectraPeaks
@@ -93,7 +94,8 @@ CREATE TABLE SpectrumSourceFiles ( -- information about the file or files from w
 id INTEGER PRIMARY KEY autoincrement not null,
 fileName VARCHAR(512), -- source spectrum file; same as idFilename if embedded spectra were used, otherwise the path to the external spectrum file (mzML/mzXML)
 idFileName VARCHAR(512), -- identification file, typically some kind of search tool output
-cutoffScore REAL -- filter threshold used when converting the source file to a BiblioSpec library. See RefSpectra scoreType field for information about the type of cutoff.
+cutoffScore REAL, -- filter threshold used when converting the source file to a BiblioSpec library. See RefSpectra scoreType field for information about the type of cutoff.
+workflowType TINYINT -- 0 for DDA, 1 for DIA
 )
 
 CREATE TABLE ScoreTypes ( -- information about the various kinds of cutoff scores understood by BiblioSpec
