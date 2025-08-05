@@ -516,7 +516,7 @@ namespace pwiz.SkylineTestTutorial
 
             ValidatePeakRanks(1, 176, true);
 
-            if(AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)  
+            if (AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)  
                 TestLibraryMatchPropertySheet();
 
             if (!AsSmallMoleculeMasses)
@@ -1241,6 +1241,7 @@ namespace pwiz.SkylineTestTutorial
 
         private void TestLibraryMatchPropertySheet()
         {
+            //TODO: [RC] Fix tests, add some tooltip testing code
             var isSmallMolecules = AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none;
 
             var expectedPropertiesDict = new Dictionary<string, object>
@@ -1252,7 +1253,9 @@ namespace pwiz.SkylineTestTutorial
                 { "RetentionTime", 46.81 },
                 { "Score", 0.0 },
                 { "ScoreType", BiblioSpec.Properties.Resources.BiblioSpecScoreType_DisplayName_Percolator_q_value },
-                { "SpectrumCount", 118 }
+                { "SpectrumCount", 118 },
+                { "PeakCount", 425 },
+                { "TotalIC",(2.0977E+7).ToString("0.0000E+0",  CultureInfo.CurrentCulture) }
             };
             if (isSmallMolecules)
             {
