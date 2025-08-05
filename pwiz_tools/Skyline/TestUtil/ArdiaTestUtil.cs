@@ -26,7 +26,7 @@ namespace pwiz.SkylineTestUtil
     /// </summary>
     public static class ArdiaTestUtil
     {
-        private static string _baseUrl = "https://hyperbridge.cmdtest.thermofisher.com";
+        private const string BASE_URL = "https://ardia-core-int.cmdtest.thermofisher.com/";
 
         public enum AccountType
         {
@@ -49,7 +49,7 @@ namespace pwiz.SkylineTestUtil
                         .ChangeTestingOnly_NotSerialized_Username("matt.chambers42@gmail.com")
                         .ChangeTestingOnly_NotSerialized_Password(password)
                         .ChangeUsername("Testing_FAKE_ArdiaUser_MultiRole")
-                        .ChangeServerUrl(_baseUrl);
+                        .ChangeServerUrl(BASE_URL);
 
                 case AccountType.SingleRole:
                     return (ArdiaAccount)ArdiaAccount.DEFAULT
@@ -64,7 +64,7 @@ namespace pwiz.SkylineTestUtil
 
                         .ChangeUsername("Testing_FAKE_ArdiaUser_SingleRole")
 
-                        .ChangeServerUrl(_baseUrl);
+                        .ChangeServerUrl(BASE_URL);
 
                 default:
                     throw new ArgumentOutOfRangeException(nameof(type), type, null);

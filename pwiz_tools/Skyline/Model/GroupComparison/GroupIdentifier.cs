@@ -21,8 +21,23 @@ using System;
 
 namespace pwiz.Skyline.Model.GroupComparison
 {
-    public struct GroupIdentifier : IComparable
+    public readonly struct GroupIdentifier : IComparable, IEquatable<GroupIdentifier>
     {
+        public bool Equals(GroupIdentifier other)
+        {
+            return Equals(_value, other._value);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is GroupIdentifier other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return (_value != null ? _value.GetHashCode() : 0);
+        }
+
         private readonly object _value;
 
         public GroupIdentifier(bool boolValue)
