@@ -185,7 +185,7 @@ namespace pwiz.Skyline.Model
                 {
                     if (!TemplateValidate(value.ToString()))
                         throw new ArgumentException(string.Format(
-                            Resources.CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for__1_,
+                            ModelResources.CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for__1_,
                             value, Name));
 
                     IsValid = true;

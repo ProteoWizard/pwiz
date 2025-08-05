@@ -1930,9 +1930,6 @@ If you prefer you can choose to report anonymously.</value>
   <data name="LocateFileDlg_LocateFileDlg_Otherwise__please_cancel_and_install__0__version__1__first" xml:space="preserve">
     <value>Otherwise, please cancel and install {0} version {1} first</value>
   </data>
-  <data name="CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for__1_" xml:space="preserve">
-    <value>Error: "{0}" is not a valid value for {1}.</value>
-  </data>
   <data name="CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for__1___It_must_be_one_of_the_following___2_" xml:space="preserve">
     <value>Error: "{0}" is not a valid value for {1}. It must be one of the following: {2}</value>
   </data>
