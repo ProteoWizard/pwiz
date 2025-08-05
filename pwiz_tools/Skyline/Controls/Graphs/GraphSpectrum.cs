@@ -148,34 +148,32 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public Size RenderTip(Graphics g, Size sizeMax, bool draw)
             {
-                if (HasTip)
+                if (!HasTip)
+                    return Size.Empty;
+                var table = new TableDesc();
+                using(var rt = new RenderTools())
                 {
-                    var table = new TableDesc();
-                    using(var rt = new RenderTools())
+                    table.AddDetailRow(GraphsResources.GraphSpectrum_ToolTip_mz,
+                          _peakRMI.ObservedMz.ToString(Formats.Mz, CultureInfo.CurrentCulture), rt);
+                    table.AddDetailRow(GraphsResources.GraphSpectrum_ToolTip_Intensity,
+                        _peakRMI.Intensity.ToString(@"##", CultureInfo.CurrentCulture), rt);
+                    if (_peakRMI.Rank > 0)
+                        table.AddDetailRow(GraphsResources.GraphSpectrum_ToolTip_Rank, 
+                            string.Format(@"{0}",  _peakRMI.Rank), rt);
+                    if (_peakRMI.MatchedIons != null && _peakRMI.MatchedIons.Count > 0)
                     {
-                        table.AddDetailRow(GraphsResources.GraphSpectrum_ToolTip_mz,
-                              _peakRMI.ObservedMz.ToString(Formats.Mz, CultureInfo.CurrentCulture), rt);
-                        table.AddDetailRow(GraphsResources.GraphSpectrum_ToolTip_Intensity,
-                            _peakRMI.Intensity.ToString(@"##", CultureInfo.CurrentCulture), rt);
-                        if (_peakRMI.Rank > 0)
-                            table.AddDetailRow(GraphsResources.GraphSpectrum_ToolTip_Rank, 
-                                string.Format(@"{0}",  _peakRMI.Rank), rt);
-                        if (_peakRMI.MatchedIons != null && _peakRMI.MatchedIons.Count > 0)
-                        {
-                            table.AddDetailRow(GraphsResources.GraphSpectrum_ToolTip_MatchedIons, GraphsResources.ToolTipImplementation_RenderTip_Calculated_Mass, rt, true);
-                            foreach (var mfi in _peakRMI.MatchedIons)
-                                table.AddDetailRow(AbstractSpectrumGraphItem.GetLabel(mfi, _peakRMI.Rank, false, false),
-                                    mfi.PredictedMz.ToString(Formats.Mz, CultureInfo.CurrentCulture) + @"  " +
-                                    AbstractSpectrumGraphItem.GetMassErrorString(_peakRMI, mfi), rt);
-                        }
-                        _table = table;
-                        var size = table.CalcDimensions(g);
-                        if (draw)
-                            table.Draw(g);
-                        return new Size((int)size.Width + 2, (int)size.Height + 2);
+                        table.AddDetailRow(GraphsResources.GraphSpectrum_ToolTip_MatchedIons, GraphsResources.ToolTipImplementation_RenderTip_Calculated_Mass, rt, true);
+                        foreach (var mfi in _peakRMI.MatchedIons)
+                            table.AddDetailRow(AbstractSpectrumGraphItem.GetLabel(mfi, _peakRMI.Rank, false, false),
+                                mfi.PredictedMz.ToString(Formats.Mz, CultureInfo.CurrentCulture) + @"  " +
+                                AbstractSpectrumGraphItem.GetMassErrorString(_peakRMI, mfi), rt);
                     }
+                    _table = table;
+                    var size = table.CalcDimensions(g);
+                    if (draw)
+                        table.Draw(g);
+                    return new Size((int)size.Width + 2, (int)size.Height + 2);
                 }
-                return Size.Empty;
             }
         }
 

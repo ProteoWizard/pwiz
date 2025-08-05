@@ -1392,7 +1392,7 @@ namespace pwiz.Skyline.Controls.Graphs {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Observed M/z:.
+        ///   Looks up a localized string similar to Observed m/z:.
         /// </summary>
         public static string GraphSpectrum_ToolTip_mz {
             get {
@@ -1960,7 +1960,7 @@ namespace pwiz.Skyline.Controls.Graphs {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Calculated M/z.
+        ///   Looks up a localized string similar to Ion m/z (calculated).
         /// </summary>
         public static string ToolTipImplementation_RenderTip_Calculated_Mass {
             get {

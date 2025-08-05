@@ -545,7 +545,7 @@ Here are the last 3 errors:
     <value>Failure loading spectrum. Library may be corrupted.</value>
   </data>
   <data name="GraphSpectrum_ToolTip_mz">
-    <value>Observed M/z:</value>
+    <value>Observed m/z:</value>
   </data>
   <data name="GraphSpectrum_ToolTip_Intensity">
     <value>Intensity:</value>
@@ -764,6 +764,6 @@ Here are the last 3 errors:
     <value>No quantitative chromatograms found</value>
   </data>
   <data name="ToolTipImplementation_RenderTip_Calculated_Mass" xml:space="preserve">
-    <value>Calculated M/z</value>
+    <value>Ion m/z (calculated)</value>
   </data>
 </root>

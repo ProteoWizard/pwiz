@@ -354,8 +354,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var massError = mfi.PredictedMz - rmi.ObservedMz;
             massError = SequenceMassCalc.GetPpm(mfi.PredictedMz, massError);
             massError = Math.Round(massError, 1);
-            sb.Append(string.Format(Resources.GraphSpectrum_MassErrorFormat_ppm, (massError > 0 ? @"+" : string.Empty), massError));
-            return sb.ToString();
+            return string.Format(Resources.GraphSpectrum_MassErrorFormat_ppm, (massError > 0 ? @"+" : string.Empty), massError);
         }
 
         public static string GetLabel(MatchedFragmentIon mfi, int rank, bool showMz, bool showRank)

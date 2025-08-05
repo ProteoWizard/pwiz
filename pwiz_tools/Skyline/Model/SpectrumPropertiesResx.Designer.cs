@@ -241,7 +241,7 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Number of non-zero peaks in the library spectrum.
+        ///   Looks up a localized string similar to Count of peaks in the library spectrum.
         /// </summary>
         internal static string Description_PeakCount {
             get {

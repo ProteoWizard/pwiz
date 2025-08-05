@@ -161,7 +161,7 @@
     <value>Number of measured spectra for this peptide in the library</value>
   </data>
   <data name="Description_PeakCount">
-    <value>Number of non-zero peaks in the library spectrum</value>
+    <value>Count of peaks in the library spectrum</value>
   </data>
   <data name="Description_TotalIC">
     <value>Sum of all peak intensities in the library spectrum</value>
