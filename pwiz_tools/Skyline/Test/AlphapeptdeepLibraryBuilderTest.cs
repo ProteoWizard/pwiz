@@ -133,8 +133,10 @@ namespace pwiz.SkylineTest
         public void TestGetWarningMods(SrmDocument document, IList<string> expectedWarningMods)
         {
             var builder = new AlphapeptdeepLibraryBuilder(TEST_LIB_NAME, NeverBuiltBlib, document, IrtStandard.BIOGNOSYS_11);
-            var (ms2SupportWarningList, rtSupportedMods, ccsSupportedMods) = builder.GetWarningMods();
-            CollectionAssert.AreEquivalent(expectedWarningMods.ToList(), ms2SupportWarningList.ToList());
+            //var (ms2SupportWarningList, rtSupportedMods, ccsSupportedMods)
+            var warningModSupports = builder.GetWarningMods();
+
+            CollectionAssert.AreEquivalent(expectedWarningMods.ToList(), warningModSupports.Where(kvp => kvp.Value.Fragmentation == false).Select(kvp => kvp.Key).ToList());
             CheckBuilderFiles(builder, false);
         }
 
@@ -210,9 +212,9 @@ namespace pwiz.SkylineTest
                 var modifiedSeq = ModifiedSequence.GetModifiedSequence(document.Settings, peptides[i], IsotopeLabelType.light);
                 string mods;
                 string modSites;
-                var (ms2SupportedMod, rtSupportedMods, ccsSupportedMods) =
-                    builder.ValidateModifications(modifiedSeq, out mods, out modSites);
-                Assert.IsTrue(ms2SupportedMod);
+                    
+                var predictionSupport = builder.ValidateSequenceModifications(modifiedSeq, out mods, out modSites);
+                Assert.IsTrue(predictionSupport.Fragmentation);
                 Assert.AreEqual(answer_mods[i], mods);
                 Assert.AreEqual(answer_modSites[i], modSites);
             }
@@ -379,9 +381,11 @@ namespace pwiz.SkylineTest
                     var modifiedSeq = ModifiedSequence.GetModifiedSequence(document.Settings, peptides[i], IsotopeLabelType.light);
                     string mods;
                     string modSites;
-                    var (ms2SupportedMods, rtSupportedMods, ccsSupportedMods) = builder.ValidateModifications(modifiedSeq, out mods, out modSites);
+                    var predictionSupport =  builder.ValidateSequenceModifications(modifiedSeq, out mods, out modSites);
 
-                    Assert.IsTrue(ms2SupportedMods == answer_ms2_supported[i] && rtSupportedMods == answer_rt_supported[i] && ccsSupportedMods == answer_ccs_supported[i]);
+                    Assert.IsTrue(predictionSupport.Fragmentation == answer_ms2_supported[i] && 
+                                  predictionSupport.RetentionTime == answer_rt_supported[i] && 
+                                  predictionSupport.Ccs == answer_ccs_supported[i]);
                     Assert.AreEqual(answer_modstrings[i], mods);
                     Assert.AreEqual(answer_modsites[i], modSites);
                     Assert.AreEqual(answer_warn_counts[i], capture.CapturedMessages.Count);
@@ -390,11 +394,11 @@ namespace pwiz.SkylineTest
               
                     capture.CapturedMessages.Clear();
 
-                    var (ms2SupportWarningList, rtSupportWarningList, ccsSupportWarningList) = builder.GetWarningMods();
-                    Assert.AreEqual(3, ms2SupportWarningList.Count);
-                    Assert.AreEqual(4, rtSupportWarningList.Count);
-                    Assert.AreEqual(4, ccsSupportWarningList.Count);
-                    CollectionAssert.AreEquivalent(answer_warningList.ToList(), rtSupportWarningList.ToList());
+                    var warningModSupports = builder.GetWarningMods();
+                    Assert.AreEqual(3, warningModSupports.Where(kvp => kvp.Value.Fragmentation == false).Select(kvp => kvp.Key).ToList().Count);
+                    Assert.AreEqual(4, warningModSupports.Where(kvp => kvp.Value.RetentionTime == false).Select(kvp => kvp.Key).ToList().Count);
+                    Assert.AreEqual(4, warningModSupports.Where(kvp => kvp.Value.Ccs == false).Select(kvp => kvp.Key).ToList().Count);
+                    CollectionAssert.AreEquivalent(answer_warningList.ToList(), warningModSupports.Where(kvp => kvp.Value.RetentionTime == false).Select(kvp => kvp.Key).ToList());
                 }
             }
             CheckBuilderFiles(builder, false);
@@ -447,9 +451,9 @@ namespace pwiz.SkylineTest
                     string mods;
                     string modSites;
 
-                    var (ms2SupportedMods, rtSupportedMods, ccsSupportedMods) =
-                        builder.ValidateModifications(modifiedSeq, out mods, out modSites);
-                    Assert.IsFalse(ms2SupportedMods);
+                    var predictionSupport =
+                        builder.ValidateSequenceModifications(modifiedSeq, out mods, out modSites);
+                    Assert.IsFalse(predictionSupport.Fragmentation);
                     
                     Assert.AreEqual(string.Empty, mods);
                     Assert.AreEqual(string.Empty, modSites);
@@ -470,9 +474,9 @@ namespace pwiz.SkylineTest
                     Assert.AreEqual(expectedMsg, capture.CapturedMessages[0]);
                     capture.CapturedMessages.Clear();
 
-                    var (ms2SupportWarningList, rtSupportWarningList, ccsSupportWarningList) = builder.GetWarningMods();
-                    Assert.AreEqual(1, ms2SupportWarningList.Count);
-                    Assert.AreEqual(answer_mods[i], ms2SupportWarningList[0]);
+                    var warningModSupports = builder.GetWarningMods();
+                    Assert.AreEqual(1, warningModSupports.Where(kvp => kvp.Value.Fragmentation == false).Select(kvp => kvp.Key).ToList().Count);
+                    Assert.AreEqual(answer_mods[i], warningModSupports.Where(kvp => kvp.Value.Fragmentation == false).Select(kvp => kvp.Key).ToList()[0]);
                 }
             }
             CheckBuilderFiles(builder, false);
