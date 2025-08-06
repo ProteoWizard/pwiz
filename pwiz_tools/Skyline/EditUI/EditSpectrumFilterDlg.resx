@@ -274,7 +274,7 @@
     <value>dataGridViewEx1</value>
   </data>
   <data name="&gt;&gt;dataGridViewEx1.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0 Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=25.1.1.216, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;dataGridViewEx1.Parent" xml:space="preserve">
     <value>panelClauses</value>
@@ -291,13 +291,13 @@
   <data name="btnDeleteFilter.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAFvSURBVDhPtZBNKMNhHMd3Vd5K7eKCWjkgk7yEZDKksciE
-        yMwkBw6LhHZxcCDlQg64SA4kJeVE4jRv89qaWn8tUtoF/7g8H2Ootb+x4nt56nm+38/v+/xUfyJcJ9Bt
-        BMcOH1eRiZV5RGcVwqyHrfWwELweWJoJ9rC2AL0mRLse0VEBcxOKkLeGwlwGIz2h75w6ApC6bERjAdia
-        gkxiyIow5cKkPWxDFYvTiMrUdxDDVnCfwVh/AOo/P2zhhccFzcWBLxmzEPV50Nfyu/Cn2N/1V85DGNKh
-        Rhth+EaCxkLISUDWxvOgjYXa7F/Wv7kGUz4UJeKzGODi6H25d2l+yPLsDwu8v4NWHY8lSbhL0/HtbX8F
-        GLXh1MQgnxwoQ3h5hkEL6JI5TlPj21gNMd6WZyC1VSN7r0Mh7G4i56pxpkQhdTWA/KQ4aUcTh+x0KACm
-        RpBSo3HrM0G6Uq7pl2zvhvNDBcClE8YH4HDv2/A/SKV6BYojAxyEJtLJAAAAAElFTkSuQmCC
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAFrSURBVDhPtZBNKMNhHMf/V+WtlIsLSjkgk5iQTIbkJTKN
+        yLwlBw6LhFx2cCDlQg64SA4kJeVEstO8zWtrSn9pWmkX/OPyfMQQnrWm+Fy/3++n5/kpyl+A6xi6q8Gx
+        w88sJFiZR3SWIyxG2FoPKuHmCpZmvndYW4BeE6LViGgvhbmJgJLXFwpLMdh65JwTh19Sm4kw54K14VtJ
+        DHUgTNkwOSKPv8LiNKIs+U3EcAe4T2Gs3y8d6w8+/oArFzQW+L9UnYGo00NfU2jjD9jbRZj0iIpUqNL9
+        cuxRwZwHWTFoumjudZFQkxmaBM81mHIgPw5fWwWcH74d15sSCcuzwSXceaHZwENhPO6iVHz27c8Bo1ac
+        SRFox/uBJTw/wWAbGBI4SonFt7EqFW9L0lBbKtFurqVMYXcTLTsWZ2IYalc9aI9ySVGUnaQoNKdDzpiy
+        oSaH4zamg3opF97RRrrh7EDOuXDC+AAc2OXwP3kBiiMDHFY5tmwAAAAASUVORK5CYII=
 </value>
   </data>
   <data name="btnDeleteFilter.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
@@ -486,26 +486,11 @@
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
     <value>800, 235</value>
   </data>
-  <data name="$this.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
     <value>Edit Spectrum Filter</value>
-  </data>
-  <data name="&gt;&gt;btnDeleteFilter.Name" xml:space="preserve">
-    <value>btnDeleteFilter</value>
-  </data>
-  <data name="&gt;&gt;btnDeleteFilter.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;toolTip1.Name" xml:space="preserve">
-    <value>toolTip1</value>
-  </data>
-  <data name="&gt;&gt;toolTip1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;propertyColumn.Name" xml:space="preserve">
     <value>propertyColumn</value>
@@ -524,6 +509,18 @@
   </data>
   <data name="&gt;&gt;valueColumn.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnDeleteFilter.Name" xml:space="preserve">
+    <value>btnDeleteFilter</value>
+  </data>
+  <data name="&gt;&gt;btnDeleteFilter.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolTip1.Name" xml:space="preserve">
+    <value>toolTip1</value>
+  </data>
+  <data name="&gt;&gt;toolTip1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>EditSpectrumFilterDlg</value>

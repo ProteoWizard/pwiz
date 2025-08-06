@@ -205,7 +205,7 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Fragmentation technique (e.g., CID, HCD, ETD).
+        ///   Looks up a localized string similar to Fragmentation technique (e.g. CID, HCD, ETD).
         /// </summary>
         internal static string Description_DissociationMethod {
             get {
