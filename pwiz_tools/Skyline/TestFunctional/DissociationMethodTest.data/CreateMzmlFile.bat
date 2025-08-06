@@ -1,1 +1,0 @@
-msconvert.exe 12122024_testing_stellar_lipidomics_pos_plasma_v14_1.raw --outfile DissociationMethodTest.mzML --filter "mzPrecursors [729.6]" --chromatogramFilter "index [100,1000]" --stripLocationFromSourceFiles --stripVersionFromSoftware
