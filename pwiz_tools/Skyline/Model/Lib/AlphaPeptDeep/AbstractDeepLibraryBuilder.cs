@@ -484,9 +484,6 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         {
             return mod.AlphaNameWithAminoAcid(unmodifiedSequence, modIndexAA);
         }
-
-        public abstract string GetWarning();
-        
         public string GetWarning()
         {
             var warningModSupports = GetWarningMods();
@@ -494,8 +491,6 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             var noMs2SupportWarningMods = warningModSupports.Where(kvp => kvp.Value.Fragmentation == false).Select(kvp => kvp.Key).ToList();
             var noRtSupportWarningMods = warningModSupports.Where(kvp => kvp.Value.RetentionTime == false).Select(kvp => kvp.Key).ToList();
             var noCcsSupportWarningMods = warningModSupports.Where(kvp => kvp.Value.Ccs == false).Select(kvp => kvp.Key).ToList();
-
-            // var (noMs2SupportWarningMods, noRtSupportWarningMods, noCcsSupportWarningMods) = GetWarningMods();
 
             if (noMs2SupportWarningMods.Count == 0 && noRtSupportWarningMods.Count == 0 && noCcsSupportWarningMods.Count == 0)
                 return null;
@@ -517,8 +512,6 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             warningModString = string.Join(Environment.NewLine, noCcsSupportWarningMods.Select(w => w.Indent(1)));
             return string.Format(ModelResources.Alphapeptdeep_Warn_limited_modification,
                 warningModString);
-
-
         }
         /// <summary>
         /// Returns a mapping between modification names in the document that will generate a warning and their available PredictionSupport. 
