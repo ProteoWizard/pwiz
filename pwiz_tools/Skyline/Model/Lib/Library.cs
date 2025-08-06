@@ -1973,7 +1973,7 @@ namespace pwiz.Skyline.Model.Lib
             return (Peaks != null ? Peaks.GetHashCode() : 0);
         }
 
-        public struct MI
+        public struct MI : IEquatable<MI>
         {
             private bool _notQuantitative;
             private List<SpectrumPeakAnnotation> _annotations; // A peak may have multiple annotations
@@ -2916,7 +2916,7 @@ namespace pwiz.Skyline.Model.Lib
     /// Key for use in dictionaries that store library header information in
     /// memory.
     /// </summary>
-    public struct LibKey
+    public struct LibKey : IEquatable<LibKey>
     {
         public static LibKey EMPTY = new LibKey(SmallMoleculeLibraryAttributes.EMPTY, Adduct.EMPTY);
 

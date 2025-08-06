@@ -114,6 +114,7 @@ enum PWIZ_API_DECL InstrumentModelType
     InstrumentModelType_Q_Exactive_HF,
     InstrumentModelType_Q_Exactive_HF_X,
     InstrumentModelType_Q_Exactive_UHMR,
+    InstrumentModelType_Q_Exactive_Focus,
     InstrumentModelType_Surveyor_PDA,
     InstrumentModelType_Accela_PDA,
     InstrumentModelType_Orbitrap_Fusion,
@@ -133,9 +134,11 @@ enum PWIZ_API_DECL InstrumentModelType
     InstrumentModelType_Orbitrap_Exploris_240,
     InstrumentModelType_Orbitrap_Exploris_GC_240,
     InstrumentModelType_Orbitrap_Exploris_480,
+    InstrumentModelType_Orbitrap_Exploris_GC,
     InstrumentModelType_Orbitrap_Eclipse,
     InstrumentModelType_Orbitrap_GC,
     InstrumentModelType_Orbitrap_Astral,
+    InstrumentModelType_Orbitrap_Astral_Zoom,
     InstrumentModelType_Stellar,
 
     InstrumentModelType_Count,
@@ -244,6 +247,7 @@ const InstrumentNameToModelMapping nameToModelMapping[] =
     {"Q EXACTIVE HF-X", InstrumentModelType_Q_Exactive_HF_X, Contains},
     {"Q EXACTIVE HF", InstrumentModelType_Q_Exactive_HF, Contains},
     {"Q EXACTIVE UHMR", InstrumentModelType_Q_Exactive_UHMR, Contains},
+    {"Q EXACTIVE FOCUS", InstrumentModelType_Q_Exactive_Focus, Contains}, // predicted
     {"Q EXACTIVE", InstrumentModelType_Q_Exactive, Contains},
     {"EXACTIVE PLUS", InstrumentModelType_Exactive_Plus, Contains},
     {"EXACTIVE", InstrumentModelType_Exactive, Contains},
@@ -251,9 +255,11 @@ const InstrumentNameToModelMapping nameToModelMapping[] =
     {"ORBITRAP EXPLORIS 240", InstrumentModelType_Orbitrap_Exploris_240, Exact},
     {"ORBITRAPEXPLORISGC240", InstrumentModelType_Orbitrap_Exploris_GC_240, ExactNoSpaces}, // predicted
     {"ORBITRAPEXPLORIS240GC", InstrumentModelType_Orbitrap_Exploris_GC_240, ExactNoSpaces}, // predicted
+    {"ORBITRAPEXPLORISGC", InstrumentModelType_Orbitrap_Exploris_GC, ContainsNoSpaces}, // predicted
     {"ORBITRAP EXPLORIS 480", InstrumentModelType_Orbitrap_Exploris_480, Exact},
     {"ORBITRAP GC", InstrumentModelType_Orbitrap_GC, Contains},
     {"ECLIPSE", InstrumentModelType_Orbitrap_Eclipse, Contains},
+    {"ASTRAL ZOOM", InstrumentModelType_Orbitrap_Astral_Zoom, Contains}, // predicted
     {"ASTRAL", InstrumentModelType_Orbitrap_Astral, Contains},
     {"FUSION ETD", InstrumentModelType_Orbitrap_Fusion_ETD, Contains},
     {"FUSION LUMOS", InstrumentModelType_Orbitrap_Fusion_Lumos, Contains},
@@ -342,6 +348,7 @@ inline std::vector<IonizationType> getIonSourcesForInstrumentModel(InstrumentMod
         case InstrumentModelType_Q_Exactive_HF:
         case InstrumentModelType_Q_Exactive_HF_X:
         case InstrumentModelType_Q_Exactive_UHMR:
+        case InstrumentModelType_Q_Exactive_Focus:
         case InstrumentModelType_Orbitrap_Exploris_120:
         case InstrumentModelType_Orbitrap_Exploris_240:
         case InstrumentModelType_Orbitrap_Exploris_480:
@@ -353,6 +360,7 @@ inline std::vector<IonizationType> getIonSourcesForInstrumentModel(InstrumentMod
         case InstrumentModelType_Orbitrap_ID_X:
         case InstrumentModelType_Orbitrap_IQ_X:
         case InstrumentModelType_Orbitrap_Astral:
+        case InstrumentModelType_Orbitrap_Astral_Zoom:
         case InstrumentModelType_Stellar:
         case InstrumentModelType_TSQ:
         case InstrumentModelType_TSQ_Quantum:
@@ -383,6 +391,7 @@ inline std::vector<IonizationType> getIonSourcesForInstrumentModel(InstrumentMod
         case InstrumentModelType_GC_IsoLink:
         case InstrumentModelType_Orbitrap_GC:
         case InstrumentModelType_Orbitrap_Exploris_GC_240:
+        case InstrumentModelType_Orbitrap_Exploris_GC:
             ionSources.push_back(IonizationType_EI);
             break;
 
@@ -465,10 +474,12 @@ inline MassAnalyzerType convertScanFilterMassAnalyzer(ScanFilterMassAnalyzerType
         case InstrumentModelType_Q_Exactive_HF_X:
         case InstrumentModelType_Q_Exactive_HF:
         case InstrumentModelType_Q_Exactive_UHMR:
+        case InstrumentModelType_Q_Exactive_Focus:
         case InstrumentModelType_Orbitrap_Exploris_120:
         case InstrumentModelType_Orbitrap_Exploris_240:
         case InstrumentModelType_Orbitrap_Exploris_GC_240:
         case InstrumentModelType_Orbitrap_Exploris_480:
+        case InstrumentModelType_Orbitrap_Exploris_GC:
             return MassAnalyzerType_Orbitrap;
 
         case InstrumentModelType_LTQ_Orbitrap:
@@ -500,6 +511,7 @@ inline MassAnalyzerType convertScanFilterMassAnalyzer(ScanFilterMassAnalyzerType
         }
 
         case InstrumentModelType_Orbitrap_Astral:
+        case InstrumentModelType_Orbitrap_Astral_Zoom:
             switch (scanFilterType)
             {
                 case ScanFilterMassAnalyzerType_FTMS: return MassAnalyzerType_Orbitrap;
@@ -617,10 +629,12 @@ inline std::vector<MassAnalyzerType> getMassAnalyzersForInstrumentModel(Instrume
         case InstrumentModelType_Q_Exactive_HF_X:
         case InstrumentModelType_Q_Exactive_HF:
         case InstrumentModelType_Q_Exactive_UHMR:
+        case InstrumentModelType_Q_Exactive_Focus:
         case InstrumentModelType_Orbitrap_Exploris_120:
         case InstrumentModelType_Orbitrap_Exploris_240:
         case InstrumentModelType_Orbitrap_Exploris_GC_240:
         case InstrumentModelType_Orbitrap_Exploris_480:
+        case InstrumentModelType_Orbitrap_Exploris_GC:
         case InstrumentModelType_Orbitrap_GC:
             massAnalyzers.push_back(MassAnalyzerType_Orbitrap);
             break;
@@ -645,6 +659,7 @@ inline std::vector<MassAnalyzerType> getMassAnalyzersForInstrumentModel(Instrume
             break;
 
         case InstrumentModelType_Orbitrap_Astral:
+        case InstrumentModelType_Orbitrap_Astral_Zoom:
             massAnalyzers.push_back(MassAnalyzerType_Orbitrap);
             massAnalyzers.push_back(MassAnalyzerType_Astral);
             break;
@@ -766,10 +781,12 @@ inline std::vector<DetectorType> getDetectorsForInstrumentModel(InstrumentModelT
         case InstrumentModelType_Q_Exactive_HF_X:
         case InstrumentModelType_Q_Exactive_HF:
         case InstrumentModelType_Q_Exactive_UHMR:
+        case InstrumentModelType_Q_Exactive_Focus:
         case InstrumentModelType_Orbitrap_Exploris_120:
         case InstrumentModelType_Orbitrap_Exploris_240:
         case InstrumentModelType_Orbitrap_Exploris_GC_240:
         case InstrumentModelType_Orbitrap_Exploris_480:
+        case InstrumentModelType_Orbitrap_Exploris_GC:
         case InstrumentModelType_Orbitrap_GC:
             detectors.push_back(DetectorType_Inductive);
             break;
@@ -793,6 +810,7 @@ inline std::vector<DetectorType> getDetectorsForInstrumentModel(InstrumentModelT
         case InstrumentModelType_Orbitrap_IQ_X:
         case InstrumentModelType_Orbitrap_Eclipse:
         case InstrumentModelType_Orbitrap_Astral:
+        case InstrumentModelType_Orbitrap_Astral_Zoom:
             detectors.push_back(DetectorType_Inductive);
             detectors.push_back(DetectorType_Electron_Multiplier);
             break;
