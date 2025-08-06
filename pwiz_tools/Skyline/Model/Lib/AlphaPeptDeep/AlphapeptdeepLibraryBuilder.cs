@@ -559,5 +559,35 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             }
             File.Delete(incompleteBlibPath);
         }
+
+        public override string GetWarning()
+        {
+            var warningModSupports = GetWarningMods();
+
+            var noMs2SupportWarningMods = warningModSupports.Where(kvp => kvp.Value.Fragmentation == false).Select(kvp => kvp.Key).ToList();
+            var noRtSupportWarningMods = warningModSupports.Where(kvp => kvp.Value.RetentionTime == false).Select(kvp => kvp.Key).ToList();
+            var noCcsSupportWarningMods = warningModSupports.Where(kvp => kvp.Value.Ccs == false).Select(kvp => kvp.Key).ToList();
+
+            if (noMs2SupportWarningMods.Count == 0 && noRtSupportWarningMods.Count == 0 && noCcsSupportWarningMods.Count == 0)
+                return null;
+
+            string warningModString;
+            if (noMs2SupportWarningMods.Count > 0)
+            {
+                warningModString = string.Join(Environment.NewLine, noMs2SupportWarningMods.Select(w => w.Indent(1)));
+                return string.Format(ModelResources.Alphapeptdeep_Warn_unknown_modification,
+                    warningModString);
+            }
+
+            if (noRtSupportWarningMods.Count > 0)
+            {
+                warningModString = string.Join(Environment.NewLine, noRtSupportWarningMods.Select(w => w.Indent(1)));
+                return string.Format(ModelResources.Alphapeptdeep_Warn_limited_modification,
+                    warningModString);
+            }
+            warningModString = string.Join(Environment.NewLine, noCcsSupportWarningMods.Select(w => w.Indent(1)));
+            return string.Format(ModelResources.Alphapeptdeep_Warn_limited_modification,
+                warningModString);
+        }
     }
 }
