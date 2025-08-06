@@ -23,7 +23,6 @@ using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Schema;
 using System.Xml.Serialization;
-using JetBrains.Annotations;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
@@ -44,7 +43,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
     public class DocumentRetentionTimes : Immutable, IXmlSerializable
     {
         public static readonly DocumentRetentionTimes EMPTY =
-            new DocumentRetentionTimes()
+            new DocumentRetentionTimes
             {
                 _libraryAlignments = new Dictionary<string, LibraryAlignmentValue>(),
             };
@@ -68,6 +67,21 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
             return dataFileUris.Any(file => _libraryAlignments.Values.Any(libraryAlignmentValue =>
                 libraryAlignmentValue.Alignments.GetAlignmentFunction(file, true) != null));
+        }
+
+        public bool HasUnalignedTimes()
+        {
+            foreach (var libraryAlignmentValue in _libraryAlignments.Values)
+            {
+                var alignments = libraryAlignmentValue.Alignments;
+                var library = libraryAlignmentValue.LibraryAlignment.Library;
+                if (alignments.LibraryFiles.Count != library.LibraryFiles.Count && library.ListRetentionTimeSources().Any())
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public AlignmentTarget.MedianDocumentRetentionTimes MedianDocumentRetentionTimes { get; private set; }
@@ -416,7 +430,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                     dict.Add(libraryName, null);
                     continue;
                 }
-                dict.Add(libraryName, new LibraryAlignmentParam(alignmentTarget, library, null));
+                dict.Add(libraryName, new LibraryAlignmentParam(alignmentTarget, library));
             }
 
             return dict;
@@ -440,11 +454,10 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         public class LibraryAlignmentParam : Immutable
         {
-            public LibraryAlignmentParam(AlignmentTarget alignmentTarget, Library library, ImmutableList<string> spectrumSourceFileSubset)
+            public LibraryAlignmentParam(AlignmentTarget alignmentTarget, Library library)
             {
                 AlignmentTarget = alignmentTarget;
                 Library = library;
-                SpectrumSourceFileSubset = spectrumSourceFileSubset;
 
             }
             public AlignmentTarget AlignmentTarget { get; }
@@ -458,12 +471,10 @@ namespace pwiz.Skyline.Model.RetentionTimes
             {
                 return ChangeProp(ImClone(this), im => im.Library = library);
             }
-            [CanBeNull]
-            public ImmutableList<string> SpectrumSourceFileSubset { get; private set; }
 
             protected bool Equals(LibraryAlignmentParam other)
             {
-                return Equals(AlignmentTarget, other.AlignmentTarget) && Equals(Library, other.Library) && Equals(SpectrumSourceFileSubset, other.SpectrumSourceFileSubset);
+                return Equals(AlignmentTarget, other.AlignmentTarget) && Equals(Library, other.Library);
             }
 
             public override bool Equals(object obj)
@@ -480,7 +491,6 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 {
                     var hashCode = (AlignmentTarget != null ? AlignmentTarget.GetHashCode() : 0);
                     hashCode = (hashCode * 397) ^ (Library != null ? Library.GetHashCode() : 0);
-                    hashCode = (hashCode * 397) ^ (SpectrumSourceFileSubset != null ? SpectrumSourceFileSubset.GetHashCode() : 0);
                     return hashCode;
                 }
             }
@@ -530,8 +540,8 @@ namespace pwiz.Skyline.Model.RetentionTimes
         public static Alignments PerformAlignment(ILoadMonitor loadMonitor, ref IProgressStatus progressStatus, LibraryAlignmentParam alignmentParam)
         {
             var library = alignmentParam.Library;
-            var spectrumSourceFiles = alignmentParam.SpectrumSourceFileSubset ?? library.LibraryFiles.FilePaths;
-            var allRetentionTimes = library.GetAllRetentionTimes(alignmentParam.SpectrumSourceFileSubset);
+            var spectrumSourceFiles = library.LibraryFiles.FilePaths;
+            var allRetentionTimes = library.GetAllRetentionTimes(null);
             if (allRetentionTimes == null)
             {
                 return Alignments.EMPTY;

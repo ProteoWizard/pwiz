@@ -2004,7 +2004,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 defSet.StaticModList.Add(mod);
             foreach(StaticMod mod in newHeavyMods)
                 defSet.HeavyModList.Add(mod);
-         }
+        }
 
         /// <summary>
         /// Returns true if any of the runs in this Document have been successfully aligned 
@@ -2012,11 +2012,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         public bool HasAlignedTimes()
         {
-            if (!AlignmentTarget.TryGetAlignmentTarget(this, out var target))
-            {
-                return false;
-            }
-            return target != null;
+            return DocumentRetentionTimes.AnyLibraryAlignments();
         }
 
         /// <summary>
@@ -2025,8 +2021,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         public bool HasUnalignedTimes()
         {
-            AlignmentTarget.TryGetAlignmentTarget(this, out var alignmentTarget);
-            return alignmentTarget == null;
+            return DocumentRetentionTimes.HasUnalignedTimes();
         }
 
         /// <summary>
