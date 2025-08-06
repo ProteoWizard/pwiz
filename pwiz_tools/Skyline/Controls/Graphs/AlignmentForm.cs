@@ -337,7 +337,7 @@ namespace pwiz.Skyline.Controls.Graphs
             return dataRows;
         }
 
-        internal struct DataRow
+        internal struct DataRow : IEquatable<DataRow>
         {
             public DataRow(SrmSettings settings, RetentionTimeSource target, RetentionTimeSource timesToAlign) : this()
             {
@@ -492,9 +492,34 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 return libraryRetentionTimes.GetFirstRetentionTimes();
             }
+
+            public bool Equals(DataRow other)
+            {
+                return Equals(DocumentRetentionTimes, other.DocumentRetentionTimes) && Equals(Target, other.Target) && Equals(Source, other.Source) && Equals(Alignment, other.Alignment) && Equals(TargetTimes, other.TargetTimes) && Equals(SourceTimes, other.SourceTimes) && Equals(AlignedRetentionTimes, other.AlignedRetentionTimes);
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is DataRow other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    var hashCode = (DocumentRetentionTimes != null ? DocumentRetentionTimes.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ (Target != null ? Target.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ (Source != null ? Source.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ (Alignment != null ? Alignment.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ (TargetTimes != null ? TargetTimes.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ (SourceTimes != null ? SourceTimes.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ (AlignedRetentionTimes != null ? AlignedRetentionTimes.GetHashCode() : 0);
+                    return hashCode;
+                }
+            }
         }
 
-        internal struct DataFileKey
+        internal struct DataFileKey : IEquatable<DataFileKey>
         {
             public DataFileKey(RetentionTimeSource retentionTimeSource) : this()
             {
@@ -505,6 +530,21 @@ namespace pwiz.Skyline.Controls.Graphs
             public override string ToString()
             {
                 return RetentionTimeSource.Name;
+            }
+
+            public bool Equals(DataFileKey other)
+            {
+                return Equals(RetentionTimeSource, other.RetentionTimeSource);
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is DataFileKey other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                return RetentionTimeSource != null ? RetentionTimeSource.GetHashCode() : 0;
             }
         }
 
