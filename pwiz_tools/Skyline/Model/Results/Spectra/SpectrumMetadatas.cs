@@ -191,7 +191,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
                     PrecursorIndex = { _spectrumPrecursors[index].Select(p=>precursors.IndexOf(p) + 1) },
                     ScanDescriptionIndex = scanDescriptions.LevelIndices[index],
                     ScanWindowIndex = scanWindows.LevelIndices[index],
-                    CompensationVoltage = _compensationVoltages[index],
+                    CompensationVoltage = _compensationVoltages[index]
                 };
                 _scanIds[index].SetInProto(spectrum);
                 proto.Spectra.Add(spectrum);
