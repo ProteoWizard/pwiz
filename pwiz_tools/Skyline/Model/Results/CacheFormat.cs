@@ -270,7 +270,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 throw new InvalidOperationException();
             }
-            return ChromGroupHeaderInfo.ItemSerializer(ChromGroupHeaderSize);
+            return ChromGroupHeaderInfo.ItemSerializer(FormatVersion, ChromGroupHeaderSize);
         }
 
         public IItemSerializer<ChromTransition> ChromTransitionSerializer()

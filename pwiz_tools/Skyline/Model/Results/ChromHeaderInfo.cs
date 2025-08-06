@@ -437,14 +437,30 @@ namespace pwiz.Skyline.Model.Results
 
         #region Fast file I/O
 
-        public static IItemSerializer<ChromGroupHeaderInfo> ItemSerializer(int itemSizeOnDisk)
+        public static IItemSerializer<ChromGroupHeaderInfo> ItemSerializer(CacheFormatVersion formatVersion, int itemSizeOnDisk)
         {
             StructSerializer<ChromGroupHeaderInfo> structSerializer = new StructSerializer<ChromGroupHeaderInfo>
             {
                 ItemSizeOnDisk = itemSizeOnDisk,
                 DirectSerializer = DirectSerializer.Create(ReadArray, WriteArray)
             };
-            return structSerializer;
+            
+            FlagValues unsupportedFlags = 0;
+            if (formatVersion < CacheFormatVersion.Nineteen)
+            {
+                unsupportedFlags |= FlagValues.has_max_peak_score;
+            }
+            if (unsupportedFlags == 0)
+            {
+                return structSerializer;
+            }
+
+            Func<ChromGroupHeaderInfo, ChromGroupHeaderInfo> converter = x =>
+            {
+                x._flagBits &= ~unsupportedFlags;
+                return x;
+            };
+            return ConvertedItemSerializer.Create(structSerializer, converter, converter);
         }
         /// <summary>
         /// Direct read of an entire array throw p-invoke of Win32 WriteFile.  This seems
