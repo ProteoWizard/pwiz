@@ -499,7 +499,7 @@ namespace pwiz.SkylineTestConnected
             // var result = client.GetFolder(folderId);
         }
 
-        private static void RegisterRemoteServer(ArdiaAccount account) 
+        public static void RegisterRemoteServer(ArdiaAccount account) 
         {
             Assert.IsNotNull(account);
 

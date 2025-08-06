@@ -639,9 +639,23 @@ namespace pwiz.Skyline.ToolsUI
 
             if (RemoteAccountType.ARDIA.Equals(AccountType))
             {
+                // Skyline only supports one Ardia account so prevent adding a second account and 
+                // cancel this dialog, returning to the list of remote accounts.
+                //
+                // First, however, switch to the Ardia account creation screen so the message
+                // is more in context and doesn't appear atop the UI for adding a UNIFI account.
+
                 wizardPagesByAccountType.SelectedIndex = ARDIA_WIZARD_PAGE_INDEX;
 
                 process_ardiaAccount_CurrentlyLoggedIn_EnableDisableControls();
+
+                if (_existing.ToList().Any(account => account.AccountType == RemoteAccountType.ARDIA))
+                {
+                    MessageDlg.Show(this, ToolsUIResources.EditRemoteAccountDlg_Ardia_OneAccountSupported, false, MessageBoxButtons.OK);
+
+                    // Reset back to the default account type
+                    AccountType = RemoteAccountType.UNIFI;
+                }
             }
         }
 
@@ -677,6 +691,12 @@ namespace pwiz.Skyline.ToolsUI
                     btnTest.Text = btnText_Connect;
                 }
             }
+        }
+
+        // Test helper
+        public bool IsVisibleAccountType(RemoteAccountType accountType)
+        {
+            return comboAccountType.SelectedIndex == RemoteAccountType.ALL.IndexOf(accountType);
         }
     }
 }

@@ -214,6 +214,7 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ArdiaAccountTest.cs" />
     <Compile Include="PanoramaClientDownloadTest.cs" />
     <Compile Include="KoinaBuildLibraryTest.cs" />
     <Compile Include="KoinaConnectionTest.cs" />
