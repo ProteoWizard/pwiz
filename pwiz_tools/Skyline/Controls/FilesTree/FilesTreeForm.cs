@@ -55,7 +55,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             filesTree.LabelEdit = true;
             filesTree.AllowDrop = true;
             filesTree.NodeMouseDoubleClick += FilesTree_TreeNodeMouseDoubleClick;
-            filesTree.MouseDown += FilesTree_MouseDown;
+            filesTree.AfterSelect += FilesTree_SelectedNodeChanged;
             filesTree.MouseMove += FilesTree_MouseMove;
             filesTree.LostFocus += FilesTree_LostFocus;
             filesTree.BeforeLabelEdit += FilesTree_BeforeLabelEdit;
@@ -417,6 +417,12 @@ namespace pwiz.Skyline.Controls.FilesTree
             }
         }
 
+        private void FilesTree_SelectedNodeChanged(object sender, TreeViewEventArgs e)
+        {
+            var clickedNode = e.Node;
+            SkylineWindow.PotentialPropertySheetOwnerGotFocus(clickedNode, e);
+        }
+            
         private void FilesTree_BeforeCollapse(object sender, TreeViewCancelEventArgs e)
         {
             // CONSIDER: change FilesTree UI so the root node is a label and not

@@ -74,6 +74,7 @@ using pwiz.Skyline.Model.Koina.Communication;
 using pwiz.Skyline.Model.Koina.Models;
 using pwiz.CommonMsData.RemoteApi;
 using pwiz.CommonMsData.RemoteApi.Ardia;
+using pwiz.Skyline.Model.PropertySheets;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.SettingsUI;
@@ -106,6 +107,7 @@ namespace pwiz.Skyline
     {
         private SequenceTreeForm _sequenceTreeForm;
         private FilesTreeForm _filesTreeForm;
+        private PropertyForm _propertyForm;
         private ImmediateWindow _immediateWindow;
 
         private SrmDocument _document;
@@ -3195,6 +3197,47 @@ namespace pwiz.Skyline
             {
                 _filesTreeForm.Close();
                 _filesTreeForm = null;
+            }
+        }
+
+        #endregion
+
+        #region Properties
+
+        public PropertyForm PropertyForm => _propertyForm;
+        public bool PropertyFormIsVisible => _propertyForm is { Visible: true };
+        public bool PropertyFormIsActivated => _propertyForm is { IsActivated: true };
+
+        public void ShowPropertyForm(bool show, string persistentState = null)
+        {
+            if (show)
+            {
+                _propertyForm ??= CreatePropertyForm(persistentState);
+                _propertyForm.Show(dockPanel, DockState.DockRight);
+            }
+            else
+            {
+                _propertyForm.Hide();
+            }
+        }
+
+        private PropertyForm CreatePropertyForm(string persistentString)
+        {
+            _propertyForm = new PropertyForm(this);
+            return _propertyForm;
+        }
+
+        public void PotentialPropertySheetOwnerGotFocus(object sender, EventArgs e)
+        {
+            if ( !(_propertyForm is { Visible: true }) ) return;
+
+            if (sender is IPropertySheetOwner owner)
+            {
+                _propertyForm.PropertyGrid.SelectedObject = owner.GetProperties();
+            }
+            else
+            {
+                _propertyForm.PropertyGrid.SelectedObject = null;
             }
         }
 

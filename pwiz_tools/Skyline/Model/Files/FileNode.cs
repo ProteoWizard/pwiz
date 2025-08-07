@@ -81,7 +81,7 @@ namespace pwiz.Skyline.Model.Files
 
         internal IDocumentContainer DocumentContainer { get; }
         internal SrmDocument Document => DocumentContainer.Document;
-        internal string DocumentPath => DocumentContainer.DocumentFilePath;
+        public string DocumentPath => DocumentContainer.DocumentFilePath;
 
         public IdentityPath IdentityPath { get; }
         public virtual bool IsBackedByFile => false;
@@ -91,6 +91,7 @@ namespace pwiz.Skyline.Model.Files
         public abstract string Name { get; }
         public abstract string FilePath { get; }
         public virtual string FileName => Path.GetFileName(FilePath);
+        public string FileType => GetType().Name;
 
         public ImageId ImageAvailable { get; }
         public ImageId ImageMissing { get; }

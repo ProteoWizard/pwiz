@@ -160,7 +160,7 @@ namespace pwiz.Skyline.Model.Files
             return ReferenceEquals(ChromatogramSet, replicate.ChromatogramSet);
         }
 
-        private ChromatogramSet ChromatogramSet
+        public ChromatogramSet ChromatogramSet
         {
             get
             {
