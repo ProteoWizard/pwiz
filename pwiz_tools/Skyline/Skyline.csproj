@@ -629,9 +629,7 @@
     <Compile Include="Model\IdPeptideDocNode.cs" />
     <Compile Include="Model\Lib\AlphaPeptDeep\AbstractDeepLibraryBuilder.cs" />
     <Compile Include="Model\Lib\Carafe\CarafeLibraryBuilder.cs" />
-    <Compile Include="Model\PropertySheets\PropertyAttribute.cs" />
     <Compile Include="Model\PropertySheets\IPropertySheetOwner.cs" />
-    <Compile Include="Model\PropertySheets\DynamicPropertyObject.cs" />
     <Compile Include="Model\PropertySheets\PropertySheetFileNodeResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
