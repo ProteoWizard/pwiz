@@ -93,10 +93,12 @@ namespace pwiz.Skyline.SettingsUI
 
         public MultiButtonMsgDlg PythonDlg { get; private set; }
         
-        public enum Pages { properties, files, learning }
+        public enum Pages { properties, files, alphapeptdeepOptions, carafeOptions, learning }
 
         public class PropertiesPage : IFormView { }
         public class FilesPage : IFormView { }
+        public class AlphapeptdeepOptionsPage : IFormView { }
+        public class CarafeOptionsPage : IFormView { }
         public class LearningPage : IFormView { }
 
         private const string PYTHON = @"Python";
@@ -110,7 +112,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private static readonly IFormView[] TAB_PAGES =
         {
-            new PropertiesPage(), new FilesPage(), new LearningPage(),
+            new PropertiesPage(), new FilesPage(), new AlphapeptdeepOptionsPage(), new CarafeOptionsPage(), new LearningPage(),
         };
         public enum DataSourcePages { files, alpha, carafe, koina }
         public enum BuildLibraryTargetOptions { fastaFile, currentSkylineDocument }
@@ -155,6 +157,11 @@ namespace pwiz.Skyline.SettingsUI
         public BuildLibraryDlg(SkylineWindow skylineWindow)
         {
             InitializeComponent();
+            EmbedAlphaPeptDeepUserSettings();
+            EmbedCarafeDataSettings();
+            EmbedCarafeModelSettings();
+            EmbedCarafeLibrarySettings();
+
             Icon = Resources.Skyline;
             
             _skylineWindow = skylineWindow;
@@ -184,10 +191,10 @@ namespace pwiz.Skyline.SettingsUI
             _driverStandards = new SettingsListComboDriver<IrtStandard>(comboStandards, Settings.Default.IrtStandardList);
             _driverStandards.LoadList(IrtStandard.EMPTY.GetKey());
 
-             if (_documentUiContainer.DocumentFilePath != null && _documentUiContainer.Document.HasPeptides)
-                 comboBuildLibraryTarget.SelectedIndex = (int)BuildLibraryTargetOptions.currentSkylineDocument;
-             else
-                 comboBuildLibraryTarget.SelectedIndex = (int)BuildLibraryTargetOptions.fastaFile;
+            if (_documentUiContainer.DocumentFilePath != null && _documentUiContainer.Document.HasPeptides)
+                comboBuildLibraryTarget.SelectedIndex = (int)BuildLibraryTargetOptions.currentSkylineDocument;
+            else
+                comboBuildLibraryTarget.SelectedIndex = (int)BuildLibraryTargetOptions.fastaFile;
 
             Grid = gridInputFiles;
             Grid.FilesChanged += (sender, e) =>
@@ -627,6 +634,12 @@ namespace pwiz.Skyline.SettingsUI
 
         private void btnNext_Click(object sender, EventArgs e)
         {
+            if (this.ActiveControl is ComboBox)
+            {
+                this.DialogResult = DialogResult.None;
+                this.ActiveControl = null;
+                AcceptButton = null;
+            }
             OkWizardPage();
         }
 
@@ -639,6 +652,111 @@ namespace pwiz.Skyline.SettingsUI
 
             return ValidateBuilder(false);
 
+        }
+
+        private bool SetParameters(IDictionary<string, AbstractDdaSearchEngine.Setting> gridValues, Dictionary<string, Control> keyValueParams)
+        {
+            bool isValid = true;
+            this.ActiveControl = null;
+            foreach (var kvp in keyValueParams)
+            {
+                if (!gridValues[kvp.Key].IsValid)
+                {
+                    isValid = false;
+                    this.DialogResult = DialogResult.None;
+                }
+
+                if (kvp.Value is TextBox tb)
+                    gridValues[kvp.Key].Value = tb.Text;
+                else if (kvp.Value is CheckBox cb)
+                    gridValues[kvp.Key].Value = cb.Checked.ToString();
+                else if (kvp.Value is ComboBox cmb)
+                {
+                    if (cmb.SelectedItem != null)
+                    {
+                        gridValues[kvp.Key].Value = cmb.SelectedItem.ToString();
+                    }
+                }
+                else
+                    throw new InvalidOperationException();
+            }
+
+            return isValid;
+        }
+        public Control.ControlCollection AlphaPeptDeepTabControl
+        {
+            get => tabAlphaOptionsSubHolder.Controls;
+        }
+        public Control.ControlCollection CarafeDataTabControl
+        {
+            get => tabCarafeData.Controls;
+        }
+        public Control.ControlCollection CarafeModelTabControl
+        {
+            get => tabCarafeModel.Controls;
+        }
+        public Control.ControlCollection CarafeLibraryTabControl
+        {
+            get => tabCarafeLibrary.Controls;
+        }
+
+        private Dictionary<string, Control> _alphaPeptDeepParams;
+        private Dictionary<string, Control> _carafeDataParams;
+        private Dictionary<string, Control> _carafeModelParams;
+        private Dictionary<string, Control> _carafeLibraryParams;
+        private void EmbedAlphaPeptDeepUserSettings()
+        {
+            if (AlphapeptdeepLibraryBuilder.UserParameters == null)
+                AlphapeptdeepLibraryBuilder.AlphaPeptDeepDefaultSettings();
+
+            _alphaPeptDeepParams = KeyValueGridDlg.Show(null, ModelResources.AlphaPeptDeep_Settings,
+                AlphapeptdeepLibraryBuilder.UserParameters,
+                setting => setting.Value.ToString(),
+                (value, setting) => setting.Value = value,
+                (value, setting) => setting.Validate(value),
+                setting => setting.ValidValues,
+                setting => setting.Description, AlphaPeptDeepTabControl);
+        }
+        private void EmbedCarafeDataSettings()
+        {
+            if (CarafeLibraryBuilder.DataParameters == null)
+                CarafeLibraryBuilder.CarafeDefaultDataSettings();
+
+            _carafeDataParams = KeyValueGridDlg.Show(null, ModelResources.CarafeTraining_Settings,
+                CarafeLibraryBuilder.DataParameters,
+                setting => setting.Value.ToString(),
+                (value, setting) => setting.Value = value,
+                (value, setting) => setting.Validate(value),
+                setting => setting.ValidValues,
+                setting => setting.Description, CarafeDataTabControl);
+        }
+
+        private void EmbedCarafeModelSettings()
+        {
+            if (CarafeLibraryBuilder.ModelParameters == null)
+                CarafeLibraryBuilder.CarafeDefaultModelSettings();
+
+            _carafeModelParams = KeyValueGridDlg.Show(null, ModelResources.CarafeModel_Settings,
+                CarafeLibraryBuilder.ModelParameters,
+                setting => setting.Value.ToString(),
+                (value, setting) => setting.Value = value,
+                (value, setting) => setting.Validate(value),
+                setting => setting.ValidValues,
+                setting => setting.Description, CarafeModelTabControl);
+        }
+
+        private void EmbedCarafeLibrarySettings()
+        {
+            if (CarafeLibraryBuilder.LibraryParameters == null)
+                CarafeLibraryBuilder.CarafeDefaultLibrarySettings();
+
+            _carafeLibraryParams = KeyValueGridDlg.Show(null, ModelResources.CarafeLibrary_Settings,
+                CarafeLibraryBuilder.LibraryParameters,
+                setting => setting.Value.ToString(),
+                (value, setting) => setting.Value = value,
+                (value, setting) => setting.Validate(value),
+                setting => setting.ValidValues,
+                setting => setting.Description, CarafeLibraryTabControl);
         }
         public void OkWizardPage()
         {
@@ -658,6 +776,57 @@ namespace pwiz.Skyline.SettingsUI
                     btnNext.Enabled = true;
                 }
 
+            }
+            else if (tabControlMain.SelectedIndex == (int)Pages.properties && radioAlphaSource.Checked)
+            {
+                btnPrevious.Enabled = true;
+                tabControlMain.SelectedIndex = (int)Pages.alphapeptdeepOptions;
+                this.DialogResult = DialogResult.None;
+                this.ActiveControl = null;
+                btnNext.Text = Resources.BuildLibraryDlg_OkWizardPage_Finish;
+            }
+            else if (tabControlMain.SelectedIndex == (int)Pages.alphapeptdeepOptions && radioAlphaSource.Checked)
+            {
+                if (SetParameters(AlphapeptdeepLibraryBuilder.UserParameters, _alphaPeptDeepParams)) 
+                {
+                    btnPrevious.Enabled = true;
+                    this.DialogResult = DialogResult.None;
+                    this.ActiveControl = null;
+                    if (ValidateBuilder(true))
+                    {
+                        Settings.Default.LibraryFilterDocumentPeptides = LibraryFilterPeptides;
+                        Settings.Default.LibraryKeepRedundant = LibraryKeepRedundant;
+                        DialogResult = DialogResult.OK;
+                    }
+                }
+            }
+            else if (tabControlMain.SelectedIndex == (int)Pages.properties && radioCarafeSource.Checked)
+            {
+                btnPrevious.Enabled = true;
+                tabControlMain.SelectedIndex = (int)Pages.carafeOptions;
+                AcceptButton = btnNext;
+
+            }
+            else if (tabControlMain.SelectedIndex == (int)Pages.carafeOptions)
+            {
+                if (SetParameters(CarafeLibraryBuilder.DataParameters, _carafeDataParams) &&
+                    SetParameters(CarafeLibraryBuilder.ModelParameters, _carafeModelParams) &&
+                    SetParameters(CarafeLibraryBuilder.LibraryParameters, _carafeLibraryParams) && 
+                    AcceptButton == btnNext)
+                {
+                    Settings.Default.LibraryDirectory = Path.GetDirectoryName(LibraryPath);
+                    tabControlMain.SelectedIndex = (int)Pages.learning;
+                    btnPrevious.Enabled = true;
+                    btnNext.Text = Resources.BuildLibraryDlg_OkWizardPage_Finish;
+                    AcceptButton = null;
+                    btnNext.Enabled = (textBoxProteinDatabase.Text != "" || 
+                                       comboBuildLibraryTarget.SelectedIndex == (int)BuildLibraryTargetOptions.currentSkylineDocument) &&
+                                      textBoxMsMsData.Text != "" &&
+                                      (textBoxTrainingDoc.Text != "" ||
+                                       comboLearnFrom.SelectedIndex == (int)LearningOptions.this_doc);
+                }
+
+                AcceptButton = btnNext;
             }
             else if (tabControlMain.SelectedIndex != (int)Pages.properties || radioAlphaSource.Checked || radioKoinaSource.Checked)
             {
@@ -687,7 +856,17 @@ namespace pwiz.Skyline.SettingsUI
         }
         private void btnPrevious_Click(object sender, EventArgs e)
         {
-            if (tabControlMain.SelectedIndex != (int)Pages.properties)
+            if (tabControlMain.SelectedIndex == (int)Pages.learning)
+            {
+                tabControlMain.SelectedIndex = (int)Pages.carafeOptions;
+                btnNext.Text = Resources.BuildLibraryDlg_btnPrevious_Click__Next__;
+                btnNext.Enabled = true;
+                btnNext.DialogResult = DialogResult.None;
+                AcceptButton = null;
+            }
+            else if (tabControlMain.SelectedIndex == (int)Pages.carafeOptions ||
+                     tabControlMain.SelectedIndex == (int)Pages.alphapeptdeepOptions ||
+                     tabControlMain.SelectedIndex == (int)Pages.files)
             {
                 tabControlMain.SelectedIndex = (int)Pages.properties;
                 btnNext.Text = Resources.BuildLibraryDlg_btnPrevious_Click__Next__;
@@ -1121,7 +1300,7 @@ namespace pwiz.Skyline.SettingsUI
                 else if (radioAlphaSource.Checked)
                 {
                     tabControlDataSource.SelectedIndex = (int)DataSourcePages.alpha;
-                    nextText = Resources.BuildLibraryDlg_OkWizardPage_Finish;
+                    //nextText = Resources.BuildLibraryDlg_OkWizardPage_Finish;
                     comboStandards.Enabled = true;
                 }
                 else // must be Koina
@@ -1355,7 +1534,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private void carafeSettings_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            _skylineWindow.ShowToolOptionsUI(ToolOptionsUI.TABS.Carafe);
+          //  _skylineWindow.ShowToolOptionsUI(ToolOptionsUI.TABS.Carafe);
         }
 
         private void textBoxTrainingDoc_TextChanged(object sender, EventArgs e)
@@ -1375,7 +1554,11 @@ namespace pwiz.Skyline.SettingsUI
 
         private void alphaPeptDeepSettings_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            _skylineWindow.ShowToolOptionsUI(ToolOptionsUI.TABS.AlphaPeptDeep);
+           // _skylineWindow.ShowToolOptionsUI(ToolOptionsUI.TABS.AlphaPeptDeep);
+        }
+        private void tabCarafeOptions_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

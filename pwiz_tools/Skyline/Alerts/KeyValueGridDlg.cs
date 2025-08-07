@@ -108,6 +108,7 @@ namespace pwiz.Skyline.Alerts
                     {
                         comboBox.DropDownStyle = ComboBoxStyle.DropDown;
                         comboBox.AutoCompleteMode = AutoCompleteMode.Suggest;
+                        comboBox.AutoCompleteSource = AutoCompleteSource.ListItems;
                     }
                     else
                     {
@@ -230,7 +231,9 @@ namespace pwiz.Skyline.Alerts
                         ComboBox thisBox = sender as ComboBox;
                         if (thisBox != null)
                         {
-                            if (!(char.IsLetterOrDigit(args.KeyChar) || char.IsPunctuation(args.KeyChar)) && !char.IsControl(args.KeyChar) && thisBox.Items.Count > 0)
+                            if (!(char.IsLetterOrDigit(args.KeyChar) || char.IsPunctuation(args.KeyChar)) && 
+                                !char.IsControl(args.KeyChar) && 
+                                thisBox.Items.Count > 0)
                             {
                                 args.Handled = true;
                                 thisBox.Focus();

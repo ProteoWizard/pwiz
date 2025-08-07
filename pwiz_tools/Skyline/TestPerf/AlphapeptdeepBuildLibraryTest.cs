@@ -150,6 +150,7 @@ namespace TestPerf
                 buildLibraryDlg.LibraryName = "No peptides prediction";
                 buildLibraryDlg.LibraryPath = LibraryPathWithoutIrt;
                 buildLibraryDlg.AlphaPeptDeep = true;
+                buildLibraryDlg.OkWizardPage();
             });
 
             RunDlg<MessageDlg>(buildLibraryDlg.OkWizardPage, dlg =>
@@ -185,8 +186,8 @@ namespace TestPerf
                 buildLibraryDlg.AlphaPeptDeep = true;
                 if (iRTtype != null)
                     buildLibraryDlg.IrtStandard = iRTtype;
+                buildLibraryDlg.OkWizardPage();
             });
-
 
             if (simulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT) 
             {

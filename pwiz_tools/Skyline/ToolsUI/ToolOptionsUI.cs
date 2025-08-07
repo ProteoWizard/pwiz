@@ -377,8 +377,8 @@ namespace pwiz.Skyline.ToolsUI
         // ReSharper disable InconsistentNaming
         public enum TABS
         {
-            AlphaPeptDeep,
-            Carafe,
+           // AlphaPeptDeep,
+           // Carafe,
             Display,
             Koina,
             Language,

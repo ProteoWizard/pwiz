@@ -388,6 +388,7 @@ namespace TestPerf
                 if (iRTtype != null) buildLibraryDlg.IrtStandard = iRTtype;
 
                 buildLibraryDlg.OkWizardPage();
+                buildLibraryDlg.OkWizardPage();
 
                 buildLibraryDlg.TextBoxMsMsDataFile = mzMLFile;
                 buildLibraryDlg.TextBoxProteinDatabase = proteinDatabase;
@@ -612,7 +613,6 @@ namespace TestPerf
         {
             PythonInstaller.SimulatedInstallationState =
                 PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD; // Normal tests systems will have registry set suitably
-
             MessageDlg confirmDlg = null;
             RunLongDlg<MultiButtonMsgDlg>(buildLibraryDlg.OkWizardPage, pythonDlg =>
             {

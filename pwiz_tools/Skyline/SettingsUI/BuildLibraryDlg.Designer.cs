@@ -61,8 +61,6 @@
             this.ceCombo = new System.Windows.Forms.ComboBox();
             this.comboStandards = new System.Windows.Forms.ComboBox();
             this.dataSourceGroupBox = new System.Windows.Forms.GroupBox();
-            this.alphaPeptDeepSettings = new System.Windows.Forms.LinkLabel();
-            this.carafeSettings = new System.Windows.Forms.LinkLabel();
             this.radioCarafeSource = new System.Windows.Forms.RadioButton();
             this.radioAlphaSource = new System.Windows.Forms.RadioButton();
             this.koinaInfoSettingsBtn = new System.Windows.Forms.LinkLabel();
@@ -72,6 +70,15 @@
             this.label4 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.tabControlMain = new pwiz.Skyline.Controls.WizardPages();
+            this.tabAlphapeptdeepOptions = new System.Windows.Forms.TabPage();
+            this.tabCarafeOptions = new System.Windows.Forms.TabPage();
+            this.tabCarafeAllOptions = new System.Windows.Forms.TabControl();
+            this.tabCarafeData = new System.Windows.Forms.TabPage();
+            this.linkLabel1 = new System.Windows.Forms.LinkLabel();
+            this.tabCarafeModel = new System.Windows.Forms.TabPage();
+            this.linkLabel2 = new System.Windows.Forms.LinkLabel();
+            this.tabCarafeLibrary = new System.Windows.Forms.TabPage();
+            this.linkLabel3 = new System.Windows.Forms.LinkLabel();
             this.tabLearn = new System.Windows.Forms.TabPage();
             this.labelLearnFrom = new System.Windows.Forms.Label();
             this.tabControlLearning = new pwiz.Skyline.Controls.WizardPages();
@@ -117,6 +124,8 @@
             this.btnPrevious = new System.Windows.Forms.Button();
             this.btnNext = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
+            this.tabAlphaOptionsSubHolder = new System.Windows.Forms.TabPage();
+            this.tabAlphaOptionsHolder = new System.Windows.Forms.TabControl();
             this.tabFiles.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridInputFiles)).BeginInit();
             this.tabProperties.SuspendLayout();
@@ -125,6 +134,12 @@
             this.tabKoinaSource.SuspendLayout();
             this.dataSourceGroupBox.SuspendLayout();
             this.tabControlMain.SuspendLayout();
+            this.tabAlphapeptdeepOptions.SuspendLayout();
+            this.tabCarafeOptions.SuspendLayout();
+            this.tabCarafeAllOptions.SuspendLayout();
+            this.tabCarafeData.SuspendLayout();
+            this.tabCarafeModel.SuspendLayout();
+            this.tabCarafeLibrary.SuspendLayout();
             this.tabLearn.SuspendLayout();
             this.tabControlLearning.SuspendLayout();
             this.tabWithFiles.SuspendLayout();
@@ -136,6 +151,7 @@
             this.tabPage3.SuspendLayout();
             this.tabPage4.SuspendLayout();
             this.tabPage5.SuspendLayout();
+            this.tabAlphaOptionsHolder.SuspendLayout();
             this.SuspendLayout();
             // 
             // helpTip
@@ -342,8 +358,6 @@
             // 
             // dataSourceGroupBox
             // 
-            this.dataSourceGroupBox.Controls.Add(this.alphaPeptDeepSettings);
-            this.dataSourceGroupBox.Controls.Add(this.carafeSettings);
             this.dataSourceGroupBox.Controls.Add(this.radioCarafeSource);
             this.dataSourceGroupBox.Controls.Add(this.radioAlphaSource);
             this.dataSourceGroupBox.Controls.Add(this.koinaInfoSettingsBtn);
@@ -352,20 +366,6 @@
             resources.ApplyResources(this.dataSourceGroupBox, "dataSourceGroupBox");
             this.dataSourceGroupBox.Name = "dataSourceGroupBox";
             this.dataSourceGroupBox.TabStop = false;
-            // 
-            // alphaPeptDeepSettings
-            // 
-            resources.ApplyResources(this.alphaPeptDeepSettings, "alphaPeptDeepSettings");
-            this.alphaPeptDeepSettings.Name = "alphaPeptDeepSettings";
-            this.alphaPeptDeepSettings.TabStop = true;
-            this.alphaPeptDeepSettings.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.alphaPeptDeepSettings_LinkClicked);
-            // 
-            // carafeSettings
-            // 
-            resources.ApplyResources(this.carafeSettings, "carafeSettings");
-            this.carafeSettings.Name = "carafeSettings";
-            this.carafeSettings.TabStop = true;
-            this.carafeSettings.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.carafeSettings_LinkClicked);
             // 
             // radioCarafeSource
             // 
@@ -426,10 +426,75 @@
             resources.ApplyResources(this.tabControlMain, "tabControlMain");
             this.tabControlMain.Controls.Add(this.tabProperties);
             this.tabControlMain.Controls.Add(this.tabFiles);
+            this.tabControlMain.Controls.Add(this.tabAlphapeptdeepOptions);
+            this.tabControlMain.Controls.Add(this.tabCarafeOptions);
             this.tabControlMain.Controls.Add(this.tabLearn);
             this.tabControlMain.Name = "tabControlMain";
             this.tabControlMain.SelectedIndex = 0;
             this.tabControlMain.TabStop = false;
+            // 
+            // tabAlphapeptdeepOptions
+            // 
+            this.tabAlphapeptdeepOptions.Controls.Add(this.tabAlphaOptionsHolder);
+            resources.ApplyResources(this.tabAlphapeptdeepOptions, "tabAlphapeptdeepOptions");
+            this.tabAlphapeptdeepOptions.Name = "tabAlphapeptdeepOptions";
+            this.tabAlphapeptdeepOptions.UseVisualStyleBackColor = true;
+            // 
+            // tabCarafeOptions
+            // 
+            this.tabCarafeOptions.Controls.Add(this.tabCarafeAllOptions);
+            resources.ApplyResources(this.tabCarafeOptions, "tabCarafeOptions");
+            this.tabCarafeOptions.Name = "tabCarafeOptions";
+            this.tabCarafeOptions.UseVisualStyleBackColor = true;
+            this.tabCarafeOptions.Click += new System.EventHandler(this.tabCarafeOptions_Click);
+            // 
+            // tabCarafeAllOptions
+            // 
+            resources.ApplyResources(this.tabCarafeAllOptions, "tabCarafeAllOptions");
+            this.tabCarafeAllOptions.Controls.Add(this.tabCarafeData);
+            this.tabCarafeAllOptions.Controls.Add(this.tabCarafeModel);
+            this.tabCarafeAllOptions.Controls.Add(this.tabCarafeLibrary);
+            this.tabCarafeAllOptions.Name = "tabCarafeAllOptions";
+            this.tabCarafeAllOptions.SelectedIndex = 0;
+            // 
+            // tabCarafeData
+            // 
+            this.tabCarafeData.Controls.Add(this.linkLabel1);
+            resources.ApplyResources(this.tabCarafeData, "tabCarafeData");
+            this.tabCarafeData.Name = "tabCarafeData";
+            this.tabCarafeData.UseVisualStyleBackColor = true;
+            // 
+            // linkLabel1
+            // 
+            resources.ApplyResources(this.linkLabel1, "linkLabel1");
+            this.linkLabel1.Name = "linkLabel1";
+            this.linkLabel1.TabStop = true;
+            // 
+            // tabCarafeModel
+            // 
+            this.tabCarafeModel.Controls.Add(this.linkLabel2);
+            resources.ApplyResources(this.tabCarafeModel, "tabCarafeModel");
+            this.tabCarafeModel.Name = "tabCarafeModel";
+            this.tabCarafeModel.UseVisualStyleBackColor = true;
+            // 
+            // linkLabel2
+            // 
+            resources.ApplyResources(this.linkLabel2, "linkLabel2");
+            this.linkLabel2.Name = "linkLabel2";
+            this.linkLabel2.TabStop = true;
+            // 
+            // tabCarafeLibrary
+            // 
+            this.tabCarafeLibrary.Controls.Add(this.linkLabel3);
+            resources.ApplyResources(this.tabCarafeLibrary, "tabCarafeLibrary");
+            this.tabCarafeLibrary.Name = "tabCarafeLibrary";
+            this.tabCarafeLibrary.UseVisualStyleBackColor = true;
+            // 
+            // linkLabel3
+            // 
+            resources.ApplyResources(this.linkLabel3, "linkLabel3");
+            this.linkLabel3.Name = "linkLabel3";
+            this.linkLabel3.TabStop = true;
             // 
             // tabLearn
             // 
@@ -746,6 +811,19 @@
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
+            // tabAlphaOptionsSubHolder
+            // 
+            resources.ApplyResources(this.tabAlphaOptionsSubHolder, "tabAlphaOptionsSubHolder");
+            this.tabAlphaOptionsSubHolder.Name = "tabAlphaOptionsSubHolder";
+            this.tabAlphaOptionsSubHolder.UseVisualStyleBackColor = true;
+            // 
+            // tabAlphaOptionsHolder
+            // 
+            resources.ApplyResources(this.tabAlphaOptionsHolder, "tabAlphaOptionsHolder");
+            this.tabAlphaOptionsHolder.Controls.Add(this.tabAlphaOptionsSubHolder);
+            this.tabAlphaOptionsHolder.Name = "tabAlphaOptionsHolder";
+            this.tabAlphaOptionsHolder.SelectedIndex = 0;
+            // 
             // BuildLibraryDlg
             // 
             this.AcceptButton = this.btnNext;
@@ -774,6 +852,15 @@
             this.dataSourceGroupBox.ResumeLayout(false);
             this.dataSourceGroupBox.PerformLayout();
             this.tabControlMain.ResumeLayout(false);
+            this.tabAlphapeptdeepOptions.ResumeLayout(false);
+            this.tabCarafeOptions.ResumeLayout(false);
+            this.tabCarafeAllOptions.ResumeLayout(false);
+            this.tabCarafeData.ResumeLayout(false);
+            this.tabCarafeData.PerformLayout();
+            this.tabCarafeModel.ResumeLayout(false);
+            this.tabCarafeModel.PerformLayout();
+            this.tabCarafeLibrary.ResumeLayout(false);
+            this.tabCarafeLibrary.PerformLayout();
             this.tabLearn.ResumeLayout(false);
             this.tabLearn.PerformLayout();
             this.tabControlLearning.ResumeLayout(false);
@@ -792,6 +879,7 @@
             this.tabPage4.PerformLayout();
             this.tabPage5.ResumeLayout(false);
             this.tabPage5.PerformLayout();
+            this.tabAlphaOptionsHolder.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -818,8 +906,6 @@
         private System.Windows.Forms.ComboBox comboAction;
         private System.Windows.Forms.CheckBox cbKeepRedundant;
         private System.Windows.Forms.CheckBox cbFilter;
-        private System.Windows.Forms.TabPage tabAlphaSource;
-        private System.Windows.Forms.TabPage tabCarafeSource;
         private System.Windows.Forms.TabPage tabKoinaSource;
         private System.Windows.Forms.Label ceLabel;
         private System.Windows.Forms.ComboBox ceCombo;
@@ -827,7 +913,6 @@
         private System.Windows.Forms.TextBox textName;
         private System.Windows.Forms.ComboBox comboStandards;
         private System.Windows.Forms.GroupBox dataSourceGroupBox;
-        private System.Windows.Forms.LinkLabel carafeSettings;
         private System.Windows.Forms.RadioButton radioCarafeSource;
         private System.Windows.Forms.RadioButton radioAlphaSource;
         private System.Windows.Forms.LinkLabel koinaInfoSettingsBtn;
@@ -883,7 +968,20 @@
         private System.Windows.Forms.TabPage tabPageLibraries;
         private System.Windows.Forms.CheckedListBox listLibraries;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.LinkLabel alphaPeptDeepSettings;
+        private System.Windows.Forms.TabPage tabAlphapeptdeepOptions;
+        private System.Windows.Forms.TabPage tabCarafeOptions;
+        private System.Windows.Forms.TabControl tabCarafeAllOptions;
+        private System.Windows.Forms.TabPage tabCarafeData;
+        private System.Windows.Forms.LinkLabel linkLabel1;
+        private System.Windows.Forms.TabPage tabCarafeModel;
+        private System.Windows.Forms.LinkLabel linkLabel2;
+        private System.Windows.Forms.TabPage tabCarafeLibrary;
+        private System.Windows.Forms.LinkLabel linkLabel3;
+        private System.Windows.Forms.TabPage tabCarafeSource;
+        private System.Windows.Forms.TabPage tabAlphaSource;
+        private System.Windows.Forms.TabControl tabAlphaOptionsHolder;
+        private System.Windows.Forms.TabPage tabAlphaOptionsSubHolder;
+
         internal string ButtonNextText
         {
             get => btnNext.Text;

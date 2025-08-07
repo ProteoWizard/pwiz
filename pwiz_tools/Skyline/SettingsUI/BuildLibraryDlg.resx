@@ -444,7 +444,7 @@ of the redundant library data.</value>
     <value>gridInputFiles</value>
   </data>
   <data name="&gt;&gt;gridInputFiles.Type" xml:space="preserve">
-    <value>pwiz.Skyline.FileUI.PeptideSearch.BuildLibraryGridView, Skyline-daily, Version=25.1.1.168, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.FileUI.PeptideSearch.BuildLibraryGridView, Skyline-daily, Version=25.1.1.219, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;gridInputFiles.Parent" xml:space="preserve">
     <value>tabFiles</value>
@@ -522,7 +522,7 @@ of the redundant library data.</value>
     <value>gridInputFiles</value>
   </data>
   <data name="&gt;&gt;gridInputFiles.Type" xml:space="preserve">
-    <value>pwiz.Skyline.FileUI.PeptideSearch.BuildLibraryGridView, Skyline-daily, Version=25.1.1.168, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.FileUI.PeptideSearch.BuildLibraryGridView, Skyline-daily, Version=25.1.1.219, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;gridInputFiles.Parent" xml:space="preserve">
     <value>tabFiles</value>
@@ -589,6 +589,117 @@ of the redundant library data.</value>
   </data>
   <data name="&gt;&gt;label7.ZOrder" xml:space="preserve">
     <value>3</value>
+  </data>
+  <data name="&gt;&gt;btnBrowse.Name" xml:space="preserve">
+    <value>btnBrowse</value>
+  </data>
+  <data name="&gt;&gt;btnBrowse.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnBrowse.Parent" xml:space="preserve">
+    <value>tabProperties</value>
+  </data>
+  <data name="&gt;&gt;btnBrowse.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;tabControlDataSource.Name" xml:space="preserve">
+    <value>tabControlDataSource</value>
+  </data>
+  <data name="&gt;&gt;tabControlDataSource.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=25.1.1.219, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;tabControlDataSource.Parent" xml:space="preserve">
+    <value>tabProperties</value>
+  </data>
+  <data name="&gt;&gt;tabControlDataSource.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;comboStandards.Name" xml:space="preserve">
+    <value>comboStandards</value>
+  </data>
+  <data name="&gt;&gt;comboStandards.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboStandards.Parent" xml:space="preserve">
+    <value>tabProperties</value>
+  </data>
+  <data name="&gt;&gt;comboStandards.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;dataSourceGroupBox.Name" xml:space="preserve">
+    <value>dataSourceGroupBox</value>
+  </data>
+  <data name="&gt;&gt;dataSourceGroupBox.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataSourceGroupBox.Parent" xml:space="preserve">
+    <value>tabProperties</value>
+  </data>
+  <data name="&gt;&gt;dataSourceGroupBox.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="&gt;&gt;iRTPeptidesLabel.Name" xml:space="preserve">
+    <value>iRTPeptidesLabel</value>
+  </data>
+  <data name="&gt;&gt;iRTPeptidesLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;iRTPeptidesLabel.Parent" xml:space="preserve">
+    <value>tabProperties</value>
+  </data>
+  <data name="&gt;&gt;iRTPeptidesLabel.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="&gt;&gt;label4.Name" xml:space="preserve">
+    <value>label4</value>
+  </data>
+  <data name="&gt;&gt;label4.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label4.Parent" xml:space="preserve">
+    <value>tabProperties</value>
+  </data>
+  <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="&gt;&gt;label2.Name" xml:space="preserve">
+    <value>label2</value>
+  </data>
+  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
+    <value>tabProperties</value>
+  </data>
+  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
+    <value>8</value>
+  </data>
+  <data name="tabProperties.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabProperties.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabProperties.Size" type="System.Drawing.Size, System.Drawing">
+    <value>567, 315</value>
+  </data>
+  <data name="tabProperties.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="tabProperties.Text" xml:space="preserve">
+    <value>Properties</value>
+  </data>
+  <data name="&gt;&gt;tabProperties.Name" xml:space="preserve">
+    <value>tabProperties</value>
+  </data>
+  <data name="&gt;&gt;tabProperties.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabProperties.Parent" xml:space="preserve">
+    <value>tabControlMain</value>
+  </data>
+  <data name="&gt;&gt;tabProperties.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <data name="btnBrowse.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -684,400 +795,13 @@ of the redundant library data.</value>
     <value>tabControlDataSource</value>
   </data>
   <data name="&gt;&gt;tabControlDataSource.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=25.1.1.168, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=25.1.1.219, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;tabControlDataSource.Parent" xml:space="preserve">
     <value>tabProperties</value>
   </data>
   <data name="&gt;&gt;tabControlDataSource.ZOrder" xml:space="preserve">
     <value>1</value>
-  </data>
-  <data name="comboStandards.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 273</value>
-  </data>
-  <data name="comboStandards.Size" type="System.Drawing.Size, System.Drawing">
-    <value>191, 21</value>
-  </data>
-  <data name="comboStandards.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
-  </data>
-  <data name="&gt;&gt;comboStandards.Name" xml:space="preserve">
-    <value>comboStandards</value>
-  </data>
-  <data name="&gt;&gt;comboStandards.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;comboStandards.Parent" xml:space="preserve">
-    <value>tabProperties</value>
-  </data>
-  <data name="&gt;&gt;comboStandards.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="alphaPeptDeepSettings.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="alphaPeptDeepSettings.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="alphaPeptDeepSettings.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="alphaPeptDeepSettings.Location" type="System.Drawing.Point, System.Drawing">
-    <value>124, 44</value>
-  </data>
-  <data name="alphaPeptDeepSettings.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
-  </data>
-  <data name="alphaPeptDeepSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>67, 13</value>
-  </data>
-  <data name="alphaPeptDeepSettings.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
-  </data>
-  <data name="alphaPeptDeepSettings.Text" xml:space="preserve">
-    <value>Tool Options</value>
-  </data>
-  <data name="&gt;&gt;alphaPeptDeepSettings.Name" xml:space="preserve">
-    <value>alphaPeptDeepSettings</value>
-  </data>
-  <data name="&gt;&gt;alphaPeptDeepSettings.Type" xml:space="preserve">
-    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;alphaPeptDeepSettings.Parent" xml:space="preserve">
-    <value>dataSourceGroupBox</value>
-  </data>
-  <data name="&gt;&gt;alphaPeptDeepSettings.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="carafeSettings.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="carafeSettings.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="carafeSettings.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="carafeSettings.Location" type="System.Drawing.Point, System.Drawing">
-    <value>124, 67</value>
-  </data>
-  <data name="carafeSettings.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
-  </data>
-  <data name="carafeSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>67, 13</value>
-  </data>
-  <data name="carafeSettings.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
-  </data>
-  <data name="carafeSettings.Text" xml:space="preserve">
-    <value>Tool Options</value>
-  </data>
-  <data name="&gt;&gt;carafeSettings.Name" xml:space="preserve">
-    <value>carafeSettings</value>
-  </data>
-  <data name="&gt;&gt;carafeSettings.Type" xml:space="preserve">
-    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;carafeSettings.Parent" xml:space="preserve">
-    <value>dataSourceGroupBox</value>
-  </data>
-  <data name="&gt;&gt;carafeSettings.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="radioCarafeSource.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="radioCarafeSource.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="radioCarafeSource.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 65</value>
-  </data>
-  <data name="radioCarafeSource.Size" type="System.Drawing.Size, System.Drawing">
-    <value>56, 17</value>
-  </data>
-  <data name="radioCarafeSource.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="radioCarafeSource.Text" xml:space="preserve">
-    <value>&amp;Carafe</value>
-  </data>
-  <data name="&gt;&gt;radioCarafeSource.Name" xml:space="preserve">
-    <value>radioCarafeSource</value>
-  </data>
-  <data name="&gt;&gt;radioCarafeSource.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;radioCarafeSource.Parent" xml:space="preserve">
-    <value>dataSourceGroupBox</value>
-  </data>
-  <data name="&gt;&gt;radioCarafeSource.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="radioAlphaSource.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="radioAlphaSource.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="radioAlphaSource.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 42</value>
-  </data>
-  <data name="radioAlphaSource.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 17</value>
-  </data>
-  <data name="radioAlphaSource.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="radioAlphaSource.Text" xml:space="preserve">
-    <value>AlphaPept&amp;Deep</value>
-  </data>
-  <data name="&gt;&gt;radioAlphaSource.Name" xml:space="preserve">
-    <value>radioAlphaSource</value>
-  </data>
-  <data name="&gt;&gt;radioAlphaSource.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;radioAlphaSource.Parent" xml:space="preserve">
-    <value>dataSourceGroupBox</value>
-  </data>
-  <data name="&gt;&gt;radioAlphaSource.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="koinaInfoSettingsBtn.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="koinaInfoSettingsBtn.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="koinaInfoSettingsBtn.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="koinaInfoSettingsBtn.Location" type="System.Drawing.Point, System.Drawing">
-    <value>124, 90</value>
-  </data>
-  <data name="koinaInfoSettingsBtn.Size" type="System.Drawing.Size, System.Drawing">
-    <value>68, 13</value>
-  </data>
-  <data name="koinaInfoSettingsBtn.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="koinaInfoSettingsBtn.Text" xml:space="preserve">
-    <value>Info/Settings</value>
-  </data>
-  <data name="&gt;&gt;koinaInfoSettingsBtn.Name" xml:space="preserve">
-    <value>koinaInfoSettingsBtn</value>
-  </data>
-  <data name="&gt;&gt;koinaInfoSettingsBtn.Type" xml:space="preserve">
-    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;koinaInfoSettingsBtn.Parent" xml:space="preserve">
-    <value>dataSourceGroupBox</value>
-  </data>
-  <data name="&gt;&gt;koinaInfoSettingsBtn.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="radioKoinaSource.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="radioKoinaSource.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="radioKoinaSource.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 88</value>
-  </data>
-  <data name="radioKoinaSource.Size" type="System.Drawing.Size, System.Drawing">
-    <value>52, 17</value>
-  </data>
-  <data name="radioKoinaSource.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="radioKoinaSource.Text" xml:space="preserve">
-    <value>&amp;Koina</value>
-  </data>
-  <data name="&gt;&gt;radioKoinaSource.Name" xml:space="preserve">
-    <value>radioKoinaSource</value>
-  </data>
-  <data name="&gt;&gt;radioKoinaSource.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;radioKoinaSource.Parent" xml:space="preserve">
-    <value>dataSourceGroupBox</value>
-  </data>
-  <data name="&gt;&gt;radioKoinaSource.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="radioFilesSource.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="radioFilesSource.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="radioFilesSource.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 19</value>
-  </data>
-  <data name="radioFilesSource.Size" type="System.Drawing.Size, System.Drawing">
-    <value>46, 17</value>
-  </data>
-  <data name="radioFilesSource.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="radioFilesSource.Text" xml:space="preserve">
-    <value>&amp;Files</value>
-  </data>
-  <data name="&gt;&gt;radioFilesSource.Name" xml:space="preserve">
-    <value>radioFilesSource</value>
-  </data>
-  <data name="&gt;&gt;radioFilesSource.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;radioFilesSource.Parent" xml:space="preserve">
-    <value>dataSourceGroupBox</value>
-  </data>
-  <data name="&gt;&gt;radioFilesSource.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
-  <data name="dataSourceGroupBox.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 124</value>
-  </data>
-  <data name="dataSourceGroupBox.Size" type="System.Drawing.Size, System.Drawing">
-    <value>200, 117</value>
-  </data>
-  <data name="dataSourceGroupBox.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
-  </data>
-  <data name="dataSourceGroupBox.Text" xml:space="preserve">
-    <value>Data source</value>
-  </data>
-  <data name="&gt;&gt;dataSourceGroupBox.Name" xml:space="preserve">
-    <value>dataSourceGroupBox</value>
-  </data>
-  <data name="&gt;&gt;dataSourceGroupBox.Type" xml:space="preserve">
-    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;dataSourceGroupBox.Parent" xml:space="preserve">
-    <value>tabProperties</value>
-  </data>
-  <data name="&gt;&gt;dataSourceGroupBox.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="iRTPeptidesLabel.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="iRTPeptidesLabel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="iRTPeptidesLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 257</value>
-  </data>
-  <data name="iRTPeptidesLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>114, 13</value>
-  </data>
-  <data name="iRTPeptidesLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
-  </data>
-  <data name="iRTPeptidesLabel.Text" xml:space="preserve">
-    <value>i&amp;RT standard peptides:</value>
-  </data>
-  <data name="&gt;&gt;iRTPeptidesLabel.Name" xml:space="preserve">
-    <value>iRTPeptidesLabel</value>
-  </data>
-  <data name="&gt;&gt;iRTPeptidesLabel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;iRTPeptidesLabel.Parent" xml:space="preserve">
-    <value>tabProperties</value>
-  </data>
-  <data name="&gt;&gt;iRTPeptidesLabel.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
-  <data name="label4.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label4.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="label4.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 9</value>
-  </data>
-  <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
-    <value>38, 13</value>
-  </data>
-  <data name="label4.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="label4.Text" xml:space="preserve">
-    <value>&amp;Name:</value>
-  </data>
-  <data name="&gt;&gt;label4.Name" xml:space="preserve">
-    <value>label4</value>
-  </data>
-  <data name="&gt;&gt;label4.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label4.Parent" xml:space="preserve">
-    <value>tabProperties</value>
-  </data>
-  <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
-    <value>7</value>
-  </data>
-  <data name="label2.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label2.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 71</value>
-  </data>
-  <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>66, 13</value>
-  </data>
-  <data name="label2.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="label2.Text" xml:space="preserve">
-    <value>&amp;Output path:</value>
-  </data>
-  <data name="&gt;&gt;label2.Name" xml:space="preserve">
-    <value>label2</value>
-  </data>
-  <data name="&gt;&gt;label2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
-    <value>tabProperties</value>
-  </data>
-  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>8</value>
-  </data>
-  <data name="tabProperties.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
-  </data>
-  <data name="tabProperties.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
-  </data>
-  <data name="tabProperties.Size" type="System.Drawing.Size, System.Drawing">
-    <value>567, 315</value>
-  </data>
-  <data name="tabProperties.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="tabProperties.Text" xml:space="preserve">
-    <value>Properties</value>
-  </data>
-  <data name="&gt;&gt;tabProperties.Name" xml:space="preserve">
-    <value>tabProperties</value>
-  </data>
-  <data name="&gt;&gt;tabProperties.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tabProperties.Parent" xml:space="preserve">
-    <value>tabControlMain</value>
-  </data>
-  <data name="&gt;&gt;tabProperties.ZOrder" xml:space="preserve">
-    <value>0</value>
   </data>
   <data name="&gt;&gt;actionLabel.Name" xml:space="preserve">
     <value>actionLabel</value>
@@ -1151,11 +875,14 @@ of the redundant library data.</value>
   <data name="tabAlphaSource.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
   </data>
+  <data name="tabAlphaSource.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
   <data name="tabAlphaSource.Size" type="System.Drawing.Size, System.Drawing">
     <value>326, 130</value>
   </data>
   <data name="tabAlphaSource.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>2</value>
   </data>
   <data name="tabAlphaSource.Text" xml:space="preserve">
     <value>AlphaPeptDeep</value>
@@ -1175,11 +902,14 @@ of the redundant library data.</value>
   <data name="tabCarafeSource.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
   </data>
+  <data name="tabCarafeSource.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
   <data name="tabCarafeSource.Size" type="System.Drawing.Size, System.Drawing">
     <value>326, 130</value>
   </data>
   <data name="tabCarafeSource.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="tabCarafeSource.Text" xml:space="preserve">
     <value>Carafe</value>
@@ -1298,8 +1028,473 @@ of the redundant library data.</value>
   <data name="&gt;&gt;ceCombo.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
+  <data name="comboStandards.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 273</value>
+  </data>
+  <data name="comboStandards.Size" type="System.Drawing.Size, System.Drawing">
+    <value>191, 21</value>
+  </data>
+  <data name="comboStandards.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="&gt;&gt;comboStandards.Name" xml:space="preserve">
+    <value>comboStandards</value>
+  </data>
+  <data name="&gt;&gt;comboStandards.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboStandards.Parent" xml:space="preserve">
+    <value>tabProperties</value>
+  </data>
+  <data name="&gt;&gt;comboStandards.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;radioCarafeSource.Name" xml:space="preserve">
+    <value>radioCarafeSource</value>
+  </data>
+  <data name="&gt;&gt;radioCarafeSource.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioCarafeSource.Parent" xml:space="preserve">
+    <value>dataSourceGroupBox</value>
+  </data>
+  <data name="&gt;&gt;radioCarafeSource.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;radioAlphaSource.Name" xml:space="preserve">
+    <value>radioAlphaSource</value>
+  </data>
+  <data name="&gt;&gt;radioAlphaSource.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioAlphaSource.Parent" xml:space="preserve">
+    <value>dataSourceGroupBox</value>
+  </data>
+  <data name="&gt;&gt;radioAlphaSource.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;koinaInfoSettingsBtn.Name" xml:space="preserve">
+    <value>koinaInfoSettingsBtn</value>
+  </data>
+  <data name="&gt;&gt;koinaInfoSettingsBtn.Type" xml:space="preserve">
+    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;koinaInfoSettingsBtn.Parent" xml:space="preserve">
+    <value>dataSourceGroupBox</value>
+  </data>
+  <data name="&gt;&gt;koinaInfoSettingsBtn.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;radioKoinaSource.Name" xml:space="preserve">
+    <value>radioKoinaSource</value>
+  </data>
+  <data name="&gt;&gt;radioKoinaSource.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioKoinaSource.Parent" xml:space="preserve">
+    <value>dataSourceGroupBox</value>
+  </data>
+  <data name="&gt;&gt;radioKoinaSource.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;radioFilesSource.Name" xml:space="preserve">
+    <value>radioFilesSource</value>
+  </data>
+  <data name="&gt;&gt;radioFilesSource.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioFilesSource.Parent" xml:space="preserve">
+    <value>dataSourceGroupBox</value>
+  </data>
+  <data name="&gt;&gt;radioFilesSource.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="dataSourceGroupBox.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 124</value>
+  </data>
+  <data name="dataSourceGroupBox.Size" type="System.Drawing.Size, System.Drawing">
+    <value>200, 117</value>
+  </data>
+  <data name="dataSourceGroupBox.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="dataSourceGroupBox.Text" xml:space="preserve">
+    <value>Data source</value>
+  </data>
+  <data name="&gt;&gt;dataSourceGroupBox.Name" xml:space="preserve">
+    <value>dataSourceGroupBox</value>
+  </data>
+  <data name="&gt;&gt;dataSourceGroupBox.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataSourceGroupBox.Parent" xml:space="preserve">
+    <value>tabProperties</value>
+  </data>
+  <data name="&gt;&gt;dataSourceGroupBox.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="radioCarafeSource.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="radioCarafeSource.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="radioCarafeSource.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 65</value>
+  </data>
+  <data name="radioCarafeSource.Size" type="System.Drawing.Size, System.Drawing">
+    <value>56, 17</value>
+  </data>
+  <data name="radioCarafeSource.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="radioCarafeSource.Text" xml:space="preserve">
+    <value>&amp;Carafe</value>
+  </data>
+  <data name="&gt;&gt;radioCarafeSource.Name" xml:space="preserve">
+    <value>radioCarafeSource</value>
+  </data>
+  <data name="&gt;&gt;radioCarafeSource.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioCarafeSource.Parent" xml:space="preserve">
+    <value>dataSourceGroupBox</value>
+  </data>
+  <data name="&gt;&gt;radioCarafeSource.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="radioAlphaSource.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="radioAlphaSource.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="radioAlphaSource.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 42</value>
+  </data>
+  <data name="radioAlphaSource.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 17</value>
+  </data>
+  <data name="radioAlphaSource.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="radioAlphaSource.Text" xml:space="preserve">
+    <value>AlphaPept&amp;Deep</value>
+  </data>
+  <data name="&gt;&gt;radioAlphaSource.Name" xml:space="preserve">
+    <value>radioAlphaSource</value>
+  </data>
+  <data name="&gt;&gt;radioAlphaSource.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioAlphaSource.Parent" xml:space="preserve">
+    <value>dataSourceGroupBox</value>
+  </data>
+  <data name="&gt;&gt;radioAlphaSource.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="koinaInfoSettingsBtn.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="koinaInfoSettingsBtn.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="koinaInfoSettingsBtn.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="koinaInfoSettingsBtn.Location" type="System.Drawing.Point, System.Drawing">
+    <value>124, 90</value>
+  </data>
+  <data name="koinaInfoSettingsBtn.Size" type="System.Drawing.Size, System.Drawing">
+    <value>68, 13</value>
+  </data>
+  <data name="koinaInfoSettingsBtn.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="koinaInfoSettingsBtn.Text" xml:space="preserve">
+    <value>Info/Settings</value>
+  </data>
+  <data name="&gt;&gt;koinaInfoSettingsBtn.Name" xml:space="preserve">
+    <value>koinaInfoSettingsBtn</value>
+  </data>
+  <data name="&gt;&gt;koinaInfoSettingsBtn.Type" xml:space="preserve">
+    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;koinaInfoSettingsBtn.Parent" xml:space="preserve">
+    <value>dataSourceGroupBox</value>
+  </data>
+  <data name="&gt;&gt;koinaInfoSettingsBtn.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="radioKoinaSource.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="radioKoinaSource.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="radioKoinaSource.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 88</value>
+  </data>
+  <data name="radioKoinaSource.Size" type="System.Drawing.Size, System.Drawing">
+    <value>52, 17</value>
+  </data>
+  <data name="radioKoinaSource.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="radioKoinaSource.Text" xml:space="preserve">
+    <value>&amp;Koina</value>
+  </data>
+  <data name="&gt;&gt;radioKoinaSource.Name" xml:space="preserve">
+    <value>radioKoinaSource</value>
+  </data>
+  <data name="&gt;&gt;radioKoinaSource.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioKoinaSource.Parent" xml:space="preserve">
+    <value>dataSourceGroupBox</value>
+  </data>
+  <data name="&gt;&gt;radioKoinaSource.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="radioFilesSource.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="radioFilesSource.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="radioFilesSource.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 19</value>
+  </data>
+  <data name="radioFilesSource.Size" type="System.Drawing.Size, System.Drawing">
+    <value>46, 17</value>
+  </data>
+  <data name="radioFilesSource.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="radioFilesSource.Text" xml:space="preserve">
+    <value>&amp;Files</value>
+  </data>
+  <data name="&gt;&gt;radioFilesSource.Name" xml:space="preserve">
+    <value>radioFilesSource</value>
+  </data>
+  <data name="&gt;&gt;radioFilesSource.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioFilesSource.Parent" xml:space="preserve">
+    <value>dataSourceGroupBox</value>
+  </data>
+  <data name="&gt;&gt;radioFilesSource.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="iRTPeptidesLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="iRTPeptidesLabel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="iRTPeptidesLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 257</value>
+  </data>
+  <data name="iRTPeptidesLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>114, 13</value>
+  </data>
+  <data name="iRTPeptidesLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="iRTPeptidesLabel.Text" xml:space="preserve">
+    <value>i&amp;RT standard peptides:</value>
+  </data>
+  <data name="&gt;&gt;iRTPeptidesLabel.Name" xml:space="preserve">
+    <value>iRTPeptidesLabel</value>
+  </data>
+  <data name="&gt;&gt;iRTPeptidesLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;iRTPeptidesLabel.Parent" xml:space="preserve">
+    <value>tabProperties</value>
+  </data>
+  <data name="&gt;&gt;iRTPeptidesLabel.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="label4.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label4.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label4.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 9</value>
+  </data>
+  <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
+    <value>38, 13</value>
+  </data>
+  <data name="label4.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="label4.Text" xml:space="preserve">
+    <value>&amp;Name:</value>
+  </data>
+  <data name="&gt;&gt;label4.Name" xml:space="preserve">
+    <value>label4</value>
+  </data>
+  <data name="&gt;&gt;label4.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label4.Parent" xml:space="preserve">
+    <value>tabProperties</value>
+  </data>
+  <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="label2.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label2.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 71</value>
+  </data>
+  <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>66, 13</value>
+  </data>
+  <data name="label2.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="label2.Text" xml:space="preserve">
+    <value>&amp;Output path:</value>
+  </data>
+  <data name="&gt;&gt;label2.Name" xml:space="preserve">
+    <value>label2</value>
+  </data>
+  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
+    <value>tabProperties</value>
+  </data>
+  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
+    <value>8</value>
+  </data>
   <data name="tabControlMain.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="tabAlphaOptionsHolder.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="tabAlphaOptionsSubHolder.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabAlphaOptionsSubHolder.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabAlphaOptionsSubHolder.Size" type="System.Drawing.Size, System.Drawing">
+    <value>554, 287</value>
+  </data>
+  <data name="tabAlphaOptionsSubHolder.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="tabAlphaOptionsSubHolder.Text" xml:space="preserve">
+    <value>AlphaPeptDeep Options</value>
+  </data>
+  <data name="&gt;&gt;tabAlphaOptionsSubHolder.Name" xml:space="preserve">
+    <value>tabAlphaOptionsSubHolder</value>
+  </data>
+  <data name="&gt;&gt;tabAlphaOptionsSubHolder.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabAlphaOptionsSubHolder.Parent" xml:space="preserve">
+    <value>tabAlphaOptionsHolder</value>
+  </data>
+  <data name="&gt;&gt;tabAlphaOptionsSubHolder.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="tabAlphaOptionsHolder.Location" type="System.Drawing.Point, System.Drawing">
+    <value>2, 1</value>
+  </data>
+  <data name="tabAlphaOptionsHolder.Size" type="System.Drawing.Size, System.Drawing">
+    <value>562, 313</value>
+  </data>
+  <data name="tabAlphaOptionsHolder.TabIndex" type="System.Int32, mscorlib">
+    <value>11</value>
+  </data>
+  <data name="&gt;&gt;tabAlphaOptionsHolder.Name" xml:space="preserve">
+    <value>tabAlphaOptionsHolder</value>
+  </data>
+  <data name="&gt;&gt;tabAlphaOptionsHolder.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabAlphaOptionsHolder.Parent" xml:space="preserve">
+    <value>tabAlphapeptdeepOptions</value>
+  </data>
+  <data name="&gt;&gt;tabAlphaOptionsHolder.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="tabAlphapeptdeepOptions.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabAlphapeptdeepOptions.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabAlphapeptdeepOptions.Size" type="System.Drawing.Size, System.Drawing">
+    <value>567, 315</value>
+  </data>
+  <data name="tabAlphapeptdeepOptions.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="tabAlphapeptdeepOptions.Text" xml:space="preserve">
+    <value>AlphapeptdeepOptions</value>
+  </data>
+  <data name="&gt;&gt;tabAlphapeptdeepOptions.Name" xml:space="preserve">
+    <value>tabAlphapeptdeepOptions</value>
+  </data>
+  <data name="&gt;&gt;tabAlphapeptdeepOptions.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabAlphapeptdeepOptions.Parent" xml:space="preserve">
+    <value>tabControlMain</value>
+  </data>
+  <data name="&gt;&gt;tabAlphapeptdeepOptions.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeAllOptions.Name" xml:space="preserve">
+    <value>tabCarafeAllOptions</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeAllOptions.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeAllOptions.Parent" xml:space="preserve">
+    <value>tabCarafeOptions</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeAllOptions.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="tabCarafeOptions.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabCarafeOptions.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabCarafeOptions.Size" type="System.Drawing.Size, System.Drawing">
+    <value>567, 315</value>
+  </data>
+  <data name="tabCarafeOptions.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="tabCarafeOptions.Text" xml:space="preserve">
+    <value>CarafeOptions</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeOptions.Name" xml:space="preserve">
+    <value>tabCarafeOptions</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeOptions.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeOptions.Parent" xml:space="preserve">
+    <value>tabControlMain</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeOptions.ZOrder" xml:space="preserve">
+    <value>3</value>
   </data>
   <data name="&gt;&gt;labelLearnFrom.Name" xml:space="preserve">
     <value>labelLearnFrom</value>
@@ -1317,7 +1512,7 @@ of the redundant library data.</value>
     <value>tabControlLearning</value>
   </data>
   <data name="&gt;&gt;tabControlLearning.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=25.1.1.168, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=25.1.1.219, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;tabControlLearning.Parent" xml:space="preserve">
     <value>tabLearn</value>
@@ -1329,7 +1524,7 @@ of the redundant library data.</value>
     <value>tabControlBuildLibraryTarget</value>
   </data>
   <data name="&gt;&gt;tabControlBuildLibraryTarget.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=25.1.1.168, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=25.1.1.219, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;tabControlBuildLibraryTarget.Parent" xml:space="preserve">
     <value>tabLearn</value>
@@ -1341,7 +1536,7 @@ of the redundant library data.</value>
     <value>wizardPages1</value>
   </data>
   <data name="&gt;&gt;wizardPages1.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=25.1.1.168, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=25.1.1.219, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;wizardPages1.Parent" xml:space="preserve">
     <value>tabLearn</value>
@@ -1407,7 +1602,7 @@ of the redundant library data.</value>
     <value>tabControlMain</value>
   </data>
   <data name="&gt;&gt;tabLearn.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>4</value>
   </data>
   <data name="tabControlMain.Location" type="System.Drawing.Point, System.Drawing">
     <value>3, 5</value>
@@ -1422,13 +1617,298 @@ of the redundant library data.</value>
     <value>tabControlMain</value>
   </data>
   <data name="&gt;&gt;tabControlMain.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=25.1.1.168, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=25.1.1.219, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;tabControlMain.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;tabControlMain.ZOrder" xml:space="preserve">
     <value>3</value>
+  </data>
+  <data name="tabCarafeAllOptions.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeData.Name" xml:space="preserve">
+    <value>tabCarafeData</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeData.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeData.Parent" xml:space="preserve">
+    <value>tabCarafeAllOptions</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeData.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeModel.Name" xml:space="preserve">
+    <value>tabCarafeModel</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeModel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeModel.Parent" xml:space="preserve">
+    <value>tabCarafeAllOptions</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeModel.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeLibrary.Name" xml:space="preserve">
+    <value>tabCarafeLibrary</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeLibrary.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeLibrary.Parent" xml:space="preserve">
+    <value>tabCarafeAllOptions</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeLibrary.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="tabCarafeAllOptions.Location" type="System.Drawing.Point, System.Drawing">
+    <value>2, 2</value>
+  </data>
+  <data name="tabCarafeAllOptions.Size" type="System.Drawing.Size, System.Drawing">
+    <value>562, 313</value>
+  </data>
+  <data name="tabCarafeAllOptions.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeAllOptions.Name" xml:space="preserve">
+    <value>tabCarafeAllOptions</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeAllOptions.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeAllOptions.Parent" xml:space="preserve">
+    <value>tabCarafeOptions</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeAllOptions.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;linkLabel1.Name" xml:space="preserve">
+    <value>linkLabel1</value>
+  </data>
+  <data name="&gt;&gt;linkLabel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;linkLabel1.Parent" xml:space="preserve">
+    <value>tabCarafeData</value>
+  </data>
+  <data name="&gt;&gt;linkLabel1.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="tabCarafeData.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabCarafeData.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="tabCarafeData.Size" type="System.Drawing.Size, System.Drawing">
+    <value>554, 287</value>
+  </data>
+  <data name="tabCarafeData.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="tabCarafeData.Text" xml:space="preserve">
+    <value>Training Data Generation</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeData.Name" xml:space="preserve">
+    <value>tabCarafeData</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeData.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeData.Parent" xml:space="preserve">
+    <value>tabCarafeAllOptions</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeData.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="linkLabel1.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="linkLabel1.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 16pt</value>
+  </data>
+  <data name="linkLabel1.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="linkLabel1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 3</value>
+  </data>
+  <data name="linkLabel1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 0, 3, 0</value>
+  </data>
+  <data name="linkLabel1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>30, 26</value>
+  </data>
+  <data name="linkLabel1.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="linkLabel1.Text" xml:space="preserve">
+    <value>? </value>
+  </data>
+  <data name="&gt;&gt;linkLabel1.Name" xml:space="preserve">
+    <value>linkLabel1</value>
+  </data>
+  <data name="&gt;&gt;linkLabel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;linkLabel1.Parent" xml:space="preserve">
+    <value>tabCarafeData</value>
+  </data>
+  <data name="&gt;&gt;linkLabel1.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;linkLabel2.Name" xml:space="preserve">
+    <value>linkLabel2</value>
+  </data>
+  <data name="&gt;&gt;linkLabel2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;linkLabel2.Parent" xml:space="preserve">
+    <value>tabCarafeModel</value>
+  </data>
+  <data name="&gt;&gt;linkLabel2.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="tabCarafeModel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabCarafeModel.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabCarafeModel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>554, 287</value>
+  </data>
+  <data name="tabCarafeModel.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="tabCarafeModel.Text" xml:space="preserve">
+    <value>Model Training</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeModel.Name" xml:space="preserve">
+    <value>tabCarafeModel</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeModel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeModel.Parent" xml:space="preserve">
+    <value>tabCarafeAllOptions</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeModel.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="linkLabel2.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="linkLabel2.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 16pt</value>
+  </data>
+  <data name="linkLabel2.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="linkLabel2.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 3</value>
+  </data>
+  <data name="linkLabel2.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 0, 3, 0</value>
+  </data>
+  <data name="linkLabel2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>30, 26</value>
+  </data>
+  <data name="linkLabel2.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="linkLabel2.Text" xml:space="preserve">
+    <value>? </value>
+  </data>
+  <data name="&gt;&gt;linkLabel2.Name" xml:space="preserve">
+    <value>linkLabel2</value>
+  </data>
+  <data name="&gt;&gt;linkLabel2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;linkLabel2.Parent" xml:space="preserve">
+    <value>tabCarafeModel</value>
+  </data>
+  <data name="&gt;&gt;linkLabel2.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;linkLabel3.Name" xml:space="preserve">
+    <value>linkLabel3</value>
+  </data>
+  <data name="&gt;&gt;linkLabel3.Type" xml:space="preserve">
+    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;linkLabel3.Parent" xml:space="preserve">
+    <value>tabCarafeLibrary</value>
+  </data>
+  <data name="&gt;&gt;linkLabel3.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="tabCarafeLibrary.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabCarafeLibrary.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabCarafeLibrary.Size" type="System.Drawing.Size, System.Drawing">
+    <value>554, 287</value>
+  </data>
+  <data name="tabCarafeLibrary.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="tabCarafeLibrary.Text" xml:space="preserve">
+    <value>Library Generation</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeLibrary.Name" xml:space="preserve">
+    <value>tabCarafeLibrary</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeLibrary.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeLibrary.Parent" xml:space="preserve">
+    <value>tabCarafeAllOptions</value>
+  </data>
+  <data name="&gt;&gt;tabCarafeLibrary.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="linkLabel3.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="linkLabel3.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 16pt</value>
+  </data>
+  <data name="linkLabel3.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="linkLabel3.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 3</value>
+  </data>
+  <data name="linkLabel3.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 0, 3, 0</value>
+  </data>
+  <data name="linkLabel3.Size" type="System.Drawing.Size, System.Drawing">
+    <value>30, 26</value>
+  </data>
+  <data name="linkLabel3.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="linkLabel3.Text" xml:space="preserve">
+    <value>? </value>
+  </data>
+  <data name="&gt;&gt;linkLabel3.Name" xml:space="preserve">
+    <value>linkLabel3</value>
+  </data>
+  <data name="&gt;&gt;linkLabel3.Type" xml:space="preserve">
+    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;linkLabel3.Parent" xml:space="preserve">
+    <value>tabCarafeLibrary</value>
+  </data>
+  <data name="&gt;&gt;linkLabel3.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <data name="labelLearnFrom.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1518,7 +1998,7 @@ of the redundant library data.</value>
     <value>tabControlLearning</value>
   </data>
   <data name="&gt;&gt;tabControlLearning.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=25.1.1.168, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=25.1.1.219, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;tabControlLearning.Parent" xml:space="preserve">
     <value>tabLearn</value>
@@ -2088,7 +2568,7 @@ of the redundant library data.</value>
     <value>tabControlBuildLibraryTarget</value>
   </data>
   <data name="&gt;&gt;tabControlBuildLibraryTarget.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=25.1.1.168, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=25.1.1.219, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;tabControlBuildLibraryTarget.Parent" xml:space="preserve">
     <value>tabLearn</value>
@@ -2379,7 +2859,7 @@ of the redundant library data.</value>
     <value>wizardPages1</value>
   </data>
   <data name="&gt;&gt;wizardPages1.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=25.1.1.168, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=25.1.1.219, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;wizardPages1.Parent" xml:space="preserve">
     <value>tabLearn</value>
@@ -3150,7 +3630,7 @@ of the redundant library data.</value>
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=25.1.1.168, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=25.1.1.219, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
@@ -3180,6 +3660,6 @@ of the redundant library data.</value>
     <value>BuildLibraryDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=25.1.1.168, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=25.1.1.219, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

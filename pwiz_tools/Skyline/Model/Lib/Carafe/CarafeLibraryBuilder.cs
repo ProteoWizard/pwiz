@@ -345,8 +345,8 @@ namespace pwiz.Skyline.Model.Lib.Carafe
                 new Dictionary<string, AbstractDdaSearchEngine.Setting>
                 {
                     { ModelResources.CarafeModel_model_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeModel_model_short, "general", Enum.GetNames(typeof(ModelTypes)), ModelResources.CarafeModel_model_long) },
-                    { ModelResources.CarafeModel_nce_short,  new AbstractDdaSearchEngine.Setting(ModelResources.CarafeModel_nce_short,ModelResources.CarafeModel_nce_long) },
-                    { ModelResources.CarafeModel_instrument_short,  new AbstractDdaSearchEngine.Setting(ModelResources.CarafeModel_instrument_short, ModelResources.CarafeModel_instrument_long) },
+                    { ModelResources.CarafeModel_nce_short,  new AbstractDdaSearchEngine.Setting(ModelResources.CarafeModel_nce_short, "",ModelResources.CarafeModel_nce_long) },
+                    { ModelResources.CarafeModel_instrument_short,  new AbstractDdaSearchEngine.Setting(ModelResources.CarafeModel_instrument_short, "",ModelResources.CarafeModel_instrument_long) },
                     { ModelResources.CarafeModel_device_short,  new AbstractDdaSearchEngine.Setting(ModelResources.CarafeModel_device_short, DeviceTypes.gpu.ToString(), Enum.GetNames(typeof(DeviceTypes)),ModelResources.CarafeModel_device_long) }
                 });
 
