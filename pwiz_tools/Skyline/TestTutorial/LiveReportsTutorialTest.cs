@@ -690,19 +690,6 @@ namespace pwiz.SkylineTestTutorial
             });
         }
 
-        public Func<Bitmap, Bitmap> ClipControl(Control control)
-        {
-            return bmp=>CallUI(() =>
-            {
-                var parentWindowRect = ScreenshotManager.GetFramedWindowBounds(control);
-                var controlScreenRect = control.RectangleToScreen(new Rectangle(0, 0, control.Width, control.Height));
-                return ClipBitmap(bmp,
-                    new Rectangle(controlScreenRect.Left - parentWindowRect.Left,
-                        controlScreenRect.Top - parentWindowRect.Top, controlScreenRect.Width,
-                        controlScreenRect.Height));
-            });
-        }
-
         public Func<Bitmap, Bitmap> ClipToolStripItem(ToolStripItem menuItem)
         {
             return bmp => CallUI(() =>
