@@ -124,484 +124,223 @@
   <data name="tabControl.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
-  <data name="btnAlphaPeptDeepUserSettings.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="btnAlphaPeptDeepUserSettings.Location" type="System.Drawing.Point, System.Drawing">
-    <value>92, 104</value>
-  </data>
-  <data name="btnAlphaPeptDeepUserSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>191, 23</value>
-  </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="btnAlphaPeptDeepUserSettings.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="btnAlphaPeptDeepUserSettings.Text" xml:space="preserve">
-    <value>AlphaPeptDeep Settings ...</value>
-  </data>
-  <data name="&gt;&gt;btnAlphaPeptDeepUserSettings.Name" xml:space="preserve">
-    <value>btnAlphaPeptDeepUserSettings</value>
-  </data>
-  <data name="&gt;&gt;btnAlphaPeptDeepUserSettings.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnAlphaPeptDeepUserSettings.Parent" xml:space="preserve">
-    <value>tabAlphaPeptDeep</value>
-  </data>
-  <data name="&gt;&gt;btnAlphaPeptDeepUserSettings.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="tabAlphaPeptDeep.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
-  </data>
-  <data name="tabAlphaPeptDeep.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
-  </data>
-  <data name="tabAlphaPeptDeep.Size" type="System.Drawing.Size, System.Drawing">
-    <value>389, 248</value>
-  </data>
-  <data name="tabAlphaPeptDeep.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
-  </data>
-  <data name="tabAlphaPeptDeep.Text" xml:space="preserve">
-    <value>AlphaPeptDeep</value>
-  </data>
-  <data name="&gt;&gt;tabAlphaPeptDeep.Name" xml:space="preserve">
-    <value>tabAlphaPeptDeep</value>
-  </data>
-  <data name="&gt;&gt;tabAlphaPeptDeep.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tabAlphaPeptDeep.Parent" xml:space="preserve">
-    <value>tabControl</value>
-  </data>
-  <data name="&gt;&gt;tabAlphaPeptDeep.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="tabControl1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+  <data name="listboxServers.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
-  <data name="lnkCarafeTrainingDataHelp.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="listboxServers.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 23</value>
   </data>
-  <data name="lnkCarafeTrainingDataHelp.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Microsoft Sans Serif, 16pt</value>
+  <data name="listboxServers.Size" type="System.Drawing.Size, System.Drawing">
+    <value>293, 199</value>
   </data>
-  <data name="lnkCarafeTrainingDataHelp.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="lnkCarafeTrainingDataHelp.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 3</value>
-  </data>
-  <data name="lnkCarafeTrainingDataHelp.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>0, 0, 3, 0</value>
-  </data>
-  <data name="lnkCarafeTrainingDataHelp.Size" type="System.Drawing.Size, System.Drawing">
-    <value>30, 26</value>
-  </data>
-  <data name="lnkCarafeTrainingDataHelp.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
-  </data>
-  <data name="lnkCarafeTrainingDataHelp.Text" xml:space="preserve">
-    <value>? </value>
-  </data>
-  <data name="&gt;&gt;lnkCarafeTrainingDataHelp.Name" xml:space="preserve">
-    <value>lnkCarafeTrainingDataHelp</value>
-  </data>
-  <data name="&gt;&gt;lnkCarafeTrainingDataHelp.Type" xml:space="preserve">
-    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lnkCarafeTrainingDataHelp.Parent" xml:space="preserve">
-    <value>tabCarafeData</value>
-  </data>
-  <data name="&gt;&gt;lnkCarafeTrainingDataHelp.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="tabCarafeData.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
-  </data>
-  <data name="tabCarafeData.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="tabCarafeData.Size" type="System.Drawing.Size, System.Drawing">
-    <value>375, 219</value>
-  </data>
-  <data name="tabCarafeData.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="tabCarafeData.Text" xml:space="preserve">
-    <value>Training Data Generation</value>
-  </data>
-  <data name="&gt;&gt;tabCarafeData.Name" xml:space="preserve">
-    <value>tabCarafeData</value>
-  </data>
-  <data name="&gt;&gt;tabCarafeData.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tabCarafeData.Parent" xml:space="preserve">
-    <value>tabControl1</value>
-  </data>
-  <data name="&gt;&gt;tabCarafeData.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="lnkCarafeModelTrainingHelp.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="lnkCarafeModelTrainingHelp.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Microsoft Sans Serif, 16pt</value>
-  </data>
-  <data name="lnkCarafeModelTrainingHelp.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="lnkCarafeModelTrainingHelp.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 3</value>
-  </data>
-  <data name="lnkCarafeModelTrainingHelp.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>0, 0, 3, 0</value>
-  </data>
-  <data name="lnkCarafeModelTrainingHelp.Size" type="System.Drawing.Size, System.Drawing">
-    <value>30, 26</value>
-  </data>
-  <data name="lnkCarafeModelTrainingHelp.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
-  </data>
-  <data name="lnkCarafeModelTrainingHelp.Text" xml:space="preserve">
-    <value>? </value>
-  </data>
-  <data name="&gt;&gt;lnkCarafeModelTrainingHelp.Name" xml:space="preserve">
-    <value>lnkCarafeModelTrainingHelp</value>
-  </data>
-  <data name="&gt;&gt;lnkCarafeModelTrainingHelp.Type" xml:space="preserve">
-    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lnkCarafeModelTrainingHelp.Parent" xml:space="preserve">
-    <value>tabCarafeModel</value>
-  </data>
-  <data name="&gt;&gt;lnkCarafeModelTrainingHelp.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="tabCarafeModel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
-  </data>
-  <data name="tabCarafeModel.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
-  </data>
-  <data name="tabCarafeModel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>375, 219</value>
-  </data>
-  <data name="tabCarafeModel.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
-  </data>
-  <data name="tabCarafeModel.Text" xml:space="preserve">
-    <value>Model Training</value>
-  </data>
-  <data name="&gt;&gt;tabCarafeModel.Name" xml:space="preserve">
-    <value>tabCarafeModel</value>
-  </data>
-  <data name="&gt;&gt;tabCarafeModel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tabCarafeModel.Parent" xml:space="preserve">
-    <value>tabControl1</value>
-  </data>
-  <data name="&gt;&gt;tabCarafeModel.ZOrder" xml:space="preserve">
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="listboxServers.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="lnkCarafeLibraryHelp.AutoSize" type="System.Boolean, mscorlib">
+  <data name="&gt;&gt;listboxServers.Name" xml:space="preserve">
+    <value>listboxServers</value>
+  </data>
+  <data name="&gt;&gt;listboxServers.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;listboxServers.Parent" xml:space="preserve">
+    <value>tabPanorama</value>
+  </data>
+  <data name="&gt;&gt;listboxServers.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="lblServers.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="lnkCarafeLibraryHelp.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Microsoft Sans Serif, 16pt</value>
+  <data name="lblServers.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 7</value>
   </data>
-  <data name="lnkCarafeLibraryHelp.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
+  <data name="lblServers.Size" type="System.Drawing.Size, System.Drawing">
+    <value>46, 13</value>
   </data>
-  <data name="lnkCarafeLibraryHelp.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 3</value>
-  </data>
-  <data name="lnkCarafeLibraryHelp.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>0, 0, 3, 0</value>
-  </data>
-  <data name="lnkCarafeLibraryHelp.Size" type="System.Drawing.Size, System.Drawing">
-    <value>30, 26</value>
-  </data>
-  <data name="lnkCarafeLibraryHelp.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
-  </data>
-  <data name="lnkCarafeLibraryHelp.Text" xml:space="preserve">
-    <value>? </value>
-  </data>
-  <data name="&gt;&gt;lnkCarafeLibraryHelp.Name" xml:space="preserve">
-    <value>lnkCarafeLibraryHelp</value>
-  </data>
-  <data name="&gt;&gt;lnkCarafeLibraryHelp.Type" xml:space="preserve">
-    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lnkCarafeLibraryHelp.Parent" xml:space="preserve">
-    <value>tabCarafeLibrary</value>
-  </data>
-  <data name="&gt;&gt;lnkCarafeLibraryHelp.ZOrder" xml:space="preserve">
+  <data name="lblServers.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name="tabCarafeLibrary.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
+  <data name="lblServers.Text" xml:space="preserve">
+    <value>&amp;Servers:</value>
   </data>
-  <data name="tabCarafeLibrary.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
+  <data name="&gt;&gt;lblServers.Name" xml:space="preserve">
+    <value>lblServers</value>
   </data>
-  <data name="tabCarafeLibrary.Size" type="System.Drawing.Size, System.Drawing">
-    <value>375, 219</value>
-  </data>
-  <data name="tabCarafeLibrary.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
-  </data>
-  <data name="tabCarafeLibrary.Text" xml:space="preserve">
-    <value>Library Generation</value>
-  </data>
-  <data name="&gt;&gt;tabCarafeLibrary.Name" xml:space="preserve">
-    <value>tabCarafeLibrary</value>
-  </data>
-  <data name="&gt;&gt;tabCarafeLibrary.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tabCarafeLibrary.Parent" xml:space="preserve">
-    <value>tabControl1</value>
-  </data>
-  <data name="&gt;&gt;tabCarafeLibrary.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="tabControl1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 2</value>
-  </data>
-  <data name="tabControl1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>383, 245</value>
-  </data>
-  <data name="tabControl1.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
-  </data>
-  <data name="&gt;&gt;tabControl1.Name" xml:space="preserve">
-    <value>tabControl1</value>
-  </data>
-  <data name="&gt;&gt;tabControl1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tabControl1.Parent" xml:space="preserve">
-    <value>tabCarafe</value>
-  </data>
-  <data name="&gt;&gt;tabControl1.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="btnCarafeLibraryGenerationSettings.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="btnCarafeLibraryGenerationSettings.Location" type="System.Drawing.Point, System.Drawing">
-    <value>92, 169</value>
-  </data>
-  <data name="btnCarafeLibraryGenerationSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>191, 23</value>
-  </data>
-  <data name="btnCarafeLibraryGenerationSettings.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
-  </data>
-  <data name="btnCarafeLibraryGenerationSettings.Text" xml:space="preserve">
-    <value>Library Generation Settings ...</value>
-  </data>
-  <data name="&gt;&gt;btnCarafeLibraryGenerationSettings.Name" xml:space="preserve">
-    <value>btnCarafeLibraryGenerationSettings</value>
-  </data>
-  <data name="&gt;&gt;btnCarafeLibraryGenerationSettings.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnCarafeLibraryGenerationSettings.Parent" xml:space="preserve">
-    <value>tabCarafe</value>
-  </data>
-  <data name="&gt;&gt;btnCarafeLibraryGenerationSettings.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="btnCarafeModelTrainingSettings.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="btnCarafeModelTrainingSettings.Location" type="System.Drawing.Point, System.Drawing">
-    <value>92, 104</value>
-  </data>
-  <data name="btnCarafeModelTrainingSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>191, 23</value>
-  </data>
-  <data name="btnCarafeModelTrainingSettings.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="btnCarafeModelTrainingSettings.Text" xml:space="preserve">
-    <value>Model Training Settings ...</value>
-  </data>
-  <data name="&gt;&gt;btnCarafeModelTrainingSettings.Name" xml:space="preserve">
-    <value>btnCarafeModelTrainingSettings</value>
-  </data>
-  <data name="&gt;&gt;btnCarafeModelTrainingSettings.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnCarafeModelTrainingSettings.Parent" xml:space="preserve">
-    <value>tabCarafe</value>
-  </data>
-  <data name="&gt;&gt;btnCarafeModelTrainingSettings.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="btnCarafeTrainingDataGenerationSettings.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="btnCarafeTrainingDataGenerationSettings.Location" type="System.Drawing.Point, System.Drawing">
-    <value>92, 42</value>
-  </data>
-  <data name="btnCarafeTrainingDataGenerationSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>191, 23</value>
-  </data>
-  <data name="btnCarafeTrainingDataGenerationSettings.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="btnCarafeTrainingDataGenerationSettings.Text" xml:space="preserve">
-    <value>Training Data Generation Settings ...</value>
-  </data>
-  <data name="&gt;&gt;btnCarafeTrainingDataGenerationSettings.Name" xml:space="preserve">
-    <value>btnCarafeTrainingDataGenerationSettings</value>
-  </data>
-  <data name="&gt;&gt;btnCarafeTrainingDataGenerationSettings.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnCarafeTrainingDataGenerationSettings.Parent" xml:space="preserve">
-    <value>tabCarafe</value>
-  </data>
-  <data name="&gt;&gt;btnCarafeTrainingDataGenerationSettings.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="tabCarafe.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
-  </data>
-  <data name="tabCarafe.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="tabCarafe.Size" type="System.Drawing.Size, System.Drawing">
-    <value>389, 248</value>
-  </data>
-  <data name="tabCarafe.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="tabCarafe.Text" xml:space="preserve">
-    <value>Carafe</value>
-  </data>
-  <data name="&gt;&gt;tabCarafe.Name" xml:space="preserve">
-    <value>tabCarafe</value>
-  </data>
-  <data name="&gt;&gt;tabCarafe.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tabCarafe.Parent" xml:space="preserve">
-    <value>tabControl</value>
-  </data>
-  <data name="&gt;&gt;tabCarafe.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="comboColorScheme.Location" type="System.Drawing.Point, System.Drawing">
-    <value>17, 31</value>
-  </data>
-  <data name="comboColorScheme.Size" type="System.Drawing.Size, System.Drawing">
-    <value>159, 21</value>
-  </data>
-  <data name="comboColorScheme.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="&gt;&gt;comboColorScheme.Name" xml:space="preserve">
-    <value>comboColorScheme</value>
-  </data>
-  <data name="&gt;&gt;comboColorScheme.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;comboColorScheme.Parent" xml:space="preserve">
-    <value>tabDisplay</value>
-  </data>
-  <data name="&gt;&gt;comboColorScheme.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="label1.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>14, 15</value>
-  </data>
-  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>74, 13</value>
-  </data>
-  <data name="label1.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="label1.Text" xml:space="preserve">
-    <value>&amp;Color scheme:</value>
-  </data>
-  <data name="&gt;&gt;label1.Name" xml:space="preserve">
-    <value>label1</value>
-  </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+  <data name="&gt;&gt;lblServers.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
-    <value>tabDisplay</value>
+  <data name="&gt;&gt;lblServers.Parent" xml:space="preserve">
+    <value>tabPanorama</value>
   </data>
-  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;lblServers.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="powerOfTenCheckBox.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
+  <data name="btnEditServers.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
   </data>
-  <data name="powerOfTenCheckBox.Location" type="System.Drawing.Point, System.Drawing">
-    <value>17, 91</value>
+  <data name="btnEditServers.Location" type="System.Drawing.Point, System.Drawing">
+    <value>308, 23</value>
   </data>
-  <data name="powerOfTenCheckBox.Size" type="System.Drawing.Size, System.Drawing">
-    <value>214, 17</value>
+  <data name="btnEditServers.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
   </data>
-  <data name="powerOfTenCheckBox.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="powerOfTenCheckBox.Text" xml:space="preserve">
-    <value>&amp;Always use scientific notation on graphs</value>
-  </data>
-  <data name="&gt;&gt;powerOfTenCheckBox.Name" xml:space="preserve">
-    <value>powerOfTenCheckBox</value>
-  </data>
-  <data name="&gt;&gt;powerOfTenCheckBox.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;powerOfTenCheckBox.Parent" xml:space="preserve">
-    <value>tabDisplay</value>
-  </data>
-  <data name="&gt;&gt;powerOfTenCheckBox.ZOrder" xml:space="preserve">
+  <data name="btnEditServers.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
-  <data name="tabDisplay.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="btnEditServers.Text" xml:space="preserve">
+    <value>E&amp;dit list...</value>
+  </data>
+  <data name="&gt;&gt;btnEditServers.Name" xml:space="preserve">
+    <value>btnEditServers</value>
+  </data>
+  <data name="&gt;&gt;btnEditServers.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnEditServers.Parent" xml:space="preserve">
+    <value>tabPanorama</value>
+  </data>
+  <data name="&gt;&gt;btnEditServers.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="tabPanorama.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
   </data>
-  <data name="tabDisplay.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+  <data name="tabPanorama.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 3, 3, 3</value>
   </data>
-  <data name="tabDisplay.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="tabPanorama.Size" type="System.Drawing.Size, System.Drawing">
     <value>389, 248</value>
   </data>
-  <data name="tabDisplay.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+  <data name="tabPanorama.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
   </data>
-  <data name="tabDisplay.Text" xml:space="preserve">
-    <value>Display</value>
+  <data name="tabPanorama.Text" xml:space="preserve">
+    <value>Panorama</value>
   </data>
-  <data name="&gt;&gt;tabDisplay.Name" xml:space="preserve">
-    <value>tabDisplay</value>
+  <data name="&gt;&gt;tabPanorama.Name" xml:space="preserve">
+    <value>tabPanorama</value>
   </data>
-  <data name="&gt;&gt;tabDisplay.Type" xml:space="preserve">
+  <data name="&gt;&gt;tabPanorama.Type" xml:space="preserve">
     <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;tabDisplay.Parent" xml:space="preserve">
+  <data name="&gt;&gt;tabPanorama.Parent" xml:space="preserve">
     <value>tabControl</value>
   </data>
-  <data name="&gt;&gt;tabDisplay.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;tabPanorama.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="listBoxRemoteAccounts.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="listBoxRemoteAccounts.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 23</value>
+  </data>
+  <data name="listBoxRemoteAccounts.Size" type="System.Drawing.Size, System.Drawing">
+    <value>293, 199</value>
+  </data>
+  <data name="listBoxRemoteAccounts.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;listBoxRemoteAccounts.Name" xml:space="preserve">
+    <value>listBoxRemoteAccounts</value>
+  </data>
+  <data name="&gt;&gt;listBoxRemoteAccounts.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;listBoxRemoteAccounts.Parent" xml:space="preserve">
+    <value>tabRemote</value>
+  </data>
+  <data name="&gt;&gt;listBoxRemoteAccounts.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="lblRemoteAccounts.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblRemoteAccounts.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="lblRemoteAccounts.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 7</value>
+  </data>
+  <data name="lblRemoteAccounts.Size" type="System.Drawing.Size, System.Drawing">
+    <value>94, 13</value>
+  </data>
+  <data name="lblRemoteAccounts.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="lblRemoteAccounts.Text" xml:space="preserve">
+    <value>&amp;Remote accounts:</value>
+  </data>
+  <data name="&gt;&gt;lblRemoteAccounts.Name" xml:space="preserve">
+    <value>lblRemoteAccounts</value>
+  </data>
+  <data name="&gt;&gt;lblRemoteAccounts.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblRemoteAccounts.Parent" xml:space="preserve">
+    <value>tabRemote</value>
+  </data>
+  <data name="&gt;&gt;lblRemoteAccounts.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="btnEditRemoteAccountList.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnEditRemoteAccountList.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnEditRemoteAccountList.Location" type="System.Drawing.Point, System.Drawing">
+    <value>308, 23</value>
+  </data>
+  <data name="btnEditRemoteAccountList.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnEditRemoteAccountList.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="btnEditRemoteAccountList.Text" xml:space="preserve">
+    <value>E&amp;dit list...</value>
+  </data>
+  <data name="&gt;&gt;btnEditRemoteAccountList.Name" xml:space="preserve">
+    <value>btnEditRemoteAccountList</value>
+  </data>
+  <data name="&gt;&gt;btnEditRemoteAccountList.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnEditRemoteAccountList.Parent" xml:space="preserve">
+    <value>tabRemote</value>
+  </data>
+  <data name="&gt;&gt;btnEditRemoteAccountList.ZOrder" xml:space="preserve">
     <value>2</value>
+  </data>
+  <data name="tabRemote.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabRemote.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabRemote.Size" type="System.Drawing.Size, System.Drawing">
+    <value>389, 248</value>
+  </data>
+  <data name="tabRemote.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="tabRemote.Text" xml:space="preserve">
+    <value>Remote Accounts</value>
+  </data>
+  <data name="&gt;&gt;tabRemote.Name" xml:space="preserve">
+    <value>tabRemote</value>
+  </data>
+  <data name="&gt;&gt;tabRemote.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabRemote.Parent" xml:space="preserve">
+    <value>tabControl</value>
+  </data>
+  <data name="&gt;&gt;tabRemote.ZOrder" xml:space="preserve">
+    <value>1</value>
   </data>
   <data name="tbxKoinaServer.Location" type="System.Drawing.Point, System.Drawing">
     <value>13, 108</value>
@@ -931,7 +670,7 @@ well as iRT prediction.</value>
     <value>tabControl</value>
   </data>
   <data name="&gt;&gt;tabKoina.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>2</value>
   </data>
   <data name="labelDisplayLanguage.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -1009,7 +748,7 @@ well as iRT prediction.</value>
     <value>tabControl</value>
   </data>
   <data name="&gt;&gt;tabLanguage.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>3</value>
   </data>
   <data name="tbxSettingsFilePath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -1189,223 +928,109 @@ well as iRT prediction.</value>
     <value>tabControl</value>
   </data>
   <data name="&gt;&gt;tabMisc.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="listboxServers.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
-  </data>
-  <data name="listboxServers.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 23</value>
-  </data>
-  <data name="listboxServers.Size" type="System.Drawing.Size, System.Drawing">
-    <value>293, 199</value>
-  </data>
-  <data name="listboxServers.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;listboxServers.Name" xml:space="preserve">
-    <value>listboxServers</value>
-  </data>
-  <data name="&gt;&gt;listboxServers.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;listboxServers.Parent" xml:space="preserve">
-    <value>tabPanorama</value>
-  </data>
-  <data name="&gt;&gt;listboxServers.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="lblServers.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="lblServers.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 7</value>
-  </data>
-  <data name="lblServers.Size" type="System.Drawing.Size, System.Drawing">
-    <value>46, 13</value>
-  </data>
-  <data name="lblServers.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="lblServers.Text" xml:space="preserve">
-    <value>&amp;Servers:</value>
-  </data>
-  <data name="&gt;&gt;lblServers.Name" xml:space="preserve">
-    <value>lblServers</value>
-  </data>
-  <data name="&gt;&gt;lblServers.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lblServers.Parent" xml:space="preserve">
-    <value>tabPanorama</value>
-  </data>
-  <data name="&gt;&gt;lblServers.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="btnEditServers.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="btnEditServers.Location" type="System.Drawing.Point, System.Drawing">
-    <value>308, 23</value>
-  </data>
-  <data name="btnEditServers.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
-  </data>
-  <data name="btnEditServers.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="btnEditServers.Text" xml:space="preserve">
-    <value>E&amp;dit list...</value>
-  </data>
-  <data name="&gt;&gt;btnEditServers.Name" xml:space="preserve">
-    <value>btnEditServers</value>
-  </data>
-  <data name="&gt;&gt;btnEditServers.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnEditServers.Parent" xml:space="preserve">
-    <value>tabPanorama</value>
-  </data>
-  <data name="&gt;&gt;btnEditServers.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="tabPanorama.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
-  </data>
-  <data name="tabPanorama.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
-  </data>
-  <data name="tabPanorama.Size" type="System.Drawing.Size, System.Drawing">
-    <value>389, 248</value>
-  </data>
-  <data name="tabPanorama.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="tabPanorama.Text" xml:space="preserve">
-    <value>Panorama</value>
-  </data>
-  <data name="&gt;&gt;tabPanorama.Name" xml:space="preserve">
-    <value>tabPanorama</value>
-  </data>
-  <data name="&gt;&gt;tabPanorama.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tabPanorama.Parent" xml:space="preserve">
-    <value>tabControl</value>
-  </data>
-  <data name="&gt;&gt;tabPanorama.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
-  <data name="listBoxRemoteAccounts.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
-  </data>
-  <data name="listBoxRemoteAccounts.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 23</value>
-  </data>
-  <data name="listBoxRemoteAccounts.Size" type="System.Drawing.Size, System.Drawing">
-    <value>293, 199</value>
-  </data>
-  <data name="listBoxRemoteAccounts.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
-  <data name="&gt;&gt;listBoxRemoteAccounts.Name" xml:space="preserve">
-    <value>listBoxRemoteAccounts</value>
+  <data name="comboColorScheme.Location" type="System.Drawing.Point, System.Drawing">
+    <value>17, 31</value>
   </data>
-  <data name="&gt;&gt;listBoxRemoteAccounts.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="comboColorScheme.Size" type="System.Drawing.Size, System.Drawing">
+    <value>159, 21</value>
   </data>
-  <data name="&gt;&gt;listBoxRemoteAccounts.Parent" xml:space="preserve">
-    <value>tabRemote</value>
-  </data>
-  <data name="&gt;&gt;listBoxRemoteAccounts.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="lblRemoteAccounts.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="lblRemoteAccounts.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="lblRemoteAccounts.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 7</value>
-  </data>
-  <data name="lblRemoteAccounts.Size" type="System.Drawing.Size, System.Drawing">
-    <value>94, 13</value>
-  </data>
-  <data name="lblRemoteAccounts.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="lblRemoteAccounts.Text" xml:space="preserve">
-    <value>&amp;Remote accounts:</value>
-  </data>
-  <data name="&gt;&gt;lblRemoteAccounts.Name" xml:space="preserve">
-    <value>lblRemoteAccounts</value>
-  </data>
-  <data name="&gt;&gt;lblRemoteAccounts.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lblRemoteAccounts.Parent" xml:space="preserve">
-    <value>tabRemote</value>
-  </data>
-  <data name="&gt;&gt;lblRemoteAccounts.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="btnEditRemoteAccountList.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="btnEditRemoteAccountList.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="btnEditRemoteAccountList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>308, 23</value>
-  </data>
-  <data name="btnEditRemoteAccountList.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
-  </data>
-  <data name="btnEditRemoteAccountList.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
-  </data>
-  <data name="btnEditRemoteAccountList.Text" xml:space="preserve">
-    <value>E&amp;dit list...</value>
-  </data>
-  <data name="&gt;&gt;btnEditRemoteAccountList.Name" xml:space="preserve">
-    <value>btnEditRemoteAccountList</value>
-  </data>
-  <data name="&gt;&gt;btnEditRemoteAccountList.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnEditRemoteAccountList.Parent" xml:space="preserve">
-    <value>tabRemote</value>
-  </data>
-  <data name="&gt;&gt;btnEditRemoteAccountList.ZOrder" xml:space="preserve">
+  <data name="comboColorScheme.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
-  <data name="tabRemote.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="&gt;&gt;comboColorScheme.Name" xml:space="preserve">
+    <value>comboColorScheme</value>
+  </data>
+  <data name="&gt;&gt;comboColorScheme.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboColorScheme.Parent" xml:space="preserve">
+    <value>tabDisplay</value>
+  </data>
+  <data name="&gt;&gt;comboColorScheme.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="label1.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>14, 15</value>
+  </data>
+  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>74, 13</value>
+  </data>
+  <data name="label1.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="label1.Text" xml:space="preserve">
+    <value>&amp;Color scheme:</value>
+  </data>
+  <data name="&gt;&gt;label1.Name" xml:space="preserve">
+    <value>label1</value>
+  </data>
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
+    <value>tabDisplay</value>
+  </data>
+  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="powerOfTenCheckBox.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="powerOfTenCheckBox.Location" type="System.Drawing.Point, System.Drawing">
+    <value>17, 91</value>
+  </data>
+  <data name="powerOfTenCheckBox.Size" type="System.Drawing.Size, System.Drawing">
+    <value>214, 17</value>
+  </data>
+  <data name="powerOfTenCheckBox.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="powerOfTenCheckBox.Text" xml:space="preserve">
+    <value>&amp;Always use scientific notation on graphs</value>
+  </data>
+  <data name="&gt;&gt;powerOfTenCheckBox.Name" xml:space="preserve">
+    <value>powerOfTenCheckBox</value>
+  </data>
+  <data name="&gt;&gt;powerOfTenCheckBox.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;powerOfTenCheckBox.Parent" xml:space="preserve">
+    <value>tabDisplay</value>
+  </data>
+  <data name="&gt;&gt;powerOfTenCheckBox.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="tabDisplay.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
   </data>
-  <data name="tabRemote.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+  <data name="tabDisplay.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 3, 3, 3</value>
   </data>
-  <data name="tabRemote.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="tabDisplay.Size" type="System.Drawing.Size, System.Drawing">
     <value>389, 248</value>
   </data>
-  <data name="tabRemote.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+  <data name="tabDisplay.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
   </data>
-  <data name="tabRemote.Text" xml:space="preserve">
-    <value>Remote Accounts</value>
+  <data name="tabDisplay.Text" xml:space="preserve">
+    <value>Display</value>
   </data>
-  <data name="&gt;&gt;tabRemote.Name" xml:space="preserve">
-    <value>tabRemote</value>
+  <data name="&gt;&gt;tabDisplay.Name" xml:space="preserve">
+    <value>tabDisplay</value>
   </data>
-  <data name="&gt;&gt;tabRemote.Type" xml:space="preserve">
+  <data name="&gt;&gt;tabDisplay.Type" xml:space="preserve">
     <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;tabRemote.Parent" xml:space="preserve">
+  <data name="&gt;&gt;tabDisplay.Parent" xml:space="preserve">
     <value>tabControl</value>
   </data>
-  <data name="&gt;&gt;tabRemote.ZOrder" xml:space="preserve">
-    <value>7</value>
+  <data name="&gt;&gt;tabDisplay.ZOrder" xml:space="preserve">
+    <value>5</value>
   </data>
   <data name="tabControl.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 12</value>
@@ -1501,12 +1126,12 @@ well as iRT prediction.</value>
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=25.1.1.219, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ToolOptionsUI</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=25.1.1.219, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
