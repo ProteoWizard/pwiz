@@ -79,6 +79,24 @@ namespace pwiz.Skyline.Model.PropertySheets {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Chromatagram.
+        /// </summary>
+        internal static string Category_Chromatagram {
+            get {
+                return ResourceManager.GetString("Category_Chromatagram", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Files.
+        /// </summary>
+        internal static string Category_FileInfo {
+            get {
+                return ResourceManager.GetString("Category_FileInfo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Document Path.
         /// </summary>
         internal static string DocumentPath {

@@ -29,6 +29,10 @@ namespace pwiz.Skyline.Model
                 {
                     return Analyzer;
                 }
+
+                // Test Support - enforced by code check
+                // Invoked via reflection in InspectPropertySheetResources in CodeInspectionTest
+                private static ResourceManager ResourceManager() => FullScanPropertiesRes.ResourceManager;
             }
 
             protected override ResourceManager GetResourceManager()
@@ -46,6 +50,10 @@ namespace pwiz.Skyline.Model
                     return TextUtil.SpaceSeparate(InstrumentManufacturer, InstrumentModel);
                 return base.ToString();
             }
+
+            // Test Support - enforced by code check
+            // Invoked via reflection in InspectPropertySheetResources in CodeInspectionTest
+            private static ResourceManager ResourceManager() => FullScanPropertiesRes.ResourceManager;
         } 
         protected override ResourceManager GetResourceManager()
         {
@@ -139,5 +147,9 @@ namespace pwiz.Skyline.Model
                 FileName = Path.GetFileName(fileName);
             }
         }
+
+        // Test Support - enforced by code check
+        // Invoked via reflection in InspectPropertySheetResources in CodeInspectionTest
+        private static ResourceManager ResourceManager() => FullScanPropertiesRes.ResourceManager;
     }
 }

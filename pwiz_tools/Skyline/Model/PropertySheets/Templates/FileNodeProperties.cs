@@ -1,0 +1,58 @@
+﻿/*
+ * Original author: Aaron Banse <acbanse .at. acbanse dot com>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2025 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
+using pwiz.Skyline.Model.Files;
+using System.ComponentModel;
+using System.Resources;
+
+namespace pwiz.Skyline.Model.PropertySheets.Templates
+{
+    public abstract class FileNodeProperties : GlobalizedObject
+    {
+        protected override ResourceManager GetResourceManager()
+        {
+            return PropertySheetFileNodeResources.ResourceManager;
+        }
+
+        protected FileNodeProperties(FileNode fileNode)
+        {
+            FilePath = fileNode.FilePath ?? string.Empty;
+            Name = fileNode.Name ?? string.Empty;
+            FileType = fileNode.FileType ?? string.Empty;
+        }
+
+        public static FileNodeProperties Create(FileNode fileNode)
+        {
+            var props = fileNode switch
+            {
+                // Add other FileNode types here as needed
+                Replicate replicate => new ReplicateProperties(replicate),
+                _ => throw new NotImplementedException()
+            };
+            props.GetProperties();
+
+            return props;
+        }
+
+        [Category("FileInfo")] public string FilePath { get; set; }
+        [Category("FileInfo")] public string Name { get; set; }
+        [Category("FileInfo")] public string FileType { get; set; }
+    }
+}

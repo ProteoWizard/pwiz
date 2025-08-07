@@ -23,20 +23,6 @@
 // 
 
 
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Windows.Forms;
-using System.Xml.Linq;
 using AssortResources;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding.Controls.Editor;
@@ -47,10 +33,25 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.GroupComparison;
-using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Resources;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Windows.Forms;
+using System.Xml.Linq;
 using TestRunnerLib.PInvoke;
 using Environment = System.Environment;
 
@@ -644,6 +645,47 @@ namespace pwiz.SkylineTest
         }
 
         /// <summary>
+        /// Tests all implementing classes of GlobalizedObject to ensure that each property has a corresponding resource string.
+        /// The test also requires that each non-abstract GlobalizedObject has a static ResourceManager method.
+        /// Necessary to prevent issues when someone renames a property without updating the corresponding resource string.
+        /// </summary>
+        void InspectPropertySheetResources(string root, List<string> errors)
+        {
+            var skylineAssembly = typeof(SkylineWindow).Assembly;
+            var types = skylineAssembly.GetTypes()
+                .Where(t => t.IsSubclassOf(typeof(GlobalizedObject)) && !t.IsAbstract)
+                .ToList();
+
+            foreach (var type in types)
+            {
+                VerifyPropertySheetResources(type, errors);
+            }
+        }
+
+        private static void VerifyPropertySheetResources(Type type, List<string> errors)
+        {
+            // Verify that the GlobalizedObject has a ResourceManager
+            var resourceManagerMethod = type.GetMethod("ResourceManager", BindingFlags.NonPublic | BindingFlags.Static);
+            if (resourceManagerMethod == null || resourceManagerMethod.ReturnType != typeof(ResourceManager))
+            {
+                errors.Add($"{type.Name} does not provide a static ResourceManager() => ResourceManager method. No way to verify all property name resources are present.");
+                return;
+            }
+
+            foreach (var prop in type.GetProperties())
+            {
+                // Verify that the property has a resource
+                var resourceManager = (ResourceManager)resourceManagerMethod.Invoke(null, new object[] { });
+                if (resourceManager.GetString(prop.Name) == null)
+                    errors.Add($"Property name resource not found for property '{prop.Name}' in class '{type.Name}'. Ensure there is a matching entry in the resource file. (Did the name of the property change?)");
+                
+                // Verify nested properties
+                if (prop.GetType().IsAssignableFrom(typeof(GlobalizedObject)))
+                    VerifyPropertySheetResources(prop.GetType(), errors);
+            }
+        }
+
+        /// <summary>
         /// Look for strings which have been localized but not moved from main Resources.resx to more appropriate locations 
         /// </summary>
         void InspectMisplacedResources(string root, List<string> errors) 
@@ -674,7 +716,7 @@ namespace pwiz.SkylineTest
             }
         }
 
-
+        
         // Looking for uses of Form where we should really be using FormEx
         private static void FindIllegalForms(List<string> results) // Looks for uses of Form rather than FormEx
         {
@@ -860,6 +902,8 @@ namespace pwiz.SkylineTest
             InspectInconsistentSetting(root, results); // Look for conflicts between settings.settings and app.config
 
             InspectPInvokeApi(root, results);
+
+            InspectPropertySheetResources(root, results); // Look for GlobalizedObject classes with missing resources
 
             InspectRedundantCsprojResourcesFromSolution(root, results); // Look for images in .csproj files that are redundant with the RESX entries
 

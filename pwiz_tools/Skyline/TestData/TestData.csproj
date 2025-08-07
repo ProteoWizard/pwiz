@@ -165,7 +165,6 @@
     <Compile Include="LocalizedResourcesTest.cs" />
     <Compile Include="OptimizationSpacingTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="PropertySheetResourceTest.cs" />
     <Compile Include="PwizFileInfoTest.cs" />
     <Compile Include="RefineTest.cs">
       <SubType>Code</SubType>

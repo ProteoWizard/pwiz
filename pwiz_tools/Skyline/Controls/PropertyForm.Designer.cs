@@ -28,27 +28,21 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PropertyForm));
             this.propertyGrid = new System.Windows.Forms.PropertyGrid();
             this.SuspendLayout();
             // 
             // propertyGrid
             // 
-            this.propertyGrid.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.propertyGrid.HelpVisible = false;
-            this.propertyGrid.Location = new System.Drawing.Point(0, 0);
+            resources.ApplyResources(this.propertyGrid, "propertyGrid");
             this.propertyGrid.Name = "propertyGrid";
-            this.propertyGrid.Size = new System.Drawing.Size(800, 450);
-            this.propertyGrid.TabIndex = 0;
             // 
             // PropertyForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
             this.Controls.Add(this.propertyGrid);
             this.Name = "PropertyForm";
-            this.TabText = "Properties";
-            this.Text = "Properties";
             this.ResumeLayout(false);
 
         }

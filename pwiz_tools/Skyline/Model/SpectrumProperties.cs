@@ -41,5 +41,9 @@ namespace pwiz.Skyline.Model
                 FileName = Path.GetFileName(fileName);
             }
         }
+
+        // Test Support - enforced by code check
+        // Invoked via reflection in InspectPropertySheetResources in CodeInspectionTest
+        private static ResourceManager ResourceManager() => SpectrumPropertiesResx.ResourceManager;
     }
 }

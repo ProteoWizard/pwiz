@@ -21,6 +21,6 @@ namespace pwiz.Skyline.Model.PropertySheets
 {
     public interface IPropertySheetOwner
     {
-        public DynamicPropertyObject GetProperties();
+        public GlobalizedObject GetProperties();
     }
 }
