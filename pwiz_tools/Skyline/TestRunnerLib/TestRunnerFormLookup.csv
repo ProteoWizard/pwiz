@@ -28,6 +28,8 @@ LongOperationRunner.BackgroundThreadLongWaitDlg,*
 BuildBackgroundProteomeDlg,TestBackgroundProteome
 BuildLibraryDlg.PropertiesPage,TestFullScanId
 BuildLibraryDlg.FilesPage,TestFullScanId
+BuildLibraryDlg.AlphapeptdeepOptionsPage,*
+BuildLibraryDlg.CarafeOptionsPage,*
 BuildLibraryDlg.LearningPage,*
 CalculateIsolationSchemeDlg,TestCalculateIsolationWindows
 CalibrateIrtDlg,IrtFunctionalTest
@@ -219,8 +221,6 @@ SynchronizedIntegrationDlg,TestSynchronizedIntegration
 BackgroundEventThreadsTestForm,TestBackgroundEventThreads
 TestPanoramaFolderBrowser, TestPanoramaClient
 ToolOptionsUI,TestAccessServer
-ToolOptionsUI.AlphaPeptDeepTab,*
-ToolOptionsUI.CarafeTab,*
 ToolOptionsUI.PanoramaTab,TestAccessServer
 ToolOptionsUI.RemoteTab,TestAccessServer
 ToolOptionsUI.LanguageTab,TestAccessServer
