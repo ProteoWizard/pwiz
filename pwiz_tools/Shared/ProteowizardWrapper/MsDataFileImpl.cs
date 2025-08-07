@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using pwiz.CLI.cv;
 using pwiz.CLI.data;
@@ -1793,8 +1794,17 @@ namespace pwiz.ProteowizardWrapper
 
         private static CVID? GetPrecursorDissociationMethod(Precursor precursor)
         {
-            return precursor.activation?.cvParams
-                .FirstOrDefault(param => CV.cvIsA(param.cvid, CVID.MS_dissociation_method))?.cvid;
+            foreach (var cvParam in (IEnumerable<CVParam>) precursor.activation.cvParams ?? Array.Empty<CVParam>())
+            {
+                using (cvParam)
+                {
+                    if (CV.cvIsA(cvParam.cvid, CVID.MS_dissociation_method))
+                    {
+                        return cvParam.cvid;
+                    }
+                }
+            }
+            return null;
         }
 
         public void Write(string path)
