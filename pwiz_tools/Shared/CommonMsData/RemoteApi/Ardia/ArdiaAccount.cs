@@ -16,14 +16,13 @@
  * limitations under the License.
  */
 
-using pwiz.Common.Collections;
-using pwiz.Common.SystemUtil;
 using System;
 using System.Globalization;
 using System.Net.Http;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
+using pwiz.Common.Collections;
 
 // BUG: now that access tokens are stored across sessions Skyline sessions, a new bug is exposed where EditRemoteAccountDlg shows
 //      the Ardia account as "not logged in" if it has not already talked with the remote API during the Skyline session.
@@ -90,6 +89,16 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
 
         private Func<HttpClient> _authenticatedHttpClientFactory;
 
+        public void SetAuthenticatedHttpClientFactory(ArdiaAccount ardiaAccount)
+        {
+            _authenticatedHttpClientFactory = ardiaAccount._authenticatedHttpClientFactory;
+        }
+
+        public bool HasAuthenticatedHttpClientFactory()
+        {
+            return _authenticatedHttpClientFactory != null;
+        }
+
         public HttpClient GetAuthenticatedHttpClient()
         {
             if (_authenticatedHttpClientFactory != null)
@@ -122,18 +131,6 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         }
 
         /// <summary>
-        /// Checks whether an account has valid credentials by attempting to create a client and make an API call.
-        /// Going forward, use this method over anything related to authenticatedHttpClientFactory, as that method does a lot more than is needed
-        /// and spawns UI elements unnecessarily.
-        /// </summary>
-        /// <returns>Returns a result indicating whether the authentication succeeded.</returns>
-        public ArdiaResult CheckAuthentication()
-        {
-            var client = ArdiaClient.Create(this);
-            return client.CheckSession();
-        }
-
-        /// <summary>
         /// Checks whether an HttpClient configured using this account can successfully call the Ardia API. This
         /// makes a real request requiring authentication.
         ///
@@ -144,6 +141,12 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         {
             var response = httpClient.GetAsync(GetFolderContentsUrl()).Result;
             response.EnsureSuccessStatusCode();
+        }
+
+        // testing only
+        public void ResetAuthenticatedHttpClientFactory()
+        {
+            _authenticatedHttpClientFactory = null;
         }
 
         public override RemoteSession CreateSession()
