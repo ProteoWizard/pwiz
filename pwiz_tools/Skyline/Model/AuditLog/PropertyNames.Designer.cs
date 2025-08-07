@@ -133,6 +133,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Lookup.
+        /// </summary>
+        public static string AnnotationDef_Lookup {
+            get {
+                return ResourceManager.GetString("AnnotationDef_Lookup", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Type.
         /// </summary>
         public static string AnnotationDef_Type {

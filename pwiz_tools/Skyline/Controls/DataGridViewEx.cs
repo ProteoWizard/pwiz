@@ -124,5 +124,10 @@ namespace pwiz.Skyline.Controls
         {
             OnKeyDown(new KeyEventArgs(Keys.V | Keys.Control));
         }
+
+        public void ClickCurrentCell()
+        {
+            OnCellContentClick(new DataGridViewCellEventArgs(CurrentCell.ColumnIndex, CurrentCell.RowIndex));
+        }
     }
 }

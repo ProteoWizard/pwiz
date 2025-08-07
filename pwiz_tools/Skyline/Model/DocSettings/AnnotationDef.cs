@@ -83,6 +83,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             return ChangeProp(ImClone(this), im => im.Type = type);
         }
+        [Track(defaultValues:typeof(DefaultValuesNullOrEmpty))]
         public string Lookup { get; private set; }
 
         public AnnotationDef ChangeLookup(string lookup)
