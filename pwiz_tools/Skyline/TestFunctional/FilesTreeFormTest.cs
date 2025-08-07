@@ -40,9 +40,8 @@ using static pwiz.Skyline.Model.Files.FileNode;
 // CONSIDER: tree disallows dragging non-draggable nodes
 // CONSIDER: use non-local file paths in SrmSettings (example: replicate sample files where SrmSettings paths point to directories that don't exist locally)
 
-// TODO: test dropping node(s) on parent folder
 // TODO: test double-click on Background Proteome. Need an additional Skyline document with a Background Proteome
-// TODO: test new .sky document, import file backed asset file (ex: .protdb), assert file system watching before document saved for the first time
+// TODO: test new .sky document, import asset backed file (ex: .protdb), assert file system watching before document saved for the first time
 // ReSharper disable WrongIndentSize
 namespace pwiz.SkylineTestFunctional
 {
@@ -342,61 +341,76 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(replicateNodes.Nodes[12].IsExpanded);
             });
 
-            //
-            // Remove and Remove All Replicates
-            // 
+            TestRemoveAllReplicates();
+
+            TestRemoveSelectedReplicates();
+
+            TestSpectralLibraries();
+
+            TestMonitoringFileSystem();
+            
+            TestDragAndDrop();
+
+            TestDragAndDropOnParentNode();
+
+            // Close FilesTreeForm so test framework doesn't fail the test due to an unexpected open dialog
+            RunUI(() => { SkylineWindow.DestroyFilesTreeForm(); });
+        }
+
+        private static void TestRemoveAllReplicates()
+        {
+            var doc = SkylineWindow.Document;
+            var confirmDlg = ShowDialog<MultiButtonMsgDlg>(() =>
             {
-                doc = SkylineWindow.Document;
-                var confirmDlg = ShowDialog<MultiButtonMsgDlg>(() =>
-                {
-                    var replicatesFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
-                    SkylineWindow.FilesTreeForm.RemoveAll(replicatesFolder);
-                });
-                OkDialog(confirmDlg, confirmDlg.ClickYes);
-
                 var replicatesFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
-                doc = WaitForDocumentChange(doc);
-                Assert.IsNull(replicatesFolder);
+                SkylineWindow.FilesTreeForm.RemoveAll(replicatesFolder);
+            });
+            OkDialog(confirmDlg, confirmDlg.ClickYes);
 
-                RunUI(() => SkylineWindow.Undo());
-                WaitForDocumentChange(doc);
-                AssertTreeFolderMatchesDocumentAndModel<ReplicatesFolder>(RAT_PLASMA_REPLICATE_COUNT);
+            var replicatesFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
+            doc = WaitForDocumentChange(doc);
+            Assert.IsNull(replicatesFolder);
 
-                // Remove selected replicates
-                doc = SkylineWindow.Document;
-                replicatesFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
-                var nodesToDelete = new List<FilesTreeNode>
-                {
-                    replicatesFolder.NodeAt(4),
-                    replicatesFolder.NodeAt(5),
-                    replicatesFolder.NodeAt(7),
-                };
+            RunUI(() => SkylineWindow.Undo());
+            WaitForDocumentChange(doc);
+            AssertTreeFolderMatchesDocumentAndModel<ReplicatesFolder>(RAT_PLASMA_REPLICATE_COUNT);
+        }
 
-                confirmDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.FilesTreeForm.RemoveSelected(nodesToDelete));
-                OkDialog(confirmDlg, confirmDlg.ClickYes);
+        private static void TestRemoveSelectedReplicates()
+        {
+            var doc = SkylineWindow.Document;
+            var replicatesFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
+            var nodesToDelete = new List<FilesTreeNode>
+            {
+                replicatesFolder.NodeAt(4),
+                replicatesFolder.NodeAt(5),
+                replicatesFolder.NodeAt(7),
+            };
 
-                replicatesFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
-                doc = WaitForDocumentChange(doc);
+            var confirmDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.FilesTreeForm.RemoveSelected(nodesToDelete));
+            OkDialog(confirmDlg, confirmDlg.ClickYes);
 
-                AssertTreeFolderMatchesDocumentAndModel<ReplicatesFolder>(RAT_PLASMA_REPLICATE_COUNT - 3);
+            replicatesFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
+            doc = WaitForDocumentChange(doc);
 
-                // Deleted nodes should be gone
-                Assert.IsFalse(replicatesFolder.HasChildWithName(nodesToDelete[0].Name));
-                Assert.IsFalse(replicatesFolder.HasChildWithName(nodesToDelete[1].Name));
-                Assert.IsFalse(replicatesFolder.HasChildWithName(nodesToDelete[2].Name));
+            AssertTreeFolderMatchesDocumentAndModel<ReplicatesFolder>(RAT_PLASMA_REPLICATE_COUNT - 3);
 
-                RunUI(() => SkylineWindow.Undo());
-                WaitForDocumentChange(doc);
+            // Deleted nodes should be gone
+            Assert.IsFalse(replicatesFolder.HasChildWithName(nodesToDelete[0].Name));
+            Assert.IsFalse(replicatesFolder.HasChildWithName(nodesToDelete[1].Name));
+            Assert.IsFalse(replicatesFolder.HasChildWithName(nodesToDelete[2].Name));
 
-                AssertTreeFolderMatchesDocumentAndModel<ReplicatesFolder>(RAT_PLASMA_REPLICATE_COUNT);
-                Assert.IsTrue(replicatesFolder.HasChildWithName(nodesToDelete[0].Name));
-                Assert.IsTrue(replicatesFolder.HasChildWithName(nodesToDelete[1].Name));
-                Assert.IsTrue(replicatesFolder.HasChildWithName(nodesToDelete[2].Name));
-            }
+            RunUI(() => SkylineWindow.Undo());
+            WaitForDocumentChange(doc);
 
-            //
-            // Spectral Libraries
-            //
+            AssertTreeFolderMatchesDocumentAndModel<ReplicatesFolder>(RAT_PLASMA_REPLICATE_COUNT);
+            Assert.IsTrue(replicatesFolder.HasChildWithName(nodesToDelete[0].Name));
+            Assert.IsTrue(replicatesFolder.HasChildWithName(nodesToDelete[1].Name));
+            Assert.IsTrue(replicatesFolder.HasChildWithName(nodesToDelete[2].Name));
+        }
+
+        private static void TestSpectralLibraries()
+        {
             Assert.AreEqual(2, SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>()?.Nodes.Count);
             Assert.AreEqual("Rat (NIST) (Rat_plasma2)", SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs[0].Name);
             Assert.AreEqual("Rat (GPM) (Rat_plasma2)", SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs[1].Name);
@@ -405,27 +419,23 @@ namespace pwiz.SkylineTestFunctional
             var peptideLibraryModel = (SpectralLibrary)peptideLibraryTreeNode?.Model;
             Assert.AreEqual(SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs[0].Name, peptideLibraryModel?.Name);
 
-            //
-            // Spectral Library explorer dialog opens with correct library selected
-            //
-            RunUI(() => SkylineWindow.FilesTreeForm.OpenLibraryExplorerDialog(peptideLibraryTreeNode));
-            var libraryDlg = WaitForOpenForm<ViewLibraryDlg>();
-            RunUI(() =>
+            // Open Library Explorer. Correct library should be selected.
             {
-                Assert.IsTrue(libraryDlg.HasSelectedLibrary);
-                Assert.AreEqual(0, libraryDlg.SelectedIndex);
-                libraryDlg.Close();
-            });
-            WaitForConditionUI(() => !libraryDlg.Visible);
+                RunUI(() => SkylineWindow.FilesTreeForm.OpenLibraryExplorerDialog(peptideLibraryTreeNode));
+                var libraryDlg = WaitForOpenForm<ViewLibraryDlg>();
+                RunUI(() =>
+                {
+                    Assert.IsTrue(libraryDlg.HasSelectedLibrary);
+                    Assert.AreEqual(0, libraryDlg.SelectedIndex);
+                    libraryDlg.Close();
+                });
+                WaitForConditionUI(() => !libraryDlg.Visible);
+            }
 
-            //
-            // Spectral Libraries - remove libraries
-            //
+            // Remove All
+            FilesTreeNode librariesFolder;
             {
-                FilesTreeNode librariesFolder;
-
-                // Remove All
-                doc = SkylineWindow.Document;
+                var doc = SkylineWindow.Document;
                 var confirmDlg = ShowDialog<MultiButtonMsgDlg>(() =>
                 {
                     librariesFolder = SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>();
@@ -440,16 +450,18 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() => SkylineWindow.Undo());
                 WaitForDocumentChange(doc);
                 AssertTreeFolderMatchesDocumentAndModel<SpectralLibrariesFolder>(2);
+            }
 
-                // Remove selected
-                doc = SkylineWindow.Document;
+            // Remove selected
+            {
+                var doc = SkylineWindow.Document;
                 librariesFolder = SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>();
                 var nodesToDelete = new List<FilesTreeNode>
                 {
                     librariesFolder.NodeAt(1),
                 };
 
-                confirmDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.FilesTreeForm.RemoveSelected(nodesToDelete));
+                var confirmDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.FilesTreeForm.RemoveSelected(nodesToDelete));
                 OkDialog(confirmDlg, confirmDlg.ClickYes);
 
                 librariesFolder = SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>();
@@ -457,7 +469,6 @@ namespace pwiz.SkylineTestFunctional
 
                 Assert.AreEqual(1, librariesFolder.Nodes.Count);
 
-                // Deleted nodes should be gone
                 Assert.IsFalse(librariesFolder.HasChildWithName(nodesToDelete[0].Name));
 
                 RunUI(() => SkylineWindow.Undo());
@@ -465,19 +476,12 @@ namespace pwiz.SkylineTestFunctional
 
                 AssertTreeFolderMatchesDocumentAndModel<SpectralLibrariesFolder>(2);
 
-                // Deleted nodes should be back
+                // Removed libraries should be available again
                 Assert.IsTrue(librariesFolder.HasChildWithName(nodesToDelete[0].Name));
             }
-
-            TestMonitoringFileSystem();
-            
-            TestDragAndDrop();
-
-            // Close FilesTreeForm so test framework doesn't fail the test due to an unexpected open dialog
-            RunUI(() => { SkylineWindow.DestroyFilesTreeForm(); });
         }
 
-        private void TestRestoreViewState()
+        private static void TestRestoreViewState()
         {
             var treeNodes = SkylineWindow.FilesTree.Nodes;
 
@@ -642,6 +646,25 @@ namespace pwiz.SkylineTestFunctional
             }
         }
 
+        protected void TestDragAndDropOnParentNode()
+        {
+            // Start with a clean document
+            var documentPath = TestFilesDir.GetTestPath(RAT_PLASMA_FILE_NAME);
+            RunUI(() =>
+            {
+                SkylineWindow.OpenFile(documentPath);
+                SkylineWindow.ShowFilesTreeForm(true);
+            });
+            WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible);
+
+            // A, B, C, D => Drag B, C to Parent Node => A, D, B, C
+            var dndParams = DragAndDrop<ReplicatesFolder>(new[] { 1, 2, 3 }, -1, DragDirection.down, MoveType.move_last);
+            AssertDragAndDropResults<ReplicatesFolder>(dndParams);
+
+            dndParams = DragAndDrop<SpectralLibrariesFolder>(new[] { 0 }, -1, DragDirection.down, MoveType.move_last);
+            AssertDragAndDropResults<SpectralLibrariesFolder>(dndParams);
+        }
+
         private static DragAndDropParams DragAndDrop<T>(int[] dragNodeIndexes,
                                                         int dropNodeIndex,
                                                         DragDirection direction,
@@ -691,12 +714,16 @@ namespace pwiz.SkylineTestFunctional
             // Verify document nodes match tree nodes
             AssertTreeFolderMatchesDocumentAndModel<TFolder>(d.Folder.Nodes.Count);
 
-            // Now, make sure DnD put dragged nodes and the drop target in the correct places
+            // Is this action dropping dragged nodes on their parent folder?
+            var doDropOnParentFolder = d.DropNodeIndex == -1;
 
+            // Now, calculate the index where dragged nodes went when dropped on the tree
             int dropNodeExpectedIndex;
-
-            // Compute the expected index of the drop target
-            if (d.MoveType == MoveType.move_last)
+            if (doDropOnParentFolder)
+            {
+                dropNodeExpectedIndex = d.Folder.Nodes.Count - d.DraggedNodes.Count;
+            }
+            else if (d.MoveType == MoveType.move_last)
             {
                 dropNodeExpectedIndex = d.DropNodeIndex - d.DraggedNodes.Count;
             }
@@ -710,13 +737,20 @@ namespace pwiz.SkylineTestFunctional
             }
 
             // Assert the drop target is in the correct location
-            Assert.AreEqual(d.DropNode, d.Folder.Nodes[dropNodeExpectedIndex]);
+            if (doDropOnParentFolder)
+                Assert.AreEqual(d.DropNode, d.Folder);
+            else 
+                Assert.AreEqual(d.DropNode, d.Folder.Nodes[dropNodeExpectedIndex]);
 
             // Compute the expected index of each dragged node and verify it's in the correct place
             for (var i = 0; i < d.DragNodeIndexes.Length; i++)
             {
                 int expectedIndex;
-                if (d.MoveType == MoveType.move_last)
+                if (doDropOnParentFolder)
+                {
+                    expectedIndex = dropNodeExpectedIndex + i;
+                }
+                else if (d.MoveType == MoveType.move_last)
                 {
                     expectedIndex = dropNodeExpectedIndex + 1 + i;
                 }
@@ -773,8 +807,7 @@ namespace pwiz.SkylineTestFunctional
             }
         }
 
-        // FilesTree only supports adding nodes of type FilesTreeNode so make sure other node types
-        // were not inadvertently added to the tree
+        // Make sure FilesTree only contains subclasses of FilesTreeNode
         private static void AssertFilesTreeOnlyIncludesFilesTreeNodes(TreeNode node)
         {
             Assert.IsInstanceOfType(node, typeof(FilesTreeNode));
@@ -816,7 +849,7 @@ namespace pwiz.SkylineTestFunctional
     internal class DragAndDropParams
     {
         internal int[] DragNodeIndexes;
-        internal int DropNodeIndex;
+        internal int DropNodeIndex; // Setting to -1 causes dragged nodes to drop on their parent folder
         internal DragDirection Direction;
         internal SrmDocument OldDoc;
         internal SrmDocument NewDoc;
