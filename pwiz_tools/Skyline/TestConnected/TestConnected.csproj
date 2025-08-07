@@ -220,7 +220,6 @@
     <Compile Include="KoinaConnectionTest.cs" />
     <Compile Include="ArdiaImportResultsTest.cs" />
     <Compile Include="ArdiaFileUploadTest.cs" />
-    <Compile Include="ArdiaRemoteAccountEditTest.cs" />
     <Compile Include="Results\RemoteApi\RemoteApiTest.cs" />
     <Compile Include="UnifiFunctionalTest.cs" />
     <Compile Include="KoinaBuildLibraryFromCsvTest.cs" />
