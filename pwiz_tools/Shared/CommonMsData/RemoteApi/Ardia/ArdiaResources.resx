@@ -117,7 +117,7 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+	<assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="UnifiUrl_OpenMsDataFile_Cannot_find_account_for_username__0__and_server__1__" xml:space="preserve">
     <value>Cannot find account for username {0} and server {1}.</value>
   </data>
@@ -126,5 +126,101 @@
   </data>
   <data name="ArdiaAccount_GetAuthenticatedHttpClient_Failed_to_open_Ardia_connection" xml:space="preserve">
     <value>Failed to open Ardia connection</value>
+  </data>
+  <data name="FileUpload_Status_ProgressWithSize" xml:space="preserve">
+    <value>{0:N0}% complete. Uploaded {1:N0} of {2:N0} MB.</value>
+  </data>
+  <data name="FileUpload_Status_CreatingDocument" xml:space="preserve">
+    <value>Completed upload. Creating document.</value>
+  </data>
+  <data name="FileUpload_ServerFolders" xml:space="preserve">
+    <value>Ardia Folders:</value>
+  </data>
+  <data name="FileUpload_AvailableFreeSpace_Unlimited" xml:space="preserve">
+    <value>Available Storage: Unlimited</value>
+  </data>
+  <data name="FileUpload_AvailableFreeSpace_WithSize" xml:space="preserve">
+    <value>Available Storage: {0}</value>
+  </data>
+  <data name="FileUpload_Success" xml:space="preserve">
+    <value>Successfully uploaded the document to Ardia.</value>
+  </data>
+  <data name="FileUpload_Error" xml:space="preserve">
+    <value>Unable to publish the document. A problem occurred communicating with the server.</value>
+  </data>
+  <data name="FileUpload_Error_DocumentTooLargeForServer" xml:space="preserve">
+    <value>Unable to publish the document. The document is larger than the available storage space on the server.</value>
+  </data>
+  <data name="OpenFolder_Title" xml:space="preserve">
+    <value>Opening folder {0}</value>
+  </data>
+  <data name="OpenFolder_Error_Folder" xml:space="preserve">
+    <value>Unable to open '{0}'. A problem occurred communicating with the server.</value>
+  </data>
+  <data name="OpenFolder_Error_Server" xml:space="preserve">
+    <value>Unable to open folders on the Ardia server '{0}'. A problem occurred communicating with the server.</value>
+  </data>
+  <data name="GetDocument_Error" xml:space="preserve">
+    <value>Error getting document '{0}'. A problem occurred communicating with the server.</value>
+  </data>
+  <data name="CreateFolder_DefaultFolderName" xml:space="preserve">
+    <value>New Folder</value>
+  </data>
+  <data name="CreateFolder_Title" xml:space="preserve">
+    <value>Create folder</value>
+  </data>
+  <data name="CreateFolder_Success" xml:space="preserve">
+    <value>Successfully created folder '{0}'.</value>
+  </data>
+  <data name="CreateFolder_Error" xml:space="preserve">
+    <value>Unable to create folder '{0}'. A problem occurred communicating with the server.</value>
+  </data>
+  <data name="CreateFolder_InputValidationError_BlankName" xml:space="preserve">
+    <value>Folder names cannot be blank.</value>
+  </data>
+  <data name="CreateFolder_InputValidationError_IllegalCharacter" xml:space="preserve">
+    <value>Folder names cannot include any of these characters {0}.</value>
+  </data>
+  <data name="CreateFolder_InputValidationError_FileAlreadyExists" xml:space="preserve">
+    <value>Unable to create folder '{0}'. An item with that name already exists.</value>
+  </data>
+  <data name="CreateFolder_Error_Forbidden" xml:space="preserve">
+    <value>Unable to create folder '{0}'. Do you have permission to create a folder in '{1}'?</value>
+  </data>
+  <data name="DeleteFolder_Error" xml:space="preserve">
+    <value>Unable to delete folder '{0}'. A problem occurred communicating with the server.</value>
+  </data>
+  <data name="Error_Detail" xml:space="preserve">
+    <value>Error detail: </value>
+  </data>
+  <data name="Error_Host" xml:space="preserve">
+    <value>Host: {0}</value>
+  </data>
+  <data name="Error_Path" xml:space="preserve">
+    <value>Path: {0}</value>
+  </data>
+  <data name="Error_StatusCode_Unexpected" xml:space="preserve">
+    <value>Unexpected error code.</value>
+  </data>
+  <data name="Error_StatusCode" xml:space="preserve">
+    <value>Code: {0} ({1})</value>
+  </data>
+  <data name="Error_FileName" xml:space="preserve">
+    <value>File Name: {0}</value>
+  </data>
+  <data name="Error_FilePath" xml:space="preserve">
+    <value>File Path: {0}</value>
+  </data>
+  <data name="Error_UploadId" xml:space="preserve">
+    <value>Upload ID: {0}</value>
+  </data>
+  <data name="Error_Size" xml:space="preserve">
+    <value>Size (bytes): {0}</value>
+  </data>
+  <data name="Error_ProblemCommunicatingWithServer" xml:space="preserve">
+    <value>A problem occurred communicating with Ardia. Check the network connection.</value>
+  </data>
+  <data name="Error_InvalidToken" xml:space="preserve">
+    <value>A problem occurred communicating with Ardia. Check your Ardia connection on the Remote Accounts tab under Skyline's Tools &gt; Options menu and try again.</value>
   </data>
 </root>
