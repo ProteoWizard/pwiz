@@ -138,12 +138,20 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 list.Add(Calculator);
             }
 
-            foreach (var library in peptideSettings.Libraries.Libraries)
+            for (int iLibrary = 0; iLibrary < peptideSettings.Libraries.Libraries.Count; iLibrary++)
             {
-                if (true == library?.IsLoaded && library.ListRetentionTimeSources().Any())
+                var library = peptideSettings.Libraries.Libraries[iLibrary];
+                var libraryName = library?.Name ?? peptideSettings.Libraries.LibrarySpecs[iLibrary]?.Name;
+                if (libraryName == null)
                 {
-                    list.Add(Library.ChangeName(library.Name));
+                    continue;
                 }
+
+                if (true == library?.IsLoaded && !library.ListRetentionTimeSources().Any())
+                {
+                    continue;
+                }
+                list.Add(Library.ChangeName(libraryName));
             }
             list.Add(ChromatogramPeaks);
             return list;

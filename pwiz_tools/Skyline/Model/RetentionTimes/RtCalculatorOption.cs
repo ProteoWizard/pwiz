@@ -48,6 +48,12 @@ namespace pwiz.Skyline.Model.RetentionTimes
             return result;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="peptideSettings"></param>
+        /// <param name="option"></param>
+        /// <returns></returns>
         public static bool TryGetDefault(PeptideSettings peptideSettings, out RtCalculatorOption option)
         {
             var calculator = peptideSettings.Prediction?.RetentionTime?.Calculator;
@@ -58,20 +64,20 @@ namespace pwiz.Skyline.Model.RetentionTimes
             }
 
             option = null;
-            foreach (var library in peptideSettings.Libraries.Libraries)
+            if (peptideSettings.Libraries.Libraries.Count != 1)
             {
-                if (library == null || !library.IsLoaded)
-                {
-                    return false;
-                }
-
-                if (library.ListRetentionTimeSources().Any())
-                {
-                    option = new Library(library.Name);
-                    return true;
-                }
+                return true;
             }
-            
+            var firstLibrary = peptideSettings.Libraries.Libraries[0];
+            if (true != firstLibrary?.IsLoaded)
+            {
+                return false;
+            }
+
+            if (firstLibrary.ListRetentionTimeSources().Any())
+            {
+                option = new Library(peptideSettings.Libraries.Libraries[0].Name);
+            }
             return true;
         }
 

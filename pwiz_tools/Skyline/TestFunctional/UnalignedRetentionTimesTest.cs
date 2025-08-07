@@ -21,6 +21,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util.Extensions;
@@ -40,19 +41,29 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            RunUI(()=>
+            RunUI(() =>
             {
                 SkylineWindow.OpenFile(TestFilesDir.GetTestPath("UnalignedRtTest.sky"));
                 SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.Molecules, 48);
             });
             WaitForDocumentLoaded();
+            RunDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, peptideSettingsUi =>
+            {
+                peptideSettingsUi.SelectedTab = PeptideSettingsUI.TABS.Prediction;
+                peptideSettingsUi.AlignmentTarget = AlignmentTargetSpec.Library.ChangeName("FirstHalf");
+                peptideSettingsUi.OkDialog();
+            });
+            WaitForDocumentLoaded();
+            Assert.IsTrue(SkylineWindow.Document.Settings.HasAlignedTimes());
+
             // The libraries "FirstHalf.blib" and "SecondHalf.blib" only have a single peptide in common.
             // For this reason, none of the runs in "SecondHalf.blib" could be aligned with "FirstHalf.blib".
-            Assert.IsTrue(SkylineWindow.Document.Settings.DocumentRetentionTimes.HasUnalignedTimes());
+
+            Assert.IsTrue(SkylineWindow.Document.Settings.HasUnalignedTimes());
             // Replace the library "FirstHalf.blib" with "FirstTwoReplicates.blib".
             RunLongDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, peptideSettingsUi =>
             {
-                RunUI(()=>peptideSettingsUi.SelectedTab = PeptideSettingsUI.TABS.Library);
+                RunUI(() => peptideSettingsUi.SelectedTab = PeptideSettingsUI.TABS.Library);
                 RunLongDlg<EditListDlg<SettingsListBase<LibrarySpec>, LibrarySpec>>(peptideSettingsUi.EditLibraryList,
                     libListDlg =>
                     {
@@ -62,20 +73,24 @@ namespace pwiz.SkylineTestFunctional
                             editLibraryDlg.LibraryPath = TestFilesDir.GetTestPath("FirstTwoReplicates.blib");
                             editLibraryDlg.OkDialog();
                         });
-                        RunUI(()=>
+                        RunUI(() =>
                         {
                             libListDlg.MoveItemUp();
-                            Assert.AreEqual("FirstTwoReplicates FirstHalf SecondHalf", TextUtil.SpaceSeparate(libListDlg.GetAllEdited().Select(libSpec=>libSpec.Name)));
+                            Assert.AreEqual("FirstTwoReplicates FirstHalf SecondHalf",
+                                TextUtil.SpaceSeparate(libListDlg.GetAllEdited().Select(libSpec => libSpec.Name)));
                         });
-                    }, libListDlg=>libListDlg.OkDialog());
+                    }, libListDlg => libListDlg.OkDialog());
                 RunUI(() =>
                 {
                     peptideSettingsUi.PickedLibraries = new[] { "FirstTwoReplicates", "SecondHalf" };
+                    peptideSettingsUi.SelectedTab = PeptideSettingsUI.TABS.Prediction;
+                    peptideSettingsUi.AlignmentTarget = AlignmentTargetSpec.Library.ChangeName("FirstTwoReplicates");
                 });
-            }, peptideSettingsUi=>peptideSettingsUi.OkDialog());
+            }, peptideSettingsUi => peptideSettingsUi.OkDialog());
             WaitForDocumentLoaded();
+            Assert.IsTrue(SkylineWindow.Document.Settings.HasAlignedTimes());
             // "FirstTwoReplicates.blib" has the complete set of peptides, so the runs in "SecondHalf.blib" could be aligned.
-            Assert.IsFalse(SkylineWindow.Document.Settings.DocumentRetentionTimes.HasUnalignedTimes());
+            Assert.IsFalse(SkylineWindow.Document.Settings.HasUnalignedTimes());
         }
     }
 }

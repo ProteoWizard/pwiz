@@ -202,7 +202,7 @@ namespace pwiz.Skyline.SettingsUI
             cbxImputeMissingPeaks.Checked = _peptideSettings.Imputation.ImputeMissingPeaks;
             tbxMaxRtShift.Text = _peptideSettings.Imputation.MaxRtShift?.ToString() ?? string.Empty;
             tbxMaxPeakWidthVariation.Text = (_peptideSettings.Imputation.MaxPeakWidthVariation * 100)?.ToString() ?? string.Empty;
-            UpdateAlignmentDropdown(_peptideSettings);
+            UpdateAlignmentDropdown();
         }
 
         /// <summary>
@@ -466,54 +466,7 @@ namespace pwiz.Skyline.SettingsUI
             Helpers.AssignIfEquals(ref filter, Filter);
 
             // Validate and hold libraries
-            PeptideLibraries libraries;
-            IList<LibrarySpec> librarySpecs = _driverLibrary.Chosen;
-            if (librarySpecs.Count == 0)
-                libraries = new PeptideLibraries(PeptidePick.library, null, null, false, librarySpecs, new Library[0]);
-            else
-            {
-                int? peptideCount = null;
-                if (cbLimitPeptides.Checked)
-                {
-                    int peptideCountVal;
-                    if (!helper.ValidateNumberTextBox(textPeptideCount, PeptideLibraries.MIN_PEPTIDE_COUNT,
-                            PeptideLibraries.MAX_PEPTIDE_COUNT, out peptideCountVal))
-                        return null;
-                    peptideCount = peptideCountVal;
-                }
-                PeptidePick pick = (PeptidePick) comboMatching.SelectedIndex;
-
-                IList<Library> librariesLoaded = new Library[librarySpecs.Count];
-                bool documentLibrary = false;
-                if (Libraries != null)
-                {
-                    // Use existing library spec's, if nothing was changed.
-                    // Avoid changing the libraries, just because the the picking
-                    // algorithm changed.
-                    if (ArrayUtil.EqualsDeep(librarySpecs, Libraries.LibrarySpecs))
-                    {
-                        librarySpecs = Libraries.LibrarySpecs;
-                        librariesLoaded = Libraries.Libraries;
-                        documentLibrary = Libraries.HasDocumentLibrary;
-                    }
-                    else
-                    {
-                        // Set to true only if one of the selected libraries is a document library.
-                        documentLibrary = librarySpecs.Any(libSpec => libSpec != null && libSpec.IsDocumentLibrary);
-                    }
-
-                    // Otherwise, leave the list of loaded libraries empty,
-                    // and let the LibraryManager refill it.  This ensures a
-                    // clean save of library specs only in the user config, rather
-                    // than a mix of library specs and libraries.
-                }
-
-                PeptideRankId rankId = (PeptideRankId) comboRank.SelectedItem;
-                if (comboRank.SelectedIndex == 0)
-                    rankId = null;
-
-                libraries = new PeptideLibraries(pick, rankId, peptideCount, documentLibrary, librarySpecs, librariesLoaded);
-            }
+            PeptideLibraries libraries = GetPeptideLibraries(showMessages);
             Helpers.AssignIfEquals(ref libraries, Libraries);
 
             // Validate and hold modifications
@@ -589,6 +542,55 @@ namespace pwiz.Skyline.SettingsUI
 
             return new PeptideSettings(enzyme, digest, prediction, filter, libraries, modifications, integration, backgroundProteome, _peptideSettings.ProteinAssociationSettings)
                 .ChangeAbsoluteQuantification(quantification).ChangeImputation(imputation);
+        }
+
+        private PeptideLibraries GetPeptideLibraries(bool showMessages)
+        {
+            var helper = new MessageBoxHelper(this, showMessages);
+            IList<LibrarySpec> librarySpecs = _driverLibrary.Chosen;
+            if (librarySpecs.Count == 0)
+                return new PeptideLibraries(PeptidePick.library, null, null, false, librarySpecs, new Library[0]);
+            int? peptideCount = null;
+            if (cbLimitPeptides.Checked)
+            {
+                int peptideCountVal;
+                if (!helper.ValidateNumberTextBox(textPeptideCount, PeptideLibraries.MIN_PEPTIDE_COUNT,
+                        PeptideLibraries.MAX_PEPTIDE_COUNT, out peptideCountVal))
+                    return null;
+                peptideCount = peptideCountVal;
+            }
+            PeptidePick pick = (PeptidePick)comboMatching.SelectedIndex;
+
+            IList<Library> librariesLoaded = new Library[librarySpecs.Count];
+            bool documentLibrary = false;
+            if (Libraries != null)
+            {
+                // Use existing library spec's, if nothing was changed.
+                // Avoid changing the libraries, just because the picking
+                // algorithm changed.
+                if (ArrayUtil.EqualsDeep(librarySpecs, Libraries.LibrarySpecs))
+                {
+                    librarySpecs = Libraries.LibrarySpecs;
+                    librariesLoaded = Libraries.Libraries;
+                    documentLibrary = Libraries.HasDocumentLibrary;
+                }
+                else
+                {
+                    // Set to true only if one of the selected libraries is a document library.
+                    documentLibrary = librarySpecs.Any(libSpec => libSpec != null && libSpec.IsDocumentLibrary);
+                }
+
+                // Otherwise, leave the list of loaded libraries empty,
+                // and let the LibraryManager refill it.  This ensures a
+                // clean save of library specs only in the user config, rather
+                // than a mix of library specs and libraries.
+            }
+
+            PeptideRankId rankId = (PeptideRankId)comboRank.SelectedItem;
+            if (comboRank.SelectedIndex == 0)
+                rankId = null;
+
+            return new PeptideLibraries(pick, rankId, peptideCount, documentLibrary, librarySpecs, librariesLoaded);
         }
 
         public void OkDialog()
@@ -1419,6 +1421,11 @@ namespace pwiz.Skyline.SettingsUI
             {
                 UpdateComboNormalizationMethod();
             }
+
+            if (tabControl1.SelectedTab == tabPrediction)
+            {
+                UpdateAlignmentDropdown();
+            }
         }
         #region Functional testing support
 
@@ -2230,8 +2237,9 @@ namespace pwiz.Skyline.SettingsUI
             listLibraries.SelectedItem = name;
         }
 
-        private void UpdateAlignmentDropdown(PeptideSettings peptideSettings)
+        private void UpdateAlignmentDropdown()
         {
+            var peptideSettings = _peptideSettings.ChangeLibraries(GetPeptideLibraries(false) ?? _peptideSettings.Libraries);
             var options = AlignmentTargetSpec.GetOptions(peptideSettings).ToList();
             var current = AlignmentTarget ?? peptideSettings.Imputation.AlignmentTarget ?? AlignmentTargetSpec.Default;
             if (!options.Contains(current))
@@ -2256,7 +2264,12 @@ namespace pwiz.Skyline.SettingsUI
             {
                 var options = comboRunToRunAlignment.Items.Cast<KeyValuePair<string, AlignmentTargetSpec>>()
                     .Select(kvp => kvp.Value).ToList();
-                comboRunToRunAlignment.SelectedIndex = options.IndexOf(value);
+                int selectedIndex = options.IndexOf(value);
+                if (selectedIndex < 0)
+                {
+                    throw new ArgumentException();
+                }
+                comboRunToRunAlignment.SelectedIndex = selectedIndex;
             }
         }
     }

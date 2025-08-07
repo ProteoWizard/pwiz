@@ -379,24 +379,25 @@ namespace pwiz.Skyline.Menus
 
         public void ShowRefineDlg()
         {
-            using (var refineDlg = new RefineDlg(SkylineWindow))
+            using var refineDlg = new RefineDlg(SkylineWindow);
+            if (refineDlg.ShowDialog(SkylineWindow) == DialogResult.OK)
             {
-                if (refineDlg.ShowDialog(SkylineWindow) == DialogResult.OK)
+                lock (SkylineWindow.GetDocumentChangeLock())
                 {
                     ModifyDocument(MenusResources.SkylineWindow_ShowRefineDlg_Refine,
                         doc =>
                         {
-                            using (var longWaitDlg = new LongWaitDlg(SkylineWindow))
+                            using var longWaitDlg = new LongWaitDlg(SkylineWindow);
+                            longWaitDlg.Message = MenusResources.SkylineWindow_ShowRefineDlg_Refining_document;
+                            longWaitDlg.PerformWork(refineDlg, 1000, progressMonitor =>
                             {
-                                longWaitDlg.Message = MenusResources.SkylineWindow_ShowRefineDlg_Refining_document;
-                                longWaitDlg.PerformWork(refineDlg, 1000, progressMonitor =>
-                                {
-                                    var srmSettingsChangeMonitor =
-                                        new SrmSettingsChangeMonitor(progressMonitor, MenusResources.SkylineWindow_ShowRefineDlg_Refining_document, SkylineWindow, doc);
+                                var srmSettingsChangeMonitor =
+                                    new SrmSettingsChangeMonitor(progressMonitor,
+                                        MenusResources.SkylineWindow_ShowRefineDlg_Refining_document, SkylineWindow,
+                                        doc);
 
-                                    doc = refineDlg.RefinementSettings.Refine(doc, srmSettingsChangeMonitor);
-                                });
-                            }
+                                doc = refineDlg.RefinementSettings.Refine(doc, srmSettingsChangeMonitor);
+                            });
 
                             return doc;
                         }, refineDlg.FormSettings.EntryCreator.Create);
