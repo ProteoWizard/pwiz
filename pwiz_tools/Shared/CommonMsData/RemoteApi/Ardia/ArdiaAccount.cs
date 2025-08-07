@@ -17,7 +17,6 @@
  */
 
 using pwiz.Common.Collections;
-using pwiz.Common.SystemUtil;
 using System;
 using System.Globalization;
 using System.Net.Http;
