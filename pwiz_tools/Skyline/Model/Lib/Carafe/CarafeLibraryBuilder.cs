@@ -199,10 +199,9 @@ namespace pwiz.Skyline.Model.Lib.Carafe
                 new PythonPackage { Name = @"alphabase", Version = @"1.2.1" },
                 new PythonPackage { Name = @"numpy", Version = @"1.26.4" },
                 new PythonPackage { Name = @"transformers", Version = @"4.36.1" },
-                new PythonPackage { Name = @"torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu118 --upgrade", Version = null },
+                new PythonPackage { Name = @"torch==2.7.1 torchvision==0.22.1 torchaudio==2.7.1 --index-url https://download.pytorch.org/whl/cu126", Version = null },
                 new PythonPackage { Name = @"wheel", Version = null },
                 new PythonPackage { Name = @"huggingface-hub", Version = null}
-                
             };
 
             return new PythonInstaller(packages, writer, CARAFE);
