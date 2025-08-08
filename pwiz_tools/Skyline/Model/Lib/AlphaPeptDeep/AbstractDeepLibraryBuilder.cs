@@ -138,11 +138,18 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
     }
     public class LibraryBuilderModificationSupport
     {
-        internal List<ModificationType> _predictionSupport; //key is ModificationType.Index
+        internal Dictionary<int, ModificationType> _modificationSupport;
 
         public LibraryBuilderModificationSupport(List<ModificationType> supportedModifications)
         {
-            _predictionSupport = supportedModifications;
+            if (supportedModifications != null)
+            {
+                _modificationSupport = new Dictionary<int, ModificationType>();
+                foreach (var mod in supportedModifications)
+                {
+                    _modificationSupport[mod.Id] = mod;
+                }
+            }
         }
 
         public bool AreAllModelsSupported(int? id)
@@ -156,7 +163,8 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         {
             if (id == null)
                 return false;
-            var type = _predictionSupport.FirstOrDefault(mod => mod.Id == id);
+
+            var type = _modificationSupport[id.Value];
             if (type == null)
             {
                 return false;
@@ -168,7 +176,8 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         {
             if (id == null)
                 return false;
-            var type = _predictionSupport.FirstOrDefault(mod => mod.Id == id);
+
+            var type = _modificationSupport[id.Value];
             if (type == null)
             {
                 return false;
@@ -180,7 +189,8 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         {
             if (id == null)
                 return false;
-            var type = _predictionSupport.FirstOrDefault(mod => mod.Id == id);
+
+            var type = _modificationSupport[id.Value];
             if (type == null)
             {
                 return false;
@@ -210,7 +220,9 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         [CanBeNull]
         public ModificationType GetModificationType(int id)
         {
-            return _predictionSupport.FirstOrDefault(mod => mod.Id == id);
+            if (_modificationSupport.ContainsKey(id))
+                return _modificationSupport[id];
+            return null;
         }
 
         public bool PeptideHasOnlyMs2SupportedMod(string modifiedPeptide)
