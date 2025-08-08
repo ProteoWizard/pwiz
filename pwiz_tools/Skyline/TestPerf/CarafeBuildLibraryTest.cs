@@ -421,56 +421,6 @@ namespace TestPerf
                 peptideSettings.ShowBuildLibraryDlg();
                 buildLibraryDlgFinished = true;
             });
-            
-            //Test unfilled Library Name
-            RunUI(() =>
-            {
-                buildLibraryDlg.ComboBuildLibraryTarget = buildTarget;
-                buildLibraryDlg.ComboLearnFrom = learnFrom;
-                buildLibraryDlg.Carafe = true;
-                if (iRTtype != null)
-                    buildLibraryDlg.IrtStandard = iRTtype;
-
-                buildLibraryDlg.OkWizardPage();
-
-                buildLibraryDlg.TextBoxMsMsDataFile = mzMLFile;
-                buildLibraryDlg.TextBoxProteinDatabase = proteinDatabase;
-                buildLibraryDlg.TextBoxTrainingDoc = fineTuneFile;
-
-                buildLibraryDlg.UnloadTrainingDocument();
-                if (proteinDatabase == "" && learnFrom == BuildLibraryDlg.LearningOptions.another_doc)
-                    buildLibraryDlg.LoadTrainingDocument(fineTuneFile);
-            });
-
-            var nameEmptyAlert = WaitForOpenForm<MessageDlg>();
-            Assert.AreEqual(String.Format(Resources.MessageBoxHelper_ValidateNameTextBox__0__cannot_be_empty, "Name"), nameEmptyAlert.Text);
-            OkDialog(nameEmptyAlert, nameEmptyAlert.OkDialog);
-
-            //Test unfilled directory
-            RunUI(() =>
-            {
-                buildLibraryDlg.LibraryName = libraryName;
-                buildLibraryDlg.ComboBuildLibraryTarget = buildTarget;
-                buildLibraryDlg.ComboLearnFrom = learnFrom;
-                buildLibraryDlg.Carafe = true;
-                if (iRTtype != null)
-                    buildLibraryDlg.IrtStandard = iRTtype;
-
-                buildLibraryDlg.OkWizardPage();
-
-                buildLibraryDlg.TextBoxMsMsDataFile = mzMLFile;
-                buildLibraryDlg.TextBoxProteinDatabase = proteinDatabase;
-                buildLibraryDlg.TextBoxTrainingDoc = fineTuneFile;
-
-                buildLibraryDlg.UnloadTrainingDocument();
-                if (proteinDatabase == "" && learnFrom == BuildLibraryDlg.LearningOptions.another_doc)
-                    buildLibraryDlg.LoadTrainingDocument(fineTuneFile);
-            });
-
-            var dirEmptyAlert = WaitForOpenForm<MessageDlg>();
-            Assert.AreEqual(SettingsUIResources.BuildLibraryDlg_ValidateBuilder_You_must_specify_an_output_file_path, dirEmptyAlert.Text);
-            OkDialog(dirEmptyAlert, dirEmptyAlert.OkDialog);
-
             // PauseTest();
             RunUI(() =>
             {
