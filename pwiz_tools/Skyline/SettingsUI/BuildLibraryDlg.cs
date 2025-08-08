@@ -779,11 +779,13 @@ namespace pwiz.Skyline.SettingsUI
             }
             else if (tabControlMain.SelectedIndex == (int)Pages.properties && radioAlphaSource.Checked)
             {
-                btnPrevious.Enabled = true;
-                tabControlMain.SelectedIndex = (int)Pages.alphapeptdeepOptions;
-                this.DialogResult = DialogResult.None;
-                this.ActiveControl = null;
-                btnNext.Text = Resources.BuildLibraryDlg_OkWizardPage_Finish;
+                if (ValidateBuilder(false)) {
+                    btnPrevious.Enabled = true;
+                    tabControlMain.SelectedIndex = (int)Pages.alphapeptdeepOptions;
+                    this.DialogResult = DialogResult.None;
+                    this.ActiveControl = null;
+                    btnNext.Text = Resources.BuildLibraryDlg_OkWizardPage_Finish;
+                }
             }
             else if (tabControlMain.SelectedIndex == (int)Pages.alphapeptdeepOptions && radioAlphaSource.Checked)
             {
@@ -802,10 +804,12 @@ namespace pwiz.Skyline.SettingsUI
             }
             else if (tabControlMain.SelectedIndex == (int)Pages.properties && radioCarafeSource.Checked)
             {
-                btnPrevious.Enabled = true;
-                tabControlMain.SelectedIndex = (int)Pages.carafeOptions;
-                AcceptButton = btnNext;
-
+                if (ValidateBuilder(false))
+                {
+                    btnPrevious.Enabled = true;
+                    tabControlMain.SelectedIndex = (int)Pages.carafeOptions;
+                    AcceptButton = btnNext;
+                }
             }
             else if (tabControlMain.SelectedIndex == (int)Pages.carafeOptions)
             {

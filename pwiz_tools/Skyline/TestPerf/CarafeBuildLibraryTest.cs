@@ -160,6 +160,9 @@ namespace TestPerf
 
         protected override void DoTest()
         {
+            TestEmptyNameMessage();
+            TestEmptyPathMessage();
+
             if (RunExtendedTest)
                 LongTest();
             else
@@ -168,7 +171,48 @@ namespace TestPerf
             if (IsCleanPythonMode)
                 AssertEx.IsTrue(PythonInstaller.DeleteToolsPythonDirectory());
         }
+        private void TestEmptyNameMessage()
+        {
+            var peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
+            var buildLibraryDlg = ShowDialog<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg);
 
+            RunUI(() =>
+            {
+                buildLibraryDlg.Carafe = true;
+            });
+
+            RunDlg<AlertDlg>(buildLibraryDlg.OkWizardPage, dlg =>
+            {
+                Assert.AreEqual(String.Format(Resources.MessageBoxHelper_ValidateNameTextBox__0__cannot_be_empty, "Name"),
+                    dlg.Message);
+                dlg.OkDialog();
+            });
+
+            OkDialog(buildLibraryDlg, buildLibraryDlg.CancelDialog);
+            OkDialog(peptideSettings, peptideSettings.OkDialog);
+        }
+
+        private void TestEmptyPathMessage()
+        {
+            var peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
+            var buildLibraryDlg = ShowDialog<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg);
+
+            RunUI(() =>
+            {
+                buildLibraryDlg.LibraryName = "No peptides prediction";
+                buildLibraryDlg.Carafe = true;
+            });
+
+            RunDlg<MessageDlg>(buildLibraryDlg.OkWizardPage, dlg =>
+            {
+                Assert.AreEqual(SettingsUIResources.BuildLibraryDlg_ValidateBuilder_You_must_specify_an_output_file_path,
+                    dlg.Message);
+                dlg.OkDialog();
+            });
+
+            OkDialog(buildLibraryDlg, buildLibraryDlg.CancelDialog);
+            OkDialog(peptideSettings, peptideSettings.OkDialog);
+        }
         private void ShortTest()
         {
             DirectoryEx.SafeDelete(TestContext.GetTestPath(@"TestCarafeBuildLibrary\"));
@@ -377,6 +421,56 @@ namespace TestPerf
                 peptideSettings.ShowBuildLibraryDlg();
                 buildLibraryDlgFinished = true;
             });
+            
+            //Test unfilled Library Name
+            RunUI(() =>
+            {
+                buildLibraryDlg.ComboBuildLibraryTarget = buildTarget;
+                buildLibraryDlg.ComboLearnFrom = learnFrom;
+                buildLibraryDlg.Carafe = true;
+                if (iRTtype != null)
+                    buildLibraryDlg.IrtStandard = iRTtype;
+
+                buildLibraryDlg.OkWizardPage();
+
+                buildLibraryDlg.TextBoxMsMsDataFile = mzMLFile;
+                buildLibraryDlg.TextBoxProteinDatabase = proteinDatabase;
+                buildLibraryDlg.TextBoxTrainingDoc = fineTuneFile;
+
+                buildLibraryDlg.UnloadTrainingDocument();
+                if (proteinDatabase == "" && learnFrom == BuildLibraryDlg.LearningOptions.another_doc)
+                    buildLibraryDlg.LoadTrainingDocument(fineTuneFile);
+            });
+
+            var nameEmptyAlert = WaitForOpenForm<MessageDlg>();
+            Assert.AreEqual(String.Format(Resources.MessageBoxHelper_ValidateNameTextBox__0__cannot_be_empty, "Name"), nameEmptyAlert.Text);
+            OkDialog(nameEmptyAlert, nameEmptyAlert.OkDialog);
+
+            //Test unfilled directory
+            RunUI(() =>
+            {
+                buildLibraryDlg.LibraryName = libraryName;
+                buildLibraryDlg.ComboBuildLibraryTarget = buildTarget;
+                buildLibraryDlg.ComboLearnFrom = learnFrom;
+                buildLibraryDlg.Carafe = true;
+                if (iRTtype != null)
+                    buildLibraryDlg.IrtStandard = iRTtype;
+
+                buildLibraryDlg.OkWizardPage();
+
+                buildLibraryDlg.TextBoxMsMsDataFile = mzMLFile;
+                buildLibraryDlg.TextBoxProteinDatabase = proteinDatabase;
+                buildLibraryDlg.TextBoxTrainingDoc = fineTuneFile;
+
+                buildLibraryDlg.UnloadTrainingDocument();
+                if (proteinDatabase == "" && learnFrom == BuildLibraryDlg.LearningOptions.another_doc)
+                    buildLibraryDlg.LoadTrainingDocument(fineTuneFile);
+            });
+
+            var dirEmptyAlert = WaitForOpenForm<MessageDlg>();
+            Assert.AreEqual(SettingsUIResources.BuildLibraryDlg_ValidateBuilder_You_must_specify_an_output_file_path, dirEmptyAlert.Text);
+            OkDialog(dirEmptyAlert, dirEmptyAlert.OkDialog);
+
             // PauseTest();
             RunUI(() =>
             {
@@ -385,7 +479,8 @@ namespace TestPerf
                 buildLibraryDlg.ComboBuildLibraryTarget = buildTarget;
                 buildLibraryDlg.ComboLearnFrom = learnFrom;
                 buildLibraryDlg.Carafe = true;
-                if (iRTtype != null) buildLibraryDlg.IrtStandard = iRTtype;
+                if (iRTtype != null) 
+                    buildLibraryDlg.IrtStandard = iRTtype;
 
                 buildLibraryDlg.OkWizardPage();
                 buildLibraryDlg.OkWizardPage();

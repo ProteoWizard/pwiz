@@ -90,6 +90,8 @@ namespace TestPerf
         protected override void DoTest()
         {
             TestEmptyDocumentMessage();
+            TestEmptyNameMessage();
+            TestEmptyPathMessage();
             
             RunUI(() => OpenDocument(TestFilesDir.GetTestPath(@"Rat_plasma.sky")));
 
@@ -140,6 +142,49 @@ namespace TestPerf
                 AssertEx.IsTrue(PythonInstaller.DeleteToolsPythonDirectory());
         }
 
+        private void TestEmptyNameMessage()
+        {
+            var peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
+            var buildLibraryDlg = ShowDialog<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg);
+
+            RunUI(() =>
+            {
+                buildLibraryDlg.AlphaPeptDeep = true;
+            });
+
+            RunDlg<AlertDlg>(buildLibraryDlg.OkWizardPage, dlg =>
+            {
+                Assert.AreEqual(String.Format(Resources.MessageBoxHelper_ValidateNameTextBox__0__cannot_be_empty, "Name"),
+                    dlg.Message);
+                dlg.OkDialog();
+            });
+
+            OkDialog(buildLibraryDlg, buildLibraryDlg.CancelDialog);
+            OkDialog(peptideSettings, peptideSettings.OkDialog);
+        }
+
+        private void TestEmptyPathMessage()
+        {
+            var peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
+            var buildLibraryDlg = ShowDialog<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg);
+
+            RunUI(() =>
+            {
+                buildLibraryDlg.LibraryName = "No peptides prediction";
+                buildLibraryDlg.AlphaPeptDeep = true;
+            });
+
+            RunDlg<MessageDlg>(buildLibraryDlg.OkWizardPage, dlg =>
+            {
+                Assert.AreEqual(SettingsUIResources.BuildLibraryDlg_ValidateBuilder_You_must_specify_an_output_file_path,
+                    dlg.Message);
+                dlg.OkDialog();
+            });
+
+            OkDialog(buildLibraryDlg, buildLibraryDlg.CancelDialog);
+            OkDialog(peptideSettings, peptideSettings.OkDialog);
+        }
+
         private void TestEmptyDocumentMessage()
         {
             var peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
@@ -179,6 +224,7 @@ namespace TestPerf
             IrtStandard iRTtype = null)
         {
             var buildLibraryDlg = ShowDialog<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg);
+
             RunUI(() =>
             {
                 buildLibraryDlg.LibraryName = libraryName;
