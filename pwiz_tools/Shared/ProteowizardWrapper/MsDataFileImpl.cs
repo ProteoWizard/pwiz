@@ -1661,10 +1661,14 @@ namespace pwiz.ProteowizardWrapper
             if (count == 0)
                 return ImmutableList<ImmutableList<MsPrecursor>>.EMPTY;
             // Most MS/MS spectra will have a single MS1 precursor
-            else if (spectrumPrecursors.Count == 1 && GetMsLevel(spectrumPrecursors[0]) == 1)
+            else if (spectrumPrecursors.Count == 1)
             {
-                var msPrecursor = CreatePrecursor(spectrumPrecursors[0], negativePolarity);
-                return ImmutableList.Singleton(ImmutableList.Singleton(msPrecursor));
+                using var precursor = spectrumPrecursors[0];
+                if (GetMsLevel(precursor) == 1)
+                {
+                    var msPrecursor = CreatePrecursor(precursor, negativePolarity);
+                    return ImmutableList.Singleton(ImmutableList.Singleton(msPrecursor));
+                }
             }
             return ImmutableList.ValueOf(GetPrecursorsByMsLevel(spectrumPrecursors, negativePolarity));
         }
@@ -1696,9 +1700,9 @@ namespace pwiz.ProteowizardWrapper
                 IsolationWindowUpper = GetIsolationWindowValue(p, CVID.MS_isolation_window_upper_offset),
             };
             var cvidDissociationMethod = GetPrecursorDissociationMethod(p);
-            if (cvidDissociationMethod.HasValue)
+            if (cvidDissociationMethod.Count > 0)
             {
-                msPrecursor.DissociationMethod = CV.cvTermInfo(cvidDissociationMethod.Value).shortName();
+                msPrecursor.DissociationMethod = string.Join(" ", cvidDissociationMethod.Select(cvid => CV.cvTermInfo(cvid).shortName()));
             }
             return msPrecursor;
         }
@@ -1792,19 +1796,31 @@ namespace pwiz.ProteowizardWrapper
             return null;
         }
 
-        private static CVID? GetPrecursorDissociationMethod(Precursor precursor)
+        private static IList<CVID> GetPrecursorDissociationMethod(Precursor precursor)
         {
-            foreach (var cvParam in (IEnumerable<CVParam>) precursor.activation.cvParams ?? Array.Empty<CVParam>())
+            if (true)
             {
-                using (cvParam)
+                var list = new List<CVID>();
+                // TODO (nicksh): This code leaks
+                foreach (var cvParam in precursor.activation.cvParamChildren(CVID.MS_dissociation_method))
                 {
-                    if (CV.cvIsA(cvParam.cvid, CVID.MS_dissociation_method))
+                    using (cvParam)
                     {
-                        return cvParam.cvid;
+                        list.Add(cvParam.cvid);
                     }
                 }
+
+                return list;
             }
-            return null;
+            else
+            {
+                var cvParam = precursor.activation.cvParamChild(CVID.MS_dissociation_method);
+                if (cvParam.cvid == CVID.CVID_Unknown)
+                {
+                    return Array.Empty<CVID>();
+                }
+                return new []{cvParam.cvid};
+            }
         }
 
         public void Write(string path)
