@@ -116,7 +116,7 @@ namespace pwiz.Skyline.Model.Results
             int lastIndex = CollectionUtil.BinarySearch(Times, (float)maxTime);
             if (lastIndex < 0)
             {
-                lastIndex = ~lastIndex + 1;
+                lastIndex = ~lastIndex - 1;
                 lastIndex = Math.Min(lastIndex, Times.Count- 1);
             }
             if (firstIndex >= lastIndex)
