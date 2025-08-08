@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using pwiz.CLI.cv;
 using pwiz.CLI.data;
@@ -1205,9 +1206,10 @@ namespace pwiz.ProteowizardWrapper
                 {
                     if (msPrecursor.IsolationMz.HasValue)
                     {
-                        var spectrumPrecursor =
-                            new SpectrumPrecursor(msPrecursor.IsolationMz.Value).ChangeCollisionEnergy(msPrecursor
-                                .PrecursorCollisionEnergy);
+                        var spectrumPrecursor = new SpectrumPrecursor(msPrecursor.IsolationMz.Value)
+                            .ChangeCollisionEnergy(msPrecursor.PrecursorCollisionEnergy)
+                            .ChangeDissociationMethod(msPrecursor.DissociationMethod);
+                        
                         if (msPrecursor.IsolationWindowLower.HasValue && msPrecursor.IsolationWindowUpper.HasValue)
                         {
                             spectrumPrecursor = spectrumPrecursor.ChangeIsolationWindowWidth(
@@ -1659,10 +1661,14 @@ namespace pwiz.ProteowizardWrapper
             if (count == 0)
                 return ImmutableList<ImmutableList<MsPrecursor>>.EMPTY;
             // Most MS/MS spectra will have a single MS1 precursor
-            else if (spectrumPrecursors.Count == 1 && GetMsLevel(spectrumPrecursors[0]) == 1)
+            else if (spectrumPrecursors.Count == 1)
             {
-                var msPrecursor = CreatePrecursor(spectrumPrecursors[0], negativePolarity);
-                return ImmutableList.Singleton(ImmutableList.Singleton(msPrecursor));
+                using var precursor = spectrumPrecursors[0];
+                if (GetMsLevel(precursor) == 1)
+                {
+                    var msPrecursor = CreatePrecursor(precursor, negativePolarity);
+                    return ImmutableList.Singleton(ImmutableList.Singleton(msPrecursor));
+                }
             }
             return ImmutableList.ValueOf(GetPrecursorsByMsLevel(spectrumPrecursors, negativePolarity));
         }
@@ -1683,7 +1689,7 @@ namespace pwiz.ProteowizardWrapper
 
         private static MsPrecursor CreatePrecursor(Precursor p, bool negativePolarity)
         {
-            return new MsPrecursor
+            var msPrecursor = new MsPrecursor
             {
                 PrecursorMz = GetPrecursorMz(p, negativePolarity),
                 PrecursorCollisionEnergy = GetPrecursorCollisionEnergy(p),
@@ -1693,6 +1699,12 @@ namespace pwiz.ProteowizardWrapper
                 IsolationWindowLower = GetIsolationWindowValue(p, CVID.MS_isolation_window_lower_offset),
                 IsolationWindowUpper = GetIsolationWindowValue(p, CVID.MS_isolation_window_upper_offset),
             };
+            var cvidDissociationMethod = GetPrecursorDissociationMethod(p);
+            if (cvidDissociationMethod.Count > 0)
+            {
+                msPrecursor.DissociationMethod = string.Join(" ", cvidDissociationMethod.Select(cvid => CV.cvTermInfo(cvid).shortName()));
+            }
+            return msPrecursor;
         }
 
         private static int GetMsLevel(Precursor precursor)
@@ -1782,6 +1794,33 @@ namespace pwiz.ProteowizardWrapper
             if (!term.empty())
                 return term.value;
             return null;
+        }
+
+        private static IList<CVID> GetPrecursorDissociationMethod(Precursor precursor)
+        {
+            if (true)
+            {
+                var list = new List<CVID>();
+                // TODO (nicksh): This code leaks
+                foreach (var cvParam in precursor.activation.cvParamChildren(CVID.MS_dissociation_method))
+                {
+                    using (cvParam)
+                    {
+                        list.Add(cvParam.cvid);
+                    }
+                }
+
+                return list;
+            }
+            else
+            {
+                var cvParam = precursor.activation.cvParamChild(CVID.MS_dissociation_method);
+                if (cvParam.cvid == CVID.CVID_Unknown)
+                {
+                    return Array.Empty<CVID>();
+                }
+                return new []{cvParam.cvid};
+            }
         }
 
         public void Write(string path)
@@ -1875,6 +1914,7 @@ namespace pwiz.ProteowizardWrapper
                 return null;
             }
         }
+        public string DissociationMethod { get; set; }
     }
 
     public sealed class MsDataSpectrum

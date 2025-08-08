@@ -71,6 +71,7 @@ namespace pwiz.Skyline.Model
                         (precursor.IsolationMz + precursor.IsolationWindowUpper).Value.RawValue.ToString(Formats.Mz),
                         precursor.IsolationWindowLower.Value.ToString(Formats.Mz), 
                         precursor.IsolationWindowUpper.Value.ToString(Formats.Mz));
+                res.DissociationMethod = precursor.DissociationMethod;
             }
 
             res.RetentionTime = spectrum.RetentionTime.HasValue ? spectrum.RetentionTime.Value.ToString(Formats.RETENTION_TIME) : null;
@@ -112,6 +113,7 @@ namespace pwiz.Skyline.Model
         [Category("PrecursorInfo")] public string CCS { get; set; }
         [Category("PrecursorInfo")] public string IonMobility { get; set; }
         [Category("PrecursorInfo")] public string IsolationWindow { get; set; }
+        [Category("PrecursorInfo")] public string DissociationMethod { get; set; }
         [Category("AcquisitionInfo")] public string IonMobilityRange { get; set; }
         [Category("AcquisitionInfo")] public string IonMobilityFilterRange { get; set; }
         [Category("PrecursorInfo")] public string HighEnergyOffset { get; set; }
