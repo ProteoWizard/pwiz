@@ -164,7 +164,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             if (id == null)
                 return false;
 
-            var type = _modificationSupport[id.Value];
+            var type = GetModificationType(id.Value);
             if (type == null)
             {
                 return false;
@@ -177,7 +177,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             if (id == null)
                 return false;
 
-            var type = _modificationSupport[id.Value];
+            var type = GetModificationType(id.Value);
             if (type == null)
             {
                 return false;
@@ -190,7 +190,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             if (id == null)
                 return false;
 
-            var type = _modificationSupport[id.Value];
+            var type = GetModificationType(id.Value);
             if (type == null)
             {
                 return false;

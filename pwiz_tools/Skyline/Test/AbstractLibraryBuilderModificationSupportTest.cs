@@ -57,14 +57,14 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(Support._modificationSupport.Count, 4); // TestMod1, TestMod2, TestMod3, TestMod4
 
             var nullId = 0;
-            var supportNull = Support._modificationSupport[nullId];
+            var supportNull = Support.GetModificationType(nullId);
 
             Assert.IsNull(supportNull);
 
-            var support0 = Support._modificationSupport[MODEL_SUPPORTED_MODS[0].Id];
-            var support1 = Support._modificationSupport[MODEL_SUPPORTED_MODS[1].Id];
-            var support2 = Support._modificationSupport[MODEL_SUPPORTED_MODS[2].Id];
-            var support3 = Support._modificationSupport[MODEL_SUPPORTED_MODS[3].Id];
+            var support0 = Support.GetModificationType(MODEL_SUPPORTED_MODS[0].Id);
+            var support1 = Support.GetModificationType(MODEL_SUPPORTED_MODS[1].Id);
+            var support2 = Support.GetModificationType(MODEL_SUPPORTED_MODS[2].Id);
+            var support3 = Support.GetModificationType(MODEL_SUPPORTED_MODS[3].Id);
 
             Assert.IsNotNull(support0);
             Assert.IsNotNull(support1);
