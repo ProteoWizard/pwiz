@@ -1023,7 +1023,14 @@ namespace pwiz.Skyline.Model.Lib
         public virtual IList<double>[] GetRetentionTimesWithSequences(IEnumerable<string> spectrumSourceFiles,
             ICollection<Target> targets)
         {
-            return null;
+            var result = new List<IList<double>>();
+            foreach (var file in spectrumSourceFiles)
+            {
+                int? fileIndex = null;
+                result.Add(GetRetentionTimesWithSequences(file, targets, ref fileIndex).ToList());
+            }
+
+            return result.ToArray();
         }
 
         public IList<double> GetRetentionTimes(MsDataFileUri fileUri, ICollection<Target> targets)
