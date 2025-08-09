@@ -1706,6 +1706,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 0, // startPeakIndex
                 0, // startscoreindex
                 0,// maxPeakIndex
+                null, // maxPeakScore
                 chromGroup.Times.Length, // numPoints
                 0, // compressedSize
                 0, // uncompressedsize

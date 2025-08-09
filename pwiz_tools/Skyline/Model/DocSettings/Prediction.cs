@@ -301,6 +301,10 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public bool IsAutoCalcRequired(SrmDocument document, SrmDocument previous)
         {
+            if (true == Calculator?.IsAlignmentOnly)
+            {
+                return false;
+            }
             // Any time there is no regression information, an auto-calc is required
             // unless the document has no results
             if (Conversion == null)
@@ -582,12 +586,12 @@ namespace pwiz.Skyline.Model.DocSettings
             return result;
         }
 
-            /// <summary>
-            /// Calculates and returns the best regression, along with all the other regressions.
-            /// Although all regression are calculated on a separate thread, this function will wait for them to comeplete
-            /// and should therefore also be called on a non-UI thread.
-            /// </summary>
-            public static CalculateRegressionSummary CalcBestRegressionBackground(string name, IList<RetentionScoreCalculatorSpec> calculators, IList<MeasuredRetentionTime> measuredPeptides,
+        /// <summary>
+        /// Calculates and returns the best regression, along with all the other regressions.
+        /// Although all regression are calculated on a separate thread, this function will wait for them to complete
+        /// and should therefore also be called on a non-UI thread.
+        /// </summary>
+        public static CalculateRegressionSummary CalcBestRegressionBackground(string name, IList<RetentionScoreCalculatorSpec> calculators, IList<MeasuredRetentionTime> measuredPeptides,
             RetentionTimeScoreCache scoreCache,
             bool allPeptides,
             RegressionMethodRT regressionMethod,
@@ -942,7 +946,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     // Recalculate values for the indexes that were not used to generate
                     // the current regression.
                     var peptideTime = variableTargetPeptides[i];
-                    double score = scoreCache.CalcScore(Calculator, peptideTime.PeptideSequence);
+                    double score = scoreCache?.CalcScore(Calculator, peptideTime.PeptideSequence) ?? Calculator.ScoreSequence(peptideTime.PeptideSequence) ?? unknownScore;
                     delta = double.MaxValue;
                     if (score != unknownScore && !zeroRt)
                     {
@@ -1091,29 +1095,6 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
-        public void RecalculateCalcCache(RetentionScoreCalculatorSpec calculator, CancellationToken token)
-        {
-            var calcCache = _cache[calculator.Name];
-            if(calcCache != null)
-            {
-                try
-                {
-                    var newCalcCache = new Dictionary<Target, double>();
-                    foreach (var key in calcCache.Keys)
-                    {
-                        //force recalculation
-                        newCalcCache.Add(key, CalcScore(calculator, key, null));
-                        ProgressMonitor.CheckCanceled(token);
-                    }
-
-                    _cache[calculator.Name] = newCalcCache;
-                }
-                catch (OperationCanceledException)
-                {
-                }
-            }
-        }
-
         public double CalcScore(IRetentionScoreCalculator calculator, Target peptide)
         {
             Dictionary<Target, double> cacheCalc;
@@ -1132,7 +1113,7 @@ namespace pwiz.Skyline.Model.DocSettings
             foreach (var pep in peptides)
             {
                 result.Add(CalcScore(calculator, pep, cacheCalc));
-                ProgressMonitor.CheckCanceled(token);
+                token.ThrowIfCancellationRequested();
             }
             return result;
         }
@@ -1194,6 +1175,8 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         public virtual bool IsUsable { get { return true; } }
+
+        public virtual bool IsAlignmentOnly { get { return false; } }
 
         public virtual RetentionScoreCalculatorSpec Initialize(IProgressMonitor loadMonitor)
         {

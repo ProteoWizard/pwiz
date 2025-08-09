@@ -130,6 +130,7 @@ namespace pwiz.Skyline.Model.Serialization
             float? isotopeDotProduct = reader.GetNullableFloatAttribute(ATTR.isotope_dotp);
             float? qvalue = reader.GetNullableFloatAttribute(ATTR.qvalue);
             float? zscore = reader.GetNullableFloatAttribute(ATTR.zscore);
+            float? originalScore = reader.GetNullableFloatAttribute(ATTR.original_score);
             var annotations = Annotations.EMPTY;
             if (!reader.IsEmptyElement)
             {
@@ -145,7 +146,7 @@ namespace pwiz.Skyline.Model.Serialization
             const UserSet userSet = UserSet.FALSE;
             var transitionGroupIonMobilityInfo = TransitionGroupIonMobilityInfo.GetTransitionGroupIonMobilityInfo(ccs,
                 ionMobilityMS1, ionMobilityFragment, ionMobilityWindow, ionMobilityUnits);
-            return new TransitionGroupChromInfo(fileInfo.FileId,
+            var transitionGroupChromInfo = new TransitionGroupChromInfo(fileInfo.FileId,
                 optimizationStep,
                 peakCountRatio,
                 retentionTime,
@@ -165,6 +166,29 @@ namespace pwiz.Skyline.Model.Serialization
                 zscore,
                 annotations,
                 userSet);
+            var originalPeak = ReadScoredPeak(reader, EL.original_peak);
+            var reintegratedPeak = ReadScoredPeak(reader, EL.reintegrated_peak);
+            if (originalScore != null)
+            {
+                originalPeak ??= new ScoredPeakBounds(transitionGroupChromInfo.RetentionTime.Value,
+                    transitionGroupChromInfo.StartRetentionTime.Value, transitionGroupChromInfo.EndRetentionTime.Value,
+                    originalScore.Value);
+            }
+            transitionGroupChromInfo = transitionGroupChromInfo.ChangeOriginalPeak(originalPeak)
+                .ChangeReintegratedPeak(reintegratedPeak);
+            return transitionGroupChromInfo;
+        }
+
+        private ScoredPeakBounds ReadScoredPeak(XmlReader reader, string el)
+        {
+            if (!reader.IsStartElement(el))
+            {
+                return null;
+            }
+
+            var scoredPeak = new ScoredPeakBounds(reader.GetFloatAttribute(ATTR.retention_time), reader.GetFloatAttribute(ATTR.start_time), reader.GetFloatAttribute(ATTR.end_time), reader.GetFloatAttribute(ATTR.score));
+            reader.Skip();
+            return scoredPeak;
         }
 
         private static eIonMobilityUnits GetAttributeMobilityUnits(XmlReader reader, string attrName, ChromFileInfo fileInfo)

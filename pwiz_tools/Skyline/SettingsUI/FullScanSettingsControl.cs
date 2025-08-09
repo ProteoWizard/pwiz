@@ -1242,8 +1242,7 @@ namespace pwiz.Skyline.SettingsUI
                             .FullScanSettingsControl_UpdateRetentionTimeFilterUi_This_document_does_not_contain_any_spectral_libraries_;
                     }
                     else if (document.Molecules.All(peptide =>
-                                 document.Settings.GetUnalignedRetentionTimes(peptide.SourceUnmodifiedTarget,
-                                     peptide.SourceExplicitMods).Length == 0))
+                                 document.Settings.GetUnalignedRetentionTimes(document.Settings.GetTargets(peptide).ToList()).Length == 0))
                     {
                         strTimeAroundMs2IdsWarning = SettingsUIResources
                             .FullScanSettingsControl_UpdateRetentionTimeFilterUi_None_of_the_spectral_libraries_in_this_document_contain_any_retention_times_for_any_of_the_peptides_in_this_document_;

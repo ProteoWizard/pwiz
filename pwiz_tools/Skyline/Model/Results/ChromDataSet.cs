@@ -87,7 +87,7 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromData BestChromatogram
         {
-            get { return _listChromData.FirstOrDefault(c => c.ParticipatesInScoring) ?? _listChromData[0]; }
+            get { return _listChromData.FirstOrDefault(c => c.ParticipatesInScoring) ?? _listChromData.FirstOrDefault(); }
         }
 
         public IList<ChromData> Chromatograms { get { return _listChromData; } }
@@ -195,63 +195,71 @@ namespace pwiz.Skyline.Model.Results
                 {
                     return ChromatogramGroupId.ForPeptide(NodeGroups.FirstOrDefault()?.Item1, NodeGroups.FirstOrDefault()?.Item2);
                 }
-                return _listChromData.Count > 0 ? BestChromatogram.Key.ChromatogramGroupId : null;
+                return BestChromatogram?.Key.ChromatogramGroupId;
             }
         }
 
         public SignedMz PrecursorMz
         {
-            get { return _listChromData.Count > 0 ? BestChromatogram.Key.Precursor : SignedMz.ZERO; }
+            get { return BestChromatogram?.Key.Precursor ?? SignedMz.ZERO; }
         }
 
         public double? CollisionalCrossSectionSqA
         {
-            get { return _listChromData.Count > 0 ? BestChromatogram.Key.CollisionalCrossSectionSqA : null; }
+            get { return BestChromatogram?.Key.CollisionalCrossSectionSqA; }
         }
 
         public eIonMobilityUnits IonMobilityUnits
         {
-            get { return _listChromData.Count > 0 ? BestChromatogram.Key.IonMobilityUnits : eIonMobilityUnits.none; }
+            get { return BestChromatogram?.Key.IonMobilityUnits ?? eIonMobilityUnits.none; }
         }
 
         public bool IsSonarData
         {
-            get { return _listChromData.Count > 0 && BestChromatogram.Key.IonMobilityFilter.IonMobilityUnits == eIonMobilityUnits.waters_sonar; }
+            get { return BestChromatogram?.Key.IonMobilityFilter.IonMobilityUnits == eIonMobilityUnits.waters_sonar; }
         }
 
         public ChromExtractor Extractor
         {
-            get { return _listChromData.Count > 0 ? BestChromatogram.Key.Extractor : ChromExtractor.summed; }
+            get { return BestChromatogram?.Key.Extractor ?? ChromExtractor.summed; }
         }
 
         public float ExtractionWidth
         {
-            get { return _listChromData.Count > 0 ? BestChromatogram.Key.ExtractionWidth : 0; }
+            get { return BestChromatogram?.Key.ExtractionWidth ?? 0; }
         }
 
         public int StatusId
         {
-            get { return _listChromData.Count > 0 ? BestChromatogram.Extra?.StatusId ?? -1 : -1; }
+            get { return BestChromatogram?.Extra?.StatusId ?? -1; }
         }
 
         public int StatusRank
         {
-            get { return _listChromData.Count > 0 ? BestChromatogram.Extra?.StatusRank ?? -1 : -1; }
+            get { return BestChromatogram?.Extra?.StatusRank ?? -1; }
         }
 
         public int CountPeaks
         {
-            get { return _listChromData.Count > 0 ? BestChromatogram.Peaks.Count : 0; }
+            get { return BestChromatogram?.Peaks.Count ?? 0; }
         }
 
         public int MaxPeakIndex
         {
-            get { return _listChromData.Count > 0 ? BestChromatogram.MaxPeakIndex : -1; }
+            get { return BestChromatogram?.MaxPeakIndex ?? -1; }
+        }
+
+        public float? MaxPeakScore
+        {
+            get
+            {
+                return BestChromatogram?.MaxPeakScore;
+            }
         }
 
         public IList<float> Times
         {
-            get { return _listChromData.Count > 0 ? BestChromatogram.Times : new float[0]; }
+            get { return BestChromatogram?.Times ?? Array.Empty<float>(); }
         }
 
         public IList<float>[] Intensities
@@ -814,7 +822,7 @@ namespace pwiz.Skyline.Model.Results
                     peak.Data.Peaks.Add(peak.DataPeak);
                     // Set the max peak index on the data for each transition
                     if (i == 0)
-                        peak.Data.MaxPeakIndex = maxPeakIndex;
+                        peak.Data.SetMaxPeak(maxPeakIndex, (float) peakSet.CombinedScore);
                 }
                 ++i;
             }   
@@ -1443,6 +1451,7 @@ namespace pwiz.Skyline.Model.Results
                 Count,
                 CountPeaks,
                 MaxPeakIndex,
+                MaxPeakScore,
                 compressedSize,
                 uncompressedSize,
                 groupOfTimeIntensities.NumInterpolatedPoints,

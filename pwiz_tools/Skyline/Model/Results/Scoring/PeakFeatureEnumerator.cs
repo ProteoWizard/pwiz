@@ -87,7 +87,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     }
                 }
                 peakFeatureLists[i] = peakFeatureList.ToArray();
-            });
+            }, threadName:nameof(GetPeakFeatures));
 
             var result = new PeakTransitionGroupFeatures[peakFeatureCount];
             int peakFeatureCurrent = 0;
@@ -186,17 +186,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
                             features[i] = summaryPeakData.GetScore(context, calcs[i]);
                         }
 
-                        // CONSIDER: Peak features can take up a lot of space in large scale DIA
-                        //           It may be possible to save even more by using a smaller struct
-                        //           when times are not required, which they are only for export
-                        float retentionTime = 0, startTime = 0, endTime = 0;
-                        if (verbose)
-                        {
-                            var peakTimes = summaryPeakData.RetentionTimeStatistics;
-                            retentionTime = peakTimes.RetentionTime;
-                            startTime = peakTimes.StartTime;
-                            endTime = peakTimes.EndTime;
-                        }
+                        var peakTimes = summaryPeakData.RetentionTimeStatistics;
+                        var retentionTime = peakTimes.RetentionTime;
+                        var startTime = peakTimes.StartTime;
+                        var endTime = peakTimes.EndTime;
+
                         int peakIndex = summaryPeakData.UsedBestPeakIndex
                             ? summaryPeakData.BestPeakIndex
                             : summaryPeakData.PeakIndex;
@@ -774,7 +768,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             FeatureScores features) : this()
         {
             OriginalPeakIndex = peakIndex;
-            // CONSIDER: This impacts memory consumption for large-scale DIA, and it is not clear anyone uses these
+            // These retention times are used by peak imputation
             RetentionTime = retentionTime;
             StartTime = startTime;
             EndTime = endTime;
