@@ -52,7 +52,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
         private const string BIN = @"bin";
         private const string INPUT = @"input";
         private const string TRAIN = @"train";
-        private const string CARAFE_VERSION = @"1.0.0";
+        private const string CARAFE_VERSION = @"1.1.2";
         private const string CARAFE_URI_NAME = @"carafe-";
         private const string CARAFE_DEV = @"-dev";
         private const string CARAFE_DEV_VERSION = ""; //@"-beta"; //CARAFE_DEV + @"-20250304T224833Z-001";
@@ -207,7 +207,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             return new PythonInstaller(packages, writer, CARAFE);
         }
 
-        private static string CARAFE_JAR_URI => @"https://github.com/Noble-Lab/Carafe/releases/download/v1.0.0/";
+        private static string CARAFE_JAR_URI => @$"https://github.com/Noble-Lab/Carafe/releases/download/v{CARAFE_VERSION}/";
         private Uri CarafeJarZipDownloadUrl()
         {
             //return new Uri(@$"https://skyline.ms/_webdav/home/support/file%20sharing/%40files/carafe-{CARAFE_VERSION}{CARAFE_DEV_VERSION}{DOT_ZIP}");
@@ -573,6 +573,8 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             bool diann_training, 
             IrtStandard irtStandard, out string testLibraryOutputPath, out string builderLibraryOutputPath) : base(document, trainingDocument, irtStandard)
         {
+            //DefaultTestDevice = DeviceTypes.gpu;
+
             string rootProcessingDir = Path.GetDirectoryName(libOutPath);
             if (string.IsNullOrEmpty(rootProcessingDir))
                 throw new ArgumentException($@"CarafeLibraryBuilder libOutputPath {libOutPath} must be a full path.");
