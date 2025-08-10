@@ -397,7 +397,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         /// <param name="mods">String representation of mods contained.</param>
         /// <param name="modSites">String representation of modification sites.</param>
         /// <returns></returns>
-        protected internal PredictionSupport ValidateSequenceModifications(ModifiedSequence modifiedSequence, out string mods, out string modSites)
+        protected internal virtual PredictionSupport ValidateSequenceModifications(ModifiedSequence modifiedSequence, out string mods, out string modSites)
         {
             var modsBuilder = new StringBuilder();
             var modSitesBuilder = new StringBuilder();
