@@ -18,7 +18,6 @@
  */
 
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
 using pwiz.SkylineTestUtil;
@@ -53,18 +52,18 @@ namespace pwiz.SkylineTest
         public void PredictionSupportTest()
         {
             // Assert
-            Assert.IsNotNull(Support._predictionSupport);
-            Assert.AreEqual(Support._predictionSupport.Count, 4); // TestMod1, TestMod2, TestMod3, TestMod4
+            Assert.IsNotNull(Support._modificationSupport);
+            Assert.AreEqual(Support._modificationSupport.Count, 4); // TestMod1, TestMod2, TestMod3, TestMod4
 
             var nullId = 0;
-            var supportNull = Support._predictionSupport.FirstOrDefault(source => source.Id == nullId);
+            var supportNull = Support.GetModificationType(nullId);
 
             Assert.IsNull(supportNull);
 
-            var support0 = Support._predictionSupport.FirstOrDefault(source => source.Id == MODEL_SUPPORTED_MODS[0].Id);
-            var support1 = Support._predictionSupport.FirstOrDefault(source => source.Id == MODEL_SUPPORTED_MODS[1].Id);
-            var support2 = Support._predictionSupport.FirstOrDefault(source => source.Id == MODEL_SUPPORTED_MODS[2].Id);
-            var support3 = Support._predictionSupport.FirstOrDefault(source => source.Id == MODEL_SUPPORTED_MODS[3].Id);
+            var support0 = Support.GetModificationType(MODEL_SUPPORTED_MODS[0].Id);
+            var support1 = Support.GetModificationType(MODEL_SUPPORTED_MODS[1].Id);
+            var support2 = Support.GetModificationType(MODEL_SUPPORTED_MODS[2].Id);
+            var support3 = Support.GetModificationType(MODEL_SUPPORTED_MODS[3].Id);
 
             Assert.IsNotNull(support0);
             Assert.IsNotNull(support1);
@@ -89,8 +88,8 @@ namespace pwiz.SkylineTest
 
             var support = new LibraryBuilderModificationSupport(new List<ModificationType>());
 
-            Assert.IsNotNull(support._predictionSupport);
-            Assert.AreEqual(support._predictionSupport.Count, 0);
+            Assert.IsNotNull(support._modificationSupport);
+            Assert.AreEqual(support._modificationSupport.Count, 0);
         }
 
         [TestMethod]

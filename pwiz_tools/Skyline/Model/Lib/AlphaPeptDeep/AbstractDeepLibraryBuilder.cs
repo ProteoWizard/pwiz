@@ -40,6 +40,12 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             RetentionTime = retentionTime; 
             Ccs = ccs;
         }
+        public PredictionSupport(PredictionSupport other)
+        {
+            Fragmentation = other.Fragmentation;
+            RetentionTime = other.RetentionTime;
+            Ccs = other.Ccs;
+        }
 
         public static readonly PredictionSupport ALL = new PredictionSupport(true, true, true);
 
@@ -88,7 +94,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             Accession = id + @":" + name;
             Name = name;
             Comment = comment;
-            SupportedModels = supportedModels;
+            SupportedModels = supportedModels ?? PredictionSupport.NONE;
         }
         public int Id { get; private set; }
         public string Accession { get; private set; }
@@ -132,11 +138,18 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
     }
     public class LibraryBuilderModificationSupport
     {
-        internal List<ModificationType> _predictionSupport; //key is ModificationType.Index
+        internal Dictionary<int, ModificationType> _modificationSupport;
 
         public LibraryBuilderModificationSupport(List<ModificationType> supportedModifications)
         {
-            _predictionSupport = supportedModifications;
+            if (supportedModifications != null)
+            {
+                _modificationSupport = new Dictionary<int, ModificationType>();
+                foreach (var mod in supportedModifications)
+                {
+                    _modificationSupport[mod.Id] = mod;
+                }
+            }
         }
 
         public bool AreAllModelsSupported(int? id)
@@ -150,7 +163,8 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         {
             if (id == null)
                 return false;
-            var type = _predictionSupport.FirstOrDefault(mod => mod.Id == id);
+
+            var type = GetModificationType(id.Value);
             if (type == null)
             {
                 return false;
@@ -162,7 +176,8 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         {
             if (id == null)
                 return false;
-            var type = _predictionSupport.FirstOrDefault(mod => mod.Id == id);
+
+            var type = GetModificationType(id.Value);
             if (type == null)
             {
                 return false;
@@ -174,7 +189,8 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         {
             if (id == null)
                 return false;
-            var type = _predictionSupport.FirstOrDefault(mod => mod.Id == id);
+
+            var type = GetModificationType(id.Value);
             if (type == null)
             {
                 return false;
@@ -202,9 +218,11 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         }
 
         [CanBeNull]
-        private ModificationType GetModificationType(int id)
+        public ModificationType GetModificationType(int id)
         {
-            return _predictionSupport.FirstOrDefault(mod => mod.Id == id);
+            if (_modificationSupport.ContainsKey(id))
+                return _modificationSupport[id];
+            return null;
         }
 
         public bool PeptideHasOnlyMs2SupportedMod(string modifiedPeptide)
@@ -511,13 +529,9 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                     }
                     else
                     {
-                        if (!(libraryBuilderModificationSupport.IsMs2SupportedMod(mod.UnimodId) &&
-                              libraryBuilderModificationSupport.IsRtSupportedMod(mod.UnimodId) &&
-                              libraryBuilderModificationSupport.IsCcsSupportedMod(mod.UnimodId)))
-                            _warningModSupports[mod.Name] = new PredictionSupport(
-                                libraryBuilderModificationSupport.IsMs2SupportedMod(mod.UnimodId),
-                                libraryBuilderModificationSupport.IsRtSupportedMod(mod.UnimodId),
-                                libraryBuilderModificationSupport.IsCcsSupportedMod(mod.UnimodId));
+                        var support = libraryBuilderModificationSupport.GetModificationType(mod.UnimodId.Value)?.SupportedModels ?? PredictionSupport.NONE;
+                        if (!(Equals(support, PredictionSupport.ALL)))
+                            _warningModSupports[mod.Name] = new PredictionSupport(support);
                     }
                 }
             }
