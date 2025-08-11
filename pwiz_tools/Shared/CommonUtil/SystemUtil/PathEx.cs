@@ -168,8 +168,8 @@ namespace pwiz.Common.SystemUtil
         /// <summary>
         /// Returns a path with a long-path prefix. If the passed in path already has
         /// a long-path prefix it is returned as is. Otherwise, one is prepended.
+        /// </summary>
         /// <param name="path">Path to convert to long-path syntax. This must be a fully qualified path.</param>
-        /// </summary>  
         public static string ToLongPath(this string path)
         {
             if (path != null && path.StartsWith(PREFIX_LONG_PATH))
