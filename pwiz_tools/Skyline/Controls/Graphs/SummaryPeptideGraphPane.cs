@@ -64,7 +64,7 @@ namespace pwiz.Skyline.Controls.Graphs
             XAxis.Type = AxisType.Text;
         }
 
-        protected override int SelectedIndex
+        public override int SelectedIndex
         {
             get { return _graphData != null ? _graphData.SelectedIndex : -1; }
         }
