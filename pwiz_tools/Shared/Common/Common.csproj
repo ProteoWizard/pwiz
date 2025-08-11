@@ -478,6 +478,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\Editor\ManageViewsForm.resx">
       <DependentUpon>ManageViewsForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\Editor\SourceTab.resx">
       <DependentUpon>SourceTab.cs</DependentUpon>
