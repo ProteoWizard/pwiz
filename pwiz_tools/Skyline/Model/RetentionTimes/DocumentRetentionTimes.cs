@@ -421,7 +421,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
             {
                 var library = peptideLibraries.Libraries[iLibrary];
                 var libraryName = library?.Name ?? peptideLibraries.LibrarySpecs[iLibrary]?.Name;
-                if (libraryName == null)
+                if (libraryName == null || dict.ContainsKey(libraryName))
                 {
                     continue;
                 }
