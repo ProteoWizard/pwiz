@@ -368,7 +368,7 @@ namespace pwiz.SkylineTestTutorial
                 OkDialog(findDlg, findDlg.Close);
 
                 var findView = WaitForOpenForm<FindResultsForm>();
-                int expectedItems = IsFullData ? 228 : 151;
+                int expectedItems = IsFullData ? 230 : 153;
                 try
                 {
                     WaitForConditionUI(1000, () => findView.ItemCount == expectedItems);
@@ -610,9 +610,9 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(viewEditor, viewEditor.OkDialog);
 
             var pathTruncated = PropertyPath.Parse("Results!*.Value.CountTruncated");
-            int expectedItems = 86;
+            int expectedItems = 88;
             if (IsFullData)
-                expectedItems = 129;
+                expectedItems = 131;
             try
             {
                 WaitForConditionUI(1000, () => documentGrid.RowCount == expectedItems &&
@@ -1155,7 +1155,7 @@ namespace pwiz.SkylineTestTutorial
 
                 PauseForScreenShot<DocumentGridForm>("Document Grid with MissingData field");
 
-                int expectedRows = IsFullData ? 133 : 89;
+                int expectedRows = IsFullData ? 135 : 91;
                 const int expectedRowsAbbreviated = 221; // When not all of the tests are run
                 RunUI(() =>
                 {
@@ -1650,10 +1650,10 @@ namespace pwiz.SkylineTestTutorial
             {
                 PeakMatcherTestUtil.SelectAndApplyPeak("LNDGSQITFEK", null, "D_138_REP1", false, false, 23.5299);
                 PeakMatcherTestUtil.VerifyPeaks(MakeVerificationDictionary(
-                    23.45410, 22.77782, 23.11210, 23.19398, 22.88790, 23.00840,
-                    23.52992, 23.57400, 23.19233, 23.45998, 22.81207, 22.81960,
-                    23.87478, 23.68238, 23.03755, 22.89255, 22.69688, 23.04172,
-                    22.85375, 23.04702, 22.85068, 22.88932, 22.70258, 23.19258));
+                    23.4541, 22.77782, 23.1121, 23.19398, 22.8879, 23.0084, 
+                    23.52992, 23.574, 23.19233, 23.45998, 22.81207, 22.8196, 
+                    23.87478, 23.68238, 23.03755, 22.89255, 22.69688, 23.04172, 
+                    22.85375, 25.51052, 22.85068, 22.88932, 22.70258, 23.19258));
             });
             // Apply to subsequent
             RunUI(() =>
@@ -1699,10 +1699,10 @@ namespace pwiz.SkylineTestTutorial
             {
                 PeakMatcherTestUtil.SelectAndApplyPeak("LGGEEVSVAC[+57.0]K", null, "H_148_REP1", false, false, 13.6641);
                 PeakMatcherTestUtil.VerifyPeaks(MakeVerificationDictionary(
-                    14.30043, 13.79685, 13.79692, 13.79708, 14.33403, 14.90242,
-                    13.83123, 14.03223, 13.66342, 13.76475, 13.83022, 13.73013,
-                    14.33438, 13.83052, 14.70115, 13.66408, 13.63018, 13.69645,
-                    13.73080, 13.52982, 13.69677, 13.83090, 13.56257, 13.76500));
+                    14.30043, 13.79685, 13.79692, 13.79708, 14.33403, 14.90242, 
+                    13.76423, 14.03223, 13.66342, 13.76475, 13.83022, 13.73013, 
+                    14.33438, 13.83052, 14.70115, 13.66408, 13.63018, 13.69645, 
+                    13.7308, 13.52982, 13.69677, 13.8309, 13.56257, 13.765));
             });
 
             // For each test, a peak was picked and applied - undo two actions per test
