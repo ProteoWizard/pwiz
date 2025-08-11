@@ -1511,6 +1511,17 @@ namespace pwiz.Skyline.Model
                         Replace(TextUtil.SEPARATOR_TSV_STR, @" ");
                     errorList.Add(new TransitionImportErrorInfo(x.PlainMessage, x.ColumnIndex, x.LineNumber + 1, line));  // CONSIDER: worth the effort to pull row and column info from error message?
                 }
+                catch (Exception ex)
+                {
+                    if (ExceptionUtil.IsProgrammingDefect(ex))
+                    {
+                        throw; // Let it fall through so we hear about it on ExceptionWeb
+                    }
+                    else
+                    {
+                        errorList.Add(new TransitionImportErrorInfo(ex.Message, null, null, string.Empty));
+                    }
+                }
             }
             else
             {
@@ -1545,6 +1556,17 @@ namespace pwiz.Skyline.Model
                 catch (LineColNumberedIoException x)
                 {
                     errorList.Add(new TransitionImportErrorInfo(x));
+                }
+                catch (Exception ex)
+                {
+                    if (ExceptionUtil.IsProgrammingDefect(ex))
+                    {
+                        throw; // Let it fall through so we hear about it on ExceptionWeb
+                    }
+                    else
+                    {
+                        errorList.Add(new TransitionImportErrorInfo(ex.Message, null, null, string.Empty));
+                    }
                 }
             }
             return docNew;

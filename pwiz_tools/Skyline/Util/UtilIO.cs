@@ -433,7 +433,8 @@ namespace pwiz.Skyline.Util
             // Check to see if the file was modified, during the time
             // it was closed.
             if (IsModified)
-                throw new FileModifiedException(string.Format(UtilResources.PooledFileStream_Connect_The_file__0__has_been_modified_since_it_was_first_opened, FilePath));
+                throw new FileModifiedException(string.Format(UtilResources.PooledFileStream_Connect_The_file__0__has_been_modified_since_it_was_first_opened, FilePath) +
+                                                string.Format($@" ({ModifiedExplanation})"));
             // Create the stream
             return StreamManager.CreateStream(FilePath, FileMode.Open, Buffered);
         }
@@ -471,9 +472,20 @@ namespace pwiz.Skyline.Util
         {
             get
             {
-                if (!IsModified)
-                    return @"Unmodified";
-                return FileEx.GetElapsedTimeExplanation(FileTime, File.GetLastWriteTime(FilePath));
+                try
+                {
+                    if (!IsModified)
+                        return @"Unmodified";
+                    return @"file time - file last write time: " + FileEx.GetElapsedTimeExplanation(FileTime, File.GetLastWriteTime(FilePath));
+                }
+                catch (UnauthorizedAccessException e)
+                {
+                    return $@"UnauthorizedAccessException: {e.Message}";
+                }
+                catch (IOException e)
+                {
+                    return $@"IOException: {e.Message}";
+                }
             }
         }
 
