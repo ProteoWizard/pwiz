@@ -126,7 +126,7 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="radioSingle.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 69</value>
+    <value>13, 66</value>
   </data>
   <data name="radioSingle.Size" type="System.Drawing.Size, System.Drawing">
     <value>92, 17</value>
@@ -160,7 +160,7 @@ make sure your instrument can handle the full set of transitions.</value>
     <value>True</value>
   </data>
   <data name="radioProtein.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 93</value>
+    <value>13, 89</value>
   </data>
   <data name="radioProtein.Size" type="System.Drawing.Size, System.Drawing">
     <value>136, 17</value>
@@ -191,7 +191,7 @@ make sure your instrument can handle the number of transitions in each file.</va
     <value>True</value>
   </data>
   <data name="radioBuckets.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 117</value>
+    <value>13, 111</value>
   </data>
   <data name="radioBuckets.Size" type="System.Drawing.Size, System.Drawing">
     <value>104, 17</value>
@@ -217,6 +217,40 @@ make sure your instrument can handle the number of transitions in each file.</va
   <data name="&gt;&gt;radioBuckets.ZOrder" xml:space="preserve">
     <value>32</value>
   </data>
+
+  
+  <data name="wcDecideBuckets.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="wcDecideBuckets.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 134</value>
+  </data>
+  <data name="wcDecideBuckets.Size" type="System.Drawing.Size, System.Drawing">
+    <value>104, 17</value>
+  </data>
+  <data name="wcDecideBuckets.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="wcDecideBuckets.Text" xml:space="preserve">
+    <value>&amp;Let w_c decide</value>
+  </data>
+  <data name="wcDecideBuckets.ToolTip" xml:space="preserve">
+    <value>Create as many files as needed, given constraints on transition count.</value>
+  </data>
+  <data name="&gt;&gt;wcDecideBuckets.Name" xml:space="preserve">
+    <value>wcDecideBuckets</value>
+  </data>
+  <data name="&gt;&gt;wcDecideBuckets.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;wcDecideBuckets.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;wcDecideBuckets.ZOrder" xml:space="preserve">
+    <value>32</value>
+  </data>
+
+
   <data name="textMaxTransitions.Location" type="System.Drawing.Point, System.Drawing">
     <value>16, 174</value>
   </data>

@@ -487,7 +487,6 @@ namespace pwiz.Skyline.FileUI
                        Equals(type, ExportInstrumentType.WATERS_XEVO_TQ_MASS_LYNX) ||
                        Equals(type, ExportInstrumentType.WATERS_XEVO_QTOF) ||
                        Equals(type, ExportInstrumentType.WATERS_QUATTRO_PREMIER) ||
-                       Equals(type, ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT) ||
                        Equals(type, ExportInstrumentType.BRUKER_TOF) ||
                        Equals(type, ExportInstrumentType.BRUKER_TIMSTOF) ||
                        // LTQ can only schedule for inclusion lists, but then it always
@@ -557,6 +556,9 @@ namespace pwiz.Skyline.FileUI
                         break;
                     case ExportStrategy.Buckets:
                         radioBuckets.Checked = true;
+                        break;
+                    case ExportStrategy.WcDecide:
+                        wcDecideBuckets.Checked = true;
                         break;
                 }
             }
@@ -1423,8 +1425,8 @@ namespace pwiz.Skyline.FileUI
                 _exportProperties.ExportStrategy = ExportStrategy.Single;
             else if (radioProtein.Checked)
                 _exportProperties.ExportStrategy = ExportStrategy.Protein;
-            else
-                _exportProperties.ExportStrategy = ExportStrategy.Buckets;
+            else if (wcDecideBuckets.Checked)
+                _exportProperties.ExportStrategy = ExportStrategy.WcDecide;
             // ReSharper restore ConvertIfStatementToConditionalTernaryExpression
 
             _exportProperties.SortByMz = cbSortByMz.Checked;
@@ -1791,6 +1793,11 @@ namespace pwiz.Skyline.FileUI
             StrategyCheckChanged();
         }
 
+        private void wcDecideBuckets_CheckedChanged(object sender, EventArgs e)
+        {
+            StrategyCheckChanged();
+        }
+
         private bool IsDia
         {
             get
@@ -1889,6 +1896,7 @@ namespace pwiz.Skyline.FileUI
                         helpTip.SetToolTip(textTemplateFile, resources.GetString("textTemplateFile.ToolTip"));
                     }
                 }
+                wcDecideBuckets.Visible = true;
             }
             else
             {
@@ -1900,6 +1908,7 @@ namespace pwiz.Skyline.FileUI
                 EnableTextTemplateFileField(true);
                 var resources = new ComponentResourceManager(typeof(ExportMethodDlg));
                 helpTip.SetToolTip(textTemplateFile, resources.GetString("textTemplateFile.ToolTip"));
+                wcDecideBuckets.Visible = false;
             }
 
             var methodType = ExportMethodTypeExtension.GetEnum(comboTargetType.SelectedItem.ToString());
@@ -2308,10 +2317,12 @@ namespace pwiz.Skyline.FileUI
                        return;
 
                     
-                    var watersConnectUrl = dlgOpen.MethodUrl;
+                    var watersConnectUrl = (WatersConnectAcquisitionMethodUrl)dlgOpen.MethodUrl
+                        // Keep folder Id for the save method dialogue to work properly.
+                        .ChangeFolderOrSampleSetId((dlgOpen.CurrentDirectory as WatersConnectAcquisitionMethodUrl)?.FolderOrSampleSetId); 
                     textTemplateFile.Tag = watersConnectUrl;
                     textTemplateFile.Text = watersConnectUrl.GetFilePath() + RemoteUrl.PATH_SEPARATOR + watersConnectUrl.MethodName;
-                    helpTip.SetToolTip(textTemplateFile, watersConnectUrl.ToString());  // Show full URL string in the tooltip
+                    helpTip.SetToolTip(textTemplateFile, watersConnectUrl.FormattedString());  // Show full URL string in the tooltip
                 }
                 return;
             }

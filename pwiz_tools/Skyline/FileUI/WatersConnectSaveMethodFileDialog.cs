@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.Drawing;
 using System.Windows.Forms;
 using pwiz.CommonMsData.RemoteApi;
+using pwiz.CommonMsData.RemoteApi.WatersConnect;
 using pwiz.Skyline.Alerts;
 
 namespace pwiz.Skyline.FileUI
@@ -13,10 +15,64 @@ namespace pwiz.Skyline.FileUI
             : base(remoteAccounts, specificDataSourceFilter)
         {
             Text = string.Format(FileUIResources.ExportMethodDlg_OkDialog_Export__0__Method, InstrumentType);
+            actionButton.Text = FileUIResources.WatersConnectSaveMethodFileDialog_SaveButtonText;
         }
         protected override void DoMainAction()
         {
             Open();
+        }
+
+        protected override void OnCurrentDirectoryChange()
+        {
+            base.OnCurrentDirectoryChange();
+            SetButtonQue();
+        }
+
+        protected override void OnFileNameTyped()
+        {
+            base.OnFileNameTyped();
+            SetButtonQue();
+        }
+
+        private void SetButtonQue()
+        {
+            var currentDir = CurrentDirectory as WatersConnectUrl;
+            if (currentDir == null)
+                return;
+            var haveFolderId = currentDir.FolderOrSampleSetId != null;
+            var fileStatus = FileNameExists(sourcePathTextBox.Text);
+            bool canWrite = false;
+            if (RemoteSession is WatersConnectSession session && session.TryGetFolderByUrl(currentDir, out var folder))
+            {
+                canWrite = folder.CanWrite;
+            }
+
+            switch (fileStatus)
+            {
+                case FileStatus.file:   // File already exists, cannot export
+                    actionButton.Font = new Font(actionButton.Font, FontStyle.Bold); // Save not allowed
+                    actionButton.ForeColor = Color.Red;
+                    actionButton.Text = FileUIResources.WatersConnectSaveMethodFileDialog_SaveButtonText;
+                    return;
+                case FileStatus.folder: // Can always open a folder
+                    actionButton.Font = new Font(actionButton.Font, FontStyle.Regular);
+                    actionButton.ForeColor = SystemColors.ControlText;
+                    actionButton.Text = FileUIResources.WatersConnectSaveMethodFileDialog_OpenButtonText;
+                    return;
+                case FileStatus.does_not_exist:
+                    actionButton.Text = FileUIResources.WatersConnectSaveMethodFileDialog_SaveButtonText;
+                    if (!haveFolderId || !canWrite)     // Cannot save if root or no write permission.
+                    {
+                        actionButton.Font = new Font(actionButton.Font, FontStyle.Bold); // Save not allowed
+                        actionButton.ForeColor = Color.Red;
+                    }
+                    else
+                    {
+                        actionButton.Font = new Font(actionButton.Font, FontStyle.Regular);
+                        actionButton.ForeColor = SystemColors.ControlText;
+                    }
+                    return;
+            }
         }
 
         protected override bool ItemSelected(ListViewItem item)

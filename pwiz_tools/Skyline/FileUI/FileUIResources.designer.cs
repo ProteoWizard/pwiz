@@ -1813,11 +1813,47 @@ namespace pwiz.Skyline.FileUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Open.
+        /// </summary>
+        public static string WatersConnectSaveMethodFileDialog_OpenButtonText {
+            get {
+                return ResourceManager.GetString("WatersConnectSaveMethodFileDialog_OpenButtonText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Export.
+        /// </summary>
+        public static string WatersConnectSaveMethodFileDialog_SaveButtonText {
+            get {
+                return ResourceManager.GetString("WatersConnectSaveMethodFileDialog_SaveButtonText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Method name:.
+        /// </summary>
+        public static string WatersConnectSaveMethodFileDialog_SourcePathLabelText {
+            get {
+                return ResourceManager.GetString("WatersConnectSaveMethodFileDialog_SourcePathLabelText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Method {0} does not exist on this Waters Connect server. Please, select an existing method..
         /// </summary>
         public static string WatersConnectSelectMethodFileDialog_ItemSelected_Method__0__does_not_exist {
             get {
                 return ResourceManager.GetString("WatersConnectSelectMethodFileDialog_ItemSelected_Method__0__does_not_exist", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select.
+        /// </summary>
+        public static string WatersConnectSelectMethodFileDialog_SelectButtonText {
+            get {
+                return ResourceManager.GetString("WatersConnectSelectMethodFileDialog_SelectButtonText", resourceCulture);
             }
         }
     }

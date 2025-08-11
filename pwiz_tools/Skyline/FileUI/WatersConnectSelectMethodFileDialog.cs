@@ -36,6 +36,7 @@ namespace pwiz.Skyline.FileUI
             : base( remoteAccounts )
         {
             Text = string.Format(FileUIResources.OpenFileDialogNEWatersConnectMethod_Select_Template, InstrumentType);
+            actionButton.Text = FileUIResources.WatersConnectSelectMethodFileDialog_SelectButtonText;
         }
 
         public WatersConnectAcquisitionMethodUrl MethodUrl { get; private set; }

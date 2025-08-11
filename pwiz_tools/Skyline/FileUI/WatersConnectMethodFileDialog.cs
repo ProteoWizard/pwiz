@@ -18,12 +18,12 @@ namespace pwiz.Skyline.FileUI
         {
             InstrumentType = ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT;
             listView.MultiSelect = false;
-
             var acctList = remoteAccounts.OfType<WatersConnectAccount>().ToList();
             if (acctList.Count == 1)  // if there is only one account, set the initial directory to its root path
                 InitialDirectory = (acctList.First().GetRootUrl() as WatersConnectUrl)?.ChangeType(WatersConnectUrl.ItemType.folder_with_methods);
             else
                 InitialDirectory = RemoteUrl.EMPTY;
+            labelSourcePath.Text = FileUIResources.WatersConnectSaveMethodFileDialog_SourcePathLabelText;
         }
 
         protected override void CreateNewRemoteSession(RemoteAccount remoteAccount)
@@ -95,7 +95,7 @@ namespace pwiz.Skyline.FileUI
         {
             // take the current directory and combine it with the file name entered in the text box.
             // Make sure the entered string is a valid file name
-            // if not list items are selected check if the text box has a path
+            // if no list items are selected check if the text box has a path
             if (RemoteSession is WatersConnectSession watersSession) // if it is a remote open it remotely
             {
                 if (listView.SelectedItems.Count > 0)
@@ -135,6 +135,33 @@ namespace pwiz.Skyline.FileUI
                             DialogResult = DialogResult.OK;
                     }
                 }
+            }
+        }
+
+        protected enum FileStatus
+        {
+            folder,
+            file,
+            does_not_exist
+        }
+        protected FileStatus FileNameExists(string fileName)
+        {
+            // check if the file name exists in the list view
+            var item = listView.Items.Cast<ListViewItem>().FirstOrDefault(i => i.Text.Equals(fileName, StringComparison.CurrentCultureIgnoreCase));
+            if (item == null)
+                return FileStatus.does_not_exist;
+            if (DataSourceUtil.IsFolderType(item.SubItems[1].Text))
+                return FileStatus.folder;
+            return FileStatus.file;
+        }
+
+        protected override void OnCurrentDirectoryChange()
+        {
+            base.OnCurrentDirectoryChange();
+            if (RemoteSession is WatersConnectSession session && _currentDirectory is WatersConnectUrl currentDir)
+            {
+                if (session.TryGetFolderByUrl(currentDir, out var folder))
+                    _currentDirectory = currentDir.ChangeFolderOrSampleSetId(folder.Id);
             }
         }
 

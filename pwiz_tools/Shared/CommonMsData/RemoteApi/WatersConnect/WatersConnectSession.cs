@@ -85,6 +85,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             yield return new WatersConnectFolderObject(currentFolder, parentId, false);
         }
 
+        // TODO: [RC] Change into a method returning a folder and set the folder Id on the caller side
         public WatersConnectUrl SetUrlId(WatersConnectUrl url)
         {
             if (url.EncodedPath == null)
@@ -99,6 +100,21 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                 }
             }
             return url;
+        }
+        public bool TryGetFolderByUrl(WatersConnectUrl url, out WatersConnectFolderObject folder)
+        {
+            folder = null;
+            if (url.EncodedPath == null)
+                return false;
+            // CONSIDER: verify that the url is from the same server as the current session.
+            ImmutableList<WatersConnectFolderObject> folders;
+            if (TryGetData(GetRootContentsUrl(), out folders))
+            {
+                folder = folders.FirstOrDefault(f => f.Path.Equals(url.EncodedPath));
+                return true;
+            }
+
+            return false;
         }
 
         protected void EnsureSuccess(HttpResponseMessage response)

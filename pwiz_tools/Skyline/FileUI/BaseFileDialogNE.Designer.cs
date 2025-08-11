@@ -1,3 +1,5 @@
+using System;
+
 namespace pwiz.Skyline.FileUI
 {
     partial class BaseFileDialogNE
@@ -122,6 +124,7 @@ namespace pwiz.Skyline.FileUI
             this.sourcePathTextBox.Name = "sourcePathTextBox";
             this.sourcePathTextBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.sourcePathTextBox_KeyPress);
             this.sourcePathTextBox.KeyUp += new System.Windows.Forms.KeyEventHandler(this.sourcePathTextBox_KeyUp);
+            this.sourcePathTextBox.TextChanged += new EventHandler(sourcePathTextBox_TextChanged);
             // 
             // labelSourcePath
             // 
@@ -345,7 +348,7 @@ namespace pwiz.Skyline.FileUI
         #endregion
         private System.Windows.Forms.ComboBox lookInComboBox;
         private System.Windows.Forms.Label labelLookIn;
-        private System.Windows.Forms.Label labelSourcePath;
+        protected System.Windows.Forms.Label labelSourcePath;
         private System.Windows.Forms.ComboBox sourceTypeComboBox;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button cancelButton;

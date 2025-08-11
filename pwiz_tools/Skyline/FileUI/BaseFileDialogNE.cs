@@ -186,7 +186,9 @@ namespace pwiz.Skyline.FileUI
             RemoteSession = null;
         }
 
-        private MsDataFileUri _currentDirectory;
+        protected virtual void OnCurrentDirectoryChange() { }
+
+        protected MsDataFileUri _currentDirectory;
         public MsDataFileUri CurrentDirectory
         {
             get { return _currentDirectory; }
@@ -209,6 +211,7 @@ namespace pwiz.Skyline.FileUI
                 if (value != null)
                 {
                     _currentDirectory = value;
+                    OnCurrentDirectoryChange();
                     populateListViewFromDirectory(_currentDirectory);
                     populateComboBoxFromDirectory(_currentDirectory);
                 }
@@ -824,6 +827,12 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        protected virtual void OnFileNameTyped() {}
+
+        private void sourcePathTextBox_TextChanged(object sender, EventArgs e)
+        {
+            OnFileNameTyped();
+        }
         private void sourcePathTextBox_KeyPress(object sender, KeyPressEventArgs e)
         {
             listView.ItemSelectionChanged -= listView_ItemSelectionChanged;
@@ -857,7 +866,6 @@ namespace pwiz.Skyline.FileUI
 
         protected void OpenFolderItem(ListViewItem listViewItem)
         {
-            // TODO: [RC] Make sure the textbox is cleared when next folder is open
             OpenFolder(((SourceInfo) listViewItem.Tag).MsDataFileUri);
         }
 

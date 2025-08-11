@@ -106,7 +106,10 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
         
         public override IEnumerable<RemoteItem> ListContents(MsDataFileUri parentUrl)
         {
-            var watersConnectUrl = SetUrlId((WatersConnectUrl) parentUrl) ?? (WatersConnectUrl)parentUrl;
+
+            var watersConnectUrl = (WatersConnectUrl)parentUrl;
+            if (TryGetFolderByUrl(watersConnectUrl, out var folder))
+                watersConnectUrl = watersConnectUrl.ChangeFolderOrSampleSetId(folder.Id);
 
             ImmutableList<WatersConnectFolderObject> folders;
             if (TryGetData(GetRootContentsUrl(), out folders))
@@ -170,11 +173,12 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             //  v1.0 uses 'methodTypeId'
             //  v2.0 uses 'methodTypeIds' which is comma delimited entries
 
-            string id;
+            string id = "";
             if (string.IsNullOrEmpty(watersConnectUrl.FolderOrSampleSetId))
             {
                 // Try to retrieve the folder Id from the folder data
-                id = SetUrlId(watersConnectUrl)?.FolderOrSampleSetId ;
+                if (TryGetFolderByUrl(watersConnectUrl, out var folder))
+                    id = folder.Id ;
             }
             else
             {

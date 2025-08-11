@@ -23,6 +23,9 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
         [JsonProperty("templateMethodVersionId")]
         public string TemplateVersionId { get; set; }
 
+        [JsonProperty("multipleMethods")]
+        public string ServerDecidesOnBuckets { get; set; }
+
         [JsonProperty("targets")]
         public Target[] Targets { get; set; }
     }
