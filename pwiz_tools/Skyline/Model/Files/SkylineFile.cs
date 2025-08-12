@@ -112,6 +112,10 @@ namespace pwiz.Skyline.Model.Files
                 list.Add(files);
             }
 
+            // Always add the folder for Other Files
+            files = new OtherFilesFolder(DocumentContainer);
+            list.Add(files);
+
             return list;
         }
 

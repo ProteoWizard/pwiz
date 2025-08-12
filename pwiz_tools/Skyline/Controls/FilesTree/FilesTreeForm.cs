@@ -360,6 +360,8 @@ namespace pwiz.Skyline.Controls.FilesTree
             selectReplicateMenuItem.Visible = false;
             removeAllMenuItem.Visible = false;
             removeMenuItem.Visible = false;
+            addFileMenuItem.Visible = false;
+            removeFileMenuItem.Visible = false;
 
             // Only offer "Open Containing Folder" if (1) supported by this tree node
             // and (2) the file's state is "available"
@@ -379,6 +381,12 @@ namespace pwiz.Skyline.Controls.FilesTree
             {
                 case ReplicatesFolder _:
                     manageResultsMenuItem.Visible = true;
+                    return;
+                case OtherFilesFolder _:
+                    addFileMenuItem.Visible = true;
+                    return;
+                case BasicFile _:
+                    removeFileMenuItem.Visible = true;
                     return;
                 case Replicate _:
                 case ReplicateSampleFile _:
@@ -468,6 +476,26 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             var selection = FilesTree.SelectedNodes.Cast<FilesTreeNode>().ToList();
             RemoveSelected(selection);
+        }
+
+        private void FilesTree_AddFileMenuItem(object sender, EventArgs e)
+        {
+
+        }
+
+        private void FilesTree_RemoveFileMenuItem(object sender, EventArgs e)
+        {
+            var result = ConfirmDelete(FilesTreeResources.FilesTreeForm_Confirm_RemoveFile);
+            if (result == DialogResult.Yes)
+            {
+                var selectedNode = (FilesTreeNode)FilesTree.SelectedNode;
+                var selectedFileModel = (BasicFile)selectedNode.Model;
+
+                // TODO: improve FilesTree.Folder<> API to avoid cast
+                var filesFolder = (OtherFilesFolder)filesTree.Folder<OtherFilesFolder>().Model;
+
+                SkylineWindow.ModifyDocument(FilesTreeResources.OtherFiles_RemoveFile, DocumentModifier.Create(doc => filesFolder.Delete(doc, selectedFileModel)));
+            }
         }
 
         // FilesTree => initiate drag-and-drop, hide tooltips 

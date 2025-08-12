@@ -694,13 +694,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             if (node.IsExpanded)
                 return true;
 
-            foreach (TreeNode child in node.Nodes)
-            {
-                if (IsAnyNodeExpanded(child))
-                    return true;
-            }
-
-            return false;
+            return node.Nodes.Cast<TreeNode>().Any(IsAnyNodeExpanded);
         }
 
         // TODO: unit tests

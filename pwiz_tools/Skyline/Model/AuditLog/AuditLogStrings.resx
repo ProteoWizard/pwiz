@@ -711,4 +711,7 @@ For reference, the audit log is located here: "{0}"</value>
   <data name="files_tree_background_proteome_update" xml:space="preserve">
     <value>Edited background proteome named {0} from the Files window</value>
   </data>
+  <data name="files_tree_otherfiles_remove_one" xml:space="preserve">
+    <value>Removed file {0} in the Files window</value>
+  </data>
 </root>

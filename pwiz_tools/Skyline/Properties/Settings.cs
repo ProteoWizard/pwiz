@@ -49,11 +49,13 @@ using pwiz.Common.Collections;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
+using pwiz.Skyline.Model.Files.Doc;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lists;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Util.Extensions;
+using File = System.IO.File;
 
 namespace pwiz.Skyline.Properties
 {    
@@ -3164,7 +3166,8 @@ namespace pwiz.Skyline.Properties
                     TransitionIonMobilityFiltering.EMPTY
                 ),
                 DataSettings.DEFAULT,
-                DocumentRetentionTimes.EMPTY
+                DocumentRetentionTimes.EMPTY,
+                Files.DEFAULT
             );
 
         public static string DefaultName
