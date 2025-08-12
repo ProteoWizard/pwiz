@@ -255,6 +255,9 @@
   <data name="AlphaPeptDeep_Settings" xml:space="preserve">
   <value>AlphaPeptDeep Settings ...</value>
   </data>
+  <data name="Carafe_DIANN_report_files" xml:space="preserve">
+    <value>DIA-NN report files</value>
+  </data>
   <data name="CarafeTraining_Settings" xml:space="preserve">
     <value>Training Data Generation ...</value>
   </data>

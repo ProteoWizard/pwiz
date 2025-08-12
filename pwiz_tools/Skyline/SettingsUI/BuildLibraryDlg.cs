@@ -22,28 +22,28 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Forms;
+using System.Xml.Serialization;
 using pwiz.BiblioSpec;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Koina;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
+using pwiz.Skyline.Model.Lib.Carafe;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using File = System.IO.File;
-using pwiz.Skyline.Model.Lib.Carafe;
-using pwiz.Skyline.EditUI;
-using System.Xml.Serialization;
-using pwiz.CommonMsData;
 
 [assembly: InternalsVisibleTo("TestFunctional")]
 
@@ -88,6 +88,16 @@ namespace pwiz.Skyline.SettingsUI
         {
             BiblioSpecLiteBuilder.EXT_SSL,
         };
+
+        public static readonly string[] EXT_REPORT = { @".tsv", @".pqt", @".parquet" };
+        public static string FILTER_DIANN_REPORT
+        {
+            get
+            {
+                return TextUtil.FileDialogFilter(ModelResources.Carafe_DIANN_report_files, EXT_REPORT);
+            }
+        }
+
 
         public void ResetBuilder() => Builder = null;
 
@@ -1488,8 +1498,9 @@ namespace pwiz.Skyline.SettingsUI
             }
             else
             {
+            
                 dlg.Title = SettingsUIResources.BuildLibraryDlg_Select_DIANN_report_document;
-                dlg.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FILTER_TSV);
+                dlg.Filter = TextUtil.FileDialogFilters(FILTER_DIANN_REPORT);
             }
 
             dlg.InitialDirectory = Settings.Default.ActiveDirectory;

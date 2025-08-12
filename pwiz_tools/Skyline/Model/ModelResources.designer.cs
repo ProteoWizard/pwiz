@@ -600,6 +600,15 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to DIA-NN report files.
+        /// </summary>
+        public static string Carafe_DIANN_report_files {
+            get {
+                return ResourceManager.GetString("Carafe_DIANN_report_files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Carafe failed to complete.
         /// </summary>
         public static string Carafe_failed_to_complete {
