@@ -74,7 +74,8 @@ namespace pwiz.Skyline.FileUI
             try
             {
                 // perhaps the user has typed an entire filename into the text box - or just garbage
-                OpenFolderFromTextBox();
+                if (OpenFolderFromTextBox())
+                    return;
                 // TODO: Make sure it can open the file from the text box remotely
             }
             // ReSharper disable once EmptyGeneralCatchClause

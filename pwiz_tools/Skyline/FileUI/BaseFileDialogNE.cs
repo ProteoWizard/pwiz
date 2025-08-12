@@ -878,7 +878,7 @@ namespace pwiz.Skyline.FileUI
             sourcePathTextBox.Clear();
         }
 
-        protected void OpenFolderFromTextBox()
+        protected bool OpenFolderFromTextBox()
         {
             var fileOrDirName = sourcePathTextBox.Text;
             bool exists;
@@ -902,7 +902,9 @@ namespace pwiz.Skyline.FileUI
                 }
                 else if (Directory.Exists(fileOrDirName))
                     OpenFolder(new MsDataFilePath(fileOrDirName));
+                return true;
             }
+            return false;
         }
 
         private void listView_ColumnClick( object sender, ColumnClickEventArgs e )
