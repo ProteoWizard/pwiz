@@ -61,7 +61,7 @@ namespace pwiz.Skyline.FileUI
                     return;
                 case FileStatus.does_not_exist:
                     actionButton.Text = FileUIResources.WatersConnectSaveMethodFileDialog_SaveButtonText;
-                    if (!haveFolderId || !canWrite)     // Cannot save if root or no write permission.
+                    if (!haveFolderId || !canWrite || string.IsNullOrEmpty(sourcePathTextBox.Text))     // Cannot save if root or no write permission.
                     {
                         actionButton.Font = new Font(actionButton.Font, FontStyle.Bold); // Save not allowed
                         actionButton.ForeColor = Color.Red;

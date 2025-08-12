@@ -97,16 +97,6 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                 else 
                     Polarity = @"Negative";
             }
-            
-            var rtWindowHeader = GetColumnName(@"StartTime");
-            if (reader.TryGetColumn(rtWindowHeader, out var rtWindowString) && !string.IsNullOrEmpty(RetentionTime))
-            {
-                if (double.TryParse(rtWindowString, out var rtWindow) && double.TryParse(RetentionTime, out var rt))
-                {
-                    StartTime = Math.Max(0.0, Math.Round(rt - rtWindow/2, 2)).ToString(CultureInfo.InvariantCulture);
-                    EndTime = Math.Round(rt + rtWindow/2, 2).ToString(CultureInfo.InvariantCulture);
-                }
-            }
         }
 
         public bool IsSameTarget(DsvStreamReader reader)

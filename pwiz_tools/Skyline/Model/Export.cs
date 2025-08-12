@@ -44,7 +44,6 @@ using ZedGraph;
 using pwiz.CommonMsData.RemoteApi.WatersConnect;
 using Process = System.Diagnostics.Process;
 using Thread = System.Threading.Thread;
-using System.Security.Principal;
 
 namespace pwiz.Skyline.Model
 {

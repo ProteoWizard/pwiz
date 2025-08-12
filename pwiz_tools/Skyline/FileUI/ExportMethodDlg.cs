@@ -1844,6 +1844,21 @@ namespace pwiz.Skyline.FileUI
             {
                 CalcMethodCount();
             }
+
+            if (wcDecideBuckets.Checked)
+            {
+                labelMaxTransitions.Visible = false;
+                textMaxTransitions.Visible = false;
+                labelMethodNum.Visible = false;
+                labelMethods.Visible = false;
+            }
+            else
+            {
+                labelMaxTransitions.Visible = true;
+                textMaxTransitions.Visible = true;
+                labelMethodNum.Visible = true;
+                labelMethods.Visible = true;
+            }
         }
 
         private void comboInstrument_SelectedIndexChanged(object sender, EventArgs e)
