@@ -131,7 +131,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             for (row = 0; row < rts.Length; row++)
             {
                 var rt = rts[row];
-                // ReSharper disable once ConditionIsAlwaysTrueOrFalse
                 CheckDocumentResultsGridFieldByName(documentGrid, "PeptideRetentionTime", row, rt, msg, IsRecordMode);
             }
 

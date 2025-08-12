@@ -907,7 +907,7 @@ namespace TestPerf
             var allChrom = WaitForOpenForm<AllChromatogramsGraph>();
             allChrom.SetFreezeProgressPercent(41, @"00:00:22");
             WaitForCondition(10 * 60 * 1000, () => allChrom.IsProgressFrozen());
-            PauseForScreenShot<AllChromatogramsGraph>("Loading chromatograms window", 60*1000); // 30 second timeout to avoid getting stuck
+            PauseForScreenShot<AllChromatogramsGraph>("Loading chromatograms window", 30*1000); // 30 second timeout to avoid getting stuck
             allChrom.SetFreezeProgressPercent(null, null);
             WaitForDocumentChangeLoaded(doc, 40 * 60 * 1000); // 40 minutes
 
