@@ -54,11 +54,6 @@ namespace pwiz.Skyline.Model
                 minDetections = _settings.MinimumDetections;
 
             MedianInfo medianInfo = null;
-            if (settings.NormalizeOption.IsRatioToLabel)
-            {
-                var isotopeLabelTypeName = (settings.NormalizeOption.NormalizationMethod as NormalizationMethod.RatioToLabel)
-                    ?.IsotopeLabelTypeName;
-            }
             if (_settings.NormalizeOption.Is(NormalizationMethod.EQUALIZE_MEDIANS))
                 medianInfo = CalculateMedianAreas(document);
 
@@ -66,10 +61,7 @@ namespace pwiz.Skyline.Model
             {
                 foreach (var peptide in peptideGroup.Molecules)
                 {
-                    if (progressMonitor != null)
-                    {
-                        progressMonitor.ProcessMolecule(peptide);
-                    }
+                    progressMonitor?.ProcessMolecule(peptide);
 
                     if (_settings.PointsType == PointsTypePeakArea.decoys != peptide.IsDecoy)
                         continue;
@@ -110,10 +102,9 @@ namespace pwiz.Skyline.Model
                             if (!Equals(a, _settings.Annotation) && (_settings.Group == null || _settings.Annotation != null))
                                 continue;
 
-                            foreach (var replicateIndex in AnnotationHelper.GetReplicateIndices(document,
-                                _settings.Group, a))
+                            foreach (var replicateIndex in AnnotationHelper.GetReplicateIndices(document, _settings.Group, a))
                             {
-                                if (progressMonitor != null && progressMonitor.IsCanceled())
+                                if (true == progressMonitor?.IsCanceled())
                                     throw new OperationCanceledException();
 
                                 token.ThrowIfCancellationRequested();
