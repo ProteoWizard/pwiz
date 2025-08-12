@@ -150,7 +150,7 @@ namespace TestPerf // Tests in this namespace are skipped unless the RunPerfTest
 
         }
 
-        protected override bool IsRecordMode => false;
+        protected override bool IsRecordMode => true;
 
         private void TestReports(string msg = null)
         {
@@ -172,8 +172,10 @@ namespace TestPerf // Tests in this namespace are skipped unless the RunPerfTest
                 -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10,
                 -10, null, null, null, null, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10,
                 -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -50, null, null, null, -10, -10, -10,
-                -40, null, null, -10, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+                -40, null, null, -10, null, null, null, null, null, null, null, null, null, null, null, null, null,
+                null,
+                null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+                null,
                 null, null
             };
             var documentGrid = EnableDocumentGridIonMobilityResultsColumns(expectedIM.Length);
