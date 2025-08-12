@@ -204,6 +204,13 @@ namespace pwiz.ProteowizardWrapper
             }
         }
 
+        // Uncomment to run leak check for C++/CLI objects
+        /*~MsDataFileImpl()
+        {
+            FULL_READER_LIST.Dispose();
+            pwiz.CLI.util.ObjectStructorLog.LeakCheck();
+        }*/
+
         /// <summary>
         /// get the accumulated performance log, if any (see note above on enabling this)
         /// </summary>
