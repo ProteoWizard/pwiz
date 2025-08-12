@@ -301,6 +301,9 @@
   <data name="ExportSchedulingAlgorithmExtension_LOCALIZED_VALUES_Trends" xml:space="preserve">
     <value>Trends</value>
   </data>
+  <data name="ExportStrategyExtension_LOCALIZED_VALUES_WcDecide" xml:space="preserve">
+    <value>WcDecide</value>
+  </data>
   <data name="ExportStrategyExtension_LOCALIZED_VALUES_Buckets" xml:space="preserve">
     <value>Buckets</value>
   </data>
@@ -846,7 +849,7 @@
     <value>Unknown Thermo instrument type '{0}' installed.</value>
   </data>
   <data name="WatersConnectMethodExporter_ExportMethod_Folder_ID_is_missing" xml:space="preserve">
-    <value>Folder ID is missing. Cannot upload the method.</value>
+    <value>Folder ID is missing. Cannot upload the method. Folder info: {0}</value>
   </data>
   <data name="WatersConnectMethodExporter_ParseMethod_Exported_from_Skyline" xml:space="preserve">
     <value>Exported from Skyline</value>

@@ -785,6 +785,15 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to WcDecide.
+        /// </summary>
+        public static string ExportStrategyExtension_LOCALIZED_VALUES_WcDecide {
+            get {
+                return ResourceManager.GetString("ExportStrategyExtension_LOCALIZED_VALUES_WcDecide", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error on line {0}: invalid non-ASCII character &apos;{1}&apos; at position {2}; are you sure this is a FASTA file?.
         /// </summary>
         public static string FastaData_ParseFastaFile_Error_on_line__0___invalid_non_ASCII_character___1___at_position__2___are_you_sure_this_is_a_FASTA_file_ {
@@ -2413,7 +2422,7 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Folder ID is missing. Cannot upload the method..
+        ///   Looks up a localized string similar to Folder ID is missing. Cannot upload the method. Folder info: {0}.
         /// </summary>
         public static string WatersConnectMethodExporter_ExportMethod_Folder_ID_is_missing {
             get {

@@ -44,11 +44,12 @@ using ZedGraph;
 using pwiz.CommonMsData.RemoteApi.WatersConnect;
 using Process = System.Diagnostics.Process;
 using Thread = System.Threading.Thread;
+using System.Security.Principal;
 
 namespace pwiz.Skyline.Model
 {
 // ReSharper disable InconsistentNaming
-    public enum ExportStrategy { Single, Protein, Buckets }
+    public enum ExportStrategy { Single, Protein, Buckets, WcDecide }
     public static class ExportStrategyExtension
     {
         private static string[] LOCALIZED_VALUES
@@ -59,7 +60,8 @@ namespace pwiz.Skyline.Model
                 {
                     ModelResources.ExportStrategyExtension_LOCALIZED_VALUES_Single,
                     ModelResources.ExportStrategyExtension_LOCALIZED_VALUES_Protein,
-                    ModelResources.ExportStrategyExtension_LOCALIZED_VALUES_Buckets
+                    ModelResources.ExportStrategyExtension_LOCALIZED_VALUES_Buckets,
+                    ModelResources.ExportStrategyExtension_LOCALIZED_VALUES_WcDecide
                 };
             }
         }
@@ -1035,7 +1037,8 @@ namespace pwiz.Skyline.Model
             if (exportMethodUrlString == null)
             {
                 // doing method file count
-                var exporter = InitExporter(new WatersConnectMethodExporter(document, null)); 
+                var exporter = InitExporter(new WatersConnectMethodExporter(document, null));
+                exporter.ServerDecidesOnBuckets = (ExportStrategy == ExportStrategy.WcDecide);
                 PerformLongExport(m => exporter.ExportMethod(null, null, null, m));
                 return exporter;
             }
@@ -5052,12 +5055,13 @@ namespace pwiz.Skyline.Model
 
     public class WatersConnectMethodExporter : WatersMassListExporter
     {
-        private WatersConnectSessionAcquisitionMethod _wcSession;
+        private WatersConnectAccount _wcAccount;
         private string _methodName;
+        public bool ServerDecidesOnBuckets { get; set; }
         public WatersConnectMethodExporter(SrmDocument document, WatersConnectAccount account)
             : base(document)
         {
-            _wcSession = new WatersConnectSessionAcquisitionMethod(account);
+            _wcAccount = account; 
         }
         public void ExportMethod(string fileName, WatersConnectUrl targetFolderUrl, WatersConnectAcquisitionMethodUrl templateUrl, IProgressMonitor progressMonitor)
         {
@@ -5065,21 +5069,26 @@ namespace pwiz.Skyline.Model
             if (!InitExport(fileName, progressMonitor))
                 return;
 
-            targetFolderUrl = _wcSession.SetUrlId(targetFolderUrl);
+            if (_wcAccount == null)
+                throw new ArgumentNullException(nameof(_wcAccount), @"WatersConnectSession requires a WatersConnectAccount");
+            var wcSession = new WatersConnectSessionAcquisitionMethod(_wcAccount);
             if (targetFolderUrl.FolderOrSampleSetId == null)
             {
-                throw new IOException(ModelResources.WatersConnectMethodExporter_ExportMethod_Folder_ID_is_missing);
+                throw new IOException(string.Format(ModelResources.WatersConnectMethodExporter_ExportMethod_Folder_ID_is_missing, targetFolderUrl.ToString()));
             }
+
             foreach (var methodData in MemoryOutput)
             {
                 var method = ParseMethod(methodData.Value.ToString());
                 method.DestinationFolderId = targetFolderUrl.FolderOrSampleSetId;
                 method.TemplateVersionId = templateUrl.MethodVersionId.ToString();
+                if (ServerDecidesOnBuckets)
+                    method.ServerDecidesOnBuckets = @"Multiple on API";
                 if (MemoryOutput.Count == 1)
                     method.Name = _methodName;
                 else
                     method.Name = methodData.Key.Replace(MEMORY_KEY_ROOT, _methodName);
-                _wcSession.UploadMethod(method, progressMonitor);
+                wcSession.UploadMethod(method, progressMonitor);
             }
         }
 
