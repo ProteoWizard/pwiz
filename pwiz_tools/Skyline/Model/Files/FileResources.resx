@@ -107,6 +107,9 @@
     <data name="FileModel_Replicates" xml:space="preserve">
         <value>Replicates</value>
     </data>
+    <data name="FileModel_OtherFilesFolder" xml:space="preserve">
+        <value>Files</value>
+    </data>
     <data name="FileModel_Libraries" xml:space="preserve">
         <value>Spectral Libraries</value>
     </data>

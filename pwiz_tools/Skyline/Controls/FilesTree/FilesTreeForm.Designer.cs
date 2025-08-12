@@ -76,6 +76,8 @@ namespace pwiz.Skyline.Controls.FilesTree
             this.openAuditLogMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeAllMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.addFileMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.removeFileMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.panel1.SuspendLayout();
             this.filesTreeContextMenu.SuspendLayout();
             this.SuspendLayout();
@@ -107,7 +109,9 @@ namespace pwiz.Skyline.Controls.FilesTree
             this.selectReplicateMenuItem,
             this.openAuditLogMenuItem,
             this.removeAllMenuItem,
-            this.removeMenuItem});
+            this.removeMenuItem,
+            this.addFileMenuItem,
+            this.removeFileMenuItem});
             this.filesTreeContextMenu.Name = "contextMenuStrip1";
             resources.ApplyResources(this.filesTreeContextMenu, "filesTreeContextMenu");
             // 
@@ -160,6 +164,18 @@ namespace pwiz.Skyline.Controls.FilesTree
             resources.ApplyResources(this.removeMenuItem, "removeMenuItem");
             this.removeMenuItem.Click += new System.EventHandler(this.FilesTree_RemoveMenuItem);
             // 
+            // addFileMenuItem
+            // 
+            this.addFileMenuItem.Name = "addFileMenuItem";
+            resources.ApplyResources(this.addFileMenuItem, "addFileMenuItem");
+            this.addFileMenuItem.Click += new System.EventHandler(this.FilesTree_AddFileMenuItem);
+            // 
+            // removeFileMenuItem
+            // 
+            this.removeFileMenuItem.Name = "removeFileMenuItem";
+            resources.ApplyResources(this.removeFileMenuItem, "removeFileMenuItem");
+            this.removeFileMenuItem.Click += new System.EventHandler(this.FilesTree_RemoveFileMenuItem);
+            // 
             // FilesTreeForm
             // 
             resources.ApplyResources(this, "$this");
@@ -189,5 +205,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         private System.Windows.Forms.ToolStripMenuItem openAuditLogMenuItem;
         private System.Windows.Forms.ToolStripMenuItem removeAllMenuItem;
         private System.Windows.Forms.ToolStripMenuItem removeMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem addFileMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem removeFileMenuItem;
     }
 }

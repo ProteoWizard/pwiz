@@ -187,6 +187,15 @@ namespace pwiz.Skyline.Controls.FilesTree {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to remove this file from the Skyline document? This will not delete the file from disk..
+        /// </summary>
+        public static string FilesTreeForm_Confirm_RemoveFile {
+            get {
+                return ResourceManager.GetString("FilesTreeForm_Confirm_RemoveFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Update background protemoe.
         /// </summary>
         public static string FilesTreeForm_Update_BackgroundProteome {
@@ -210,6 +219,24 @@ namespace pwiz.Skyline.Controls.FilesTree {
         public static string FilesTreeNode_TreeNode_Tooltip_ReplicateSampleFileCount {
             get {
                 return ResourceManager.GetString("FilesTreeNode_TreeNode_Tooltip_ReplicateSampleFileCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add file.
+        /// </summary>
+        public static string OtherFiles_AddFile {
+            get {
+                return ResourceManager.GetString("OtherFiles_AddFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove file.
+        /// </summary>
+        public static string OtherFiles_RemoveFile {
+            get {
+                return ResourceManager.GetString("OtherFiles_RemoveFile", resourceCulture);
             }
         }
         

@@ -201,8 +201,9 @@ namespace pwiz.Skyline.Controls.FilesTree
             {
                 customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_Tooltip_FileName, FileName, rt);
 
-                // if path == localPath: "File Path: <foo/bar>"
-                // else "Saved File Path: <abc/def>, Local File Path: <foo/bar>"
+                // LocalFilePath only appears in tooltips if it differs from the FilePath from SrmDocument
+                //      if path == localPath: "File Path: <foo/bar>"
+                //      else "Saved File Path: <abc/def>, Local File Path: <foo/bar>"
                 if (string.Compare(FilePath, LocalFilePath, StringComparison.Ordinal) == 0)
                 {
                     customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_Tooltip_FilePath, FilePath, rt);

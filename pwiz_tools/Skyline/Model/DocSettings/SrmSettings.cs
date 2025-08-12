@@ -65,7 +65,7 @@ namespace pwiz.Skyline.Model.DocSettings
     [XmlRoot("settings_summary")]
     public class SrmSettings : XmlNamedElement, IPeptideFilter
     {
-        public SrmSettings(string name, PeptideSettings peptideSettings, TransitionSettings transitionSettings, DataSettings dataSettings, DocumentRetentionTimes documentRetentionTimes)
+        public SrmSettings(string name, PeptideSettings peptideSettings, TransitionSettings transitionSettings, DataSettings dataSettings, DocumentRetentionTimes documentRetentionTimes, Files.Doc.Files files)
             : base(name)
         {
             PeptideSettings = peptideSettings;
@@ -76,6 +76,8 @@ namespace pwiz.Skyline.Model.DocSettings
             // Create cached calculator instances
             CreatePrecursorMassCalcs();
             CreateFragmentMassCalcs();
+
+            Files = files;
         }
 
         [TrackChildren]
@@ -88,6 +90,8 @@ namespace pwiz.Skyline.Model.DocSettings
         public DataSettings DataSettings { get; private set; }
 
         public MeasuredResults MeasuredResults { get; private set; }
+
+        public Files.Doc.Files Files { get; private set; }
 
         /// <summary>
         /// Unfortunately, because the MeasuredResults property can be null, this
@@ -488,6 +492,12 @@ namespace pwiz.Skyline.Model.DocSettings
             if (prop.Prediction.FragmentMassType != TransitionSettings.Prediction.FragmentMassType)
                 settings.CreateFragmentMassCalcs();
 
+            return settings;
+        }
+
+        public SrmSettings ChangeFiles(Files.Doc.Files prop)
+        {
+            var settings = ChangeProp(ImClone(this), im => im.Files = prop);
             return settings;
         }
 
@@ -2208,7 +2218,11 @@ namespace pwiz.Skyline.Model.DocSettings
                 DataSettings = reader.DeserializeElement<DataSettings>() ?? DataSettings.DEFAULT;
                 MeasuredResults = reader.DeserializeElement<MeasuredResults>();
             }
+
             DocumentRetentionTimes = reader.DeserializeElement<DocumentRetentionTimes>() ?? DocumentRetentionTimes.EMPTY;
+
+            Files = reader.DeserializeElement<Files.Doc.Files>() ?? Model.Files.Doc.Files.DEFAULT;
+
             reader.ReadEndElement();
             ValidateLoad();
         }
@@ -2224,6 +2238,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 writer.WriteElement(MeasuredResults);
             if (!DocumentRetentionTimes.IsEmpty)
                 writer.WriteElement(DocumentRetentionTimes);
+            if (!Files.IsEmpty)
+                writer.WriteElement(Files);
         }
 
         #endregion
@@ -2239,7 +2255,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 Equals(obj.TransitionSettings, TransitionSettings) &&
                 Equals(obj.DataSettings, DataSettings) &&
                 Equals(obj.MeasuredResults, MeasuredResults) &&
-                Equals(obj.DocumentRetentionTimes, DocumentRetentionTimes);
+                Equals(obj.DocumentRetentionTimes, DocumentRetentionTimes) && 
+                Equals(obj.Files, Files);
         }
 
         public override bool Equals(object obj)
@@ -2259,6 +2276,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result*397) ^ DataSettings.GetHashCode();
                 result = (result*397) ^ (MeasuredResults != null ? MeasuredResults.GetHashCode() : 0);
                 result = (result*397) ^ DocumentRetentionTimes.GetHashCode();
+                result = (result*397) ^ Files.GetHashCode();
                 return result;
             }
         }

@@ -237,6 +237,18 @@
   <data name="removeMenuItem.Text" xml:space="preserve">
     <value>Remove</value>
   </data>
+  <data name="addFileMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>201, 22</value>
+  </data>
+  <data name="addFileMenuItem.Text" xml:space="preserve">
+    <value>Add File</value>
+  </data>
+  <data name="removeFileMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>201, 22</value>
+  </data>
+  <data name="removeFileMenuItem.Text" xml:space="preserve">
+    <value>Remove File</value>
+  </data>
   <data name="filesTreeContextMenu.Size" type="System.Drawing.Size, System.Drawing">
     <value>202, 224</value>
   </data>
@@ -337,6 +349,18 @@
     <value>removeMenuItem</value>
   </data>
   <data name="&gt;&gt;removeMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;addFileMenuItem.Name" xml:space="preserve">
+    <value>addFileMenuItem</value>
+  </data>
+  <data name="&gt;&gt;addFileMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;removeFileMenuItem.Name" xml:space="preserve">
+    <value>removeFileMenuItem</value>
+  </data>
+  <data name="&gt;&gt;removeFileMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">

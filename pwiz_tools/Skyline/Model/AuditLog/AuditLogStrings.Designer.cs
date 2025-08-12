@@ -735,6 +735,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Removed file {0} in the Files window.
+        /// </summary>
+        public static string files_tree_otherfiles_remove_one {
+            get {
+                return ResourceManager.GetString("files_tree_otherfiles_remove_one", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Removed all replicates in the Files window.
         /// </summary>
         public static string files_tree_replicates_remove_all {

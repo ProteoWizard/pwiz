@@ -184,4 +184,13 @@
   <data name="FilesTreeForm_Update_BackgroundProteome" xml:space="preserve">
     <value>Update background protemoe</value>
   </data>
+  <data name="FilesTreeForm_Confirm_RemoveFile" xml:space="preserve">
+    <value>Are you sure you want to remove this file from the Skyline document? This will not delete the file from disk.</value>
+  </data>    
+  <data name="OtherFiles_RemoveFile" xml:space="preserve">
+    <value>Remove file</value>
+  </data>    
+  <data name="OtherFiles_AddFile" xml:space="preserve">
+    <value>Add file</value>
+  </data>    
 </root>

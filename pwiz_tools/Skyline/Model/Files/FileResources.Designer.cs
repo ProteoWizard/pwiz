@@ -115,6 +115,15 @@ namespace pwiz.Skyline.Model.Files {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Files.
+        /// </summary>
+        public static string FileModel_OtherFilesFolder {
+            get {
+                return ResourceManager.GetString("FileModel_OtherFilesFolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Project Files.
         /// </summary>
         public static string FileModel_ProjectFiles {
