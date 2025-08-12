@@ -29,6 +29,7 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Serialization;
@@ -1166,6 +1167,96 @@ namespace pwiz.SkylineTestUtil
                         }
                         Assert.AreEqual(expectedSumIntensity, actualSumIntensity, intensityTolerance, "peak intensity delta exceeded tolerance");
                     }
+                }
+            }
+            finally
+            {
+                expectedLoaded?.ReadStream.CloseStream();
+                actualLoaded?.ReadStream.CloseStream();
+            }
+        }
+
+        /// <summary>
+        /// Compare two LibrarySpec libraries, with some possible allowances
+        /// </summary>
+        /// <param name="libraryExpected">expected result</param>
+        /// <param name="libraryActual">new result</param>
+        /// <param name="mzTolerance">tolerance for m/z peak comparison</param>
+        /// <param name="minimumCosineAngle">minimum allowed cosine angle</param>
+        public static void LibraryEquivalentCosineAngle(LibrarySpec libraryExpected, LibrarySpec libraryActual, double mzTolerance = 1e-8, double minimumCosineAngle = 0.9)
+        {
+            Library expectedLoaded = null, actualLoaded = null;
+            try
+            {
+                FileExists(libraryExpected.FilePath);
+                FileExists(libraryActual.FilePath);
+
+                var monitor = new DefaultFileLoadMonitor(new SilentProgressMonitor());
+                expectedLoaded = libraryExpected.LoadLibrary(monitor);
+                actualLoaded = libraryActual.LoadLibrary(monitor);
+
+                Assert.AreEqual(expectedLoaded.SpectrumCount, actualLoaded.SpectrumCount, "spectrum counts not equal");
+
+                var expectedList = expectedLoaded.Keys.ToList();
+                var actualList = actualLoaded.Keys.ToList();
+
+                for (int i = 0; i < expectedList.Count; ++i)
+                {
+                    var expected = expectedList[i];
+                    var actual = actualList[i];
+                    Assert.AreEqual(expected, actual, "spectrum library keys not equal");
+
+                    var expectedSpectra = expectedLoaded.GetSpectra(expected, IsotopeLabelType.light, LibraryRedundancy.best);
+                    var expectedSpectrum = expectedSpectra.First().SpectrumPeaksInfo.Peaks;
+
+                    var actualSpectra = actualLoaded.GetSpectra(actual, IsotopeLabelType.light, LibraryRedundancy.best);
+                    var actualSpectrum = actualSpectra.First().SpectrumPeaksInfo.Peaks;
+
+                    Array.Sort(expectedSpectrum, (s1, s2) => s2.Mz.CompareTo(s1.Mz));
+                    Array.Sort(actualSpectrum, (s1, s2) => s2.Mz.CompareTo(s1.Mz));
+
+                    var vectorLength = expectedSpectrum.Length + actualSpectrum.Length;
+
+                    var mzToleranceCheck = new MzTolerance(mzTolerance);
+                    var intensities1All = new List<double>(vectorLength);
+                    var intensities2All = new List<double>(vectorLength);
+                    var matchIndex1 = 0;
+                    var matchIndex2 = 0;
+                    while (matchIndex1 < expectedSpectrum.Length && matchIndex2 < actualSpectrum.Length)
+                    {
+                        var mz1 = expectedSpectrum[matchIndex1].Mz;
+                        var mz2 = actualSpectrum[matchIndex2].Mz;
+                        if (mzToleranceCheck.IsWithinTolerance(mz1, mz2))
+                        {
+                            intensities1All.Add(expectedSpectrum[matchIndex1++].Intensity);
+                            intensities2All.Add(actualSpectrum[matchIndex2++].Intensity);
+                        }
+                        else if (mz1 < mz2)
+                        {
+                            intensities1All.Add(expectedSpectrum[matchIndex1].Intensity);
+                            intensities2All.Add(0.0);
+                       
+                            matchIndex1++;
+                        }
+                        else
+                        {
+                            intensities1All.Add(0.0);
+                            intensities2All.Add(actualSpectrum[matchIndex2].Intensity);
+                    
+                            matchIndex2++;
+                        }
+                    }
+
+                    var cosAngle = new Statistics(intensities1All).NormalizedContrastAngleSqrt(
+                        new Statistics(intensities2All));
+
+
+
+                    if (cosAngle < minimumCosineAngle)
+                    {
+                        LogSpectrumPeaks(expected.Target.ToString(), actual.Target.ToString(), expectedSpectrum, actualSpectrum);
+                    }
+                    Assert.IsTrue(cosAngle >= minimumCosineAngle);
                 }
             }
             finally

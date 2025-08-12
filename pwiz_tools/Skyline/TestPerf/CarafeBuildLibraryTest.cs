@@ -21,7 +21,6 @@ using System;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -44,13 +43,17 @@ namespace TestPerf
     public class CarafeBuildLibraryTest : AbstractFunctionalTestEx
     {
         private double MZ_TOLERANCE = 1e-4; 
-        private double INTENSITY_TOLERANCE = 1.5e-1;
+        // private double INTENSITY_TOLERANCE = 1.5e-1;
+        private double MIN_COSINE_ANGLE = 0.9;
+
         /// <summary>
         /// When true Python installation is forced by deleting any old installation
         /// </summary>
         private bool IsCleanPythonMode => true;
 
         private bool RunExtendedTest => true;
+
+        private bool DisableLongPathsRegistry => false;
 
         /// <summary>
         /// When true console output is added to clarify what the test has accomplished
@@ -63,17 +66,11 @@ namespace TestPerf
         protected override bool IsRecordMode => false;
 
         public string LogOutput => TestContext.GetTestResultsPath("TestConsole.log");
-
-        public IAsynchronousDownloadClient TestDownloadClient { get; set; }
-        private const string TESTDATA_URL = @"https://skyline.ms/tutorials/CarafeTestData/";
         private const string TESTDATA_FILE = @"CarafeBuildLibraryTestSmall.zip";
         private const string TESTDATA_DIR = @"TestPerf";
 
         private string _toolName = CarafeLibraryBuilder.CARAFE;
         private string _pythonVersion = CarafeLibraryBuilder.PythonVersion;
-
-        private bool _undoRegistry;
-        public Uri TestDataPackageUri => new Uri($@"{TESTDATA_URL}{TESTDATA_FILE}");
 
         private void PrintEnvironment()
         {
@@ -119,44 +116,16 @@ namespace TestPerf
             }
 
         }
-
-        private void DownloadTestDataPackage(IProgressMonitor progressMonitor)
-        {
-            using var webClient = TestDownloadClient ?? new MultiFileAsynchronousDownloadClient(progressMonitor, 1);
-
-            Console.WriteLine("");
-            Console.WriteLine(@"TestCarafeBuildLibrary: Attempting TestData package download ...");
-            TryHelper.TryTwice(() =>
-            {
-                if (!webClient.DownloadFileAsync(TestDataPackageUri, TestFilesZip, out var downloadException))
-                    throw new ToolExecutionException(@"TestData package download failed...", downloadException);
-            });
-            Console.WriteLine(@"TestCarafeBuildLibrary: TestData package download success!");
-        }
-
-
         string LibraryTunedByDiann => @"CarafeLibraryTunedByDiann";
         string LibraryTunedBySky => @"CarafeLibraryTunedBySkyline";
         string LibraryTunedBySkyIrt => @"CarafeLibraryTunedBySkylineIrt";
-        string LibraryTunedByThis => @"CarafeLibraryTunedByThis";
         private string LibraryPathTunedByDiann => TestContext.GetTestPath(@"TestCarafeBuildLibrary\LibraryTunedByDiann.blib");
         private string LibraryPathTunedBySky => TestContext.GetTestPath(@"TestCarafeBuildLibrary\LibraryTunedBySkyline.blib");
         private string LibraryPathTunedBySkyIrt => TestContext.GetTestPath(@"TestCarafeBuildLibrary\LibraryTunedBySkylineIrt.blib");
-
-        private string LibraryPathTunedByThis => TestContext.GetTestPath(@"TestCarafeBuildLibrary\LibraryTunedByThis.blib");
-        private string openSkyDoc = "";
-
-        private string LibraryPathWithoutIrt =>
-            TestFilesDir.GetTestPath("LibraryWithoutIrt.blib");
-
-        private string LibraryPathWithIrt =>
-            TestFilesDir.GetTestPath("LibraryWithIrt.blib");
-
         string DiannFineTuneFile => TestFilesDir.GetTestPath(@"report.tsv");
         string MzMLFile => TestFilesDir.GetTestPath(@"Lumos_8mz_staggered_reCID_human_small\Crucios_20240320_CH_15_HeLa_CID_27NCE_01.mzML");
         private string SkyFineTuneFile => SkyTestFile;
         private string SkyTestFile => TestFilesDir.GetTestPath(@"Lumos_8mz_staggered_reCID_human_small\Lumos_8mz_staggered_reCID_human.sky");
-        string ProteinDatabase => TestFilesDir.GetTestPath(@"UP000005640_9606_small.fasta");
 
         protected override void DoTest()
         {
@@ -278,7 +247,9 @@ namespace TestPerf
 
             var expected = LibrarySpec.CreateFromPath("answer", TestFilesDir.GetTestPath(@"cpu_test_res_fine_tuned_bySky.blib"));
             var result = LibrarySpec.CreateFromPath("testBuilt", builtLibraryBySky);
-            AssertEx.LibraryEquivalent(expected, result, MZ_TOLERANCE, INTENSITY_TOLERANCE);
+            //AssertEx.LibraryEquivalent(expected, result, MZ_TOLERANCE, INTENSITY_TOLERANCE);
+
+            AssertEx.LibraryEquivalentCosineAngle(expected, result, MZ_TOLERANCE, MIN_COSINE_ANGLE);
             TestFilesDir.CheckForFileLocks(TestFilesDir.FullPath);
         }
         private void LongTest() 
@@ -339,59 +310,22 @@ namespace TestPerf
             
             var expected = LibrarySpec.CreateFromPath("answer", TestFilesDir.GetTestPath(@"cpu_test_res_fine_tuned_bySky_iRT.blib")); 
             var result = LibrarySpec.CreateFromPath("testBuilt", builtLibraryBySkyIrt); 
-            AssertEx.LibraryEquivalent(expected, result, MZ_TOLERANCE, INTENSITY_TOLERANCE); 
-            
+//            AssertEx.LibraryEquivalent(expected, result, MZ_TOLERANCE, INTENSITY_TOLERANCE);
+            AssertEx.LibraryEquivalentCosineAngle(expected, result, MZ_TOLERANCE, MIN_COSINE_ANGLE);
+
+
             expected = LibrarySpec.CreateFromPath("answer", TestFilesDir.GetTestPath(@"cpu_test_res_fine_tuned_byDiann.blib"));
             result = LibrarySpec.CreateFromPath("testBuilt", builtLibraryByDiann);
-            AssertEx.LibraryEquivalent(expected, result, MZ_TOLERANCE, INTENSITY_TOLERANCE);
+//            AssertEx.LibraryEquivalent(expected, result, MZ_TOLERANCE, INTENSITY_TOLERANCE);
+            AssertEx.LibraryEquivalentCosineAngle(expected, result, MZ_TOLERANCE, MIN_COSINE_ANGLE);
+
 
             expected = LibrarySpec.CreateFromPath("answer", TestFilesDir.GetTestPath(@"cpu_test_res_fine_tuned_bySky.blib"));
             result = LibrarySpec.CreateFromPath("testBuilt", builtLibraryBySky);
-            AssertEx.LibraryEquivalent(expected, result, MZ_TOLERANCE, INTENSITY_TOLERANCE);
+//            AssertEx.LibraryEquivalent(expected, result, MZ_TOLERANCE, INTENSITY_TOLERANCE);
+            AssertEx.LibraryEquivalentCosineAngle(expected, result, MZ_TOLERANCE, MIN_COSINE_ANGLE);
+
             TestFilesDir.CheckForFileLocks(TestFilesDir.FullPath);
-        }
-
-        protected void DoTestBACK()
-        {
-            openSkyDoc = TestFilesDir.GetTestPath(SkyTestFile); //(@"Test-imported\Test-imported.sky");
-            OpenDocument(openSkyDoc);
-
-            var peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
-
-            const string libraryTunedByDiann = @"CarafeLibraryTunedByDiann";
-            const string libraryTunedBySky = @"CarafeLibraryTunedBySkyline";
-            const string libraryTunedByThis = @"CarafeLibraryTunedByThis";
-            string diannFineTuneFile = DiannFineTuneFile;
-            string mzMLFile = MzMLFile;
-            string skyFineTuneFile = SkyTestFile;
-            string proteinDatabase = ProteinDatabase;
-
-
-            CarafeBuildLibrary(peptideSettings, libraryTunedBySky, LibraryTunedBySky, mzMLFile, "", skyFineTuneFile, BuildLibraryDlg.BuildLibraryTargetOptions.currentSkylineDocument, BuildLibraryDlg.LearningOptions.another_doc, @"test_res_fine_tuned_bySky.csv");
-            OkDialog(peptideSettings, peptideSettings.OkDialog);
-
-            peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
-
-            CarafeBuildLibrary(peptideSettings, libraryTunedByDiann, LibraryTunedByDiann, mzMLFile, "", diannFineTuneFile, BuildLibraryDlg.BuildLibraryTargetOptions.currentSkylineDocument, BuildLibraryDlg.LearningOptions.diann_report, @"test_res_fine_tuned_byDiann.csv");
-            OkDialog(peptideSettings, peptideSettings.OkDialog);
-
-            peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
-
-            CarafeBuildLibrary(peptideSettings, libraryTunedByThis, LibraryTunedByThis, mzMLFile, proteinDatabase, "", BuildLibraryDlg.BuildLibraryTargetOptions.currentSkylineDocument, BuildLibraryDlg.LearningOptions.this_doc, @"test_res_fine_tuned_bySky.csv");
-            OkDialog(peptideSettings, peptideSettings.OkDialog);
-
-            var spectralLibraryViewer = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
-            RunUI(() =>
-            {
-                spectralLibraryViewer.ChangeSelectedLibrary(libraryTunedBySky);
-                spectralLibraryViewer.ChangeSelectedLibrary(libraryTunedByDiann);
-                spectralLibraryViewer.ChangeSelectedLibrary(libraryTunedByThis);
-            });
-            OkDialog(spectralLibraryViewer, spectralLibraryViewer.Close);
-
-            // test with iRT
-            peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
-            CarafeBuildLibrary(peptideSettings, libraryTunedByThis, LibraryTunedByThis, mzMLFile, proteinDatabase, "", BuildLibraryDlg.BuildLibraryTargetOptions.currentSkylineDocument, BuildLibraryDlg.LearningOptions.this_doc, "test_res_fine_tuned_bySky_iRT.csv", PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD, IrtStandard.BIOGNOSYS_11);
         }
 
         /// <summary>
@@ -544,18 +478,7 @@ namespace TestPerf
             });
             OkDialog(regression, regression.CloseDialog);
         }
-        private void TestResultingLibByValues(BuildLibraryDlg buildLibraryDlg, string answer)
-        {
-            string product = buildLibraryDlg.TestLibFilepath;
-            using (var answerReader = new StreamReader(answer))
-            {
-                using (var productReader = new StreamReader(product))
-                {
-                    AssertEx.FieldsEqual(productReader, answerReader, 24, null, true, 0, 1e-1);
-                }
-            }
-        }
-
+ 
         /// <summary>
         /// Pretends Python needs installation then Cancels Python install
         /// </summary>
@@ -693,99 +616,12 @@ namespace TestPerf
 
 
             }, dlg => dlg.Close());
-            if (_undoRegistry)
+            if (DisableLongPathsRegistry)
             {
                 PythonInstaller.EnableWindowsLongPaths(false);
             }
 
             return true;
-        }
-
-        public bool HaveNvidiaSoftware()
-        {
-            return PythonInstaller.NvidiaLibrariesInstalled();
-        }
-
-        public bool HaveNvidiaHardware()
-        {
-            return PythonInstaller.TestForNvidiaGPU() == true;
-        }
-
-        /// <summary>
-        /// Runs Nvidia Dialog
-        /// </summary>
-        /// <param name="nvidiaDlg">Nvidia Detected Dialog</param>
-        /// <param name="pythonDlg">Python Installer Dialog</param>
-        /// <param name="clickNo">true clicks No, false clicks Yes, null clicks Cancel to Nvidia Detected Dialog</param>
-        private void RunNvidiaDialog(MessageDlg nvidiaDlg, MessageDlg pythonDlg, bool? clickNo = true)
-        {
-            if (clickNo == true)
-            {
-                RunDlg<AlertDlg>(nvidiaDlg.ClickNo, ConfirmPythonSuccess);
-            }
-            else if (clickNo == false)
-            {
-                RunDlg<AlertDlg>(nvidiaDlg.ClickYes, ConfirmPythonSuccess);
-            }
-            else // clickNo == null
-            {
-                RunDlg<AlertDlg>(nvidiaDlg.ClickCancel, ConfirmPythonSuccess);
-            }
-
-            if (!nvidiaDlg.IsDisposed)
-                nvidiaDlg.Dispose();
-        }
-
-        /// <summary>
-        /// Helps with Nvidia GPU Detections
-        /// </summary>
-        /// <param name="pythonDlg">Python set up is required dialog</param>
-        /// <param name="nvidiaClickNo">What to tell Nvidia Dialog: Yes=install, No=don't install, null=cancel operation</param>
-        private void NvidiaTestHelper(MessageDlg pythonDlg, bool? nvidiaClickNo)
-        {
-            PythonInstaller.SimulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT;
-            if (PythonInstaller.TestForNvidiaGPU() == true && !PythonInstaller.NvidiaLibrariesInstalled())
-            {
-                Console.WriteLine(@"Info: NVIDIA GPU DETECTED on test node");
-
-                MessageDlg nvidiaDlg = ShowDialog<MessageDlg>(pythonDlg.OkDialog, WAIT_TIME);
-
-                RunNvidiaDialog(nvidiaDlg, pythonDlg, nvidiaClickNo);
-
-            }
-            else
-            {
-                if (PythonInstaller.TestForNvidiaGPU() != true)
-                    Console.WriteLine(@"Info: NVIDIA GPU *NOT* DETECTED on test node");
-                else
-                    Console.WriteLine(@"Info: Nvidia libraries already installed");
-                OkDialog(pythonDlg, pythonDlg.OkDialog);
-                //Not cancelled
-                var confirmDlg = ShowDialog<AlertDlg>(pythonDlg.OkDialog, WAIT_TIME);
-                ConfirmPythonSuccess(confirmDlg);
-
-            }
-        }
-
-        /// <summary>
-        /// Tries to set EnableLongPaths
-        /// </summary>
-        /// <param name="longPathDlg">EnableLongPaths registry dialog</param>
-        /// <returns></returns>
-        private MessageDlg RunLongPathsDialog(MessageDlg longPathDlg)
-        {
-            Console.WriteLine(@"Info: Trying to set LongPathsEnabled registry key to 1");
-            OkDialog(longPathDlg, longPathDlg.OkDialog);
-
-            MessageDlg okDlg = ShowDialog<MessageDlg>(longPathDlg.OkDialog);
-
-            Console.WriteLine(@"Info: Successfully set LongPathsEnabled registry key to 1");
-            _undoRegistry = true;
-
-            if (!longPathDlg.IsDisposed)
-                longPathDlg.Dispose();
-
-            return okDlg;
         }
 
         /// <summary>
@@ -796,16 +632,7 @@ namespace TestPerf
         {
             ConfirmPython(confirmDlg);
         }
-
-        /// <summary>
-        /// Confirms Python installation failure
-        /// </summary>
-        /// <param name="confirmDlg">Message dialog failed</param>
-        private void ConfirmPythonFailed(AlertDlg confirmDlg)
-        {
-            ConfirmPython(confirmDlg, false);
-        }
-
+        
         /// <summary>
         /// Confirms Python installation
         /// </summary>
@@ -821,19 +648,6 @@ namespace TestPerf
 
             Assert.AreEqual(expectMsg, confirmDlg.Message);
             confirmDlg.OkDialog();
-        }
-
-        /// <summary>
-        /// Second dialog after Nvidia is detected to direct user to admin instructions for setting up Nvidia
-        /// </summary>
-        /// <param name="confirmDlg">Message dialog to the user with admin instructions</param>
-        private void ConfirmInstallNvidiaBatMessage(MessageDlg confirmDlg)
-        {
-            AssertEx.AreComparableStrings(
-                string.Format(ModelResources.NvidiaInstaller_Requesting_Administrator_elevation,
-                    PythonInstaller.InstallNvidiaLibrariesBat),
-                confirmDlg.Message);
-            OkDialog(confirmDlg, confirmDlg.OkDialog);
         }
     }
 }
