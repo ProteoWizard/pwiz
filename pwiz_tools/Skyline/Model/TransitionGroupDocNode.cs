@@ -1536,8 +1536,12 @@ namespace pwiz.Skyline.Model
                         // Make sure nothing gets added when no measurements are present
                         continue;
                     }
-                    TransitionGroupChromInfo transitionGroupChromInfoOld =
-                        FindGroupChromInfo(GetSafeChromInfo(iResultOld), fileId, 0);
+
+                    TransitionGroupChromInfo transitionGroupChromInfoOld = null;
+                    if (iResultOld >= 0)
+                    {
+                        transitionGroupChromInfoOld = FindGroupChromInfo(GetSafeChromInfo(iResultOld), fileId, 0);
+                    }
 
                     // Always add the right number of steps to the list, no matter
                     // how many entries were returned.
