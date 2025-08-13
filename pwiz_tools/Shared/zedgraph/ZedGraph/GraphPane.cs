@@ -2337,10 +2337,9 @@ namespace ZedGraph
 										valueHandler.GetValues( curve, iPt, out xVal, out _, out yVal );
 									}
 									// Pixel distance needs to be calculated differently for log scale graphs
-									distY = YAxis.Type == AxisType.Log ? LogScalePixelDistance(yVal, yAct, _chart._rect.Height) : 
-										(yVal - yAct) * yPixPerUnitAct;
-									distX = XAxis.Type == AxisType.Log ? LogScalePixelDistance(xVal, xAct, _chart._rect.Width) : 
-										( xVal - xAct ) * xPixPerUnit;
+									var testDist = 
+                                    distY = yAxis.Scale.Transform(yVal) - yAxis.Scale.Transform(yAct); ;
+									distX = xAxis.Scale.Transform(xVal) - xAxis.Scale.Transform(xAct); ;
 									dist = distX * distX + distY * distY;
 
 									if ( dist >= minDist )
@@ -2452,7 +2451,7 @@ namespace ZedGraph
                                     nearestStick = stickItem;
                                     iNearestIndex = iPt;
                                 }
-                                var xDist = Math.Abs(AxisType.Log == XAxis.Type ? LogScalePixelDistance(xVal, xAct, _chart._rect.Width) : xVal - xAct);
+                                var xDist = Math.Abs(XAxis.Scale.Transform(xVal) - XAxis.Scale.Transform(xAct));
                                 if (xDist < minDist)
                                 {
                                     minDist = xDist;
@@ -2470,11 +2469,6 @@ namespace ZedGraph
             }
             return false;
         }
-        private double LogScalePixelDistance(double positionA, double positionB, double totalDistance)
-		{
-			var fractionOfDistance = (Math.Log(positionA) - Math.Log(positionB)) / Math.Log(totalDistance);
-			return fractionOfDistance * totalDistance;
-		}
 		/// <summary>
 		/// Search through the <see cref="GraphObjList" /> and <see cref="CurveList" /> for
 		/// items that contain active <see cref="Link" /> objects.

@@ -1386,7 +1386,6 @@ namespace pwiz.Skyline.Controls.Graphs
                         double? dotp = null;
                         // need to keep it at the class level to be able to extract tooltip info.
                         double? fullDotp = null;
-                        SpectrumGraphItem mirrorGraphItem = null;
                         if (mirrorSpectrum != null)
                         {
                             var peaksInfo = spectrum != null
@@ -1400,10 +1399,10 @@ namespace pwiz.Skyline.Controls.Graphs
                             if (spectrum != null)
                             {
                                 dotp = KoinaHelpers.CalculateSpectrumDotpMzMatch(GraphItem.SpectrumInfo,
-                                    mirrorGraphItem.SpectrumInfo,
+                                    MirrorGraphItem.SpectrumInfo,
                                     settings.TransitionSettings.Libraries.IonMatchMzTolerance);
                                 fullDotp = KoinaHelpers.CalculateSpectrumDotpMzFull(GraphItem.SpectrumInfo.Peaks,
-                                    mirrorGraphItem.SpectrumInfo.Peaks,
+                                    MirrorGraphItem.SpectrumInfo.Peaks,
                                     settings.TransitionSettings.Libraries.IonMatchMzTolerance, true, false);
                             }
                         }

@@ -350,7 +350,6 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public static string GetMassErrorString(LibraryRankedSpectrumInfo.RankedMI rmi, MatchedFragmentIon mfi)
         {
-            var sb = new StringBuilder();
             var massError = mfi.PredictedMz - rmi.ObservedMz;
             massError = SequenceMassCalc.GetPpm(mfi.PredictedMz, massError);
             massError = Math.Round(massError, 1);
