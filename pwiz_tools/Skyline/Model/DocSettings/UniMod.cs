@@ -276,12 +276,34 @@ namespace pwiz.Skyline.Model.DocSettings
                 && mod.Equivalent(unimod);
         }
 
-        public struct UniModIdKey
+        public struct UniModIdKey : IEquatable<UniModIdKey>
         {
             public int Id { get; set; }
             public char Aa { get; set; }
             public bool AllAas { get; set; }
             public ModTerminus? Terminus { get; set; }
+
+            public bool Equals(UniModIdKey other)
+            {
+                return Id == other.Id && Aa == other.Aa && AllAas == other.AllAas && Terminus == other.Terminus;
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is UniModIdKey other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    var hashCode = Id;
+                    hashCode = (hashCode * 397) ^ Aa.GetHashCode();
+                    hashCode = (hashCode * 397) ^ AllAas.GetHashCode();
+                    hashCode = (hashCode * 397) ^ Terminus.GetHashCode();
+                    return hashCode;
+                }
+            }
         }
     }
 
