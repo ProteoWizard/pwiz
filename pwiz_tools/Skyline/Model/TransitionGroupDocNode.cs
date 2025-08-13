@@ -16,18 +16,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Threading;
 using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding.Filtering;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
@@ -37,6 +32,13 @@ using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Model.RetentionTimes.PeakImputation;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Threading;
+using static pwiz.Skyline.Controls.Graphs.RTScheduleGraphPane;
 
 namespace pwiz.Skyline.Model
 {
@@ -1534,6 +1536,8 @@ namespace pwiz.Skyline.Model
                         // Make sure nothing gets added when no measurements are present
                         continue;
                     }
+                    TransitionGroupChromInfo transitionGroupChromInfoOld =
+                        FindGroupChromInfo(GetSafeChromInfo(iResultOld), fileId, 0);
 
                     // Always add the right number of steps to the list, no matter
                     // how many entries were returned.
@@ -1544,7 +1548,7 @@ namespace pwiz.Skyline.Model
                         UserSet userSet = UserSet.FALSE;
                         var chromInfo = FindChromInfo(results, fileId, step);
                         bool notUserSet;
-                        if (resultsHandler == null)
+                        if (resultsHandler == null && transitionGroupChromInfoOld?.ReintegratedPeak == null)
                         {
                             // If we don't have a model then we shouldn't change peaks that are "REINTEGRATED".
                             notUserSet = chromInfo == null || chromInfo.UserSet == UserSet.FALSE;
@@ -1598,9 +1602,7 @@ namespace pwiz.Skyline.Model
                                 // Otherwise use the best peak chosen at import time
                                 else
                                 {
-                                    int bestIndex = info.BestPeakIndex;
-                                    if (bestIndex != -1)
-                                        peak = info.GetPeak(bestIndex);
+                                    peak = GetTransitionBestPeak(info, transitionGroupChromInfoOld?.ReintegratedPeak ?? transitionGroupChromInfoOld?.OriginalPeak);
                                     var imputedPeak = imputedPeaks?[j];
                                     if (imputedPeak != null && !peakBoundaryImputer.IsAcceptable(peak, imputedPeak))
                                     {
@@ -1642,8 +1644,36 @@ namespace pwiz.Skyline.Model
             }
             for (int j = 0; j < chromGroupInfos.Count; j++)
             {
-                resultsCalc.SetOriginalPeak(fileIds[j], GetOriginalPeak(chromGroupInfos[j], mzMatchTolerance));
+                var originalPeak = GetOriginalPeak(chromGroupInfos[j], mzMatchTolerance);
+                resultsCalc.SetOriginalPeak(fileIds[j], originalPeak);
             }
+        }
+
+        private ChromPeak GetTransitionBestPeak(ChromatogramInfo chromatogramInfo, ScoredPeakBounds peakBounds)
+        {
+            var bestPeak = chromatogramInfo.BestPeakIndex == -1
+                ? ChromPeak.EMPTY
+                : chromatogramInfo.GetPeak(chromatogramInfo.BestPeakIndex);
+            if (peakBounds == null)
+            {
+                return bestPeak;
+            }
+
+            var candidates = chromatogramInfo.Peaks;
+            if (!bestPeak.IsEmpty)
+            {
+                candidates = candidates.Prepend(bestPeak);
+            }
+
+            foreach (var candidate in candidates)
+            {
+                if (peakBounds.StartTime <= candidate.StartTime && peakBounds.EndTime >= candidate.EndTime)
+                {
+                    return candidate;
+                }
+            }
+
+            return bestPeak;
         }
 
         private ScoredPeakBounds GetOriginalPeak(ChromatogramGroupInfo chromGroupInfo, float tolerance)
@@ -1756,6 +1786,10 @@ namespace pwiz.Skyline.Model
             }
 
             if (!Equals(settingsNew.PeptideSettings.Imputation, settingsOld.PeptideSettings.Imputation))
+            {
+                return false;
+            }
+            if (!Equals(settingsNew.DocumentRetentionTimes, settingsOld.DocumentRetentionTimes))
             {
                 return false;
             }
