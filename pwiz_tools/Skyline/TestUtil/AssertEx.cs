@@ -1256,7 +1256,7 @@ namespace pwiz.SkylineTestUtil
                     {
                         LogSpectrumPeaks(expected.Target.ToString(), actual.Target.ToString(), expectedSpectrum, actualSpectrum);
                     }
-                    Assert.IsTrue(cosAngle >= minimumCosineAngle);
+                    Assert.IsTrue(cosAngle >= minimumCosineAngle, $@"cosine of spectrum angle {cosAngle} is less than allowed minimum {minimumCosineAngle}");
                 }
             }
             finally

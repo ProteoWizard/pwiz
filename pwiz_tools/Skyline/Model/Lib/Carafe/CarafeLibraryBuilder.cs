@@ -654,7 +654,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             bool diann_training, 
             IrtStandard irtStandard, out string testLibraryOutputPath, out string builderLibraryOutputPath) : base(document, trainingDocument, irtStandard)
         {
-            DefaultTestDevice = DeviceTypes.gpu;
+            DefaultTestDevice = DeviceTypes.cpu;
 
             string rootProcessingDir = Path.GetDirectoryName(libOutPath);
             if (string.IsNullOrEmpty(rootProcessingDir))
