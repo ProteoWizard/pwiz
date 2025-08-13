@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using pwiz.CLI.cv;
 using pwiz.CLI.data;
@@ -1706,7 +1705,7 @@ namespace pwiz.ProteowizardWrapper
                 IsolationWindowLower = GetIsolationWindowValue(p, CVID.MS_isolation_window_lower_offset),
                 IsolationWindowUpper = GetIsolationWindowValue(p, CVID.MS_isolation_window_upper_offset),
             };
-            var cvidDissociationMethod = GetPrecursorDissociationMethod(p);
+            var cvidDissociationMethod = GetPrecursorDissociationMethods(p);
             if (cvidDissociationMethod.Count > 0)
             {
                 msPrecursor.DissociationMethod = string.Join(" ", cvidDissociationMethod.Select(cvid => CV.cvTermInfo(cvid).shortName()));
@@ -1803,31 +1802,17 @@ namespace pwiz.ProteowizardWrapper
             return null;
         }
 
-        private static IList<CVID> GetPrecursorDissociationMethod(Precursor precursor)
+        private static IList<CVID> GetPrecursorDissociationMethods(Precursor precursor)
         {
-            if (true)
+            var list = new List<CVID>();
+            foreach (var cvParam in precursor.activation.cvParamChildren(CVID.MS_dissociation_method))
             {
-                var list = new List<CVID>();
-                // TODO (nicksh): This code leaks
-                foreach (var cvParam in precursor.activation.cvParamChildren(CVID.MS_dissociation_method))
+                using (cvParam)
                 {
-                    using (cvParam)
-                    {
-                        list.Add(cvParam.cvid);
-                    }
+                    list.Add(cvParam.cvid);
                 }
-
-                return list;
             }
-            else
-            {
-                var cvParam = precursor.activation.cvParamChild(CVID.MS_dissociation_method);
-                if (cvParam.cvid == CVID.CVID_Unknown)
-                {
-                    return Array.Empty<CVID>();
-                }
-                return new []{cvParam.cvid};
-            }
+            return list;
         }
 
         public void Write(string path)
