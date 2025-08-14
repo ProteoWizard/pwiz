@@ -74,7 +74,6 @@ using pwiz.Skyline.Model.Koina.Communication;
 using pwiz.Skyline.Model.Koina.Models;
 using pwiz.CommonMsData.RemoteApi;
 using pwiz.CommonMsData.RemoteApi.Ardia;
-using pwiz.Skyline.Model.PropertySheets;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.SettingsUI;
@@ -1092,6 +1091,9 @@ namespace pwiz.Skyline
                     SequenceTree.KeysOverride = Keys.None;
                     FindNext(true);
                     SequenceTree.UseKeysOverride = false;
+                    return true;
+                case Keys.F4:
+                    ShowPropertyForm(show: !_propertyForm.Visible);
                     return true;
             }
             return base.ProcessCmdKey(ref msg, keyData);
