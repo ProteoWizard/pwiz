@@ -716,7 +716,7 @@ namespace pwiz.SkylineTest
             }
         }
 
-        
+
         // Looking for uses of Form where we should really be using FormEx
         private static void FindIllegalForms(List<string> results) // Looks for uses of Form rather than FormEx
         {
