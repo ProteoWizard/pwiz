@@ -226,6 +226,9 @@
   <data name="EditRemoteAccountDlg_TestSettings_Settings_are_correct" xml:space="preserve">
     <value>Settings are correct</value>
   </data>
+  <data name="EditRemoteAccountDlg_TestSettings_Account_credentials_not_valid" xml:space="preserve">
+	<value>Account could not be authenticated, please check credentials and try again.</value>
+  </data>
   <data name="EditRemoteAccountDlg_TestUnifiAccount_An_error_occurred_while_trying_to_authenticate_" xml:space="preserve">
     <value>An error occurred while trying to authenticate.</value>
   </data>
