@@ -1222,9 +1222,6 @@ namespace pwiz.SkylineTestUtil
                     var intensities2All = new List<double>(vectorLength);
                     var matchIndex1 = 0;
                     var matchIndex2 = 0;
-                    double ab = 0;
-                    double aa = 0;
-                    double bb = 0;
                     while (matchIndex1 < expectedSpectrum.Length && matchIndex2 < actualSpectrum.Length)
                     {
                         var mz1 = expectedSpectrum[matchIndex1].Mz;
@@ -1235,50 +1232,34 @@ namespace pwiz.SkylineTestUtil
                         {
                             intensities1All.Add(expectedSpectrum[matchIndex1++].Intensity);
                             intensities2All.Add(actualSpectrum[matchIndex2++].Intensity);
-                            ab += a * b;
-                            aa += a * a;
-                            bb += b * b;
                         }
                         else if (mz1 < mz2)
                         {
                             intensities1All.Add(expectedSpectrum[matchIndex1].Intensity);
                             intensities2All.Add(0.0);
-                            aa += a * a;
                             matchIndex1++;
                         }
                         else
                         { 
                             intensities1All.Add(0.0);
                             intensities2All.Add(actualSpectrum[matchIndex2].Intensity);
-                            bb += b * b;
                             matchIndex2++;
                         }
-                    }
-
-                    double cosAngleRecalc = 1;
-                    if (aa != 0 && bb != 0)
-                    {
-                        cosAngleRecalc = Math.Min(1.0, ab / Math.Sqrt(aa * bb));
                     }
                     var cosAngle = new Statistics(intensities1All).NormalizedContrastAngleSqrt(new Statistics(intensities2All));
 
 
                     if (cosAngle < minimumCosineAngle)
                     {
-                        Console.WriteLine("");
-                        Console.WriteLine(@"Expected Intensities: ");
-                        Console.WriteLine(string.Join(TextUtil.SPACE, intensities1All));
-                        Console.WriteLine(@"Actual Intensities: ");
-                        Console.WriteLine(string.Join(TextUtil.SPACE, intensities2All));
                         LogSpectrumPeaks(expected.Target.ToString(), actual.Target.ToString(), expectedSpectrum, actualSpectrum);
                     }
-                    Assert.IsTrue(cosAngle >= minimumCosineAngle, $@"cosine of spectrum angle {cosAngle} is less than allowed minimum {minimumCosineAngle} ... recalculated cosine angle {cosAngleRecalc}");
+                    Assert.IsTrue(cosAngle >= minimumCosineAngle, $@"cosine of spectrum angle {cosAngle} is less than allowed minimum {minimumCosineAngle}");
                 }
             }
             finally
             {
-                expectedLoaded.ReadStream.CloseStream();
-                actualLoaded.ReadStream.CloseStream();
+                expectedLoaded?.ReadStream.CloseStream();
+                actualLoaded?.ReadStream.CloseStream();
             }
         }
 
