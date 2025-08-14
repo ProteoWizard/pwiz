@@ -1267,9 +1267,9 @@ namespace pwiz.SkylineTestUtil
                     {
                         Console.WriteLine("");
                         Console.WriteLine(@"Expected Intensities: ");
-                        Console.WriteLine(intensities1All.ToString(), TextUtil.SPACE);
+                        Console.WriteLine(string.Join(TextUtil.SPACE, intensities1All));
                         Console.WriteLine(@"Actual Intensities: ");
-                        Console.WriteLine(intensities2All.ToString(), TextUtil.SPACE);
+                        Console.WriteLine(string.Join(TextUtil.SPACE, intensities2All));
                         LogSpectrumPeaks(expected.Target.ToString(), actual.Target.ToString(), expectedSpectrum, actualSpectrum);
                     }
                     Assert.IsTrue(cosAngle >= minimumCosineAngle, $@"cosine of spectrum angle {cosAngle} is less than allowed minimum {minimumCosineAngle} ... recalculated cosine angle {cosAngleRecalc}");
