@@ -34,24 +34,9 @@ namespace pwiz.Skyline.Model.PropertySheets.Templates
         {
             FilePath = fileNode.FilePath ?? string.Empty;
             Name = fileNode.Name ?? string.Empty;
-            FileType = fileNode.FileType ?? string.Empty;
-        }
-
-        public static FileNodeProperties Create(FileNode fileNode)
-        {
-            var props = fileNode switch
-            {
-                // Add other FileNode types here as needed
-                Replicate replicate => new ReplicateProperties(replicate),
-                _ => null
-            };
-            props?.GetProperties();
-
-            return props;
         }
 
         [Category("FileInfo")] public string FilePath { get; set; }
         [Category("FileInfo")] public string Name { get; set; }
-        [Category("FileInfo")] public string FileType { get; set; }
     }
 }

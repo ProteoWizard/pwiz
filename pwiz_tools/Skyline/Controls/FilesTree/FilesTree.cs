@@ -71,6 +71,8 @@ namespace pwiz.Skyline.Controls.FilesTree
             ImageList.Images.Add(Resources.ViewFile);           // 32bpp
         }
 
+        public FilesTreeNode CurrentlySelectedFTN => SelectedNode as FilesTreeNode;
+
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public SrmDocument Document { get; private set; }

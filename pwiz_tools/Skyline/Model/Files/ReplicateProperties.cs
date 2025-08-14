@@ -17,12 +17,13 @@
  * limitations under the License.
  */
 
-using pwiz.Skyline.Model.Files;
 using System;
 using System.ComponentModel;
 using System.Resources;
+using pwiz.Skyline.Model.PropertySheets;
+using pwiz.Skyline.Model.PropertySheets.Templates;
 
-namespace pwiz.Skyline.Model.PropertySheets.Templates
+namespace pwiz.Skyline.Model.Files
 {
     public class ReplicateProperties : FileNodeProperties
     {

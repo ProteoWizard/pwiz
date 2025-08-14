@@ -316,10 +316,5 @@ namespace pwiz.Skyline.Controls.FilesTree
             // Nodes not backed by files are considered initialized by default
             else return true;
         }
-
-        public GlobalizedObject GetProperties()
-        {
-            return FileNodeProperties.Create(Model);
-        }
     }
 }

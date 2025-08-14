@@ -49,6 +49,11 @@ namespace pwiz.Skyline.Model.Files
             }
         }
 
+        public override GlobalizedObject GetProperties()
+        {
+            return new ReplicateProperties(this);
+        }
+
         public ModifiedDocument Delete(SrmDocument document, List<FileNode> models)
         {
             var deleteIds = models.Select(model => ReferenceValue.Of(model.IdentityPath.Child)).ToHashSet();
@@ -160,7 +165,7 @@ namespace pwiz.Skyline.Model.Files
             return ReferenceEquals(ChromatogramSet, replicate.ChromatogramSet);
         }
 
-        public ChromatogramSet ChromatogramSet
+        internal ChromatogramSet ChromatogramSet
         {
             get
             {

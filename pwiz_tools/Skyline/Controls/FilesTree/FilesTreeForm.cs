@@ -38,7 +38,7 @@ using Process = System.Diagnostics.Process;
 // ReSharper disable WrongIndentSize
 namespace pwiz.Skyline.Controls.FilesTree
 {
-    public partial class FilesTreeForm : DockableFormEx, ITipDisplayer, IPropertySheetOwner
+    public partial class FilesTreeForm : DockableFormEx, ITipDisplayer, IPropertyProvider
     {
         private NodeTip _nodeTip;
         private Panel _dropTargetRemove;
@@ -57,7 +57,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             filesTree.LabelEdit = true;
             filesTree.AllowDrop = true;
             filesTree.NodeMouseDoubleClick += FilesTree_TreeNodeMouseDoubleClick;
-            filesTree.AfterSelect += FilesTree_SelectedNodeChanged;
+            filesTree.AfterSelect += FilesTree_AfterSelect;
             filesTree.MouseMove += FilesTree_MouseMove;
             filesTree.LostFocus += FilesTree_LostFocus;
             filesTree.BeforeLabelEdit += FilesTree_BeforeLabelEdit;
@@ -356,11 +356,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         public GlobalizedObject GetSelectedObjectProperties()
         {
-            // Return the selected node's model as the object to display in the property sheet
-            if (!(FilesTree.SelectedNode is FilesTreeNode selectedNode))
-                return null;
-            var propertyObject = FileNodeProperties.Create(selectedNode.Model);
-            return propertyObject;
+            return FilesTree.CurrentlySelectedFTN.Model.GetProperties();
         }
 
         #endregion
@@ -437,7 +433,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             }
         }
 
-        private void FilesTree_SelectedNodeChanged(object sender, TreeViewEventArgs e)
+        private void FilesTree_AfterSelect(object sender, TreeViewEventArgs e)
         {
             NotifyPropertySheetOwnerGotFocus(SkylineWindow, e);
         }

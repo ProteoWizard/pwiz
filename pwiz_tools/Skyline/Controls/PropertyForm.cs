@@ -48,9 +48,9 @@ namespace pwiz.Skyline.Controls
 
         public void GetProperties(IDockableForm form)
         {
-            if (form is IPropertySheetOwner propertySheetOwnerForm)
+            if (form is IPropertyProvider propertyProviderForm)
             {
-                PropertyGrid.SelectedObject = propertySheetOwnerForm.GetSelectedObjectProperties();
+                PropertyGrid.SelectedObject = propertyProviderForm.GetSelectedObjectProperties();
             }
             else
             {

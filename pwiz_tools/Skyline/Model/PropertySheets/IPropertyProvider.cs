@@ -21,11 +21,11 @@ using System;
 
 namespace pwiz.Skyline.Model.PropertySheets
 {
-    public interface IPropertySheetOwner
+    public interface IPropertyProvider
     {
         /// <summary>
-        /// Should be called by the implementer when the selection changes or the owner gains focus,
-        /// to notify the main window to update the property sheet.
+        /// Should be called by the implementer when the selection changes and when the owner gains focus.
+        /// Implement to invoke <see cref="SkylineWindow.PotentialPropertySheetOwnerGotFocus"/> with the proper arguments.
         /// </summary>
         /// <param name="skylineWindow">The main SkylineWindow instance to notify.</param>
         /// <param name="e">The event args associated with the selection/focus change.</param>

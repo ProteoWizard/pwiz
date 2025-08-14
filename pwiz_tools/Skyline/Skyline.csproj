@@ -629,7 +629,7 @@
     <Compile Include="Model\IdPeptideDocNode.cs" />
     <Compile Include="Model\Lib\AlphaPeptDeep\AbstractDeepLibraryBuilder.cs" />
     <Compile Include="Model\Lib\Carafe\CarafeLibraryBuilder.cs" />
-    <Compile Include="Model\PropertySheets\IPropertySheetOwner.cs" />
+    <Compile Include="Model\PropertySheets\IPropertyProvider.cs" />
     <Compile Include="Model\PropertySheets\PropertySheetFileNodeResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -641,7 +641,7 @@
       <DependentUpon>PropertySheetResources.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\PropertySheets\Templates\FileNodeProperties.cs" />
-    <Compile Include="Model\PropertySheets\Templates\ReplicateProperties.cs" />
+    <Compile Include="Model\Files\ReplicateProperties.cs" />
     <Compile Include="Model\Proteome\AssociateProteinsResults.cs" />
     <Compile Include="Model\Lib\LibraryFiles.cs" />
     <Compile Include="Model\Results\LcPeakIonMetrics.cs" />

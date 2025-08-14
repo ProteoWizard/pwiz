@@ -81,7 +81,7 @@ namespace pwiz.Skyline.Model.Files
 
         internal IDocumentContainer DocumentContainer { get; }
         internal SrmDocument Document => DocumentContainer.Document;
-        public string DocumentPath => DocumentContainer.DocumentFilePath;
+        internal string DocumentPath => DocumentContainer.DocumentFilePath;
 
         public IdentityPath IdentityPath { get; }
         public virtual bool IsBackedByFile => false;
@@ -91,7 +91,6 @@ namespace pwiz.Skyline.Model.Files
         public abstract string Name { get; }
         public abstract string FilePath { get; }
         public virtual string FileName => Path.GetFileName(FilePath);
-        public string FileType => GetType().Name;
 
         public ImageId ImageAvailable { get; }
         public ImageId ImageMissing { get; }
@@ -99,6 +98,12 @@ namespace pwiz.Skyline.Model.Files
         public virtual IList<FileNode> Files => ImmutableList.Empty<FileNode>();
 
         public override string ToString() => @"FileNode: " + (Name ?? string.Empty);
+
+        // All implementers should override
+        public virtual GlobalizedObject GetProperties()
+        {
+            return null;
+        }
 
         /// <summary>
         /// Use this to decide whether the file represented by this model is ready to be monitored. A model may not be ready if:
