@@ -1093,7 +1093,7 @@ namespace pwiz.Skyline
                     SequenceTree.UseKeysOverride = false;
                     return true;
                 case Keys.F4:
-                    ShowPropertyForm(show: !_propertyForm.Visible);
+                    ShowPropertyForm(show: !(_propertyForm is { Visible: true }));
                     return true;
             }
             return base.ProcessCmdKey(ref msg, keyData);
