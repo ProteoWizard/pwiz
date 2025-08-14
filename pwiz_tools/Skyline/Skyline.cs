@@ -3212,13 +3212,12 @@ namespace pwiz.Skyline
         {
             if (show)
             {
-                var activeDockableForm = DockPanel.ActiveContent;
-                _propertyForm ??= CreatePropertyForm(persistentState);
-                _propertyForm.Show(dockPanel, DockState.DockRight);
-                if (activeDockableForm is IPropertySheetOwner propertySheetOwnerForm)
+                if (DockPanel.ActiveContent is IPropertySheetOwner propertySheetOwnerForm)
                 {
                     _propertyForm.PropertyGrid.SelectedObject = propertySheetOwnerForm.GetSelectedObjectProperties();
                 }
+                _propertyForm ??= CreatePropertyForm();
+                _propertyForm.Show(dockPanel, DockState.DockRight);
             }
             else
             {
@@ -3226,9 +3225,13 @@ namespace pwiz.Skyline
             }
         }
 
-        private PropertyForm CreatePropertyForm(string persistentString)
+        private PropertyForm CreatePropertyForm()
         {
             _propertyForm = new PropertyForm(this);
+            if (DockPanel.ActiveContent is IPropertySheetOwner propertySheetOwnerForm)
+            {
+                _propertyForm.PropertyGrid.SelectedObject = propertySheetOwnerForm.GetSelectedObjectProperties();
+            }
             return _propertyForm;
         }
 
