@@ -17,6 +17,8 @@
  * limitations under the License.
  */
 
+using DigitalRune.Windows.Docking;
+using pwiz.Skyline.Model.PropertySheets;
 using pwiz.Skyline.Util;
 using System.ComponentModel;
 using System.Windows.Forms;
@@ -43,5 +45,17 @@ namespace pwiz.Skyline.Controls
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public PropertyGrid PropertyGrid => propertyGrid;
+
+        public void GetProperties(IDockableForm form)
+        {
+            if (form is IPropertySheetOwner propertySheetOwnerForm)
+            {
+                PropertyGrid.SelectedObject = propertySheetOwnerForm.GetSelectedObjectProperties();
+            }
+            else
+            {
+                PropertyGrid.SelectedObject = null;
+            }
+        }
     }
 }
