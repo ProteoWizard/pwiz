@@ -121,18 +121,6 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         }
 
         /// <summary>
-        /// Checks whether an account has valid credentials by attempting to create a client and make an API call.
-        /// Going forward, use this method over anything related to authenticatedHttpClientFactory, as that method does a lot more than is needed
-        /// and spawns UI elements unnecessarily.
-        /// </summary>
-        /// <returns>Returns a result indicating whether the authentication succeeded.</returns>
-        public ArdiaResult CheckAuthentication()
-        {
-            var client = ArdiaClient.Create(this);
-            return client.CheckSession();
-        }
-
-        /// <summary>
         /// Checks whether an HttpClient configured using this account can successfully call the Ardia API. This
         /// makes a real request requiring authentication.
         ///

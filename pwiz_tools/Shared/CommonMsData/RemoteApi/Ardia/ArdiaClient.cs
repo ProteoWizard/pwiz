@@ -92,6 +92,27 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             return new ArdiaClient(account, serverUrl, applicationCode, token);
         }
 
+        /// <summary>
+        /// Checks whether an account has valid credentials by checking for nonempty token and application code,
+        /// then attempting to create a client and make an API call.
+        /// Going forward, use this method over anything related to authenticatedHttpClientFactory, as that method does a lot more than is needed
+        /// and spawns UI elements unnecessarily.
+        /// </summary>
+        /// <returns>Returns a result indicating whether the authentication succeeded.</returns>
+        public static ArdiaResult TestConnection(ArdiaAccount account)
+        {
+            var applicationCode = ArdiaCredentialHelper.GetApplicationCode(account);
+            var token = ArdiaCredentialHelper.GetToken(account);
+            if (string.IsNullOrEmpty(applicationCode) || token.IsNullOrEmpty())
+                return ArdiaResult.Failure(ArdiaResources.Error_InvalidToken, HttpStatusCode.Unauthorized, new UnauthorizedAccessException());
+
+            var ardiaUrl = account.GetRootArdiaUrl();
+            var serverUrl = ardiaUrl.ServerApiUrl;
+
+            var client = new ArdiaClient(account, serverUrl, applicationCode, token);
+            return client.CheckSession();
+        }
+
         private ArdiaClient(ArdiaAccount account, string serverUrl, string applicationCode, EncryptedToken token)
         {
             Account = account;

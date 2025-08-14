@@ -486,7 +486,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 longWaitDlg.PerformWork(this, 1000, (ILongWaitBroker broker) =>
                 {
-                    authenticationResult = ardiaAccount.CheckAuthentication();
+                    authenticationResult = ArdiaClient.TestConnection(ardiaAccount);
                 });
             }
             catch (OperationCanceledException)
