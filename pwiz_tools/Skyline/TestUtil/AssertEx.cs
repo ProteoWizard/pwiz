@@ -1212,8 +1212,8 @@ namespace pwiz.SkylineTestUtil
                     var actualSpectra = actualLoaded.GetSpectra(actual, IsotopeLabelType.light, LibraryRedundancy.best);
                     var actualSpectrum = actualSpectra.First().SpectrumPeaksInfo.Peaks;
 
-                    Array.Sort(expectedSpectrum, (s1, s2) => s2.Mz.CompareTo(s1.Mz));
-                    Array.Sort(actualSpectrum, (s1, s2) => s2.Mz.CompareTo(s1.Mz));
+                    Array.Sort(expectedSpectrum, (s1, s2) => s1.Mz.CompareTo(s2.Mz));
+                    Array.Sort(actualSpectrum, (s1, s2) => s1.Mz.CompareTo(s2.Mz));
 
                     var vectorLength = Math.Max( expectedSpectrum.Length, actualSpectrum.Length);
 
