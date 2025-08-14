@@ -51,7 +51,7 @@ namespace pwiz.Skyline.Model
                     TypeConverterDictionary.Add(methodKey, method);
             }
         }
-           
+
         protected abstract ResourceManager GetResourceManager();
         
         public String GetClassName() => TypeDescriptor.GetClassName(this, true);
