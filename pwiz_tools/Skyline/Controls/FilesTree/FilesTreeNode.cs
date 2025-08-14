@@ -24,7 +24,6 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Files;
-using pwiz.Skyline.Model.PropertySheets;
 using pwiz.Skyline.Model.PropertySheets.Templates;
 
 // ReSharper disable WrongIndentSize
@@ -37,7 +36,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         not_initialized
     }
 
-    public class FilesTreeNode : TreeNodeMS, ITipProvider, IPropertySheetOwner
+    public class FilesTreeNode : TreeNodeMS, ITipProvider
     {
         private FileNode _model;
 

@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System;
 using pwiz.Skyline.Model.Files;
 using System.ComponentModel;
 using System.Resources;
@@ -44,9 +43,9 @@ namespace pwiz.Skyline.Model.PropertySheets.Templates
             {
                 // Add other FileNode types here as needed
                 Replicate replicate => new ReplicateProperties(replicate),
-                _ => throw new NotImplementedException()
+                _ => null
             };
-            props.GetProperties();
+            props?.GetProperties();
 
             return props;
         }

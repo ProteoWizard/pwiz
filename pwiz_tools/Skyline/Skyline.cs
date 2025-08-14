@@ -3212,8 +3212,13 @@ namespace pwiz.Skyline
         {
             if (show)
             {
+                var activeDockableForm = DockPanel.ActiveContent;
                 _propertyForm ??= CreatePropertyForm(persistentState);
                 _propertyForm.Show(dockPanel, DockState.DockRight);
+                if (activeDockableForm is IPropertySheetOwner propertySheetOwnerForm)
+                {
+                    _propertyForm.PropertyGrid.SelectedObject = propertySheetOwnerForm.GetSelectedObjectProperties();
+                }
             }
             else
             {
@@ -3229,16 +3234,10 @@ namespace pwiz.Skyline
 
         public void PotentialPropertySheetOwnerGotFocus(object sender, EventArgs e)
         {
-            if ( !(_propertyForm is { Visible: true }) ) return;
+            if ( !(_propertyForm is { Visible: true }) || !(sender is IPropertySheetOwner owner)) return;
 
-            if (sender is IPropertySheetOwner owner)
-            {
-                _propertyForm.PropertyGrid.SelectedObject = owner.GetProperties();
-            }
-            else
-            {
-                _propertyForm.PropertyGrid.SelectedObject = null;
-            }
+            // PropertySheetOwner handles what to do when it gets focus
+            _propertyForm.PropertyGrid.SelectedObject = owner.GetSelectedObjectProperties();
         }
 
         #endregion

@@ -17,10 +17,20 @@
  * limitations under the License.
  */
 
+using System;
+
 namespace pwiz.Skyline.Model.PropertySheets
 {
     public interface IPropertySheetOwner
     {
-        public GlobalizedObject GetProperties();
+        /// <summary>
+        /// Should be called by the implementer when the selection changes or the owner gains focus,
+        /// to notify the main window to update the property sheet.
+        /// </summary>
+        /// <param name="skylineWindow">The main SkylineWindow instance to notify.</param>
+        /// <param name="e">The event args associated with the selection/focus change.</param>
+        void NotifyPropertySheetOwnerGotFocus(SkylineWindow skylineWindow, EventArgs e);
+
+        public GlobalizedObject GetSelectedObjectProperties();
     }
 }

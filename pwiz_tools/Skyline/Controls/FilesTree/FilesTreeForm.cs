@@ -25,6 +25,8 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Files;
+using pwiz.Skyline.Model.PropertySheets;
+using pwiz.Skyline.Model.PropertySheets.Templates;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using static pwiz.Skyline.Model.Files.FileNode;
@@ -36,7 +38,7 @@ using Process = System.Diagnostics.Process;
 // ReSharper disable WrongIndentSize
 namespace pwiz.Skyline.Controls.FilesTree
 {
-    public partial class FilesTreeForm : DockableFormEx, ITipDisplayer
+    public partial class FilesTreeForm : DockableFormEx, ITipDisplayer, IPropertySheetOwner
     {
         private NodeTip _nodeTip;
         private Panel _dropTargetRemove;
@@ -345,6 +347,24 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         #endregion
 
+        #region IPropertySheetOwner implementation
+
+        public void NotifyPropertySheetOwnerGotFocus(SkylineWindow skyline, EventArgs e)
+        {
+            SkylineWindow.PotentialPropertySheetOwnerGotFocus(this, e);
+        }
+
+        public GlobalizedObject GetSelectedObjectProperties()
+        {
+            // Return the selected node's model as the object to display in the property sheet
+            if (!(FilesTree.SelectedNode is FilesTreeNode selectedNode))
+                return null;
+            var propertyObject = FileNodeProperties.Create(selectedNode.Model);
+            return propertyObject;
+        }
+
+        #endregion
+
         // TreeNode => Open Context Menu
         private void FilesTree_ContextMenuStrip_Opening(object sender, CancelEventArgs e)
         {
@@ -419,10 +439,9 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         private void FilesTree_SelectedNodeChanged(object sender, TreeViewEventArgs e)
         {
-            var clickedNode = e.Node;
-            SkylineWindow.PotentialPropertySheetOwnerGotFocus(clickedNode, e);
+            NotifyPropertySheetOwnerGotFocus(SkylineWindow, e);
         }
-            
+        
         private void FilesTree_BeforeCollapse(object sender, TreeViewCancelEventArgs e)
         {
             // CONSIDER: change FilesTree UI so the root node is a label and not

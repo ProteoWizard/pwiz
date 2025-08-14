@@ -37,10 +37,10 @@ namespace pwiz.Skyline.Model.PropertySheets.Templates
             SampleType = replicate.ChromatogramSet.SampleType?.ToString() ?? string.Empty;
         }
 
-        [Category("Chromatagram")] public string BatchName { get; set; }
-        [Category("Chromatagram")] public double? AnalyteConcentration { get; set; }
-        [Category("Chromatagram")] public double SampleDilutionFactor { get; set; }
-        [Category("Chromatagram")] public string SampleType { get; set; }
+        [Category("Replicate")] public string BatchName { get; set; }
+        [Category("Replicate")] public double? AnalyteConcentration { get; set; }
+        [Category("Replicate")] public double SampleDilutionFactor { get; set; }
+        [Category("Replicate")] public string SampleType { get; set; }
 
         // Test Support - enforced by code check
         // Invoked via reflection in InspectPropertySheetResources in CodeInspectionTest
