@@ -115,7 +115,7 @@ namespace pwiz.Skyline.Model
                 }
             }
             return globalizedProps;
-        }   
+        }
 
         public PropertyDescriptorCollection GetProperties()
         {
