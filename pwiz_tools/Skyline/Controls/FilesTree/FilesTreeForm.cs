@@ -26,7 +26,6 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Files;
 using pwiz.Skyline.Model.PropertySheets;
-using pwiz.Skyline.Model.PropertySheets.Templates;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using static pwiz.Skyline.Model.Files.FileNode;
@@ -489,6 +488,11 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             var selection = FilesTree.SelectedNodes.Cast<FilesTreeNode>().ToList();
             RemoveSelected(selection);
+        }
+
+        private void FilesTree_OpenPropertiesViewMenuItem(object sender, EventArgs e)
+        {
+            SkylineWindow.ShowPropertyForm(true);
         }
 
         // FilesTree => initiate drag-and-drop, hide tooltips 
