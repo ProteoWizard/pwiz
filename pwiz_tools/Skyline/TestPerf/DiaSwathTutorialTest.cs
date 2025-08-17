@@ -1274,7 +1274,7 @@ namespace TestPerf
                     return; // fold change bar graphs don't behave the same way for DIA-NN results as for iProphet, so exit early
                 }
 
-                WaitForCondition(() => barGraph.IsComplete);
+                WaitForConditionUI(() => barGraph.IsComplete);
                 if (IsRecordMode)
                 {
                     _expectedValues.PolishedProteins = GetBarCount(barGraph);
@@ -1290,7 +1290,7 @@ namespace TestPerf
 
                 RestoreViewOnScreen(31);
                 barGraph = WaitForOpenForm<FoldChangeBarGraph>();
-                WaitForCondition(() => barGraph.IsComplete);
+                WaitForConditionUI(() => barGraph.IsComplete);
                 RunUIForScreenShot(() =>
                 {
                     var yScale = barGraph.ZedGraphControl.GraphPane.YAxis.Scale;
