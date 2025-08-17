@@ -116,7 +116,12 @@ namespace pwiz.Skyline.Menus
             {
                 if (decoysDlg.ShowDialog(owner ?? SkylineWindow) == DialogResult.OK)
                 {
-                    var refinementSettings = new RefinementSettings { NumberOfDecoys = decoysDlg.NumDecoys, DecoysMethod = decoysDlg.DecoysMethod };
+                    var refinementSettings = new RefinementSettings
+                    {
+                        NumberOfDecoys = decoysDlg.NumDecoys, 
+                        DecoysMethod = decoysDlg.DecoysMethod,
+                        AddDecoyMassShift = decoysDlg.AddMassShift
+                    };
                     SkylineWindow.ModifyDocument(MenusResources.SkylineWindow_ShowGenerateDecoysDlg_Generate_Decoys, 
                         DocumentModifier.Create(refinementSettings.ModifyDocumentByGeneratingDecoys));
 

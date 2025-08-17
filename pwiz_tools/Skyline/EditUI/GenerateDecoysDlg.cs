@@ -50,6 +50,18 @@ namespace pwiz.Skyline.EditUI
             set { comboDecoysGenerationMethod.SelectedItem = value; }
         }
 
+        public bool AddMassShift
+        {
+            get
+            {
+                return cbxAddMassShift.Checked;
+            }
+            set
+            {
+                cbxAddMassShift.Checked = value;
+            }
+        }
+
         public GenerateDecoysDlg(SrmDocument document)
         {
             _document = document;
@@ -64,6 +76,7 @@ namespace pwiz.Skyline.EditUI
             // Fill method type combo box
             comboDecoysGenerationMethod.Items.AddRange(DecoyGeneration.Methods.Cast<object>().ToArray());
             comboDecoysGenerationMethod.SelectedIndex = 0;
+            cbxAddMassShift.Checked = true;
         }
 
         public void OkDialog()
@@ -95,6 +108,11 @@ namespace pwiz.Skyline.EditUI
         private void btnOK_Click(object sender, EventArgs e)
         {
             OkDialog();
+        }
+
+        private void comboDecoysGenerationMethod_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            cbxAddMassShift.Checked = DecoyGeneration.ADD_RANDOM.Equals(comboDecoysGenerationMethod.SelectedItem);
         }
     }
 }
