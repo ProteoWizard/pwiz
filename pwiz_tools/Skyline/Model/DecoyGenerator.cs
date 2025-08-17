@@ -1,4 +1,23 @@
-﻿using pwiz.Skyline.Model.DocSettings;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2025 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Util;
 using System;
@@ -12,6 +31,46 @@ namespace pwiz.Skyline.Model
         private const int RANDOM_SEED = 7 * 7 * 7 * 7 * 7; // 7^5 recommended by Brian S.
 
         public Random Random { get; set; } = new Random(RANDOM_SEED);
+
+        public bool PreservePrecursorMass { get; set; }
+
+        public class Shuffler : DecoyGenerator
+        {
+            protected override SequenceMods PermuteSequence(SequenceMods sequenceMods)
+            {
+                return sequenceMods.Shuffle(Random);
+            }
+
+            protected override bool MultiCycle
+            {
+                get { return true; }
+            }
+        }
+
+        public class Reverser : DecoyGenerator
+        {
+            protected override SequenceMods PermuteSequence(SequenceMods sequenceMods)
+            {
+                if (sequenceMods.Sequence.Take(sequenceMods.Sequence.Length - 1).Distinct().Count() <= 1)
+                {
+                    return null;
+                }
+                var reversed = sequenceMods.Reverse();
+                if (PreservePrecursorMass && reversed.Sequence == sequenceMods.Sequence)
+                {
+                    return null;
+                }
+                return reversed;
+            }
+        }
+
+        public class MassShifter : DecoyGenerator
+        {
+            protected override SequenceMods PermuteSequence(SequenceMods sequenceMods)
+            {
+                return sequenceMods;
+            }
+        }
 
         public SrmDocument AddDecoys(SrmDocument document, int numDecoys)
         {
@@ -40,6 +99,7 @@ namespace pwiz.Skyline.Model
                         {
                             break;
                         }
+
                         var decoyPeptide = new Peptide(null, seqMods.Sequence, null, null, enzyme.CountCleavagePoints(seqMods.Sequence), true);
                         seqMods = new SequenceMods(decoyPeptide, decoyPeptide.Sequence, seqMods.Mods?.ChangePeptide(decoyPeptide));
                         var retry = false;
@@ -73,7 +133,10 @@ namespace pwiz.Skyline.Model
 
                             // Avoid adding duplicate peptides
                             if (!setDecoyKeys.Add(nodePepNew.Key))
+                            {
+                                retry = MultiCycle;
                                 continue;
+                            }
 
                             decoyNodePepList.Add(nodePepNew);
                             numDecoys--;
@@ -103,9 +166,7 @@ namespace pwiz.Skyline.Model
             ExplicitMods mods, IEnumerable<TransitionGroupDocNode> comparableGroups, SrmDocument document)
         {
             var decoyNodeTranGroupList = new List<TransitionGroupDocNode>();
-            var chargeToPrecursor =
-                new Tuple<int, TransitionGroupDocNode>[2 * (TransitionGroup.MAX_PRECURSOR_CHARGE +
-                                                            1)]; // Allow for negative charges
+            var chargeToPrecursor = new Dictionary<int, Tuple<int, TransitionGroupDocNode>>();
             bool shiftMass = nodePep.Peptide.Sequence == decoyPeptide.Sequence;
             foreach (TransitionGroupDocNode nodeGroup in comparableGroups)
             {
@@ -113,23 +174,19 @@ namespace pwiz.Skyline.Model
 
                 int precursorMassShift;
                 TransitionGroupDocNode nodeGroupPrimary = null;
-
-                var primaryPrecursor =
-                    chargeToPrecursor[
-                        TransitionGroup.MAX_PRECURSOR_CHARGE +
-                        nodeGroup.TransitionGroup.PrecursorAdduct.AdductCharge]; // Allow for negative charges
-                if (primaryPrecursor != null)
+                if (chargeToPrecursor.TryGetValue(nodeGroup.TransitionGroup.PrecursorCharge,
+                        out var primaryPrecursor))
                 {
                     precursorMassShift = primaryPrecursor.Item1;
                     nodeGroupPrimary = primaryPrecursor.Item2;
                 }
                 else if (shiftMass)
                 {
-                    precursorMassShift = GetPrecursorMassShift();
+                    precursorMassShift = NextPrecursorMassShift();
                 }
                 else
                 {
-                    precursorMassShift = TransitionGroup.ALTERED_SEQUENCE_DECOY_MZ_SHIFT;
+                    precursorMassShift = PreservePrecursorMass ? 0 : TransitionGroup.ALTERED_SEQUENCE_DECOY_MZ_SHIFT;
                 }
 
                 var decoyGroup = new TransitionGroup(decoyPeptide, transGroup.PrecursorAdduct,
@@ -152,16 +209,14 @@ namespace pwiz.Skyline.Model
 
                 if (primaryPrecursor == null)
                 {
-                    chargeToPrecursor
-                            [TransitionGroup.MAX_PRECURSOR_CHARGE + transGroup.PrecursorAdduct.AdductCharge] = // Allow for negative charges
-                        new Tuple<int, TransitionGroupDocNode>(precursorMassShift, nodeGroupDecoy);
+                    chargeToPrecursor.Add(transGroup.PrecursorCharge, Tuple.Create(precursorMassShift, nodeGroupDecoy));
                 }
             }
 
             return decoyNodeTranGroupList;
         }
 
-        private int GetPrecursorMassShift()
+        private int NextPrecursorMassShift()
         {
             // Do not allow zero for the mass shift of the precursor
             int massShift = Random.Next(TransitionGroup.MIN_PRECURSOR_DECOY_MASS_SHIFT,
@@ -177,7 +232,7 @@ namespace pwiz.Skyline.Model
                 var transition = nodeTran.Transition;
                 int productMassShift = 0;
                 if (shiftMass)
-                    productMassShift = GetProductMassShift();
+                    productMassShift = NextProductMassShift();
                 else if (transition.IsPrecursor() && decoyGroup.DecoyMassShift.HasValue)
                     productMassShift = decoyGroup.DecoyMassShift.Value;
                 var decoyTransition = new Transition(decoyGroup, transition.IonType, transition.CleavageOffset,
@@ -188,7 +243,7 @@ namespace pwiz.Skyline.Model
             return decoyNodeTranList.ToArray();
         }
 
-        private int GetProductMassShift()
+        private int NextProductMassShift()
         {
             int massShift = Random.Next(Transition.MIN_PRODUCT_DECOY_MASS_SHIFT,
                 Transition.MAX_PRODUCT_DECOY_MASS_SHIFT);
@@ -197,42 +252,6 @@ namespace pwiz.Skyline.Model
         }
 
 
-        public class Shuffler : DecoyGenerator
-        {
-            protected override SequenceMods PermuteSequence(SequenceMods sequenceMods)
-            {
-                if (sequenceMods.Sequence.Take(sequenceMods.Sequence.Length - 1).Distinct().Count() <= 1)
-                {
-                    return null;
-                }
-                return sequenceMods.Shuffle(Random);
-            }
-
-            protected override bool MultiCycle
-            {
-                get { return true; }
-            }
-        }
-
-        public class Reverser : DecoyGenerator
-        {
-            protected override SequenceMods PermuteSequence(SequenceMods sequenceMods)
-            {
-                if (sequenceMods.Sequence.Take(sequenceMods.Sequence.Length - 1).Distinct().Count() <= 1)
-                {
-                    return null;
-                }
-                return sequenceMods.Reverse();
-            }
-        }
-
-        public class MassShifter : DecoyGenerator
-        {
-            protected override SequenceMods PermuteSequence(SequenceMods sequenceMods)
-            {
-                return sequenceMods;
-            }
-        }
 
         protected abstract SequenceMods PermuteSequence(SequenceMods sequenceMods);
         protected virtual bool MultiCycle
@@ -240,28 +259,12 @@ namespace pwiz.Skyline.Model
             get { return false; }
         }
 
-        protected virtual bool CanPermute(SequenceMods sequenceMods)
-        {
-            return sequenceMods.Sequence.Take(sequenceMods.Sequence.Length - 1).Distinct().Count() > 1;
-        }
-        
         private static IList<ExplicitMod> GetReversedMods(IEnumerable<ExplicitMod> mods, int lenSeq)
         {
             return GetRearrangedMods(mods, lenSeq, i => lenSeq - i - 1);
         }
 
-        private static IEnumerable<TypedExplicitModifications> GetReversedHeavyMods(SequenceMods seqMods,
-            TypedExplicitModifications typedStaticMods, int lenSeq)
-        {
-            var reversedHeavyMods = seqMods.Mods.GetHeavyModifications().Select(typedMod =>
-                new TypedExplicitModifications(seqMods.Peptide, typedMod.LabelType, GetReversedMods(typedMod.Modifications, lenSeq)));
-            foreach (var typedMods in reversedHeavyMods)
-            {
-                yield return typedMods.AddModMasses(typedStaticMods);
-            }
-        }
-
-        public class SequenceMods
+        protected class SequenceMods
         {
             public SequenceMods(PeptideDocNode peptideDocNode) : this(peptideDocNode.Peptide,
                 peptideDocNode.Peptide.Sequence, peptideDocNode.ExplicitMods)
@@ -282,6 +285,10 @@ namespace pwiz.Skyline.Model
             {
                 char finalA = Sequence.Last();
                 string sequencePrefix = Sequence.Substring(0, Sequence.Length - 1);
+                if (sequencePrefix.Distinct().Count() <= 1)
+                {
+                    return null;
+                }
                 int lenPrefix = sequencePrefix.Length;
 
                 // Calculate a random shuffling of the current positions
@@ -369,6 +376,7 @@ namespace pwiz.Skyline.Model
                 ? new TypedExplicitModifications(peptide, IsotopeLabelType.light, staticMods)
                 : null;
         }
+
         private static IList<ExplicitMod> GetRearrangedMods(IEnumerable<ExplicitMod> mods, int lenSeq,
             Func<int, int> getNewIndex)
         {
@@ -376,7 +384,7 @@ namespace pwiz.Skyline.Model
             {
                 return null;
             }
-            
+
             var arrayMods = mods.ToList();
             for (int i = 0; i < arrayMods.Count; i++)
             {
@@ -387,6 +395,5 @@ namespace pwiz.Skyline.Model
 
             return arrayMods.OrderBy(mod => mod.IndexAA).ToList();
         }
-
     }
 }

@@ -35,7 +35,7 @@
             this.btnOK = new System.Windows.Forms.Button();
             this.label3 = new System.Windows.Forms.Label();
             this.comboDecoysGenerationMethod = new System.Windows.Forms.ComboBox();
-            this.cbxAddMassShift = new System.Windows.Forms.CheckBox();
+            this.cbxPreservePrecursorMass = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // label1
@@ -75,11 +75,11 @@
             this.comboDecoysGenerationMethod.Name = "comboDecoysGenerationMethod";
             this.comboDecoysGenerationMethod.SelectedIndexChanged += new System.EventHandler(this.comboDecoysGenerationMethod_SelectedIndexChanged);
             // 
-            // cbxAddMassShift
+            // cbxPreservePrecursorMass
             // 
-            resources.ApplyResources(this.cbxAddMassShift, "cbxAddMassShift");
-            this.cbxAddMassShift.Name = "cbxAddMassShift";
-            this.cbxAddMassShift.UseVisualStyleBackColor = true;
+            resources.ApplyResources(this.cbxPreservePrecursorMass, "cbxPreservePrecursorMass");
+            this.cbxPreservePrecursorMass.Name = "cbxPreservePrecursorMass";
+            this.cbxPreservePrecursorMass.UseVisualStyleBackColor = true;
             // 
             // GenerateDecoysDlg
             // 
@@ -87,7 +87,7 @@
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.Controls.Add(this.cbxAddMassShift);
+            this.Controls.Add(this.cbxPreservePrecursorMass);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.comboDecoysGenerationMethod);
             this.Controls.Add(this.btnCancel);
@@ -112,6 +112,6 @@
         private System.Windows.Forms.Button btnOK;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.ComboBox comboDecoysGenerationMethod;
-        private System.Windows.Forms.CheckBox cbxAddMassShift;
+        private System.Windows.Forms.CheckBox cbxPreservePrecursorMass;
     }
 }

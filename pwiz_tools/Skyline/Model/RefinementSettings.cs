@@ -202,7 +202,7 @@ namespace pwiz.Skyline.Model
         public bool AutoPickChildrenOff { get; set; }
         public int NumberOfDecoys { get; set; }
         public string DecoysMethod { get; set; }
-        public bool AddDecoyMassShift { get; set; } = true;
+        public bool NeverShiftDecoyPrecursorMass { get; set; } = false;
 
         public enum ReplicateInclusion { all, best }
 
@@ -1396,6 +1396,7 @@ namespace pwiz.Skyline.Model
                 decoyGenerator = new DecoyGenerator.MassShifter();
             }
 
+            decoyGenerator.PreservePrecursorMass = NeverShiftDecoyPrecursorMass;
             return decoyGenerator.AddDecoys(document, numDecoys);
         }
 

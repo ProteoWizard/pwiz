@@ -276,31 +276,31 @@
   <data name="&gt;&gt;comboDecoysGenerationMethod.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <data name="cbxAddMassShift.AutoSize" type="System.Boolean, mscorlib">
+  <data name="cbxPreservePrecursorMass.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="cbxAddMassShift.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="cbxPreservePrecursorMass.Location" type="System.Drawing.Point, System.Drawing">
     <value>15, 133</value>
   </data>
-  <data name="cbxAddMassShift.Size" type="System.Drawing.Size, System.Drawing">
-    <value>116, 17</value>
+  <data name="cbxPreservePrecursorMass.Size" type="System.Drawing.Size, System.Drawing">
+    <value>142, 17</value>
   </data>
-  <data name="cbxAddMassShift.TabIndex" type="System.Int32, mscorlib">
+  <data name="cbxPreservePrecursorMass.TabIndex" type="System.Int32, mscorlib">
     <value>18</value>
   </data>
-  <data name="cbxAddMassShift.Text" xml:space="preserve">
-    <value>Also add mass shift</value>
+  <data name="cbxPreservePrecursorMass.Text" xml:space="preserve">
+    <value>Preserve precursor mass</value>
   </data>
-  <data name="&gt;&gt;cbxAddMassShift.Name" xml:space="preserve">
-    <value>cbxAddMassShift</value>
+  <data name="&gt;&gt;cbxPreservePrecursorMass.Name" xml:space="preserve">
+    <value>cbxPreservePrecursorMass</value>
   </data>
-  <data name="&gt;&gt;cbxAddMassShift.Type" xml:space="preserve">
+  <data name="&gt;&gt;cbxPreservePrecursorMass.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;cbxAddMassShift.Parent" xml:space="preserve">
+  <data name="&gt;&gt;cbxPreservePrecursorMass.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;cbxAddMassShift.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;cbxPreservePrecursorMass.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">

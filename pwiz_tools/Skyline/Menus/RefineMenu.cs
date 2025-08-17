@@ -120,7 +120,7 @@ namespace pwiz.Skyline.Menus
                     {
                         NumberOfDecoys = decoysDlg.NumDecoys, 
                         DecoysMethod = decoysDlg.DecoysMethod,
-                        AddDecoyMassShift = decoysDlg.AddMassShift
+                        NeverShiftDecoyPrecursorMass = decoysDlg.PreservePrecursorMass
                     };
                     SkylineWindow.ModifyDocument(MenusResources.SkylineWindow_ShowGenerateDecoysDlg_Generate_Decoys, 
                         DocumentModifier.Create(refinementSettings.ModifyDocumentByGeneratingDecoys));

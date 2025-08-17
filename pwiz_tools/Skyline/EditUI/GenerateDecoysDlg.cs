@@ -50,15 +50,15 @@ namespace pwiz.Skyline.EditUI
             set { comboDecoysGenerationMethod.SelectedItem = value; }
         }
 
-        public bool AddMassShift
+        public bool PreservePrecursorMass
         {
             get
             {
-                return cbxAddMassShift.Checked;
+                return cbxPreservePrecursorMass.Checked;
             }
             set
             {
-                cbxAddMassShift.Checked = value;
+                cbxPreservePrecursorMass.Checked = value;
             }
         }
 
@@ -76,7 +76,6 @@ namespace pwiz.Skyline.EditUI
             // Fill method type combo box
             comboDecoysGenerationMethod.Items.AddRange(DecoyGeneration.Methods.Cast<object>().ToArray());
             comboDecoysGenerationMethod.SelectedIndex = 0;
-            cbxAddMassShift.Checked = true;
         }
 
         public void OkDialog()
@@ -112,7 +111,7 @@ namespace pwiz.Skyline.EditUI
 
         private void comboDecoysGenerationMethod_SelectedIndexChanged(object sender, EventArgs e)
         {
-            cbxAddMassShift.Checked = DecoyGeneration.ADD_RANDOM.Equals(comboDecoysGenerationMethod.SelectedItem);
+            cbxPreservePrecursorMass.Enabled = !DecoyGeneration.ADD_RANDOM.Equals(DecoysMethod);
         }
     }
 }
