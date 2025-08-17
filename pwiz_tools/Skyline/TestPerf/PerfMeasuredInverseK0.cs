@@ -145,7 +145,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
             // And read some mz5 converted from Bruker in 2-array IMS format, then compare replicates - should be identical
             var mz5 = TestFilesDir.GetTestPath(bsaFmolTimsInfusionesiPrecMz5Mz5);
-            ImportResultsFile(mz5);
+            ImportResultsFile(mz5, waitForLoadSeconds:4200);
             document = WaitForDocumentChange(document);
             var sb = new StringBuilder();
             int trials = 0;
