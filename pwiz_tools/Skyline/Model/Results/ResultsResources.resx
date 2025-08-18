@@ -344,4 +344,7 @@ It is recommended that you delete this file so that Skyline can create a new fil
   <data name="PeptideChromDataSets_FilterByRetentionTime_Discarding_empty_chromatograms_for__0_" xml:space="preserve">
     <value>Discarding empty chromatograms for {0}</value>
   </data>
+  <data name="SpectrumFilter_No_Isolation_Window_Found_For_Precursor_" xml:space="preserve">
+      <value>No isolation window found in {0} for precursor {1} (m/z={2} im={3})</value>
+  </data>
 </root>
