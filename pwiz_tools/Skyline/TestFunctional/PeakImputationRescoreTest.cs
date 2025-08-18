@@ -95,7 +95,6 @@ namespace pwiz.SkylineTestFunctional
             {
                 foreach (var molecule in moleculeList.Molecules)
                 {
-                    var identityPath = new IdentityPath(moleculeList.PeptideGroup, molecule.Peptide);
                     var exemplaryPeak = peakBoundaryImputer.GetExemplaryPeak(molecule);
                     Assert.IsNotNull(exemplaryPeak);
                     var exemplaryPeakMidPoint = (exemplaryPeak.Peak.StartTime + exemplaryPeak.Peak.EndTime) / 2;
