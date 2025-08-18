@@ -2365,7 +2365,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Molecules belong to Molecule Lists and contain Percursors..
+        ///   Looks up a localized string similar to Molecules belong to Molecule Lists and contain Precursors..
         /// </summary>
         public static string Molecule {
             get {
@@ -2392,7 +2392,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A number representing the abundance of the molecule list, calculated according to the &quot;Normalization Method&quot; specified in the Molecule Quantification settings.
+        ///   Looks up a localized string similar to A number representing the abundance of the molecule list.
+        ///Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings..
         /// </summary>
         public static string MoleculeListAbundance {
             get {
@@ -2410,7 +2411,19 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A number representing the abundance of the molecule list, calculated according to the &quot;Normalization Method&quot; specified in the Molecule Quantification settings.
+        ///   Looks up a localized string similar to A number representing the abundance of the molecule list.
+        ///Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.
+        ///Available even when missing data impacts comparisons between replicates..
+        /// </summary>
+        public static string MoleculeListAbundanceRaw {
+            get {
+                return ResourceManager.GetString("MoleculeListAbundanceRaw", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A number representing the abundance of the molecule list.
+        ///Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.
         ///Unavailable when missing data impacts comparisons between replicates..
         /// </summary>
         public static string MoleculeListAbundanceStrict {
@@ -2420,8 +2433,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Average of the normalized areas of the transitions under the Molecule List.
-        ///The areas are normalized according to the Normalization Method specified in the Molecule Quantification settings..
+        ///   Looks up a localized string similar to Obsolete: Use Molecule List Abundance Raw instead..
         /// </summary>
         public static string MoleculeListAbundanceTransitionAveraged {
             get {
@@ -2430,8 +2442,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Sum of the normalized areas of the transitions under the Molecule List.
-        ///The areas are normalized according to the Normalization Method specified in the Molecule Quantification settings.
+        ///   Looks up a localized string similar to Obsolete: Equal to Molecule List Abundance Raw times the number of Transitions..
         /// </summary>
         public static string MoleculeListAbundanceTransitionSummed {
             get {
@@ -3447,7 +3458,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A number representing the abundance of the protein, calculated according to the &quot;Normalization Method&quot; specified in the Peptide Quantification settings..
+        ///   Looks up a localized string similar to A number representing the abundance of the molecule list.
+        ///Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings..
         /// </summary>
         public static string ProteinAbundance {
             get {
@@ -3465,7 +3477,19 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A number representing the abundance of the protein, calculated according to the &quot;Normalization Method&quot; specified in the Peptide Quantification settings.
+        ///   Looks up a localized string similar to A number representing the abundance of the molecule list.
+        ///Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.
+        ///Available even when missing data impacts comparisons between replicates..
+        /// </summary>
+        public static string ProteinAbundanceRaw {
+            get {
+                return ResourceManager.GetString("ProteinAbundanceRaw", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A number representing the abundance of the molecule list.
+        ///Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.
         ///Unavailable when missing data impacts comparisons between replicates..
         /// </summary>
         public static string ProteinAbundanceStrict {
@@ -3475,8 +3499,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Average of the normalized areas of the transitions under the Protein.
-        ///The areas are normalized according to the Normalization Method specified in the Peptide Quantification settings..
+        ///   Looks up a localized string similar to Obsolete: Use Protein Abundance Raw instead..
         /// </summary>
         public static string ProteinAbundanceTransitionAveraged {
             get {
@@ -3485,8 +3508,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Sum of the normalized areas of the transitions under the Protein.
-        ///The areas are normalized according to the Normalization Method specified in the Peptide Quantification settings..
+        ///   Looks up a localized string similar to Obsolete: Equal to Protein Abundance Raw times the number of transitions..
         /// </summary>
         public static string ProteinAbundanceTransitionSummed {
             get {

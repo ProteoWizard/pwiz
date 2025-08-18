@@ -879,6 +879,9 @@
   <data name="MoleculeListAbundanceMessage">
     <value>Molecule List Abundance Message</value>
   </data>
+  <data name="MoleculeListAbundanceRaw">
+    <value>Molecule List Abundance Raw</value>
+  </data>
   <data name="MoleculeListAbundanceStrict">
     <value>Molecule List Abundance Strict</value>
   </data>
@@ -1217,6 +1220,9 @@
   </data>
   <data name="ProteinAbundanceMessage">
     <value>Protein Abundance Message</value>
+  </data>
+  <data name="ProteinAbundanceRaw">
+    <value>Protein Abundance Raw</value>
   </data>
   <data name="ProteinAbundanceStrict">
     <value>Protein Abundance Strict</value>

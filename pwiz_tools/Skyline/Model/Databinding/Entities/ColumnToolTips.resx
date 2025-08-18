@@ -910,7 +910,7 @@ cysteine alkylation. (example: AGLC[+57]QTFVYGGC[+57]R)</value>
 modified on disk</value>
   </data>
   <data name="Molecule">
-    <value>Molecules belong to Molecule Lists and contain Percursors.</value>
+    <value>Molecules belong to Molecule Lists and contain Precursors.</value>
   </data>
   <data name="MoleculeFormula">
     <value>An atomic chemical formula for the neutral, unlabeled molecule to be measured in a mass spectrometer.</value>
@@ -919,22 +919,27 @@ modified on disk</value>
     <value>A grouping of molecules in a Skyline document.</value>
   </data>
   <data name="MoleculeListAbundance">
-    <value>A number representing the abundance of the molecule list, calculated according to the "Normalization Method" specified in the Molecule Quantification settings</value>
+    <value>A number representing the abundance of the molecule list.
+Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.</value>
   </data>
   <data name="MoleculeListAbundanceMessage">
     <value>Warning if missing data impacts comparisons of "Molecule List Abundance" between replicates</value>
   </data>
+  <data name="MoleculeListAbundanceRaw">
+    <value>A number representing the abundance of the molecule list.
+Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.
+Available even when missing data impacts comparisons between replicates.</value>
+  </data>
   <data name="MoleculeListAbundanceStrict">
-    <value>A number representing the abundance of the molecule list, calculated according to the "Normalization Method" specified in the Molecule Quantification settings.
+    <value>A number representing the abundance of the molecule list.
+Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.
 Unavailable when missing data impacts comparisons between replicates.</value>
   </data>
   <data name="MoleculeListAbundanceTransitionAveraged">
-    <value>Average of the normalized areas of the transitions under the Molecule List.
-The areas are normalized according to the Normalization Method specified in the Molecule Quantification settings.</value>
+    <value>Obsolete: Use Molecule List Abundance Raw instead.</value>
   </data>
   <data name="MoleculeListAbundanceTransitionSummed">
-    <value>Sum of the normalized areas of the transitions under the Molecule List.
-The areas are normalized according to the Normalization Method specified in the Molecule Quantification settings</value>
+    <value>Obsolete: Equal to Molecule List Abundance Raw times the number of Transitions.</value>
   </data>
   <data name="MoleculeListLocator">
     <value>Unique identifier of the molecule list within the document. This begins with "MoleculeGroup:".</value>
@@ -1303,22 +1308,27 @@ greater than 25% of the background-subtracted peak height higher than the other 
     <value>Protein</value>
   </data>
   <data name="ProteinAbundance">
-    <value>A number representing the abundance of the protein, calculated according to the "Normalization Method" specified in the Peptide Quantification settings.</value>
+    <value>A number representing the abundance of the molecule list.
+Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.</value>
   </data>
   <data name="ProteinAbundanceMessage">
     <value>Warning if missing data impacts comparisons of "Protein Abundance" between replicates</value>
   </data>
+  <data name="ProteinAbundanceRaw">
+    <value>A number representing the abundance of the molecule list.
+Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.
+Available even when missing data impacts comparisons between replicates.</value>
+  </data>
   <data name="ProteinAbundanceStrict">
-    <value>A number representing the abundance of the protein, calculated according to the "Normalization Method" specified in the Peptide Quantification settings.
+    <value>A number representing the abundance of the molecule list.
+Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.
 Unavailable when missing data impacts comparisons between replicates.</value>
   </data>
   <data name="ProteinAbundanceTransitionAveraged">
-    <value>Average of the normalized areas of the transitions under the Protein.
-The areas are normalized according to the Normalization Method specified in the Peptide Quantification settings.</value>
+    <value>Obsolete: Use Protein Abundance Raw instead.</value>
   </data>
   <data name="ProteinAbundanceTransitionSummed">
-    <value>Sum of the normalized areas of the transitions under the Protein.
-The areas are normalized according to the Normalization Method specified in the Peptide Quantification settings.</value>
+    <value>Obsolete: Equal to Protein Abundance Raw times the number of transitions.</value>
   </data>
   <data name="ProteinAccession">
     <value>Protein Accession</value>
