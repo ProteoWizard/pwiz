@@ -84,7 +84,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 SkylineWindow.OpenFile(skyfile);
             });
             var doc0 = WaitForDocumentLoaded();
-PauseTest();
+
             // For debug convenience
             //  RemoveReplicateReference(@"DiaPASEF"); // debug convenience - remove 20240619_HeLa_400ng_py12_IO25_35min_Slot2-25_1_8265
             //  RemoveReplicateReference(@"synchroPASEF"); // debug convenience - remove B_240304_IO25x75_HeLa_35min_vista_6S_200mz_70ms_Slot2-1_1_7799
@@ -134,7 +134,7 @@ PauseTest();
             }
             loadStopwatch.Stop();
             DebugLog.Info("load time = {0}", loadStopwatch.ElapsedMilliseconds);
-PauseTest();
+
             var diffFileE = TestFilesDir.GetTestPath("expected.txt"); // For debug convenience e.g. WinMerge
             var diffFileA = TestFilesDir.GetTestPath("actual.txt");
 
