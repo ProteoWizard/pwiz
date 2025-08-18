@@ -355,7 +355,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         public GlobalizedObject GetSelectedObjectProperties()
         {
-            return FilesTree.CurrentlySelectedFTN.Model.GetProperties();
+            return FilesTree.CurrentlySelectedFTN?.Model.GetProperties();
         }
 
         #endregion

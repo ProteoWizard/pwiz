@@ -18,17 +18,63 @@
  */
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline;
+using pwiz.Skyline.Model.Files;
 using pwiz.SkylineTestUtil;
+using System.ComponentModel;
 
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
-    public class PropertySheetTest : AbstractUnitTest
+    public class PropertySheetTest : AbstractFunctionalTest
     {
+        internal const string RAT_PLASMA_FILE_NAME = "Rat_plasma.sky";
+
         [TestMethod]
         public void TestPropertySheet()
         {
+            TestFilesZip = @"TestFunctional\FilesTreeFormTest.zip";
+            RunFunctionalTest();
+        }
 
+        protected override void DoTest()
+        {
+            TestFileNodeProperties();
+        }
+
+        protected void TestFileNodeProperties()
+        {
+            var documentPath = TestFilesDir.GetTestPath(RAT_PLASMA_FILE_NAME);
+            RunUI(() => SkylineWindow.OpenFile(documentPath));
+
+            Assert.IsNull(SkylineWindow.PropertyForm);
+            Assert.IsFalse(SkylineWindow.PropertyFormIsVisible);
+            Assert.IsFalse(SkylineWindow.PropertyFormIsActivated);
+
+
+            RunUI(() => { SkylineWindow.ShowFilesTreeForm(true); });
+            WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible);
+
+            RunUI(() => { SkylineWindow.ShowPropertyForm(true); });
+            WaitForConditionUI(() => SkylineWindow.PropertyFormIsVisible);
+
+            // test selecting a replicate sample file node
+            var replicateNode = SkylineWindow.FilesTree.Folder<ReplicatesFolder>().NodeAt(0);
+            RunUI(() => SkylineWindow.FilesTreeForm.FilesTree.SelectNodeWithoutResettingSelection(replicateNode));
+
+            var selectedObject = SkylineWindow.PropertyForm?.PropertyGrid.SelectedObject;
+
+            Assert.IsNotNull(selectedObject);
+
+            Assert.AreEqual(typeof(ReplicateSampleFileProperties), selectedObject.GetType());
+
+            var props = TypeDescriptor.GetProperties(selectedObject, true);
+
+            // remove magic number whenever possible
+            Assert.AreEqual(8,props.Count);
+
+            RunUI(() => { SkylineWindow.DestroyPropertyForm(); });
+            RunUI(() => { SkylineWindow.DestroyFilesTreeForm(); });
         }
     }
 }

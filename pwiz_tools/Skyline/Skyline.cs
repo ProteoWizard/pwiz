@@ -3231,6 +3231,15 @@ namespace pwiz.Skyline
             return _propertyForm;
         }
 
+        public void DestroyPropertyForm()
+        {
+            if (_propertyForm != null)
+            {
+                _propertyForm.Close();
+                _propertyForm = null;
+            }
+        }
+
         public void PotentialPropertySheetOwnerGotFocus(object sender, EventArgs e)
         {
             if ( !(_propertyForm is { Visible: true }) || !(sender is IDockableForm form)) return;

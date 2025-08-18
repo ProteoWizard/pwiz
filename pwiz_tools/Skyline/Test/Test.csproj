@@ -177,6 +177,7 @@
     <Compile Include="ErrorIfPersistentFilesDirModifiedTest.cs" />
     <Compile Include="FastaSequenceTest.cs" />
     <Compile Include="FilteredMessageWriterTest.cs" />
+    <Compile Include="GlobalizedObjectTest.cs" />
     <Compile Include="ImmutableListTest.cs" />
     <Compile Include="LocalizedHtmlTutorialsTest.cs" />
     <Compile Include="LibraryRankedSpectrumInfoTest.cs" />
