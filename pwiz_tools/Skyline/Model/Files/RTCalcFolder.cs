@@ -26,7 +26,7 @@ namespace pwiz.Skyline.Model.Files
         private static readonly Identity RT_CALC_FOLDER = new StaticFolderId();
 
         public RTCalcFolder(IDocumentContainer documentContainer) :
-            base(documentContainer, new IdentityPath(RT_CALC_FOLDER), ImageId.folder)
+            base(documentContainer, new IdentityPath(RT_CALC_FOLDER), ImageId.folder, ImageId.folder_missing)
         {
         }
 

@@ -26,7 +26,7 @@ namespace pwiz.Skyline.Model.Files
     public class Replicate : FileNode
     {
         public Replicate(IDocumentContainer documentContainer, ChromatogramSetId chromSetId) : 
-            base(documentContainer, new IdentityPath(chromSetId), ImageId.replicate)
+            base(documentContainer, new IdentityPath(chromSetId), ImageId.replicate, ImageId.replicate_missing)
         {
         }
 

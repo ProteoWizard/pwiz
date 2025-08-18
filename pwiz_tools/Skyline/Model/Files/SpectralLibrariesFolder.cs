@@ -29,7 +29,7 @@ namespace pwiz.Skyline.Model.Files
         private static readonly Identity SPECTRAL_LIBRARIES = new StaticFolderId();
 
         public SpectralLibrariesFolder(IDocumentContainer documentContainer) :
-            base(documentContainer, new IdentityPath(SPECTRAL_LIBRARIES), ImageId.folder)
+            base(documentContainer, new IdentityPath(SPECTRAL_LIBRARIES), ImageId.folder, ImageId.folder_missing)
         {
         }
 

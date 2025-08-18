@@ -187,7 +187,7 @@ namespace pwiz.Skyline.Controls.FilesTree {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Update background protemoe.
+        ///   Looks up a localized string similar to Update background proteome.
         /// </summary>
         public static string FilesTreeForm_Update_BackgroundProteome {
             get {

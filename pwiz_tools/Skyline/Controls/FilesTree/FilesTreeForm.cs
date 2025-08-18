@@ -271,8 +271,6 @@ namespace pwiz.Skyline.Controls.FilesTree
             return false;
         }
 
-        // CONSIDER: use IdentityPath to save and restore selected nodes? Caveat, all draggable nodes
-        //           types must subclass DocNode, which is not true of replicates.
         public void DropNodes(IList<FilesTreeNode> draggedNodes, FilesTreeNode primaryDraggedNode, FilesTreeNode dropNode, MoveType moveType, DragDropEffects effect)
         {
             try
