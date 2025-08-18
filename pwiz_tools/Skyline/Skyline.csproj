@@ -537,6 +537,8 @@
     <Compile Include="FileUI\PeptideSearch\HardklorSearchControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Include="Model\Files\ReplicateSampleFileProperties.cs" />
+    <Compile Include="Model\Files\ReplicatesFolderProperties.cs" />
     <Compile Include="Model\Lib\AlphaPeptDeep\AlphapeptdeepLibraryBuilder.cs" />
     <Compile Include="Model\AuditLog\EnumNames.Designer.cs">
       <AutoGen>True</AutoGen>

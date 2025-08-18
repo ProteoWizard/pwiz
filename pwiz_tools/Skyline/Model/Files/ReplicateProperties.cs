@@ -27,12 +27,7 @@ namespace pwiz.Skyline.Model.Files
 {
     public class ReplicateProperties : FileNodeProperties
     {
-        public static ReplicateProperties Create(Replicate replicate)
-        {
-
-        }
-
-        private ReplicateProperties(Replicate replicate)
+        public ReplicateProperties(Replicate replicate)
             : base(replicate)
         {
             if (replicate == null)
@@ -43,7 +38,7 @@ namespace pwiz.Skyline.Model.Files
             SampleType = replicate.ChromatogramSet.SampleType?.ToString() ?? string.Empty;
 
             var dataFileInfo = replicate.ChromatogramSet.MSDataFileInfos;
-            if (dataFileInfo.Count > 0)
+            if (dataFileInfo.Count == 1)
             {
                 MaxRetentionTime = dataFileInfo[0].MaxRetentionTime.ToString(format: "F2");
                 MaxIntensity = dataFileInfo[0].MaxIntensity.ToString("F2");
@@ -56,22 +51,6 @@ namespace pwiz.Skyline.Model.Files
                     Analyzer = instrumentInfo[0].Analyzer ?? string.Empty;
                     Detector = instrumentInfo[0].Detector ?? string.Empty;
                 }
-                else
-                {
-                    Model = string.Empty;
-                    Ionization = string.Empty;
-                    Analyzer = string.Empty;
-                    Detector = string.Empty;
-                }
-            }
-            else
-            {
-                MaxRetentionTime = string.Empty;
-                MaxIntensity = string.Empty;
-                Model = string.Empty;
-                Ionization = string.Empty;
-                Analyzer = string.Empty;
-                Detector = string.Empty;
             }
         }
 

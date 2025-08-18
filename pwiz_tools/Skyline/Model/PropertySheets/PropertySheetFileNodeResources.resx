@@ -168,6 +168,9 @@
   <data name="Detector" xml:space="preserve">
     <value>Detector</value>
   </data>
+  <data name="FileNum" xml:space="preserve">
+    <value>Number of Replicates</value>
+  </data>
   <data name="Category_FileInfo" xml:space="preserve">
     <value>Files</value>
   </data>

@@ -142,6 +142,15 @@ namespace pwiz.Skyline.Model.PropertySheets {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Number of Replicates.
+        /// </summary>
+        internal static string FileNum {
+            get {
+                return ResourceManager.GetString("FileNum", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to File Path.
         /// </summary>
         internal static string FilePath {

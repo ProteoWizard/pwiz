@@ -1,0 +1,58 @@
+﻿/*
+ * Original author: Aaron Banse <acbanse .at. acbanse dot com>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2025 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using pwiz.Skyline.Model.PropertySheets.Templates;
+using System;
+using System.ComponentModel;
+
+namespace pwiz.Skyline.Model.Files
+{
+    public class ReplicateSampleFileProperties : FileNodeProperties
+    {
+        public ReplicateSampleFileProperties(ReplicateSampleFile replicateSampleFile)
+            : base(replicateSampleFile)
+        {
+            if (replicateSampleFile == null)
+                throw new ArgumentNullException(nameof(replicateSampleFile));
+
+            FilePath = replicateSampleFile.FilePath ?? string.Empty;
+            Name = replicateSampleFile.Name ?? string.Empty;
+
+            var dataFileInfo = replicateSampleFile.ChromFileInfo;
+            MaxRetentionTime = dataFileInfo.MaxRetentionTime.ToString(format: "F2");
+            MaxIntensity = dataFileInfo.MaxIntensity.ToString("F2");
+
+            var instrumentInfo = dataFileInfo.InstrumentInfoList;
+            if (instrumentInfo.Count > 0)
+            {
+                Model = instrumentInfo[0].Model ?? string.Empty;
+                Ionization = instrumentInfo[0].Ionization ?? string.Empty;
+                Analyzer = instrumentInfo[0].Analyzer ?? string.Empty;
+                Detector = instrumentInfo[0].Detector ?? string.Empty;
+            }
+        }
+
+        [Category("Replicate")] public string MaxRetentionTime { get; set; }
+        [Category("Replicate")] public string MaxIntensity { get; set; }
+        [Category("Instrument")] public string Model { get; set; }
+        [Category("Instrument")] public string Ionization { get; set; }
+        [Category("Instrument")] public string Analyzer { get; set; }
+        [Category("Instrument")] public string Detector { get; set; }
+    }
+}

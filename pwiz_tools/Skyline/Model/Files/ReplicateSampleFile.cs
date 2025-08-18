@@ -32,7 +32,7 @@ namespace pwiz.Skyline.Model.Files
         public override string FilePath => ChromFileInfo?.FilePath.GetFilePath() ?? string.Empty;
         public override string FileName => ChromFileInfo?.FilePath.GetFileName() ?? string.Empty;
 
-        private ChromFileInfo ChromFileInfo
+        internal ChromFileInfo ChromFileInfo
         {
             get
             {
@@ -44,6 +44,11 @@ namespace pwiz.Skyline.Model.Files
                 }
                 else return null;
             }
+        }
+
+        public override GlobalizedObject GetProperties()
+        {
+            return new ReplicateSampleFileProperties(this);
         }
 
         public override bool ModelEquals(FileNode nodeDoc)
