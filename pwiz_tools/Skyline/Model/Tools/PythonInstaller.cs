@@ -358,7 +358,7 @@ namespace pwiz.Skyline.Model.Tools
             {
                 PythonPackages.Add(new PythonPackage { Name = @"wheel", Version = null });
                 PythonPackages.Add(new PythonPackage { Name = @"nvidia-cudnn-cu12", Version = null });
-                PythonPackages.Add(new PythonPackage { Name = @"torch --extra-index-url https://download.pytorch.org/whl/cu118 --upgrade", Version = null });
+                PythonPackages.Add(new PythonPackage { Name = @"torch==2.7.1 torchvision==0.22.1 torchaudio==2.7.1 --index-url https://download.pytorch.org/whl/cu126", Version = null });
             }
         }
 
