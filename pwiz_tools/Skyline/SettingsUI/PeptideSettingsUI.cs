@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -2237,6 +2238,7 @@ namespace pwiz.Skyline.SettingsUI
             listLibraries.SelectedItem = name;
         }
 
+        private bool _firstAlignmentOptionInvalid;
         private void UpdateAlignmentDropdown()
         {
             var peptideSettings = _peptideSettings.ChangeLibraries(GetPeptideLibraries(false) ?? _peptideSettings.Libraries);
@@ -2244,7 +2246,14 @@ namespace pwiz.Skyline.SettingsUI
             var current = AlignmentTarget ?? peptideSettings.Imputation.AlignmentTarget ?? AlignmentTargetSpec.Default;
             if (!options.Contains(current))
             {
+                _firstAlignmentOptionInvalid = true;
+                pictureBoxRunAlignmentError.Visible = true;
                 options.Insert(0, current);
+            }
+            else
+            {
+                _firstAlignmentOptionInvalid = false;
+                pictureBoxRunAlignmentError.Visible = false;
             }
             comboRunToRunAlignment.Items.Clear();
             comboRunToRunAlignment.Items.AddRange(options.Select(option => (object)
@@ -2271,6 +2280,11 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 comboRunToRunAlignment.SelectedIndex = selectedIndex;
             }
+        }
+
+        private void comboRunToRunAlignment_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            pictureBoxRunAlignmentError.Visible = _firstAlignmentOptionInvalid && comboRunToRunAlignment.SelectedIndex == 0;
         }
     }
 }
