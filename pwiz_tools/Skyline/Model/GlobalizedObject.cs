@@ -95,7 +95,7 @@ namespace pwiz.Skyline.Model
         /// </summary>
         /// <param name="attributes"></param>
         /// <returns></returns>
-        public PropertyDescriptorCollection GetProperties(Attribute[] attributes = null)
+        public PropertyDescriptorCollection GetProperties(Attribute[] attributes)
         {
             if (globalizedProps == null)
             {
@@ -115,6 +115,11 @@ namespace pwiz.Skyline.Model
                 }
             }
             return globalizedProps;
+        }
+
+        public PropertyDescriptorCollection GetProperties()
+        {
+            return GetProperties(null);
         }
 
         #region Test suppport
