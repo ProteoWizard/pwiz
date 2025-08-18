@@ -33,7 +33,6 @@ using System.Linq;
 using System.Threading;
 using System.Xml;
 using System.Xml.Serialization;
-using static pwiz.Skyline.Model.Results.ChromatogramLoadingStatus.TransitionData;
 
 namespace pwiz.SkylineTestUtil
 {

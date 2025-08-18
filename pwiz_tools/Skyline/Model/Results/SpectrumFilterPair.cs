@@ -30,7 +30,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.Results
 {
