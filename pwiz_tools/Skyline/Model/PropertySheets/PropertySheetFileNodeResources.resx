@@ -126,12 +126,6 @@
   <data name="FilePath" xml:space="preserve">
     <value>File Path</value>
   </data>
-  <data name="DocumentPath" xml:space="preserve">
-    <value>Document Path</value>
-  </data>
-  <data name="FileType" xml:space="preserve">
-    <value>File Type</value>
-  </data>
   <data name="FileCount" xml:space="preserve">
     <value>File Count</value>
   </data>
@@ -162,10 +156,25 @@
   <data name="MSDataFileInfos" xml:space="preserve">
     <value>File</value>
   </data>
+  <data name="Model" xml:space="preserve">
+    <value>Model</value>
+  </data>
+  <data name="Ionization" xml:space="preserve">
+    <value>Ionization</value>
+  </data>
+  <data name="Analyzer" xml:space="preserve">
+    <value>Analyzer</value>
+  </data>
+  <data name="Detector" xml:space="preserve">
+    <value>Detector</value>
+  </data>
   <data name="Category_FileInfo" xml:space="preserve">
     <value>Files</value>
   </data>
-  <data name="Category_Chromatagram" xml:space="preserve">
-    <value>Chromatagram</value>
+  <data name="Category_Replicate" xml:space="preserve">
+    <value>Replicate</value>
+  </data>
+  <data name="Category_Instrument" xml:space="preserve">
+    <value>Instrument</value>
   </data>
 </root>

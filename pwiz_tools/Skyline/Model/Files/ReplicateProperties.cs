@@ -27,7 +27,12 @@ namespace pwiz.Skyline.Model.Files
 {
     public class ReplicateProperties : FileNodeProperties
     {
-        public ReplicateProperties(Replicate replicate)
+        public static ReplicateProperties Create(Replicate replicate)
+        {
+
+        }
+
+        private ReplicateProperties(Replicate replicate)
             : base(replicate)
         {
             if (replicate == null)
@@ -36,12 +41,50 @@ namespace pwiz.Skyline.Model.Files
             AnalyteConcentration = replicate.ChromatogramSet.AnalyteConcentration;
             SampleDilutionFactor = replicate.ChromatogramSet.SampleDilutionFactor;
             SampleType = replicate.ChromatogramSet.SampleType?.ToString() ?? string.Empty;
+
+            var dataFileInfo = replicate.ChromatogramSet.MSDataFileInfos;
+            if (dataFileInfo.Count > 0)
+            {
+                MaxRetentionTime = dataFileInfo[0].MaxRetentionTime.ToString(format: "F2");
+                MaxIntensity = dataFileInfo[0].MaxIntensity.ToString("F2");
+
+                var instrumentInfo = dataFileInfo[0].InstrumentInfoList;
+                if (instrumentInfo.Count > 0)
+                {
+                    Model = instrumentInfo[0].Model ?? string.Empty;
+                    Ionization = instrumentInfo[0].Ionization ?? string.Empty;
+                    Analyzer = instrumentInfo[0].Analyzer ?? string.Empty;
+                    Detector = instrumentInfo[0].Detector ?? string.Empty;
+                }
+                else
+                {
+                    Model = string.Empty;
+                    Ionization = string.Empty;
+                    Analyzer = string.Empty;
+                    Detector = string.Empty;
+                }
+            }
+            else
+            {
+                MaxRetentionTime = string.Empty;
+                MaxIntensity = string.Empty;
+                Model = string.Empty;
+                Ionization = string.Empty;
+                Analyzer = string.Empty;
+                Detector = string.Empty;
+            }
         }
 
         [Category("Replicate")] public string BatchName { get; set; }
         [Category("Replicate")] public double? AnalyteConcentration { get; set; }
         [Category("Replicate")] public double SampleDilutionFactor { get; set; }
         [Category("Replicate")] public string SampleType { get; set; }
+        [Category("Replicate")] public string MaxRetentionTime { get; set; }
+        [Category("Replicate")] public string MaxIntensity { get; set; }
+        [Category("Instrument")] public string Model { get; set; }
+        [Category("Instrument")] public string Ionization { get; set; }
+        [Category("Instrument")] public string Analyzer { get; set; }
+        [Category("Instrument")] public string Detector { get; set; }
 
         // Test Support - enforced by code check
         // Invoked via reflection in InspectPropertySheetResources in CodeInspectionTest

@@ -95,35 +95,13 @@ namespace pwiz.Skyline.Model
         /// </summary>
         /// <param name="attributes"></param>
         /// <returns></returns>
-        public PropertyDescriptorCollection GetProperties(Attribute[] attributes)
+        public PropertyDescriptorCollection GetProperties(Attribute[] attributes = null)
         {
             if (globalizedProps == null)
             {
                 // Get the collection of properties
                 PropertyDescriptorCollection baseProps = TypeDescriptor.GetProperties(this, attributes, true);
 
-                globalizedProps = new PropertyDescriptorCollection(null);
-
-                // For each property use a property descriptor of our own that is able to be globalized
-                foreach (PropertyDescriptor oProp in baseProps)
-                {
-                    // Only display properties whose values have been set
-                    if (oProp.GetValue(this) != null)
-                    {
-                        globalizedProps.Add(new GlobalizedPropertyDescriptor(oProp, GetResourceManager()));
-                    }
-                }
-            }
-            return globalizedProps;
-        }
-
-        public PropertyDescriptorCollection GetProperties()
-        {
-            // Only do once
-            if (globalizedProps == null)
-            {
-                // Get the collection of properties
-                PropertyDescriptorCollection baseProps = TypeDescriptor.GetProperties(this, true);
                 globalizedProps = new PropertyDescriptorCollection(null);
 
                 // For each property use a property descriptor of our own that is able to be globalized

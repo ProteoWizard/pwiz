@@ -70,20 +70,20 @@ namespace pwiz.Skyline.Model.PropertySheets {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Analyzer.
+        /// </summary>
+        internal static string Analyzer {
+            get {
+                return ResourceManager.GetString("Analyzer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Batch Name.
         /// </summary>
         internal static string BatchName {
             get {
                 return ResourceManager.GetString("BatchName", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Chromatagram.
-        /// </summary>
-        internal static string Category_Chromatagram {
-            get {
-                return ResourceManager.GetString("Category_Chromatagram", resourceCulture);
             }
         }
         
@@ -97,11 +97,29 @@ namespace pwiz.Skyline.Model.PropertySheets {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Document Path.
+        ///   Looks up a localized string similar to Instrument.
         /// </summary>
-        internal static string DocumentPath {
+        internal static string Category_Instrument {
             get {
-                return ResourceManager.GetString("DocumentPath", resourceCulture);
+                return ResourceManager.GetString("Category_Instrument", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Replicate.
+        /// </summary>
+        internal static string Category_Replicate {
+            get {
+                return ResourceManager.GetString("Category_Replicate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Detector.
+        /// </summary>
+        internal static string Detector {
+            get {
+                return ResourceManager.GetString("Detector", resourceCulture);
             }
         }
         
@@ -133,20 +151,20 @@ namespace pwiz.Skyline.Model.PropertySheets {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to File Type.
-        /// </summary>
-        internal static string FileType {
-            get {
-                return ResourceManager.GetString("FileType", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Instrument.
         /// </summary>
         internal static string InstrumentInfoList {
             get {
                 return ResourceManager.GetString("InstrumentInfoList", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ionization.
+        /// </summary>
+        internal static string Ionization {
+            get {
+                return ResourceManager.GetString("Ionization", resourceCulture);
             }
         }
         
@@ -165,6 +183,15 @@ namespace pwiz.Skyline.Model.PropertySheets {
         internal static string MaxRetentionTime {
             get {
                 return ResourceManager.GetString("MaxRetentionTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Model.
+        /// </summary>
+        internal static string Model {
+            get {
+                return ResourceManager.GetString("Model", resourceCulture);
             }
         }
         
