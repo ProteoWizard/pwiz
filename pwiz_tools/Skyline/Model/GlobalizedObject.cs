@@ -107,13 +107,20 @@ namespace pwiz.Skyline.Model
                 // For each property use a property descriptor of our own that is able to be globalized
                 foreach (PropertyDescriptor oProp in baseProps)
                 {
+                    // don't copy over properties that require custom handling
+                    if (oProp.Attributes[typeof(UseCustomHandlingAttribute)] != null)
+                        continue;
+                    
                     // Only display properties whose values have been set
-                    if (oProp.GetValue(this) != null)
-                    {
-                        globalizedProps.Add(new GlobalizedPropertyDescriptor(oProp, GetResourceManager()));
-                    }
+                    if (oProp.GetValue(this) == null)
+                        continue;
+
+                    globalizedProps.Add(new GlobalizedPropertyDescriptor(oProp, GetResourceManager()));
                 }
             }
+
+            AddCustomizedProperties();
+
             return globalizedProps;
         }
 
@@ -121,6 +128,11 @@ namespace pwiz.Skyline.Model
         {
             return GetProperties(null);
         }
+
+        /// <summary>
+        /// Override this method to add custom properties to the property collection, like if we needed to dynamically add nested properties.
+        /// </summary>
+        protected virtual void AddCustomizedProperties() {}
 
         #region Test suppport
 
@@ -358,4 +370,8 @@ namespace pwiz.Skyline.Model
             basePropertyDescriptor.SetValue(component, value);
         }
     }
+
+    // Used to flag properties that should not be copied directly to the globalized object, as they require custom handling.
+    [AttributeUsage(AttributeTargets.Property)]
+    public class UseCustomHandlingAttribute : Attribute { }
 }
