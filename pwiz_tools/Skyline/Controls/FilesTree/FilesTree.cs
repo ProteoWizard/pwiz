@@ -94,6 +94,12 @@ namespace pwiz.Skyline.Controls.FilesTree
             return _monitoringFileSystem;
         }
 
+        public bool WaitForEmptyQueue()
+        {
+            _fsWorkQueue.Wait();
+            return true;
+        }
+
         public string PathMonitoredForFileSystemChanges()
         {
             return _fsWatcher?.Path;

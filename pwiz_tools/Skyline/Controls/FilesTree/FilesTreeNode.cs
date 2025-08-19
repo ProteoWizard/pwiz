@@ -101,15 +101,23 @@ namespace pwiz.Skyline.Controls.FilesTree
             Name = Model.Name;
             Text = Model.Name;
 
-            // CONSIDER: use a separate state flag to track whether 1+ child nodes are missing files instead of inferring child state from the parent's ImageIndex
-            var anyChildMissingFile =
-                Nodes.Cast<FilesTreeNode>().Any(node => node.FileState == FileState.missing) ||
-                Nodes.Cast<FilesTreeNode>().Any(node => node.ImageIndex == (int)ImageId.file_missing || node.ImageIndex == (int)ImageId.folder_missing || node.ImageIndex == (int)ImageId.replicate_missing);
-
-            if (anyChildMissingFile || FileState == FileState.missing)
-                ImageIndex = (int)ImageMissing;
+            // Special case for the root node
+            if (Model is SkylineFile)
+            {
+                ImageIndex = FileState == FileState.missing ? (int)ImageMissing : (int)ImageAvailable;
+            }
             else
-                ImageIndex = (int)ImageAvailable;
+            {
+                // CONSIDER: use a separate state flag to track whether 1+ child nodes are missing files instead of inferring child state from the parent's ImageIndex
+                var anyChildMissingFile =
+                    Nodes.Cast<FilesTreeNode>().Any(node => node.FileState == FileState.missing) ||
+                    Nodes.Cast<FilesTreeNode>().Any(node => node.ImageIndex == (int)ImageId.file_missing || node.ImageIndex == (int)ImageId.folder_missing || node.ImageIndex == (int)ImageId.replicate_missing);
+
+                if (anyChildMissingFile || FileState == FileState.missing)
+                    ImageIndex = (int)ImageMissing;
+                else
+                    ImageIndex = (int)ImageAvailable;
+            }
         }
 
         public void RefreshState()

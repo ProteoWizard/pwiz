@@ -110,7 +110,7 @@ namespace pwiz.SkylineTestFunctional
 
             AssertFilesTreeOnlyIncludesFilesTreeNodes(SkylineWindow.FilesTree.Root);
 
-            AssertTopLevelFiles(new[] {typeof(SkylineAuditLog)}, SkylineWindow);
+            AssertTopLevelFiles(SkylineWindow, typeof(SkylineAuditLog));
 
             Assert.IsFalse(SkylineWindow.FilesTree.IsMonitoringFileSystem());
             Assert.AreEqual(string.Empty, SkylineWindow.FilesTree.PathMonitoredForFileSystemChanges());
@@ -119,12 +119,12 @@ namespace pwiz.SkylineTestFunctional
             var monitoredPath = Path.Combine(TestFilesDir.FullPath, fileName);
             RunUI(() => SkylineWindow.SaveDocument(monitoredPath));
 
-            WaitForCondition(() => File.Exists(monitoredPath) && SkylineWindow.FilesTree.IsMonitoringFileSystem());
+            WaitForCondition(() => File.Exists(monitoredPath) && SkylineWindow.FilesTree.IsMonitoringFileSystem() && SkylineWindow.FilesTree.WaitForEmptyQueue());
 
             Assert.AreEqual(Path.GetDirectoryName(monitoredPath), SkylineWindow.FilesTree.PathMonitoredForFileSystemChanges());
 
             // After saving, Window Layout (.sky.view) is present
-            AssertTopLevelFiles(new[] { typeof(SkylineAuditLog), typeof(SkylineViewFile) }, SkylineWindow);
+            AssertTopLevelFiles(SkylineWindow, typeof(SkylineAuditLog), typeof(SkylineViewFile));
 
             // Skyline File
             Assert.AreEqual(fileName, SkylineWindow.FilesTree.Root.Name);
@@ -157,7 +157,7 @@ namespace pwiz.SkylineTestFunctional
             // Save document for the first time
             var monitoredPath = Path.Combine(TestFilesDir.FullPath, origFileName);
             RunUI(() => SkylineWindow.SaveDocument(monitoredPath));
-            WaitForCondition(() => File.Exists(monitoredPath) && SkylineWindow.FilesTree.IsMonitoringFileSystem());
+            WaitForCondition(() => File.Exists(monitoredPath) && SkylineWindow.FilesTree.IsMonitoringFileSystem() && SkylineWindow.FilesTree.WaitForEmptyQueue());
 
             Assert.AreEqual(FileState.available, SkylineWindow.FilesTree.Root.NodeAt(0).FileState);
             Assert.IsNotNull(SkylineWindow.FilesTree.Root.NodeAt(0).LocalFilePath);
@@ -166,13 +166,13 @@ namespace pwiz.SkylineTestFunctional
             // Save As - existing document saved to a new location
             monitoredPath = Path.Combine(TestFilesDir.FullPath, saveAsFileName);
             RunUI(() => SkylineWindow.SaveDocument(monitoredPath));
-            WaitForCondition(() => File.Exists(monitoredPath) && SkylineWindow.FilesTree.IsMonitoringFileSystem());
+            WaitForCondition(() => File.Exists(monitoredPath) && SkylineWindow.FilesTree.IsMonitoringFileSystem() && SkylineWindow.FilesTree.WaitForEmptyQueue());
 
             // Verify file state after SaveAs - files are available and paths updated
             var tree = SkylineWindow.FilesTree;
             Assert.AreEqual(Path.GetDirectoryName(monitoredPath), tree.PathMonitoredForFileSystemChanges());
 
-            AssertTopLevelFiles(new[] { typeof(SkylineAuditLog), typeof(SkylineViewFile) }, SkylineWindow);
+            AssertTopLevelFiles(SkylineWindow, typeof(SkylineAuditLog), typeof(SkylineViewFile));
 
             Assert.AreEqual(saveAsFileName, tree.Root.Name);
             Assert.AreEqual(monitoredPath, tree.Root.FilePath);
@@ -203,11 +203,12 @@ namespace pwiz.SkylineTestFunctional
 
             // now, show files tree
             RunUI(() => SkylineWindow.ShowFilesTreeForm(true));
-            WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible && SkylineWindow.FilesTree.IsMonitoringFileSystem());
+            Assert.IsNotNull(SkylineWindow.FilesTree);
+            WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible && SkylineWindow.FilesTree.IsMonitoringFileSystem() && SkylineWindow.FilesTree.WaitForEmptyQueue());
 
             Assert.AreEqual(RAT_PLASMA_FILE_NAME, SkylineWindow.FilesTree.Root.Text);
 
-            AssertTopLevelFiles(new[] { typeof(SkylineViewFile), typeof(ReplicatesFolder) , typeof(SpectralLibrariesFolder)}, SkylineWindow);
+            AssertTopLevelFiles(SkylineWindow, typeof(SkylineViewFile), typeof(ReplicatesFolder), typeof(SpectralLibrariesFolder));
 
             Assert.AreEqual(Path.GetDirectoryName(documentPath), SkylineWindow.FilesTree.PathMonitoredForFileSystemChanges());
             AssertFileState(true, FileState.available, SkylineWindow.FilesTree.Root);
@@ -216,18 +217,18 @@ namespace pwiz.SkylineTestFunctional
 
             TestRestoreViewState();
 
-            // Check SrmSettings matches Model matches FilesTree UI
-            var doc = SkylineWindow.Document;
-
             AssertTreeFolderMatchesDocumentAndModel<ReplicatesFolder>(RAT_PLASMA_REPLICATE_COUNT);
 
-            // 
+            //
             // Edit SrmDocument directly and make sure FilesTree updates correctly
+            //
             
             // Rename replicate
             RunUI(() => SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[3].Expand());
             WaitForConditionUI(() => SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[3].IsExpanded);
 
+            // Check SrmSettings matches Model matches FilesTree UI
+            var doc = SkylineWindow.Document;
             var newName = "Test this name";
             RunUI(() =>
             {
@@ -813,8 +814,20 @@ namespace pwiz.SkylineTestFunctional
                 var filesTreeNode = (FilesTreeNode)treeNodes[i];
         
                 Assert.AreSame(docNodes[i], modelNodes[i].Immutable);
-                Assert.AreSame(docNodes[i], filesTreeNode.Model.Immutable);
-        
+
+                // Temporary debugging in case of potential race condition
+                try
+                {
+                    Assert.AreSame(docNodes[i], filesTreeNode.Model.Immutable);
+                }
+                catch (Exception)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine($@"== Assert.AreSame({docNodes[i].GetType()}, {filesTreeNode.Model.Immutable.GetType()})");
+                    Console.WriteLine($@"== Assert.AreSame({docNodes[i].Name}, {filesTreeNode.Model.Name})");
+                    throw;
+                }
+
                 Assert.AreEqual(docNodes[i].Id, modelNodes[i].IdentityPath.GetIdentity(0));
                 Assert.AreEqual(docNodes[i].Id, filesTreeNode.Model.IdentityPath.GetIdentity(0));
         
@@ -839,7 +852,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual((int)expected, actual.ImageIndex);
         }
 
-        protected static void AssertTopLevelFiles(Type[] expectedModelTypes, SkylineWindow skylineWindow)
+        protected static void AssertTopLevelFiles(SkylineWindow skylineWindow, params Type[] expectedModelTypes)
         {
             var filesTree = SkylineWindow.FilesTree;
 

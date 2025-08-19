@@ -358,6 +358,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             selectReplicateMenuItem.Visible = false;
             removeAllMenuItem.Visible = false;
             removeMenuItem.Visible = false;
+            debugRefreshTreeMenuItem.Visible = false;
 
             // Only offer "Open Containing Folder" if (1) supported by this tree node
             // and (2) the file's state is "available"
@@ -391,7 +392,16 @@ namespace pwiz.Skyline.Controls.FilesTree
                 case SkylineAuditLog _:
                     openAuditLogMenuItem.Visible = true;
                     break;
+                case SkylineFile _:
+                    if(Debugger.IsAttached)
+                        debugRefreshTreeMenuItem.Visible = true;
+                    break;
             }
+        }
+
+        private void FilesTree_DebugRefreshTreeMenuItem(object sender, EventArgs e)
+        {
+            FilesTree.Root.RefreshState();
         }
 
         private void FilesTree_TreeNodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
