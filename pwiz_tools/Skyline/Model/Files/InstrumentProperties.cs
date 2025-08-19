@@ -33,6 +33,7 @@ namespace pwiz.Skyline.Model.Files
 
         public override string ToString()
         {
+            // This overrides default behavior which displays the full type name in the property sheet.
             return string.Empty;
         }
 
