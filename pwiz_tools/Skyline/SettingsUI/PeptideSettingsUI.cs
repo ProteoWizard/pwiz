@@ -492,7 +492,8 @@ namespace pwiz.Skyline.SettingsUI
                 Settings.Default.StaticModList, Settings.Default.HeavyModList);
             Helpers.AssignIfEquals(ref modifications, _peptideSettings.Modifications);
 
-            PeptideIntegration integration = new PeptideIntegration(_driverPeakScoringModel.SelectedItem);
+            PeptideIntegration integration = new PeptideIntegration(_driverPeakScoringModel.SelectedItem)
+                .ChangeScoreQValueMap(ScoreQValueMap.FromDocument(_parent.DocumentUI));
             Helpers.AssignIfEquals(ref integration, Integration);
 
             QuantificationSettings quantification = QuantificationSettings.DEFAULT
