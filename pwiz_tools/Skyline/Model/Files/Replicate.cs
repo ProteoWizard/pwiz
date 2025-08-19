@@ -19,6 +19,7 @@ using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.Files
@@ -49,6 +50,7 @@ namespace pwiz.Skyline.Model.Files
             }
         }
 
+        // TODO: wrap in LongWaitDlg and use SrmSettingsChangeMonitor
         public ModifiedDocument Delete(SrmDocument document, List<FileNode> models)
         {
             var deleteIds = models.Select(model => ReferenceValue.Of(model.IdentityPath.Child)).ToHashSet();
@@ -78,7 +80,7 @@ namespace pwiz.Skyline.Model.Files
             return new ModifiedDocument(newDocument).ChangeAuditLogEntry(entry);
         }
 
-        public ModifiedDocument Rearrange(SrmDocument document, List<FileNode> draggedModels, FileNode dropModel, MoveType moveType)
+        public ModifiedDocument Rearrange(SrmDocument document, SrmSettingsChangeMonitor monitor, List<FileNode> draggedModels, FileNode dropModel, MoveType moveType)
         {
             var draggedChromSets = draggedModels.Cast<Replicate>().Select(model => model.ChromatogramSet).ToList();
 
@@ -99,7 +101,7 @@ namespace pwiz.Skyline.Model.Files
             }
 
             var newMeasuredResults = document.MeasuredResults.ChangeChromatograms(newChromatograms);
-            var newDocument = document.ChangeMeasuredResults(newMeasuredResults);
+            var newDocument = document.ChangeMeasuredResults(newMeasuredResults, monitor);
             newDocument.ValidateResults();
 
             var readableNames = draggedChromSets.Select(item => item.Name).ToList();
@@ -124,6 +126,7 @@ namespace pwiz.Skyline.Model.Files
             return new ModifiedDocument(newDocument).ChangeAuditLogEntry(entry);
         }
 
+        // TODO: wrap in LongWaitDlg and use SrmSettingsChangeMonitor
         public ModifiedDocument ChangeName(SrmDocument document, string newName)
         {
             var oldName = ChromatogramSet.Name;

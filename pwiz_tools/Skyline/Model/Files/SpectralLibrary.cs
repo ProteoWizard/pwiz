@@ -19,6 +19,7 @@ using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 
 namespace pwiz.Skyline.Model.Files
@@ -35,6 +36,7 @@ namespace pwiz.Skyline.Model.Files
         public override string Name => LibrarySpec?.Name ?? string.Empty;
         public override string FilePath => LibrarySpec?.FilePath ?? string.Empty;
 
+        // TODO: wrap in LongWaitDlg and use SrmSettingsChangeMonitor
         public ModifiedDocument Delete(SrmDocument document, List<FileNode> models)
         {
             var deleteIds = models.Select(model => ReferenceValue.Of(model.IdentityPath.Child)).ToHashSet();
@@ -63,7 +65,7 @@ namespace pwiz.Skyline.Model.Files
             return new ModifiedDocument(newDocument).ChangeAuditLogEntry(entry);
         }
 
-        public ModifiedDocument Rearrange(SrmDocument document, List<FileNode> draggedModels, FileNode dropModel, MoveType moveType)
+        public ModifiedDocument Rearrange(SrmDocument document, SrmSettingsChangeMonitor monitor, List<FileNode> draggedModels, FileNode dropModel, MoveType moveType)
         {
             var draggedLibraries = draggedModels.Cast<SpectralLibrary>().Select(model => model.LibrarySpec).ToList();
 
@@ -87,7 +89,7 @@ namespace pwiz.Skyline.Model.Files
             var newPepLibraries = document.Settings.PeptideSettings.Libraries.ChangeLibraries(newLibraries, newLibs);
             var newPepSettings = document.Settings.PeptideSettings.ChangeLibraries(newPepLibraries);
             var newSettings = document.Settings.ChangePeptideSettings(newPepSettings);
-            var newDocument = document.ChangeSettings(newSettings);
+            var newDocument = document.ChangeSettings(newSettings, monitor);
 
             var readableNames = draggedLibraries.Select(item => item.Name).ToList();
 

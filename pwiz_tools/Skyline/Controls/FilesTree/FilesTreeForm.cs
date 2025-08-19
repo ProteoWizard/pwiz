@@ -24,10 +24,12 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Files;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using static pwiz.Skyline.Model.Files.FileNode;
+using Debugger = System.Diagnostics.Debugger;
 using Process = System.Diagnostics.Process;
 
 // CONSIDER: using IdentityPath (and DocNode.ReplaceChild) to simplify replicate name changes
@@ -280,30 +282,36 @@ namespace pwiz.Skyline.Controls.FilesTree
 
                 var draggedModels = draggedNodes.Select(item => item.Model).ToList();
 
-                IDocumentModifier modifier;
-                switch (primaryDraggedNode.Model)
+                // Adjust moveType if dragged nodes were dropped on the parent folder in which case
+                // dropped nodes should move to the bottom of the list
+                if (dropNode.Model is ReplicatesFolder || dropNode.Model is SpectralLibrariesFolder)
+                    moveType = MoveType.move_last;
+
+                lock (SkylineWindow.GetDocumentChangeLock())
                 {
-                    case Replicate replicate:
-                    {
-                        if (dropNode.Model is ReplicatesFolder)
-                            moveType = MoveType.move_last;
+                    var originalDoc = SkylineWindow.Document;
+                    ModifiedDocument modifiedDoc = null;
 
-                        modifier = DocumentModifier.Create(doc => replicate.Rearrange(doc, draggedModels, dropNode.Model, moveType));
-                        break;
-                    }
-                    case SpectralLibrary library:
+                    using var longWaitDlg = new LongWaitDlg();
+                    longWaitDlg.PerformWork(this, 750, progressMonitor =>
                     {
-                        if (dropNode.Model is SpectralLibrariesFolder)
-                            moveType = MoveType.move_last;
+                        using var monitor = new SrmSettingsChangeMonitor(progressMonitor, longWaitDlg.Text, SkylineWindow);
 
-                        modifier = DocumentModifier.Create(doc => library.Rearrange(doc, draggedModels, dropNode.Model, moveType));
-                        break;
-                    }
-                    default:
+                        if (primaryDraggedNode.Model is Replicate replicate)
+                        {
+                            modifiedDoc = replicate.Rearrange(originalDoc, monitor, draggedModels, dropNode.Model, moveType);
+                        }
+                        else if (primaryDraggedNode.Model is SpectralLibrary library)
+                        {
+                            modifiedDoc = library.Rearrange(originalDoc, monitor, draggedModels, dropNode.Model, moveType);
+                        }
+                    });
+
+                    if (modifiedDoc == null)
                         return;
-                }
 
-                SkylineWindow.ModifyDocument(FilesTreeResources.Drag_and_Drop, modifier);
+                    SkylineWindow.ModifyDocument(FilesTreeResources.Drag_and_Drop, DocumentModifier.FromResult(originalDoc, modifiedDoc));
+                }
 
                 // After the drop, re-select the dragged nodes to paint the nodes blue and maintain the user's selection.
                 // This is a tricky process which must be done in a specific order.
