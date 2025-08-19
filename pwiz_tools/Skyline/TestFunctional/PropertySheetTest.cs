@@ -28,6 +28,7 @@ namespace pwiz.SkylineTestFunctional
     public class PropertySheetTest : AbstractFunctionalTest
     {
         internal const string RAT_PLASMA_FILE_NAME = "Rat_plasma.sky";
+        internal const int REP_SAMPLE_FILE_PROP_NUM = 5;
 
         [TestMethod]
         public void TestPropertySheet()
@@ -69,8 +70,7 @@ namespace pwiz.SkylineTestFunctional
 
             var props = TypeDescriptor.GetProperties(selectedObject, true);
 
-            // remove magic number whenever possible
-            Assert.AreEqual(5,props.Count);
+            Assert.AreEqual(REP_SAMPLE_FILE_PROP_NUM, props.Count);
 
             RunUI(() => { SkylineWindow.DestroyPropertyForm(); });
             RunUI(() => { SkylineWindow.DestroyFilesTreeForm(); });
