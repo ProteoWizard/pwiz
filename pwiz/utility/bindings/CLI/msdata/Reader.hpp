@@ -145,6 +145,16 @@ public ref class ReaderConfig
     /// </summary>
     bool ddaProcessing;
 
+    /// <summary>
+    /// when true, diaPASEF data is combined frame-by-frame instead of grouped by isolation window
+    /// </summary>
+    bool passEntireDiaPasefFrame;
+
+    /// <summary>
+    /// when true, PASEF data that's combined frame-by-frame gets isolation data in two additional arrays
+    /// </summary>
+    bool includeIsolationArrays;
+
     ReaderConfig()
     : simAsSpectra(false)
     , srmAsSpectra(false)
@@ -160,6 +170,8 @@ public ref class ReaderConfig
     , sortAndJitter(false)
     , globalChromatogramsAreMs1Only(false)
     , ddaProcessing(false)
+    , passEntireDiaPasefFrame(false) // By default MS2 PASEF is passed in chunks of consistent isolation range
+    , includeIsolationArrays(true) // By default when passing MS2 PASEF as entire frame, add arrays detailing isolation range for each [mz,intensity,IM] 
     {
     }
 };

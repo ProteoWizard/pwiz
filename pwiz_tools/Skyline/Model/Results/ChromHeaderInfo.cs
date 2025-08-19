@@ -1171,7 +1171,8 @@ namespace pwiz.Skyline.Model.Results
 
         public override string ToString()
         {
-            return string.Format(@"rt={0:F02}, area={1}", RetentionTime, Area);
+            var pa = PointsAcross ==  null ? @"N/A" : _pointsAcross.ToString();
+            return $@"rt={StartTime:F02};{RetentionTime:F02};{EndTime:F02} area={Area} pointsAcross={pa}"; // For debug convenience
         }
 
         public FlagValues Flags
@@ -1530,6 +1531,7 @@ namespace pwiz.Skyline.Model.Results
             used_ms1_centroids = 0x100,
             used_ms2_centroids = 0x200,
             result_file_data = 0x400,
+            pass_entire_dia_pasef_frame = 0x800, // For use with Bruker TIMSTOF
         }
 
         public static DateTime GetLastWriteTime(MsDataFileUri filePath)
@@ -1648,6 +1650,10 @@ namespace pwiz.Skyline.Model.Results
             get { return (Flags & FlagValues.used_ms2_centroids) != 0; }
         }
 
+        public bool PassEntireDiaPasefFrame
+        {
+            get { return (Flags & FlagValues.pass_entire_dia_pasef_frame) != 0; }
+        }
         public bool IsSrm
         {
             get { return (Flags & FlagValues.is_srm) != 0; }
@@ -2706,7 +2712,7 @@ namespace pwiz.Skyline.Model.Results
             return extractionWidth;
         }
 
-        private ChromTransition ChromTransition
+        public ChromTransition ChromTransition
         {
             get { return _groupInfo.GetChromTransitionLocal(_transitionIndex); }
         }

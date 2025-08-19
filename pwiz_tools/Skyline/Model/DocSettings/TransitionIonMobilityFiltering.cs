@@ -1004,11 +1004,18 @@ namespace pwiz.Skyline.Model.DocSettings
 
         }
 
-        public IonMobilityFilter ApplyOffset(double offset)
+        public IonMobilityFilter ApplyOffset(double offsetLow, double offsetHigh)
         {
-            if (offset == 0 || !IonMobility.HasValue)
+            if ((offsetLow == 0 && offsetHigh == 0) || !IonMobility.HasValue)
                 return this;
-            return GetIonMobilityFilter(IonMobility.Mobility + offset, IonMobilityUnits, IonMobilityExtractionWindowWidth, CollisionalCrossSectionSqA);
+            // Original bounds
+            var boundsLow = IonMobility.Mobility.Value - 0.5 * IonMobilityExtractionWindowWidth??0;
+            var boundsHigh = boundsLow + IonMobilityExtractionWindowWidth??0;
+            // Apply offsets
+            boundsLow += offsetLow;
+            boundsHigh += offsetHigh;
+            var width = Math.Abs(boundsHigh - boundsLow);
+            return GetIonMobilityFilter(boundsLow + 0.5*width, IonMobilityUnits, width, CollisionalCrossSectionSqA);
         }
 
         public bool ContainsIonMobility(double val, bool useHighEnergyOffset)
@@ -1241,10 +1248,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public override string ToString() // For debugging convenience, not user-facing
         {
-            return string.Format(@"{0}/w{1:F04}", IonMobilityAndCCS, IonMobilityExtractionWindowWidth );
+            return string.Format(@"{0}/w{1:F06}", IonMobilityAndCCS, IonMobilityExtractionWindowWidth );
         }
 
     }
-
-
 }

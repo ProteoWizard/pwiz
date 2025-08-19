@@ -725,6 +725,15 @@ namespace pwiz.Skyline.Model.Results {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No isolation window found in {0} for precursor {1} (m/z={2} im={3}).
+        /// </summary>
+        public static string SpectrumFilter_No_Isolation_Window_Found_For_Precursor_ {
+            get {
+                return ResourceManager.GetString("SpectrumFilter_No_Isolation_Window_Found_For_Precursor_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Imported spectrum appears to be missing m/z or intensity values ({0} != {1}).
         /// </summary>
         public static string TransitionBinner_BinData_ {
