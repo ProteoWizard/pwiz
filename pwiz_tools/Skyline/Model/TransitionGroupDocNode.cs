@@ -1673,6 +1673,7 @@ namespace pwiz.Skyline.Model
             {
                 if (reintegratedPeakBounds.StartTime <= candidate.StartTime && reintegratedPeakBounds.EndTime >= candidate.EndTime)
                 {
+                    userSet = UserSet.REINTEGRATED;
                     return candidate;
                 }
             }
