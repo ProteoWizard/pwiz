@@ -171,6 +171,9 @@
   <data name="FileNum" xml:space="preserve">
     <value>Number of Replicates</value>
   </data>
+  <data name="Instrument" xml:space="preserve">
+    <value>Instrument</value>
+  </data>
   <data name="Category_FileInfo" xml:space="preserve">
     <value>Files</value>
   </data>
@@ -179,5 +182,8 @@
   </data>
   <data name="Category_Instrument" xml:space="preserve">
     <value>Instrument</value>
+  </data>
+  <data name="Category_Instruments" xml:space="preserve">
+    <value>Instruments</value>
   </data>
 </root>

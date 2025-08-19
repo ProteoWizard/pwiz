@@ -51,6 +51,9 @@ namespace pwiz.Skyline.Controls
             if (form is IPropertyProvider propertyProviderForm)
             {
                 PropertyGrid.SelectedObject = propertyProviderForm.GetSelectedObjectProperties();
+                // TODO: Fix bug where PropertyGrid does not expand all nested properties when the form is first shown.
+                // Highly possible it has to do with multiple expandable properties having the same display name.
+                PropertyGrid.ExpandAllGridItems();
             }
             else
             {

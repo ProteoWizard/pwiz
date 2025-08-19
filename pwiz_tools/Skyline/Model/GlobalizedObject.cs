@@ -46,7 +46,7 @@ namespace pwiz.Skyline.Model
     /// </summary>
     public abstract class GlobalizedObject : ICustomTypeDescriptor
     {
-        private PropertyDescriptorCollection globalizedProps;
+        protected PropertyDescriptorCollection globalizedProps;
 
         private static Dictionary<string, MethodInfo> TypeConverterDictionary;
 
@@ -117,9 +117,11 @@ namespace pwiz.Skyline.Model
 
                     globalizedProps.Add(new GlobalizedPropertyDescriptor(oProp, GetResourceManager()));
                 }
+
+                AddCustomizedProperties();
             }
 
-            AddCustomizedProperties();
+            
 
             return globalizedProps;
         }
@@ -368,6 +370,111 @@ namespace pwiz.Skyline.Model
         public override void SetValue(object component, object value)
         {
             basePropertyDescriptor.SetValue(component, value);
+        }
+    }
+
+    /// <summary>
+    /// Used to support properties returned in GetProperties() that are not present on the globalized object, or need custom handling.
+    /// </summary>
+    public class CustomHandledGlobalizedPropertyDescriptor : PropertyDescriptor
+    {
+        private readonly ResourceManager _resourceManager;
+        private object _value;
+        private readonly string _category;
+        private readonly string _name;
+        private readonly Type _type;
+        private readonly string _nonLocalizedDisplayName;
+        private readonly Func<string, string> _displayNameFormat;
+
+        private const string DESCRIPTION_PREFIX = @"Description_";
+        private const string CATEGORY_PREFIX = @"Category_";
+
+        public CustomHandledGlobalizedPropertyDescriptor( ResourceManager resourceManager, object value, string category,
+            string name, Type type, string nonLocalizedDisplayName = null, Func<string, string> displayNameFormat = null, Attribute[] attributes = null) 
+            : base(name, attributes)
+        {
+            _resourceManager = resourceManager;
+            _value = value;
+            _category = category;
+            _name = name;
+            _type = type;
+            _nonLocalizedDisplayName = nonLocalizedDisplayName;
+            _displayNameFormat = displayNameFormat;
+        }
+
+        public override bool CanResetValue(object component)
+        {
+            return false;
+        }
+
+        public override Type ComponentType
+        {
+            get => _type;
+        }
+
+        public override string DisplayName
+        {
+            get
+            {
+                var displayName = _resourceManager.GetString(_name);
+
+                if (_displayNameFormat != null && displayName != null)
+                    displayName = _displayNameFormat(displayName);
+
+                return displayName ?? _nonLocalizedDisplayName ?? string.Empty;
+            }
+        }
+
+        public override string Description
+        {
+            get => _resourceManager.GetString(DESCRIPTION_PREFIX + _name) ?? string.Empty;
+        }
+
+        public override string Category
+        {
+            get
+            {
+                if (_category != null)
+                {
+                    return _resourceManager.GetString(CATEGORY_PREFIX + _category) ?? string.Empty;
+                }
+
+                return null;
+            }
+        }
+
+        public override object GetValue(object component)
+        {
+            return _value;
+        }
+
+        public override bool IsReadOnly
+        {
+            get => true;
+        }
+
+        public override string Name
+        {
+            get => _name;
+        }
+
+        public override Type PropertyType
+        {
+            get => _type;
+        }
+
+        public override void ResetValue(object component)
+        {
+        }
+
+        public override bool ShouldSerializeValue(object component)
+        {
+            return false;
+        }
+
+        public override void SetValue(object component, object value)
+        {
+            _value = value;
         }
     }
 

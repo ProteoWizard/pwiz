@@ -18,7 +18,6 @@
  */
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline;
 using pwiz.Skyline.Model.Files;
 using pwiz.SkylineTestUtil;
 using System.ComponentModel;

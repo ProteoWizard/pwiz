@@ -106,6 +106,15 @@ namespace pwiz.Skyline.Model.PropertySheets {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Instruments.
+        /// </summary>
+        internal static string Category_Instruments {
+            get {
+                return ResourceManager.GetString("Category_Instruments", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Replicate.
         /// </summary>
         internal static string Category_Replicate {
@@ -156,6 +165,15 @@ namespace pwiz.Skyline.Model.PropertySheets {
         internal static string FilePath {
             get {
                 return ResourceManager.GetString("FilePath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Instrument.
+        /// </summary>
+        internal static string Instrument {
+            get {
+                return ResourceManager.GetString("Instrument", resourceCulture);
             }
         }
         

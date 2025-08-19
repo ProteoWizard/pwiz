@@ -537,6 +537,7 @@
     <Compile Include="FileUI\PeptideSearch\HardklorSearchControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Include="Model\Files\InstrumentProperties.cs" />
     <Compile Include="Model\Files\ReplicateSampleFileProperties.cs" />
     <Compile Include="Model\Files\ReplicatesFolderProperties.cs" />
     <Compile Include="Model\Lib\AlphaPeptDeep\AlphapeptdeepLibraryBuilder.cs" />

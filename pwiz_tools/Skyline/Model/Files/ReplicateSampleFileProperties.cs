@@ -19,7 +19,9 @@
 
 using pwiz.Skyline.Model.PropertySheets.Templates;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 
 namespace pwiz.Skyline.Model.Files
 {
@@ -41,18 +43,48 @@ namespace pwiz.Skyline.Model.Files
             var instrumentInfo = dataFileInfo.InstrumentInfoList;
             if (instrumentInfo.Count > 0)
             {
-                Model = instrumentInfo[0].Model ?? string.Empty;
-                Ionization = instrumentInfo[0].Ionization ?? string.Empty;
-                Analyzer = instrumentInfo[0].Analyzer ?? string.Empty;
-                Detector = instrumentInfo[0].Detector ?? string.Empty;
+                Instruments = instrumentInfo
+                    .Select(info => new InstrumentProperties(info))
+                    .ToList();
             }
         }
 
         [Category("Replicate")] public string MaxRetentionTime { get; set; }
         [Category("Replicate")] public string MaxIntensity { get; set; }
-        [Category("Instrument")] public string Model { get; set; }
-        [Category("Instrument")] public string Ionization { get; set; }
-        [Category("Instrument")] public string Analyzer { get; set; }
-        [Category("Instrument")] public string Detector { get; set; }
+
+        [UseCustomHandling] public List<InstrumentProperties> Instruments { get; set; }
+
+        /// <summary>
+        /// Transforms the list of InstrumentProperties into a form that will display better in the property sheet.
+        /// List rendering is suboptimal, so we either show all properties of a single instrument at the top level,
+        /// or we show each instrument's properties in a separate expandable section.
+        /// </summary>
+        protected override void AddCustomizedProperties()
+        {
+            const string instrumentsCategoryKey = "Instruments";
+
+            if (Instruments?.Count == 1)
+            {
+                // if only one instrument, add instrument properties in one category at top level
+                foreach (var globalizedProp in from PropertyDescriptor prop in TypeDescriptor.GetProperties(typeof(InstrumentProperties))
+                         select new CustomHandledGlobalizedPropertyDescriptor(
+                             GetResourceManager(), prop.GetValue(Instruments[0]), prop.Category, prop.Name,
+                             prop.PropertyType))
+                {
+                    globalizedProps.Add(globalizedProp);
+                }
+            }
+            else if (Instruments?.Count > 1)
+            {
+                // if multiple instruments, add instrument properties nested within each instrument
+                for (var i = 0; i < Instruments.Count; i++)
+                {
+                    globalizedProps.Add(new CustomHandledGlobalizedPropertyDescriptor(
+                        GetResourceManager(), Instruments[i], instrumentsCategoryKey, instrumentsCategoryKey + i,
+                        typeof(InstrumentProperties), Instruments[i].Model, null,
+                        new Attribute[] { new TypeConverterAttribute(typeof(ExpandableObjectConverter)) }));
+                }
+            }
+        }
     }
 }
