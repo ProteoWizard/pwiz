@@ -20,6 +20,7 @@ using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 
 namespace pwiz.Skyline.Model.Files
@@ -57,12 +58,12 @@ namespace pwiz.Skyline.Model.Files
             }
         }
 
-        public ModifiedDocument DeleteAll(SrmDocument document)
+        public ModifiedDocument DeleteAll(SrmDocument document, SrmSettingsChangeMonitor monitor)
         {
             var newPepLibraries = document.Settings.PeptideSettings.Libraries.ChangeLibraries(Array.Empty<LibrarySpec>(), Array.Empty<Library>());
             var newPepSettings = document.Settings.PeptideSettings.ChangeLibraries(newPepLibraries);
             var newSettings = document.Settings.ChangePeptideSettings(newPepSettings);
-            var newDocument = document.ChangeSettings(newSettings);
+            var newDocument = document.ChangeSettings(newSettings, monitor);
 
             var entry = AuditLogEntry.CreateSimpleEntry(MessageType.files_tree_libraries_remove_all, document.DocumentType);
 

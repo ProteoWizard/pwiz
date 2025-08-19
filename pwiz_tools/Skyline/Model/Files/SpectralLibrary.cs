@@ -36,8 +36,7 @@ namespace pwiz.Skyline.Model.Files
         public override string Name => LibrarySpec?.Name ?? string.Empty;
         public override string FilePath => LibrarySpec?.FilePath ?? string.Empty;
 
-        // TODO: wrap in LongWaitDlg and use SrmSettingsChangeMonitor
-        public ModifiedDocument Delete(SrmDocument document, List<FileNode> models)
+        public ModifiedDocument Delete(SrmDocument document, SrmSettingsChangeMonitor monitor, List<FileNode> models)
         {
             var deleteIds = models.Select(model => ReferenceValue.Of(model.IdentityPath.Child)).ToHashSet();
             var deleteNames = models.Select(item => item.Name).ToList();
@@ -48,7 +47,7 @@ namespace pwiz.Skyline.Model.Files
             var newPepLibraries = document.Settings.PeptideSettings.Libraries.ChangeLibrarySpecs(remainingLibraries.ToList());
             var newPepSettings = document.Settings.PeptideSettings.ChangeLibraries(newPepLibraries);
             var newSettings = document.Settings.ChangePeptideSettings(newPepSettings);
-            var newDocument = document.ChangeSettings(newSettings);
+            var newDocument = document.ChangeSettings(newSettings, monitor);
 
             var entry = AuditLogEntry.CreateCountChangeEntry(
                 MessageType.files_tree_libraries_remove_one,
