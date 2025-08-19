@@ -28,7 +28,7 @@ namespace pwiz.Skyline.Model.Files
         private static readonly Identity REPLICATES = new StaticFolderId();
 
         public ReplicatesFolder(IDocumentContainer documentContainer) : 
-            base(documentContainer, new IdentityPath(REPLICATES), ImageId.folder)
+            base(documentContainer, new IdentityPath(REPLICATES), ImageId.folder, ImageId.folder_missing)
         {
         }
 
