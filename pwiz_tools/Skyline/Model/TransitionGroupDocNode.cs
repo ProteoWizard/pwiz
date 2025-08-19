@@ -1605,6 +1605,18 @@ namespace pwiz.Skyline.Model
                                 else
                                 {
                                     peak = GetTransitionBestPeak(info, transitionGroupChromInfoOld?.ReintegratedPeak ?? transitionGroupChromInfoOld?.OriginalPeak);
+                                    userSet = UserSet.FALSE;
+                                    if (transitionGroupChromInfoOld?.ReintegratedPeak != null)
+                                    {
+                                        if (!Equals(transitionGroupChromInfoOld.ReintegratedPeak.StartTime,
+                                                transitionGroupChromInfoOld.OriginalPeak.StartTime) ||
+                                            !Equals(transitionGroupChromInfoOld.ReintegratedPeak.EndTime,
+                                                transitionGroupChromInfoOld.OriginalPeak.EndTime))
+                                        {
+                                            userSet = UserSet.REINTEGRATED;
+                                        }
+                                    }
+
                                     var imputedPeak = imputedPeaks?[j];
                                     if (imputedPeak != null && !peakBoundaryImputer.IsAcceptable(peak, imputedPeak))
                                     {
@@ -1835,30 +1847,6 @@ namespace pwiz.Skyline.Model
 
             var empty = measuredResults.EmptyTransitionGroupResults;
             return (TransitionGroupDocNode) ChangeResults(empty).ChangeChildren(childrenNew);
-        }
-
-        private static int GetBestIndex(ChromatogramInfo info, PeakFeatureStatistics reintegratePeak, double qcutoff, ref UserSet userSet)
-        {
-            int bestIndex = info.BestPeakIndex;
-            if (reintegratePeak != null)
-            {
-                // If a cut-off for qvalues is set and q value is not low enough
-                // then pick no peak at all.
-                var qvalue = reintegratePeak.QValue;
-                if (qvalue.HasValue && qvalue.Value > qcutoff)
-                {
-                    userSet = UserSet.REINTEGRATED;
-                    bestIndex = -1;
-                }
-                // Otherwise, if the reintegrate peak is different from the default
-                // best peak, then use it and mark the peak as chosen by reintegration
-                else if (bestIndex != reintegratePeak.BestPeakIndex)
-                {
-                    userSet = UserSet.REINTEGRATED;
-                    bestIndex = reintegratePeak.BestPeakIndex;
-                }
-            }
-            return bestIndex;
         }
 
         private static ChromPeak CalcPeak(SrmSettings settingsNew, PeakGroupIntegrator peakGroupIntegrator,
