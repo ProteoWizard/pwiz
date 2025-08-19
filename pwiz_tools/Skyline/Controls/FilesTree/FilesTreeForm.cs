@@ -208,21 +208,37 @@ namespace pwiz.Skyline.Controls.FilesTree
             if (folderNode == null || !folderNode.SupportsRemoveAllItems())
                 return;
 
-            if (folderNode.Model is ReplicatesFolder replicates)
+            var messages = folderNode.Model is ReplicatesFolder ? 
+                ValueTuple.Create(FilesTreeResources.FilesTreeForm_Confirm_Remove_Replicates, FilesTreeResources.Remove_All_Replicates) : 
+                ValueTuple.Create(FilesTreeResources.FilesTreeForm_Confirm_Remove_Spectral_Libraries, FilesTreeResources.Remove_All_Spectral_Libraries);
+
+            if (ConfirmDelete(messages.Item1) == DialogResult.No)
+                return;
+
+            lock (SkylineWindow.GetDocumentChangeLock())
             {
-                var dialogResult = ConfirmDelete(FilesTreeResources.FilesTreeForm_Confirm_Remove_Replicates);
-                if (dialogResult == DialogResult.No)
+                var originalDoc = SkylineWindow.Document;
+                ModifiedDocument modifiedDoc = null;
+
+                using var longWaitDlg = new LongWaitDlg();
+                longWaitDlg.PerformWork(this, 750, progressMonitor =>
+                {
+                    using var monitor = new SrmSettingsChangeMonitor(progressMonitor, longWaitDlg.Text, SkylineWindow);
+
+                    if (folderNode.Model is ReplicatesFolder replicates)
+                    {
+                        modifiedDoc = replicates.DeleteAll(originalDoc, monitor);
+                    }
+                    else if (folderNode.Model is SpectralLibrariesFolder libraries)
+                    {
+                        modifiedDoc = libraries.DeleteAll(originalDoc, monitor);
+                    }
+                });
+
+                if (modifiedDoc == null) 
                     return;
 
-                SkylineWindow.ModifyDocument(FilesTreeResources.Remove_All_Replicates, DocumentModifier.Create(doc => replicates.DeleteAll(doc)));
-            }
-            else if (folderNode.Model is SpectralLibrariesFolder libraries)
-            {
-                var dialogResult = ConfirmDelete(FilesTreeResources.FilesTreeForm_Confirm_Remove_Spectral_Libraries);
-                if (dialogResult == DialogResult.No)
-                    return;
-
-                SkylineWindow.ModifyDocument(FilesTreeResources.Remove_All_Spectral_Libraries, DocumentModifier.Create(doc => libraries.DeleteAll(doc)));
+                SkylineWindow.ModifyDocument(messages.Item2, DocumentModifier.FromResult(originalDoc, modifiedDoc));
             }
         }
 
@@ -234,42 +250,73 @@ namespace pwiz.Skyline.Controls.FilesTree
             var model = nodes.First().Model;
             Assume.IsTrue(model is Replicate || model is SpectralLibrary);
 
-            if (nodes.First().Model is Replicate replicate)
-            {
-                var dialogResult = ConfirmDelete(nodes.Count, 
-                        FilesTreeResources.FilesTreeForm_Confirm_Remove_Replicate, 
-                        FilesTreeResources.FilesTreeForm_Confirm_Remove_Replicates);
+            var replicateMessages = ValueTuple.Create(
+                FilesTreeResources.FilesTreeForm_Confirm_Remove_Replicate,
+                FilesTreeResources.FilesTreeForm_Confirm_Remove_Spectral_Library, 
+                FilesTreeResources.Remove_Replicate);
 
-                if (dialogResult == DialogResult.No)
+            var libraryMessages = ValueTuple.Create(
+                FilesTreeResources.FilesTreeForm_Confirm_Remove_Replicates,
+                FilesTreeResources.FilesTreeForm_Confirm_Remove_Spectral_Libraries,
+                FilesTreeResources.Remove_Spectral_Library);
+
+            var messages = model is Replicate ? replicateMessages : libraryMessages;
+
+            // Confirm delete
+            if(ConfirmDelete(nodes.Count, messages.Item1, messages.Item2) == DialogResult.No)
+                return;
+
+            lock (SkylineWindow.GetDocumentChangeLock())
+            {
+                var originalDoc = SkylineWindow.Document;
+                ModifiedDocument modifiedDoc = null;
+
+                using var longWaitDlg = new LongWaitDlg();
+                longWaitDlg.PerformWork(this, 750, progressMonitor =>
+                {
+                    using var monitor = new SrmSettingsChangeMonitor(progressMonitor, longWaitDlg.Text, SkylineWindow);
+
+                    if (model is Replicate replicate)
+                    {
+                        // The selected nodes could include sample files. If so, remove them so the list is only Replicates, which
+                        // makes the Audit Log messages more consistent.
+                        var deletedModels = nodes.Select(item => item.Model).OfType<Replicate>().Cast<FileNode>().ToList();
+                        modifiedDoc = replicate.Delete(originalDoc, monitor, deletedModels);
+                    }
+                    else if (model is SpectralLibrary library)
+                    {
+                        var deletedModels = nodes.Select(item => item.Model).ToList();
+                        modifiedDoc = library.Delete(originalDoc, monitor, deletedModels);
+                    }
+                });
+
+                if (modifiedDoc == null)
                     return;
 
-                // Replicate sample files could be included in the selection so filter the list so it only includes Replicate models.
-                // This makes Audit Log messages more consistent.
-                var deletedModels = nodes.Select(item => item.Model).OfType<Replicate>().Cast<FileNode>().ToList();
-
-                SkylineWindow.ModifyDocument(FilesTreeResources.Remove_Replicate, DocumentModifier.Create(doc => replicate.Delete(doc, deletedModels)));
-            }
-            else if (nodes.First().Model is SpectralLibrary library)
-            {
-                var dialogResult = ConfirmDelete(nodes.Count, 
-                    FilesTreeResources.FilesTreeForm_Confirm_Remove_Spectral_Library, 
-                    FilesTreeResources.FilesTreeForm_Confirm_Remove_Spectral_Libraries);
-
-                if (dialogResult == DialogResult.No)
-                    return;
-
-                var deletedModels = nodes.Select(item => item.Model).ToList();
-
-                SkylineWindow.ModifyDocument(FilesTreeResources.Remove_Spectral_Library, DocumentModifier.Create(doc => library.Delete(doc, deletedModels)));
+                SkylineWindow.ModifyDocument(messages.Item3, DocumentModifier.FromResult(originalDoc, modifiedDoc));
             }
         }
 
         public bool EditTreeNodeLabel(FilesTreeNode node, string newLabel)
         {
             if (string.IsNullOrEmpty(newLabel) || !(node.Model is Replicate replicate))
-                return false;
+                return true;
 
-            SkylineWindow.ModifyDocument(FilesTreeResources.Change_ReplicateName, DocumentModifier.Create(doc => replicate.ChangeName(doc, newLabel)));
+            lock (SkylineWindow.GetDocumentChangeLock())
+            {
+                var originalDoc = SkylineWindow.Document;
+                ModifiedDocument modifiedDoc = null;
+
+                using var longWaitDlg = new LongWaitDlg();
+                longWaitDlg.PerformWork(this, 750, progressMonitor =>
+                {
+                    using var monitor = new SrmSettingsChangeMonitor(progressMonitor, longWaitDlg.Text, SkylineWindow);
+
+                    modifiedDoc = replicate.Rename(originalDoc, monitor, newLabel);
+                });
+
+                SkylineWindow.ModifyDocument(FilesTreeResources.Change_ReplicateName, DocumentModifier.FromResult(originalDoc, modifiedDoc));
+            }
 
             return false;
         }
