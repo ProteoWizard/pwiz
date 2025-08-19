@@ -70,7 +70,7 @@ namespace pwiz.SkylineTestFunctional
             var props = TypeDescriptor.GetProperties(selectedObject, true);
 
             // remove magic number whenever possible
-            Assert.AreEqual(8,props.Count);
+            Assert.AreEqual(5,props.Count);
 
             RunUI(() => { SkylineWindow.DestroyPropertyForm(); });
             RunUI(() => { SkylineWindow.DestroyFilesTreeForm(); });
