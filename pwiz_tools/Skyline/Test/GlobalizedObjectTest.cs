@@ -28,8 +28,7 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestGlobalizedObject()
         {
-            // This test is intentionally left empty. It serves as a placeholder for future globalized object tests.
-            // The test can be expanded to include specific functionality related to globalized objects in Skyline.
+            
         }
     }
 }

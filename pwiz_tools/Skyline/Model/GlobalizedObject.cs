@@ -121,8 +121,6 @@ namespace pwiz.Skyline.Model
                 AddCustomizedProperties();
             }
 
-            
-
             return globalizedProps;
         }
 
