@@ -37,6 +37,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using NHibernate.Criterion;
 
 namespace pwiz.Skyline.Model
 {
@@ -1604,19 +1605,7 @@ namespace pwiz.Skyline.Model
                                 // Otherwise use the best peak chosen at import time
                                 else
                                 {
-                                    peak = GetTransitionBestPeak(info, transitionGroupChromInfoOld?.ReintegratedPeak ?? transitionGroupChromInfoOld?.OriginalPeak);
-                                    userSet = UserSet.FALSE;
-                                    if (transitionGroupChromInfoOld?.ReintegratedPeak != null)
-                                    {
-                                        if (!Equals(transitionGroupChromInfoOld.ReintegratedPeak.StartTime,
-                                                transitionGroupChromInfoOld.OriginalPeak.StartTime) ||
-                                            !Equals(transitionGroupChromInfoOld.ReintegratedPeak.EndTime,
-                                                transitionGroupChromInfoOld.OriginalPeak.EndTime))
-                                        {
-                                            userSet = UserSet.REINTEGRATED;
-                                        }
-                                    }
-
+                                    peak = GetTransitionBestPeak(info, transitionGroupChromInfoOld?.OriginalPeak, transitionGroupChromInfoOld?.ReintegratedPeak, out userSet);
                                     var imputedPeak = imputedPeaks?[j];
                                     if (imputedPeak != null && !peakBoundaryImputer.IsAcceptable(peak, imputedPeak))
                                     {
@@ -1663,11 +1652,13 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private ChromPeak GetTransitionBestPeak(ChromatogramInfo chromatogramInfo, ScoredPeakBounds peakBounds)
+        private ChromPeak GetTransitionBestPeak(ChromatogramInfo chromatogramInfo, ScoredPeakBounds originalPeakBounds, ScoredPeakBounds reintegratedPeakBounds, out UserSet userSet)
         {
+            userSet = UserSet.FALSE;
             var bestPeak = chromatogramInfo.BestPeakIndex == -1
                 ? ChromPeak.EMPTY
                 : chromatogramInfo.GetPeak(chromatogramInfo.BestPeakIndex);
+            var peakBounds = reintegratedPeakBounds ?? originalPeakBounds;
             if (peakBounds == null)
             {
                 return bestPeak;
@@ -1683,6 +1674,16 @@ namespace pwiz.Skyline.Model
             {
                 if (peakBounds.StartTime <= candidate.StartTime && peakBounds.EndTime >= candidate.EndTime)
                 {
+                    if (reintegratedPeakBounds != null)
+                    {
+                        var originalStartTime = originalPeakBounds?.StartTime ?? bestPeak.StartTime;
+                        var originalEndTime = originalPeakBounds?.EndTime ?? bestPeak.EndTime;
+                        if (!Equals(reintegratedPeakBounds.StartTime, originalStartTime) ||
+                            !Equals(reintegratedPeakBounds.EndTime, originalEndTime))
+                        {
+                            userSet = UserSet.REINTEGRATED;
+                        }
+                    }
                     return candidate;
                 }
             }
