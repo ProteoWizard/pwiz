@@ -50,8 +50,7 @@ namespace pwiz.Skyline.Model.Files
             }
         }
 
-        // TODO: wrap in LongWaitDlg and use SrmSettingsChangeMonitor
-        public ModifiedDocument Delete(SrmDocument document, List<FileNode> models)
+        public ModifiedDocument Delete(SrmDocument document, SrmSettingsChangeMonitor monitor, List<FileNode> models)
         {
             var deleteIds = models.Select(model => ReferenceValue.Of(model.IdentityPath.Child)).ToHashSet();
             var deleteNames = models.Select(item => item.Name).ToList();
@@ -60,7 +59,7 @@ namespace pwiz.Skyline.Model.Files
                 document.MeasuredResults.Chromatograms.Where(chrom => !deleteIds.Contains(chrom.Id));
 
             var newMeasuredResults = document.MeasuredResults.ChangeChromatograms(remainingChromatograms.ToList());
-            var newDocument = document.ChangeMeasuredResults(newMeasuredResults);
+            var newDocument = document.ChangeMeasuredResults(newMeasuredResults, monitor);
             newDocument.ValidateResults();
             
             var entry = AuditLogEntry.CreateCountChangeEntry(
@@ -126,8 +125,7 @@ namespace pwiz.Skyline.Model.Files
             return new ModifiedDocument(newDocument).ChangeAuditLogEntry(entry);
         }
 
-        // TODO: wrap in LongWaitDlg and use SrmSettingsChangeMonitor
-        public ModifiedDocument ChangeName(SrmDocument document, string newName)
+        public ModifiedDocument Rename(SrmDocument document, SrmSettingsChangeMonitor monitor, string newName)
         {
             var oldName = ChromatogramSet.Name;
             var newChromatogram = (ChromatogramSet)ChromatogramSet.ChangeName(newName);
@@ -143,7 +141,7 @@ namespace pwiz.Skyline.Model.Files
             }
 
             measuredResults = measuredResults.ChangeChromatograms(chromatograms);
-            var newDocument = document.ChangeMeasuredResults(measuredResults);
+            var newDocument = document.ChangeMeasuredResults(measuredResults, monitor);
             newDocument.ValidateResults();
 
             var entry = AuditLogEntry.CreateSimpleEntry(

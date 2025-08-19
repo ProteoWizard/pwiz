@@ -19,6 +19,7 @@ using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.Files
@@ -55,9 +56,9 @@ namespace pwiz.Skyline.Model.Files
             }
         }
 
-        public ModifiedDocument DeleteAll(SrmDocument document)
+        public ModifiedDocument DeleteAll(SrmDocument document, SrmSettingsChangeMonitor monitor)
         {
-            var newDocument = document.ChangeMeasuredResults(null);
+            var newDocument = document.ChangeMeasuredResults(null, monitor);
             newDocument.ValidateResults();
 
             var entry = AuditLogEntry.CreateSimpleEntry(MessageType.files_tree_replicates_remove_all, document.DocumentType);
