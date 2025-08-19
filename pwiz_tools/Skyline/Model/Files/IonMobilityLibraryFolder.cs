@@ -26,7 +26,7 @@ namespace pwiz.Skyline.Model.Files
         private static readonly Identity IMSDB_FOLDER = new StaticFolderId();
 
         public IonMobilityLibraryFolder(IDocumentContainer documentContainer) : 
-            base(documentContainer, new IdentityPath(IMSDB_FOLDER), ImageId.folder)
+            base(documentContainer, new IdentityPath(IMSDB_FOLDER), ImageId.folder, ImageId.folder_missing)
         {
         }
 

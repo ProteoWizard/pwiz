@@ -51,9 +51,11 @@ namespace pwiz.Skyline.Model.Files
     {
         blank,
         folder,
+        folder_missing,
         file,
         file_missing,
         replicate,
+        replicate_missing,
         replicate_sample_file,
         peptide_library,
         skyline,
@@ -97,7 +99,7 @@ namespace pwiz.Skyline.Model.Files
 
         public virtual IList<FileNode> Files => ImmutableList.Empty<FileNode>();
 
-        public override string ToString() => @"FileNode: " + (Name ?? string.Empty);
+        public override string ToString() => @"{GetType().Name}: " + (Name ?? string.Empty);
 
         // All implementers should override
         public virtual GlobalizedObject GetProperties()

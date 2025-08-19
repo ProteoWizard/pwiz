@@ -87,7 +87,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 // Verify ability to extract predictions from raw data - first pass, use the clean BSA sample
                 // N.B. second pass gets benefit of first pass IM findings so we get similar peaks picked
                 ImportResultsAsync(TestFilesDirs[0].GetTestPath(TestFilesPersistent[pass]));
-                document = WaitForDocumentChangeLoaded(document);
+                document = WaitForDocumentChangeLoaded(document, WAIT_TIME * 10);
                 var transitionSettingsDlg = ShowDialog<TransitionSettingsUI>(
                     () => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
                 // Simulate user setting ion mobility resolving power then picking Edit New from the Ion Mobility Library combo control

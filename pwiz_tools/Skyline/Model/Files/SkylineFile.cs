@@ -24,6 +24,12 @@ namespace pwiz.Skyline.Model.Files
 {
     public class SkylineFile : FileNode
     {
+        public static SkylineFile Create(SrmDocument document, string documentFilePath)
+        {
+            var documentContainer = CreateDocumentContainer(document, documentFilePath);
+            return new SkylineFile(documentContainer);
+        }
+
         public SkylineFile(IDocumentContainer documentContainer) :
             base(documentContainer, IdentityPath.ROOT, ImageId.skyline)
         {
@@ -54,7 +60,7 @@ namespace pwiz.Skyline.Model.Files
         public FileNode Folder<T>() where T : FileNode
         {
             return Files.OfType<T>().FirstOrDefault();
-        } 
+        }
 
         private IEnumerable<FileNode> BuildFileList()
         {
@@ -113,12 +119,6 @@ namespace pwiz.Skyline.Model.Files
             }
 
             return list;
-        }
-
-        public static SkylineFile Create(SrmDocument document, string documentFilePath) 
-        {
-            var documentContainer = CreateDocumentContainer(document, documentFilePath);
-            return new SkylineFile(documentContainer);
         }
     }
 }
