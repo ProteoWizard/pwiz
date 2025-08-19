@@ -1605,7 +1605,7 @@ namespace pwiz.Skyline.Model
                                 // Otherwise use the best peak chosen at import time
                                 else
                                 {
-                                    peak = GetTransitionBestPeak(info, transitionGroupChromInfoOld?.OriginalPeak, transitionGroupChromInfoOld?.ReintegratedPeak, out userSet);
+                                    peak = GetTransitionBestPeak(info, transitionGroupChromInfoOld?.ReintegratedPeak, out userSet);
                                     var imputedPeak = imputedPeaks?[j];
                                     if (imputedPeak != null && !peakBoundaryImputer.IsAcceptable(peak, imputedPeak))
                                     {
@@ -1652,14 +1652,13 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private ChromPeak GetTransitionBestPeak(ChromatogramInfo chromatogramInfo, ScoredPeakBounds originalPeakBounds, ScoredPeakBounds reintegratedPeakBounds, out UserSet userSet)
+        private ChromPeak GetTransitionBestPeak(ChromatogramInfo chromatogramInfo, ScoredPeakBounds reintegratedPeakBounds, out UserSet userSet)
         {
             userSet = UserSet.FALSE;
             var bestPeak = chromatogramInfo.BestPeakIndex == -1
                 ? ChromPeak.EMPTY
                 : chromatogramInfo.GetPeak(chromatogramInfo.BestPeakIndex);
-            var peakBounds = reintegratedPeakBounds ?? originalPeakBounds;
-            if (peakBounds == null)
+            if (reintegratedPeakBounds == null || Equals(reintegratedPeakBounds.StartTime, bestPeak.StartTime) && Equals(reintegratedPeakBounds.EndTime, bestPeak.EndTime))
             {
                 return bestPeak;
             }
@@ -1672,18 +1671,8 @@ namespace pwiz.Skyline.Model
 
             foreach (var candidate in candidates)
             {
-                if (peakBounds.StartTime <= candidate.StartTime && peakBounds.EndTime >= candidate.EndTime)
+                if (reintegratedPeakBounds.StartTime <= candidate.StartTime && reintegratedPeakBounds.EndTime >= candidate.EndTime)
                 {
-                    if (reintegratedPeakBounds != null)
-                    {
-                        var originalStartTime = originalPeakBounds?.StartTime ?? bestPeak.StartTime;
-                        var originalEndTime = originalPeakBounds?.EndTime ?? bestPeak.EndTime;
-                        if (!Equals(reintegratedPeakBounds.StartTime, originalStartTime) ||
-                            !Equals(reintegratedPeakBounds.EndTime, originalEndTime))
-                        {
-                            userSet = UserSet.REINTEGRATED;
-                        }
-                    }
                     return candidate;
                 }
             }
