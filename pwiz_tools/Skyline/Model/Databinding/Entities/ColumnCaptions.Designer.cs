@@ -862,6 +862,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Dissociation Method.
+        /// </summary>
+        public static string DissociationMethod {
+            get {
+                return ResourceManager.GetString("DissociationMethod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Drift Time Fragment.
         /// </summary>
         public static string DriftTimeFragment {
