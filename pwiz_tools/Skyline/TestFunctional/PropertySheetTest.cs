@@ -18,10 +18,10 @@
  */
 
 using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.ComponentModel;
 using pwiz.Skyline.Model.Files;
 using pwiz.SkylineTestUtil;
-using System.ComponentModel;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -72,6 +72,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(typeof(ReplicateProperties), selectedObject.GetType());
 
             var props = TypeDescriptor.GetProperties(selectedObject, false);
+            // only non-null properties end up in the property sheet
             Assert.AreEqual(REP_FILE_PROP_NUM, props.Count);
 
             // test selecting a replicate sample file node
@@ -85,9 +86,8 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNotNull(selectedObject);
 
             props = TypeDescriptor.GetProperties(selectedObject, false);
+            // only non-null properties end up in the property sheet
             Assert.AreEqual(REP_SAMPLE_FILE_PROP_NUM, props.Count);
-
-            
 
             // Destroy the property form and files tree form to avoid test freezing
             RunUI(() => { SkylineWindow.DestroyPropertyForm(); });
