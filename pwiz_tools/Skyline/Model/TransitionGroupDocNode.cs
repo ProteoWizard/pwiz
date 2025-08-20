@@ -1658,7 +1658,7 @@ namespace pwiz.Skyline.Model
             var bestPeak = chromatogramInfo.BestPeakIndex == -1
                 ? ChromPeak.EMPTY
                 : chromatogramInfo.GetPeak(chromatogramInfo.BestPeakIndex);
-            if (reintegratedPeakBounds == null || Equals(reintegratedPeakBounds.StartTime, bestPeak.StartTime) && Equals(reintegratedPeakBounds.EndTime, bestPeak.EndTime))
+            if (reintegratedPeakBounds == null || bestPeak.StartTime >= reintegratedPeakBounds.StartTime && bestPeak.EndTime <= reintegratedPeakBounds.EndTime)
             {
                 return bestPeak;
             }
@@ -1794,9 +1794,13 @@ namespace pwiz.Skyline.Model
             {
                 return false;
             }
-            if (!Equals(settingsNew.DocumentRetentionTimes, settingsOld.DocumentRetentionTimes))
+
+            if (settingsNew.PeptideSettings.Imputation.HasImputation)
             {
-                return false;
+                if (!Equals(settingsNew.DocumentRetentionTimes, settingsOld.DocumentRetentionTimes))
+                {
+                    return false;
+                }
             }
             if (measuredResults.HasNewChromatogramData(chromIndex))
             {
