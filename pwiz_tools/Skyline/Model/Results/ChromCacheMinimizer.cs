@@ -686,6 +686,7 @@ namespace pwiz.Skyline.Model.Results
 
                 int numPeaks = minimizedChromGroup.NumPeaks;
                 int maxPeakIndex = minimizedChromGroup.MaxPeakIndex;
+                float? maxPeakScore = maxPeakIndex >= 0 ? originalChromGroup.Header.MaxPeakScore : null;
 
                 _cacheFormat.ChromPeakSerializer().WriteItems(_outputStreamPeaks, minimizedChromGroup.MinimizedPeaks);
 
@@ -701,7 +702,8 @@ namespace pwiz.Skyline.Model.Results
                     numPeaks,
                     startPeakIndex,
                     startScoreIndex,
-                    maxPeakIndex,
+                    maxPeakIndex, 
+                    maxPeakScore,
                     timeIntensitiesGroup.NumInterpolatedPoints,
                     lenCompressed,
                     lenUncompressed,

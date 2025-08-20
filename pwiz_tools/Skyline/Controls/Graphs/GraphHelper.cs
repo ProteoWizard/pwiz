@@ -367,7 +367,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var bestStartTime = firstPeak.StartRetentionTime;
             var bestEndTime = lastPeak.EndRetentionTime;
             // If relative zooming, scale to the best peak
-            if (chromDisplayState.TimeRange == 0 || chromDisplayState.PeakRelativeTime)
+            if (bestEndTime > bestStartTime && (chromDisplayState.TimeRange == 0 || chromDisplayState.PeakRelativeTime))
             {
                 double multiplier = (chromDisplayState.TimeRange != 0 ? chromDisplayState.TimeRange : GraphChromatogram.DEFAULT_PEAK_RELATIVE_WINDOW);
                 bestStartTime -= firstPeak.Fwb * (multiplier - 1) / 2;

@@ -144,10 +144,10 @@ namespace TestPerf
                     foreach (var graphChromatogram in SkylineWindow.GraphChromatograms)
                     {
                         Assert.IsNull(graphChromatogram.RetentionMsMs);
+                        // There are no aligned retention times because the graph has only been asked to show unaligned retention times
                         Assert.IsNull(graphChromatogram.AlignedRetentionMsMs);
-                        Assert.IsNotNull(graphChromatogram.UnalignedRetentionMsMs);
-                        Assert.AreNotEqual(0, graphChromatogram.UnalignedRetentionMsMs.Length);
-                        ValidateTimeRange(graphChromatogram, graphChromatogram.UnalignedRetentionMsMs, 8, 120);
+                        // There are no unaligned retention times because all runs have been successfully aligned to each other
+                        Assert.IsNull(graphChromatogram.UnalignedRetentionMsMs);
                     }
 
                     SkylineWindow.SequenceTree.SelectedNode = SkipInvalidNodes(SkylineWindow.SequenceTree.SelectedNode.NextNode);

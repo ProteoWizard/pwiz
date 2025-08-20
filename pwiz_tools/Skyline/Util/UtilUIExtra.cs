@@ -294,7 +294,7 @@ EndSelection:<<<<<<<3
             {
                 foreach (object item in comboBox.Items)
                 {
-                    string valueToMeasure = item.ToString();
+                    string valueToMeasure = comboBox.GetItemText(item);
 
                     int currentWidth = TextRenderer.MeasureText(g, valueToMeasure, comboBox.Font).Width;
                     if (currentWidth > widestWidth)

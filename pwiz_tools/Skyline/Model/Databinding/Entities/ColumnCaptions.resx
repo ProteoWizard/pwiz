@@ -408,6 +408,30 @@
   <data name="ExcludeFromCalibration">
     <value>Exclude From Calibration</value>
   </data>
+  <data name="ExemplaryEndTime">
+    <value>Exemplary End Time</value>
+  </data>
+  <data name="ExemplaryFilePath">
+    <value>Exemplary File Path</value>
+  </data>
+  <data name="ExemplaryLibraryName">
+    <value>Exemplary Library Name</value>
+  </data>
+  <data name="ExemplaryPeak">
+    <value>Exemplary Peak</value>
+  </data>
+  <data name="ExemplaryReplicateName">
+    <value>Exemplary Replicate Name</value>
+  </data>
+  <data name="ExemplaryRetentionTime">
+    <value>Exemplary Retention Time</value>
+  </data>
+  <data name="ExemplaryScore">
+    <value>Exemplary Score</value>
+  </data>
+  <data name="ExemplaryStartTime">
+    <value>Exemplary Start Time</value>
+  </data>
   <data name="ExplicitAnalyteConcentration">
     <value>Explicit Analyte Concentration</value>
   </data>
@@ -512,6 +536,15 @@
   </data>
   <data name="Identified">
     <value>Identified</value>
+  </data>
+  <data name="ImputedEndTime">
+    <value>Imputed End Time</value>
+  </data>
+  <data name="ImputedPeak">
+    <value>Imputed Peak</value>
+  </data>
+  <data name="ImputedStartTime">
+    <value>Imputed Start Time</value>
   </data>
   <data name="InChI">
     <value>InChI</value>
@@ -951,6 +984,21 @@
   <data name="OptStep">
     <value>Opt Step</value>
   </data>
+  <data name="OriginalEndTime">
+    <value>Original End Time</value>
+  </data>
+  <data name="OriginalPeak">
+    <value>Original Peak</value>
+  </data>
+  <data name="OriginalRetentionTime">
+    <value>Original Retention Time</value>
+  </data>
+  <data name="OriginalScore">
+    <value>Original Score</value>
+  </data>
+  <data name="OriginalStartTime">
+    <value>Original Start Time</value>
+  </data>
   <data name="PeakGroupEndTime">
     <value>Peak Group End Time</value>
   </data>
@@ -1280,6 +1328,21 @@
   </data>
   <data name="Reason">
     <value>Reason</value>
+  </data>
+  <data name="ReintegratedEndTime">
+    <value>Reintegrated End Time</value>
+  </data>
+  <data name="ReintegratedPeak">
+    <value>Reintegrated Peak</value>
+  </data>
+  <data name="ReintegratedRetentionTime">
+    <value>Reintegrated Retention Time</value>
+  </data>
+  <data name="ReintegratedScore">
+    <value>Reintegrated Score</value>
+  </data>
+  <data name="ReintegratedStartTime">
+    <value>Reintegrated Start Time</value>
   </data>
   <data name="Replicate">
     <value>Replicate</value>

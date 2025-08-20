@@ -61,11 +61,223 @@ namespace pwiz.Skyline.Model.RetentionTimes {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to !!Invalid!!.
+        /// </summary>
+        internal static string AlignmentTargetSpec_GetLabel___Invalid__ {
+            get {
+                return ResourceManager.GetString("AlignmentTargetSpec_GetLabel___Invalid__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Default.
+        /// </summary>
+        internal static string AlignmentTargetSpec_GetLabel_Default {
+            get {
+                return ResourceManager.GetString("AlignmentTargetSpec_GetLabel_Default", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Default ({0}).
+        /// </summary>
+        internal static string AlignmentTargetSpec_GetLabel_Default___0__ {
+            get {
+                return ResourceManager.GetString("AlignmentTargetSpec_GetLabel_Default___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Default (None).
+        /// </summary>
+        internal static string AlignmentTargetSpec_GetLabel_Default__None_ {
+            get {
+                return ResourceManager.GetString("AlignmentTargetSpec_GetLabel_Default__None_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Retention time calculator.
+        /// </summary>
+        internal static string AlignmentTargetSpec_GetLabel_Retention_time_calculator {
+            get {
+                return ResourceManager.GetString("AlignmentTargetSpec_GetLabel_Retention_time_calculator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to RT calculator {0}.
+        /// </summary>
+        internal static string AlignmentTargetSpec_GetLabel_RT_calculator__0_ {
+            get {
+                return ResourceManager.GetString("AlignmentTargetSpec_GetLabel_RT_calculator__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Aligning retention times.
         /// </summary>
         internal static string DocumentRetentionTimes_RecalculateAlignments_Aligning_retention_times {
             get {
                 return ResourceManager.GetString("DocumentRetentionTimes_RecalculateAlignments_Aligning_retention_times", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Library {0}.
+        /// </summary>
+        internal static string Library_DisplayName_Library__0_ {
+            get {
+                return ResourceManager.GetString("Library_DisplayName_Library__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Align to Library &apos;{0}&apos;.
+        /// </summary>
+        internal static string LibraryTarget_GetAlignmentMenuItemText_Align_to_Library___0__ {
+            get {
+                return ResourceManager.GetString("LibraryTarget_GetAlignmentMenuItemText_Align_to_Library___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} aligned to library &apos;{1}&apos;.
+        /// </summary>
+        internal static string LibraryTarget_GetAxisTitle__0__aligned_to_library___1__ {
+            get {
+                return ResourceManager.GetString("LibraryTarget_GetAxisTitle__0__aligned_to_library___1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Retention time aligned to library &apos;{0}&apos;.
+        /// </summary>
+        internal static string LibraryTarget_GetAxisTitle_Retention_time_aligned_to_library___0__ {
+            get {
+                return ResourceManager.GetString("LibraryTarget_GetAxisTitle_Retention_time_aligned_to_library___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Median LC Peak Time.
+        /// </summary>
+        internal static string MedianDocumentRetentionTimes_DisplayName_Median_LC_Peak_Time {
+            get {
+                return ResourceManager.GetString("MedianDocumentRetentionTimes_DisplayName_Median_LC_Peak_Time", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Median LC Peak Times.
+        /// </summary>
+        internal static string MedianDocumentRetentionTimes_DisplayName_Median_LC_Peak_Times {
+            get {
+                return ResourceManager.GetString("MedianDocumentRetentionTimes_DisplayName_Median_LC_Peak_Times", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Align to Median Document Retention Times.
+        /// </summary>
+        internal static string MedianDocumentRetentionTimes_GetAlignmentMenuItemText_Align_to_Median_Document_Retention_Times {
+            get {
+                return ResourceManager.GetString("MedianDocumentRetentionTimes_GetAlignmentMenuItemText_Align_to_Median_Document_Re" +
+                        "tention_Times", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Normalized {0}.
+        /// </summary>
+        internal static string MedianDocumentRetentionTimes_GetAxisTitle_Normalized__0_ {
+            get {
+                return ResourceManager.GetString("MedianDocumentRetentionTimes_GetAxisTitle_Normalized__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Normalized retention time.
+        /// </summary>
+        internal static string MedianDocumentRetentionTimes_GetAxisTitle_Normalized_retention_time {
+            get {
+                return ResourceManager.GetString("MedianDocumentRetentionTimes_GetAxisTitle_Normalized_retention_time", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Performing alignment between libraries {0} and {1}.
+        /// </summary>
+        internal static string RetentionTimeManager_GetAlignmentDescription_Performing_alignment_between_libraries__0__and__1_ {
+            get {
+                return ResourceManager.GetString("RetentionTimeManager_GetAlignmentDescription_Performing_alignment_between_librari" +
+                        "es__0__and__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Performing alignment between library {0} and calculator {1}.
+        /// </summary>
+        internal static string RetentionTimeManager_GetAlignmentDescription_Performing_alignment_between_library__0__and_calculator__1_ {
+            get {
+                return ResourceManager.GetString("RetentionTimeManager_GetAlignmentDescription_Performing_alignment_between_library" +
+                        "__0__and_calculator__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Performing alignment between library {0} and itself.
+        /// </summary>
+        internal static string RetentionTimeManager_GetAlignmentDescription_Performing_alignment_between_library__0__and_itself {
+            get {
+                return ResourceManager.GetString("RetentionTimeManager_GetAlignmentDescription_Performing_alignment_between_library" +
+                        "__0__and_itself", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Performing alignment on library {0}.
+        /// </summary>
+        internal static string RetentionTimeManager_GetAlignmentDescription_Performing_alignment_on_library__0_ {
+            get {
+                return ResourceManager.GetString("RetentionTimeManager_GetAlignmentDescription_Performing_alignment_on_library__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Performing replicate retention time alignments.
+        /// </summary>
+        internal static string RetentionTimeManager_UpdateResultFileAlignments_Performing_replicate_retention_time_alignments {
+            get {
+                return ResourceManager.GetString("RetentionTimeManager_UpdateResultFileAlignments_Performing_replicate_retention_ti" +
+                        "me_alignments", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to FWB Time.
+        /// </summary>
+        internal static string RtGraphValue_FWB_Time {
+            get {
+                return ResourceManager.GetString("RtGraphValue_FWB_Time", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to FWHM Time.
+        /// </summary>
+        internal static string RtGraphValue_FWHM_Time {
+            get {
+                return ResourceManager.GetString("RtGraphValue_FWHM_Time", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Retention Time.
+        /// </summary>
+        internal static string RtGraphValue_Retention_Time {
+            get {
+                return ResourceManager.GetString("RtGraphValue_Retention_Time", resourceCulture);
             }
         }
     }
