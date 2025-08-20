@@ -3156,7 +3156,11 @@ namespace pwiz.Skyline
             {
                 if (_filesTreeForm != null)
                 {
-                    _filesTreeForm.Show(dockPanel, DockState.DockLeft);
+                    if (_filesTreeForm.DockPanel != null)
+                        _filesTreeForm.Activate();
+                    else
+                        _filesTreeForm.Show(dockPanel, DockState.DockLeft);
+
                     _filesTreeForm.FilesTree.ScrollToTop();
                 }
                 else
