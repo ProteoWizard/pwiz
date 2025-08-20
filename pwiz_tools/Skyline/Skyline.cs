@@ -3217,7 +3217,7 @@ namespace pwiz.Skyline
                 _propertyForm ??= CreatePropertyForm();
                 _propertyForm.GetProperties(DockPanel.ActiveContent);
 
-                if (_propertyForm.Visible)
+                if (_propertyForm.DockPanel != null)
                     _propertyForm.Activate();
                 else
                     _propertyForm.Show(dockPanel, DockState.DockRight);
