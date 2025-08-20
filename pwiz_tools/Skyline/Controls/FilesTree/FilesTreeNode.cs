@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
@@ -67,7 +68,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         
         public bool HasTip => true;
 
-        internal string DocumentPath => ((FilesTree)TreeView).DocumentContainer.DocumentFilePath;
+        internal string DocumentPath => Model.DocumentPath;
 
         // Convenience to avoid casts
         public FilesTree FilesTree => (FilesTree)TreeView;
@@ -253,6 +254,17 @@ namespace pwiz.Skyline.Controls.FilesTree
                 }
             }
 
+            if (Debugger.IsAttached)
+            {
+                customTable.AddDetailRow(@" ", @" ", rt);
+                customTable.AddDetailRow(@"Debug Info", @" ", rt);
+
+                var msg = Model.IsBackedByFile ? $@"{FileState}" : @"Not backed by local file";
+                customTable.AddDetailRow(@"FileState", msg, rt);
+
+                customTable.AddDetailRow(@"Document revision", $@"{Model.Document.RevisionIndex}", rt);
+            }
+
             var size = customTable.CalcDimensions(g);
             customTable.Draw(g);
             return new Size((int)size.Width + 4, (int)size.Height + 4);
@@ -299,6 +311,23 @@ namespace pwiz.Skyline.Controls.FilesTree
         public FilesTreeNode NodeAt(int index)
         {
             return (FilesTreeNode)Nodes[index];
+        }
+
+        protected override void DebugBorders(Graphics g, int rightEdge)
+        {
+            // var bounds = BoundsMS;
+            //
+            // var boundsTv = Bounds;
+            // using var penTv = new Pen(Color.Green, 1);
+            // g.DrawRectangle(penTv, boundsTv);
+            //
+            // using var penMs = new Pen(Color.Red, 1);
+            // g.DrawRectangle(penMs, bounds);
+        }
+
+        public new string ToString()
+        {
+            return $@"FilesTreeNode: {Name} {Model.GetType().Name}";
         }
 
         ///

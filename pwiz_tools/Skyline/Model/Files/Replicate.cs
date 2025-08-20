@@ -127,9 +127,11 @@ namespace pwiz.Skyline.Model.Files
 
         public ModifiedDocument Rename(SrmDocument document, SrmSettingsChangeMonitor monitor, string newName)
         {
-            var oldName = ChromatogramSet.Name;
-            var newChromatogram = (ChromatogramSet)ChromatogramSet.ChangeName(newName);
-            var measuredResults = Document.MeasuredResults;
+            var chromSet = ChromatogramSet;
+
+            var oldName = chromSet.Name;
+            var newChromatogram = (ChromatogramSet)chromSet.ChangeName(newName);
+            var measuredResults = document.MeasuredResults;
 
             var chromatograms = measuredResults.Chromatograms.ToArray();
             for (var i = 0; i < chromatograms.Length; i++)

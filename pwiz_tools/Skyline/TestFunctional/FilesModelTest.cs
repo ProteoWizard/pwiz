@@ -18,6 +18,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Files;
 using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
@@ -43,9 +44,15 @@ namespace pwiz.SkylineTestFunctional
             WaitForOpenForm<SkylineWindow>();
             WaitForDocumentLoaded();
 
-            var docSettings = SkylineWindow.Document.Settings;
+            var documentContainer = new MemoryDocumentContainer
+            {
+                DocumentFilePath = documentPath
+            };
+            documentContainer.SetDocument(SkylineWindow.Document, null);
 
-            var modelFiles = SkylineFile.Create(SkylineWindow.Document, documentPath);
+            var modelFiles = SkylineFile.Create(documentContainer);
+
+            var docSettings = SkylineWindow.Document.Settings;
 
             // <root>/
             //      replicates/
@@ -131,9 +138,14 @@ namespace pwiz.SkylineTestFunctional
                 });
             });
 
-            docSettings = SkylineWindow.Document.Settings;
+            documentContainer = new MemoryDocumentContainer
+            {
+                DocumentFilePath = documentPath
+            };
+            documentContainer.SetDocument(SkylineWindow.Document, null);
 
-            modelFiles = SkylineFile.Create(SkylineWindow.Document, documentPath);
+            modelFiles = SkylineFile.Create(documentContainer);
+            docSettings = SkylineWindow.Document.Settings;
 
             var newDocReplicate = docSettings.MeasuredResults.Chromatograms[0];
             var newModelReplicate = modelFiles.Files[1].Files[0];
