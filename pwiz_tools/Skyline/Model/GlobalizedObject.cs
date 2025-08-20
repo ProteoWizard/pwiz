@@ -479,10 +479,6 @@ namespace pwiz.Skyline.Model
         }
     }
 
-    // Used to flag properties that should not be copied directly to the globalized object, as they require custom handling.
-    [AttributeUsage(AttributeTargets.Property)]
-    public class UseCustomHandlingAttribute : Attribute { }
-
     public class TwoDecimalDoubleConverter : DoubleConverter
     {
         public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
@@ -492,4 +488,8 @@ namespace pwiz.Skyline.Model
             return base.ConvertTo(context, culture, value, destinationType);
         }
     }
+
+    // Used to flag properties that should not be copied directly to the globalized object, as they require custom handling.
+    [AttributeUsage(AttributeTargets.Property)]
+    public class UseCustomHandlingAttribute : Attribute { }
 }
