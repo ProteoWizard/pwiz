@@ -4484,6 +4484,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap FileMissing {
+            get {
+                object obj = ResourceManager.GetObject("FileMissing", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Could not replace file .
         /// </summary>
         public static string FileStreamManager_Commit_Could_not_replace_file_ {
@@ -4528,6 +4538,16 @@ namespace pwiz.Skyline.Properties {
         public static System.Drawing.Bitmap Folder {
             get {
                 object obj = ResourceManager.GetObject("Folder", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap FolderMissing {
+            get {
+                object obj = ResourceManager.GetObject("FolderMissing", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -6081,16 +6101,6 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("MessageBoxHelper_ValidateSignedNumberTextBox_Value__0__must_be_between__1__and__2" +
                         "__or__3__and__4__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap MissingFile {
-            get {
-                object obj = ResourceManager.GetObject("MissingFile", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
             }
         }
         
@@ -8561,6 +8571,16 @@ namespace pwiz.Skyline.Properties {
         public static System.Drawing.Bitmap Replicate {
             get {
                 object obj = ResourceManager.GetObject("Replicate", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap ReplicateMissing {
+            get {
+                object obj = ResourceManager.GetObject("ReplicateMissing", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

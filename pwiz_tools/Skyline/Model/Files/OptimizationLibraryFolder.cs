@@ -26,7 +26,7 @@ namespace pwiz.Skyline.Model.Files
         private static readonly Identity OPTDB_FOLDER = new StaticFolderId();
 
         public OptimizationLibraryFolder(IDocumentContainer documentContainer) : 
-            base(documentContainer, new IdentityPath(OPTDB_FOLDER), ImageId.folder)
+            base(documentContainer, new IdentityPath(OPTDB_FOLDER), ImageId.folder, ImageId.folder_missing)
         {
         }
 

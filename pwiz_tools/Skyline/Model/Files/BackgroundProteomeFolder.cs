@@ -25,7 +25,7 @@ namespace pwiz.Skyline.Model.Files
         private static readonly Identity BACKGROUND_PROTEOME = new StaticFolderId();
 
         public BackgroundProteomeFolder(IDocumentContainer documentContainer) : 
-            base(documentContainer, new IdentityPath(BACKGROUND_PROTEOME), ImageId.folder)
+            base(documentContainer, new IdentityPath(BACKGROUND_PROTEOME), ImageId.folder, ImageId.folder_missing)
         {
         }
 

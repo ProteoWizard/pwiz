@@ -24,10 +24,12 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Files;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using static pwiz.Skyline.Model.Files.FileNode;
+using Debugger = System.Diagnostics.Debugger;
 using Process = System.Diagnostics.Process;
 
 // CONSIDER: using IdentityPath (and DocNode.ReplaceChild) to simplify replicate name changes
@@ -55,18 +57,19 @@ namespace pwiz.Skyline.Controls.FilesTree
             filesTree.LabelEdit = true;
             filesTree.AllowDrop = true;
             filesTree.NodeMouseDoubleClick += FilesTree_TreeNodeMouseDoubleClick;
+            filesTree.MouseDown += FilesTree_MouseDown;
             filesTree.MouseMove += FilesTree_MouseMove;
             filesTree.LostFocus += FilesTree_LostFocus;
             filesTree.BeforeLabelEdit += FilesTree_BeforeLabelEdit;
             filesTree.AfterLabelEdit += FilesTree_AfterLabelEdit;
             filesTree.AfterNodeEdit += FilesTree_AfterLabelEdit;
-            filesTree.ItemDrag += FilesTree_ItemDrag;
             filesTree.DragEnter += FilesTree_DragEnter;
             filesTree.DragLeave += FilesTree_DragLeave;
             filesTree.DragOver += FilesTree_DragOver;
             filesTree.DragDrop += FilesTree_DragDrop;
             filesTree.QueryContinueDrag += FilesTree_QueryContinueDrag;
             filesTree.KeyDown += FilesTree_KeyDown;
+            filesTree.BeforeCollapse += FilesTree_BeforeCollapse;
 
             SkylineWindow.DocumentSavedEvent += OnDocumentSavedEvent;
             SkylineWindow.DocumentUIChangedEvent += OnDocumentUIChangedEvent;
@@ -149,7 +152,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         }
 
         /// <summary>
-        /// Activate a replicate by nam. This handler runs when a replicate sample file is clicked, so
+        /// Activate a replicate by name. This handler runs when a replicate sample file is clicked, so
         /// obtain the replicate's name from its parent tree node, which represents the replicate.
         /// </summary>
         /// <param name="selectedNode">Replicate sample file</param>
@@ -204,21 +207,37 @@ namespace pwiz.Skyline.Controls.FilesTree
             if (folderNode == null || !folderNode.SupportsRemoveAllItems())
                 return;
 
-            if (folderNode.Model is ReplicatesFolder replicates)
+            var messages = folderNode.Model is ReplicatesFolder ? 
+                ValueTuple.Create(FilesTreeResources.FilesTreeForm_Confirm_Remove_Replicates, FilesTreeResources.Remove_All_Replicates) : 
+                ValueTuple.Create(FilesTreeResources.FilesTreeForm_Confirm_Remove_Spectral_Libraries, FilesTreeResources.Remove_All_Spectral_Libraries);
+
+            if (ConfirmDelete(messages.Item1) == DialogResult.No)
+                return;
+
+            lock (SkylineWindow.GetDocumentChangeLock())
             {
-                var dialogResult = ConfirmDelete(FilesTreeResources.FilesTreeForm_Confirm_Remove_Replicates);
-                if (dialogResult == DialogResult.No)
+                var originalDoc = SkylineWindow.Document;
+                ModifiedDocument modifiedDoc = null;
+
+                using var longWaitDlg = new LongWaitDlg();
+                longWaitDlg.PerformWork(this, 750, progressMonitor =>
+                {
+                    using var monitor = new SrmSettingsChangeMonitor(progressMonitor, longWaitDlg.Text, SkylineWindow);
+
+                    if (folderNode.Model is ReplicatesFolder replicates)
+                    {
+                        modifiedDoc = replicates.DeleteAll(originalDoc, monitor);
+                    }
+                    else if (folderNode.Model is SpectralLibrariesFolder libraries)
+                    {
+                        modifiedDoc = libraries.DeleteAll(originalDoc, monitor);
+                    }
+                });
+
+                if (modifiedDoc == null) 
                     return;
 
-                SkylineWindow.ModifyDocument(FilesTreeResources.Remove_All_Replicates, DocumentModifier.Create(doc => replicates.DeleteAll(doc)));
-            }
-            else if (folderNode.Model is SpectralLibrariesFolder libraries)
-            {
-                var dialogResult = ConfirmDelete(FilesTreeResources.FilesTreeForm_Confirm_Remove_Spectral_Libraries);
-                if (dialogResult == DialogResult.No)
-                    return;
-
-                SkylineWindow.ModifyDocument(FilesTreeResources.Remove_All_Spectral_Libraries, DocumentModifier.Create(doc => libraries.DeleteAll(doc)));
+                SkylineWindow.ModifyDocument(messages.Item2, DocumentModifier.FromResult(originalDoc, modifiedDoc));
             }
         }
 
@@ -230,48 +249,83 @@ namespace pwiz.Skyline.Controls.FilesTree
             var model = nodes.First().Model;
             Assume.IsTrue(model is Replicate || model is SpectralLibrary);
 
-            if (nodes.First().Model is Replicate replicate)
-            {
-                var dialogResult = ConfirmDelete(nodes.Count, 
-                        FilesTreeResources.FilesTreeForm_Confirm_Remove_Replicate, 
-                        FilesTreeResources.FilesTreeForm_Confirm_Remove_Replicates);
+            var replicateMessages = ValueTuple.Create(
+                FilesTreeResources.FilesTreeForm_Confirm_Remove_Replicate,
+                FilesTreeResources.FilesTreeForm_Confirm_Remove_Spectral_Library, 
+                FilesTreeResources.Remove_Replicate);
 
-                if (dialogResult == DialogResult.No)
+            var libraryMessages = ValueTuple.Create(
+                FilesTreeResources.FilesTreeForm_Confirm_Remove_Replicates,
+                FilesTreeResources.FilesTreeForm_Confirm_Remove_Spectral_Libraries,
+                FilesTreeResources.Remove_Spectral_Library);
+
+            var messages = model is Replicate ? replicateMessages : libraryMessages;
+
+            // Confirm delete
+            if(ConfirmDelete(nodes.Count, messages.Item1, messages.Item2) == DialogResult.No)
+                return;
+
+            lock (SkylineWindow.GetDocumentChangeLock())
+            {
+                var originalDoc = SkylineWindow.Document;
+                ModifiedDocument modifiedDoc = null;
+
+                using var longWaitDlg = new LongWaitDlg();
+                longWaitDlg.PerformWork(this, 750, progressMonitor =>
+                {
+                    using var monitor = new SrmSettingsChangeMonitor(progressMonitor, longWaitDlg.Text, SkylineWindow);
+
+                    if (model is Replicate replicate)
+                    {
+                        // The selected nodes could include sample files. If so, remove them so the list is only Replicates, which
+                        // makes the Audit Log messages more consistent.
+                        var deletedModels = nodes.Select(item => item.Model).OfType<Replicate>().Cast<FileNode>().ToList();
+                        modifiedDoc = replicate.Delete(originalDoc, monitor, deletedModels);
+                    }
+                    else if (model is SpectralLibrary library)
+                    {
+                        var deletedModels = nodes.Select(item => item.Model).ToList();
+                        modifiedDoc = library.Delete(originalDoc, monitor, deletedModels);
+                    }
+                });
+
+                if (modifiedDoc == null)
                     return;
 
-                // Replicate sample files could be included in the selection so filter the list so it only includes Replicate models.
-                // This makes Audit Log messages more consistent.
-                var deletedModels = nodes.Select(item => item.Model).OfType<Replicate>().Cast<FileNode>().ToList();
-
-                SkylineWindow.ModifyDocument(FilesTreeResources.Remove_Replicate, DocumentModifier.Create(doc => replicate.Delete(doc, deletedModels)));
-            }
-            else if (nodes.First().Model is SpectralLibrary library)
-            {
-                var dialogResult = ConfirmDelete(nodes.Count, 
-                    FilesTreeResources.FilesTreeForm_Confirm_Remove_Spectral_Library, 
-                    FilesTreeResources.FilesTreeForm_Confirm_Remove_Spectral_Libraries);
-
-                if (dialogResult == DialogResult.No)
-                    return;
-
-                var deletedModels = nodes.Select(item => item.Model).ToList();
-
-                SkylineWindow.ModifyDocument(FilesTreeResources.Remove_Spectral_Library, DocumentModifier.Create(doc => library.Delete(doc, deletedModels)));
+                SkylineWindow.ModifyDocument(messages.Item3, DocumentModifier.FromResult(originalDoc, modifiedDoc));
             }
         }
 
+        /// <summary>
+        /// Set the name of the given tree node to a new value.
+        /// </summary>
+        /// <param name="node"></param>
+        /// <param name="newLabel"></param>
+        /// <returns>true if the caller should cancel the edit. false otherwise.</returns>
         public bool EditTreeNodeLabel(FilesTreeNode node, string newLabel)
         {
-            if (string.IsNullOrEmpty(newLabel) || !(node.Model is Replicate replicate))
-                return false;
+            if (node == null || string.IsNullOrEmpty(newLabel) || !(node.Model is Replicate replicate))
+                return true;
 
-            SkylineWindow.ModifyDocument(FilesTreeResources.Change_ReplicateName, DocumentModifier.Create(doc => replicate.ChangeName(doc, newLabel)));
+            lock (SkylineWindow.GetDocumentChangeLock())
+            {
+                var originalDoc = SkylineWindow.Document;
+                ModifiedDocument modifiedDoc = null;
+
+                using var longWaitDlg = new LongWaitDlg();
+                longWaitDlg.PerformWork(this, 750, progressMonitor =>
+                {
+                    using var monitor = new SrmSettingsChangeMonitor(progressMonitor, longWaitDlg.Text, SkylineWindow);
+
+                    modifiedDoc = replicate.Rename(originalDoc, monitor, newLabel);
+                });
+
+                SkylineWindow.ModifyDocument(FilesTreeResources.Change_ReplicateName, DocumentModifier.FromResult(originalDoc, modifiedDoc));
+            }
 
             return false;
         }
 
-        // CONSIDER: use IdentityPath to save and restore selected nodes? Caveat, all draggable nodes
-        //           types must subclass DocNode, which is not true of replicates.
         public void DropNodes(IList<FilesTreeNode> draggedNodes, FilesTreeNode primaryDraggedNode, FilesTreeNode dropNode, MoveType moveType, DragDropEffects effect)
         {
             try
@@ -281,30 +335,36 @@ namespace pwiz.Skyline.Controls.FilesTree
 
                 var draggedModels = draggedNodes.Select(item => item.Model).ToList();
 
-                IDocumentModifier modifier;
-                switch (primaryDraggedNode.Model)
+                // Adjust moveType if dragged nodes were dropped on the parent folder in which case
+                // dropped nodes should move to the bottom of the list
+                if (dropNode.Model is ReplicatesFolder || dropNode.Model is SpectralLibrariesFolder)
+                    moveType = MoveType.move_last;
+
+                lock (SkylineWindow.GetDocumentChangeLock())
                 {
-                    case Replicate replicate:
-                    {
-                        if (dropNode.Model is ReplicatesFolder)
-                            moveType = MoveType.move_last;
+                    var originalDoc = SkylineWindow.Document;
+                    ModifiedDocument modifiedDoc = null;
 
-                        modifier = DocumentModifier.Create(doc => replicate.Rearrange(doc, draggedModels, dropNode.Model, moveType));
-                        break;
-                    }
-                    case SpectralLibrary library:
+                    using var longWaitDlg = new LongWaitDlg();
+                    longWaitDlg.PerformWork(this, 750, progressMonitor =>
                     {
-                        if (dropNode.Model is SpectralLibrariesFolder)
-                            moveType = MoveType.move_last;
+                        using var monitor = new SrmSettingsChangeMonitor(progressMonitor, longWaitDlg.Text, SkylineWindow);
 
-                        modifier = DocumentModifier.Create(doc => library.Rearrange(doc, draggedModels, dropNode.Model, moveType));
-                        break;
-                    }
-                    default:
+                        if (primaryDraggedNode.Model is Replicate replicate)
+                        {
+                            modifiedDoc = replicate.Rearrange(originalDoc, monitor, draggedModels, dropNode.Model, moveType);
+                        }
+                        else if (primaryDraggedNode.Model is SpectralLibrary library)
+                        {
+                            modifiedDoc = library.Rearrange(originalDoc, monitor, draggedModels, dropNode.Model, moveType);
+                        }
+                    });
+
+                    if (modifiedDoc == null)
                         return;
-                }
 
-                SkylineWindow.ModifyDocument(FilesTreeResources.Drag_and_Drop, modifier);
+                    SkylineWindow.ModifyDocument(FilesTreeResources.Drag_and_Drop, DocumentModifier.FromResult(originalDoc, modifiedDoc));
+                }
 
                 // After the drop, re-select the dragged nodes to paint the nodes blue and maintain the user's selection.
                 // This is a tricky process which must be done in a specific order.
@@ -359,6 +419,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             selectReplicateMenuItem.Visible = false;
             removeAllMenuItem.Visible = false;
             removeMenuItem.Visible = false;
+            debugRefreshTreeMenuItem.Visible = false;
 
             // Only offer "Open Containing Folder" if (1) supported by this tree node
             // and (2) the file's state is "available"
@@ -392,7 +453,16 @@ namespace pwiz.Skyline.Controls.FilesTree
                 case SkylineAuditLog _:
                     openAuditLogMenuItem.Visible = true;
                     break;
+                case SkylineFile _:
+                    if(Debugger.IsAttached)
+                        debugRefreshTreeMenuItem.Visible = true;
+                    break;
             }
+        }
+
+        private void FilesTree_DebugRefreshTreeMenuItem(object sender, EventArgs e)
+        {
+            FilesTree.Root.RefreshState();
         }
 
         private void FilesTree_TreeNodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
@@ -413,6 +483,17 @@ namespace pwiz.Skyline.Controls.FilesTree
                 case BackgroundProteome _:
                     OpenEditBackgroundProteomeDialog(filesTreeNode);
                     break;
+            }
+        }
+
+        private void FilesTree_BeforeCollapse(object sender, TreeViewCancelEventArgs e)
+        {
+            // CONSIDER: change FilesTree UI so the root node is a label and not
+            //           actually a TreeNode. Akin to VisualStudio's Solution Explorer.
+            // Prevent collapse of root node. 
+            if (e.Node == filesTree.Root)
+            {
+                e.Cancel = true;
             }
         }
 
@@ -458,10 +539,15 @@ namespace pwiz.Skyline.Controls.FilesTree
             RemoveSelected(selection);
         }
 
-        // FilesTree => display ToolTip
+        // FilesTree => initiate drag-and-drop, hide tooltips 
         private void FilesTree_MouseMove(object sender, MouseEventArgs e)
         {
-            FilesTree_MouseMove(e.Location);
+            FilesTree_MouseMove(e.Location, e.Button);
+        }
+
+        private void FilesTree_MouseDown(object sender, MouseEventArgs e)
+        {
+            _moveThreshold.Location = e.Location;
         }
 
         private void FilesTree_LostFocus(object sender, EventArgs e)
@@ -469,11 +555,13 @@ namespace pwiz.Skyline.Controls.FilesTree
             _nodeTip?.HideTip();
         }
 
-        private void FilesTree_MouseMove(Point location)
+        private void FilesTree_MouseMove(Point location, MouseButtons button)
         {
+            // Skip if the mouse hasn't moved enough to do stuff
             if (!_moveThreshold.Moved(location))
                 return;
 
+            // Ok, mouse moved enough - reset previous location
             _moveThreshold.Location = null;
 
             var node = FilesTree.GetNodeAt(location) as TreeNodeMS;
@@ -493,6 +581,63 @@ namespace pwiz.Skyline.Controls.FilesTree
             else
             {
                 _nodeTip?.HideTip();
+            }
+
+            // Trigger drag-and-drop. The advanced approach is needed because the ItemDrag event does not trigger correctly
+            // when users set a custom font - despite calculating the custom width for a given font size on FilesTreeNode.
+            if (button == MouseButtons.Left)
+            {
+                var selectedNode = FilesTree.SelectedNode;
+                var selectedNodes = FilesTree.SelectedNodes.Cast<FilesTreeNode>().ToList();
+            
+                if (selectedNode == null || selectedNodes.Count == 0)
+                    return;
+            
+                _nodeTip?.HideTip();
+            
+                // Warning - order matters! Do this first to either short-circuit if attempting to
+                // select an un-draggable node or collect nodes to drag
+                var draggedNodes = new List<FilesTreeNode>();
+                foreach (var item in selectedNodes)
+                {
+                    if (item.IsDraggable())
+                    {
+                        draggedNodes.Add(item);
+                    }
+                    // Cannot drag the .sky file and need to prevent running the next check on Root
+                    else if (ReferenceEquals(item, FilesTree.Root))
+                    {
+                        return;
+                    }
+                    else if (((FilesTreeNode)item.Parent).IsDraggable() && selectedNodes.Contains(item.Parent))
+                    {
+                        /* ignore node and keep going - node's parent is selected and will be added to draggedNodes */
+                    }
+                    else return;
+                }
+            
+                // Clear selection of dragged nodes, which omits the light blue selection color
+                filesTree.SelectedNodes.Clear();
+            
+                // Set the location for the remove drop target based on the tree's SelectedNode. This
+                // deliberately ignore window resize events. They cancel an active drag-and-drop operation.
+                // No need to do extra work handling them.
+                if (!_dropTargetRemove.Visible)
+                {
+                    // Vertically center the drop target on the SelectNode's midline
+                    var x = FilesTree.Bounds.X + FilesTree.ClientSize.Width - _dropTargetRemove.Width - 10 /* extra padding */;
+                    var y = FilesTree.SelectedNode.Bounds.Y + FilesTree.SelectedNode.Bounds.Height / 2 - _dropTargetRemove.Height / 2;
+            
+                    _dropTargetRemove.Location = new Point(x, y);
+                }
+            
+                ShowRemoveDropTarget();
+            
+                var dataObj = new DataObject();
+                dataObj.SetData(typeof(PrimarySelectedNode), selectedNode);
+                dataObj.SetData(typeof(FilesTreeNode), draggedNodes);
+            
+                filesTree.DoDragDrop(dataObj, DragDropEffects.Move);
             }
         }
 
@@ -574,61 +719,6 @@ namespace pwiz.Skyline.Controls.FilesTree
                 e.Effect = DragDropEffects.Move;
 
             ShowRemoveDropTarget();
-        }
-
-        private void FilesTree_ItemDrag(object sender, ItemDragEventArgs e)
-        {
-            var selectedNode = FilesTree.SelectedNode;
-            var selectedNodes = FilesTree.SelectedNodes.Cast<FilesTreeNode>().ToList();
-
-            if (selectedNode == null || selectedNodes.Count == 0)
-                return;
-
-            _nodeTip.HideTip();
-
-            // Warning - order matters! Do this first to either short-circuit if attempting to
-            // select an un-draggable node or collect nodes to drag
-            var draggedNodes = new List<FilesTreeNode>();
-            foreach (var node in selectedNodes)
-            {
-                if (node.IsDraggable())
-                {
-                    draggedNodes.Add(node);
-                }
-                // Cannot drag the .sky file and need to prevent running the next check on Root
-                else if (ReferenceEquals(node, FilesTree.Root))
-                {
-                    return;
-                }
-                else if (((FilesTreeNode)node.Parent).IsDraggable() && selectedNodes.Contains(node.Parent))
-                {
-                    /* ignore node and keep going - node's parent is selected and will be added to draggedNodes */
-                }
-                else return;
-            }
-
-            // Clear selection of dragged nodes, which omits the light blue selection color
-            filesTree.SelectedNodes.Clear();
-
-            // Set the location for the remove drop target based on the tree's SelectedNode. This
-            // deliberately ignore window resize events. They cancel an active drag-and-drop operation.
-            // No need to do extra work handling them.
-            if (!_dropTargetRemove.Visible)
-            {
-                // Vertically center the drop target on the SelectNode's midline
-                var x = FilesTree.Bounds.X + FilesTree.ClientSize.Width - _dropTargetRemove.Width - 10 /* extra padding */;
-                var y = FilesTree.SelectedNode.Bounds.Y + FilesTree.SelectedNode.Bounds.Height / 2 - _dropTargetRemove.Height / 2;
-
-                _dropTargetRemove.Location = new Point(x, y);
-            }
-
-            ShowRemoveDropTarget();
-
-            var dataObj = new DataObject();
-            dataObj.SetData(typeof(PrimarySelectedNode), selectedNode);
-            dataObj.SetData(typeof(FilesTreeNode), draggedNodes);
-
-            filesTree.DoDragDrop(dataObj, DragDropEffects.Move);
         }
 
         private void FilesTree_DragDrop(object sender, DragEventArgs e)

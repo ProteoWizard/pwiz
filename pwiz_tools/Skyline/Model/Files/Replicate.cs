@@ -19,6 +19,7 @@ using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.Files
@@ -26,7 +27,7 @@ namespace pwiz.Skyline.Model.Files
     public class Replicate : FileNode
     {
         public Replicate(IDocumentContainer documentContainer, ChromatogramSetId chromSetId) : 
-            base(documentContainer, new IdentityPath(chromSetId), ImageId.replicate)
+            base(documentContainer, new IdentityPath(chromSetId), ImageId.replicate, ImageId.replicate_missing)
         {
         }
 
@@ -49,7 +50,7 @@ namespace pwiz.Skyline.Model.Files
             }
         }
 
-        public ModifiedDocument Delete(SrmDocument document, List<FileNode> models)
+        public ModifiedDocument Delete(SrmDocument document, SrmSettingsChangeMonitor monitor, List<FileNode> models)
         {
             var deleteIds = models.Select(model => ReferenceValue.Of(model.IdentityPath.Child)).ToHashSet();
             var deleteNames = models.Select(item => item.Name).ToList();
@@ -58,7 +59,7 @@ namespace pwiz.Skyline.Model.Files
                 document.MeasuredResults.Chromatograms.Where(chrom => !deleteIds.Contains(chrom.Id));
 
             var newMeasuredResults = document.MeasuredResults.ChangeChromatograms(remainingChromatograms.ToList());
-            var newDocument = document.ChangeMeasuredResults(newMeasuredResults);
+            var newDocument = document.ChangeMeasuredResults(newMeasuredResults, monitor);
             newDocument.ValidateResults();
             
             var entry = AuditLogEntry.CreateCountChangeEntry(
@@ -78,7 +79,7 @@ namespace pwiz.Skyline.Model.Files
             return new ModifiedDocument(newDocument).ChangeAuditLogEntry(entry);
         }
 
-        public ModifiedDocument Rearrange(SrmDocument document, List<FileNode> draggedModels, FileNode dropModel, MoveType moveType)
+        public ModifiedDocument Rearrange(SrmDocument document, SrmSettingsChangeMonitor monitor, List<FileNode> draggedModels, FileNode dropModel, MoveType moveType)
         {
             var draggedChromSets = draggedModels.Cast<Replicate>().Select(model => model.ChromatogramSet).ToList();
 
@@ -99,7 +100,7 @@ namespace pwiz.Skyline.Model.Files
             }
 
             var newMeasuredResults = document.MeasuredResults.ChangeChromatograms(newChromatograms);
-            var newDocument = document.ChangeMeasuredResults(newMeasuredResults);
+            var newDocument = document.ChangeMeasuredResults(newMeasuredResults, monitor);
             newDocument.ValidateResults();
 
             var readableNames = draggedChromSets.Select(item => item.Name).ToList();
@@ -124,11 +125,13 @@ namespace pwiz.Skyline.Model.Files
             return new ModifiedDocument(newDocument).ChangeAuditLogEntry(entry);
         }
 
-        public ModifiedDocument ChangeName(SrmDocument document, string newName)
+        public ModifiedDocument Rename(SrmDocument document, SrmSettingsChangeMonitor monitor, string newName)
         {
-            var oldName = ChromatogramSet.Name;
-            var newChromatogram = (ChromatogramSet)ChromatogramSet.ChangeName(newName);
-            var measuredResults = Document.MeasuredResults;
+            var chromSet = ChromatogramSet;
+
+            var oldName = chromSet.Name;
+            var newChromatogram = (ChromatogramSet)chromSet.ChangeName(newName);
+            var measuredResults = document.MeasuredResults;
 
             var chromatograms = measuredResults.Chromatograms.ToArray();
             for (var i = 0; i < chromatograms.Length; i++)
@@ -140,7 +143,7 @@ namespace pwiz.Skyline.Model.Files
             }
 
             measuredResults = measuredResults.ChangeChromatograms(chromatograms);
-            var newDocument = document.ChangeMeasuredResults(measuredResults);
+            var newDocument = document.ChangeMeasuredResults(measuredResults, monitor);
             newDocument.ValidateResults();
 
             var entry = AuditLogEntry.CreateSimpleEntry(

@@ -24,10 +24,14 @@ namespace pwiz.Skyline.Model.Files
 {
     public class SkylineFile : FileNode
     {
-        public SkylineFile(IDocumentContainer documentContainer) :
+        public static SkylineFile Create(IDocumentContainer documentContainer)
+        {
+            return new SkylineFile(documentContainer);
+        }
+
+        private SkylineFile(IDocumentContainer documentContainer) :
             base(documentContainer, IdentityPath.ROOT, ImageId.skyline)
         {
-            // DocumentPath is null when a .sky document is new and has not been saved to disk yet
             if (IsDocumentSavedToDisk())
             {
                 Name = FileName = Path.GetFileName(documentContainer.DocumentFilePath);
@@ -54,7 +58,7 @@ namespace pwiz.Skyline.Model.Files
         public FileNode Folder<T>() where T : FileNode
         {
             return Files.OfType<T>().FirstOrDefault();
-        } 
+        }
 
         private IEnumerable<FileNode> BuildFileList()
         {
@@ -113,12 +117,6 @@ namespace pwiz.Skyline.Model.Files
             }
 
             return list;
-        }
-
-        public static SkylineFile Create(SrmDocument document, string documentFilePath) 
-        {
-            var documentContainer = CreateDocumentContainer(document, documentFilePath);
-            return new SkylineFile(documentContainer);
         }
     }
 }

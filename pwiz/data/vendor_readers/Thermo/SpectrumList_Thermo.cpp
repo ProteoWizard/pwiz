@@ -439,7 +439,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
 
         const auto& precursorInfoList = scanInfo->precursorInfo();
 
-        if (scanInfo->hasMultiplePrecursors())
+        if (msLevel > 1 && scanInfo->hasMultiplePrecursors())
         {
             vector<double> isolationWidths = scanInfo->getIsolationWidths();
             if (precursorCount != (long) isolationWidths.size())

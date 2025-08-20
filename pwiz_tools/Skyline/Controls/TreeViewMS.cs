@@ -584,11 +584,15 @@ namespace pwiz.Skyline.Controls
             }
         }
 
+        protected virtual void DebugBorders(Graphics g, int rightEdge) {}
+
         public virtual void DrawNodeCustom(Graphics g, int rightEdge)
         {
             EnsureWidthCustom(g);
 
             Rectangle bounds = BoundsMS;
+
+            DebugBorders(g, rightEdge);
 
             // Draw dashed lines
             var treeView = TreeViewMS;

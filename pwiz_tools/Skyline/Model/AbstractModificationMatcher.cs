@@ -1199,7 +1199,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public struct AAModKey
+        public struct AAModKey : IEquatable<AAModKey>
         {
             public char AA { get; set; }
             private ModTerminus? _terminus;
@@ -1226,6 +1226,33 @@ namespace pwiz.Skyline.Model
             }
 
             public string TerminusText => Terminus.HasValue ? @"-" + Terminus.Value : string.Empty;
+
+            public bool Equals(AAModKey other)
+            {
+                return _terminus == other._terminus && AA == other.AA && Nullable.Equals(Mass, other.Mass) && Name == other.Name && UniModId == other.UniModId && RoundedTo == other.RoundedTo && AppearsToBeSpecificMod == other.AppearsToBeSpecificMod && UserIndicatedHeavy == other.UserIndicatedHeavy && IsCrosslinker == other.IsCrosslinker;
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is AAModKey other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    var hashCode = _terminus.GetHashCode();
+                    hashCode = (hashCode * 397) ^ AA.GetHashCode();
+                    hashCode = (hashCode * 397) ^ Mass.GetHashCode();
+                    hashCode = (hashCode * 397) ^ (Name != null ? Name.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ UniModId.GetHashCode();
+                    hashCode = (hashCode * 397) ^ RoundedTo;
+                    hashCode = (hashCode * 397) ^ AppearsToBeSpecificMod.GetHashCode();
+                    hashCode = (hashCode * 397) ^ UserIndicatedHeavy.GetHashCode();
+                    hashCode = (hashCode * 397) ^ IsCrosslinker.GetHashCode();
+                    return hashCode;
+                }
+            }
         }
 
         public struct AAModMatch

@@ -57,7 +57,7 @@ namespace pwiz.Skyline.Model
             UnrecognizedChargeStates = new HashSet<UnrecognizedChargeState>();
         }
 
-        public struct UnrecognizedChargeState
+        public struct UnrecognizedChargeState : IEquatable<UnrecognizedChargeState>
         {
             public string Peptide;
             public string File;
@@ -84,6 +84,27 @@ namespace pwiz.Skyline.Model
             public override string ToString()
             {
                 return PrintLine(' ');
+            }
+
+            public bool Equals(UnrecognizedChargeState other)
+            {
+                return Peptide == other.Peptide && File == other.File && Equals(Charge, other.Charge);
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is UnrecognizedChargeState other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    var hashCode = (Peptide != null ? Peptide.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ (File != null ? File.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ (Charge != null ? Charge.GetHashCode() : 0);
+                    return hashCode;
+                }
             }
         }
 
