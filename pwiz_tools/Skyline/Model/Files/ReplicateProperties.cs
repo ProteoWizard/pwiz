@@ -43,8 +43,8 @@ namespace pwiz.Skyline.Model.Files
             var dataFileInfo = model.ChromatogramSet.MSDataFileInfos;
             if (dataFileInfo.Count == 1)
             {
-                MaxRetentionTime = dataFileInfo[0].MaxRetentionTime.ToString(format: "F2");
-                MaxIntensity = dataFileInfo[0].MaxIntensity.ToString("F2");
+                MaxRetentionTime = dataFileInfo[0].MaxRetentionTime;
+                MaxIntensity = dataFileInfo[0].MaxIntensity;
 
                 var instrumentInfo = dataFileInfo[0].InstrumentInfoList;
                 if (instrumentInfo.Count > 0)
@@ -58,11 +58,6 @@ namespace pwiz.Skyline.Model.Files
             {
                 // TODO: figure out better way to signal to the user that there are multiple files, and to
                 // select a replicate sample file to see its properties
-
-                // FULLY TEMPORARY
-                MaxRetentionTime = "Multiple files";
-                MaxIntensity = "Multiple files";
-                Instruments = new List<InstrumentProperties>();
             }
         }
 
@@ -70,8 +65,8 @@ namespace pwiz.Skyline.Model.Files
         [Category("Replicate")] public double? AnalyteConcentration { get; set; }
         [Category("Replicate")] public double SampleDilutionFactor { get; set; }
         [Category("Replicate")] public string SampleType { get; set; }
-        [Category("Replicate")] public string MaxRetentionTime { get; set; }
-        [Category("Replicate")] public string MaxIntensity { get; set; }
+        [Category("Replicate")] public double MaxRetentionTime { get; set; }
+        [Category("Replicate")] public double MaxIntensity { get; set; }
 
         [UseCustomHandling] public List<InstrumentProperties> Instruments { get; set; }
 
