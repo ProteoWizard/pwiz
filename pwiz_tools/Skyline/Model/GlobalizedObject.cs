@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Resources;
-using Newtonsoft.Json;
 
 namespace pwiz.Skyline.Model
 {
@@ -355,6 +356,8 @@ namespace pwiz.Skyline.Model
             get => basePropertyDescriptor.PropertyType;
         }
 
+        public override TypeConverter Converter => basePropertyDescriptor.PropertyType == typeof(double) ? new TwoDecimalDoubleConverter() : basePropertyDescriptor.Converter;
+
         public override void ResetValue(object component)
         {
             basePropertyDescriptor.ResetValue(component);
@@ -387,7 +390,7 @@ namespace pwiz.Skyline.Model
         private const string DESCRIPTION_PREFIX = @"Description_";
         private const string CATEGORY_PREFIX = @"Category_";
 
-        public CustomHandledGlobalizedPropertyDescriptor( ResourceManager resourceManager, object value, string category,
+        public CustomHandledGlobalizedPropertyDescriptor(ResourceManager resourceManager, object value, string category,
             string name, Type type, string nonLocalizedDisplayName = null, Func<string, string> displayNameFormat = null, Attribute[] attributes = null) 
             : base(name, attributes)
         {
@@ -479,4 +482,14 @@ namespace pwiz.Skyline.Model
     // Used to flag properties that should not be copied directly to the globalized object, as they require custom handling.
     [AttributeUsage(AttributeTargets.Property)]
     public class UseCustomHandlingAttribute : Attribute { }
+
+    public class TwoDecimalDoubleConverter : DoubleConverter
+    {
+        public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
+        {
+            if (destinationType == typeof(string) && value is double d)
+                return d.ToString("F2", culture ?? CultureInfo.CurrentCulture);
+            return base.ConvertTo(context, culture, value, destinationType);
+        }
+    }
 }
