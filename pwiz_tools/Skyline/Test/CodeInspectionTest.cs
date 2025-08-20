@@ -23,9 +23,24 @@
 // 
 
 
+using AssortResources;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.DataBinding.Controls.Editor;
+using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.PInvoke;
+using pwiz.Skyline;
+using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Controls.GroupComparison;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Util;
+using pwiz.SkylineTestUtil;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -38,20 +53,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using System.Xml.Linq;
-using AssortResources;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.DataBinding.Controls.Editor;
-using pwiz.Common.SystemUtil;
-using pwiz.Common.SystemUtil.PInvoke;
-using pwiz.Skyline;
-using pwiz.Skyline.Controls;
-using pwiz.Skyline.Controls.Databinding;
-using pwiz.Skyline.Controls.Graphs;
-using pwiz.Skyline.Controls.GroupComparison;
-using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model;
-using pwiz.Skyline.Util;
-using pwiz.SkylineTestUtil;
 using TestRunnerLib.PInvoke;
 using Environment = System.Environment;
 
@@ -672,7 +673,7 @@ namespace pwiz.SkylineTest
                 return;
             }
 
-            foreach (var prop in type.GetProperties())
+            foreach (var prop in type.GetProperties()) if (!prop.IsDefined(typeof(UseCustomHandlingAttribute), inherit: true))
             {
                 // Verify that the property has a resource
                 var resourceManager = (ResourceManager)resourceManagerMethod.Invoke(null, new object[] { });

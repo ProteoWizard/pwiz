@@ -17,10 +17,12 @@
  * limitations under the License.
  */
 
+using pwiz.Skyline.Controls.FilesTree;
+using pwiz.Skyline.Model.PropertySheets;
+using pwiz.Skyline.Model.PropertySheets.Templates;
 using System;
 using System.ComponentModel;
-using pwiz.Skyline.Controls.FilesTree;
-using pwiz.Skyline.Model.PropertySheets.Templates;
+using System.Resources;
 
 namespace pwiz.Skyline.Model.Files
 {
@@ -36,5 +38,10 @@ namespace pwiz.Skyline.Model.Files
         }
 
         [Category("FileInfo")] public int FileNum { get; set; }
+
+
+        // Test Support - enforced by code check
+        // Invoked via reflection in InspectPropertySheetResources in CodeInspectionTest
+        private static ResourceManager ResourceManager() => PropertySheetFileNodeResources.ResourceManager;
     }
 }
