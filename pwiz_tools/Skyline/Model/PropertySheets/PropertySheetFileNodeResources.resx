@@ -129,6 +129,9 @@
   <data name="FileCount" xml:space="preserve">
     <value>File Count</value>
   </data>
+  <data name="FileSize" xml:space="preserve">
+    <value>Size</value>
+  </data>
   <data name="AnalyteConcentration" xml:space="preserve">
     <value>Analyte Concentration</value>
   </data>

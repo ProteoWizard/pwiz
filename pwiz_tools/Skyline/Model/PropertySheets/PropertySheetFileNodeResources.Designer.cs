@@ -169,6 +169,15 @@ namespace pwiz.Skyline.Model.PropertySheets {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Size.
+        /// </summary>
+        internal static string FileSize {
+            get {
+                return ResourceManager.GetString("FileSize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Instrument.
         /// </summary>
         internal static string Instrument {

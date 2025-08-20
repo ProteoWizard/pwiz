@@ -3790,8 +3790,8 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Model\PropertySheets\PropertySheetFileNodeResources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>PropertySheetFileNodeResources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
+      <LastGenOutput>PropertySheetFileNodeResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\PropertySheets\PropertySheetResources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

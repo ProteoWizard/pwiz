@@ -17,9 +17,10 @@
  * limitations under the License.
  */
 
-using pwiz.Skyline.Model.Files;
 using System.ComponentModel;
 using System.Resources;
+using pwiz.Common.Collections;
+using pwiz.Skyline.Controls.FilesTree;
 
 namespace pwiz.Skyline.Model.PropertySheets.Templates
 {
@@ -30,13 +31,33 @@ namespace pwiz.Skyline.Model.PropertySheets.Templates
             return PropertySheetFileNodeResources.ResourceManager;
         }
 
-        protected FileNodeProperties(FileNode fileNode)
+        protected FileNodeProperties(FilesTreeNode filesTreeNode)
         {
-            FilePath = fileNode.FilePath;
-            Name = fileNode.Name;
+            FilePath = filesTreeNode.LocalFilePath;
+            Name = filesTreeNode.Model.Name;
+            if (!FilePath.IsNullOrEmpty())
+            {
+                var fileInfo = new System.IO.FileInfo(FilePath);
+                FileSize = FormatFileSize(fileInfo.Length);
+            }
         }
 
         [Category("FileInfo")] public string FilePath { get; set; }
         [Category("FileInfo")] public string Name { get; set; }
+        [Category("FileInfo")] public string FileSize { get; set; }
+
+        // TODO: Does this need to be localized?
+        private static string FormatFileSize(long bytes)
+        {
+            string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+            double len = bytes;
+            var order = 0;
+            while (len >= 1024 && order < sizes.Length - 1)
+            {
+                order++;
+                len /= 1024;
+            }
+            return $"{len:0.##} {sizes[order]}";
+        }
     }
 }

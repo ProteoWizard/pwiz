@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Resources;
+using pwiz.Skyline.Controls.FilesTree;
 using pwiz.Skyline.Model.PropertySheets;
 using pwiz.Skyline.Model.PropertySheets.Templates;
 
@@ -29,17 +30,17 @@ namespace pwiz.Skyline.Model.Files
 {
     public class ReplicateProperties : FileNodeProperties
     {
-        public ReplicateProperties(Replicate replicate)
-            : base(replicate)
+        public ReplicateProperties(FilesTreeNode filesTreeNode, Replicate model)
+            : base(filesTreeNode)
         {
-            if (replicate == null)
-                throw new ArgumentNullException(nameof(replicate));
-            BatchName = replicate.ChromatogramSet.BatchName;
-            AnalyteConcentration = replicate.ChromatogramSet.AnalyteConcentration;
-            SampleDilutionFactor = replicate.ChromatogramSet.SampleDilutionFactor;
-            SampleType = replicate.ChromatogramSet.SampleType?.ToString();
+            if (model == null)
+                throw new ArgumentNullException(nameof(model));
+            BatchName = model.ChromatogramSet.BatchName;
+            AnalyteConcentration = model.ChromatogramSet.AnalyteConcentration;
+            SampleDilutionFactor = model.ChromatogramSet.SampleDilutionFactor;
+            SampleType = model.ChromatogramSet.SampleType?.ToString();
 
-            var dataFileInfo = replicate.ChromatogramSet.MSDataFileInfos;
+            var dataFileInfo = model.ChromatogramSet.MSDataFileInfos;
             if (dataFileInfo.Count == 1)
             {
                 MaxRetentionTime = dataFileInfo[0].MaxRetentionTime.ToString(format: "F2");

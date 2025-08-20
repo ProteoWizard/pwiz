@@ -19,19 +19,20 @@
 
 using System;
 using System.ComponentModel;
+using pwiz.Skyline.Controls.FilesTree;
 using pwiz.Skyline.Model.PropertySheets.Templates;
 
 namespace pwiz.Skyline.Model.Files
 {
     public class ReplicatesFolderProperties : FileNodeProperties
     {
-        public ReplicatesFolderProperties(ReplicatesFolder replicatesFolder)
-            : base(replicatesFolder)
+        public ReplicatesFolderProperties(FilesTreeNode filesTreeNode, ReplicatesFolder model)
+            : base(filesTreeNode)
         {
-            if (replicatesFolder == null)
-                throw new ArgumentNullException(nameof(replicatesFolder));
+            if (model == null)
+                throw new ArgumentNullException(nameof(model));
             
-            FileNum = replicatesFolder.Files.Count;
+            FileNum = model.Files.Count;
         }
 
         [Category("FileInfo")] public int FileNum { get; set; }

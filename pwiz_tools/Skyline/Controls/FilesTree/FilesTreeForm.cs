@@ -408,7 +408,13 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         public GlobalizedObject GetSelectedObjectProperties()
         {
-            return FilesTree.CurrentlySelectedFTN?.Model.GetProperties();
+            // TODO: I don't like the way this is formatted, but each Model type to implement their
+            // own GetProperties method, and FileNodeProperties needs access to a FilesTreeNode to get LocalFilePath,
+            // and FileNode does not see what FilesTreeNode it's a part of. So we need to pass it in.
+            // Likewise, each ...Properties class needs to take in a FilesTreeNode and a FileNode of their associated type,
+            // to avoid casting.
+            var filesTreeNodeSelected = FilesTree.CurrentlySelectedFTN;
+            return filesTreeNodeSelected?.Model.GetProperties(filesTreeNodeSelected);
         }
 
         #endregion

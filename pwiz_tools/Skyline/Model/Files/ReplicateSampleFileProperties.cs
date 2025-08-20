@@ -17,26 +17,24 @@
  * limitations under the License.
  */
 
-using pwiz.Skyline.Model.PropertySheets.Templates;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using pwiz.Skyline.Controls.FilesTree;
+using pwiz.Skyline.Model.PropertySheets.Templates;
 
 namespace pwiz.Skyline.Model.Files
 {
     public class ReplicateSampleFileProperties : FileNodeProperties
     {
-        public ReplicateSampleFileProperties(ReplicateSampleFile replicateSampleFile)
-            : base(replicateSampleFile)
+        public ReplicateSampleFileProperties(FilesTreeNode fileNode, ReplicateSampleFile model)
+            : base(fileNode)
         {
-            if (replicateSampleFile == null)
-                throw new ArgumentNullException(nameof(replicateSampleFile));
+            if (model == null)
+                throw new ArgumentNullException(nameof(model));
 
-            FilePath = replicateSampleFile.FilePath;
-            Name = replicateSampleFile.Name;
-
-            var dataFileInfo = replicateSampleFile.ChromFileInfo;
+            var dataFileInfo = model.ChromFileInfo;
             MaxRetentionTime = dataFileInfo.MaxRetentionTime;
             MaxIntensity = dataFileInfo.MaxIntensity;
 
