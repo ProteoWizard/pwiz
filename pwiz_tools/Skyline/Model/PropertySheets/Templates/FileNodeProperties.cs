@@ -32,8 +32,8 @@ namespace pwiz.Skyline.Model.PropertySheets.Templates
 
         protected FileNodeProperties(FileNode fileNode)
         {
-            FilePath = fileNode.FilePath ?? string.Empty;
-            Name = fileNode.Name ?? string.Empty;
+            FilePath = fileNode.FilePath;
+            Name = fileNode.Name;
         }
 
         [Category("FileInfo")] public string FilePath { get; set; }

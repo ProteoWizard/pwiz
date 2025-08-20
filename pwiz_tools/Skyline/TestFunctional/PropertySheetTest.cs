@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model.Files;
 using pwiz.SkylineTestUtil;
@@ -58,30 +59,35 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => { SkylineWindow.ShowPropertyForm(true); });
             WaitForConditionUI(() => SkylineWindow.PropertyFormIsVisible);
 
-            // test selecting a replicate sample file node
-            var sampleFileNode = SkylineWindow.FilesTree.Folder<ReplicateSampleFile>();
+            // test selecting a replicate node
+            var replicateFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
+            var replicateNode = SkylineWindow.FilesTree.File<Replicate>(replicateFolder);
+            Assert.IsNotNull(replicateNode);
 
-            RunUI(() => SkylineWindow.FilesTreeForm.FilesTree.SelectNodeWithoutResettingSelection(sampleFileNode));
+            RunUI(() => SkylineWindow.FilesTreeForm.FilesTree.SelectNodeWithoutResettingSelection(replicateNode));
+            RunUI(() => SkylineWindow.FilesTreeForm.NotifyPropertySheetOwnerGotFocus(SkylineWindow, EventArgs.Empty));
 
             var selectedObject = SkylineWindow.PropertyForm?.PropertyGrid.SelectedObject;
             Assert.IsNotNull(selectedObject);
-            // TODO: Fix assertion failure when running this test
-            Assert.AreEqual(typeof(ReplicateSampleFileProperties), selectedObject.GetType());
+            Assert.AreEqual(typeof(ReplicateProperties), selectedObject.GetType());
 
-            var props = TypeDescriptor.GetProperties(selectedObject, true);
-            Assert.AreEqual(REP_SAMPLE_FILE_PROP_NUM, props.Count);
+            var props = TypeDescriptor.GetProperties(selectedObject, false);
+            Assert.AreEqual(REP_FILE_PROP_NUM, props.Count);
 
-            // test selecting a replicate node
-            var replicateNode = SkylineWindow.FilesTree.Folder<Replicate>();
+            // test selecting a replicate sample file node
+            var sampleFileNode = SkylineWindow.FilesTree.File<ReplicateSampleFile>(replicateNode);
+            Assert.IsNotNull(sampleFileNode);
 
-            RunUI(() => SkylineWindow.FilesTreeForm.FilesTree.SelectNodeWithoutResettingSelection(replicateNode));
+            RunUI(() => SkylineWindow.FilesTreeForm.FilesTree.SelectNodeWithoutResettingSelection(sampleFileNode));
+            RunUI(() => SkylineWindow.FilesTreeForm.NotifyPropertySheetOwnerGotFocus(SkylineWindow, EventArgs.Empty));
 
             selectedObject = SkylineWindow.PropertyForm?.PropertyGrid.SelectedObject;
             Assert.IsNotNull(selectedObject);
-            Assert.AreEqual(typeof(ReplicateProperties), selectedObject.GetType());
 
-            props = TypeDescriptor.GetProperties(selectedObject, true);
-            Assert.AreEqual(REP_FILE_PROP_NUM, props.Count);
+            props = TypeDescriptor.GetProperties(selectedObject, false);
+            Assert.AreEqual(REP_SAMPLE_FILE_PROP_NUM, props.Count);
+
+            
 
             // Destroy the property form and files tree form to avoid test freezing
             RunUI(() => { SkylineWindow.DestroyPropertyForm(); });

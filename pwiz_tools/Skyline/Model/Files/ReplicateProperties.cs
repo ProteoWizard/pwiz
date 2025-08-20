@@ -34,10 +34,10 @@ namespace pwiz.Skyline.Model.Files
         {
             if (replicate == null)
                 throw new ArgumentNullException(nameof(replicate));
-            BatchName = replicate.ChromatogramSet.BatchName ?? string.Empty;
+            BatchName = replicate.ChromatogramSet.BatchName;
             AnalyteConcentration = replicate.ChromatogramSet.AnalyteConcentration;
             SampleDilutionFactor = replicate.ChromatogramSet.SampleDilutionFactor;
-            SampleType = replicate.ChromatogramSet.SampleType?.ToString() ?? string.Empty;
+            SampleType = replicate.ChromatogramSet.SampleType?.ToString();
 
             var dataFileInfo = replicate.ChromatogramSet.MSDataFileInfos;
             if (dataFileInfo.Count == 1)

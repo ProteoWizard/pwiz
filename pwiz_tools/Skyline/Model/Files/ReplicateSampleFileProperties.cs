@@ -33,12 +33,12 @@ namespace pwiz.Skyline.Model.Files
             if (replicateSampleFile == null)
                 throw new ArgumentNullException(nameof(replicateSampleFile));
 
-            FilePath = replicateSampleFile.FilePath ?? string.Empty;
-            Name = replicateSampleFile.Name ?? string.Empty;
+            FilePath = replicateSampleFile.FilePath;
+            Name = replicateSampleFile.Name;
 
             var dataFileInfo = replicateSampleFile.ChromFileInfo;
-            MaxRetentionTime = dataFileInfo.MaxRetentionTime.ToString(format: "F2");
-            MaxIntensity = dataFileInfo.MaxIntensity.ToString("F2");
+            MaxRetentionTime = dataFileInfo.MaxRetentionTime;
+            MaxIntensity = dataFileInfo.MaxIntensity;
 
             var instrumentInfo = dataFileInfo.InstrumentInfoList;
             if (instrumentInfo.Count > 0)
@@ -49,8 +49,8 @@ namespace pwiz.Skyline.Model.Files
             }
         }
 
-        [Category("Replicate")] public string MaxRetentionTime { get; set; }
-        [Category("Replicate")] public string MaxIntensity { get; set; }
+        [Category("Replicate")] public double MaxRetentionTime { get; set; }
+        [Category("Replicate")] public double MaxIntensity { get; set; }
 
         [UseCustomHandling] public List<InstrumentProperties> Instruments { get; set; }
 

@@ -135,6 +135,17 @@ namespace pwiz.Skyline.Controls.FilesTree
                 Root.Nodes.Cast<FilesTreeNode>().FirstOrDefault(filesTreeNode => filesTreeNode.Model is T);
         }
 
+        /// <summary>
+        /// Get the File associated with a model type, contained in a given folder.
+        /// </summary>
+        /// <typeparam name="T">The model type</typeparam>
+        /// <param name="folder"></param>
+        /// <returns></returns>
+        public FilesTreeNode File<T>(FilesTreeNode folder) where T : FileNode
+        {
+            return folder.Nodes.Cast<FilesTreeNode>().FirstOrDefault(filesTreeNode => filesTreeNode.Model is T);
+        }
+
         public void SelectNodeWithoutResettingSelection(FilesTreeNode node)
         {
             _inhibitOnAfterSelect = true;
