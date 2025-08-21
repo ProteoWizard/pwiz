@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -23,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Resources;
+using Newtonsoft.Json;
 
 namespace pwiz.Skyline.Model
 {

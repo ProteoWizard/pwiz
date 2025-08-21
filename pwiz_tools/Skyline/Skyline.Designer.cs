@@ -520,7 +520,7 @@ namespace pwiz.Skyline
             this.editSpectrumFilterContextMenuItem.Name = "editSpectrumFilterContextMenuItem";
             resources.ApplyResources(this.editSpectrumFilterContextMenuItem, "editSpectrumFilterContextMenuItem");
             this.editSpectrumFilterContextMenuItem.Click += new System.EventHandler(this.editSpectrumFilterContextMenuItem_Click);
-            
+
             // 
             // expandSelectionContextMenuItem
             // 
@@ -540,7 +540,7 @@ namespace pwiz.Skyline
             resources.ApplyResources(this.expandSelectionNoneContextMenuItem, "expandSelectionNoneContextMenuItem");
             this.expandSelectionNoneContextMenuItem.Click += new System.EventHandler(this.expandSelectionNoneContextMenuItem_Click);
             this.expandSelectionNoneContextMenuItem.Tag = typeof(SrmTreeNodeParent);
-            
+
             // 
             // expandSelectionProteinsContextMenuItem
             // 
@@ -562,7 +562,7 @@ namespace pwiz.Skyline
             resources.ApplyResources(this.expandSelectionPrecursorsContextMenuItem, "expandSelectionPrecursorsContextMenuItem");
             this.expandSelectionPrecursorsContextMenuItem.Click += new System.EventHandler(this.expandSelectionPrecursorsContextMenuItem_Click);
             this.expandSelectionPrecursorsContextMenuItem.Tag = typeof(TransitionGroupTreeNode);
-            
+
             // 
             // toggleQuantitativeContextMenuItem
             // 
