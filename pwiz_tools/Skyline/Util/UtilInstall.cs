@@ -18,7 +18,6 @@
  */
 using Ionic.Zip;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
