@@ -124,29 +124,146 @@ namespace pwiz.Skyline.Model.PropertySheets {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Measured concentration of the target analyte in this replicate sample.
+        /// </summary>
+        internal static string Description_AnalyteConcentration {
+            get {
+                return ResourceManager.GetString("Description_AnalyteConcentration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Mass analyzer type used for detection.
+        /// </summary>
+        internal static string Description_Analyzer {
+            get {
+                return ResourceManager.GetString("Description_Analyzer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Name of the batch.
+        /// </summary>
+        internal static string Description_BatchName {
+            get {
+                return ResourceManager.GetString("Description_BatchName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion detector type used in the mass spectrometer.
+        /// </summary>
+        internal static string Description_Detector {
+            get {
+                return ResourceManager.GetString("Description_Detector", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Number of replicate files in this folder.
+        /// </summary>
+        internal static string Description_FileNum {
+            get {
+                return ResourceManager.GetString("Description_FileNum", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Path to the file on local disk.
+        /// </summary>
+        internal static string Description_FilePath {
+            get {
+                return ResourceManager.GetString("Description_FilePath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Size of the file.
+        /// </summary>
+        internal static string Description_FileSize {
+            get {
+                return ResourceManager.GetString("Description_FileSize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ionization method used for MS analysis.
+        /// </summary>
+        internal static string Description_Ionization {
+            get {
+                return ResourceManager.GetString("Description_Ionization", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum peak intensity observed in this replicate.
+        /// </summary>
+        internal static string Description_MaxIntensity {
+            get {
+                return ResourceManager.GetString("Description_MaxIntensity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum retention time window for peak integration (minutes).
+        /// </summary>
+        internal static string Description_MaxRetentionTime {
+            get {
+                return ResourceManager.GetString("Description_MaxRetentionTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Mass spectrometer model used for data acquisition.
+        /// </summary>
+        internal static string Description_Model {
+            get {
+                return ResourceManager.GetString("Description_Model", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Name of the file.
+        /// </summary>
+        internal static string Description_Name {
+            get {
+                return ResourceManager.GetString("Description_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Custom notes or comments added by the user for this replicate.
+        /// </summary>
+        internal static string Description_Note {
+            get {
+                return ResourceManager.GetString("Description_Note", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Dilution factor applied to this sample prior to analysis.
+        /// </summary>
+        internal static string Description_SampleDilutionFactor {
+            get {
+                return ResourceManager.GetString("Description_SampleDilutionFactor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Type of sample: Unknown, Standard, QC, Blank, Double Blank, or Solvent.
+        /// </summary>
+        internal static string Description_SampleType {
+            get {
+                return ResourceManager.GetString("Description_SampleType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Detector.
         /// </summary>
         internal static string Detector {
             get {
                 return ResourceManager.GetString("Detector", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to File Count.
-        /// </summary>
-        internal static string FileCount {
-            get {
-                return ResourceManager.GetString("FileCount", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to File Name.
-        /// </summary>
-        internal static string FileName {
-            get {
-                return ResourceManager.GetString("FileName", resourceCulture);
             }
         }
         
@@ -187,15 +304,6 @@ namespace pwiz.Skyline.Model.PropertySheets {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Instrument.
-        /// </summary>
-        internal static string InstrumentInfoList {
-            get {
-                return ResourceManager.GetString("InstrumentInfoList", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Ionization.
         /// </summary>
         internal static string Ionization {
@@ -228,15 +336,6 @@ namespace pwiz.Skyline.Model.PropertySheets {
         internal static string Model {
             get {
                 return ResourceManager.GetString("Model", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to File.
-        /// </summary>
-        internal static string MSDataFileInfos {
-            get {
-                return ResourceManager.GetString("MSDataFileInfos", resourceCulture);
             }
         }
         

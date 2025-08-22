@@ -120,14 +120,8 @@
   <data name="Name" xml:space="preserve">
     <value>Name</value>
   </data>
-  <data name="FileName" xml:space="preserve">
-    <value>File Name</value>
-  </data>
   <data name="FilePath" xml:space="preserve">
     <value>File Path</value>
-  </data>
-  <data name="FileCount" xml:space="preserve">
-    <value>File Count</value>
   </data>
   <data name="FileSize" xml:space="preserve">
     <value>Size</value>
@@ -153,12 +147,6 @@
   <data name="MaxIntensity" xml:space="preserve">
     <value>Max Intensity</value>
   </data>
-  <data name="InstrumentInfoList" xml:space="preserve">
-    <value>Instrument</value>
-  </data>
-  <data name="MSDataFileInfos" xml:space="preserve">
-    <value>File</value>
-  </data>
   <data name="Model" xml:space="preserve">
     <value>Model</value>
   </data>
@@ -176,6 +164,54 @@
   </data>
   <data name="Instrument" xml:space="preserve">
     <value>Instrument</value>
+  </data>
+  <data name="Description_Name" xml:space="preserve">
+    <value>Name of the file</value>
+  </data>
+  <data name="Description_FilePath" xml:space="preserve">
+    <value>Path to the file on local disk</value>
+  </data>
+  <data name="Description_FileSize" xml:space="preserve">
+    <value>Size of the file</value>
+  </data>
+  <data name="Description_AnalyteConcentration" xml:space="preserve">
+    <value>Measured concentration of the target analyte in this replicate sample</value>
+  </data>
+  <data name="Description_AnalyteConcentration" xml:space="preserve">
+    <value>Measured concentration of the target analyte in this replicate sample</value>
+  </data>
+  <data name="Description_BatchName" xml:space="preserve">
+    <value>Name of the batch</value>
+  </data>
+  <data name="Description_SampleDilutionFactor" xml:space="preserve">
+    <value>Dilution factor applied to this sample prior to analysis</value>
+  </data>
+  <data name="Description_SampleType" xml:space="preserve">
+    <value>Type of sample: Unknown, Standard, QC, Blank, Double Blank, or Solvent</value>
+  </data>
+  <data name="Description_Note" xml:space="preserve">
+    <value>Custom notes or comments added by the user for this replicate</value>
+  </data>
+  <data name="Description_MaxRetentionTime" xml:space="preserve">
+    <value>Maximum retention time window for peak integration (minutes)</value>
+  </data>
+  <data name="Description_MaxIntensity" xml:space="preserve">
+    <value>Maximum peak intensity observed in this replicate</value>
+  </data>
+  <data name="Description_Model" xml:space="preserve">
+    <value>Mass spectrometer model used for data acquisition</value>
+  </data>
+  <data name="Description_Ionization" xml:space="preserve">
+    <value>Ionization method used for MS analysis</value>
+  </data>
+  <data name="Description_Analyzer" xml:space="preserve">
+    <value>Mass analyzer type used for detection</value>
+  </data>
+  <data name="Description_Detector" xml:space="preserve">
+    <value>Ion detector type used in the mass spectrometer</value>
+  </data>
+  <data name="Description_FileNum" xml:space="preserve">
+    <value>Number of replicate files in this folder</value>
   </data>
   <data name="Category_FileInfo" xml:space="preserve">
     <value>Files</value>
