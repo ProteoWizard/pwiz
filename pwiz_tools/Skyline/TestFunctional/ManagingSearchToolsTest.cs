@@ -275,7 +275,7 @@ namespace pwiz.SkylineTestFunctional
             
             OkDialog(importPeptideSearchDlg, importPeptideSearchDlg.Close);
 
-
+            testFilesDir.Cleanup();
         }
     }
 }
