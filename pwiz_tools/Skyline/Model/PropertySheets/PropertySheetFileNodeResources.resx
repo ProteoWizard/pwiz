@@ -165,6 +165,9 @@
   <data name="Instrument" xml:space="preserve">
     <value>Instrument</value>
   </data>
+  <data name="AcquisitionTime" xml:space="preserve">
+    <value>Acquisition time</value>
+  </data>
   <data name="Description_Name" xml:space="preserve">
     <value>Name of the file</value>
   </data>
@@ -213,7 +216,10 @@
   <data name="Description_FileNum" xml:space="preserve">
     <value>Number of replicate files in this folder</value>
   </data>
-  <data name="Category_FileInfo" xml:space="preserve">
+  <data name="Description_AcquistionTime" xml:space="preserve">
+    <value>Timestamp of when this replicate's MS data collection began</value>
+  </data>
+	<data name="Category_FileInfo" xml:space="preserve">
     <value>Files</value>
   </data>
   <data name="Category_Replicate" xml:space="preserve">

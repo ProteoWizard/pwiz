@@ -45,6 +45,7 @@ namespace pwiz.Skyline.Model.Files
             {
                 MaxRetentionTime = dataFileInfo[0].MaxRetentionTime;
                 MaxIntensity = dataFileInfo[0].MaxIntensity;
+                AcquisitionTime = dataFileInfo[0].RunStartTime.ToString();
 
                 var instrumentInfo = dataFileInfo[0].InstrumentInfoList;
                 if (instrumentInfo.Count > 0)
@@ -67,6 +68,7 @@ namespace pwiz.Skyline.Model.Files
         [Category("Replicate")] public string SampleType { get; set; }
         [Category("Replicate")] public double MaxRetentionTime { get; set; }
         [Category("Replicate")] public double MaxIntensity { get; set; }
+        [Category("Replicate")] public string AcquisitionTime { get; set; }
 
         [UseCustomHandling] public List<InstrumentProperties> Instruments { get; set; }
 

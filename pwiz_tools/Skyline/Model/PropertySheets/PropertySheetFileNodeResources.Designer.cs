@@ -61,6 +61,15 @@ namespace pwiz.Skyline.Model.PropertySheets {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Acquisition time.
+        /// </summary>
+        internal static string AcquisitionTime {
+            get {
+                return ResourceManager.GetString("AcquisitionTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Analyte Concentration.
         /// </summary>
         internal static string AnalyteConcentration {
@@ -120,6 +129,15 @@ namespace pwiz.Skyline.Model.PropertySheets {
         internal static string Category_Replicate {
             get {
                 return ResourceManager.GetString("Category_Replicate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Timestamp of when this replicate&apos;s MS data collection began.
+        /// </summary>
+        internal static string Description_AcquistionTime {
+            get {
+                return ResourceManager.GetString("Description_AcquistionTime", resourceCulture);
             }
         }
         
