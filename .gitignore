@@ -370,6 +370,7 @@ build-nt-x86
 /libraries/libgd*
 /libraries/libpng*
 /libraries/msparser_*_win64
+/libraries/msparser_*_linux64
 /libraries/zlib*
 Version.cpp
 /pwiz_tools/BiblioSpec/tests/inputs
@@ -382,6 +383,7 @@ Version.cpp
 /pwiz_tools/Bumbershoot/idpicker/Resources/Resources.*
 /pwiz/utility/bindings/CLI/example/binaries
 /artifact_xml
+/jetbrains.dotcover.commandlinetools/*
 
 # Vendor reader test data extracted from tarballs (newer data should be committed directly to git)
 /pwiz/data/vendor_readers/*/Reader*Test.data/**/1SRef

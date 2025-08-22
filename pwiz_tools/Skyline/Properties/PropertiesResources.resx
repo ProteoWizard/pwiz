@@ -256,6 +256,15 @@
   <data name="RTScoreCalculatorList_Title_Edit_Retention_Time_Calculators" xml:space="preserve">
     <value>Edit Retention Time Calculators</value>
   </data>
+  <data name="SearchToolList_Label_Internal__Tools" xml:space="preserve">
+    <value>Internal &amp;Tools</value>
+  </data>
+  <data name="SearchToolList_Label_Search__Tools" xml:space="preserve">
+    <value>Search &amp;Tools</value>
+  </data>
+  <data name="SearchToolList_Title_Edit_Search_Tools" xml:space="preserve">
+    <value>Edit Search Tools</value>
+  </data>
   <data name="ServerList_Label__Servers" xml:space="preserve">
     <value>&amp;Servers</value>
   </data>

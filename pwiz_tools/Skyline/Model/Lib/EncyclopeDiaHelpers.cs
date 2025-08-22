@@ -45,12 +45,14 @@ namespace pwiz.Skyline.Model.Lib
         public static string ENCYCLOPEDIA_FILENAME = $@"encyclopedia-{ENCYCLOPEDIA_VERSION}-executable.jar";
         static Uri ENCYCLOPEDIA_URL = new Uri($@"https://bitbucket.org/searleb/encyclopedia/downloads/{ENCYCLOPEDIA_FILENAME}");
         public static string EncyclopeDiaDirectory => ToolDescriptionHelpers.GetToolsDirectory();
-        public static string EncyclopeDiaBinary => Path.Combine(EncyclopeDiaDirectory, ENCYCLOPEDIA_FILENAME);
+        public static string EncyclopeDiaBinary => Settings.Default.SearchToolList.GetToolPathOrDefault(SearchToolType.EncyclopeDIA, Path.Combine(EncyclopeDiaDirectory, ENCYCLOPEDIA_FILENAME));
+        public static string EncyclopeDiaArgs => Settings.Default.SearchToolList.GetToolArgsOrDefault(SearchToolType.EncyclopeDIA, "");
 
         public static FileDownloadInfo EncyclopeDiaDownloadInfo => new FileDownloadInfo
         {
             Filename = ENCYCLOPEDIA_FILENAME, DownloadUrl = ENCYCLOPEDIA_URL, InstallPath = EncyclopeDiaDirectory,
-            OverwriteExisting = true, Unzip = false
+            OverwriteExisting = true, Unzip = false,
+            ToolType = SearchToolType.EncyclopeDIA, ToolPath = EncyclopeDiaBinary, ToolExtraArgs = EncyclopeDiaArgs
         };
         public static FileDownloadInfo[] FilesToDownload => Java8DownloadInfo.FilesToDownload.Concat(new[] {
             EncyclopeDiaDownloadInfo
@@ -154,12 +156,11 @@ namespace pwiz.Skyline.Model.Lib
             if (!EnsureRequiredFilesDownloaded(FilesToDownload, progressMonitor))
                 throw new InvalidOperationException(Resources.EncyclopeDiaHelpers_ConvertFastaToKoinaInputCsv_could_not_find_EncyclopeDia);
 
-            long javaMaxHeapMB = Math.Min(4 * 1024L * 1024 * 1024, MemoryInfo.TotalBytes / 2) / 1024 / 1024;
             const string csvToLibraryClasspath = "edu.washington.gs.maccoss.encyclopedia.cli.ConvertFastaToPrositCSV";
 
             var pr = new ProcessRunner();
             var psi = new ProcessStartInfo(JavaBinary,
-                $" -Xmx{javaMaxHeapMB}M -cp {EncyclopeDiaBinary.Quote()} {csvToLibraryClasspath} {LOCALIZATION_PARAMS} -i {fastaFilepath.Quote()} -o {koinaCsvFilepath.Quote()} {config}")
+                $" {Java8DownloadInfo.JavaExtraArgs} -cp {EncyclopeDiaBinary.Quote()} {csvToLibraryClasspath} {LOCALIZATION_PARAMS} {EncyclopeDiaArgs} -i {fastaFilepath.Quote()} -o {koinaCsvFilepath.Quote()} {config}")
             {
                 CreateNoWindow = true,
                 UseShellExecute = false
@@ -182,12 +183,11 @@ namespace pwiz.Skyline.Model.Lib
             if (!EnsureRequiredFilesDownloaded(FilesToDownload, progressMonitor))
                 throw new InvalidOperationException(Resources.EncyclopeDiaHelpers_ConvertFastaToKoinaInputCsv_could_not_find_EncyclopeDia);
 
-            long javaMaxHeapMB = Math.Min(12 * 1024L * 1024 * 1024, MemoryInfo.TotalBytes / 2) / 1024 / 1024;
             const string csvToLibraryClasspath = "edu.washington.gs.maccoss.encyclopedia.cli.ConvertBLIBToLibrary";
-
+            
             var pr = new ProcessRunner();
             var psi = new ProcessStartInfo(JavaBinary,
-                $" -Xmx{javaMaxHeapMB}M -cp {EncyclopeDiaBinary.Quote()} {csvToLibraryClasspath} {LOCALIZATION_PARAMS} -i {koinaBlibFilepath.Quote()} -f {fastaFilepath.Quote()} -o {encyclopeDiaDlibFilepath.Quote()}")
+                $" {Java8DownloadInfo.JavaExtraArgs} -cp {EncyclopeDiaBinary.Quote()} {csvToLibraryClasspath} {LOCALIZATION_PARAMS} {EncyclopeDiaArgs} -i {koinaBlibFilepath.Quote()} -f {fastaFilepath.Quote()} -o {encyclopeDiaDlibFilepath.Quote()}")
             {
                 CreateNoWindow = true,
                 UseShellExecute = false
@@ -884,7 +884,6 @@ namespace pwiz.Skyline.Model.Lib
             if (!EnsureRequiredFilesDownloaded(FilesToDownload, progressMonitor))
                 throw new InvalidOperationException(Resources.EncyclopeDiaHelpers_ConvertFastaToKoinaInputCsv_could_not_find_EncyclopeDia);
 
-            long javaMaxHeapMB = Math.Min(12 * 1024L * 1024 * 1024, MemoryInfo.TotalBytes / 2) / 1024 / 1024;
             string extraParams = config.ToString();
             string subdir = quantLibrary ? @"elib_quant" : @"elib_chrom";
 
@@ -904,7 +903,7 @@ namespace pwiz.Skyline.Model.Lib
             string threadDir = @"Thread" + Thread.CurrentThread.ManagedThreadId;
             var pr = new ProcessRunner();
             var psi = new ProcessStartInfo(JavaBinary,
-                $" -Xmx{javaMaxHeapMB}M -jar {EncyclopeDiaBinary.Quote()} {LOCALIZATION_PARAMS} {extraParams} -i {diaDataFilepath.Quote()} -f {fastaFilepath.Quote()} -l {encyclopeDiaLibInputFilepath.Quote()}")
+                $" {Java8DownloadInfo.JavaExtraArgs} -jar {EncyclopeDiaBinary.Quote()} {LOCALIZATION_PARAMS} {EncyclopeDiaArgs} {extraParams} -i {diaDataFilepath.Quote()} -f {fastaFilepath.Quote()} -l {encyclopeDiaLibInputFilepath.Quote()}")
             {
                 CreateNoWindow = true,
                 UseShellExecute = false
@@ -927,7 +926,6 @@ namespace pwiz.Skyline.Model.Lib
             if (!EnsureRequiredFilesDownloaded(FilesToDownload, progressMonitor))
                 throw new InvalidOperationException(Resources.EncyclopeDiaHelpers_ConvertFastaToKoinaInputCsv_could_not_find_EncyclopeDia);
 
-            long javaMaxHeapMB = Math.Min(12 * 1024L * 1024 * 1024, MemoryInfo.TotalBytes / 2) / 1024 / 1024;
             string extraParams = config.ToString();
             string subdir = quantLibrary ? @"elib_quant" : @"elib_chrom";
 
@@ -938,7 +936,7 @@ namespace pwiz.Skyline.Model.Lib
 
             var prMerge = new ProcessRunner();
             var psiMerge = new ProcessStartInfo(JavaBinary,
-                $" -Xmx{javaMaxHeapMB}M -jar {EncyclopeDiaBinary.Quote()} {LOCALIZATION_PARAMS} {extraParams} -i {diaDataPath.Quote()} -libexport {aParam} -o {encyclopeDiaElibOutputFilepath.Quote()} -f {fastaFilepath.Quote()} -l {encyclopeDiaLibInputFilepath.Quote()}")
+                $" {Java8DownloadInfo.JavaExtraArgs} -jar {EncyclopeDiaBinary.Quote()} {LOCALIZATION_PARAMS} {extraParams} {EncyclopeDiaArgs} -i {diaDataPath.Quote()} -libexport {aParam} -o {encyclopeDiaElibOutputFilepath.Quote()} -f {fastaFilepath.Quote()} -l {encyclopeDiaLibInputFilepath.Quote()}")
             {
                 CreateNoWindow = true,
                 UseShellExecute = false
