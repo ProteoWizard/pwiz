@@ -154,10 +154,21 @@ namespace pwiz.Skyline.Model.DdaSearch
         static string CRUX_FILENAME = @"crux-4.3";
         static Uri CRUX_URL = new Uri($@"https://noble.gs.washington.edu/crux-downloads/{CRUX_FILENAME}/{CRUX_FILENAME}.Windows.AMD64.zip");
         public static string CruxDirectory => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), CRUX_FILENAME);
-        public static string CruxBinary => Path.Combine(CruxDirectory, $@"{CRUX_FILENAME}.Windows.AMD64", @"bin", @"crux");
+        public static string CruxBinary => Settings.Default.SearchToolList.GetToolPathOrDefault(SearchToolType.CruxComet, Path.Combine(CruxDirectory, $@"{CRUX_FILENAME}.Windows.AMD64", @"bin", @"crux"));
+        public static string CometArgs => Settings.Default.SearchToolList.GetToolArgsOrDefault(SearchToolType.CruxComet, "");
+        public static string PercolatorArgs => Settings.Default.SearchToolList.GetToolArgsOrDefault(SearchToolType.CruxPercolator, "");
 
         public static FileDownloadInfo[] FilesToDownload => JavaDownloadInfo.FilesToDownload.Concat(new[] {
-            new FileDownloadInfo { Filename = CRUX_FILENAME, DownloadUrl = CRUX_URL, InstallPath = CruxDirectory, OverwriteExisting = true, Unzip = true }
+            new FileDownloadInfo
+            {
+                Filename = CRUX_FILENAME, DownloadUrl = CRUX_URL, InstallPath = CruxDirectory, OverwriteExisting = true, Unzip = true,
+                ToolType = SearchToolType.CruxComet, ToolPath = CruxBinary, ToolExtraArgs = CometArgs
+            },
+            new FileDownloadInfo
+            {
+                Filename = CRUX_FILENAME, DownloadUrl = CRUX_URL, InstallPath = CruxDirectory, OverwriteExisting = true, Unzip = true,
+                ToolType = SearchToolType.CruxPercolator, ToolPath = CruxBinary, ToolExtraArgs = PercolatorArgs
+            }
         }).ToArray();
 
         private MzTolerance _precursorMzTolerance;
@@ -279,7 +290,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
                 // Run Comet
                 var pr = new ProcessRunner();
-                var psi = new ProcessStartInfo(CruxBinary, $@"comet --overwrite T --output-dir ""{defaultOutputDirectory}"" --parameter-file ""{paramsFile}""")
+                var psi = new ProcessStartInfo(CruxBinary, $@"comet {CometArgs} --overwrite T --output-dir ""{defaultOutputDirectory}"" --parameter-file ""{paramsFile}""")
                 {
                     CreateNoWindow = true,
                     UseShellExecute = false
@@ -297,7 +308,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
                 // Run Crux Percolator
                 psi.FileName = CruxBinary;
-                psi.Arguments = $@"percolator --only-psms T --output-dir ""{cruxOutputDir}"" --overwrite T --decoy-prefix ""{_decoyPrefix}"" --parameter-file ""{cruxParamsFile}""";
+                psi.Arguments = $@"percolator {PercolatorArgs} --only-psms T --output-dir ""{cruxOutputDir}"" --overwrite T --decoy-prefix ""{_decoyPrefix}"" --parameter-file ""{cruxParamsFile}""";
 
                 foreach (var settingName in PERCOLATOR_SETTINGS)
                     psi.Arguments += $@" --{AdditionalSettings[settingName].ToString(false, CultureInfo.InvariantCulture)}";

@@ -16,6 +16,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using Ionic.Zip;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.DdaSearch;
+using pwiz.Skyline.Model.Tools;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -24,11 +30,7 @@ using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
-using Ionic.Zip;
-using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model.Tools;
-using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util.Extensions;
+using pwiz.Skyline.Model;
 
 namespace pwiz.Skyline.Util
 {
@@ -159,6 +161,21 @@ namespace pwiz.Skyline.Util
         /// If true, the file must be a ZIP file and it will unzipped into InstallPath after downloading.
         /// </summary>
         public bool Unzip;
+        
+        /// <summary>
+        /// The enum-based value for this kind of tool in the SearchTool system (that allows users to provide their own local versions of tools).
+        /// </summary>
+        public SearchToolType ToolType;
+
+        /// <summary>
+        /// The final path to the executable tool.
+        /// </summary>
+        public string ToolPath;
+
+        /// <summary>
+        /// Extra argument to pass to the tool's command-line.
+        /// </summary>
+        public string ToolExtraArgs;
     }
 
     public static class JavaDownloadInfo
@@ -170,13 +187,20 @@ namespace pwiz.Skyline.Util
         /// </summary>
         static Uri JRE_URL = new Uri($@"https://ci.skyline.ms/skyline_tool_testing_mirror/{JRE_FILENAME}.zip");
         public static string JavaDirectory => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), JRE_FILENAME);
-        public static string JavaBinary => Path.Combine(JavaDirectory, JRE_FILENAME, @"bin", @"java.exe");
+        public static string JavaBinary => Settings.Default.SearchToolList.GetToolPathOrDefault(SearchToolType.Java, Path.Combine(JavaDirectory, JRE_FILENAME, @"bin", @"java.exe"));
+        public static string JavaExtraArgs => Settings.Default.SearchToolList.GetToolArgsOrDefault(SearchToolType.Java, JavaMaxHeapArg(2 * MemoryInfo.TotalBytes / 3));
 
         // TODO: Try to find a pre-existing installation of Java instead of downloading: https://stackoverflow.com/questions/3038140/how-to-determine-windows-java-installation-location
         public static FileDownloadInfo[] FilesToDownload => new[]
         {
-            new FileDownloadInfo {Filename = JRE_FILENAME, InstallPath = JavaDirectory, DownloadUrl = JRE_URL, OverwriteExisting = true, Unzip = true} 
+            new FileDownloadInfo
+            {
+                Filename = JRE_FILENAME, InstallPath = JavaDirectory, DownloadUrl = JRE_URL, OverwriteExisting = true, Unzip = true,
+                ToolType = SearchToolType.Java, ToolPath = JavaBinary, ToolExtraArgs = JavaExtraArgs
+            }
         }; // N.B. lazy evaluation so that JavaDirectory reflects current Tools directory, which may change from test to test
+
+        public static string JavaMaxHeapArg(long maxHeapBytes) => $@"-Xmx{maxHeapBytes / 1024 / 1024}M";
     }
 
     public static class Java8DownloadInfo
@@ -189,11 +213,16 @@ namespace pwiz.Skyline.Util
         /// </summary>
         static Uri JRE_URL = new Uri($@"https://ci.skyline.ms/skyline_tool_testing_mirror/{JRE_FILENAME}.zip");
         public static string JavaDirectory => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory());
-        public static string JavaBinary => Path.Combine(JavaDirectory, JRE_SUBDIRECTORY, @"bin", @"java.exe");
+        public static string JavaBinary => Settings.Default.SearchToolList.GetToolPathOrDefault(SearchToolType.Java8, Path.Combine(JavaDirectory, Path.Combine(JRE_SUBDIRECTORY, @"bin", @"java.exe")));
+        public static string JavaExtraArgs => Settings.Default.SearchToolList.GetToolArgsOrDefault(SearchToolType.Java8, JavaDownloadInfo.JavaMaxHeapArg(2 * MemoryInfo.TotalBytes / 3));
 
         public static FileDownloadInfo[] FilesToDownload => new[]
         {
-            new FileDownloadInfo {Filename = JRE_FILENAME, InstallPath = JavaDirectory, CheckInstalledPath = JavaBinary, DownloadUrl = JRE_URL, OverwriteExisting = true, Unzip = true}
+            new FileDownloadInfo
+            {
+                Filename = JRE_FILENAME, InstallPath = JavaDirectory, CheckInstalledPath = JavaBinary, DownloadUrl = JRE_URL, OverwriteExisting = true, Unzip = true,
+                ToolType = SearchToolType.Java8, ToolPath = JavaBinary, ToolExtraArgs = JavaExtraArgs
+            }
         }; // N.B. lazy evaluation so that JavaDirectory reflects current Tools directory, which may change from test to test
     }
 
@@ -203,14 +232,25 @@ namespace pwiz.Skyline.Util
 
         public static bool FileAlreadyDownloaded(FileDownloadInfo requiredFile)
         {
+            if (Settings.Default.SearchToolList.ContainsKey(requiredFile.ToolType))
+                return true;
+            
+            bool alreadyDownloaded;
             if (requiredFile.Unzip)
             {
                 if (requiredFile.CheckInstalledPath != null)
-                    return File.Exists(requiredFile.CheckInstalledPath) || Directory.Exists(requiredFile.CheckInstalledPath);
-                return Directory.Exists(requiredFile.InstallPath);
+                    alreadyDownloaded = File.Exists(requiredFile.CheckInstalledPath) || Directory.Exists(requiredFile.CheckInstalledPath);
+                else
+                    alreadyDownloaded = Directory.Exists(requiredFile.InstallPath);
             }
             else
-                return File.Exists(Path.Combine(requiredFile.InstallPath, requiredFile.Filename));
+                alreadyDownloaded = File.Exists(Path.Combine(requiredFile.InstallPath, requiredFile.Filename));
+
+            if (!alreadyDownloaded)
+                return false;
+            
+            Settings.Default.SearchToolList.Add(new SearchTool(requiredFile.ToolType, requiredFile.ToolPath, requiredFile.ToolExtraArgs, requiredFile.InstallPath, true));
+            return true;
         }
 
         public static IEnumerable<FileDownloadInfo> FilesNotAlreadyDownloaded(IEnumerable<FileDownloadInfo> requiredFiles)
@@ -292,6 +332,7 @@ namespace pwiz.Skyline.Util
                     {
                         if (useCachedDownloads && !File.Exists(destinationFilename))
                             File.Copy(downloadFilename, destinationFilename);
+                        Settings.Default.SearchToolList.Add(new SearchTool(requiredFile.ToolType, requiredFile.ToolPath, requiredFile.ToolExtraArgs, requiredFile.InstallPath, true));
                         continue;
                     }
 
@@ -318,6 +359,7 @@ namespace pwiz.Skyline.Util
                     {
                         FileEx.SafeDelete(downloadFilename);
                     }
+                    Settings.Default.SearchToolList.Add(new SearchTool(requiredFile.ToolType, requiredFile.ToolPath, requiredFile.ToolExtraArgs, requiredFile.InstallPath, true));
                 }
 
                 if (downloadTimer != null)

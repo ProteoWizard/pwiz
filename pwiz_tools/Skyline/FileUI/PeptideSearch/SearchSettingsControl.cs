@@ -220,28 +220,27 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
-        public static bool HasRequiredFilesDownloaded(SearchEngine searchEngine)
+        public static FileDownloadInfo[] GetSearchEngineRequiredFiles(SearchEngine searchEngine)
         {
-            FileDownloadInfo[] fileDownloadInfo;
             switch (searchEngine)
             {
                 case SearchEngine.Hardklor:
                 case SearchEngine.MSAmanda:
-                    return true;
+                    return Array.Empty<FileDownloadInfo>();
                 case SearchEngine.MSGFPlus:
-                    fileDownloadInfo = MsgfPlusSearchEngine.FilesToDownload;
-                    break;
+                    return MsgfPlusSearchEngine.FilesToDownload;
                 case SearchEngine.MSFragger:
-                    fileDownloadInfo = MsFraggerSearchEngine.FilesToDownload;
-                    break;
+                    return MsFraggerSearchEngine.FilesToDownload;
                 case SearchEngine.Comet:
-                    fileDownloadInfo = CometSearchEngine.FilesToDownload;
-                    break;
+                    return CometSearchEngine.FilesToDownload;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+        }
 
-            return !SimpleFileDownloader.FilesNotAlreadyDownloaded(fileDownloadInfo).Any();
+        public static bool HasRequiredFilesDownloaded(SearchEngine searchEngine)
+        {
+            return !SimpleFileDownloader.FilesNotAlreadyDownloaded(GetSearchEngineRequiredFiles(searchEngine)).Any();
         }
 
         private AbstractDdaSearchEngine InitSelectedSearchEngine()

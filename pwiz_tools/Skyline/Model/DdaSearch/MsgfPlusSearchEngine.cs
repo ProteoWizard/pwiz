@@ -110,10 +110,17 @@ namespace pwiz.Skyline.Model.DdaSearch
         static string MSGFPLUS_FILENAME = @"MSGFPlus_v20210906";
         static Uri MSGFPLUS_URL = new Uri($@"https://github.com/MSGFPlus/msgfplus/releases/download/v2021.09.06/{MSGFPLUS_FILENAME}.zip");
         public static string MsgfPlusDirectory => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), MSGFPLUS_FILENAME);
-        public static string MsgfPlusBinary => Path.Combine(MsgfPlusDirectory, @"MSGFPlus.jar");
+        public static string MsgfPlusBinary => Settings.Default.SearchToolList.GetToolPathOrDefault(SearchToolType.MSGFPlus, Path.Combine(MsgfPlusDirectory, @"MSGFPlus.jar"));
+        public static string MsgfPlusArgs => Settings.Default.SearchToolList.GetToolArgsOrDefault(SearchToolType.MSGFPlus, "");
 
         public static FileDownloadInfo[] FilesToDownload => JavaDownloadInfo.FilesToDownload.Concat(new []
-            { new FileDownloadInfo { Filename = MSGFPLUS_FILENAME, DownloadUrl = MSGFPLUS_URL, InstallPath = MsgfPlusDirectory, OverwriteExisting = true, Unzip = true}}).ToArray();
+        {
+            new FileDownloadInfo
+            {
+                Filename = MSGFPLUS_FILENAME, DownloadUrl = MSGFPLUS_URL, InstallPath = MsgfPlusDirectory, OverwriteExisting = true, Unzip = true,
+                ToolType = SearchToolType.MSGFPlus, ToolPath = MsgfPlusBinary, ToolExtraArgs = MsgfPlusArgs
+            }
+        }).ToArray();
 
         private MzTolerance precursorMzTolerance;
         private Tuple<double, double> isotopeErrorRange = new Tuple<double, double>(0, 0);
@@ -158,7 +165,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
                     var pr = new ProcessRunner();
                     var psi = new ProcessStartInfo(JavaDownloadInfo.JavaBinary,
-                        $@"-Xmx{javaMaxHeapMB}M -XX:-UsePerfData -jar """ + MsgfPlusBinary + @""" -tasks -2 " +
+                        $@"{JavaDownloadInfo.JavaExtraArgs} -XX:-UsePerfData -jar """ + MsgfPlusBinary + $@""" {MsgfPlusArgs} -tasks -2 " +
                         $@"-s ""{spectrumFilename}"" -d ""{FastaFileNames[0]}"" -tda 1 " +
                         $@"-t {precursorMzTolerance.Value}{precursorMzTolerance.UnitName} -ti {isotopeErrorRange.Item1},{isotopeErrorRange.Item2} " +
                         $@"-m {fragmentationMethod} -inst {instrumentType} -e {enzyme} -ntt {ntt} -maxMissedCleavages {maxMissedCleavages} " +

@@ -117,7 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="ConfigureToolsDlg_AddFromFile_Cancel" xml:space="preserve">
     <value>Cancel</value>
   </data>
@@ -393,6 +392,15 @@
     <value>Login was canceled</value>
   </data>
   <data name="EditRemoteAccountDlg_TestAccount_Testing_remote_account_connection" xml:space="preserve">
-      <value>Testing remote account connection</value>
+    <value>Testing remote account connection</value>
+  </data>
+  <data name="ConfigureToolsDlg_btnFindCommand_Click_Exe_Files" xml:space="preserve">
+    <value>Exe Files</value>
+  </data>
+  <data name="EditSearchToolDlg_OkDialog_The_tool__0__is_already_configured_" xml:space="preserve">
+      <value>The tool {0} is already configured.</value>
+  </data>
+  <data name="EditSearchToolDlg_OkDialog_The_file__0__does_not_exist_" xml:space="preserve">
+      <value>The file {0} does not exist.</value>
   </data>
 </root>
