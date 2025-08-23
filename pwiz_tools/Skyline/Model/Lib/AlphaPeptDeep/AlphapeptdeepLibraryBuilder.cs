@@ -125,31 +125,23 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             {
                 {
                     new ModificationType(
-                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 4).ID.Value ,
-                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 4).Name,
-                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 4).Formula,
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 4),
                         PredictionSupport.ALL)
                 },
                 {
                     new ModificationType(
-                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 21).ID.Value ,
-                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 21).Name,
-                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 21).Formula,
-                    PredictionSupport.FRAGMENTATION)
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 21),
+                        PredictionSupport.FRAGMENTATION)
                 },
                 {
                     new ModificationType(
-                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 35).ID.Value ,
-                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 35).Name,
-                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 35).Formula,
-                    PredictionSupport.ALL)
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 35),
+                        PredictionSupport.ALL)
                 },
                 {
                     new ModificationType(
-                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 121).ID.Value ,
-                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 121).Name,
-                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 121).Formula,
-                    PredictionSupport.FRAGMENTATION)
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 121),
+                        PredictionSupport.FRAGMENTATION)
                 }
 
             };

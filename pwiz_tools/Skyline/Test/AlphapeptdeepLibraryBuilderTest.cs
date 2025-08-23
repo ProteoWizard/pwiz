@@ -239,9 +239,9 @@ namespace pwiz.SkylineTest
             var answer_modstrings = new[]
             {
                 "Oxidation@M",
-                "", //"Acetyl@Protein_N-term",
-                "Oxidation@M", //"Acetyl@Protein_N-term;Oxidation@M",
-                "", //""Acetyl@K",
+                "Acetyl@Protein_N-term",
+                "Acetyl@Protein_N-term;Oxidation@M",
+                "Acetyl@K",
                 "GG@K"
             };
 
@@ -276,9 +276,9 @@ namespace pwiz.SkylineTest
             var answer_modsites = new[]
             {
                 "1",
-                "",  //"1"
-                "2", //"1;2",
-                "",  //""17",
+                "1", 
+                "1;2",
+                "17",
                 "17"
             };
 
@@ -409,6 +409,13 @@ namespace pwiz.SkylineTest
         /// </summary>
         public void TestValidateModifications_Unsupported()
         {
+            var answer_warn_counts = new[]
+            {
+                1,
+                2,
+                1
+            };
+
             var peptideList = new[]
             {
                 new Peptide("MSGSHSNDEDDVVQVPETSSPTK"),
@@ -434,7 +441,7 @@ namespace pwiz.SkylineTest
                 // Non-unimod
                 new ExplicitMods(peptideList[0], new[] { new ExplicitMod(0, aceOxMetMod) }, null, true),
                 // Non-unimod in multiple locations
-                new ExplicitMods(peptideList[1], new[] { new ExplicitMod(0, aceOxMetMod), new ExplicitMod(0, aceOxMetMod) }, null, true),
+                new ExplicitMods(peptideList[1], new[] { new ExplicitMod(0, aceOxMetMod), new ExplicitMod(1, aceOxMetMod) }, null, true),
                 // Unrecognized unimod
                 new ExplicitMods(peptideList[2], new[] { new ExplicitMod(0, fakeUnimodAceOxMetMod) }, null, true),
             };
@@ -457,7 +464,7 @@ namespace pwiz.SkylineTest
                     
                     Assert.AreEqual(string.Empty, mods);
                     Assert.AreEqual(string.Empty, modSites);
-                    Assert.AreEqual(1, capture.CapturedMessages.Count);
+                    Assert.AreEqual(answer_warn_counts[i], capture.CapturedMessages.Count);
                     
                     string expectedMsg;
                     var unsupportedMod = modifiedSeq.ExplicitMods[0];

@@ -21,7 +21,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using JetBrains.Annotations;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -88,14 +87,24 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
     };
     public class ModificationType
     {
-        public ModificationType(int id, string name, string comment, PredictionSupport supportedModels = null)
+        public ModificationType(int id, string name, string comment, PredictionSupport supportedModels)
         {
             Id = id;
             Accession = id + @":" + name;
             Name = name;
             Comment = comment;
-            SupportedModels = supportedModels ?? PredictionSupport.NONE;
+            SupportedModels = supportedModels;
         }
+
+        public ModificationType(UniModModificationData unimodModificationData, PredictionSupport supportedModels)
+        {
+            Id = unimodModificationData.ID.Value;
+            Accession = Id + @":" + unimodModificationData.Name;
+            Name = unimodModificationData.Name;
+            Comment = unimodModificationData.Formula;
+            SupportedModels = supportedModels;
+        }
+
         public int Id { get; private set; }
         public string Accession { get; private set; }
         public string Name { get; private set; }
@@ -386,104 +395,106 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         /// <returns></returns>
         protected internal PredictionSupport ValidateSequenceModifications(ModifiedSequence modifiedSequence, out string mods, out string modSites)
         {
-            var modsBuilder = new StringBuilder();
-            var modSitesBuilder = new StringBuilder();
-
-            // The list returned below is probably always short enough that determining
-            // if it contains a modification would not be greatly improved by caching a set
-            // for use here instead of the list.
-            var warningModSupports = GetWarningMods();
-            var noMs2SupportWarningMods = warningModSupports.Where(kvp => kvp.Value.Fragmentation == false).Select(kvp => kvp.Key).ToList();
-            var noRtSupportWarningMods = warningModSupports.Where(kvp => kvp.Value.RetentionTime == false).Select(kvp => kvp.Key).ToList();
-            var noCcsSupportWarningMods = warningModSupports.Where(kvp => kvp.Value.Ccs == false).Select(kvp => kvp.Key).ToList();
+            var modsList = new List<string>();
+            var modSitesList = new List<int>();
 
             bool ms2SupportedMod = true;
             bool rtSupportedMod = true;
             bool ccsSupportedMod = true;
 
-            var setMs2Unsupported = new HashSet<string>();
-            var setRtUnsupported = new HashSet<string>();
-            var setCcsUnsupported = new HashSet<string>();
-
-            for (var i = 0; i < modifiedSequence.ExplicitMods.Count; i++)
+            // The list returned below is probably always short enough that determining
+            // if it contains a modification would not be greatly improved by caching a set
+            // for use here instead of the list.
+            var modificationTypes = new List<Tuple<ModifiedSequence.Modification, ModificationType>>();
+            foreach (var explicitMod in modifiedSequence.ExplicitMods)
             {
-                var mod = modifiedSequence.ExplicitMods[i];
-                if (mod.UnimodId == null)
+                ModificationType modificationType = null;
+                if (explicitMod.UnimodId.HasValue)
                 {
-                    if (!setMs2Unsupported.Contains(mod.Name))
-                    {
-                        var msg = string.Format(ModelsResources.BuildPrecursorTable_UnsupportedModification, modifiedSequence, mod.Name, ToolName);
-                        Messages.WriteAsyncUserMessage(msg);
-                        ms2SupportedMod = false;
-                        rtSupportedMod = false;
-                        ccsSupportedMod = false;
-                        setMs2Unsupported.Add(mod.Name);
-                    }
-                    continue;
+                    modificationType =
+                        libraryBuilderModificationSupport.GetModificationType(explicitMod.UnimodId.Value);
+                    modificationTypes.Add(Tuple.Create(explicitMod, modificationType));
                 }
-
-                var unimodIdWithName = mod.UnimodIdWithName;
-                if (noMs2SupportWarningMods.Contains(mod.Name))
+                else
                 {
-                    if (!setMs2Unsupported.Contains(mod.Name))
-                    {
-                        var msg = string.Format(ModelsResources.BuildPrecursorTable_Unimod_limited_Modification, modifiedSequence, mod.Name, unimodIdWithName, ToolName);
-                        Messages.WriteAsyncUserMessage(msg);
-                        ms2SupportedMod = false;
-                        rtSupportedMod = false;
-                        ccsSupportedMod = false;
-                        setMs2Unsupported.Add(mod.Name);
-                    }
+                    var msg = string.Format(ModelsResources.BuildPrecursorTable_UnsupportedModification,
+                        modifiedSequence, explicitMod.Name, ToolName);
+                    Messages.WriteAsyncUserMessage(msg);
 
+                    ms2SupportedMod = false;
+                    rtSupportedMod = false;
+                    ccsSupportedMod = false;
+                }
+            }
+
+            foreach (var group in modificationTypes.GroupBy(tuple => tuple.Item1.Name))
+            {
+                if (group.Any(tuple => true != tuple.Item2?.SupportedModels?.Fragmentation))
+                {
+                    var msg = string.Format(ModelsResources.BuildPrecursorTable_Unimod_limited_Modification,
+                        modifiedSequence, group.Key, group.First().Item1.UnimodIdWithName, ToolName);
+                    Messages.WriteAsyncUserMessage(msg);
+                    ms2SupportedMod = false;
+                    rtSupportedMod = false;
+                    ccsSupportedMod = false;
                     continue;
                 }
 
                 bool msgGenerated = false;
-                unimodIdWithName = mod.UnimodIdWithName;
-                if (noRtSupportWarningMods.Contains(mod.Name))
+                if (group.Any(tuple => true != tuple.Item2?.SupportedModels?.RetentionTime))
                 {
-                    if (!setRtUnsupported.Contains(mod.Name))
-                    {
-                        var msg = string.Format(ModelsResources.BuildPrecursorTable_Unimod_limited_Modification, modifiedSequence, mod.Name, unimodIdWithName, ToolName);
-                        Messages.WriteAsyncUserMessage(msg);
-                        rtSupportedMod = false;
-                        setRtUnsupported.Add(mod.Name);
-                        msgGenerated = true;
-                    }
-                    
-                }
-                
-                if (noCcsSupportWarningMods.Contains(mod.Name))
-                {
-                    if (!setCcsUnsupported.Contains(mod.Name))
-                    {
-                        if (!msgGenerated)
-                        {
-                            var msg = string.Format(ModelsResources.BuildPrecursorTable_Unimod_limited_Modification, modifiedSequence, mod.Name, unimodIdWithName, ToolName);
-                            Messages.WriteAsyncUserMessage(msg);
-                        }
-                        ccsSupportedMod = false;
-                        setCcsUnsupported.Add(mod.Name);
-                    }
+                    var msg = string.Format(ModelsResources.BuildPrecursorTable_Unimod_limited_Modification,
+                        modifiedSequence, group.Key, group.First().Item1.UnimodIdWithName, ToolName);
+                    Messages.WriteAsyncUserMessage(msg);
+                    rtSupportedMod = false;
+                    msgGenerated = true;
                 }
 
-                var modNames = UniModData.UNI_MOD_DATA.Where(m => unimodIdWithName.Contains(m.Name)).ToArray();
-                Assume.IsTrue(modNames.Length != 0);    // The warningMods test above should guarantee the mod is supported
-                string modName = GetModName(new ModificationType( modNames.Single().ID.Value, modNames.Single().Name, modNames.Single().Formula), modifiedSequence.GetUnmodifiedSequence(), mod.IndexAA);
-                modsBuilder.Append(modName);
-                modSitesBuilder.Append((mod.IndexAA + 1).ToString()); // + 1 because alphapeptdeep mod_site number starts from 1 as the first amino acid
-                if (i != modifiedSequence.ExplicitMods.Count - 1)
+                if (group.Any(tuple => true != tuple.Item2?.SupportedModels?.Ccs))
                 {
-                    modsBuilder.Append(TextUtil.SEMICOLON);
-                    modSitesBuilder.Append(TextUtil.SEMICOLON);
+                    if (!msgGenerated)
+                    {
+                        var msg = string.Format(ModelsResources.BuildPrecursorTable_Unimod_limited_Modification,
+                            modifiedSequence, group.Key, group.First().Item1.UnimodIdWithName, ToolName);
+                        Messages.WriteAsyncUserMessage(msg);
+                    }
+
+                    ccsSupportedMod = false;
+                }
+
+            }
+
+            foreach (var group in modificationTypes.GroupBy(tuple => tuple.Item1.IndexAA))
+            {
+                var modNames = UniModData.UNI_MOD_DATA
+                    .Where(m => group.First().Item1.UnimodIdWithName.Contains(m.Name)).ToArray();
+                if (modNames.Length == 0)
+                {
+                    ms2SupportedMod = false;
+                    rtSupportedMod = false;
+                    ccsSupportedMod = false;
+                    var msg = string.Format(ModelsResources.BuildPrecursorTable_Unimod_limited_Modification,
+                        modifiedSequence, group.First().Item1.Name, group.First().Item1.UnimodIdWithName, ToolName);
+                    Messages.WriteAsyncUserMessage(msg);
+                }
+                else
+                {
+                    modsList.AddRange(modificationTypes
+                        .FindAll(tuple => tuple.Item1.IndexAA == group.First().Item1.IndexAA).Select(tuple =>
+                            GetModName(new ModificationType(modNames.Single(), PredictionSupport.NONE),
+                                modifiedSequence.GetUnmodifiedSequence(), tuple.Item1.IndexAA)).ToList());
+                    modSitesList.AddRange(modificationTypes
+                        .FindAll(tuple => tuple.Item1.IndexAA == group.First().Item1.IndexAA)
+                        .Select(tuple => tuple.Item1.IndexAA + 1).ToList());
                 }
             }
 
-            mods = modsBuilder.ToString();
-            modSites = modSitesBuilder.ToString();
-            
+            mods = string.Join(TextUtil.SEMICOLON, modsList).ToString();
+            modSites = string.Join(TextUtil.SEMICOLON, modSitesList).ToString();
+
             return new PredictionSupport(ms2SupportedMod, rtSupportedMod, ccsSupportedMod);
         }
+
 
         protected virtual string GetModName(ModificationType mod, string unmodifiedSequence, int modIndexAA)
         {
