@@ -1,0 +1,53 @@
+﻿/*
+ * Copyright 2025 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System.Collections.Generic;
+using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
+
+namespace pwiz.Skyline.Model.Files
+{
+    // .irtdb
+    public class RTCalcFolder : FileNode
+    {
+        private static readonly Identity RT_CALC_FOLDER = new StaticFolderId();
+
+        public RTCalcFolder(IDocumentContainer documentContainer) :
+            base(documentContainer, new IdentityPath(RT_CALC_FOLDER), ImageId.folder, ImageId.folder_missing)
+        {
+        }
+
+        public override Immutable Immutable => Document.Settings.PeptideSettings;
+        public override string Name => SkylineResources.SkylineWindow_FindIrtDatabase_iRT_Calculator;
+        public override string FilePath => string.Empty;
+
+        public override IList<FileNode> Files
+        {
+            get
+            {
+                if (Document.Settings.PeptideSettings is { HasRTCalcPersisted: true })
+                {
+                    var model = new RTCalc(DocumentContainer, Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator.Id);
+                    return ImmutableList<FileNode>.Singleton(model);
+                }
+                else
+                {
+                    return ImmutableList.Empty<FileNode>();
+                }
+            }
+        }
+    }
+}
