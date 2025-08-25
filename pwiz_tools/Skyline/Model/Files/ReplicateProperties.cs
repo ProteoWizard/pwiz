@@ -35,12 +35,12 @@ namespace pwiz.Skyline.Model.Files
         {
             Assume.IsNotNull(model);
 
-            BatchName = model.ChromatogramSet.BatchName;
-            AnalyteConcentration = model.ChromatogramSet.AnalyteConcentration;
-            SampleDilutionFactor = model.ChromatogramSet.SampleDilutionFactor;
-            SampleType = model.ChromatogramSet.SampleType?.ToString();
+            BatchName = model.BatchName;
+            AnalyteConcentration = model.AnalyteConcentration;
+            SampleDilutionFactor = model.SampleDilutionFactor;
+            SampleType = model.SampleType;
 
-            var dataFileInfo = model.ChromatogramSet.MSDataFileInfos;
+            var dataFileInfo = model.MSDataFileInfos;
             if (dataFileInfo.Count == 1)
             {
                 MaxRetentionTime = dataFileInfo[0].MaxRetentionTime;

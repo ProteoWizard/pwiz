@@ -35,12 +35,11 @@ namespace pwiz.Skyline.Model.Files
         {
             Assume.IsNotNull(model);
 
-            var dataFileInfo = model.ChromFileInfo;
-            MaxRetentionTime = dataFileInfo.MaxRetentionTime;
-            MaxIntensity = dataFileInfo.MaxIntensity;
-            AcquisitionTime = dataFileInfo.RunStartTime.ToString();
+            MaxRetentionTime = model.MaxRetentionTime;
+            MaxIntensity = model.MaxIntensity;
+            AcquisitionTime = model.AcquisitionTime.ToString();
 
-            var instrumentInfo = dataFileInfo.InstrumentInfoList;
+            var instrumentInfo = model.InstrumentInfoList;
             if (instrumentInfo.Count > 0)
             {
                 Instruments = instrumentInfo
