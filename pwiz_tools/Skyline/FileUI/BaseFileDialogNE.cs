@@ -458,7 +458,7 @@ namespace pwiz.Skyline.FileUI
                     {
                         listSourceInfo.Add(new SourceInfo(GetRootUrl(remoteAccount))
                         {
-                            name = remoteAccount.GetKey(),
+                            name = remoteAccount.AccountAlias,
                             type = DataSourceUtil.FOLDER_TYPE,
                             imageIndex = ImageIndex.MyNetworkPlaces,
                         });
@@ -712,8 +712,9 @@ namespace pwiz.Skyline.FileUI
                 TreeNode remoteNode = (TreeNode)lookInComboBox.Items[_remoteIndex];
 
                 ++driveCount;
+                var remoteAccount = remoteUrl.FindMatchingAccount();
                 TreeNode serverNode = remoteNode.Nodes.Add(remoteUrl.ServerUrl,
-                                                           remoteUrl.ServerUrl,
+                                                           remoteAccount?.AccountAlias ?? remoteUrl.ServerUrl,
                                                            (int)ImageIndex.MyNetworkPlaces,
                                                            (int)ImageIndex.MyNetworkPlaces);
                 // ReSharper disable once PossibleUnintendedReferenceComparison
