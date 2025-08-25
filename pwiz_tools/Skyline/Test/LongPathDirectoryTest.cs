@@ -100,7 +100,7 @@ namespace pwiz.SkylineTest
         public bool IsVerboseMode => false;
 
         /// <summary>
-        /// Test of long path functions in <see cref="DirectoryEx"/>. Because the test cannot
+        /// Test of long path functions in <see cref="Directory"/>. Because the test cannot
         /// turn on long path support in the registry, this does not actually test long paths
         /// if the feature is not enabled in the registry. Since the feature is required for
         /// installing Python and testing AlphaPeptDeep and Carafe, we expect the majority
@@ -129,16 +129,69 @@ namespace pwiz.SkylineTest
             if (IsVerboseMode)
                 Console.WriteLine($@"Creating directory with path ""{inputPath}"" that has length {inputPath.Length} characters");
 
-            DirectoryEx.CreateLongPath(inputPath);
-
+            Directory.CreateDirectory(inputPath);
             while (!Equals(inputPath, TestContext.GetTestResultsPath()))
             {
-                Assert.IsTrue(DirectoryEx.ExistsLongPath(inputPath));
-                DirectoryEx.SafeDeleteLongPath(inputPath);
-                Assert.IsFalse(DirectoryEx.ExistsLongPath(inputPath));
+                Assert.IsTrue(Directory.Exists(inputPath));
+                Directory.Delete(inputPath);
+                Assert.IsFalse(Directory.Exists(inputPath));
                 inputPath = Path.GetDirectoryName(inputPath);
             }
             
+            // ToLongPath tests
+            AssertEx.ThrowsException<ArgumentException>(() => @"path\to\file.txt".ToLongPath());
+            const string validPath = @"C:\path\to\file.txt";
+            AssertEx.NoExceptionThrown<Exception>(() => validPath.ToLongPath());
+            // Make sure calling multiple times does not cause multiple long-path prefixes
+            string testPath = validPath;
+            for (int i = 0; i < 3; i++)
+            {
+                string longPath = testPath.ToLongPath();
+                if (i > 0)
+                    Assert.AreEqual(testPath, longPath);
+                testPath = longPath;
+            }
+        }
+
+        /// <summary>
+        /// Test of long path functions in <see cref="DirectoryEx"/>. Because the test cannot
+        /// turn on long path support in the registry, this does not actually test long paths
+        /// if the feature is not enabled in the registry. Since the feature is required for
+        /// installing Python and testing AlphaPeptDeep and Carafe, we expect the majority
+        /// of systems on the Skyline dev team to eventually have this enabled.
+        /// </summary>
+        [TestMethod]
+        public void DirectoryExWithLongPathTest()
+        {
+            string inputPath = TestContext.GetTestResultsPath();    // Start in the normal test directory that gets tested for file locking
+
+            if (PythonInstaller.ValidateEnableLongpaths())
+            {
+                // Make the directory path longer than 256 characters, but only when the registry has LongPathsEnabled set
+                for (int i = 0; i < 12; i++)
+                {
+                    inputPath = Path.Combine(inputPath, @"LongPathDirectoryTest");
+                }
+                Assert.IsTrue(inputPath.Length > 256);
+            }
+            else
+            {
+                // Can't actually test long paths if the feature is not enabled.
+                Assert.IsFalse(inputPath.Length > 256);
+            }
+
+            if (IsVerboseMode)
+                Console.WriteLine($@"Creating directory with path ""{inputPath}"" that has length {inputPath.Length} characters");
+
+            DirectoryEx.CreateLongPath(inputPath);
+            while (!Equals(inputPath, TestContext.GetTestResultsPath()))
+            {
+                Assert.IsTrue(Directory.Exists(inputPath));
+                Directory.Delete(inputPath);
+                Assert.IsFalse(Directory.Exists(inputPath));
+                inputPath = Path.GetDirectoryName(inputPath);
+            }
+
             // ToLongPath tests
             AssertEx.ThrowsException<ArgumentException>(() => @"path\to\file.txt".ToLongPath());
             const string validPath = @"C:\path\to\file.txt";
