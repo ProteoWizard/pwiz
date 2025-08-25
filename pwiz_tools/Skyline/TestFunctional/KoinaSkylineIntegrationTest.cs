@@ -460,6 +460,10 @@ namespace pwiz.SkylineTestFunctional
                     { "Charge", "2" },
                     { "Label", "light" },
                     { "SpectrumCount", "93" },
+                    { "PeakCount","169"},
+                    { "MirrorPeakCount","25"},
+                    { "TotalIC", (1.0071E+5).ToString(@"0.0000E+0", CultureInfo.CurrentCulture)},
+                    { "MirrorTotalIC",(6.1699E+4).ToString(@"0.0000E+0", CultureInfo.CurrentCulture)},
                     { "KoinaDotpMatch", string.Format(GraphsResources.GraphSpectrum_DoUpdate_dotp___0_0_0000_, 0.7402) },
                     { "KoinaDotpMatchFull", string.Format(GraphsResources.GraphSpectrum_DoUpdate_dotp___0_0_0000_, 0.7396) }
                 },
@@ -469,6 +473,10 @@ namespace pwiz.SkylineTestFunctional
                     {"Charge","2"},
                     {"Label","light"},
                     {"SpectrumCount","4"},
+                    {"PeakCount","118"},
+                    {"MirrorPeakCount","27"},
+                    {"TotalIC", (1.9350E+5).ToString(@"0.0000E+0", CultureInfo.CurrentCulture)},
+                    {"MirrorTotalIC", (5.3983E+4).ToString(@"0.0000E+0", CultureInfo.CurrentCulture)},
                     {"KoinaDotpMatch",string.Format(GraphsResources.GraphSpectrum_DoUpdate_dotp___0_0_0000_, 0.7349)},
                     {"KoinaDotpMatchFull",string.Format(GraphsResources.GraphSpectrum_DoUpdate_dotp___0_0_0000_, 0.6997)}
                 }
@@ -503,7 +511,7 @@ namespace pwiz.SkylineTestFunctional
                 var currentProperties = graphExtension.PropertiesSheet.SelectedObject as SpectrumProperties;
                 Assert.IsNotNull(currentProperties);
                 // if property values change use the statement below to generate a new set.
-                // Trace.Write(currentProperties.Serialize());
+                //Trace.Write(currentProperties.Serialize());
                 var expectedProperties = new SpectrumProperties();
                 expectedProperties.Deserialize(expectedPropertiesDict[i-1]);
                 Assert.IsTrue(expectedProperties.IsSameAs(currentProperties));
