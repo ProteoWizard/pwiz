@@ -19,8 +19,7 @@
 
 using System.ComponentModel;
 using System.Resources;
-using pwiz.Common.Collections;
-using pwiz.Skyline.Controls.FilesTree;
+using pwiz.Skyline.Model.Files;
 
 namespace pwiz.Skyline.Model.PropertySheets.Templates
 {
@@ -31,15 +30,10 @@ namespace pwiz.Skyline.Model.PropertySheets.Templates
             return PropertySheetFileNodeResources.ResourceManager;
         }
 
-        protected FileNodeProperties(FilesTreeNode filesTreeNode)
+        protected FileNodeProperties(FileNode fileNode, string localFilePath)
         {
-            FilePath = filesTreeNode.LocalFilePath;
-            Name = filesTreeNode.Model.Name;
-            if (!FilePath.IsNullOrEmpty())
-            {
-                var fileInfo = new System.IO.FileInfo(FilePath);
-                FileSize = FormatFileSize(fileInfo.Length);
-            }
+            FilePath = localFilePath;
+            Name = fileNode.Name;
         }
 
         [Category("FileInfo")] public string FilePath { get; set; }

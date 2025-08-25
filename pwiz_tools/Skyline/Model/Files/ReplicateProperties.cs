@@ -17,24 +17,24 @@
  * limitations under the License.
  */
 
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.PropertySheets;
+using pwiz.Skyline.Model.PropertySheets.Templates;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Resources;
-using pwiz.Skyline.Controls.FilesTree;
-using pwiz.Skyline.Model.PropertySheets;
-using pwiz.Skyline.Model.PropertySheets.Templates;
 
 namespace pwiz.Skyline.Model.Files
 {
     public class ReplicateProperties : FileNodeProperties
     {
-        public ReplicateProperties(FilesTreeNode filesTreeNode, Replicate model)
-            : base(filesTreeNode)
+        public ReplicateProperties(Replicate model, string localFilePath)
+            : base(model, localFilePath)
         {
-            if (model == null)
-                throw new ArgumentNullException(nameof(model));
+            Assume.IsNotNull(model);
+
             BatchName = model.ChromatogramSet.BatchName;
             AnalyteConcentration = model.ChromatogramSet.AnalyteConcentration;
             SampleDilutionFactor = model.ChromatogramSet.SampleDilutionFactor;

@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using pwiz.Skyline.Controls.FilesTree;
 using pwiz.Skyline.Model.PropertySheets;
 using pwiz.Skyline.Model.PropertySheets.Templates;
 using System;
@@ -28,8 +27,8 @@ namespace pwiz.Skyline.Model.Files
 {
     public class ReplicatesFolderProperties : FileNodeProperties
     {
-        public ReplicatesFolderProperties(FilesTreeNode filesTreeNode, ReplicatesFolder model)
-            : base(filesTreeNode)
+        public ReplicatesFolderProperties(ReplicatesFolder model, string localFilePath)
+            : base(model, localFilePath)
         {
             if (model == null)
                 throw new ArgumentNullException(nameof(model));

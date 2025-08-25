@@ -15,7 +15,6 @@
  */
 
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Controls.FilesTree;
 using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.Files
@@ -47,9 +46,9 @@ namespace pwiz.Skyline.Model.Files
             }
         }
 
-        public override GlobalizedObject GetProperties(FilesTreeNode filesTreeNode)
+        public override GlobalizedObject GetProperties(string localFilePath)
         {
-            return new ReplicateSampleFileProperties(filesTreeNode, this);
+            return new ReplicateSampleFileProperties(this, localFilePath);
         }
 
         public override bool ModelEquals(FileNode nodeDoc)

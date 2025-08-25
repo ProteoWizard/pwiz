@@ -414,7 +414,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             // Likewise, each ...Properties class needs to take in a FilesTreeNode and a FileNode of their associated type,
             // to avoid casting.
             var filesTreeNodeSelected = FilesTree.CurrentlySelectedFTN;
-            return filesTreeNodeSelected?.Model.GetProperties(filesTreeNodeSelected);
+            return filesTreeNodeSelected.GetProperties();
         }
 
         #endregion
