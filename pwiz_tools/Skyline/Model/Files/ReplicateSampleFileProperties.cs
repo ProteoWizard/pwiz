@@ -71,7 +71,7 @@ namespace pwiz.Skyline.Model.Files
                              GetResourceManager(), prop.GetValue(Instruments[0]), prop.Category, prop.Name,
                              prop.PropertyType))
                 {
-                    globalizedProps.Add(globalizedProp);
+                    AddProperty(globalizedProp);
                 }
             }
             else if (Instruments?.Count > 1)
@@ -79,7 +79,7 @@ namespace pwiz.Skyline.Model.Files
                 // if multiple instruments, add instrument properties nested within each instrument
                 for (var i = 0; i < Instruments.Count; i++)
                 {
-                    globalizedProps.Add(new CustomHandledGlobalizedPropertyDescriptor(
+                    AddProperty(new CustomHandledGlobalizedPropertyDescriptor(
                         GetResourceManager(), Instruments[i], instrumentsCategoryKey, instrumentsCategoryKey + i,
                         typeof(InstrumentProperties), Instruments[i].Model, null,
                         new Attribute[] { new TypeConverterAttribute(typeof(ExpandableObjectConverter)) }));

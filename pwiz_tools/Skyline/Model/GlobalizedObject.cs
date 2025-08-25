@@ -47,7 +47,7 @@ namespace pwiz.Skyline.Model
     /// </summary>
     public abstract class GlobalizedObject : ICustomTypeDescriptor
     {
-        protected PropertyDescriptorCollection globalizedProps;
+        private PropertyDescriptorCollection globalizedProps;
 
         private static Dictionary<string, MethodInfo> TypeConverterDictionary;
 
@@ -128,6 +128,11 @@ namespace pwiz.Skyline.Model
         public PropertyDescriptorCollection GetProperties()
         {
             return GetProperties(null);
+        }
+
+        protected void AddProperty(PropertyDescriptor propertyDescriptor)
+        {
+            globalizedProps.Add(propertyDescriptor);
         }
 
         /// <summary>
