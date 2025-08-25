@@ -17,8 +17,7 @@
  * limitations under the License.
  */
 
-using pwiz.Skyline.Model.PropertySheets;
-using pwiz.Skyline.Model.PropertySheets.Templates;
+using JetBrains.Annotations;
 using System;
 using System.ComponentModel;
 using System.Resources;
@@ -41,6 +40,7 @@ namespace pwiz.Skyline.Model.Files
 
         // Test Support - enforced by code check
         // Invoked via reflection in InspectPropertySheetResources in CodeInspectionTest
+        [UsedImplicitly]
         private static ResourceManager ResourceManager() => PropertySheetFileNodeResources.ResourceManager;
     }
 }

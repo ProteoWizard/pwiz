@@ -58,6 +58,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             filesTree.LabelEdit = true;
             filesTree.AllowDrop = true;
             filesTree.NodeMouseDoubleClick += FilesTree_TreeNodeMouseDoubleClick;
+            filesTree.MouseDown += FilesTree_MouseDown;
             filesTree.AfterSelect += FilesTree_AfterSelect;
             filesTree.MouseMove += FilesTree_MouseMove;
             filesTree.LostFocus += FilesTree_LostFocus;
@@ -408,7 +409,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         public GlobalizedObject GetSelectedObjectProperties()
         {
-            var filesTreeNodeSelected = FilesTree.CurrentlySelectedFTN;
+            var filesTreeNodeSelected = FilesTree.SelectedNodeFTN;
             return filesTreeNodeSelected.GetProperties();
         }
 

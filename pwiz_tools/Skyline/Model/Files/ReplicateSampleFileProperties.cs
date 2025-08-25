@@ -17,13 +17,12 @@
  * limitations under the License.
  */
 
-using pwiz.Skyline.Model.PropertySheets;
-using pwiz.Skyline.Model.PropertySheets.Templates;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Resources;
+using JetBrains.Annotations;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.Files
@@ -68,8 +67,8 @@ namespace pwiz.Skyline.Model.Files
                 // if only one instrument, add instrument properties in one category at top level
                 foreach (var globalizedProp in from PropertyDescriptor prop in TypeDescriptor.GetProperties(typeof(InstrumentProperties))
                          select new CustomHandledGlobalizedPropertyDescriptor(
-                             GetResourceManager(), prop.GetValue(Instruments[0]), prop.Category, prop.Name,
-                             prop.PropertyType))
+                             prop.PropertyType, prop.Name, prop.GetValue(Instruments[0]), prop.Category,
+                             GetResourceManager()))
                 {
                     AddProperty(globalizedProp);
                 }
@@ -79,16 +78,20 @@ namespace pwiz.Skyline.Model.Files
                 // if multiple instruments, add instrument properties nested within each instrument
                 for (var i = 0; i < Instruments.Count; i++)
                 {
+                    var expandableAttr = new Attribute[]
+                        { new TypeConverterAttribute(typeof(ExpandableObjectConverter)) };
+
                     AddProperty(new CustomHandledGlobalizedPropertyDescriptor(
-                        GetResourceManager(), Instruments[i], instrumentsCategoryKey, instrumentsCategoryKey + i,
-                        typeof(InstrumentProperties), Instruments[i].Model, null,
-                        new Attribute[] { new TypeConverterAttribute(typeof(ExpandableObjectConverter)) }));
+                        typeof(InstrumentProperties), instrumentsCategoryKey + i, Instruments[i], instrumentsCategoryKey,
+                        GetResourceManager(),
+                        attributes: expandableAttr, nonLocalizedDisplayName: Instruments[i].Model));
                 }
             }
         }
 
         // Test Support - enforced by code check
         // Invoked via reflection in InspectPropertySheetResources in CodeInspectionTest
+        [UsedImplicitly]
         private static ResourceManager ResourceManager() => PropertySheetFileNodeResources.ResourceManager;
     }
 }

@@ -633,17 +633,12 @@
     <Compile Include="Model\Lib\AlphaPeptDeep\AbstractDeepLibraryBuilder.cs" />
     <Compile Include="Model\Lib\Carafe\CarafeLibraryBuilder.cs" />
     <Compile Include="Model\PropertySheets\IPropertyProvider.cs" />
-    <Compile Include="Model\PropertySheets\PropertySheetFileNodeResources.Designer.cs">
+    <Compile Include="Model\Files\PropertySheetFileNodeResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>PropertySheetFileNodeResources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Model\PropertySheets\PropertySheetResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>PropertySheetResources.resx</DependentUpon>
-    </Compile>
-    <Compile Include="Model\PropertySheets\Templates\FileNodeProperties.cs" />
+    <Compile Include="Model\Files\FileNodeProperties.cs" />
     <Compile Include="Model\Files\ReplicateProperties.cs" />
     <Compile Include="Model\Proteome\AssociateProteinsResults.cs" />
     <Compile Include="Model\Lib\LibraryFiles.cs" />
@@ -3789,15 +3784,10 @@
       <DependentUpon>FullScanPropertiesRes.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Model\PropertySheets\PropertySheetFileNodeResources.resx">
+    <EmbeddedResource Include="Model\Files\PropertySheetFileNodeResources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
       <LastGenOutput>PropertySheetFileNodeResources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Model\PropertySheets\PropertySheetResources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>PropertySheetResources.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\RetentionTimes\RetentionTimesResources.ja.resx">
       <DependentUpon>RetentionTimesResources.resx</DependentUpon>

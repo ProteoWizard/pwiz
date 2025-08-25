@@ -397,8 +397,10 @@ namespace pwiz.Skyline.Model
         private const string DESCRIPTION_PREFIX = @"Description_";
         private const string CATEGORY_PREFIX = @"Category_";
 
-        public CustomHandledGlobalizedPropertyDescriptor(ResourceManager resourceManager, object value, string category,
-            string name, Type type, string nonLocalizedDisplayName = null, Func<string, string> displayNameFormat = null, Attribute[] attributes = null) 
+        public CustomHandledGlobalizedPropertyDescriptor(
+            Type type, string name, object value, string category,
+            ResourceManager resourceManager, Attribute[] attributes = null,
+            string nonLocalizedDisplayName = null, Func<string, string> displayNameFormat = null) 
             : base(name, attributes)
         {
             _resourceManager = resourceManager;
@@ -410,15 +412,9 @@ namespace pwiz.Skyline.Model
             _displayNameFormat = displayNameFormat;
         }
 
-        public override bool CanResetValue(object component)
-        {
-            return false;
-        }
+        public override bool CanResetValue(object component) => false;
 
-        public override Type ComponentType
-        {
-            get => _type;
-        }
+        public override Type ComponentType => _type;
 
         public override string DisplayName
         {
@@ -433,10 +429,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public override string Description
-        {
-            get => _resourceManager.GetString(DESCRIPTION_PREFIX + _name) ?? string.Empty;
-        }
+        public override string Description => _resourceManager.GetString(DESCRIPTION_PREFIX + _name) ?? string.Empty;
 
         public override string Category
         {
@@ -451,34 +444,17 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public override object GetValue(object component)
-        {
-            return _value;
-        }
+        public override object GetValue(object component) => _value;
 
-        public override bool IsReadOnly
-        {
-            get => true;
-        }
+        public override bool IsReadOnly => true;
 
-        public override string Name
-        {
-            get => _name;
-        }
+        public override string Name => _name;
 
-        public override Type PropertyType
-        {
-            get => _type;
-        }
+        public override Type PropertyType => _type;
 
-        public override void ResetValue(object component)
-        {
-        }
+        public override void ResetValue(object component) { }
 
-        public override bool ShouldSerializeValue(object component)
-        {
-            return false;
-        }
+        public override bool ShouldSerializeValue(object component) => false;
 
         public override void SetValue(object component, object value)
         {

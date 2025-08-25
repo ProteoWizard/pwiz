@@ -19,9 +19,9 @@
 
 using System.ComponentModel;
 using System.Resources;
-using pwiz.Skyline.Model.Files;
+using pwiz.Common.SystemUtil;
 
-namespace pwiz.Skyline.Model.PropertySheets.Templates
+namespace pwiz.Skyline.Model.Files
 {
     public abstract class FileNodeProperties : GlobalizedObject
     {
@@ -34,24 +34,17 @@ namespace pwiz.Skyline.Model.PropertySheets.Templates
         {
             FilePath = localFilePath;
             Name = fileNode.Name;
+
+            if (fileNode.IsBackedByFile && System.IO.File.Exists(localFilePath))
+            {
+                var fileInfo = new System.IO.FileInfo(localFilePath);
+                if (fileInfo.Exists)
+                    FileSize = new FileSize(fileInfo.Length).ToString();
+            }
         }
 
         [Category("FileInfo")] public string FilePath { get; set; }
         [Category("FileInfo")] public string Name { get; set; }
         [Category("FileInfo")] public string FileSize { get; set; }
-
-        // TODO: Does this need to be localized?
-        private static string FormatFileSize(long bytes)
-        {
-            string[] sizes = { "B", "KB", "MB", "GB", "TB" };
-            double len = bytes;
-            var order = 0;
-            while (len >= 1024 && order < sizes.Length - 1)
-            {
-                order++;
-                len /= 1024;
-            }
-            return $"{len:0.##} {sizes[order]}";
-        }
     }
 }

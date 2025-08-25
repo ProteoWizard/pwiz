@@ -30,7 +30,7 @@ namespace pwiz.SkylineTestFunctional
     {
         internal const string RAT_PLASMA_FILE_NAME = "Rat_plasma.sky";
         internal const int REP_FILE_PROP_NUM = 10;
-        internal const int REP_SAMPLE_FILE_PROP_NUM = 9;
+        internal const int REP_SAMPLE_FILE_PROP_NUM = 10;
 
         [TestMethod]
         public void TestPropertySheet()

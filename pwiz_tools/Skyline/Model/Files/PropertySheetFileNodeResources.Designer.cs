@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace pwiz.Skyline.Model.PropertySheets {
+namespace pwiz.Skyline.Model.Files {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace pwiz.Skyline.Model.PropertySheets {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("pwiz.Skyline.Model.PropertySheets.PropertySheetFileNodeResources", typeof(PropertySheetFileNodeResources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("pwiz.Skyline.Model.Files.PropertySheetFileNodeResources", typeof(PropertySheetFileNodeResources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
