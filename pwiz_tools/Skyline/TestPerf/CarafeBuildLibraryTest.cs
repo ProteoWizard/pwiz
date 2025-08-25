@@ -1,5 +1,5 @@
 ﻿/*
- * Author: David Shteynberg <dshteyn .at. proteinms.net>,
+ * Author: David Shteynberg <david.shteynberg at proton.me>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
  * Copyright 2025 University of Washington - Seattle, WA

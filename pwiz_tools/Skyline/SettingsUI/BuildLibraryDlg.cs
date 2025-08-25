@@ -104,11 +104,37 @@ namespace pwiz.Skyline.SettingsUI
         public MultiButtonMsgDlg PythonDlg { get; private set; }
         
         public enum Pages { properties, files, alphapeptdeepOptions, carafeOptions, learning }
+        public enum CarafeOptions { tabCarafeData, tabCarafeModel, tabCarafeLibrary }
 
         public class PropertiesPage : IFormView { }
         public class FilesPage : IFormView { }
         public class AlphapeptdeepOptionsPage : IFormView { }
         public class CarafeOptionsPage : IFormView { }
+
+        public CarafeOptions SelectedCarafeOptions
+        {
+            get { return controlIndexToCarafeOptionsTab(tabCarafeAllOptions.SelectedIndex); }
+            set { tabCarafeAllOptions.SelectedIndex = CarafeOptionsTabToControlIndex(value); }
+        }
+
+        private readonly Dictionary<CarafeOptions, TabPage> _carafeOptTabs;
+
+        // Adjusts indexing for tabs that may be hidden due to UI mode
+        private CarafeOptions controlIndexToCarafeOptionsTab(int controlIndex)
+        {
+            var control = tabCarafeAllOptions.TabPages[controlIndex];
+            var kvp = _carafeOptTabs.FirstOrDefault(p => ReferenceEquals(p.Value, control));
+            return kvp.Key;
+        }
+        // Adjusts indexing for tabs that may be hidden due to UI mode
+        private int CarafeOptionsTabToControlIndex(CarafeOptions tab)
+        {
+            int tabIndex = tabCarafeAllOptions.TabPages.IndexOf(_carafeOptTabs[tab]);
+            if (tabIndex != -1)
+                return tabIndex;
+            return 0; // The tab is not visible default to the first tab
+        }
+
         public class LearningPage : IFormView { }
 
         private const string PYTHON = @"Python";
@@ -168,6 +194,15 @@ namespace pwiz.Skyline.SettingsUI
         {
             InitializeComponent();
             EmbedAlphaPeptDeepUserSettings();
+
+            _carafeOptTabs = new Dictionary<CarafeOptions, TabPage>
+            {
+                {CarafeOptions.tabCarafeData, tabCarafeData},
+                {CarafeOptions.tabCarafeModel, tabCarafeModel},
+                {CarafeOptions.tabCarafeLibrary, tabCarafeLibrary}
+           
+            };
+
             EmbedCarafeDataSettings();
             EmbedCarafeModelSettings();
             EmbedCarafeLibrarySettings();
@@ -1516,13 +1551,6 @@ namespace pwiz.Skyline.SettingsUI
                 if (this.labelDoc.Text == SettingsUIResources.BuildLibraryDlg_Skyline_tuning_document)
                 {
                     LoadTrainingDocument(dlg.FileName);
-                    _trainingDocument = new SrmDocument(SrmSettingsList.GetDefault());
-
-                    using (var reader = new StreamReader(PathEx.SafePath(dlg.FileName)))
-                    {
-                        XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));
-                        _trainingDocument = (SrmDocument)ser.Deserialize(reader);
-                    }
                 }
             }
             

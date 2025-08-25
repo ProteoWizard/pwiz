@@ -1,4 +1,5 @@
 using System;
+using System.Windows.Forms;
 using pwiz.Skyline.Controls.Graphs;
 
 namespace pwiz.Skyline.SettingsUI
@@ -9,6 +10,18 @@ namespace pwiz.Skyline.SettingsUI
         /// Required designer variable.
         /// </summary>
         private System.ComponentModel.IContainer components = null;
+
+        public ToolStripButton BtnBIons
+        {
+            get => btnBIons;
+            private set => btnBIons = value;
+        }
+
+        public ToolStripButton Charge2Button
+        {
+            get => charge2Button;
+            private set => charge2Button = value;
+        }
 
         /// <summary>
         /// Clean up any resources being used.
