@@ -587,7 +587,7 @@ between the peak integration boundaries.</value>
     <value>True if this is a decoy precursor.</value>
   </data>
   <data name="IsolationWindowWidth">
-    <value>With of the m/z window in which the precursor was isolated. 
+    <value>Width of the m/z window in which the precursor was isolated. 
 If more than one precursor was isolated then the Isolation Window Width is the sum of the windows around each precursor.</value>
   </data>
   <data name="IsotopeDistIndex">
