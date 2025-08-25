@@ -30,6 +30,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.CLI.Bruker.PrmScheduling;
+using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Model.DocSettings;
@@ -40,13 +41,14 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
+using pwiz.CommonMsData.RemoteApi.WatersConnect;
 using Process = System.Diagnostics.Process;
 using Thread = System.Threading.Thread;
 
 namespace pwiz.Skyline.Model
 {
 // ReSharper disable InconsistentNaming
-    public enum ExportStrategy { Single, Protein, Buckets }
+    public enum ExportStrategy { Single, Protein, Buckets, WcDecide }
     public static class ExportStrategyExtension
     {
         private static string[] LOCALIZED_VALUES
@@ -57,7 +59,8 @@ namespace pwiz.Skyline.Model
                 {
                     ModelResources.ExportStrategyExtension_LOCALIZED_VALUES_Single,
                     ModelResources.ExportStrategyExtension_LOCALIZED_VALUES_Protein,
-                    ModelResources.ExportStrategyExtension_LOCALIZED_VALUES_Buckets
+                    ModelResources.ExportStrategyExtension_LOCALIZED_VALUES_Buckets,
+                    ModelResources.ExportStrategyExtension_LOCALIZED_VALUES_WcDecide
                 };
             }
         }
@@ -211,7 +214,8 @@ namespace pwiz.Skyline.Model
         public const string THERMO_ASTRAL_ZOOM = "Thermo Astral Zoom";        // q-orbi/tof
         public const string THERMO_ASTRAL_ZOOM_REG = "OrbitrapAstralZoom";
         public const string WATERS = "Waters";
-        public const string WATERS_XEVO_TQ = "Waters Xevo TQ";
+        public const string WATERS_XEVO_TQ_MASS_LYNX = "Waters TQ (MassLynx)"; // Export to local file
+        public const string WATERS_XEVO_TQ_WATERS_CONNECT = "Waters TQ (waters_connect)";  // Export to Remote Waters Connect
         public const string WATERS_XEVO_QTOF = "Waters Xevo QTOF";
         public const string WATERS_SYNAPT_TRAP = "Waters Synapt (trap)";
         public const string WATERS_SYNAPT_TRANSFER = "Waters Synapt (transfer)";
@@ -240,8 +244,16 @@ namespace pwiz.Skyline.Model
                 THERMO,
                 THERMO_TSQ,
                 THERMO_LTQ,
-                WATERS_XEVO_TQ,
-                WATERS_QUATTRO_PREMIER,
+                THERMO_QUANTIVA,
+                THERMO_ALTIS,
+                THERMO_STELLAR,
+                THERMO_EXPLORIS,
+                THERMO_ECLIPSE,
+                THERMO_FUSION,
+                THERMO_FUSION_LUMOS,
+                WATERS_XEVO_TQ_MASS_LYNX,
+                WATERS_XEVO_TQ_WATERS_CONNECT,
+                WATERS_QUATTRO_PREMIER
             };
 
         public static readonly string[] TRANSITION_LIST_TYPES =
@@ -302,7 +314,7 @@ namespace pwiz.Skyline.Model
                 { THERMO_ECLIPSE, EXT_THERMO },
                 { THERMO_ASTRAL, EXT_THERMO },
                 { THERMO_ASTRAL_ZOOM, EXT_THERMO },
-                { WATERS_XEVO_TQ, EXT_WATERS },
+                { WATERS_XEVO_TQ_MASS_LYNX, EXT_WATERS },
                 { WATERS_QUATTRO_PREMIER, EXT_WATERS }
             };
 
@@ -442,7 +454,8 @@ namespace pwiz.Skyline.Model
         public static bool IsSingleWindowInstrumentType(string type)
         {
             return Equals(type, WATERS) ||
-                   Equals(type, WATERS_XEVO_TQ) ||
+                   Equals(type, WATERS_XEVO_TQ_MASS_LYNX) ||
+                   Equals(type, WATERS_XEVO_TQ_WATERS_CONNECT) ||
                    Equals(type, WATERS_QUATTRO_PREMIER);
         }
     }
@@ -627,7 +640,7 @@ namespace pwiz.Skyline.Model
                 case ExportInstrumentType.WATERS:
                 case ExportInstrumentType.WATERS_SYNAPT_TRAP:
                 case ExportInstrumentType.WATERS_SYNAPT_TRANSFER:
-                case ExportInstrumentType.WATERS_XEVO_TQ:
+                case ExportInstrumentType.WATERS_XEVO_TQ_MASS_LYNX:
                 case ExportInstrumentType.WATERS_XEVO_QTOF:
                     if (type == ExportFileType.List)
                         return ExportWatersCsv(doc, path);
@@ -635,6 +648,8 @@ namespace pwiz.Skyline.Model
                         return ExportWatersIsolationList(doc, path, template, instrumentType);
                     else
                         return ExportWatersMethod(doc, path, template);
+                case ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT:
+                    return ExportWatersConnectMethod(doc, path, template);
                 case ExportInstrumentType.WATERS_QUATTRO_PREMIER:
                     return ExportWatersQMethod(doc, path, template);
                 default:
@@ -1015,6 +1030,44 @@ namespace pwiz.Skyline.Model
             PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
 
             return exporter;
+        }
+        public AbstractMassListExporter ExportWatersConnectMethod(SrmDocument document, string exportMethodUrlString, string templateMethodUrlString)
+        {
+            if (exportMethodUrlString == null)
+            {
+                // doing method file count
+                var exporter = InitExporter(new WatersConnectMethodExporter(document, null));
+                exporter.ServerDecidesOnBuckets = (ExportStrategy == ExportStrategy.WcDecide);
+                PerformLongExport(m => exporter.ExportMethod(null, null, null, m));
+                return exporter;
+            }
+
+            var templateMethodUrl = new WatersConnectAcquisitionMethodUrl(templateMethodUrlString);
+            var targetFolderUrl = new WatersConnectUrl(exportMethodUrlString);
+            var methodName = targetFolderUrl.InjectionId;       // This is a hack to pass method name to the exporter
+            targetFolderUrl = targetFolderUrl.ChangeInjectionId(null); // Clear the injection ID so that it does not get used in the export
+
+            if (templateMethodUrl.ServerUrl != targetFolderUrl.ServerUrl)
+            {
+                throw new ApplicationException(ModelResources.ExportProperties_ExportWatersConnectMethod_Cannot_use_a_template_method_from_another_server_);
+            }
+
+            // get the account from the settings
+            var account = Settings.Default.RemoteAccountList.GetRemoteAccount(targetFolderUrl);
+            if (account is WatersConnectAccount wcAcct)
+            {
+                var exporter = InitExporter(new WatersConnectMethodExporter(document, wcAcct)); // Load transition data into the memory list
+                if (MethodType == ExportMethodType.Standard)
+                {
+                    exporter.RunLength = RunLength;
+                }
+                // decode URLs from the string parameters
+                // Convert to JSON and upload
+                PerformLongExport(m => exporter.ExportMethod(methodName, targetFolderUrl, templateMethodUrl, m));
+                return exporter;
+            }
+            else
+                throw new ApplicationException(ModelResources.ExportProperties_ExportWatersConnectMethod_No_matching_Waters_Connect_account_is_found_for_this_URL_);
         }
 
         public abstract void PerformLongExport(Action<IProgressMonitor> performExport);
@@ -4543,6 +4596,8 @@ namespace pwiz.Skyline.Model
             writer.Write("precursor_charge");
             writer.Write(FieldSeparator);
             writer.Write("rt_window");
+            writer.Write(FieldSeparator);
+            writer.Write("is_quant_ion");
             writer.WriteLine();
         }
         // ReSharper restore LocalizableElement
@@ -4642,6 +4697,14 @@ namespace pwiz.Skyline.Model
             writer.Write(nodeTranGroup.PrecursorAdduct.AdductCharge);
             writer.Write(FieldSeparator);
             writer.Write(RTWindow);
+            writer.Write(FieldSeparator);
+            if (nodeTran.ExplicitQuantitative)
+                writer.Write(@"true");
+            else if (nodeTran.QuantInfo.Quantititative)
+                writer.Write(@"true");
+            else
+                writer.Write(@"false");
+
             writer.WriteLine();
         }
 
@@ -4913,7 +4976,9 @@ namespace pwiz.Skyline.Model
                 EnsureLibraries();
 
             if (!InitExport(fileName, progressMonitor))
+            {
                 return;
+            }
 
             var argv = new List<string>();
             if (Equals(MethodInstrumentType, ExportInstrumentType.WATERS_QUATTRO_PREMIER))
@@ -4984,6 +5049,78 @@ namespace pwiz.Skyline.Model
                 if (!File.Exists(destFile) || !Equals(File.GetLastWriteTime(destFile), File.GetLastWriteTime(srcFile)))
                     File.Copy(srcFile, destFile, true);
             }
+        }
+    }
+
+    public class WatersConnectMethodExporter : WatersMassListExporter
+    {
+        private WatersConnectAccount _wcAccount;
+        private string _methodName;
+        public bool ServerDecidesOnBuckets { get; set; }
+        public WatersConnectMethodExporter(SrmDocument document, WatersConnectAccount account)
+            : base(document)
+        {
+            _wcAccount = account; 
+        }
+        public void ExportMethod(string fileName, WatersConnectUrl targetFolderUrl, WatersConnectAcquisitionMethodUrl templateUrl, IProgressMonitor progressMonitor)
+        {
+            _methodName = fileName;
+            if (!InitExport(fileName, progressMonitor))
+                return;
+
+            if (_wcAccount == null)
+                throw new ArgumentNullException(nameof(_wcAccount), @"WatersConnectSession requires a WatersConnectAccount");
+            var wcSession = new WatersConnectSessionAcquisitionMethod(_wcAccount);
+            if (targetFolderUrl.FolderOrSampleSetId == null)
+            {
+                throw new IOException(string.Format(ModelResources.WatersConnectMethodExporter_ExportMethod_Folder_ID_is_missing, targetFolderUrl.ToString()));
+            }
+
+            foreach (var methodData in MemoryOutput)
+            {
+                var method = ParseMethod(methodData.Value.ToString());
+                method.DestinationFolderId = targetFolderUrl.FolderOrSampleSetId;
+                method.TemplateVersionId = templateUrl.MethodVersionId.ToString();
+                if (ServerDecidesOnBuckets)
+                    method.ServerDecidesOnBuckets = @"Multiple on API";
+                if (MemoryOutput.Count == 1)
+                    method.Name = _methodName;
+                else
+                    method.Name = methodData.Key.Replace(MEMORY_KEY_ROOT, _methodName);
+                wcSession.UploadMethod(method, progressMonitor);
+            }
+        }
+
+        public MethodModel ParseMethod(string outputLines)
+        {
+            var linesReader = new DsvStreamReader(new StringReader(outputLines), ',');
+            var targets = new List<CommonMsData.RemoteApi.WatersConnect.Target>();
+            while (!linesReader.EndOfStream)
+            {
+                CommonMsData.RemoteApi.WatersConnect.Target currentTarget;
+                linesReader.ReadLine();
+                // we assume that the lines are sorted by target
+                if (targets.Count == 0 || !targets.Last().IsSameTarget(linesReader))
+                {
+                    currentTarget = new CommonMsData.RemoteApi.WatersConnect.Target();
+                    targets.Add(currentTarget);
+                    currentTarget.ParseObject(linesReader);
+                    currentTarget.Transitions = new List<CommonMsData.RemoteApi.WatersConnect.Transition>();
+                }
+                else
+                {
+                    currentTarget = targets.Last();
+                }
+                var currentTransition = new CommonMsData.RemoteApi.WatersConnect.Transition();
+                currentTarget.Transitions.Add(currentTransition);
+                currentTransition.ParseObject(linesReader);
+            }
+
+            var res = new MethodModel();
+            res.Targets = targets.ToArray();
+            res.Description = ModelResources.WatersConnectMethodExporter_ParseMethod_Exported_from_Skyline;
+            res.Name = _methodName;
+            return res;
         }
     }
 

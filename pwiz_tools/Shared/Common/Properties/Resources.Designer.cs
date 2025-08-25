@@ -709,6 +709,33 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Empty stream..
+        /// </summary>
+        internal static string DsvStreamReader_DsvStreamReader_Empty_stream_ {
+            get {
+                return ResourceManager.GetString("DsvStreamReader_DsvStreamReader_Empty_stream_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Stream is null or empty..
+        /// </summary>
+        internal static string DsvStreamReader_DsvStreamReader_Stream_is_null_or_empty_ {
+            get {
+                return ResourceManager.GetString("DsvStreamReader_DsvStreamReader_Stream_is_null_or_empty_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Header {0} not found in DSV file..
+        /// </summary>
+        internal static string DsvStreamReader_this_Header__0__not_found_in_DSV_file_ {
+            get {
+                return ResourceManager.GetString("DsvStreamReader_this_Header__0__not_found_in_DSV_file_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap Filter {

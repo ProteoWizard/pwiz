@@ -18,6 +18,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using System.Text;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.Collections;
 
@@ -25,8 +27,13 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
 {
     public class WatersConnectSession : RemoteSession
     {
+        protected HttpClient _httpClient;
+
         public WatersConnectSession(WatersConnectAccount account) : base(account)
         {
+            if (account == null)
+                throw new ArgumentException(@"WatersConnectSession requires a WatersConnectAccount");
+            _httpClient = account.GetAuthenticatedHttpClient();
         }
 
         public WatersConnectAccount WatersConnectAccount { get { return (WatersConnectAccount) Account; } }
@@ -52,11 +59,10 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
 
                 var sampleSetsUrl = GetSampleSetsUrl(wcUrl);
                 if (sampleSetsUrl != null)
-                    return gotFolders && AsyncFetch(sampleSetsUrl, GetInjections, out remoteException);
+                    return gotFolders && AsyncFetch(sampleSetsUrl, GetInjections, out remoteException); // CONSIDER: this overrides the exception from the first fetch
                 // if sampleSetsUrl is null, last path segment may be a sample_set misclassified as a folder
             }
 
-            // wcUrl.Type == WatersConnectUrl.ItemType.sample_set
             var injectionsUrl = GetInjectionsUrl(wcUrl);
             if (injectionsUrl == null)
             {
@@ -79,11 +85,54 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             yield return new WatersConnectFolderObject(currentFolder, parentId, false);
         }
 
-        private ImmutableList<WatersConnectFolderObject> GetFolders(Uri requestUri)
+        // TODO: [RC] Change into a method returning a folder and set the folder Id on the caller side
+        public WatersConnectUrl SetUrlId(WatersConnectUrl url)
         {
-            var httpClient = WatersConnectAccount.GetAuthenticatedHttpClient();
-            var response = httpClient.GetAsync(requestUri).Result;
-            response.EnsureSuccessStatusCode();
+            if (url.EncodedPath == null)
+                return url;
+            ImmutableList<WatersConnectFolderObject> folders;
+            if (TryGetData(GetRootContentsUrl(), out folders))
+            {
+                var folder = folders.FirstOrDefault(f => f.Path.Equals(url.EncodedPath));
+                if (folder != null)
+                {
+                    return url.ChangeFolderOrSampleSetId(folder.Id);
+                }
+            }
+            return url;
+        }
+        public bool TryGetFolderByUrl(WatersConnectUrl url, out WatersConnectFolderObject folder)
+        {
+            folder = null;
+            if (url.EncodedPath == null)
+                return false;
+            // CONSIDER: verify that the url is from the same server as the current session.
+            ImmutableList<WatersConnectFolderObject> folders;
+            if (TryGetData(GetRootContentsUrl(), out folders))
+            {
+                folder = folders.FirstOrDefault(f => f.Path.Equals(url.EncodedPath));
+                return true;
+            }
+
+            return false;
+        }
+
+        protected void EnsureSuccess(HttpResponseMessage response)
+        {
+            if (response.StatusCode >= System.Net.HttpStatusCode.BadRequest)
+            {
+                var messageBuilder = new StringBuilder(string.Format("Waters Connect server returns an error code: {0}.", response.StatusCode));
+                if (response.Content != null)
+                {
+                    messageBuilder.Append(string.Format("\n {0}", response.Content.ReadAsStringAsync().Result));
+                }
+                throw new RemoteServerException(messageBuilder.ToString());
+            }
+        }
+        protected ImmutableList<WatersConnectFolderObject> GetFolders(Uri requestUri)
+        {
+            var response = _httpClient.GetAsync(requestUri).Result;
+            EnsureSuccess(response);
             string responseBody = response.Content.ReadAsStringAsync().Result;
             var jsonObject = JObject.Parse(responseBody);
 
@@ -95,11 +144,10 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             return ImmutableList.ValueOf(EnumerateChildFolderHierarchy(foldersValue.First() as JObject, null));
         }
 
-        private ImmutableList<WatersConnectFolderObject> GetInjections(Uri requestUri)
+        protected ImmutableList<WatersConnectFolderObject> GetInjections(Uri requestUri)
         {
-            var httpClient = WatersConnectAccount.GetAuthenticatedHttpClient();
-            var response = httpClient.GetAsync(requestUri).Result;
-            response.EnsureSuccessStatusCode();
+            var response = _httpClient.GetAsync(requestUri).Result;
+            EnsureSuccess(response);
             string responseBody = response.Content.ReadAsStringAsync().Result;
             var itemsValue = JArray.Parse(responseBody);
             if (itemsValue == null)
@@ -113,9 +161,8 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
 
         private ImmutableList<WatersConnectFileObject> GetFiles(Uri requestUri)
         {
-            var httpClient = WatersConnectAccount.GetAuthenticatedHttpClient();
-            var response = httpClient.GetAsync(requestUri).Result;
-            response.EnsureSuccessStatusCode();
+            var response = _httpClient.GetAsync(requestUri).Result;
+            EnsureSuccess(response);
             string responseBody = response.Content.ReadAsStringAsync().Result;
             var itemsValue = JArray.Parse(responseBody);
             if (itemsValue == null)
@@ -145,7 +192,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                         var childUrl =
                             ((WatersConnectUrl)watersConnectUrl.ChangePathParts(watersConnectUrl.GetPathParts().Concat(new[] { folderObject.Name })))
                             .ChangeFolderOrSampleSetId(folderObject.Id)
-                            .ChangeType(folderObject.HasSampleSets
+                            .ChangeType(folderObject.CanRead
                                 ? WatersConnectUrl.ItemType.folder
                                 : WatersConnectUrl.ItemType.folder_without_sample_sets);
                         yield return new RemoteItem(childUrl, folderObject.Name, DataSourceUtil.FOLDER_TYPE, null, 0);
@@ -200,7 +247,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                 RetryFetch(GetInjectionsUrl(watersConnectUrl), GetFiles);
         }
 
-        private Uri GetRootContentsUrl()
+        protected Uri GetRootContentsUrl()
         {
             return new Uri(WatersConnectAccount.ServerUrl + @"/waters_connect/v1.0/folders");
         }
@@ -218,7 +265,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                 {
                     if (folder.Path == watersConnectUrl.GetFilePath())
                     {
-                        var folderType = folder.HasSampleSets
+                        var folderType = folder.CanRead
                             ? WatersConnectUrl.ItemType.folder
                             : WatersConnectUrl.ItemType.folder_without_sample_sets;
                         return watersConnectUrl.ChangeFolderOrSampleSetId(folder.Id).ChangeType(folderType);
@@ -243,7 +290,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                 {
                     if (folder.Path == watersConnectUrl.GetFilePath())
                     {
-                        var folderType = folder.HasSampleSets
+                        var folderType = folder.CanRead
                             ? WatersConnectUrl.ItemType.folder
                             : WatersConnectUrl.ItemType.folder_without_sample_sets;
                         return watersConnectUrl.ChangeFolderOrSampleSetId(folder.Id).ChangeType(folderType);
@@ -302,6 +349,12 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
 
             string url = string.Format(@"/waters_connect/v2.0/sample-sets/{0}/injection-data", watersConnectUrl.FolderOrSampleSetId);
             return new Uri(WatersConnectAccount.ServerUrl + url);
+        }
+
+        public override void Dispose()
+        {
+            _httpClient?.Dispose();
+            base.Dispose();
         }
     }
 }
