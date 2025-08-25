@@ -1566,7 +1566,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to With of the m/z window in which the precursor was isolated. 
+        ///   Looks up a localized string similar to Width of the m/z window in which the precursor was isolated. 
         ///If more than one precursor was isolated then the Isolation Window Width is the sum of the windows around each precursor..
         /// </summary>
         public static string IsolationWindowWidth {
