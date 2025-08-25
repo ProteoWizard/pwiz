@@ -16,6 +16,7 @@
 
 using System.Collections.Generic;
 using System.IO;
+using pwiz.Skyline.Controls.FilesTree;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 
@@ -99,6 +100,12 @@ namespace pwiz.Skyline.Model.Files
         public virtual IList<FileNode> Files => ImmutableList.Empty<FileNode>();
 
         public override string ToString() => @$"{GetType().Name}: " + (Name ?? string.Empty);
+
+        // All implementers should override
+        public virtual GlobalizedObject GetProperties(FilesTreeNode fileNode)
+        {
+            return null;
+        }
 
         /// <summary>
         /// Use this to decide whether the file represented by this model is ready to be monitored. A model may not be ready if:

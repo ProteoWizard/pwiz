@@ -135,6 +135,7 @@
             this.massErrorHistogram2DMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.calibrationCurveMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator36 = new System.Windows.Forms.ToolStripSeparator();
+            this.viewPropertiesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolBarToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
@@ -174,6 +175,7 @@
             this.massErrorsMenuItem,
             this.calibrationCurveMenuItem,
             this.toolStripSeparator36,
+            this.viewPropertiesMenuItem,
             this.toolBarToolStripMenuItem,
             this.statusToolStripMenuItem});
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
@@ -904,6 +906,13 @@
             this.toolStripSeparator36.Name = "toolStripSeparator36";
             resources.ApplyResources(this.toolStripSeparator36, "toolStripSeparator36");
             // 
+            // viewPropertiesMenuItem
+            // 
+            this.viewPropertiesMenuItem.CheckOnClick = true;
+            this.viewPropertiesMenuItem.Name = "viewPropertiesMenuItem";
+            resources.ApplyResources(this.viewPropertiesMenuItem, "viewPropertiesMenuItem");
+            this.viewPropertiesMenuItem.Click += new System.EventHandler(this.viewPropertiesMenuItem_Click);
+            // 
             // toolBarToolStripMenuItem
             // 
             this.toolBarToolStripMenuItem.Checked = true;
@@ -1045,5 +1054,6 @@
         private System.Windows.Forms.ToolStripMenuItem librariesMenuItem;
         private System.Windows.Forms.ToolStripMenuItem viewFilesMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripMenuItem viewPropertiesMenuItem;
     }
 }

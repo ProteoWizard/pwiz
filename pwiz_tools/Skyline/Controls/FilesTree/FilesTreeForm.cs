@@ -26,6 +26,7 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Files;
+using pwiz.Skyline.Model.PropertySheets;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using static pwiz.Skyline.Model.Files.FileNode;
@@ -38,7 +39,7 @@ using Process = System.Diagnostics.Process;
 // ReSharper disable WrongIndentSize
 namespace pwiz.Skyline.Controls.FilesTree
 {
-    public partial class FilesTreeForm : DockableFormEx, ITipDisplayer
+    public partial class FilesTreeForm : DockableFormEx, ITipDisplayer, IPropertyProvider
     {
         private NodeTip _nodeTip;
         private Panel _dropTargetRemove;
@@ -57,7 +58,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             filesTree.LabelEdit = true;
             filesTree.AllowDrop = true;
             filesTree.NodeMouseDoubleClick += FilesTree_TreeNodeMouseDoubleClick;
-            filesTree.MouseDown += FilesTree_MouseDown;
+            filesTree.AfterSelect += FilesTree_AfterSelect;
             filesTree.MouseMove += FilesTree_MouseMove;
             filesTree.LostFocus += FilesTree_LostFocus;
             filesTree.BeforeLabelEdit += FilesTree_BeforeLabelEdit;
@@ -404,6 +405,26 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         #endregion
 
+        #region IPropertySheetOwner implementation
+
+        public void NotifyPropertySheetOwnerGotFocus(SkylineWindow skyline, EventArgs e)
+        {
+            SkylineWindow.PotentialPropertySheetOwnerGotFocus(this, e);
+        }
+
+        public GlobalizedObject GetSelectedObjectProperties()
+        {
+            // TODO: I don't like the way this is formatted, but each Model type to implement their
+            // own GetProperties method, and FileNodeProperties needs access to a FilesTreeNode to get LocalFilePath,
+            // and FileNode does not see what FilesTreeNode it's a part of. So we need to pass it in.
+            // Likewise, each ...Properties class needs to take in a FilesTreeNode and a FileNode of their associated type,
+            // to avoid casting.
+            var filesTreeNodeSelected = FilesTree.CurrentlySelectedFTN;
+            return filesTreeNodeSelected?.Model.GetProperties(filesTreeNodeSelected);
+        }
+
+        #endregion
+
         // TreeNode => Open Context Menu
         private void FilesTree_ContextMenuStrip_Opening(object sender, CancelEventArgs e)
         {
@@ -486,6 +507,11 @@ namespace pwiz.Skyline.Controls.FilesTree
             }
         }
 
+        private void FilesTree_AfterSelect(object sender, TreeViewEventArgs e)
+        {
+            NotifyPropertySheetOwnerGotFocus(SkylineWindow, e);
+        }
+        
         private void FilesTree_BeforeCollapse(object sender, TreeViewCancelEventArgs e)
         {
             // CONSIDER: change FilesTree UI so the root node is a label and not
@@ -537,6 +563,11 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             var selection = FilesTree.SelectedNodes.Cast<FilesTreeNode>().ToList();
             RemoveSelected(selection);
+        }
+
+        private void FilesTree_OpenPropertiesViewMenuItem(object sender, EventArgs e)
+        {
+            SkylineWindow.ShowPropertyForm(true);
         }
 
         // FilesTree => initiate drag-and-drop, hide tooltips 

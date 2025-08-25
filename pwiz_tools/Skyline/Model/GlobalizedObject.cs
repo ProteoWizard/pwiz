@@ -1,6 +1,23 @@
-﻿using System;
+﻿/*
+ * Copyright 2025 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -30,7 +47,7 @@ namespace pwiz.Skyline.Model
     /// </summary>
     public abstract class GlobalizedObject : ICustomTypeDescriptor
     {
-        private PropertyDescriptorCollection globalizedProps;
+        protected PropertyDescriptorCollection globalizedProps;
 
         private static Dictionary<string, MethodInfo> TypeConverterDictionary;
 
@@ -91,37 +108,32 @@ namespace pwiz.Skyline.Model
                 // For each property use a property descriptor of our own that is able to be globalized
                 foreach (PropertyDescriptor oProp in baseProps)
                 {
+                    // don't copy over properties that require custom handling
+                    if (oProp.Attributes[typeof(UseCustomHandlingAttribute)] != null)
+                        continue;
+                    
                     // Only display properties whose values have been set
-                    if (oProp.GetValue(this) != null)
-                    {
-                        globalizedProps.Add(new GlobalizedPropertyDescriptor(oProp, GetResourceManager()));
-                    }
+                    if (oProp.GetValue(this) == null)
+                        continue;
+
+                    globalizedProps.Add(new GlobalizedPropertyDescriptor(oProp, GetResourceManager()));
                 }
+
+                AddCustomizedProperties();
             }
+
             return globalizedProps;
         }
 
         public PropertyDescriptorCollection GetProperties()
         {
-            // Only do once
-            if (globalizedProps == null)
-            {
-                // Get the collection of properties
-                PropertyDescriptorCollection baseProps = TypeDescriptor.GetProperties(this, true);
-                globalizedProps = new PropertyDescriptorCollection(null);
-
-                // For each property use a property descriptor of our own that is able to be globalized
-                foreach (PropertyDescriptor oProp in baseProps)
-                {
-                    // Only display properties whose values have been set
-                    if (oProp.GetValue(this) != null)
-                    {
-                        globalizedProps.Add(new GlobalizedPropertyDescriptor(oProp, GetResourceManager()));
-                    }
-                }
-            }
-            return globalizedProps;
+            return GetProperties(null);
         }
+
+        /// <summary>
+        /// Override this method to add custom properties to the property collection, like if we needed to dynamically add nested properties.
+        /// </summary>
+        protected virtual void AddCustomizedProperties() {}
 
         #region Test suppport
 
@@ -344,6 +356,8 @@ namespace pwiz.Skyline.Model
             get => basePropertyDescriptor.PropertyType;
         }
 
+        public override TypeConverter Converter => basePropertyDescriptor.PropertyType == typeof(double) ? new TwoDecimalDoubleConverter() : basePropertyDescriptor.Converter;
+
         public override void ResetValue(object component)
         {
             basePropertyDescriptor.ResetValue(component);
@@ -359,4 +373,123 @@ namespace pwiz.Skyline.Model
             basePropertyDescriptor.SetValue(component, value);
         }
     }
+
+    /// <summary>
+    /// Used to support properties returned in GetProperties() that are not present on the globalized object, or need custom handling.
+    /// </summary>
+    public class CustomHandledGlobalizedPropertyDescriptor : PropertyDescriptor
+    {
+        private readonly ResourceManager _resourceManager;
+        private object _value;
+        private readonly string _category;
+        private readonly string _name;
+        private readonly Type _type;
+        private readonly string _nonLocalizedDisplayName;
+        private readonly Func<string, string> _displayNameFormat;
+
+        private const string DESCRIPTION_PREFIX = @"Description_";
+        private const string CATEGORY_PREFIX = @"Category_";
+
+        public CustomHandledGlobalizedPropertyDescriptor(ResourceManager resourceManager, object value, string category,
+            string name, Type type, string nonLocalizedDisplayName = null, Func<string, string> displayNameFormat = null, Attribute[] attributes = null) 
+            : base(name, attributes)
+        {
+            _resourceManager = resourceManager;
+            _value = value;
+            _category = category;
+            _name = name;
+            _type = type;
+            _nonLocalizedDisplayName = nonLocalizedDisplayName;
+            _displayNameFormat = displayNameFormat;
+        }
+
+        public override bool CanResetValue(object component)
+        {
+            return false;
+        }
+
+        public override Type ComponentType
+        {
+            get => _type;
+        }
+
+        public override string DisplayName
+        {
+            get
+            {
+                var displayName = _resourceManager.GetString(_name);
+
+                if (_displayNameFormat != null && displayName != null)
+                    displayName = _displayNameFormat(displayName);
+
+                return displayName ?? _nonLocalizedDisplayName ?? string.Empty;
+            }
+        }
+
+        public override string Description
+        {
+            get => _resourceManager.GetString(DESCRIPTION_PREFIX + _name) ?? string.Empty;
+        }
+
+        public override string Category
+        {
+            get
+            {
+                if (_category != null)
+                {
+                    return _resourceManager.GetString(CATEGORY_PREFIX + _category) ?? string.Empty;
+                }
+
+                return null;
+            }
+        }
+
+        public override object GetValue(object component)
+        {
+            return _value;
+        }
+
+        public override bool IsReadOnly
+        {
+            get => true;
+        }
+
+        public override string Name
+        {
+            get => _name;
+        }
+
+        public override Type PropertyType
+        {
+            get => _type;
+        }
+
+        public override void ResetValue(object component)
+        {
+        }
+
+        public override bool ShouldSerializeValue(object component)
+        {
+            return false;
+        }
+
+        public override void SetValue(object component, object value)
+        {
+            _value = value;
+        }
+    }
+
+    public class TwoDecimalDoubleConverter : DoubleConverter
+    {
+        public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
+        {
+            if (destinationType == typeof(string) && value is double d)
+                return d.ToString("F2", culture ?? CultureInfo.CurrentCulture);
+            return base.ConvertTo(context, culture, value, destinationType);
+        }
+    }
+
+    // Used to flag properties that should not be copied directly to the globalized object, as they require custom handling.
+    [AttributeUsage(AttributeTargets.Property)]
+    public class UseCustomHandlingAttribute : Attribute { }
 }

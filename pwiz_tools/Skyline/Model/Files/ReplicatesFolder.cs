@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Controls.FilesTree;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
@@ -54,6 +55,11 @@ namespace pwiz.Skyline.Model.Files
                     return ImmutableList.ValueOf(files.ToList<FileNode>());
                 }
             }
+        }
+
+        public override GlobalizedObject GetProperties(FilesTreeNode filesTreeNode)
+        {
+            return new ReplicatesFolderProperties(filesTreeNode, this);
         }
 
         public ModifiedDocument DeleteAll(SrmDocument document, SrmSettingsChangeMonitor monitor)
