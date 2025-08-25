@@ -116,7 +116,8 @@ namespace pwiz.Skyline.Model
                     if (oProp.GetValue(this) == null)
                         continue;
 
-                    globalizedProps.Add(new GlobalizedPropertyDescriptor(oProp, GetResourceManager()));
+                    globalizedProps.Add(new GlobalizedPropertyDescriptor(oProp, GetResourceManager(),
+                        oProp.Attributes[typeof(EditablePropertyAttribute)] == null));
                 }
 
                 AddCustomizedProperties();
@@ -282,15 +283,16 @@ namespace pwiz.Skyline.Model
     public class GlobalizedPropertyDescriptor : PropertyDescriptor
     {
         private readonly PropertyDescriptor basePropertyDescriptor;
-        public bool ReadOnly = true;
+        public readonly bool ReadOnly;
         private static string _descriptionPrefix = @"Description_";
         private static string _categoryPrefix = @"Category_";
         private readonly ResourceManager _resourceManager;
 
-        public GlobalizedPropertyDescriptor(PropertyDescriptor basePropertyDescriptor, ResourceManager resourceManager) : base(basePropertyDescriptor)
+        public GlobalizedPropertyDescriptor(PropertyDescriptor basePropertyDescriptor, ResourceManager resourceManager, bool readOnly = true) : base(basePropertyDescriptor)
         {
             this.basePropertyDescriptor = basePropertyDescriptor;
             _resourceManager = resourceManager;
+            ReadOnly = readOnly;
         }
 
         public override bool CanResetValue(object component)
@@ -497,4 +499,8 @@ namespace pwiz.Skyline.Model
     // Used to flag properties that should not be copied directly to the globalized object, as they require custom handling.
     [AttributeUsage(AttributeTargets.Property)]
     public class UseCustomHandlingAttribute : Attribute { }
+
+    // Used to flag properties that are editable and should be set ReadOnly = false in the property sheet.
+    [AttributeUsage(AttributeTargets.Property)]
+    public class EditablePropertyAttribute : Attribute { }
 }
