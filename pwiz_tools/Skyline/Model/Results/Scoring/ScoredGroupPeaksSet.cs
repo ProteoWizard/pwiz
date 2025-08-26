@@ -183,7 +183,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             {
                 var maxPeak = _scoredGroupPeaksList[i].MaxPeak;
                 maxScores[i] = maxPeak?.Score ?? double.NaN;
-            });
+            }, threadName:nameof(GetMaxScores));
                 
             return maxScores;
         }
@@ -218,7 +218,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 {
                     scoredPeaks[j] = scoredPeaks[j].CalcScore(weights, replaceUnknownFeatureScores);
                 }
-            });
+            }, threadName:nameof(ScorePeaks));
 
             // Calculate mean and stdev for top-scoring peaks in each transition group.
             var scores = GetMaxScores();

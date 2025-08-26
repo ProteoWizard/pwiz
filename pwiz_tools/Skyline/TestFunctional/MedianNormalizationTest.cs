@@ -281,12 +281,12 @@ namespace pwiz.SkylineTestFunctional
                     var diagnosis = replicate.ChromatogramSet.Annotations.GetAnnotation(ANNOTIONNAME_DIAGNOSIS);
                     if (diagnosis == "AD")
                     {
-                        proteinAbundanceDenominators.Add(protein.IdentityPath, abundance.TransitionAveraged);
+                        proteinAbundanceDenominators.Add(protein.IdentityPath, abundance.Raw);
                     }
                     else
                     {
                         Assert.AreEqual("PD", diagnosis);
-                        proteinAbundanceNumerators.Add(protein.IdentityPath, abundance.TransitionAveraged);
+                        proteinAbundanceNumerators.Add(protein.IdentityPath, abundance.Raw);
                     }
                 }
             });
