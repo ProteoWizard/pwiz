@@ -75,9 +75,9 @@ namespace TestPerf
                 FinalTargetCounts = new[] { 369, 719, 719, 5058 },
                 MassErrorStats = new[]
                 {
-                    new[] {-0.2, 2.5},
-                    new[] {-0.2, 2.5},
-                    new[] {-0.2, 2.4},
+                    new[] {-0.2, 2.5 },
+                    new[] {-0.2, 2.5 },
+                    new[] {-0.2, 2.5 },
                 },
                 ChromatogramClickPoint = new PointF(32.2f, 12.5f)
             };

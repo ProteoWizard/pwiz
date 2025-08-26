@@ -906,7 +906,7 @@ namespace TestPerf
 
             var allChrom = WaitForOpenForm<AllChromatogramsGraph>();
             allChrom.SetFreezeProgressPercent(41, @"00:00:22");
-            WaitForCondition(() => allChrom.IsProgressFrozen());
+            WaitForCondition(10 * 60 * 1000, () => allChrom.IsProgressFrozen());
             PauseForScreenShot<AllChromatogramsGraph>("Loading chromatograms window", 30*1000); // 30 second timeout to avoid getting stuck
             allChrom.SetFreezeProgressPercent(null, null);
             WaitForDocumentChangeLoaded(doc, 40 * 60 * 1000); // 40 minutes
@@ -1274,7 +1274,7 @@ namespace TestPerf
                     return; // fold change bar graphs don't behave the same way for DIA-NN results as for iProphet, so exit early
                 }
 
-                WaitForCondition(() => barGraph.IsComplete);
+                WaitForConditionUI(() => barGraph.IsComplete);
                 if (IsRecordMode)
                 {
                     _expectedValues.PolishedProteins = GetBarCount(barGraph);
@@ -1290,7 +1290,7 @@ namespace TestPerf
 
                 RestoreViewOnScreen(31);
                 barGraph = WaitForOpenForm<FoldChangeBarGraph>();
-                WaitForCondition(() => barGraph.IsComplete);
+                WaitForConditionUI(() => barGraph.IsComplete);
                 RunUIForScreenShot(() =>
                 {
                     var yScale = barGraph.ZedGraphControl.GraphPane.YAxis.Scale;

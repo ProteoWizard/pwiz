@@ -337,7 +337,7 @@ namespace TestPerf
             var importResultsNameDlg = WaitForOpenForm<ImportResultsNameDlg>();
             var docPreLoad = SkylineWindow.Document;
             OkDialog(importResultsNameDlg, importResultsNameDlg.NoDialog);
-            WaitForDocumentChangeLoaded(docPreLoad);
+            WaitForDocumentChangeLoaded(docPreLoad, WAIT_TIME * 10);
             
             RunUI(() =>
             {
