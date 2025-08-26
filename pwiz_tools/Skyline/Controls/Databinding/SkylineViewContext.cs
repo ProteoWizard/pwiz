@@ -286,9 +286,12 @@ namespace pwiz.Skyline.Controls.Databinding
             yield return new TabularFileFormat('\t', TextUtil.FILTER_TSV);
         }
 
-        public override DialogResult ShowMessageBox(Control owner, string message, MessageBoxButtons messageBoxButtons)
+        public override DialogResult ShowMessageBox(Control owner, string message, MessageBoxButtons messageBoxButtons, Exception exception)
         {
-            return new AlertDlg(message, messageBoxButtons).ShowAndDispose(FormUtil.FindTopLevelOwner(owner));
+            return new AlertDlg(message, messageBoxButtons)
+            {
+                Exception = exception
+            }.ShowAndDispose(FormUtil.FindTopLevelOwner(owner));
         }
 
         public override bool RunLongJob(Control owner, Action<CancellationToken, IProgressMonitor> job)
@@ -613,6 +616,7 @@ namespace pwiz.Skyline.Controls.Databinding
                     columnsToRemove.Add(PropertyPath.Root.Property(nameof(Precursor.TargetQualitativeIonRatio)));
                     columnsToRemove.Add(PropertyPath.Root.Property(nameof(Precursor.LibraryIonMobility)));
                     columnsToRemove.Add(PropertyPath.Root.Property(nameof(Precursor.SpectrumFilter)));
+                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Precursor.ExemplaryPeak)));
                     addRoot = true;
                 }
                 else if (columnDescriptor.PropertyType == typeof(Model.Databinding.Entities.Transition))
@@ -767,7 +771,7 @@ namespace pwiz.Skyline.Controls.Databinding
             if (!views.ViewSpecs.Any())
             {
                 ShowMessageBox(owner, DatabindingResources.SkylineViewContext_ImportViews_No_views_were_found_in_that_file_,
-                    MessageBoxButtons.OK);
+                    MessageBoxButtons.OK, null);
                 return;
             }
             CopyViewsToGroup(owner, group, views);

@@ -1147,6 +1147,25 @@ namespace pwiz.Skyline.Controls.Graphs {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Libraries are still loading.
+        /// </summary>
+        public static string GraphChromatogram_SetRetentionTimeIdIndicators_Libraries_are_still_loading {
+            get {
+                return ResourceManager.GetString("GraphChromatogram_SetRetentionTimeIdIndicators_Libraries_are_still_loading", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Waiting for retention time alignment.
+        /// </summary>
+        public static string GraphChromatogram_SetRetentionTimeIdIndicators_Waiting_for_retention_time_alignment {
+            get {
+                return ResourceManager.GetString("GraphChromatogram_SetRetentionTimeIdIndicators_Waiting_for_retention_time_alignme" +
+                        "nt", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to All.
         /// </summary>
         public static string GraphChromatogram_UpdateToolbar_All {
@@ -1671,38 +1690,20 @@ namespace pwiz.Skyline.Controls.Graphs {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to FWB Time.
-        /// </summary>
-        public static string RtGraphValue_FWB_Time {
-            get {
-                return ResourceManager.GetString("RtGraphValue_FWB_Time", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to FWHM Time.
-        /// </summary>
-        public static string RtGraphValue_FWHM_Time {
-            get {
-                return ResourceManager.GetString("RtGraphValue_FWHM_Time", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Retention Time.
-        /// </summary>
-        public static string RtGraphValue_Retention_Time {
-            get {
-                return ResourceManager.GetString("RtGraphValue_Retention_Time", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Score.
         /// </summary>
         public static string RTLinearRegressionGraphPane_RTLinearRegressionGraphPane_Score {
             get {
                 return ResourceManager.GetString("RTLinearRegressionGraphPane_RTLinearRegressionGraphPane_Score", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calculating....
+        /// </summary>
+        public static string RTLinearRegressionGraphPane_UpdateGraph_Calculating___ {
+            get {
+                return ResourceManager.GetString("RTLinearRegressionGraphPane_UpdateGraph_Calculating___", resourceCulture);
             }
         }
         
