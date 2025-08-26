@@ -216,11 +216,15 @@
     <Compile Include="Alerts\AlertLinkDlg.Designer.cs">
       <DependentUpon>AlertLinkDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="Alerts\ArdiaLogoutDlg.cs" />
+    <Compile Include="Alerts\ArdiaLogoutDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Alerts\ArdiaLogoutDlg.Designer.cs">
       <DependentUpon>ArdiaLogoutDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="Alerts\ArdiaLoginDlg.cs" />
+    <Compile Include="Alerts\ArdiaLoginDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Alerts\ArdiaLoginDlg.Designer.cs">
       <DependentUpon>ArdiaLoginDlg.cs</DependentUpon>
     </Compile>
@@ -2373,7 +2377,9 @@
     <Compile Include="FileUI\ExportMethodDlg.Designer.cs">
       <DependentUpon>ExportMethodDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="FileUI\BaseFileDialogNE.cs" />
+    <Compile Include="FileUI\BaseFileDialogNE.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="FileUI\BaseFileDialogNE.designer.cs">
       <DependentUpon>BaseFileDialogNE.cs</DependentUpon>
     </Compile>
@@ -5014,7 +5020,9 @@
     <Compile Include="ToolsUI\EditServerDlg.Designer.cs">
       <DependentUpon>EditServerDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="ToolsUI\PythonInstallerLegacyDlg.cs" />
+    <Compile Include="ToolsUI\PythonInstallerLegacyDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="ToolsUI\PythonInstallerLegacyDlg.Designer.cs">
       <DependentUpon>PythonInstallerLegacyDlg.cs</DependentUpon>
     </Compile>

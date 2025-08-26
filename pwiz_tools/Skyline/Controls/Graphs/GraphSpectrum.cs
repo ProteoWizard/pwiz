@@ -24,6 +24,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 using System.Windows.Forms;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
@@ -134,11 +135,34 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private class ToolTipImplementation : ITipProvider
+        public class ToolTipImplementation : ITipProvider
         {
             LibraryRankedSpectrumInfo.RankedMI _peakRMI;
             private TableDesc _table;       // Used for test support
-            public TableDesc Table => _table;
+
+            // This property for testing purposes only, not visible to the user
+            [Localizable(false)]
+            public string ToolTipText
+            {
+                get
+                {
+                    if (_table == null)
+                        return string.Empty;
+                    StringBuilder sbText = new StringBuilder();
+                    for (var rowIndex = 0; rowIndex < _table.Count; rowIndex++)
+                    {
+                        for (var colIndex = 0; colIndex < _table[rowIndex].Count; colIndex++)
+                        {
+                            sbText.Append(_table[rowIndex][colIndex].Text);
+                            if (colIndex < _table[rowIndex].Count - 1)
+                                sbText.Append("\t");
+                        }
+                        if (rowIndex < _table.Count - 1)
+                            sbText.Append("\n");
+                    }
+                    return sbText.ToString();
+                }
+            }
 
             public ToolTipImplementation(LibraryRankedSpectrumInfo.RankedMI peakRMI)
             {
@@ -1860,6 +1884,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public ToolStripButton PropertyButton => propertiesButton;
         public MsGraphExtension MsGraphExtension => msGraphExtension;
         public ToolStripComboBox SpectrumCombo => comboSpectrum;
+        public NodeTip ToolTip => _toolTip;
 
         #endregion
 

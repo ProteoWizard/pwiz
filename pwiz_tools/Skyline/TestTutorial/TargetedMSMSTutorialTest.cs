@@ -515,6 +515,8 @@ namespace pwiz.SkylineTestTutorial
             }
 
             ValidatePeakRanks(1, 176, true);
+            WaitForGraphs();
+            ValidatePeakTooltips();
 
             if (AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)  
                 TestLibraryMatchPropertySheet();
@@ -1241,7 +1243,6 @@ namespace pwiz.SkylineTestTutorial
 
         private void TestLibraryMatchPropertySheet()
         {
-            //TODO: [RC] Fix tests, add some tooltip testing code
             var isSmallMolecules = AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none;
 
             var expectedPropertiesDict = new Dictionary<string, object>
@@ -1359,6 +1360,48 @@ namespace pwiz.SkylineTestTutorial
             var score = GetProperties(pg).Find("Score", true).GetValue(pg.SelectedObject);
             Assert.AreEqual(expectedScore.ToString(CultureInfo.CurrentCulture), score?.ToString());
             Assert.AreEqual(expectedScore, dlg.GraphItem.SpectrumInfo.Score);
+        }
+
+        private void ValidatePeakTooltips()
+        {
+            // 191, 95; 169, 175
+            var testData = new Dictionary<Point, string>()
+            {
+                {new Point(191, 95), "Observed m/z:\t951.6229\nIntensity:\t3814516\nRank:\t1\nMatched Ions\tIon m/z (calculated)\ny8\t951.4782  -152.1 ppm"},
+                {new Point(169, 175), "Observed m/z:\t951.6229\nIntensity:\t3814516\nRank:\t1\nMatched Ions\tIon m/z (calculated)\ny8\t951.4782  -152.1 ppm"},
+                {new Point(190, 5), null}, // No peak here
+            };
+            foreach (var testPoint in testData)
+            {
+                RunUI(() =>
+                {
+                    SkylineWindow.GraphSpectrum.DisplayTooltip(
+                        new MouseEventArgs(MouseButtons.Left, 1, testPoint.Key.X, testPoint.Key.Y, 0));
+                });
+                if (testPoint.Value == null)
+                {
+                    // Make sure the tooltip is hidden if there is no peak under the mouse
+                    WaitForConditionUI(() => SkylineWindow.GraphSpectrum.ToolTip == null);
+                    continue;
+                }
+                // Wait for the tooltip to render
+                WaitForConditionUI(() =>
+                {
+                    if (SkylineWindow.GraphSpectrum.ToolTip?.Provider is GraphSpectrum.ToolTipImplementation provider)
+                    {
+                        return !string.IsNullOrEmpty(provider.ToolTipText);
+                    }
+                    return false;
+                });
+                RunUI(() =>
+                {
+                    if (SkylineWindow.GraphSpectrum.ToolTip?.Provider is GraphSpectrum.ToolTipImplementation provider)
+                    {
+                        //Trace.WriteLine(provider.ToolTipText);
+                        Assert.AreEqual(testPoint.Value, provider.ToolTipText);
+                    }
+                });
+            }
         }
     }
 }
