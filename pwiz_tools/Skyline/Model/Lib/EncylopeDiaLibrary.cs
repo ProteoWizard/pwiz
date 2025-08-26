@@ -26,6 +26,7 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
+using MathNet.Numerics.Statistics;
 using pwiz.BiblioSpec;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -900,6 +901,96 @@ namespace pwiz.Skyline.Model.Lib
             }
 
             #endregion
+        }
+
+        public override bool TryGetIrts(out LibraryRetentionTimes retentionTimes)
+        {
+            var allRetentionTimes = GetAllRetentionTimes(null);
+            var medianDict = new Dictionary<Target, Tuple<TimeSource, double[]>>();
+            foreach (var target in allRetentionTimes.SelectMany(dict => dict.Keys).Distinct())
+            {
+                var times = new List<double>();
+                foreach (var dict in allRetentionTimes)
+                {
+                    if (dict.TryGetValue(target, out var time))
+                    {
+                        times.Add(time);
+                    }
+                }
+
+                if (times.Count > 0)
+                {
+                    medianDict[target] = Tuple.Create(TimeSource.scan, new[] { times.Median() });
+                }
+            }
+
+            retentionTimes = new LibraryRetentionTimes(FilePath, medianDict);
+            return true;
+        }
+
+        public override Dictionary<Target, double>[] GetAllRetentionTimes(IEnumerable<string> spectrumSourceFiles)
+        {
+            Dictionary<Target, double>[] dictionaries;
+            List<int> fileIndexes;
+            if (spectrumSourceFiles == null)
+            {
+                dictionaries = Enumerable.Range(0, LibraryFiles.Count).Select(i => new Dictionary<Target, double>())
+                    .ToArray();
+                fileIndexes = null;
+            }
+            else
+            {
+                dictionaries = new Dictionary<Target, double>[LibraryFiles.Count];
+                fileIndexes = spectrumSourceFiles.Select(file => LibraryFiles.IndexOfFilePath(file)).ToList();
+                foreach (var fileIndex in fileIndexes)
+                {
+                    dictionaries[fileIndex] = new Dictionary<Target, double>();
+                }
+            }
+
+            foreach (var grouping in _libraryEntries.GroupBy(entry => entry.Key.Target))
+            {
+                foreach (var fileData in grouping.SelectMany(spectrumInfo=>spectrumInfo.FileDatas))
+                {
+                    if (fileData.Value.ApexTime.HasValue)
+                    {
+                        var dictionary = dictionaries[fileData.Key];
+                        if (dictionary != null)
+                        {
+                            dictionary[grouping.Key] = fileData.Value.ApexTime.Value;
+                        }
+                    }
+                }
+            }
+
+            if (fileIndexes == null)
+            {
+                return dictionaries;
+            }
+            return fileIndexes.Select(fileIndex => dictionaries[fileIndex]).ToArray();
+        }
+
+        public override IList<double>[] GetRetentionTimesWithSequences(IEnumerable<string> spectrumSourceFiles, ICollection<Target> targets)
+        {
+            var fileIndexes = spectrumSourceFiles.Select(file => LibraryFiles.IndexOfFilePath(file)).ToList();
+            var lists = new IList<double>[LibraryFiles.Count];
+            foreach (var fileIndex in fileIndexes)
+            {
+                lists[fileIndex] = new List<double>();
+            }
+            foreach (var entry in targets.SelectMany(target =>
+                         _libraryEntries.ItemsMatching(new LibKey(target, Adduct.EMPTY), false)))
+            {
+                foreach (var fileData in entry.FileDatas)
+                {
+                    if (fileData.Value.ApexTime.HasValue)
+                    {
+                        lists[fileData.Key]?.Add(fileData.Value.ApexTime.Value);
+                    }
+                }
+            }
+
+            return fileIndexes.Select(index => lists[index]).ToArray();
         }
 
         public class ElibSpectrumInfo : ICachedSpectrumInfo

@@ -30,7 +30,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Results.Spectra;
-using pwiz.Skyline.Model.RetentionTimes;
+using pwiz.Skyline.Model.RetentionTimes.PeakImputation;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -49,6 +49,7 @@ namespace pwiz.Skyline.Model.Results
 
         // Lock on this to access these variables
         private readonly SrmDocument _document;
+        private readonly ChromatogramSet _chromatogramSet;
         private FileBuildInfo _currentFileInfo;
 
         private readonly ChromatogramCache _cacheRecalc;
@@ -59,9 +60,10 @@ namespace pwiz.Skyline.Model.Results
 
         // Accessed only on the write thread
         private readonly RetentionTimePredictor _retentionTimePredictor;
-        private readonly Dictionary<Target, int> _dictSequenceToByteIndex = new Dictionary<Target, int>();
 
         private readonly int SCORING_THREADS = ParallelEx.SINGLE_THREADED ? 1 : 4;
+
+        private readonly PeakBoundaryImputer _peakBoundaryImputer;
         //private static readonly Log LOG = new Log<ChromCacheBuilder>();
 
         public ChromCacheBuilder(SrmDocument document, ChromatogramCache cacheRecalc,
@@ -71,6 +73,7 @@ namespace pwiz.Skyline.Model.Results
         {
             _document = document;
             _cacheRecalc = cacheRecalc;
+            _destinationStream = _cacheRecalc?.ReadStream;
             MSDataFilePath = msDataFilePath;
 
             // Initialize retention time prediction
@@ -95,15 +98,19 @@ namespace pwiz.Skyline.Model.Results
             DetailedPeakFeatureCalculators = new DetailedFeatureCalculators(calcEnum.Cast<DetailedPeakFeatureCalculator>());
             _listScoreTypes = DetailedPeakFeatureCalculators.FeatureNames;
 
-            string basename = MSDataFilePath.GetFileNameWithoutExtension();
-            FileAlignmentIndices = _document.Settings.DocumentRetentionTimes.GetRetentionTimeAlignmentIndexes(basename);
+            _peakBoundaryImputer = new PeakBoundaryImputer(document);
+            _chromatogramSet =
+                document.Settings.MeasuredResults?.Chromatograms.FirstOrDefault(chromSet =>
+                    chromSet.IndexOfPath(msDataFilePath) >= 0);
         }
 
         private void ScoreWriteChromDataSets(PeptideChromDataSets chromDataSets, int threadIndex)
         {
             // Score peaks.
             GetPeptideRetentionTimes(chromDataSets);
-            chromDataSets.PickChromatogramPeaks();
+            var explicitPeakBounds = _peakBoundaryImputer.GetExplicitPeakBounds(
+                chromDataSets.NodePep, _chromatogramSet, chromDataSets.FileInfo.FilePath);
+            chromDataSets.PickChromatogramPeaks(explicitPeakBounds);
             StorePeptideRetentionTime(chromDataSets);
 
             if (chromDataSets.IsDelayedWrite)
@@ -117,8 +124,6 @@ namespace pwiz.Skyline.Model.Results
         }
 
         private MsDataFileUri MSDataFilePath { get; set; }
-        private RetentionTimeAlignmentIndexes FileAlignmentIndices { get; set; }
-
         private DetailedFeatureCalculators DetailedPeakFeatureCalculators { get; set; }
 
         public void BuildCache()
@@ -444,8 +449,10 @@ namespace pwiz.Skyline.Model.Results
 
             // Write scan ids
             _currentFileInfo.WriteResultFileMetadata(provider.ResultFileData, _fsScans.Stream);
+            var resultFileData = provider.ResultFileData;
             // Release all provider memory before waiting for write completion
             provider.ReleaseMemory();
+
 
             //LOG.InfoFormat(@"Scans read: {0}", MSDataFilePath.GetFileName());
             _chromDataSets.DoneAdding(true);
@@ -469,7 +476,7 @@ namespace pwiz.Skyline.Model.Results
                                      _currentFileInfo.SampleId,
                                      _currentFileInfo.SerialNumber,
                                      _currentFileInfo.InstrumentInfoList));
-            _listResultFileDatas.Add(provider.ResultFileData as ResultFileMetaData);
+            _listResultFileDatas.Add(resultFileData as ResultFileMetaData);
         }
 
         private bool CreateRetentionTimeEquation(ChromDataProvider provider,
@@ -694,15 +701,12 @@ namespace pwiz.Skyline.Model.Results
                 return;
             }
             // N.B. No retention time prediction for small molecules (yet?), but may be able to pull from libraries
-            var lookupSequence = nodePep.SourceUnmodifiedTarget;
-            var lookupMods = nodePep.SourceExplicitMods;
-            double[] retentionTimes = _document.Settings.GetRetentionTimes(MSDataFilePath, lookupSequence, lookupMods);
-            bool isAlignedTimes = (retentionTimes.Length == 0);
+            var targets = _document.Settings.GetTargets(nodePep).ToList();
+            double[] retentionTimes = _document.Settings.GetRetentionTimes(MSDataFilePath, targets);
+            bool isAlignedTimes = retentionTimes.Length == 0;
             if (isAlignedTimes)
             {
-                retentionTimes = _document.Settings.GetAlignedRetentionTimes(FileAlignmentIndices,
-                                                                             lookupSequence,
-                                                                             lookupMods);
+                retentionTimes = _document.Settings.GetAlignedRetentionTimes(_chromatogramSet, MSDataFilePath, targets);
             }
             peptideChromDataSets.RetentionTimes = retentionTimes;
             peptideChromDataSets.IsAlignedTimes = isAlignedTimes;
@@ -721,7 +725,7 @@ namespace pwiz.Skyline.Model.Results
             if (prediction == null && isFullScan && fullScan.RetentionTimeFilterType == RetentionTimeFilterType.ms2_ids)
             {
                 if (retentionTimes.Length == 0)
-                    retentionTimes = _document.Settings.GetUnalignedRetentionTimes(lookupSequence, lookupMods);
+                    retentionTimes = _document.Settings.GetUnalignedRetentionTimes(targets);
                 if (retentionTimes.Length > 0)
                 {
                     var statTimes = new Statistics(retentionTimes);
