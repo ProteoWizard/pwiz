@@ -596,6 +596,7 @@
     <Compile Include="Model\Results\Spectra\SpectrumFilterAutoComplete.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumMetadatas.cs" />
     <Compile Include="Model\RetentionTimes\AlignmentFunction.cs" />
+    <Compile Include="Model\SearchTool.cs" />
     <Compile Include="Model\SpectrumPropertiesResx.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -885,6 +886,12 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>FileUIResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="ToolsUI\EditSearchToolDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ToolsUI\EditSearchToolDlg.Designer.cs">
+      <DependentUpon>EditSearchToolDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="ToolsUI\PythonInstallerUI.cs" />
     <Compile Include="ToolsUI\ToolsUIResources.Designer.cs">
@@ -4879,6 +4886,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\EditCustomThemeDlg.zh-CHS.resx">
       <DependentUpon>EditCustomThemeDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ToolsUI\EditSearchToolDlg.resx">
+      <DependentUpon>EditSearchToolDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\EditServerDlg.ja.resx">
       <DependentUpon>EditServerDlg.cs</DependentUpon>
