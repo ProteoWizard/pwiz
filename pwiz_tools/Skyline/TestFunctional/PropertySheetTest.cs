@@ -28,14 +28,14 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class PropertySheetTest : AbstractFunctionalTest
     {
-        internal const string RAT_PLASMA_FILE_NAME = "Rat_plasma.sky";
         internal const int REP_FILE_PROP_NUM = 10;
         internal const int REP_SAMPLE_FILE_PROP_NUM = 10;
 
         [TestMethod]
         public void TestPropertySheet()
         {
-            TestFilesZip = @"TestFunctional\FilesTreeFormTest.zip";
+            // These test files are large (90MB) so reuse rather than duplicate
+            TestFilesZip = FilesTreeFormTest.TEST_FILES_ZIP;
             RunFunctionalTest();
         }
 
@@ -46,7 +46,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected void TestFileNodeProperties()
         {
-            var documentPath = TestFilesDir.GetTestPath(RAT_PLASMA_FILE_NAME);
+            var documentPath = TestFilesDir.GetTestPath(FilesTreeFormTest.RAT_PLASMA_FILE_NAME);
             RunUI(() => SkylineWindow.OpenFile(documentPath));
 
             Assert.IsNull(SkylineWindow.PropertyForm);
