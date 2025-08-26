@@ -106,7 +106,7 @@ namespace TestPerf
         private string MzMLFile => TestFilesDir.GetTestPath(@"Lumos_8mz_staggered_reCID_human_small\Crucios_20240320_CH_15_HeLa_CID_27NCE_01.mzML");
 
         private string LibraryTunedByDiann => @"CarafeLibraryTunedByDiann";
-        private string LibraryPathTunedByDiann => TestContext.GetTestPath(@"TestCarafeBuildLibrary\LibraryTunedByDiann.blib");
+        private string LibraryPathTunedByDiann => TestContext.GetTestPath(@"TestCarafeBuildLibraryTutorial\LibraryTunedByDiann.blib");
 
         private const string TESTDATA_FILE = @"CarafeBuildLibraryTestSmall.zip";
         private const string TESTDATA_DIR = @"TestPerf";

@@ -96,7 +96,7 @@ namespace TestPerf
         protected override bool IsRecordMode => false;
 
         private string LibraryName => @"AlphaPeptDeepLibraryTutorial";
-        private string LibraryPath => TestContext.GetTestPath(@"TestAlphaPeptDeepBuildLibrary\AlphaPeptDeepLibraryTutorial.blib");
+        private string LibraryPath => TestContext.GetTestPath(@"TestAlphaPeptDeepBuildLibraryTutorial\AlphaPeptDeepLibraryTutorial.blib");
 
         private const string TESTDATA_FILE = @"CarafeBuildLibraryTestSmall.zip";
         private const string TESTDATA_DIR = @"TestPerf";
