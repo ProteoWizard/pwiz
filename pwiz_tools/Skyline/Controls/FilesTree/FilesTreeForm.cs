@@ -319,6 +319,8 @@ namespace pwiz.Skyline.Controls.FilesTree
                 SkylineWindow.ModifyDocument(FilesTreeResources.Change_ReplicateName, DocumentModifier.FromResult(originalDoc, modifiedDoc));
             }
 
+            SkylineWindow.PotentialPropertySheetOwnerGotFocus(this, EventArgs.Empty);
+
             return false;
         }
 

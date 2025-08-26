@@ -44,7 +44,12 @@ namespace pwiz.Skyline.Model.Files
         }
 
         [Category("FileInfo")] public string FilePath { get; set; }
-        [Category("FileInfo")] public string Name { get; set; }
         [Category("FileInfo")] public string FileSize { get; set; }
+
+        // Name is editable for some FileNode types, such as Replicate, so allow override
+        // TODO: this needs to be virtual so derived classes can assign their own attributes to it,
+        // but that gives the warning "Virtual member call in constructor" from "Name = fileNode.Name;".
+        // does not throw errors but should be considered.
+        [Category("FileInfo")] public virtual string Name { get; set; }
     }
 }

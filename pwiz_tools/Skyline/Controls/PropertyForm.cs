@@ -18,6 +18,9 @@
  */
 
 using DigitalRune.Windows.Docking;
+using pwiz.Skyline.Controls.FilesTree;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.PropertySheets;
 using pwiz.Skyline.Util;
 using System.ComponentModel;
@@ -31,6 +34,7 @@ namespace pwiz.Skyline.Controls
         {
             InitializeComponent();
             HideOnClose = true; // Hide the form when closed, but do not dispose it
+            PropertyGrid.PropertyValueChanged += PropertyGrid_PropertyValueChanged;
         }
 
         public PropertyForm(SkylineWindow skylineWindow) : this()
@@ -58,6 +62,33 @@ namespace pwiz.Skyline.Controls
             else
             {
                 PropertyGrid.SelectedObject = null;
+            }
+        }
+
+        private void PropertyGrid_PropertyValueChanged(object sender, PropertyValueChangedEventArgs e)
+        {
+            var newValue = e.ChangedItem.Value;
+            var descriptor = e.ChangedItem.PropertyDescriptor;
+
+            if (!(descriptor is GlobalizedPropertyDescriptor { IsReadOnly: false, GetModifiedDocument: { } } globalizedPropertyDescriptor))
+                return;
+
+            // If the property is editable and modifies the document, acquire the document change lock and modify the document,
+            // by calling the GetModifiedDocument delegate of the property descriptor.
+            lock (SkylineWindow.GetDocumentChangeLock())
+            {
+                var originalDoc = SkylineWindow.Document;
+                ModifiedDocument modifiedDoc = null;
+
+                using var longWaitDlg = new LongWaitDlg();
+                longWaitDlg.PerformWork(this, 750, progressMonitor =>
+                {
+                    using var monitor = new SrmSettingsChangeMonitor(progressMonitor, longWaitDlg.Text, SkylineWindow);
+
+                    modifiedDoc = globalizedPropertyDescriptor.GetModifiedDocument.Invoke(SkylineWindow.Document, monitor, newValue);
+                });
+
+                SkylineWindow.ModifyDocument(FilesTreeResources.Change_ReplicateName, DocumentModifier.FromResult(originalDoc, modifiedDoc));
             }
         }
     }

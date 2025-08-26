@@ -19,6 +19,7 @@
 
 using JetBrains.Annotations;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.DocSettings;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -38,6 +39,7 @@ namespace pwiz.Skyline.Model.Files
             AnalyteConcentration = model.AnalyteConcentration;
             SampleDilutionFactor = model.SampleDilutionFactor;
             SampleType = model.SampleType;
+            _getModifiedDocumentRename = (document, monitor, name) => model.Rename(document, monitor, name as string);
 
             var dataFileInfo = model.MSDataFileInfos;
             if (dataFileInfo.Count == 1)
@@ -69,6 +71,15 @@ namespace pwiz.Skyline.Model.Files
         [Category("Replicate")] public double MaxIntensity { get; set; }
         [Category("Replicate")] public string AcquisitionTime { get; set; }
 
+        // Replicate Name is editable and updates the document with _getModifiedDocumentRename
+        [EditableProperty]
+        [ModifiesDocument("_getModifiedDocumentRename")]
+        [Category("FileInfo")]
+        public override string Name { get; set; }
+        [UsedImplicitly]
+        private readonly Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument> _getModifiedDocumentRename;
+
+        // Instrument properties need to be added as nested properties, as lists don't render well in PropertyGrid
         [UseCustomHandling] public List<InstrumentProperties> Instruments { get; set; }
 
         /// <summary>
