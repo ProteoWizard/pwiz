@@ -1364,13 +1364,23 @@ namespace pwiz.SkylineTestTutorial
 
         private void ValidatePeakTooltips()
         {
-            // 191, 95; 169, 175
+            // Initializing localized expected values
+            var mzObserved = (951.6229f).ToString(Formats.Mz, CultureInfo.CurrentCulture);
+            var mzMatched = (951.4782f).ToString(Formats.Mz, CultureInfo.CurrentCulture);
+            var massError = -152.1f;
+            var massErrorString = string.Format(CultureInfo.CurrentCulture, Resources.GraphSpectrum_MassErrorFormat_ppm, (massError > 0 ? @"+" : string.Empty), massError);
+            var testString = $"{GraphsResources.GraphSpectrum_ToolTip_mz}\t{mzObserved}\n" +
+                             $"{GraphsResources.GraphSpectrum_ToolTip_Intensity}\t3814516\n"+
+                             $"{GraphsResources.GraphSpectrum_ToolTip_Rank}\t1\n"+
+                             $"{GraphsResources.GraphSpectrum_ToolTip_MatchedIons}\t{GraphsResources.ToolTipImplementation_RenderTip_Calculated_Mass}\n"+
+                             $"y8\t{mzMatched}  {massErrorString}";
             var testData = new Dictionary<Point, string>()
             {
-                {new Point(191, 95), "Observed m/z:\t951.6229\nIntensity:\t3814516\nRank:\t1\nMatched Ions\tIon m/z (calculated)\ny8\t951.4782  -152.1 ppm"},
-                {new Point(169, 175), "Observed m/z:\t951.6229\nIntensity:\t3814516\nRank:\t1\nMatched Ions\tIon m/z (calculated)\ny8\t951.4782  -152.1 ppm"},
+                {new Point(191, 95), testString},
+                {new Point(169, 175), testString},
                 {new Point(190, 5), null}, // No peak here
             };
+
             foreach (var testPoint in testData)
             {
                 RunUI(() =>
@@ -1397,6 +1407,7 @@ namespace pwiz.SkylineTestTutorial
                 {
                     if (SkylineWindow.GraphSpectrum.ToolTip?.Provider is GraphSpectrum.ToolTipImplementation provider)
                     {
+                        // Uncomment to get updated expected values
                         //Trace.WriteLine(provider.ToolTipText);
                         Assert.AreEqual(testPoint.Value, provider.ToolTipText);
                     }
