@@ -29,6 +29,7 @@ using ZedGraph;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -272,11 +273,14 @@ namespace pwiz.Skyline.Controls.Graphs
         private void UpdateCombo()
         {
             var documentRetentionTimes = Document.Settings.DocumentRetentionTimes;
-            var newItems = documentRetentionTimes.RetentionTimeSources.Values.Select(retentionTimeSource=>new DataFileKey(retentionTimeSource)).ToArray();
+            
+            var newItems = GetRetentionTimeSources().Select(retentionTimeSource=>new DataFileKey(retentionTimeSource)).ToArray();
             if (newItems.SequenceEqual(comboAlignAgainst.Items.Cast<DataFileKey>()))
             {
                 return;
             }
+
+            var resultNameMap = ResultNameMap.FromNamedElements(GetRetentionTimeSources());
             var selectedIndex = comboAlignAgainst.SelectedIndex;
             comboAlignAgainst.Items.Clear();
             comboAlignAgainst.Items.AddRange(newItems.Cast<object>().ToArray());
@@ -292,7 +296,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             Document.Settings.MeasuredResults.Chromatograms[SkylineWindow.SelectedResultsIndex];
                         foreach (var msDataFileInfo in chromatogramSet.MSDataFileInfos)
                         {
-                            var retentionTimeSource = documentRetentionTimes.RetentionTimeSources.Find(msDataFileInfo);
+                            var retentionTimeSource = resultNameMap.Find(msDataFileInfo);
                             if (retentionTimeSource == null)
                             {
                                 continue;
@@ -326,7 +330,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             var documentRetentionTimes = Document.Settings.DocumentRetentionTimes;
             var dataRows = new List<DataRow>();
-            foreach (var retentionTimeSource in documentRetentionTimes.RetentionTimeSources.Values)
+            foreach (var retentionTimeSource in GetRetentionTimeSources())
             {
                 if (targetKey.Value.RetentionTimeSource.Name == retentionTimeSource.Name)
                 {
@@ -337,6 +341,12 @@ namespace pwiz.Skyline.Controls.Graphs
             return dataRows;
         }
 
+        private IEnumerable<RetentionTimeSource> GetRetentionTimeSources()
+        {
+            return Document.Settings.PeptideSettings.Libraries.Libraries.Where(lib => true == lib?.IsLoaded)
+                .SelectMany(lib => lib.ListRetentionTimeSources());
+        }
+
         internal struct DataRow : IEquatable<DataRow>
         {
             public DataRow(SrmSettings settings, RetentionTimeSource target, RetentionTimeSource timesToAlign) : this()
@@ -345,16 +355,16 @@ namespace pwiz.Skyline.Controls.Graphs
                 Target = target;
                 Source = timesToAlign;
                 Assume.IsNotNull(target, @"target");
-                Assume.IsNotNull(DocumentRetentionTimes.FileAlignments, @"DocumentRetentionTimes.FileAlignments");
-                var fileAlignment = DocumentRetentionTimes.FileAlignments.Find(target.Name);
-                if (fileAlignment != null)
-                {
-                    Assume.IsNotNull(fileAlignment.RetentionTimeAlignments, @"fileAlignment.RetentionTimeAlignments");
-                    Assume.IsNotNull(Source, @"Source");
-                    Alignment = fileAlignment.RetentionTimeAlignments.Find(Source.Name);
-                }
                 TargetTimes = GetFirstRetentionTimes(settings, target);
                 SourceTimes = GetFirstRetentionTimes(settings, timesToAlign);
+                AlignedRetentionTimes = AlignedRetentionTimes.AlignLibraryRetentionTimes(GetFirstRetentionTimes(settings, target), GetFirstRetentionTimes(settings, timesToAlign), DocumentRetentionTimes.REFINEMENT_THRESHOLD, RegressionMethodRT.linear, CancellationToken.None);
+                var regressionLine =
+                    (AlignedRetentionTimes.RegressionRefined ?? AlignedRetentionTimes.Regression)
+                    ?.Conversion as RegressionLine;
+                if (regressionLine != null)
+                {
+                    Alignment = new RetentionTimeAlignment(XmlNamedElement.NAME_INTERNAL, regressionLine);
+                }
             }
 
             internal DocumentRetentionTimes DocumentRetentionTimes { get; private set; }
@@ -600,6 +610,18 @@ namespace pwiz.Skyline.Controls.Graphs
                     UpdateGraph();                    
                 }
             }
+        }
+
+        private Dictionary<Target, double> GetRetentionTimes(RetentionTimeSource retentionTimeSource)
+        {
+            var libraries = Document.Settings.PeptideSettings.Libraries;
+            var library = libraries.Libraries.FirstOrDefault(lib => lib.Name == retentionTimeSource.Library);
+            if (true != library?.IsLoaded)
+            {
+                return new Dictionary<Target, double>();
+            }
+
+            return library.GetAllRetentionTimes(new[] { retentionTimeSource.Name })?[0] ?? new Dictionary<Target, double>();
         }
 
         #region Functional test support

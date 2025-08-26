@@ -16,11 +16,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding.Filtering;
 using pwiz.Common.SystemUtil;
@@ -33,8 +28,15 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Model.RetentionTimes;
+using pwiz.Skyline.Model.RetentionTimes.PeakImputation;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Threading;
 
 namespace pwiz.Skyline.Model
 {
@@ -1473,6 +1475,14 @@ namespace pwiz.Skyline.Model
             PeakFeatureStatistics[] reintegratePeaks = resultsHandler != null
                 ? new PeakFeatureStatistics[countGroupInfos]
                 : null;
+            ImputedPeak[] imputedPeaks = null;
+            PeakBoundaryImputer peakBoundaryImputer = null;
+            if (resultsHandler == null && settingsNew.PeptideSettings.Imputation.HasImputation)
+            {
+                peakBoundaryImputer = new PeakBoundaryImputer(settingsNew);
+                imputedPeaks = new ImputedPeak[countGroupInfos];
+            }
+
             for (int j = 0; j < countGroupInfos; j++)
             {
                 var fileId = chromatograms.FindFile(chromGroupInfos[j]);
@@ -1482,6 +1492,12 @@ namespace pwiz.Skyline.Model
                 if (resultsHandler != null)
                 {
                     reintegratePeaks[j] = resultsHandler.GetPeakFeatureStatistics(nodePep.Peptide, fileId);
+                }
+
+                if (peakBoundaryImputer != null)
+                {
+                    imputedPeaks[j] = peakBoundaryImputer.GetImputedPeakBounds(CancellationToken.None, nodePep,
+                        chromatograms, chromGroupInfos[j].FilePath);
                 }
             }
             resultsCalc.AddReintegrateInfo(resultsHandler, fileIds, reintegratePeaks);
@@ -1510,7 +1526,6 @@ namespace pwiz.Skyline.Model
                     ChromatogramGroupInfo chromGroupInfo = chromGroupInfos[j];
                     PeakGroupIntegrator peakGroupIntegrator = null;
                     ChromFileInfoId fileId = fileIds[j];
-                    PeakFeatureStatistics reintegratePeak = reintegratePeaks != null ? reintegratePeaks[j] : null;
 
                     var listChromInfo = chromGroupInfo.GetAllTransitionInfo(nodeTran,
                         mzMatchTolerance, chromatograms.OptimizationFunction, TransformChrom.interpolated);
@@ -1518,6 +1533,12 @@ namespace pwiz.Skyline.Model
                     {
                         // Make sure nothing gets added when no measurements are present
                         continue;
+                    }
+
+                    TransitionGroupChromInfo transitionGroupChromInfoOld = null;
+                    if (iResultOld >= 0)
+                    {
+                        transitionGroupChromInfoOld = FindGroupChromInfo(GetSafeChromInfo(iResultOld), fileId, 0);
                     }
 
                     // Always add the right number of steps to the list, no matter
@@ -1529,7 +1550,7 @@ namespace pwiz.Skyline.Model
                         UserSet userSet = UserSet.FALSE;
                         var chromInfo = FindChromInfo(results, fileId, step);
                         bool notUserSet;
-                        if (resultsHandler == null)
+                        if (resultsHandler == null && transitionGroupChromInfoOld?.ReintegratedPeak == null)
                         {
                             // If we don't have a model then we shouldn't change peaks that are "REINTEGRATED".
                             notUserSet = chromInfo == null || chromInfo.UserSet == UserSet.FALSE;
@@ -1568,19 +1589,30 @@ namespace pwiz.Skyline.Model
                                         userSet = chromInfoBest.UserSet;
                                     }
                                 }
+                                else if (resultsHandler != null)
+                                {
+                                    peak = resultsHandler.GetBestPeak(nodePep, this, chromatograms, info,
+                                        ref peakGroupIntegrator, out userSet);
+                                }
                                 // Or if there is a matching peak on another precursor in the peptide
                                 else if (nodePep.HasResults && !HasResults &&
-                                    TryGetMatchingGroupInfo(nodePep, chromIndex, fileId, step, out chromGroupInfoMatch))
+                                         TryGetMatchingGroupInfo(nodePep, chromIndex, fileId, step, out chromGroupInfoMatch))
                                 {
                                     peakGroupIntegrator ??= MakePeakGroupIntegrator(settingsNew, chromatograms, chromGroupInfo);
-                                    peak = CalcMatchingPeak(settingsNew, peakGroupIntegrator, info, chromGroupInfoMatch, reintegratePeak, qcutoff, ref userSet);
+                                    peak = CalcMatchingPeak(settingsNew, peakGroupIntegrator, info, chromGroupInfoMatch, qcutoff, ref userSet);
                                 }
                                 // Otherwise use the best peak chosen at import time
                                 else
                                 {
-                                    int bestIndex = GetBestIndex(info, reintegratePeak, qcutoff, ref userSet);
-                                    if (bestIndex != -1)
-                                        peak = info.GetPeak(bestIndex);
+                                    peak = GetTransitionBestPeak(info, transitionGroupChromInfoOld?.ReintegratedPeak, out userSet);
+                                    var imputedPeak = imputedPeaks?[j];
+                                    if (imputedPeak != null && !peakBoundaryImputer.IsAcceptable(peak, imputedPeak))
+                                    {
+                                        peakGroupIntegrator ??= MakePeakGroupIntegrator(settingsNew, chromatograms, chromGroupInfo);
+                                        peak = CalcPeak(settingsNew, peakGroupIntegrator, info,
+                                            (float)imputedPeak.PeakBounds.StartTime,
+                                            (float)imputedPeak.PeakBounds.EndTime);
+                                    }
                                 }
                                 ionMobility = info.GetIonMobilityFilter();
                             }
@@ -1604,6 +1636,7 @@ namespace pwiz.Skyline.Model
                         }
                     }
                 }
+
                 if (firstChromInfo == null)
                     resultsCalc.AddTransitionChromInfo(iTran, null);
                 else if (listTranInfo == null)
@@ -1611,6 +1644,81 @@ namespace pwiz.Skyline.Model
                 else
                     resultsCalc.AddTransitionChromInfo(iTran, listTranInfo);
             }
+            for (int j = 0; j < chromGroupInfos.Count; j++)
+            {
+                var originalPeak = GetOriginalPeak(chromGroupInfos[j], mzMatchTolerance);
+                resultsCalc.SetOriginalPeak(fileIds[j], originalPeak);
+            }
+        }
+
+        private ChromPeak GetTransitionBestPeak(ChromatogramInfo chromatogramInfo, ScoredPeakBounds reintegratedPeakBounds, out UserSet userSet)
+        {
+            userSet = UserSet.FALSE;
+            var bestPeak = chromatogramInfo.BestPeakIndex == -1
+                ? ChromPeak.EMPTY
+                : chromatogramInfo.GetPeak(chromatogramInfo.BestPeakIndex);
+            if (reintegratedPeakBounds == null || bestPeak.StartTime >= reintegratedPeakBounds.StartTime && bestPeak.EndTime <= reintegratedPeakBounds.EndTime)
+            {
+                return bestPeak;
+            }
+
+            var candidates = chromatogramInfo.Peaks;
+            if (!bestPeak.IsEmpty)
+            {
+                candidates = candidates.Prepend(bestPeak);
+            }
+
+            foreach (var candidate in candidates)
+            {
+                if (reintegratedPeakBounds.StartTime <= candidate.StartTime && reintegratedPeakBounds.EndTime >= candidate.EndTime)
+                {
+                    userSet = UserSet.REINTEGRATED;
+                    return candidate;
+                }
+            }
+
+            return bestPeak;
+        }
+
+        private ScoredPeakBounds GetOriginalPeak(ChromatogramGroupInfo chromGroupInfo, float tolerance)
+        {
+            var score = chromGroupInfo.Header.MaxPeakScore;
+            if (!score.HasValue)
+            {
+                return null;
+            }
+
+            var minStartTime = float.MaxValue;
+            var maxEndTime = float.MinValue;
+            float? apexTime = null;
+            float maxHeight = float.MinValue;
+            int bestPeakIndex = chromGroupInfo.BestPeakIndex;
+            foreach (var transition in Transitions)
+            {
+                var chromatogramInfo = chromGroupInfo.GetTransitionInfo(transition, tolerance, TransformChrom.raw);
+                if (chromatogramInfo == null)
+                {
+                    continue;
+                }
+                var peak = chromatogramInfo.GetPeak(bestPeakIndex);
+                if (!peak.IsEmpty)
+                {
+                    minStartTime = Math.Min(minStartTime, peak.StartTime);
+                    maxEndTime = Math.Max(maxEndTime, peak.EndTime);
+                    if (!apexTime.HasValue || maxHeight < peak.Height)
+                    {
+                        apexTime = peak.RetentionTime;
+                        maxHeight = peak.Height;
+                    }
+                }
+            }
+
+            if (minStartTime >= maxEndTime || !apexTime.HasValue)
+            {
+                return null;
+            }
+
+            return new ScoredPeakBounds(apexTime.Value, minStartTime, maxEndTime, score.Value);
         }
 
         public PeakGroupIntegrator MakePeakGroupIntegrator(SrmSettings settings, ChromatogramSet chromatogramSet, ChromatogramGroupInfo chromatogramGroupInfo)
@@ -1680,6 +1788,19 @@ namespace pwiz.Skyline.Model
             {
                 return false;
             }
+
+            if (!Equals(settingsNew.PeptideSettings.Imputation, settingsOld.PeptideSettings.Imputation))
+            {
+                return false;
+            }
+
+            if (settingsNew.PeptideSettings.Imputation.HasImputation)
+            {
+                if (!Equals(settingsNew.DocumentRetentionTimes, settingsOld.DocumentRetentionTimes))
+                {
+                    return false;
+                }
+            }
             if (measuredResults.HasNewChromatogramData(chromIndex))
             {
                 return false;
@@ -1722,30 +1843,6 @@ namespace pwiz.Skyline.Model
             return (TransitionGroupDocNode) ChangeResults(empty).ChangeChildren(childrenNew);
         }
 
-        private static int GetBestIndex(ChromatogramInfo info, PeakFeatureStatistics reintegratePeak, double qcutoff, ref UserSet userSet)
-        {
-            int bestIndex = info.BestPeakIndex;
-            if (reintegratePeak != null)
-            {
-                // If a cut-off for qvalues is set and q value is not low enough
-                // then pick no peak at all.
-                var qvalue = reintegratePeak.QValue;
-                if (qvalue.HasValue && qvalue.Value > qcutoff)
-                {
-                    userSet = UserSet.REINTEGRATED;
-                    bestIndex = -1;
-                }
-                // Otherwise, if the reintegrate peak is different from the default
-                // best peak, then use it and mark the peak as chosen by reintegration
-                else if (bestIndex != reintegratePeak.BestPeakIndex)
-                {
-                    userSet = UserSet.REINTEGRATED;
-                    bestIndex = reintegratePeak.BestPeakIndex;
-                }
-            }
-            return bestIndex;
-        }
-
         private static ChromPeak CalcPeak(SrmSettings settingsNew, PeakGroupIntegrator peakGroupIntegrator,
             ChromatogramInfo info, TransitionChromInfo chromInfoBest)
         {
@@ -1754,18 +1851,25 @@ namespace pwiz.Skyline.Model
                 return ChromPeak.EMPTY;
             }
 
+            return CalcPeak(settingsNew, peakGroupIntegrator, info, chromInfoBest.StartRetentionTime,
+                chromInfoBest.EndRetentionTime);
+        }
+
+        private static ChromPeak CalcPeak(SrmSettings settingsNew, PeakGroupIntegrator peakGroupIntegrator, ChromatogramInfo info,
+            float startTime, float endTime)
+        {
             ChromPeak.FlagValues flags = 0;
             if (settingsNew.MeasuredResults.IsTimeNormalArea)
                 flags = ChromPeak.FlagValues.time_normalized;
-            return info.CalcPeak(peakGroupIntegrator, chromInfoBest.StartRetentionTime, chromInfoBest.EndRetentionTime,
+            return info.CalcPeak(peakGroupIntegrator, startTime, endTime,
                 flags);
+
         }
 
         private static ChromPeak CalcMatchingPeak(SrmSettings settingsNew,
                                                   PeakGroupIntegrator peakGroupIntegrator,
                                                   ChromatogramInfo info,
                                                   TransitionGroupChromInfo chromGroupInfoMatch,
-                                                  PeakFeatureStatistics reintegratePeak,
                                                   double qcutoff, 
                                                   ref UserSet userSet)
         {
@@ -1775,7 +1879,7 @@ namespace pwiz.Skyline.Model
             var peak = info.CalcPeak(peakGroupIntegrator, chromGroupInfoMatch.StartRetentionTime.Value, chromGroupInfoMatch.EndRetentionTime.Value, flags);
             userSet = UserSet.MATCHED;
             var userSetBest = UserSet.FALSE;
-            int bestIndex = GetBestIndex(info, reintegratePeak, qcutoff, ref userSetBest);
+            int bestIndex = info.BestPeakIndex;
             if (bestIndex != -1)
             {
                 var peakBest = info.GetPeak(bestIndex);
@@ -1997,7 +2101,7 @@ namespace pwiz.Skyline.Model
                     iResult, transitionCount, listChromInfo));
             }
 
-            public void AddReintegrateInfo(MProphetResultsHandler resultsHandler, ChromFileInfoId[] fileIds, PeakFeatureStatistics[] reintegratePeaks)
+            public void AddReintegrateInfo(ReintegrateResultsHandler resultsHandler, ChromFileInfoId[] fileIds, PeakFeatureStatistics[] reintegratePeaks)
             {
                 _listResultCalcs.Last().AddReintegrateInfo(resultsHandler, fileIds, reintegratePeaks);
             }
@@ -2011,6 +2115,11 @@ namespace pwiz.Skyline.Model
 
                 // Add the iNext entry
                 _listResultCalcs[iNext].AddChromInfoList(nodeTran, info);
+            }
+
+            public void SetOriginalPeak(ChromFileInfoId fileId, ScoredPeakBounds originalPeak)
+            {
+                _listResultCalcs.Last().SetOriginalPeak(fileId, originalPeak);
             }
 
             private int GetOldPosition(int iResult)
@@ -2372,7 +2481,7 @@ namespace pwiz.Skyline.Model
             private int TransitionCount { get; set; }
             private List<TransitionGroupChromInfoCalculator> Calculators { get; set; }
 
-            private MProphetResultsHandler ReintegrateResults { get; set; }
+            private ReintegrateResultsHandler ReintegrateResults { get; set; }
             private ChromFileInfoId[] ReintegrateFileIds { get; set; }
             private PeakFeatureStatistics[] ReintegratePeaks { get; set; }
 
@@ -2380,14 +2489,14 @@ namespace pwiz.Skyline.Model
             {
                 if (ReintegrateResults != null && step == 0)
                 {
-                    int i = ReintegrateFileIds.IndexOf(id => id.GlobalIndex == fileId.GlobalIndex);
+                    int i = ReintegrateFileIds.IndexOf(id => ReferenceEquals(id, fileId));
                     if (i != -1)
                         return ReintegratePeaks[i];
                 }
                 return null;
             }
 
-            public void AddReintegrateInfo(MProphetResultsHandler resultsHandler, ChromFileInfoId[] fileIds, PeakFeatureStatistics[] reintegratePeaks)
+            public void AddReintegrateInfo(ReintegrateResultsHandler resultsHandler, ChromFileInfoId[] fileIds, PeakFeatureStatistics[] reintegratePeaks)
             {
                 if (resultsHandler != null)
                 {
@@ -2427,8 +2536,15 @@ namespace pwiz.Skyline.Model
                                                                           step,
                                                                           TransitionCount,
                                                                           chromInfoGroup,
-                                                                          GetReintegratePeak(fileId, step), 
                                                                           explicitPeakBounds);
+                        if (ReintegrateResults != null)
+                        {
+                            var reintegratedPeak = GetReintegratePeak(fileId, step);
+                            if (reintegratedPeak != null)
+                            {
+                                calc.SetReintegratedPeak(reintegratedPeak, ReintegrateResults);
+                            }
+                        }
                         calc.AddChromInfo(nodeTran, chromInfo);
                         Calculators.Insert(~i, calc);
                     }
@@ -2499,6 +2615,15 @@ namespace pwiz.Skyline.Model
                 }
                 return ~i;
             }
+
+            public void SetOriginalPeak(ChromFileInfoId fileId, ScoredPeakBounds originalPeak)
+            {
+                var iCalc = IndexOfCalc(fileId, 0);
+                if (iCalc >= 0)
+                {
+                    Calculators[iCalc].SetOriginalPeak(originalPeak);
+                }
+            }
         }
 
         private sealed class TransitionGroupChromInfoCalculator
@@ -2509,7 +2634,6 @@ namespace pwiz.Skyline.Model
                                                         int optimizationStep,
                                                         int transitionCount,
                                                         TransitionGroupChromInfo chromInfo,
-                                                        PeakFeatureStatistics reintegratePeak,
                                                         ExplicitPeakBounds explicitPeakBounds)
             {
                 Settings = settings;
@@ -2528,18 +2652,14 @@ namespace pwiz.Skyline.Model
                     Annotations = chromInfo.Annotations;
 
                     IonMobilityInfo = chromInfo.IonMobilityInfo;
+                    OriginalPeak = chromInfo.OriginalPeak;
+                    ReintegratedPeak = chromInfo.ReintegratedPeak;
                 }
                 else
                 {
                     Annotations = Annotations.EMPTY;
 
                     IonMobilityInfo = TransitionGroupIonMobilityInfo.EMPTY; 
-                }
-
-                if (reintegratePeak != null)
-                {
-                    QValue = reintegratePeak.QValue;
-                    ZScore = reintegratePeak.BestScore;
                 }
                 ExplicitPeakBounds = explicitPeakBounds;
             }
@@ -2556,6 +2676,37 @@ namespace pwiz.Skyline.Model
             private RetentionTimeValues BestRetentionTimes { get; set; }
             private RetentionTimeValues NonQuantitativeRetentionTimes { get; set; }
             private TransitionGroupIonMobilityInfo IonMobilityInfo { get; set; }
+            private ScoredPeakBounds OriginalPeak { get; set; }
+            private ScoredPeakBounds ReintegratedPeak { get; set; }
+
+            public void SetReintegratedPeak(PeakFeatureStatistics reintegratedPeak, ReintegrateResultsHandler reintegrateResultsHandler)
+            {
+                if (reintegrateResultsHandler.IsDefaultScoringModel())
+                {
+                    SetOriginalPeak(reintegratedPeak.BestScoredPeak);
+                    ZScore = reintegratedPeak.BestScore;
+                    QValue = null;
+                    ReintegratedPeak = null;
+                }
+                else
+                {
+                    ZScore = reintegratedPeak.BestScore;
+                    QValue = reintegratedPeak.QValue;
+                    if (reintegratedPeak.QValue >= reintegrateResultsHandler.QValueCutoff)
+                    {
+                        ReintegratedPeak = null;
+                    }
+                    else
+                    {
+                        ReintegratedPeak = reintegratedPeak.BestScoredPeak;
+                    }
+                }
+            }
+
+            public void SetOriginalPeak(ScoredPeakBounds peak)
+            {
+                OriginalPeak = peak;
+            }
             private float? Fwhm { get; set; }
             private float? Area { get; set; } // Area of all peaks, including non-scoring peaks that don't influence RT determination
             private float? AreaMs1 { get; set; }
@@ -2699,7 +2850,7 @@ namespace pwiz.Skyline.Model
                 }
 
                 var retentionTimeValues = BestRetentionTimes ?? NonQuantitativeRetentionTimes;
-                return new TransitionGroupChromInfo(FileId,
+                var transitionGroupChromInfo = new TransitionGroupChromInfo(FileId,
                                                     OptimizationStep,
                                                     PeakCountRatio,
                                                     (float?) retentionTimeValues?.RetentionTime,
@@ -2718,7 +2869,8 @@ namespace pwiz.Skyline.Model
                                                     qValue,
                                                     ZScore,
                                                     Annotations,
-                                                    UserSet);
+                                                    UserSet).ChangeOriginalPeak(OriginalPeak).ChangeReintegratedPeak(ReintegratedPeak);
+                return transitionGroupChromInfo;
             }
         }
 

@@ -29,7 +29,6 @@ using pwiz.Skyline.Util.Extensions;
 namespace pwiz.Skyline.Controls.Graphs
 {
 // ReSharper disable InconsistentNaming
-    public enum RTPeptideValue { All, Retention, FWHM, FWB }
 // ReSharper restore InconsistentNaming
 
     internal class RTPeptideGraphPane : SummaryPeptideGraphPane, IUpdateGraphPaneController

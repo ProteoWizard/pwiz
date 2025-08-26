@@ -411,6 +411,30 @@ containing protein sequence, or #N/A if no protein sequence is available</value>
   <data name="ExcludeFromCalibration">
     <value>Whether the results in the replicate should be excluded from the peptide's calibration curve calculation.</value>
   </data>
+  <data name="ExemplaryEndTime">
+    <value>Normalized end retention time of the peak from the best-scoring replicate or library file</value>
+  </data>
+  <data name="ExemplaryFilePath">
+    <value>File path of the result file with the best-scoring peak</value>
+  </data>
+  <data name="ExemplaryLibraryName">
+    <value>Name of the library with the best-scoring peak</value>
+  </data>
+  <data name="ExemplaryPeak">
+    <value>Best-scoring peak either from one of the Replicates in the document or one of the explicit peak boundaries from a library</value>
+  </data>
+  <data name="ExemplaryReplicateName">
+    <value>Name of the replicate with the best-scoring peak</value>
+  </data>
+  <data name="ExemplaryRetentionTime">
+    <value>Normalized retention time of the apex of the best-scoring peak</value>
+  </data>
+  <data name="ExemplaryScore">
+    <value>Score of the highest scoring peak in either a replicate or a library</value>
+  </data>
+  <data name="ExemplaryStartTime">
+    <value>Normalized start retention time of the peak from the best-scoring replicate or library file</value>
+  </data>
   <data name="ExplicitAnalyteConcentration">
     <value>The concentration of this particular molecule or peptide in this particular replicate.
 If the Explicit Analyte Concentration is not specified then the concentration of the analyte is assumed 
@@ -523,6 +547,15 @@ boundaries.</value>
     <value>True if a MS/MS peptide identification exists for the result file at a time
 between the peak integration boundaries.</value>
   </data>
+  <data name="ImputedEndTime">
+    <value>End time of the peak from the best-scoring replicate mapped using retention time alignment to this replicate</value>
+  </data>
+  <data name="ImputedPeak">
+    <value>Peak boundaries of the best-scoring replicate mapped using retention time alignment to this replicate</value>
+  </data>
+  <data name="ImputedStartTime">
+    <value>Start time of the peak from the best-scoring replicate mapped using retention time alignment to this replicate</value>
+  </data>
   <data name="InChI" xml:space="preserve">
     <value>Standardized molecular identifier</value>
   </data>
@@ -587,7 +620,7 @@ between the peak integration boundaries.</value>
     <value>True if this is a decoy precursor.</value>
   </data>
   <data name="IsolationWindowWidth">
-    <value>With of the m/z window in which the precursor was isolated. 
+    <value>Width of the m/z window in which the precursor was isolated. 
 If more than one precursor was isolated then the Isolation Window Width is the sum of the windows around each precursor.</value>
   </data>
   <data name="IsotopeDistIndex">
@@ -1017,6 +1050,21 @@ OptStep if declustering potential optimization is being performed</value>
 parameter being optimized, 0 for the default parameter value, or if no optimization is
 being performed in the replicate.</value>
   </data>
+  <data name="OriginalEndTime">
+    <value>End retention time of the peak chosen by Skyline during chromatogram extraction</value>
+  </data>
+  <data name="OriginalPeak">
+    <value>Peak boundaries chosen by Skyline during chromatogram extraction</value>
+  </data>
+  <data name="OriginalRetentionTime">
+    <value>Retention time of the apex of the peak chosen by Skyline during the initial chromatogram extraction</value>
+  </data>
+  <data name="OriginalScore">
+    <value>Peak score assigned by Skyline during chromatogram extraction</value>
+  </data>
+  <data name="OriginalStartTime">
+    <value>Start retention time of the peak chosen by Skyline during chromatogram extraction</value>
+  </data>
   <data name="PeakGroupEndTime">
     <value>The maximum end time of the individual peaks in the peak group.</value>
   </data>
@@ -1390,6 +1438,21 @@ measured.</value>
   </data>
   <data name="Reason">
     <value>Reason the user gave for making the change</value>
+  </data>
+  <data name="ReintegratedEndTime">
+    <value>End retention time of the peak chosen when reintegrating with a trained peak scoring model</value>
+  </data>
+  <data name="ReintegratedPeak">
+    <value>Peak boundaries of the peak chosen when reintegrating with a trained peak scoring model</value>
+  </data>
+  <data name="ReintegratedRetentionTime">
+    <value>Retention time of the apex of the peak chosen when reintegrating with a trained peak scoring model</value>
+  </data>
+  <data name="ReintegratedScore">
+    <value>Score assigned to the peak chosen when reintegrating with a trained peak scoring model</value>
+  </data>
+  <data name="ReintegratedStartTime">
+    <value>Start retention time of the peak chosen when reintegrating with a trained peak scoring model</value>
   </data>
   <data name="Replicate">
     <value>Replicate</value>
