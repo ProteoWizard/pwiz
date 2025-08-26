@@ -218,17 +218,17 @@ namespace pwiz.Skyline.Util
 
         public ShareType DecideShareTypeVersion(SrmDocument document, ShareType shareType)
         {
-            var cacheVersion = GetDocumentCacheVersion(document);
+            var cacheFormat = GetDocumentCacheFormat(document);
 
-            if (!cacheVersion.HasValue)
+            if (cacheFormat == null)
             {
                 // The document may not have any chromatogram data.
                 return shareType;
             }
 
-            var supportedSkylineVersion = GetSupportedVersionForCacheFormat(cacheVersion);
+            var supportedSkylineVersion = GetSupportedVersionForCacheFormat(cacheFormat);
             CacheFormatVersion supportedVersion = supportedSkylineVersion.CacheFormatVersion;
-            if (supportedVersion >= cacheVersion.Value)
+            if (supportedVersion >= cacheFormat.VersionRequired)
             {
                 return shareType;
             }
@@ -236,11 +236,11 @@ namespace pwiz.Skyline.Util
             return shareType.ChangeSkylineVersion(supportedSkylineVersion);
         }
 
-        private SkylineVersion GetSupportedVersionForCacheFormat(CacheFormatVersion? cacheVersion)
+        private SkylineVersion GetSupportedVersionForCacheFormat(CacheFormat cacheFormat)
         {
             var skydVersion = GetSupportedSkydVersion();
             SkylineVersion skylineVersion;
-            if (!cacheVersion.HasValue || skydVersion >= cacheVersion)
+            if (cacheFormat == null || skydVersion >= cacheFormat.VersionRequired)
             {
                 // Either the document does not have any chromatograms or the server supports the document's cache version. 
                 // Since the cache version does not change when the document is shared, it can be shared as the latest Skyline
@@ -260,24 +260,24 @@ namespace pwiz.Skyline.Util
                 if (skylineVersion == null)
                 {
                     throw new PanoramaServerException(string.Format(
-                        Resources.PublishDocumentDlg_ServerSupportsSkydVersion_, (int)cacheVersion.Value));
+                        Resources.PublishDocumentDlg_ServerSupportsSkydVersion_, (int)cacheFormat.FormatVersion));
                 }
             }
 
             return skylineVersion;
         }
 
-        private static CacheFormatVersion? GetDocumentCacheVersion(SrmDocument document)
+        private static CacheFormat GetDocumentCacheFormat(SrmDocument document)
         {
             var settings = document.Settings;
             Assume.IsTrue(document.IsLoaded);
-            return settings.HasResults ? settings.MeasuredResults.CacheVersion : null;
+            return settings.HasResults ? settings.MeasuredResults.CacheFormat : null;
         }
 
         public ShareType GetShareType(SrmDocument document,
             string documentFilePath, DocumentFormat? fileFormatOnDisk, Control parent, ref bool cancelled)
         {
-            var cacheVersion = GetDocumentCacheVersion(document);
+            var cacheVersion = GetDocumentCacheFormat(document);
             var supportedSkylineVersion = GetSupportedVersionForCacheFormat(cacheVersion);
             
             using (var dlgType = new ShareTypeDlg(document, documentFilePath, fileFormatOnDisk, supportedSkylineVersion, 

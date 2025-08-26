@@ -121,9 +121,9 @@ namespace pwiz.Skyline.Model.Results
         public Results<TransitionGroupChromInfo> EmptyTransitionGroupResults { get; private set; }
         public Results<TransitionChromInfo> EmptyTransitionResults { get; private set; }
 
-        public CacheFormatVersion? CacheVersion
+        public CacheFormat CacheFormat
         {
-            get { return _cacheFinal != null ? _cacheFinal.Version : (CacheFormatVersion?) null; }
+            get { return _cacheFinal?.CacheFormat; }
         }
 
         public bool IsLoaded
