@@ -18,9 +18,9 @@
  */
 
 using JetBrains.Annotations;
-using System;
 using System.ComponentModel;
 using System.Resources;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.Files
 {
@@ -29,8 +29,7 @@ namespace pwiz.Skyline.Model.Files
         public ReplicatesFolderProperties(ReplicatesFolder model, string localFilePath)
             : base(model, localFilePath)
         {
-            if (model == null)
-                throw new ArgumentNullException(nameof(model));
+            Assume.IsNotNull(model);
             
             FileNum = model.Files.Count;
         }
