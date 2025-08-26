@@ -35,7 +35,6 @@ namespace pwiz.Skyline.Model
         public UseToCompare(bool isUsed)
         {
             IsUsed = isUsed;
-            var myAttribute = BrowsableAttribute.Yes;
         }
     }
 
@@ -333,7 +332,7 @@ namespace pwiz.Skyline.Model
         {
             // Doesn't display default values to highlight changed ones
             var value = _basePropertyDescriptor.GetValue(component);
-            if (value == null || value is bool b && !b)
+            if (value == null || (value is bool b && !b))
                 return string.Empty;
 
             return value;
