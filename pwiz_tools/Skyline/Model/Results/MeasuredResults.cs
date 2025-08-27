@@ -126,6 +126,11 @@ namespace pwiz.Skyline.Model.Results
             get { return _cacheFinal?.CacheFormat; }
         }
 
+        public CacheFormatVersion? CacheVersion
+        {
+            get { return CacheFormat?.FormatVersion; }
+        }
+
         public bool IsLoaded
         {
             get
