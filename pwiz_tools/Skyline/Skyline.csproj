@@ -640,11 +640,6 @@
     </Compile>
     <Compile Include="Model\Files\FileNodeProperties.cs" />
     <Compile Include="Model\Files\ReplicateProperties.cs" />
-    <Compile Include="Model\PropertySheets\PropertySheetResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>PropertySheetResources.resx</DependentUpon>
-    </Compile>
     <Compile Include="Model\Proteome\AssociateProteinsResults.cs" />
     <Compile Include="Model\Lib\LibraryFiles.cs" />
     <Compile Include="Model\Results\LcPeakIonMetrics.cs" />
@@ -3793,10 +3788,6 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
       <LastGenOutput>PropertySheetFileNodeResources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Model\PropertySheets\PropertySheetResources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>PropertySheetResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\RetentionTimes\RetentionTimesResources.ja.resx">
       <DependentUpon>RetentionTimesResources.resx</DependentUpon>

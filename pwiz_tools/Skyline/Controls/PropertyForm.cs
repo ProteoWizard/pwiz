@@ -70,10 +70,11 @@ namespace pwiz.Skyline.Controls
             var newValue = e.ChangedItem.Value;
             var descriptor = e.ChangedItem.PropertyDescriptor;
 
-            if (!(descriptor is GlobalizedPropertyDescriptor { IsReadOnly: false, GetModifiedDocument: { } } globalizedPropertyDescriptor))
+            // This situation is not possible, but necessary to satisfy the compiler.
+            if (!(descriptor is GlobalizedPropertyDescriptor { IsReadOnly: false } globalizedPropertyDescriptor))
                 return;
 
-            // If the property is editable and modifies the document, acquire the document change lock and modify the document,
+            // If the property is editable, acquire the document change lock and modify the document,
             // by calling the GetModifiedDocument delegate of the property descriptor.
             lock (SkylineWindow.GetDocumentChangeLock())
             {
@@ -85,7 +86,7 @@ namespace pwiz.Skyline.Controls
                 {
                     using var monitor = new SrmSettingsChangeMonitor(progressMonitor, longWaitDlg.Text, SkylineWindow);
 
-                    modifiedDoc = globalizedPropertyDescriptor.GetModifiedDocument.Invoke(SkylineWindow.Document, monitor, newValue);
+                    modifiedDoc = globalizedPropertyDescriptor.GetModifiedDocument(SkylineWindow.Document, monitor, newValue);
                 });
 
                 SkylineWindow.ModifyDocument(FilesTreeResources.Change_ReplicateName, DocumentModifier.FromResult(originalDoc, modifiedDoc));

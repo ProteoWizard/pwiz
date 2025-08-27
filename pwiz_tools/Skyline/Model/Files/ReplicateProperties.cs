@@ -71,15 +71,10 @@ namespace pwiz.Skyline.Model.Files
         [Category("Replicate")] public double MaxIntensity { get; set; }
         [Category("Replicate")] public string AcquisitionTime { get; set; }
 
-        // TODO: GetModifiedDocument delegate needs to  be attached to the PropertyDescriptor in some way, so PropertyForm can call it
-        // when the property is changed. Are there ways to do this without attributes?
-
         // Replicate Name is editable and updates the document with _getModifiedDocumentRename
         [EditableProperty]
-        [ModifiesDocument("_getModifiedDocumentRename")]
-        [Category("FileInfo")]
-        public override string Name { get; set; }
-        [UsedImplicitly]
+        [Category("FileInfo")] public override string Name { get; set; }
+
         private readonly Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument> _getModifiedDocumentRename;
 
         // Instrument properties need to be added as nested properties, as lists don't render well in PropertyGrid
@@ -92,6 +87,13 @@ namespace pwiz.Skyline.Model.Files
         /// </summary>
         protected override void AddCustomizedProperties()
         {
+            // add editable Name property with ModifiedDocument delegate
+            var namePropertyDescriptor = GetBaseDescriptorByName(nameof(Name));
+            AddProperty(new GlobalizedPropertyDescriptor(
+                namePropertyDescriptor,
+                GetResourceManager(),
+                _getModifiedDocumentRename));
+
             const string instrumentsCategoryKey = "Instruments";
 
             if (Instruments?.Count == 1)

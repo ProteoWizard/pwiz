@@ -17,7 +17,6 @@
 using Newtonsoft.Json;
 using JetBrains.Annotations;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.PropertySheets;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -94,6 +93,15 @@ namespace pwiz.Skyline.Model
         public object GetPropertyOwner(PropertyDescriptor pd) => this;
 
         /// <summary>
+        /// Gets the base property descriptor of this object by name. Note that GetProperties(GetType()) returns the base properties,
+        /// not the properties returned by GetProperties() in this class.
+        /// Used by derived classes to get the base property descriptor when adding custom properties.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public PropertyDescriptor GetBaseDescriptorByName(string name) => TypeDescriptor.GetProperties(GetType()).Find(name, false);
+
+        /// <summary>
         /// Called to get the properties of a type.
         /// </summary>
         /// <param name="attributes"></param>
@@ -111,31 +119,16 @@ namespace pwiz.Skyline.Model
                 foreach (PropertyDescriptor oProp in baseProps)
                 {
                     // don't copy over properties that require custom handling
-                    if (oProp.Attributes[typeof(UseCustomHandlingAttribute)] != null || oProp.Attributes[typeof(UsedImplicitlyAttribute)] != null)
+                    if (oProp.Attributes[typeof(UseCustomHandlingAttribute)] != null || 
+                        oProp.Attributes[typeof(UsedImplicitlyAttribute)] != null ||
+                        oProp.Attributes[typeof(EditablePropertyAttribute)] != null)
                         continue;
                     
                     // Only display properties whose values have been set
                     if (oProp.GetValue(this) == null)
                         continue;
 
-                    var readOnly = oProp.Attributes[typeof(EditablePropertyAttribute)] == null;
-                    var modifiesDocumentAttr = (ModifiesDocumentAttribute)oProp.Attributes[typeof(ModifiesDocumentAttribute)];
-
-                    if (modifiesDocumentAttr == null)
-                    {
-                        _globalizedProps.Add(new GlobalizedPropertyDescriptor(oProp, GetResourceManager(), readOnly));
-                        continue;
-                    }
-                    
-                    var getModifiedDocumentFunc = GetType()
-                        .GetField(modifiesDocumentAttr.GetModifiedDocumentFuncName, BindingFlags.Instance | BindingFlags.NonPublic)
-                        ?.GetValue(this);
-
-                    // TODO: Consider moving this check to a static check in CodeInspection and calling Assume?
-                    if (!(getModifiedDocumentFunc is Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument> getModifiedDocument))
-                        throw new Exception(string.Format(PropertySheetResources.ModifiedDocFuncName_NotFound, modifiesDocumentAttr.GetModifiedDocumentFuncName, GetType()));
-
-                    _globalizedProps.Add(new GlobalizedPropertyDescriptor(oProp, GetResourceManager(), readOnly, getModifiedDocument));
+                    _globalizedProps.Add(new GlobalizedPropertyDescriptor(oProp, GetResourceManager()));
                 }
 
                 AddCustomizedProperties();
@@ -306,18 +299,21 @@ namespace pwiz.Skyline.Model
 
         private readonly PropertyDescriptor _basePropertyDescriptor;
         private readonly ResourceManager _resourceManager;
-        private readonly bool _readOnly;
 
-        public readonly Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument> GetModifiedDocument;
+        private readonly Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument> _getModifiedDocumentFromEdit;
 
-        public GlobalizedPropertyDescriptor(PropertyDescriptor basePropertyDescriptor, ResourceManager resourceManager, bool readOnly = true,
-            Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument> getModifiedDocument = null) : base(basePropertyDescriptor)
+        public GlobalizedPropertyDescriptor(PropertyDescriptor basePropertyDescriptor, ResourceManager resourceManager,
+            Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument> getModifiedDocumentFromEdit = null) 
+            : base(basePropertyDescriptor)
         {
             _basePropertyDescriptor = basePropertyDescriptor;
             _resourceManager = resourceManager;
-            _readOnly = readOnly;
+            _getModifiedDocumentFromEdit = getModifiedDocumentFromEdit;
+        }
 
-            GetModifiedDocument = getModifiedDocument;
+        public ModifiedDocument GetModifiedDocument(SrmDocument document, SrmSettingsChangeMonitor monitor, object value)
+        {
+            return _getModifiedDocumentFromEdit?.Invoke(document, monitor, value);
         }
 
         public override bool CanResetValue(object component)
@@ -362,7 +358,7 @@ namespace pwiz.Skyline.Model
             return value;
         }
 
-        public override bool IsReadOnly => _readOnly;
+        public override bool IsReadOnly => _getModifiedDocumentFromEdit == null;
 
         public override string Name => _basePropertyDescriptor.Name;
 
@@ -391,6 +387,9 @@ namespace pwiz.Skyline.Model
     /// </summary>
     public class CustomHandledGlobalizedPropertyDescriptor : PropertyDescriptor
     {
+        private const string DESCRIPTION_PREFIX = @"Description_";
+        private const string CATEGORY_PREFIX = @"Category_";
+
         private readonly ResourceManager _resourceManager;
         private object _value;
         private readonly string _category;
@@ -399,13 +398,11 @@ namespace pwiz.Skyline.Model
         private readonly string _nonLocalizedDisplayName;
         private readonly Func<string, string> _displayNameFormat;
 
-        private const string DESCRIPTION_PREFIX = @"Description_";
-        private const string CATEGORY_PREFIX = @"Category_";
-
         public CustomHandledGlobalizedPropertyDescriptor(
             Type type, string name, object value, string category,
             ResourceManager resourceManager, Attribute[] attributes = null,
-            string nonLocalizedDisplayName = null, Func<string, string> displayNameFormat = null) 
+            string nonLocalizedDisplayName = null, Func<string, string> displayNameFormat = null,
+            Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument> getModifiedDocument = null) 
             : base(name, attributes)
         {
             _resourceManager = resourceManager;
@@ -481,19 +478,7 @@ namespace pwiz.Skyline.Model
     [AttributeUsage(AttributeTargets.Property)]
     public class UseCustomHandlingAttribute : Attribute { }
 
-    // Used to flag properties that are editable and should be set ReadOnly = false in the property sheet.
+    // Used to flag properties that are editable.
     [AttributeUsage(AttributeTargets.Property)]
     public class EditablePropertyAttribute : Attribute { }
-
-    // Used to flag properties that modify the document, and provide a method to do so.
-    [AttributeUsage(AttributeTargets.Property)]
-    public class ModifiesDocumentAttribute : Attribute
-    {
-        public string GetModifiedDocumentFuncName;
-
-        public ModifiesDocumentAttribute(string getModifiedDocumentFuncName)
-        {
-            GetModifiedDocumentFuncName = getModifiedDocumentFuncName;
-        }
-    }
 }
