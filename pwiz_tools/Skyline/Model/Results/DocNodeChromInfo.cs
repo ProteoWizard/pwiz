@@ -386,6 +386,37 @@ namespace pwiz.Skyline.Model.Results
 
         public bool IsUserModified { get { return IsUserSetManual || !Annotations.IsEmpty; } }
 
+        public ScoredPeakBounds MakeScoredPeak(float score)
+        {
+            if (RetentionTime.HasValue && StartRetentionTime.HasValue && EndRetentionTime.HasValue)
+            {
+                return new ScoredPeakBounds(RetentionTime.Value, StartRetentionTime.Value, EndRetentionTime.Value, score);
+            }
+
+            return null;
+        }
+
+        public ScoredPeakBounds OriginalPeak { get; private set; }
+
+        public TransitionGroupChromInfo ChangeOriginalPeak(ScoredPeakBounds value)
+        {
+            if (ReferenceEquals(value, OriginalPeak))
+            {
+                return this;
+            }
+            return ChangeProp(ImClone(this), im => im.OriginalPeak = value);
+        }
+        public ScoredPeakBounds ReintegratedPeak { get; private set; }
+
+        public TransitionGroupChromInfo ChangeReintegratedPeak(ScoredPeakBounds value)
+        {
+            if (ReferenceEquals(value, ReintegratedPeak))
+            {
+                return this;
+            }
+            return ChangeProp(ImClone(this), im => im.ReintegratedPeak = value);
+        }
+
         private bool GetFlag(Flags flag)
         {
             return 0 != (_flags & flag);
@@ -463,7 +494,9 @@ namespace pwiz.Skyline.Model.Results
                    other.Annotations.Equals(Annotations) &&
                    other.OptimizationStep.Equals(OptimizationStep) &&
                    other.Annotations.Equals(Annotations) &&
-                   other.UserSet.Equals(UserSet);
+                   other.UserSet.Equals(UserSet) &&
+                   Equals(other.OriginalPeak, OriginalPeak) &&
+                   Equals(other.ReintegratedPeak, ReintegratedPeak);
             return result;
         }
 
@@ -479,28 +512,30 @@ namespace pwiz.Skyline.Model.Results
             unchecked
             {
                 int result = base.GetHashCode();
-                result = (result*397) ^ PeakCountRatio.GetHashCode();
-                result = (result*397) ^ (RetentionTime.HasValue ? RetentionTime.Value.GetHashCode() : 0);
-                result = (result*397) ^ (StartRetentionTime.HasValue ? StartRetentionTime.Value.GetHashCode() : 0);
-                result = (result*397) ^ (EndRetentionTime.HasValue ? EndRetentionTime.Value.GetHashCode() : 0);
-                result = (result*397) ^ IonMobilityInfo.GetHashCode();
-                result = (result*397) ^ (Fwhm.HasValue ? Fwhm.Value.GetHashCode() : 0);
-                result = (result*397) ^ (Area.HasValue ? Area.Value.GetHashCode() : 0);
-                result = (result*397) ^ (AreaMs1.HasValue ? AreaMs1.Value.GetHashCode() : 0);
-                result = (result*397) ^ (AreaFragment.HasValue ? AreaFragment.Value.GetHashCode() : 0);
-                result = (result*397) ^ (BackgroundArea.HasValue ? BackgroundArea.Value.GetHashCode() : 0);
-                result = (result*397) ^ (BackgroundAreaMs1.HasValue ? BackgroundAreaMs1.Value.GetHashCode() : 0);
-                result = (result*397) ^ (BackgroundAreaFragment.HasValue ? BackgroundAreaFragment.Value.GetHashCode() : 0);
-                result = (result*397) ^ (Height.HasValue ? Height.Value.GetHashCode() : 0);
-                result = (result*397) ^ (Truncated.HasValue ? Truncated.Value.GetHashCode() : 0);
-                result = (result*397) ^ Identified.GetHashCode();
-                result = (result*397) ^ (LibraryDotProduct.HasValue ? LibraryDotProduct.Value.GetHashCode() : 0);
-                result = (result*397) ^ (IsotopeDotProduct.HasValue ? IsotopeDotProduct.Value.GetHashCode() : 0);
-                result = (result*397) ^ QValue.GetHashCode();
-                result = (result*397) ^ ZScore.GetHashCode();
-                result = (result*397) ^ OptimizationStep;
-                result = (result*397) ^ Annotations.GetHashCode();
-                result = (result*397) ^ UserSet.GetHashCode();
+                result = (result * 397) ^ PeakCountRatio.GetHashCode();
+                result = (result * 397) ^ (RetentionTime?.GetHashCode() ?? 0);
+                result = (result * 397) ^ (StartRetentionTime?.GetHashCode() ?? 0);
+                result = (result * 397) ^ (EndRetentionTime?.GetHashCode() ?? 0);
+                result = (result * 397) ^ IonMobilityInfo.GetHashCode();
+                result = (result * 397) ^ (Fwhm?.GetHashCode() ?? 0);
+                result = (result * 397) ^ Area?.GetHashCode() ?? 0;
+                result = (result * 397) ^ (AreaMs1?.GetHashCode() ?? 0);
+                result = (result * 397) ^ (AreaFragment?.GetHashCode() ?? 0);
+                result = (result * 397) ^ (BackgroundArea?.GetHashCode() ?? 0);
+                result = (result * 397) ^ (BackgroundAreaMs1?.GetHashCode() ?? 0);
+                result = (result * 397) ^ (BackgroundAreaFragment?.GetHashCode() ?? 0);
+                result = (result * 397) ^ (Height?.GetHashCode() ?? 0);
+                result = (result * 397) ^ (Truncated?.GetHashCode() ?? 0);
+                result = (result * 397) ^ Identified.GetHashCode();
+                result = (result * 397) ^ (LibraryDotProduct?.GetHashCode() ?? 0);
+                result = (result * 397) ^ (IsotopeDotProduct?.GetHashCode() ?? 0);
+                result = (result * 397) ^ QValue.GetHashCode();
+                result = (result * 397) ^ ZScore.GetHashCode();
+                result = (result * 397) ^ OptimizationStep;
+                result = (result * 397) ^ Annotations.GetHashCode();
+                result = (result * 397) ^ UserSet.GetHashCode();
+                result = (result * 397) ^ (OriginalPeak?.GetHashCode() ?? 0);
+                result = (result * 397) ^ (ReintegratedPeak?.GetHashCode() ?? 0);
                 return result;
             }
         }

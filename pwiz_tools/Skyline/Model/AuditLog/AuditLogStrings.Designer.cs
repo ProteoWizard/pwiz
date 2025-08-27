@@ -915,6 +915,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Imputed boundaries for &apos;{0}&apos;.
+        /// </summary>
+        public static string imputed_boundaries {
+            get {
+                return ResourceManager.GetString("imputed_boundaries", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Inserted Peptides/Proteins.
         /// </summary>
         public static string inserted_data {
