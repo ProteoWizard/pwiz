@@ -32,8 +32,5 @@ namespace pwiz.Common.SystemUtil.PInvoke
 
         [DllImport("gdi32.dll", SetLastError = true)]
         public static extern bool DeleteObject(IntPtr hObject);
-
-        [DllImport("gdi32.dll")]
-        public static extern IntPtr CreateRoundRectRgn(int x, int y, int width, int height, int radiusWidth, int radiusHeight);
     }
 }
