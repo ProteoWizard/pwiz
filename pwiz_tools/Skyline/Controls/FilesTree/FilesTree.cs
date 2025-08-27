@@ -43,9 +43,12 @@ namespace pwiz.Skyline.Controls.FilesTree
         private FilesTreeNode _triggerLabelEditForNode;
         private TextBox _editTextBox;
         private string _editedLabel;
+        private readonly MemoryDocumentContainer _modelDocumentContainer;
 
         public FilesTree()
         {
+            _modelDocumentContainer = new MemoryDocumentContainer();
+
             _monitoringFileSystem = false;
             _monitoredFilePath = null;
             _fsWatcher = new FileSystemWatcher();
@@ -76,10 +79,6 @@ namespace pwiz.Skyline.Controls.FilesTree
         }
 
         public FilesTreeNode SelectedNodeFTN => SelectedNode as FilesTreeNode;
-
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public SrmDocument Document { get; private set; }
 
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -174,9 +173,12 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         public void OnDocumentSaved(object sender, DocumentSavedEventArgs args)
         {
-            if (args == null || DocumentContainer.DocumentUI == null)
+            Assume.IsNotNull(DocumentContainer);
+
+            if (args == null || DocumentContainer.Document == null)
                 return;
 
+            // CONSIDER: use DocumentContainer.DocumentFilePath?
             var newDocumentFilePath = args.DocumentFilePath;
 
             if (IsMonitoringFileSystem() && args.IsSaveAs && !string.Equals(_monitoredFilePath, newDocumentFilePath, StringComparison.OrdinalIgnoreCase))
@@ -186,28 +188,44 @@ namespace pwiz.Skyline.Controls.FilesTree
                 _monitoringFileSystem = true;
             }
 
-            UpdateTree(Document, newDocumentFilePath);
+            UpdateTree(DocumentContainer.Document, newDocumentFilePath, true);
         }
 
         public void OnDocumentChanged(object sender, DocumentChangedEventArgs args)
         {
-            Document = DocumentContainer.DocumentUI;
+            Assume.IsNotNull(DocumentContainer);
 
-            if (args == null || Document == null || ReferenceEquals(Document.Settings, args.DocumentPrevious?.Settings))
+            if (args == null || DocumentContainer.Document == null)
+                return;
+            // Nothing to do if no changes to SrmSettings
+            if (ReferenceEquals(DocumentContainer.Document.Settings, args.DocumentPrevious?.Settings))
                 return;
 
-            UpdateTree(Document, DocumentContainer.DocumentFilePath);
+            UpdateTree(DocumentContainer.Document, DocumentContainer.DocumentFilePath);
         }
 
-        internal void UpdateTree(SrmDocument document, string documentFilePath) 
+        internal void UpdateTree(SrmDocument document, string documentFilePath, bool documentPathChanged = false) 
         {
             try
             {
                 BeginUpdateMS();
 
-                var files = SkylineFile.Create(document, documentFilePath);
+                // CONSIDER: pass DocumentContainer, which is actually just SkylineWindow?
+                var originalDocument = _modelDocumentContainer.Document;
+                _modelDocumentContainer.DocumentFilePath = documentFilePath;
+                _modelDocumentContainer.SetDocument(document, originalDocument);
 
-                MergeNodes(new SingletonList<FileNode>(files), Nodes, FilesTreeNode.CreateNode);
+                // {
+                //     var versionMsg = originalDocument != null ? @$"{originalDocument.RevisionIndex}" : @"null";
+                //     var nameMsg = documentFilePath != null ? $@"{Path.GetFileName(documentFilePath)}" : @"<unsaved>";
+                //     Console.WriteLine($@"===== Updating document {nameMsg} from {versionMsg} to {document.RevisionIndex}. DocumentPathChanged {documentPathChanged}.");
+                // }
+
+                var files = SkylineFile.Create(_modelDocumentContainer);
+
+                MergeNodes(new SingletonList<FileNode>(files), Nodes, FilesTreeNode.CreateNode, documentPathChanged);
+
+                Root.Expand(); // Always keep Root expanded
 
                 if (FileNode.IsDocumentSavedToDisk(documentFilePath) && !IsMonitoringFileSystem())
                 {
@@ -236,7 +254,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         }
 
         // CONSIDER: refactor for more code reuse with SrmTreeNode
-        internal void MergeNodes(IList<FileNode> docFiles, TreeNodeCollection treeNodes, Func<FileNode, FilesTreeNode> createTreeNodeFunc)
+        internal void MergeNodes(IList<FileNode> docFiles, TreeNodeCollection treeNodes, Func<FileNode, FilesTreeNode> createTreeNodeFunc, bool documentPathChanged)
         {
             if (docFiles == null)
                 return;
@@ -267,6 +285,9 @@ namespace pwiz.Skyline.Controls.FilesTree
                     if (nodeTree == null)
                         break;
 
+                    // TODO: should this have an else clause that updates the Document on an existing FilesTreeNode's Model? 
+                    //       Otherwise, the FTN's reference to the Document might be old. Or maybe, the root should be an 
+                    //       IDocumentContainer passed to the children so only one update is needed? Hmmm....
                     if (!nodeTree.Model.ModelEquals(nodeDoc))
                     {
                         // Found a node with the correct ID in the tree so apply a new model
@@ -288,6 +309,10 @@ namespace pwiz.Skyline.Controls.FilesTree
                             
                             treeNodes.Insert(i, nodeTree);
                         }
+                    }
+                    else if(documentPathChanged)
+                    {
+                        localFileInitList.Add(nodeTree); // cause the FilesTreeNode to update from the file system
                     }
                     i++;
                 }
@@ -379,7 +404,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
                 if (model != null && model.Files.Count > 0)
                 {
-                    MergeNodes(model.Files, treeNode.Nodes, createTreeNodeFunc);
+                    MergeNodes(model.Files, treeNode.Nodes, createTreeNodeFunc, documentPathChanged);
                 }
             }
         }
@@ -568,6 +593,8 @@ namespace pwiz.Skyline.Controls.FilesTree
             }
         }
 
+        #region FileSystemWatcher Event Handlers
+
         public void FileDeleted(string fileName)
         {
             if (IgnoreFileName(fileName))
@@ -598,7 +625,11 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         public void FileRenamed(string oldName, string newName)
         {
-            if(IgnoreFileName(oldName))
+            // Ignore file names with .bak / .tmp extensions as they are temporary files created during the save process.
+            // N.B. it's important to only ignore rename events where the new file name's extension is on the ignore list.
+            // Otherwise, files that actually exist will be marked as missing in Files Tree without a way to force those
+            // nodes to reset their FileState from disk leading to much confusion.
+            if (IgnoreFileName(newName))
                 return;
 
             // Look for a tree node with the file's previous name. If a node with that name is found
@@ -618,6 +649,8 @@ namespace pwiz.Skyline.Controls.FilesTree
                 RunUI(this, () => FilesTreeNode.UpdateFileImages(availableFileTreeNode));
             }
         }
+
+        #endregion
 
         protected override bool IsParentNode(TreeNode node)
         {

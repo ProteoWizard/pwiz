@@ -154,7 +154,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         }
 
         /// <summary>
-        /// Activate a replicate by nam. This handler runs when a replicate sample file is clicked, so
+        /// Activate a replicate by name. This handler runs when a replicate sample file is clicked, so
         /// obtain the replicate's name from its parent tree node, which represents the replicate.
         /// </summary>
         /// <param name="selectedNode">Replicate sample file</param>
@@ -298,9 +298,15 @@ namespace pwiz.Skyline.Controls.FilesTree
             }
         }
 
+        /// <summary>
+        /// Set the name of the given tree node to a new value.
+        /// </summary>
+        /// <param name="node"></param>
+        /// <param name="newLabel"></param>
+        /// <returns>true if the caller should cancel the edit. false otherwise.</returns>
         public bool EditTreeNodeLabel(FilesTreeNode node, string newLabel)
         {
-            if (string.IsNullOrEmpty(newLabel) || !(node.Model is Replicate replicate))
+            if (node == null || string.IsNullOrEmpty(newLabel) || !(node.Model is Replicate replicate))
                 return true;
 
             lock (SkylineWindow.GetDocumentChangeLock())

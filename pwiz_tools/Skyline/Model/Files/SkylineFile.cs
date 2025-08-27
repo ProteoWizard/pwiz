@@ -24,16 +24,14 @@ namespace pwiz.Skyline.Model.Files
 {
     public class SkylineFile : FileNode
     {
-        public static SkylineFile Create(SrmDocument document, string documentFilePath)
+        public static SkylineFile Create(IDocumentContainer documentContainer)
         {
-            var documentContainer = CreateDocumentContainer(document, documentFilePath);
             return new SkylineFile(documentContainer);
         }
 
-        public SkylineFile(IDocumentContainer documentContainer) :
+        private SkylineFile(IDocumentContainer documentContainer) :
             base(documentContainer, IdentityPath.ROOT, ImageId.skyline)
         {
-            // DocumentPath is null when a .sky document is new and has not been saved to disk yet
             if (IsDocumentSavedToDisk())
             {
                 Name = FileName = Path.GetFileName(documentContainer.DocumentFilePath);

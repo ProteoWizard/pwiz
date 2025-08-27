@@ -1136,6 +1136,14 @@ namespace pwiz.Skyline
             return false;
         }
 
+        /// <summary>
+        /// Saves the .sky file.
+        /// </summary>
+        /// <param name="fileName">File name to save the .sky file to. If this is different from the current path, the document will be assigned a new GUID</param>
+        /// <param name="includingCacheFile">Whether to also update the .skyd file by copying to a new path and/or removing <see cref="ChromCachedFile"/> entries which are no longer part of the document.
+        /// When saving immediately before a ReScore the .skyd file should not be changed because a new one is about to be created.</param>
+        /// <param name="isSaveAs">Flag indicating whether this saves the document to a new file name.</param>
+        /// <returns></returns>
         public bool SaveDocument(String fileName, bool includingCacheFile = true, bool isSaveAs = false)
         {
             if (string.IsNullOrEmpty(DocumentUI.Settings.DataSettings.DocumentGuid) ||
@@ -1205,7 +1213,6 @@ namespace pwiz.Skyline
             {
                 SaveLayout(fileName);
 
-                // CONSIDER: Is this really optional?
                 if (includingCacheFile)
                 {
                     using (var longWaitDlg = new LongWaitDlg(this))
@@ -1307,8 +1314,7 @@ namespace pwiz.Skyline
                 do
                 {
                     docOriginal = Document;
-                    docNew = docOriginal.ChangeSettingsNoDiff(docOriginal.Settings.ChangePeptideLibraries(libraries =>
-                        libraries.ChangeDocumentLibraryPath(newDocFilePath)));                        
+                    docNew = docOriginal.ChangeSettingsNoDiff(docOriginal.Settings.ChangeDocumentLibraryPath(newDocFilePath));                        
                 }
                 while (!SetDocument(docNew, docOriginal));
             }

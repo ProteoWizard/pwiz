@@ -68,9 +68,7 @@ namespace pwiz.SkylineTestFunctional
 
             // UI tests
             TestEmptyDocument();
-
             TestSaveAs();
-
             TestRatPlasmaDocument();
         }
 
@@ -130,8 +128,10 @@ namespace pwiz.SkylineTestFunctional
             // Skyline File
             Assert.AreEqual(fileName, SkylineWindow.FilesTree.Root.Name);
             AssertFileState(true, FileState.available, SkylineWindow.FilesTree.Root);
+
             // Audit Log
             AssertFileState(true, FileState.available, SkylineWindow.FilesTree.Root.NodeAt(0));
+
             // Window Layout
             AssertFileState(true, FileState.available, SkylineWindow.FilesTree.Root.NodeAt(1));
 
@@ -160,16 +160,19 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.SaveDocument(monitoredPath));
             WaitForCondition(() => File.Exists(monitoredPath) && SkylineWindow.FilesTree.IsMonitoringFileSystem() && SkylineWindow.FilesTree.WaitForEmptyQueue());
 
-            Assert.AreEqual(FileState.available, SkylineWindow.FilesTree.Root.NodeAt(0).FileState);
-            Assert.IsNotNull(SkylineWindow.FilesTree.Root.NodeAt(0).LocalFilePath);
             Assert.AreEqual(Path.GetDirectoryName(monitoredPath), SkylineWindow.FilesTree.PathMonitoredForFileSystemChanges());
 
-            // Save As - existing document saved to a new location
+            // Audit Log
+            // TODO: make tests more readable by adding new helper on FilesTree for getting node of certain type 
+            Assert.AreEqual(FileState.available, SkylineWindow.FilesTree.Root.NodeAt(0).FileState);
+            Assert.IsNotNull(SkylineWindow.FilesTree.Root.NodeAt(0).LocalFilePath);
+
+            // Now, save document to a new location (Save As)
             monitoredPath = Path.Combine(TestFilesDir.FullPath, saveAsFileName);
             RunUI(() => SkylineWindow.SaveDocument(monitoredPath));
             WaitForCondition(() => File.Exists(monitoredPath) && SkylineWindow.FilesTree.IsMonitoringFileSystem() && SkylineWindow.FilesTree.WaitForEmptyQueue());
 
-            // Verify file state after SaveAs - files are available and paths updated
+            // Check state of files and paths after saving
             var tree = SkylineWindow.FilesTree;
             Assert.AreEqual(Path.GetDirectoryName(monitoredPath), tree.PathMonitoredForFileSystemChanges());
 
@@ -179,9 +182,11 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(monitoredPath, tree.Root.FilePath);
             AssertFileState(true, FileState.available, tree.Root);
 
+            // Audit Log (.skyl)
             Assert.AreEqual(SrmDocument.GetAuditLogPath(monitoredPath), tree.Root.NodeAt(0).LocalFilePath);
             AssertFileState(true, FileState.available, tree.Root.NodeAt(0));
 
+            // View Layout (.sky.view)
             Assert.AreEqual(SkylineWindow.GetViewFile(monitoredPath), tree.Root.NodeAt(1).LocalFilePath);
             AssertFileState(true, FileState.available, tree.Root.NodeAt(1));
 
@@ -217,6 +222,7 @@ namespace pwiz.SkylineTestFunctional
             AssertFilesTreeOnlyIncludesFilesTreeNodes(SkylineWindow.FilesTree.Root);
 
             TestRestoreViewState();
+            WaitForFilesTree();
 
             AssertTreeFolderMatchesDocumentAndModel<ReplicatesFolder>(RAT_PLASMA_REPLICATE_COUNT);
 
@@ -229,33 +235,31 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(() => SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[3].IsExpanded);
 
             // Check SrmSettings matches Model matches FilesTree UI
-            var doc = SkylineWindow.Document;
             var newName = "Test this name";
             RunUI(() =>
             {
                 SkylineWindow.ModifyDocument("Rename replicate in FilesTree test", srmDoc =>
                 {
-                    var chromSet = doc.MeasuredResults.Chromatograms[3];
+                    var chromSet = srmDoc.MeasuredResults.Chromatograms[3]; // D_103_REP1
                     var newChromSet = (ChromatogramSet)chromSet.ChangeName(newName);
 
-                    var measuredResults = doc.MeasuredResults;
+                    var measuredResults = srmDoc.MeasuredResults;
                     var chromatograms = measuredResults.Chromatograms.ToArray();
 
                     chromatograms[3] = newChromSet; // replace existing with modified ChromatogramSet
 
                     measuredResults = measuredResults.ChangeChromatograms(chromatograms);
-                    return doc.ChangeMeasuredResults(measuredResults);
+                    return srmDoc.ChangeMeasuredResults(measuredResults);
                 });
             });
-
-            doc = WaitForDocumentChange(doc);
+            WaitForFilesTree();
 
             AssertTreeFolderMatchesDocumentAndModel<ReplicatesFolder>(RAT_PLASMA_REPLICATE_COUNT);
 
             // make sure no new top-level folders were added
             Assert.AreEqual(3, SkylineWindow.FilesTree.Nodes[0].Nodes.Count);
 
-            Assert.AreEqual(newName, doc.Settings.MeasuredResults.Chromatograms[3].Name);
+            Assert.AreEqual(newName, SkylineWindow.Document.Settings.MeasuredResults.Chromatograms[3].Name);
             Assert.AreEqual(newName, SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[3].Name);
 
             // Expanded folder should remain expanded after a document update
@@ -267,6 +271,8 @@ namespace pwiz.SkylineTestFunctional
             newName = "NEW REPLICATE NAME";
             var treeNode = SkylineWindow.FilesTree.Folder<ReplicatesFolder>().NodeAt(0);
             RunUI(() => SkylineWindow.FilesTreeForm.EditTreeNodeLabel(treeNode, newName));
+            WaitForFilesTree();
+
             Assert.AreEqual(newName, SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[0].Name);
 
             //
@@ -275,39 +281,37 @@ namespace pwiz.SkylineTestFunctional
             const int selectedIndex = 4;
             var filesTreeNode = SkylineWindow.FilesTree.Folder<ReplicatesFolder>().NodeAt(selectedIndex);
             RunUI(() => { SkylineWindow.FilesTreeForm.ActivateReplicate(filesTreeNode); });
-            WaitForGraphs();
+            WaitForFilesTree();
             RunUI(() => Assert.AreEqual(selectedIndex, SkylineWindow.SelectedResultsIndex));
 
             //
             // Reorder replicate by editing SkylineDocument directly - should trigger FilesTree update
             //
-            doc = SkylineWindow.Document;
             RunUI(() =>
             {
                 SkylineWindow.ModifyDocument("Reverse order of all replicates in FilesTree test", srmDoc =>
                 {
-                    var measuredResults = doc.MeasuredResults;
+                    var measuredResults = srmDoc.MeasuredResults;
                     var chromatograms = measuredResults.Chromatograms.ToArray();
                     var reversedChromatograms = new List<ChromatogramSet>(chromatograms.Reverse());
 
                     measuredResults = measuredResults.ChangeChromatograms(reversedChromatograms);
-                    return doc.ChangeMeasuredResults(measuredResults);
+                    return srmDoc.ChangeMeasuredResults(measuredResults);
                 });
             });
+            WaitForFilesTree();
 
-            WaitForDocumentChange(doc);
             AssertTreeFolderMatchesDocumentAndModel<ReplicatesFolder>(RAT_PLASMA_REPLICATE_COUNT);
             // END
 
             //
             // Remove replicate by editing SkylineDocument directly
             //
-            doc = SkylineWindow.Document;
             RunUI(() =>
             {
                 SkylineWindow.ModifyDocument("Delete several replicates in FilesTree test", srmDoc =>
                 {
-                    var measuredResults = doc.MeasuredResults;
+                    var measuredResults = srmDoc.MeasuredResults;
                     var chromatograms = new List<ChromatogramSet>(measuredResults.Chromatograms);
                     chromatograms.RemoveAt(3);
                     chromatograms.RemoveAt(5);
@@ -315,14 +319,15 @@ namespace pwiz.SkylineTestFunctional
                     chromatograms.RemoveAt(9);
 
                     measuredResults = measuredResults.ChangeChromatograms(chromatograms);
-                    return doc.ChangeMeasuredResults(measuredResults);
+                    return srmDoc.ChangeMeasuredResults(measuredResults);
                 });
             });
-            doc = WaitForDocumentChange(doc);
+            WaitForFilesTree();
+
             AssertTreeFolderMatchesDocumentAndModel<ReplicatesFolder>(RAT_PLASMA_REPLICATE_COUNT - 4);
 
             RunUI(() => SkylineWindow.Undo());
-            WaitForDocumentChange(doc);
+            WaitForFilesTree();
             // END
 
             AssertTreeFolderMatchesDocumentAndModel<ReplicatesFolder>(RAT_PLASMA_REPLICATE_COUNT);
@@ -340,6 +345,8 @@ namespace pwiz.SkylineTestFunctional
             TestDragAndDrop();
 
             TestDragAndDropOnParentNode();
+
+            TestReplicateLabelEdit();
 
             // Close FilesTreeForm so test framework doesn't fail the test due to an unexpected open dialog
             RunUI(() => { SkylineWindow.DestroyFilesTreeForm(); });
@@ -683,6 +690,53 @@ namespace pwiz.SkylineTestFunctional
             AssertDragAndDropResults<SpectralLibrariesFolder>(dndParams);
         }
 
+        protected void TestReplicateLabelEdit()
+        {
+            // Start with a clean document
+            var documentPath = TestFilesDir.GetTestPath(RAT_PLASMA_FILE_NAME);
+            RunUI(() =>
+            {
+                SkylineWindow.OpenFile(documentPath);
+                SkylineWindow.ShowFilesTreeForm(true);
+            });
+            WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible);
+
+            var replicatesFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
+            Assert.AreEqual(@"D_102_REP1", replicatesFolder.Nodes[0].Name);
+
+            RunUI(() =>
+            {
+                SkylineWindow.FilesTreeForm.EditTreeNodeLabel((FilesTreeNode)replicatesFolder.Nodes[0], @"NEW NAME");
+            });
+            WaitForFilesTree();
+
+            Assert.AreEqual(@"NEW NAME", replicatesFolder.Nodes[0].Name);
+            Assert.AreEqual(@"NEW NAME", SkylineWindow.Document.MeasuredResults.Chromatograms[0].Name);
+            Assert.AreEqual(@"NEW NAME", SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[0].Name);
+
+            RunUI(() =>
+            {
+                SkylineWindow.FilesTreeForm.EditTreeNodeLabel((FilesTreeNode)replicatesFolder.Nodes[1], @"ANOTHER NEW NAME");
+            });
+            WaitForFilesTree();
+
+            Assert.AreEqual(@"ANOTHER NEW NAME", replicatesFolder.Nodes[1].Name);
+            Assert.AreEqual(@"ANOTHER NEW NAME", SkylineWindow.Document.MeasuredResults.Chromatograms[1].Name);
+            Assert.AreEqual(@"ANOTHER NEW NAME", SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[1].Name);
+
+            // Make sure the first name remains intact
+            Assert.AreEqual(@"NEW NAME", replicatesFolder.Nodes[0].Name);
+            Assert.AreEqual(@"NEW NAME", SkylineWindow.Document.MeasuredResults.Chromatograms[0].Name);
+            Assert.AreEqual(@"NEW NAME", SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[0].Name);
+        }
+
+        // CONSIDER: replace WaitForGraphs with a way to FilesTree to check for a pending update
+        private static void WaitForFilesTree()
+        {
+            WaitForGraphs();
+            WaitForConditionUI(() => SkylineWindow.FilesTree.WaitForEmptyQueue());
+        }
+
         private static DragAndDropParams DragAndDrop<T>(int[] dragNodeIndexes,
                                                         int dropNodeIndex,
                                                         DragDirection direction,
@@ -788,7 +842,13 @@ namespace pwiz.SkylineTestFunctional
         private static void AssertTreeFolderMatchesDocumentAndModel<T>(int expectedCount) 
             where T : FileNode
         {
-            var filesModel = SkylineFile.Create(SkylineWindow.Document, SkylineWindow.DocumentFilePath);
+            var documentContainer = new MemoryDocumentContainer
+            {
+                DocumentFilePath = SkylineWindow.DocumentFilePath
+            };
+            documentContainer.SetDocument(SkylineWindow.Document, null);
+
+            var filesModel = SkylineFile.Create(documentContainer);
 
             IList<IFile> docNodes = typeof(T) switch
             {
@@ -826,6 +886,7 @@ namespace pwiz.SkylineTestFunctional
                     Console.WriteLine();
                     Console.WriteLine($@"== Assert.AreSame({docNodes[i].GetType()}, {filesTreeNode.Model.Immutable.GetType()})");
                     Console.WriteLine($@"== Assert.AreSame({docNodes[i].Name}, {filesTreeNode.Model.Name})");
+                    Console.WriteLine($@"== Assert.AreSame({docNodes[i].Id.GlobalIndex}, {filesTreeNode.Model.IdentityPath.Child.GlobalIndex})");
                     throw;
                 }
 
