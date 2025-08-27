@@ -175,7 +175,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 _monitoringFileSystem = true;
             }
 
-            UpdateTree(DocumentContainer.Document, newDocumentFilePath, true);
+            UpdateTree(DocumentContainer.Document, newDocumentFilePath, false, true);
         }
 
         public void OnDocumentChanged(object sender, DocumentChangedEventArgs args)
@@ -184,20 +184,28 @@ namespace pwiz.Skyline.Controls.FilesTree
 
             if (args == null || DocumentContainer.Document == null)
                 return;
+
             // Nothing to do if no changes to SrmSettings
             if (ReferenceEquals(DocumentContainer.Document.Settings, args.DocumentPrevious?.Settings))
                 return;
 
-            UpdateTree(DocumentContainer.Document, DocumentContainer.DocumentFilePath);
+            // Handles wholesale replacement of the previous document with a new one. Example scenario:
+            // document foo.sky is open and user either creates a new (empty) document or opens a different document (bar.sky).
+            var changeAll = false;
+            if (args.DocumentPrevious != null && !ReferenceEquals(args.DocumentPrevious.Id, DocumentContainer.Document.Id))
+            {
+                changeAll = true;
+            }
+
+            UpdateTree(DocumentContainer.Document, DocumentContainer.DocumentFilePath, changeAll);
         }
 
-        internal void UpdateTree(SrmDocument document, string documentFilePath, bool documentPathChanged = false) 
+        internal void UpdateTree(SrmDocument document, string documentFilePath, bool changeAll = false, bool documentPathChanged = false) 
         {
             try
             {
                 BeginUpdateMS();
 
-                // CONSIDER: pass DocumentContainer, which is actually just SkylineWindow?
                 var originalDocument = _modelDocumentContainer.Document;
                 _modelDocumentContainer.DocumentFilePath = documentFilePath;
                 _modelDocumentContainer.SetDocument(document, originalDocument);
@@ -207,6 +215,13 @@ namespace pwiz.Skyline.Controls.FilesTree
                 //     var nameMsg = documentFilePath != null ? $@"{Path.GetFileName(documentFilePath)}" : @"<unsaved>";
                 //     Console.WriteLine($@"===== Updating document {nameMsg} from {versionMsg} to {document.RevisionIndex}. DocumentPathChanged {documentPathChanged}.");
                 // }
+
+                if (changeAll)
+                {
+                    Nodes.Clear();
+                    _fsWorkQueue.Clear(); // clear work pending in the queue
+                    // TODO: need a way to tell addt'l work queued with BeginInvoke to cancel
+                }
 
                 var files = SkylineFile.Create(_modelDocumentContainer);
 

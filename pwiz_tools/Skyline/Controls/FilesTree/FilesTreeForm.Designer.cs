@@ -28,6 +28,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             if (FilesTree != null)
             {
                 FilesTree.NodeMouseDoubleClick -= FilesTree_TreeNodeMouseDoubleClick;
+                FilesTree.MouseDown -= FilesTree_MouseDown;
                 FilesTree.MouseMove -= FilesTree_MouseMove;
                 FilesTree.LostFocus -= FilesTree_LostFocus;
                 FilesTree.BeforeLabelEdit -= FilesTree_BeforeLabelEdit;
@@ -39,6 +40,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 FilesTree.DragDrop -= FilesTree_DragDrop;
                 FilesTree.QueryContinueDrag -= FilesTree_QueryContinueDrag;
                 FilesTree.KeyDown -= FilesTree_KeyDown;
+                FilesTree.BeforeCollapse -= FilesTree_BeforeCollapse;
             }
 
             SkylineWindow.DocumentSavedEvent -= OnDocumentSavedEvent;
