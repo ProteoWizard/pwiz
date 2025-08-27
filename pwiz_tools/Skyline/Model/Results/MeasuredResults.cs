@@ -244,6 +244,13 @@ namespace pwiz.Skyline.Model.Results
                 (_listPartialCaches != null && _listPartialCaches.Contains(cache => Equals(cachePath, cache.CachePath)));
         }
 
+        public bool FinalCacheIncomplete { get; private set; }
+
+        public MeasuredResults ChangeFinalCacheIncomplete(bool value)
+        {
+            return ChangeProp(ImClone(this), im => im.FinalCacheIncomplete = value);
+        }
+
         /// <summary>
         /// The unique set of file paths represented in all replicates,
         /// in the order they appear.
@@ -1283,6 +1290,42 @@ namespace pwiz.Skyline.Model.Results
             SetClonedCacheState(null);
         }
 
+        public MeasuredResults LoadFinalCache(string cachePath, IProgressStatus status, ILoadMonitor loader, SrmDocument doc)
+        {
+            if (!File.Exists(cachePath))
+            {
+                return ChangeFinalCacheIncomplete(true);
+            }
+
+            using var stream = File.OpenRead(cachePath);
+            var cachedFilePaths = ChromatogramCache.GetCachedFilePaths(stream).ToHashSet();
+            if (!Chromatograms.SelectMany(chrom => chrom.MSDataFilePaths).All(cachedFilePaths.Contains))
+            {
+                return null;
+            }
+
+            ChromatogramCache chromatogramCache;
+            try
+            {
+                chromatogramCache = ChromatogramCache.Load(cachePath, status, loader, doc);
+            }
+            catch (Exception)
+            {
+                chromatogramCache = null;
+            }
+
+            if (chromatogramCache == null)
+            {
+                return ChangeFinalCacheIncomplete(true);
+            }
+
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.SetClonedCacheState(chromatogramCache);
+                im.Chromatograms = Chromatograms;
+            });
+        }
+
         #endregion
 
         #region Implementation of IXmlSerializable
@@ -1343,7 +1386,7 @@ namespace pwiz.Skyline.Model.Results
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return ArrayUtil.EqualsDeep(obj._chromatograms, _chromatograms);
+            return ArrayUtil.EqualsDeep(obj._chromatograms, _chromatograms) && obj.FinalCacheIncomplete == FinalCacheIncomplete;
         }
 
         public override bool Equals(object obj)

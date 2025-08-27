@@ -22,7 +22,6 @@ using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
-using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -39,7 +38,7 @@ namespace pwiz.SkylineTestData
         public void TestTargetedAcquisitionMethod()
         {
             var doc = GetTestDocument(FullScanAcquisitionMethod.Targeted, null);
-            var spectrumFilter = new SpectrumFilter(doc, MsDataFilePath.EMPTY, null);
+            var spectrumFilter = new SpectrumFilter(doc);
             VerifyFilterPairs(spectrumFilter, 280.66, "ELVIS", "LIVES");
             VerifyFilterPairs(spectrumFilter, 280.18, "QLVIS");
             VerifyFilterPairs(spectrumFilter, 280.19, "KLVIS");
@@ -52,7 +51,7 @@ namespace pwiz.SkylineTestData
                 {FullScanAcquisitionMethod.PRM, FullScanAcquisitionMethod.SureQuant})
             {
                 var doc = GetTestDocument(acquisitionMethod, null);
-                var spectrumFilter = new SpectrumFilter(doc, MsDataFilePath.EMPTY, null);
+                var spectrumFilter = new SpectrumFilter(doc);
                 VerifyFilterPairs(spectrumFilter, 280.66, "ELVIS", "LIVES");
                 VerifyFilterPairs(spectrumFilter, 280.18, "QLVIS", "KLVIS");
                 VerifyFilterPairs(spectrumFilter, 280.19, "QLVIS", "KLVIS");

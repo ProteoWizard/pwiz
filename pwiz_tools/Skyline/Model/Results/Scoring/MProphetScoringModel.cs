@@ -107,7 +107,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 {
                     calcs = calcs.Where(calc => !calc.IsMs1Score);
                 }
-                if (document.Settings.DocumentRetentionTimes.IsEmpty)
+                if (!document.Settings.DocumentRetentionTimes.AnyLibraryAlignmentsForFiles(document.Settings.MeasuredResults?.MSDataFilePaths))
                 {
                     calcs = calcs.Where(calc => !(calc is LegacyIdentifiedCountCalc));
                 }
