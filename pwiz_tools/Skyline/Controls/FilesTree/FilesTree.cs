@@ -612,7 +612,11 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         public void FileRenamed(string oldName, string newName)
         {
-            if(IgnoreFileName(oldName))
+            // Ignore file names with .bak / .tmp extensions as they are temporary files created during the save process.
+            // N.B. it's important to only ignore rename events where the new file name's extension is on the ignore list.
+            // Otherwise, files that actually exist will be marked as missing in Files Tree without a way to force those
+            // nodes to reset their FileState from disk leading to much confusion.
+            if (IgnoreFileName(newName))
                 return;
 
             // Look for a tree node with the file's previous name. If a node with that name is found
