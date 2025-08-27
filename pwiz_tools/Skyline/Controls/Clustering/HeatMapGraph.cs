@@ -47,7 +47,7 @@ namespace pwiz.Skyline.Controls.Clustering
             InitializeDendrograms();
             _calculator = new HeatMapCalculator(this);
             var graphPane = zedGraphControl1.GraphPane;
-            graphPane.Title.Text = Resources.RTLinearRegressionGraphPane_UpdateGraph_Calculating___;
+            graphPane.Title.Text = ClusteringResources.HeatMapGraph_HeatMapGraph_Calculating___;
             graphPane.XAxis.Title.IsVisible = false;
             graphPane.YAxis.Title.IsVisible = false;
             graphPane.Legend.IsVisible = false;

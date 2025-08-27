@@ -306,6 +306,22 @@
           <xs:attribute name="shared_peptides" type="xs:string" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="imputation" minOccurs="0" maxOccurs="1">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="alignment" minOccurs="0" maxOccurs="1">
+              <xs:complexType>
+                <xs:attribute name="type" type="xs:string" />
+                <xs:attribute name="name" type="xs:string" />
+                <xs:attribute name="regression_method" type="xs:string" />
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+          <xs:attribute name="max_rt_shift" type="xs:double" />
+          <xs:attribute name="max_peak_width_var" type="xs:double" />
+          <xs:attribute name="impute_missing" type="xs:boolean" />
+        </xs:complexType>
+      </xs:element>
     </xs:sequence>
   </xs:complexType>
   <!-- Transition Settings -->
@@ -805,6 +821,24 @@
             </xs:element>
           </xs:sequence>
           <xs:attribute name="name" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="alignments" maxOccurs="unbounded" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="alignment" minOccurs="0" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="measured" type="xs:base64Binary"/>
+                  <xs:element name="aligned" type="xs:base64Binary"/>
+                </xs:sequence>
+                <xs:attribute name="file" type="xs:string"/>
+                <xs:attribute name="length" type="xs:integer"/>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+          <xs:attribute name="library" type="xs:string"/>
+          <xs:attribute name="batch" type="xs:string"/>
         </xs:complexType>
       </xs:element>
     </xs:sequence>
@@ -1706,6 +1740,12 @@
       </xs:extension>
     </xs:simpleContent>
   </xs:complexType>
+  <xs:complexType name="scored_peak">
+    <xs:attribute name="score" type="xs:double" use="required" />
+    <xs:attribute name="retention_time" type="xs:double" />
+    <xs:attribute name="start_time" type="xs:double" />
+    <xs:attribute name="end_time" type="xs:double" />
+  </xs:complexType>
   <xs:complexType name="modification_type">
     <xs:attribute name="index_aa" type="xs:nonNegativeInteger" use="required"/>
     <xs:attribute name="modification_name" type="xs:string" use="required"/>
@@ -1892,6 +1932,8 @@
           <xs:element name="note" type="note_type" minOccurs="0" maxOccurs="1"/>
           <xs:element name="annotation" type="annotation_type" minOccurs="0"
               maxOccurs="unbounded"/>
+           <xs:element name="original_peak" type="scored_peak" minOccurs="0" maxOccurs="1"/>
+           <xs:element name="reintegrated_peak"    type="scored_peak" minOccurs="0" maxOccurs="1"/>
         </xs:sequence>
         <xs:attribute name="step" type="xs:int"/>
         <xs:attribute name="start_time" type="xs:double"/>
@@ -1913,6 +1955,7 @@
         <xs:attribute name="qvalue" type="xs:float"/>
         <xs:attribute name="zscore" type="xs:float"/>
         <xs:attribute name="user_set" type="user_set" use="optional"/>
+        <xs:attribute name="original_score" type="xs:float"/>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>

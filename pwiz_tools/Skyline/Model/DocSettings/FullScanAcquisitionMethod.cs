@@ -25,7 +25,7 @@ using pwiz.Skyline.Model.AuditLog;
 
 namespace pwiz.Skyline.Model.DocSettings
 {
-    public struct FullScanAcquisitionMethod : IAuditLogObject
+    public struct FullScanAcquisitionMethod : IAuditLogObject, IEquatable<FullScanAcquisitionMethod>
     {
         public static readonly FullScanAcquisitionMethod None = default(FullScanAcquisitionMethod);
         public static readonly FullScanAcquisitionMethod DIA = new FullScanAcquisitionMethod(@"DIA",
