@@ -300,7 +300,7 @@ namespace pwiz.Skyline.Model
         private readonly PropertyDescriptor _basePropertyDescriptor;
         private readonly ResourceManager _resourceManager;
 
-        private readonly Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument> _getModifiedDocumentFromEdit;
+        private readonly Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument> _getModifiedDocument;
 
         public GlobalizedPropertyDescriptor(PropertyDescriptor basePropertyDescriptor, ResourceManager resourceManager,
             Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument> getModifiedDocumentFromEdit = null) 
@@ -308,12 +308,12 @@ namespace pwiz.Skyline.Model
         {
             _basePropertyDescriptor = basePropertyDescriptor;
             _resourceManager = resourceManager;
-            _getModifiedDocumentFromEdit = getModifiedDocumentFromEdit;
+            _getModifiedDocument = getModifiedDocumentFromEdit;
         }
 
-        public ModifiedDocument GetModifiedDocument(SrmDocument document, SrmSettingsChangeMonitor monitor, object value)
+        public ModifiedDocument GetModifiedDocument(SrmDocument document, SrmSettingsChangeMonitor monitor, object newValue)
         {
-            return _getModifiedDocumentFromEdit?.Invoke(document, monitor, value);
+            return _getModifiedDocument?.Invoke(document, monitor, newValue);
         }
 
         public override bool CanResetValue(object component)
@@ -358,7 +358,7 @@ namespace pwiz.Skyline.Model
             return value;
         }
 
-        public override bool IsReadOnly => _getModifiedDocumentFromEdit == null;
+        public override bool IsReadOnly => _getModifiedDocument == null;
 
         public override string Name => _basePropertyDescriptor.Name;
 

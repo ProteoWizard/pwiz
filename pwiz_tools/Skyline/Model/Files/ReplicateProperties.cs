@@ -39,7 +39,7 @@ namespace pwiz.Skyline.Model.Files
             AnalyteConcentration = model.AnalyteConcentration;
             SampleDilutionFactor = model.SampleDilutionFactor;
             SampleType = model.SampleType;
-            _getModifiedDocumentRename = (document, monitor, name) => model.Rename(document, monitor, name as string);
+            _getModifiedDocumentRename = (document, monitor, newName) => model.Rename(document, monitor, newName as string);
 
             var dataFileInfo = model.MSDataFileInfos;
             if (dataFileInfo.Count == 1)
