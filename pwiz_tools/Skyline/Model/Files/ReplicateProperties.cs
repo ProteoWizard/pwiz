@@ -71,6 +71,9 @@ namespace pwiz.Skyline.Model.Files
         [Category("Replicate")] public double MaxIntensity { get; set; }
         [Category("Replicate")] public string AcquisitionTime { get; set; }
 
+        // TODO: GetModifiedDocument delegate needs to  be attached to the PropertyDescriptor in some way, so PropertyForm can call it
+        // when the property is changed. Are there ways to do this without attributes?
+
         // Replicate Name is editable and updates the document with _getModifiedDocumentRename
         [EditableProperty]
         [ModifiesDocument("_getModifiedDocumentRename")]

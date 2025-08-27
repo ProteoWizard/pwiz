@@ -126,12 +126,12 @@ namespace pwiz.Skyline.Model
                         _globalizedProps.Add(new GlobalizedPropertyDescriptor(oProp, GetResourceManager(), readOnly));
                         continue;
                     }
-
+                    
                     var getModifiedDocumentFunc = GetType()
                         .GetField(modifiesDocumentAttr.GetModifiedDocumentFuncName, BindingFlags.Instance | BindingFlags.NonPublic)
                         ?.GetValue(this);
 
-                    // TODO: better, localized error message
+                    // TODO: Consider moving this check to a static check in CodeInspection and calling Assume?
                     if (!(getModifiedDocumentFunc is Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument> getModifiedDocument))
                         throw new Exception(string.Format(PropertySheetResources.ModifiedDocFuncName_NotFound, modifiesDocumentAttr.GetModifiedDocumentFuncName, GetType()));
 
