@@ -1084,6 +1084,10 @@ namespace pwiz.SkylineTestUtil
 
         private void UpdateImageSourceButtons()
         {
+            if (_defaultImageSourceTipText == null)
+            {
+                return;
+            }
             switch (OldImageSource)
             {
                 case ImageSource.web:
