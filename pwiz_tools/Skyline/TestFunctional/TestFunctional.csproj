@@ -224,6 +224,10 @@
     <Compile Include="PanoramaClientPublishTest.cs" />
     <Compile Include="PeakAreaRelativeAbundanceGraphTest.cs" />
     <Compile Include="PeakAreaPeptideGraphTest.cs" />
+    <Compile Include="PeakImputationImportTest.cs" />
+    <Compile Include="PeakImputationRescoreTest.cs" />
+    <Compile Include="PeakImputationWithBatchesTest.cs" />
+    <Compile Include="PeakImputationTest.cs" />
     <Compile Include="PeakMetricsTest.cs" />
     <Compile Include="PrmCeOptimizationTest.cs" />
     <Compile Include="QcTraceChromatogramTest.cs" />
@@ -237,7 +241,9 @@
     <Compile Include="ReplicatePivotColumnsTest.cs" />
     <Compile Include="ReplicatePivotGridTest.cs" />
     <Compile Include="RescoreInPlaceTest.cs" />
+    <Compile Include="RescoreSimultaneousTest.cs" />
     <Compile Include="ResultFileMetadataBackCompatTest.cs" />
+    <Compile Include="RunToRunAlignmentTest.cs" />
     <Compile Include="SaveAfterProteinAssociationTest.cs" />
     <Compile Include="SelectSpectrumTest.cs" />
     <Compile Include="SequenceTreeExpandCollapseTest.cs" />
@@ -252,6 +258,7 @@
     <Compile Include="EditSpectrumFilterTest.cs" />
     <Compile Include="EncyclopeDiaSearchTest.cs" />
     <Compile Include="PropertySheetTest.cs" />
+    <Compile Include="UnalignedRetentionTimesTest.cs" />
     <Compile Include="UnreadableBlibTest.cs" />
     <Compile Include="RemoveSmallMoleculeLabelTypeTest.cs" />
     <Compile Include="StartPageInsertTransitionListTest.cs" />

@@ -341,7 +341,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             }
             if (string.IsNullOrEmpty(e.Label))
             {
-                ViewContext.ShowMessageBox(this, Resources.ChooseViewsControl_listView1_AfterLabelEdit_Name_cannot_be_blank, MessageBoxButtons.OK);
+                ViewContext.ShowMessageBox(this, Resources.ChooseViewsControl_listView1_AfterLabelEdit_Name_cannot_be_blank, MessageBoxButtons.OK, null);
                 e.CancelEdit = true;
                 return;
             }
@@ -356,7 +356,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                 return;
             }
             ViewContext.ShowMessageBox(this, string.Format(
-                Resources.ChooseViewsControl_listView1_AfterLabelEdit_There_is_already_a_view_named___0___, e.Label), MessageBoxButtons.OK);
+                Resources.ChooseViewsControl_listView1_AfterLabelEdit_There_is_already_a_view_named___0___, e.Label), MessageBoxButtons.OK, null);
             e.CancelEdit = true;
         }
 

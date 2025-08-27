@@ -42,7 +42,6 @@ using pwiz.Common.SystemUtil;
 
     File type reference, which Brendan shares with people using Skyline.
         https://skyline.ms/wiki/home/software/Skyline/page.view?name=file-types
-
  */
 // ReSharper disable WrongIndentSize
 namespace pwiz.Skyline.Model.Files
@@ -99,7 +98,7 @@ namespace pwiz.Skyline.Model.Files
 
         public virtual IList<FileNode> Files => ImmutableList.Empty<FileNode>();
 
-        public override string ToString() => @"{GetType().Name}: " + (Name ?? string.Empty);
+        public override string ToString() => @$"{GetType().Name}: " + (Name ?? string.Empty);
 
         // All implementers should override
         public virtual GlobalizedObject GetProperties(string localFilePath)
@@ -123,7 +122,7 @@ namespace pwiz.Skyline.Model.Files
             if(!IsBackedByFile) 
                 return false;
 
-            // Files like .skyl / .view only exist once a Skyline document is saved.
+            // Files like .skyl / .view are only saved to disk once a Skyline document is saved.
             if (RequiresSavedSkylineDocument && !IsDocumentSavedToDisk())
                 return false;
 
@@ -139,6 +138,7 @@ namespace pwiz.Skyline.Model.Files
             return ReferenceEquals(Immutable, nodeDoc.Immutable);
         }
 
+        // If DocumentFilePath is null, document is not saved to disk
         public static bool IsDocumentSavedToDisk(string documentFilePath)
         {
             return !string.IsNullOrEmpty(documentFilePath);
@@ -147,18 +147,6 @@ namespace pwiz.Skyline.Model.Files
         internal bool IsDocumentSavedToDisk()
         {
             return IsDocumentSavedToDisk(DocumentPath);
-        }
-
-        internal static IDocumentContainer CreateDocumentContainer(SrmDocument document, string documentFilePath)
-        {
-            var documentContainer = new MemoryDocumentContainer
-            {
-                DocumentFilePath = documentFilePath
-            };
-            // CONSIDER: does docOriginal need to be set differently?
-            documentContainer.SetDocument(document, documentContainer.Document);
-
-            return documentContainer;
         }
     }
 }
