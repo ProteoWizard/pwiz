@@ -19,8 +19,11 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using pwiz.Common.DataBinding.Attributes;
+using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Lists;
 
 namespace pwiz.Skyline.Model.Databinding
@@ -147,9 +150,61 @@ namespace pwiz.Skyline.Model.Databinding
 
         private static Attribute[] GetAttributes(PropertyDescriptor innerPropertyDescriptor)
         {
-            var attributes = new List<Attribute>{new DataGridViewColumnTypeAttribute(typeof(ListLookupDataGridViewColumn))};
-            attributes.AddRange(innerPropertyDescriptor.Attributes.Cast<Attribute>().Where(a=>a is DisplayNameAttribute || a is ColumnCaptionAttribute));
+            var attributes = new List<Attribute>
+            {
+                new DataGridViewColumnTypeAttribute(typeof(ListLookupDataGridViewColumn)),
+            };
+            var annotationDef = (innerPropertyDescriptor as AnnotationPropertyDescriptor)?.AnnotationDef;
+            if (!string.IsNullOrEmpty(annotationDef?.Lookup))
+            {
+                var listItemType = ListItemTypes.INSTANCE.GetListItemType(annotationDef.Lookup);
+                if (annotationDef.Type == AnnotationDef.AnnotationType.number)
+                {
+                    attributes.Add(new ImportableAttribute
+                        { Formatter = typeof(NumericKeyPropertyFormatter<>).MakeGenericType(listItemType) });
+                }
+                else
+                {
+                    attributes.Add(new ImportableAttribute
+                        { Formatter = typeof(ListItemPropertyFormatter<>).MakeGenericType(listItemType) });
+                }
+            }
+
+            attributes.AddRange(innerPropertyDescriptor.Attributes.Cast<Attribute>()
+                .Where(a => a is DisplayNameAttribute || a is ColumnCaptionAttribute));
             return attributes.ToArray();
+        }
+
+        private class ListItemPropertyFormatter<T> : IPropertyFormatter
+        {
+            public string FormatValue(CultureInfo cultureInfo, object value)
+            {
+                var key = (value as ListItem)?.GetRecord().PrimaryKeyValue;
+                if (key is double doubleValue)
+                {
+                    return doubleValue.ToString(Formats.RoundTrip, CultureInfo.InvariantCulture);
+                }
+                return value?.ToString() ?? string.Empty;
+            }
+
+            public virtual object ParseValue(CultureInfo cultureInfo, string text)
+            {
+                return ListItem.ConstructListItem(typeof(T), new ListItem.OrphanRecordData(text, false));
+            }
+        }
+
+        private class NumericKeyPropertyFormatter<T> : ListItemPropertyFormatter<T>
+        {
+            public override object ParseValue(CultureInfo cultureInfo, string text)
+            {
+                if (string.IsNullOrEmpty(text))
+                {
+                    return null;
+                }
+
+                var doubleValue = double.Parse(text, cultureInfo);
+                return ListItem.ConstructListItem(typeof(ListItem), new ListItem.OrphanRecordData(doubleValue, false));
+            }
         }
     }
 }

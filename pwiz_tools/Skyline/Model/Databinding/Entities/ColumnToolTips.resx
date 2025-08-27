@@ -411,6 +411,30 @@ containing protein sequence, or #N/A if no protein sequence is available</value>
   <data name="ExcludeFromCalibration">
     <value>Whether the results in the replicate should be excluded from the peptide's calibration curve calculation.</value>
   </data>
+  <data name="ExemplaryEndTime">
+    <value>Normalized end retention time of the peak from the best-scoring replicate or library file</value>
+  </data>
+  <data name="ExemplaryFilePath">
+    <value>File path of the result file with the best-scoring peak</value>
+  </data>
+  <data name="ExemplaryLibraryName">
+    <value>Name of the library with the best-scoring peak</value>
+  </data>
+  <data name="ExemplaryPeak">
+    <value>Best-scoring peak either from one of the Replicates in the document or one of the explicit peak boundaries from a library</value>
+  </data>
+  <data name="ExemplaryReplicateName">
+    <value>Name of the replicate with the best-scoring peak</value>
+  </data>
+  <data name="ExemplaryRetentionTime">
+    <value>Normalized retention time of the apex of the best-scoring peak</value>
+  </data>
+  <data name="ExemplaryScore">
+    <value>Score of the highest scoring peak in either a replicate or a library</value>
+  </data>
+  <data name="ExemplaryStartTime">
+    <value>Normalized start retention time of the peak from the best-scoring replicate or library file</value>
+  </data>
   <data name="ExplicitAnalyteConcentration">
     <value>The concentration of this particular molecule or peptide in this particular replicate.
 If the Explicit Analyte Concentration is not specified then the concentration of the analyte is assumed 
@@ -523,6 +547,15 @@ boundaries.</value>
     <value>True if a MS/MS peptide identification exists for the result file at a time
 between the peak integration boundaries.</value>
   </data>
+  <data name="ImputedEndTime">
+    <value>End time of the peak from the best-scoring replicate mapped using retention time alignment to this replicate</value>
+  </data>
+  <data name="ImputedPeak">
+    <value>Peak boundaries of the best-scoring replicate mapped using retention time alignment to this replicate</value>
+  </data>
+  <data name="ImputedStartTime">
+    <value>Start time of the peak from the best-scoring replicate mapped using retention time alignment to this replicate</value>
+  </data>
   <data name="InChI" xml:space="preserve">
     <value>Standardized molecular identifier</value>
   </data>
@@ -587,7 +620,7 @@ between the peak integration boundaries.</value>
     <value>True if this is a decoy precursor.</value>
   </data>
   <data name="IsolationWindowWidth">
-    <value>With of the m/z window in which the precursor was isolated. 
+    <value>Width of the m/z window in which the precursor was isolated. 
 If more than one precursor was isolated then the Isolation Window Width is the sum of the windows around each precursor.</value>
   </data>
   <data name="IsotopeDistIndex">
@@ -877,7 +910,7 @@ cysteine alkylation. (example: AGLC[+57]QTFVYGGC[+57]R)</value>
 modified on disk</value>
   </data>
   <data name="Molecule">
-    <value>Molecules belong to Molecule Lists and contain Percursors.</value>
+    <value>Molecules belong to Molecule Lists and contain Precursors.</value>
   </data>
   <data name="MoleculeFormula">
     <value>An atomic chemical formula for the neutral, unlabeled molecule to be measured in a mass spectrometer.</value>
@@ -886,22 +919,27 @@ modified on disk</value>
     <value>A grouping of molecules in a Skyline document.</value>
   </data>
   <data name="MoleculeListAbundance">
-    <value>A number representing the abundance of the molecule list, calculated according to the "Normalization Method" specified in the Molecule Quantification settings</value>
+    <value>A number representing the abundance of the molecule list.
+Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.</value>
   </data>
   <data name="MoleculeListAbundanceMessage">
     <value>Warning if missing data impacts comparisons of "Molecule List Abundance" between replicates</value>
   </data>
+  <data name="MoleculeListAbundanceRaw">
+    <value>A number representing the abundance of the molecule list.
+Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.
+Available even when missing data impacts comparisons between replicates.</value>
+  </data>
   <data name="MoleculeListAbundanceStrict">
-    <value>A number representing the abundance of the molecule list, calculated according to the "Normalization Method" specified in the Molecule Quantification settings.
+    <value>A number representing the abundance of the molecule list.
+Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.
 Unavailable when missing data impacts comparisons between replicates.</value>
   </data>
   <data name="MoleculeListAbundanceTransitionAveraged">
-    <value>Average of the normalized areas of the transitions under the Molecule List.
-The areas are normalized according to the Normalization Method specified in the Molecule Quantification settings.</value>
+    <value>Obsolete: Use Molecule List Abundance Raw instead.</value>
   </data>
   <data name="MoleculeListAbundanceTransitionSummed">
-    <value>Sum of the normalized areas of the transitions under the Molecule List.
-The areas are normalized according to the Normalization Method specified in the Molecule Quantification settings</value>
+    <value>Obsolete: Equal to Molecule List Abundance Raw times the number of Transitions.</value>
   </data>
   <data name="MoleculeListLocator">
     <value>Unique identifier of the molecule list within the document. This begins with "MoleculeGroup:".</value>
@@ -1011,6 +1049,21 @@ OptStep if declustering potential optimization is being performed</value>
     <value>Optimization step value indicating distance from the default value for the
 parameter being optimized, 0 for the default parameter value, or if no optimization is
 being performed in the replicate.</value>
+  </data>
+  <data name="OriginalEndTime">
+    <value>End retention time of the peak chosen by Skyline during chromatogram extraction</value>
+  </data>
+  <data name="OriginalPeak">
+    <value>Peak boundaries chosen by Skyline during chromatogram extraction</value>
+  </data>
+  <data name="OriginalRetentionTime">
+    <value>Retention time of the apex of the peak chosen by Skyline during the initial chromatogram extraction</value>
+  </data>
+  <data name="OriginalScore">
+    <value>Peak score assigned by Skyline during chromatogram extraction</value>
+  </data>
+  <data name="OriginalStartTime">
+    <value>Start retention time of the peak chosen by Skyline during chromatogram extraction</value>
   </data>
   <data name="PeakGroupEndTime">
     <value>The maximum end time of the individual peaks in the peak group.</value>
@@ -1255,22 +1308,27 @@ greater than 25% of the background-subtracted peak height higher than the other 
     <value>Protein</value>
   </data>
   <data name="ProteinAbundance">
-    <value>A number representing the abundance of the protein, calculated according to the "Normalization Method" specified in the Peptide Quantification settings.</value>
+    <value>A number representing the abundance of the molecule list.
+Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.</value>
   </data>
   <data name="ProteinAbundanceMessage">
     <value>Warning if missing data impacts comparisons of "Protein Abundance" between replicates</value>
   </data>
+  <data name="ProteinAbundanceRaw">
+    <value>A number representing the abundance of the molecule list.
+Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.
+Available even when missing data impacts comparisons between replicates.</value>
+  </data>
   <data name="ProteinAbundanceStrict">
-    <value>A number representing the abundance of the protein, calculated according to the "Normalization Method" specified in the Peptide Quantification settings.
+    <value>A number representing the abundance of the molecule list.
+Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.
 Unavailable when missing data impacts comparisons between replicates.</value>
   </data>
   <data name="ProteinAbundanceTransitionAveraged">
-    <value>Average of the normalized areas of the transitions under the Protein.
-The areas are normalized according to the Normalization Method specified in the Peptide Quantification settings.</value>
+    <value>Obsolete: Use Protein Abundance Raw instead.</value>
   </data>
   <data name="ProteinAbundanceTransitionSummed">
-    <value>Sum of the normalized areas of the transitions under the Protein.
-The areas are normalized according to the Normalization Method specified in the Peptide Quantification settings.</value>
+    <value>Obsolete: Equal to Protein Abundance Raw times the number of transitions.</value>
   </data>
   <data name="ProteinAccession">
     <value>Protein Accession</value>
@@ -1380,6 +1438,21 @@ measured.</value>
   </data>
   <data name="Reason">
     <value>Reason the user gave for making the change</value>
+  </data>
+  <data name="ReintegratedEndTime">
+    <value>End retention time of the peak chosen when reintegrating with a trained peak scoring model</value>
+  </data>
+  <data name="ReintegratedPeak">
+    <value>Peak boundaries of the peak chosen when reintegrating with a trained peak scoring model</value>
+  </data>
+  <data name="ReintegratedRetentionTime">
+    <value>Retention time of the apex of the peak chosen when reintegrating with a trained peak scoring model</value>
+  </data>
+  <data name="ReintegratedScore">
+    <value>Score assigned to the peak chosen when reintegrating with a trained peak scoring model</value>
+  </data>
+  <data name="ReintegratedStartTime">
+    <value>Start retention time of the peak chosen when reintegrating with a trained peak scoring model</value>
   </data>
   <data name="Replicate">
     <value>Replicate</value>
