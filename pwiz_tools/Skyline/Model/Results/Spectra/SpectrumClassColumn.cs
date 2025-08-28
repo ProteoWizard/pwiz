@@ -26,6 +26,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.Spectra;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results.Spectra
 {
@@ -73,10 +74,13 @@ namespace pwiz.Skyline.Model.Results.Spectra
             nameof(SpectrumClass.IsolationWindowWidth),
             spectrum => GetIsolationWindowWidth(spectrum.GetPrecursors(1)));
 
+        public static readonly SpectrumClassColumn DissociationMethod = MakeColumn(
+            nameof(SpectrumClass.DissociationMethod), GetDissociationMethod);
+
         public static readonly ImmutableList<SpectrumClassColumn> ALL = ImmutableList.ValueOf(new[]
         {
             Ms1Precursors, Ms2Precursors, ScanDescription, CollisionEnergy, ScanWindowWidth, CompensationVoltage,
-            PresetScanConfiguration, MsLevel, Analyzer, IsolationWindowWidth
+            PresetScanConfiguration, MsLevel, Analyzer, IsolationWindowWidth, DissociationMethod
         });
 
         public static readonly ImmutableList<SpectrumClassColumn> MS1 = ImmutableList.ValueOf(new[]
@@ -288,6 +292,28 @@ namespace pwiz.Skyline.Model.Results.Spectra
             }
             Assume.AreEqual(0.0, totalWidth);
             return null;
+        }
+        
+        private static string GetDissociationMethod(SpectrumMetadata spectrumMetadata)
+        {
+            if (spectrumMetadata.MsLevel <= 1)
+            {
+                return null;
+            }
+
+            var dissociationMethods  = Enumerable.Range(1, spectrumMetadata.MsLevel - 1)
+                .SelectMany(spectrumMetadata.GetPrecursors).Select(precursor => precursor.DissociationMethod)
+                .Where(method => !string.IsNullOrEmpty(method)).Distinct().ToList();
+            if (dissociationMethods.Count == 0)
+            {
+                return null;
+            }
+
+            if (dissociationMethods.Count == 1)
+            {
+                return dissociationMethods[0];
+            }
+            return TextUtil.SpaceSeparate(dissociationMethods);
         }
 
         /// <summary>

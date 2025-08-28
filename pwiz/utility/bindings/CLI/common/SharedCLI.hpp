@@ -45,19 +45,18 @@ using namespace pwiz::util;
 //#define GC_DEBUG
 
 #ifdef GC_DEBUG
-#define LOG_DESTRUCT(msg, willDelete) \
-    pwiz::CLI::util::ObjectStructorLog::WriteLine("In " + msg + \
-                                                  " destructor (will delete: " + \
-                                                  ((willDelete) ? "yes" : "no") + ").\n");
-#define LOG_FINALIZE(msg) \
-    pwiz::CLI::util::ObjectStructorLog::WriteLine("In " + msg + " finalizer.\n");
-#define LOG_CONSTRUCT(msg) \
-    pwiz::CLI::util::ObjectStructorLog::WriteLine("In " + msg + " constructor.\n");
+#define LOG_DESTRUCT(msg, ptr, willDelete) \
+    pwiz::CLI::util::ObjectStructorLog::LogDestruct(msg, (long long) ptr, willDelete);
+#define LOG_FINALIZE(msg, ptr) \
+    pwiz::CLI::util::ObjectStructorLog::LogFinalize(msg, (long long) ptr);
+#define LOG_CONSTRUCT(msg, ptr) \
+    pwiz::CLI::util::ObjectStructorLog::LogConstruct(msg, (long long) ptr);
 
 namespace pwiz { namespace CLI { namespace util {
 public ref class ObjectStructorLog
 {
     static System::IO::TextWriter^ writer = gcnew System::IO::StringWriter();
+    static System::Collections::Concurrent::ConcurrentDictionary<long long, System::String^>^ allocations = gcnew System::Collections::Concurrent::ConcurrentDictionary<long long, System::String^>();
 
     // Explicit static constructor to tell C# compiler
     // not to mark type as beforefieldinit
@@ -78,24 +77,70 @@ public ref class ObjectStructorLog
         void set(System::IO::TextWriter^ value)
         {
             System::Threading::Monitor::Enter(mutex);
-            writer = value;
-            System::Threading::Monitor::Exit(mutex);
+            try
+            {
+                writer = value;
+            }
+            catch (...)
+            {
+                System::Threading::Monitor::Exit(mutex);
+            }
         }
     }
 
     static void WriteLine(System::String^ line)
     {
         System::Threading::Monitor::Enter(mutex);
-        writer->WriteLine(line);
-        System::Threading::Monitor::Exit(mutex);
+        try
+        {
+            writer->WriteLine(line);
+        }
+        catch (...)
+        {
+            System::Threading::Monitor::Exit(mutex);
+        }
+    }
+
+    static void LogDestruct(System::String^ msg, long long ptr, bool willDelete)
+    {
+        /*WriteLine("In " + msg + \
+            " (" + System::Convert::ToString(ptr, 16) + ") destructor (will delete: " + \
+            ((willDelete) ? "yes" : "no") + ").\n");*/
+        System::String^ s;
+        allocations->TryRemove(ptr, s);
+    }
+
+    static void LogConstruct(System::String^ msg, long long ptr)
+    {
+        //WriteLine("In " + msg + " (" + System::Convert::ToString(ptr, 16) + ") constructor.\n");
+        allocations->TryAdd(ptr, msg);
+    }
+
+    static void LogFinalize(System::String^ msg, long long ptr)
+    {
+        //WriteLine("In " + msg + " (" + System::Convert::ToString(ptr, 16) + ") finalizer.\n");
+        System::String^ s;
+        allocations->TryRemove(ptr, s);
+    }
+
+    static void LeakCheck()
+    {
+        System::GC::Collect();
+        System::GC::WaitForPendingFinalizers();
+        System::GC::Collect();
+        if (allocations->Count > 0)
+        {
+            for each (auto a in allocations)
+                System::Console::Error->WriteLine("Allocation " + a.Key.ToString("X2") + " (" + a.Value + ") not deleted.");
+        }
     }
 };
 } } }
 
 #else // !defined GC_DEBUG
-#define LOG_DESTRUCT(msg, willDelete)
-#define LOG_FINALIZE(msg)
-#define LOG_CONSTRUCT(msg)
+#define LOG_DESTRUCT(msg, ptr, willDelete)
+#define LOG_FINALIZE(msg, ptr)
+#define LOG_CONSTRUCT(msg, ptr)
 #endif
 
 #define SAFEDELETE(x) if(x) {delete x; x = NULL;}
@@ -151,10 +196,10 @@ namespace { void nullDelete(void* s) {} }
 // defines internal members for wrapping a raw pointer to a non-derived native class with a managed wrapper class
 #define DEFINE_INTERNAL_BASE_CODE(CLIType, NativeType) \
 public:   System::IntPtr void_base() {return (System::IntPtr) base_;} \
-INTERNAL: CLIType(NativeType* base, System::Object^ owner) : base_(base), owner_(owner) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(CLIType))} \
-          CLIType(NativeType* base) : base_(base), owner_(nullptr) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(CLIType))} \
-          virtual ~CLIType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(CLIType), (owner_ == nullptr)) if (owner_ == nullptr) {SAFEDELETE(base_);}} \
-          !CLIType() {LOG_FINALIZE(BOOST_PP_STRINGIZE(CLIType)) delete this;} \
+INTERNAL: CLIType(NativeType* base, System::Object^ owner) : base_(base), owner_(owner) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(CLIType), base)} \
+          CLIType(NativeType* base) : base_(base), owner_(nullptr) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(CLIType), base)} \
+          virtual ~CLIType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(CLIType), base_, (owner_ == nullptr)) if (owner_ == nullptr) {SAFEDELETE(base_);}} \
+          !CLIType() {LOG_FINALIZE(BOOST_PP_STRINGIZE(CLIType), base_) delete this;} \
           NativeType* base_; \
           System::Object^ owner_; \
           NativeType& base() {return *base_;}
@@ -162,20 +207,20 @@ INTERNAL: CLIType(NativeType* base, System::Object^ owner) : base_(base), owner_
 // defines internal members for wrapping a raw pointer to a derived native class with a managed wrapper class
 #define DEFINE_DERIVED_INTERNAL_BASE_CODE(ns, ClassType, BaseClassType) \
 public:   System::IntPtr void_base() new {return (System::IntPtr) base_;} \
-INTERNAL: ClassType(ns::ClassType* base, System::Object^ owner) : BaseClassType(base), base_(base) {owner_ = owner; LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
-          ClassType(ns::ClassType* base) : BaseClassType(base), base_(base) {owner_ = nullptr; LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
-          virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType), (owner_ == nullptr)) if (owner_ == nullptr) {SAFEDELETE(base_); BaseClassType::base_ = NULL;}} \
-          !ClassType() {LOG_FINALIZE(BOOST_PP_STRINGIZE(ClassType)) delete this;} \
+INTERNAL: ClassType(ns::ClassType* base, System::Object^ owner) : BaseClassType(base), base_(base) {owner_ = owner; LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType), base)} \
+          ClassType(ns::ClassType* base) : BaseClassType(base), base_(base) {owner_ = nullptr; LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType), base)} \
+          virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType), base_, (owner_ == nullptr)) if (owner_ == nullptr) {SAFEDELETE(base_); BaseClassType::base_ = NULL;}} \
+          !ClassType() {LOG_FINALIZE(BOOST_PP_STRINGIZE(ClassType), base_) delete this;} \
           ns::ClassType* base_; \
           ns::ClassType& base() new {return *base_;}
 
 // defines internal members for wrapping a shared_ptr to a non-derived native class with a managed wrapper class
 #define DEFINE_SHARED_INTERNAL_BASE_CODE(ns, ClassType) \
 public:   System::IntPtr void_base() {return (System::IntPtr) base_;} \
-INTERNAL: ClassType(boost::shared_ptr<ns::ClassType>* base, System::Object^ owner) : base_(base), owner_(owner) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
-          ClassType(boost::shared_ptr<ns::ClassType>* base) : base_(base), owner_(nullptr) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
-          virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType), true) SAFEDELETE(base_);} \
-          !ClassType() {LOG_FINALIZE(BOOST_PP_STRINGIZE(ClassType)) delete this;} \
+INTERNAL: ClassType(boost::shared_ptr<ns::ClassType>* base, System::Object^ owner) : base_(base), owner_(owner) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType), base)} \
+          ClassType(boost::shared_ptr<ns::ClassType>* base) : base_(base), owner_(nullptr) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType), base)} \
+          virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType), base_, true) SAFEDELETE(base_);} \
+          !ClassType() {LOG_FINALIZE(BOOST_PP_STRINGIZE(ClassType), base_) delete this;} \
           boost::shared_ptr<ns::ClassType>* base_; \
           System::Object^ owner_; \
           ns::ClassType& base() {return **base_;}
@@ -183,9 +228,9 @@ INTERNAL: ClassType(boost::shared_ptr<ns::ClassType>* base, System::Object^ owne
 // defines internal members for wrapping a shared_ptr to a derived native class with a managed wrapper class
 #define DEFINE_SHARED_DERIVED_INTERNAL_BASE_CODE(ns, ClassType, BaseClassType) \
 public:   System::IntPtr void_base() new {return (System::IntPtr) base_;} \
-INTERNAL: ClassType(boost::shared_ptr<ns::ClassType>* base) : BaseClassType(base->get()), base_(base) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
-          virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType), true) SAFEDELETE(base_); BaseClassType::base_ = NULL;} \
-          !ClassType() {LOG_FINALIZE(BOOST_PP_STRINGIZE(ClassType)) delete this;} \
+INTERNAL: ClassType(boost::shared_ptr<ns::ClassType>* base) : BaseClassType(base->get()), base_(base) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType), base)} \
+          virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType), base_, true) SAFEDELETE(base_); BaseClassType::base_ = NULL;} \
+          !ClassType() {LOG_FINALIZE(BOOST_PP_STRINGIZE(ClassType), base_) delete this;} \
           boost::shared_ptr<ns::ClassType>* base_; \
           ns::ClassType& base() new {return **base_;}
 
@@ -193,9 +238,9 @@ INTERNAL: ClassType(boost::shared_ptr<ns::ClassType>* base) : BaseClassType(base
 // TODO: explain why SpectrumList/MSData derivatives need this but ParamContainer derivatives don't
 #define DEFINE_SHARED_DERIVED_INTERNAL_SHARED_BASE_CODE(ns, ClassType, BaseClassType) \
 public:   System::IntPtr void_base() new {return (System::IntPtr) base_;} \
-INTERNAL: ClassType(boost::shared_ptr<ns::ClassType>* base) : BaseClassType(new boost::shared_ptr<ns::BaseClassType>(base->get(), nullDelete)), base_(base) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
-          virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType), true) SAFEDELETE(base_); BaseClassType::base_ = NULL;} \
-          !ClassType() {LOG_FINALIZE(BOOST_PP_STRINGIZE(ClassType)) delete this;} \
+INTERNAL: ClassType(boost::shared_ptr<ns::ClassType>* base) : BaseClassType(new boost::shared_ptr<ns::BaseClassType>(base->get(), nullDelete)), base_(base) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType), base)} \
+          virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType), base_, true) SAFEDELETE(base_); BaseClassType::base_ = NULL;} \
+          !ClassType() {LOG_FINALIZE(BOOST_PP_STRINGIZE(ClassType), base_) delete this;} \
           boost::shared_ptr<ns::ClassType>* base_; \
           ns::ClassType& base() new {return **base_;}
 
