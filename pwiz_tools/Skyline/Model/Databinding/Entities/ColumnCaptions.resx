@@ -384,6 +384,9 @@
   <data name="DetectionZScore">
     <value>Detection Z Score</value>
   </data>
+  <data name="DissociationMethod">
+    <value>Dissociation Method</value>
+  </data>
   <data name="DriftTimeFragment">
     <value>Drift Time Fragment</value>
   </data>
