@@ -1435,9 +1435,7 @@ namespace pwiz.Skyline.SettingsUI
                 MessageDlg.Show(this, SettingsUIResources.TransitionSettingsUI_EditSpectrumFilter_MS1_or_MS_MS_filtering_must_be_enabled_on_the_Full_Scan_tab_in_order_to_use_this_feature_);
                 return;
             }
-
             using var dlg = new EditSpectrumFilterDlg(rootColumn, filterPages);
-            dlg.AutoComplete = new SpectrumFilterAutoComplete(_parent);
             dlg.CreateCopyVisible = false;
             if (dlg.ShowDialog(this) == DialogResult.OK)
             {

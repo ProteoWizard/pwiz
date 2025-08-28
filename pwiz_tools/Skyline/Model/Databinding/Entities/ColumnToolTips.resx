@@ -386,9 +386,6 @@ the decoy m/z</value>
   <data name="DetectionZScore">
     <value>A normalized mProphet score assigned to each chosen peak (target and decoy) after applying a mProphet model, expressed as the number of standard deviations (SD) from the mean decoy score.</value>
   </data>
-  <data name="DissociationMethod">
-    <value>Fragmentation technique (e.g. CID, HCD, ETD)</value>
-  </data>
   <data name="DriftTimeFragment">
     <value>Ion mobility drift time (in milliseconds) for fragment ions, which typically move faster due to more energetic collisions. (For backward compatibility only: IonMobilityFragment and IonMobilityUnits are the preferred terms.)</value>
   </data>

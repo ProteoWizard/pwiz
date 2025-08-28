@@ -183,7 +183,6 @@
     <Compile Include="DdaPeakIntegrationTest.cs" />
     <Compile Include="DdaScoringTest.cs" />
     <Compile Include="DetectionsPlotErrorTest.cs" />
-    <Compile Include="DissociationMethodTest.cs" />
     <Compile Include="DocumentGridExportTest.cs" />
     <Compile Include="DocumentGridUndoTest.cs" />
     <Compile Include="EditablePivotTest.cs" />

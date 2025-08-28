@@ -307,10 +307,4 @@
   <data name="Description_rdotp" xml:space="preserve">
     <value>Measure of similarity between labeled and non-labeled spectra.</value>
   </data>
-  <data name="Description_DissociationMethod" xml:space="preserve">
-    <value>Fragmentation technique (e.g. CID, HCD, ETD)</value>
-  </data>
-  <data name="DissociationMethod" xml:space="preserve">
-    <value>Dissociation Method</value>
-  </data>
 </root>

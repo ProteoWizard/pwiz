@@ -77,7 +77,5 @@ namespace pwiz.Skyline.Model.Results.Spectra
 
         [Format(Formats.Mz)]
         public double? IsolationWindowWidth { get; private set; }
-        
-        public string DissociationMethod { get; private set; }
     }
 }

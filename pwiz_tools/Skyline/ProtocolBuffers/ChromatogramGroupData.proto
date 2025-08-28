@@ -55,7 +55,6 @@ message ResultFileMetaDataProto {
 		double isolationWindowUpper = 3;
 		double collisionEnergy = 4;
 		int32 msLevel = 5;
-		string dissociationMethod = 6;
 	}
 	message ScanWindow {
 		double lowerLimit = 1;
