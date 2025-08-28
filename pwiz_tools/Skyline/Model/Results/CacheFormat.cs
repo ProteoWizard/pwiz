@@ -164,7 +164,7 @@ namespace pwiz.Skyline.Model.Results
         public static readonly CacheFormat CURRENT = new CacheFormat
         {
             FormatVersion = CacheFormatVersion.CURRENT,
-            VersionRequired = CacheFormatVersion.Eighteen,
+            VersionRequired = GetVersionRequired(CacheFormatVersion.CURRENT),
             CachedFileSize = Marshal.SizeOf<CachedFileHeaderStruct>(),
             ChromGroupHeaderSize = Marshal.SizeOf<ChromGroupHeaderInfo>(),
             ChromPeakSize = Marshal.SizeOf<ChromPeak>(),
