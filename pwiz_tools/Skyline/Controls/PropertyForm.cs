@@ -34,13 +34,14 @@ namespace pwiz.Skyline.Controls
         private PropertyForm()
         {
             InitializeComponent();
-            HideOnClose = true; // Hide the form when closed, but do not dispose it
-            PropertyGrid.PropertyValueChanged += PropertyGrid_PropertyValueChanged;
         }
 
         public PropertyForm(SkylineWindow skylineWindow) : this()
         {
+            HideOnClose = true; // Hide the form when closed, but do not dispose it
             SkylineWindow = skylineWindow;
+
+            PropertyGrid.PropertyValueChanged += PropertyGrid_PropertyValueChanged;
             SkylineWindow.Listen(OnDocumentChanged);
         }
 
@@ -101,7 +102,9 @@ namespace pwiz.Skyline.Controls
 
             Assume.IsTrue(PropertyGrid.SelectedObject is GlobalizedObject);
             var selectedGlobalizedObject = (GlobalizedObject)PropertyGrid.SelectedObject;
-            selectedGlobalizedObject.OnDocumentChanged(SkylineWindow);
+
+            selectedGlobalizedObject.OnDocumentChanged();
+            PropertyGrid.Refresh();
         }
     }
 }

@@ -25,6 +25,8 @@ namespace pwiz.Skyline.Model.Files
 {
     public abstract class FileNodeProperties : GlobalizedObject
     {
+        private readonly FileNode _model;
+
         protected override ResourceManager GetResourceManager()
         {
             return PropertySheetFileNodeResources.ResourceManager;
@@ -32,12 +34,17 @@ namespace pwiz.Skyline.Model.Files
 
         protected FileNodeProperties(FileNode fileNode, string localFilePath)
         {
+            _model = fileNode;
             FilePath = localFilePath;
-            Name = fileNode.Name;
+        }
 
-            if (fileNode.IsBackedByFile && System.IO.File.Exists(localFilePath))
+        protected void UpdateBaseProperties()
+        {
+            Name = _model.Name;
+
+            if (_model.IsBackedByFile && System.IO.File.Exists(FilePath))
             {
-                var fileInfo = new System.IO.FileInfo(localFilePath);
+                var fileInfo = new System.IO.FileInfo(FilePath);
                 if (fileInfo.Exists)
                     FileSize = new FileSize(fileInfo.Length).ToString();
             }

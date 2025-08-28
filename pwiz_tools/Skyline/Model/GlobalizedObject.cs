@@ -70,7 +70,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public virtual void OnDocumentChanged(IDocumentContainer documentContainer) { }
+        public virtual void OnDocumentChanged() { }
 
         protected abstract ResourceManager GetResourceManager();
         

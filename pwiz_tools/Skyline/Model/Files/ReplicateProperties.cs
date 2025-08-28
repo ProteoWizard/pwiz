@@ -31,12 +31,6 @@ namespace pwiz.Skyline.Model.Files
     {
         private readonly Replicate _model;
 
-        public override void OnDocumentChanged(IDocumentContainer documentContainer)
-        {
-            _model.SetDocumentContainer(documentContainer);
-            UpdateProperties();
-        }
-
         public ReplicateProperties(Replicate model, string localFilePath)
             : base(model, localFilePath)
         {
@@ -46,8 +40,12 @@ namespace pwiz.Skyline.Model.Files
             UpdateProperties();
         }
 
-        public void UpdateProperties()
+        public override void OnDocumentChanged() => UpdateProperties();
+
+        private void UpdateProperties()
         {
+            UpdateBaseProperties();
+
             BatchName = _model.BatchName;
             AnalyteConcentration = _model.AnalyteConcentration;
             SampleDilutionFactor = _model.SampleDilutionFactor;
