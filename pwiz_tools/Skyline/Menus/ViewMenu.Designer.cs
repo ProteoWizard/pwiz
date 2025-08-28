@@ -1053,6 +1053,7 @@
         private System.Windows.Forms.ToolStripMenuItem spectrumGridMenuItem;
         private System.Windows.Forms.ToolStripMenuItem librariesMenuItem;
         private System.Windows.Forms.ToolStripMenuItem viewFilesMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem viewPropertiesMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
     }
 }
