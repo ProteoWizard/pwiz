@@ -36,10 +36,6 @@ namespace pwiz.Skyline.Model.Files
         {
             get
             {
-                // TODO: remove! Temporary fix - replace with cancellation token
-                if (DocumentContainer.Document.MeasuredResults == null)
-                    return null;
-
                 var chromSetId = (ChromatogramSetId)IdentityPath.GetIdentity(0);
                 if (DocumentContainer.Document.MeasuredResults.TryGetChromatogramSet(chromSetId.GlobalIndex, out var chromSet, out _))
                 {
