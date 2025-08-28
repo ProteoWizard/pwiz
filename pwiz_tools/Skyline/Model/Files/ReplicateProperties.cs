@@ -19,7 +19,6 @@
 
 using JetBrains.Annotations;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model.DocSettings;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -30,18 +29,31 @@ namespace pwiz.Skyline.Model.Files
 {
     public class ReplicateProperties : FileNodeProperties
     {
+        private readonly Replicate _model;
+
+        public override void OnDocumentChanged(IDocumentContainer documentContainer)
+        {
+            _model.SetDocumentContainer(documentContainer);
+            UpdateProperties();
+        }
+
         public ReplicateProperties(Replicate model, string localFilePath)
             : base(model, localFilePath)
         {
             Assume.IsNotNull(model);
+            _model = model;
 
-            BatchName = model.BatchName;
-            AnalyteConcentration = model.AnalyteConcentration;
-            SampleDilutionFactor = model.SampleDilutionFactor;
-            SampleType = model.SampleType;
-            _getModifiedDocumentRename = (document, monitor, newName) => model.Rename(document, monitor, newName as string);
+            UpdateProperties();
+        }
 
-            var dataFileInfo = model.MSDataFileInfos;
+        public void UpdateProperties()
+        {
+            BatchName = _model.BatchName;
+            AnalyteConcentration = _model.AnalyteConcentration;
+            SampleDilutionFactor = _model.SampleDilutionFactor;
+            SampleType = _model.SampleType;
+
+            var dataFileInfo = _model.MSDataFileInfos;
             if (dataFileInfo.Count == 1)
             {
                 MaxRetentionTime = dataFileInfo[0].MaxRetentionTime;
@@ -71,14 +83,13 @@ namespace pwiz.Skyline.Model.Files
         [Category("Replicate")] public double MaxIntensity { get; set; }
         [Category("Replicate")] public string AcquisitionTime { get; set; }
 
-        // Replicate Name is editable and updates the document with _getModifiedDocumentRename
-        [EditableProperty]
+        // Replicate Name is editable and updates the document with model.Rename
+        [UseCustomHandling]
         [Category("FileInfo")] public override string Name { get; set; }
 
-        private readonly Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument> _getModifiedDocumentRename;
-
         // Instrument properties need to be added as nested properties, as lists don't render well in PropertyGrid
-        [UseCustomHandling] public List<InstrumentProperties> Instruments { get; set; }
+        [UseCustomHandling]
+        [Category("Instruments")] public List<InstrumentProperties> Instruments { get; set; }
 
         /// <summary>
         /// Transforms the list of InstrumentProperties into a form that will display better in the property sheet.
@@ -92,9 +103,7 @@ namespace pwiz.Skyline.Model.Files
             AddProperty(new GlobalizedPropertyDescriptor(
                 namePropertyDescriptor,
                 GetResourceManager(),
-                _getModifiedDocumentRename));
-
-            const string instrumentsCategoryKey = "Instruments";
+                getModifiedDocument: _model.Rename));
 
             if (Instruments?.Count == 1)
             {
@@ -116,9 +125,13 @@ namespace pwiz.Skyline.Model.Files
                         { new TypeConverterAttribute(typeof(ExpandableObjectConverter)) };
 
                     AddProperty(new CustomHandledGlobalizedPropertyDescriptor(
-                        typeof(InstrumentProperties), instrumentsCategoryKey + i, Instruments[i], instrumentsCategoryKey,
+                        typeof(InstrumentProperties), 
+                        GetBaseDescriptorByName(nameof(Instruments)).Category + i, 
+                        Instruments[i], 
+                        GetBaseDescriptorByName(nameof(Instruments)).Category,
                         GetResourceManager(), 
-                        attributes: expandableAttr, nonLocalizedDisplayName: Instruments[i].Model));
+                        attributes: expandableAttr, 
+                        nonLocalizedDisplayName: Instruments[i].Model));
                 }
             }
         }

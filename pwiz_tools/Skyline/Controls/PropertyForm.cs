@@ -23,6 +23,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.PropertySheets;
 using pwiz.Skyline.Util;
+using pwiz.Common.SystemUtil;
 using System.ComponentModel;
 using System.Windows.Forms;
 
@@ -40,6 +41,7 @@ namespace pwiz.Skyline.Controls
         public PropertyForm(SkylineWindow skylineWindow) : this()
         {
             SkylineWindow = skylineWindow;
+            SkylineWindow.Listen(OnDocumentChanged);
         }
 
         [Browsable(false)]
@@ -67,12 +69,11 @@ namespace pwiz.Skyline.Controls
 
         private void PropertyGrid_PropertyValueChanged(object sender, PropertyValueChangedEventArgs e)
         {
-            var newValue = e.ChangedItem.Value;
-            var descriptor = e.ChangedItem.PropertyDescriptor;
+            Assume.IsTrue(e.ChangedItem.PropertyDescriptor is GlobalizedPropertyDescriptor { IsReadOnly: false });
+            var globalizedPropertyDescriptor = (GlobalizedPropertyDescriptor)e.ChangedItem.PropertyDescriptor;
 
-            // This situation is not possible, but necessary to satisfy the compiler.
-            if (!(descriptor is GlobalizedPropertyDescriptor { IsReadOnly: false } globalizedPropertyDescriptor))
-                return;
+            Assume.IsTrue(e.ChangedItem.Value is string);
+            var newValue = (string)e.ChangedItem.Value;
 
             // If the property is editable, acquire the document change lock and modify the document,
             // by calling the GetModifiedDocument delegate of the property descriptor.
@@ -91,6 +92,16 @@ namespace pwiz.Skyline.Controls
 
                 SkylineWindow.ModifyDocument(FilesTreeResources.Change_ReplicateName, DocumentModifier.FromResult(originalDoc, modifiedDoc));
             }
+        }
+
+        private void OnDocumentChanged(object sender, DocumentChangedEventArgs e)
+        {
+            if (PropertyGrid.SelectedObject == null)
+                return;
+
+            Assume.IsTrue(PropertyGrid.SelectedObject is GlobalizedObject);
+            var selectedGlobalizedObject = (GlobalizedObject)PropertyGrid.SelectedObject;
+            selectedGlobalizedObject.OnDocumentChanged(SkylineWindow);
         }
     }
 }

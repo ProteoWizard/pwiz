@@ -80,7 +80,12 @@ namespace pwiz.Skyline.Model.Files
             ImageMissing = missing;
         }
 
-        internal IDocumentContainer DocumentContainer { get; }
+        public void SetDocumentContainer(IDocumentContainer documentContainer)
+        {
+            DocumentContainer = documentContainer;
+        }
+
+        internal IDocumentContainer DocumentContainer { get; set; }
         internal SrmDocument Document => DocumentContainer.Document;
         internal string DocumentPath => DocumentContainer.DocumentFilePath;
 

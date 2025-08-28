@@ -70,6 +70,8 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        public virtual void OnDocumentChanged(IDocumentContainer documentContainer) { }
+
         protected abstract ResourceManager GetResourceManager();
         
         public string GetClassName() => TypeDescriptor.GetClassName(this, true);
@@ -114,6 +116,7 @@ namespace pwiz.Skyline.Model
                 var baseProps = TypeDescriptor.GetProperties(this, attributes, true);
 
                 _globalizedProps = new PropertyDescriptorCollection(null);
+
 
                 // For each property use a property descriptor of our own that is able to be globalized
                 foreach (PropertyDescriptor oProp in baseProps)
@@ -300,18 +303,18 @@ namespace pwiz.Skyline.Model
         private readonly PropertyDescriptor _basePropertyDescriptor;
         private readonly ResourceManager _resourceManager;
 
-        private readonly Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument> _getModifiedDocument;
+        private readonly Func<SrmDocument, SrmSettingsChangeMonitor, string, ModifiedDocument> _getModifiedDocument;
 
         public GlobalizedPropertyDescriptor(PropertyDescriptor basePropertyDescriptor, ResourceManager resourceManager,
-            Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument> getModifiedDocumentFromEdit = null) 
+            Func<SrmDocument, SrmSettingsChangeMonitor, string, ModifiedDocument> getModifiedDocument = null) 
             : base(basePropertyDescriptor)
         {
             _basePropertyDescriptor = basePropertyDescriptor;
             _resourceManager = resourceManager;
-            _getModifiedDocument = getModifiedDocumentFromEdit;
+            _getModifiedDocument = getModifiedDocument;
         }
 
-        public ModifiedDocument GetModifiedDocument(SrmDocument document, SrmSettingsChangeMonitor monitor, object newValue)
+        public ModifiedDocument GetModifiedDocument(SrmDocument document, SrmSettingsChangeMonitor monitor, string newValue)
         {
             return _getModifiedDocument?.Invoke(document, monitor, newValue);
         }
