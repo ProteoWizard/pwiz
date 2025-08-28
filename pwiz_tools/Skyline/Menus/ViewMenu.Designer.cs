@@ -1054,6 +1054,5 @@
         private System.Windows.Forms.ToolStripMenuItem librariesMenuItem;
         private System.Windows.Forms.ToolStripMenuItem viewFilesMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
-        private System.Windows.Forms.ToolStripMenuItem viewPropertiesMenuItem;
     }
 }

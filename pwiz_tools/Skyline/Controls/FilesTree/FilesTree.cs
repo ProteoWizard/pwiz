@@ -20,6 +20,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;
@@ -43,11 +44,18 @@ namespace pwiz.Skyline.Controls.FilesTree
         private FilesTreeNode _triggerLabelEditForNode;
         private TextBox _editTextBox;
         private string _editedLabel;
-        private readonly MemoryDocumentContainer _modelDocumentContainer;
+
+        /// <summary>
+        /// Used to cancel any pending async work when the document changes including any
+        /// lingering async tasks waiting in _fsWorkQueue or the UI event loop. This
+        /// token source is re-instantiated whenever Skyline loads a new document. For example,
+        /// creating a new document (File => New) or opening a different existing document (File => Open).
+        /// </summary>
+        private CancellationTokenSource _cancellationTokenSource;
 
         public FilesTree()
         {
-            _modelDocumentContainer = new MemoryDocumentContainer();
+            _cancellationTokenSource = new CancellationTokenSource();
 
             _monitoringFileSystem = false;
             _monitoredFilePath = null;
@@ -178,8 +186,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             if (args == null || DocumentContainer.Document == null)
                 return;
 
-            // CONSIDER: use DocumentContainer.DocumentFilePath?
-            var newDocumentFilePath = args.DocumentFilePath;
+            var newDocumentFilePath = DocumentContainer.DocumentFilePath;
 
             if (IsMonitoringFileSystem() && args.IsSaveAs && !string.Equals(_monitoredFilePath, newDocumentFilePath, StringComparison.OrdinalIgnoreCase))
             {
@@ -188,7 +195,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 _monitoringFileSystem = true;
             }
 
-            UpdateTree(DocumentContainer.Document, newDocumentFilePath, true);
+            UpdateTree(true);
         }
 
         public void OnDocumentChanged(object sender, DocumentChangedEventArgs args)
@@ -197,39 +204,53 @@ namespace pwiz.Skyline.Controls.FilesTree
 
             if (args == null || DocumentContainer.Document == null)
                 return;
+
             // Nothing to do if no changes to SrmSettings
             if (ReferenceEquals(DocumentContainer.Document.Settings, args.DocumentPrevious?.Settings))
                 return;
 
-            UpdateTree(DocumentContainer.Document, DocumentContainer.DocumentFilePath);
+            // Handle wholesale replacement of the previous document with a new one. Example scenario:
+            // document foo.sky is open and user either creates a new (empty) document or opens a different document (bar.sky).
+            var changeAll = args.DocumentPrevious != null && !ReferenceEquals(args.DocumentPrevious.Id, DocumentContainer.Document.Id);
+
+            UpdateTree(false, changeAll);
         }
 
-        internal void UpdateTree(SrmDocument document, string documentFilePath, bool documentPathChanged = false) 
+        // CONSIDER: consider a better, more scalable way of passing flags
+        internal void UpdateTree(bool documentPathChanged = false, bool changeAll = false)
         {
             try
             {
                 BeginUpdateMS();
 
-                // CONSIDER: pass DocumentContainer, which is actually just SkylineWindow?
-                var originalDocument = _modelDocumentContainer.Document;
-                _modelDocumentContainer.DocumentFilePath = documentFilePath;
-                _modelDocumentContainer.SetDocument(document, originalDocument);
+                // Do this work inside the Begin/EndUpdate calls to avoid flickering the tree
+                if (changeAll)
+                {
+                    Nodes.Clear(); // Remove existing nodes from FilesTree
+                    _fsWorkQueue.Clear(); // Clear pending tasks from the QueueWorker
+                    _cancellationTokenSource.Cancel(); // Cancel any in-flight tasks from QueWorker and the UI event loop (control.BeginInvoke).
 
+                    _cancellationTokenSource = new CancellationTokenSource(); // Create a token source for the new document
+                }
+
+                // Output useful for debugging async file monitoring
                 // {
                 //     var versionMsg = originalDocument != null ? @$"{originalDocument.RevisionIndex}" : @"null";
                 //     var nameMsg = documentFilePath != null ? $@"{Path.GetFileName(documentFilePath)}" : @"<unsaved>";
                 //     Console.WriteLine($@"===== Updating document {nameMsg} from {versionMsg} to {document.RevisionIndex}. DocumentPathChanged {documentPathChanged}.");
                 // }
 
-                var files = SkylineFile.Create(_modelDocumentContainer);
+                var files = SkylineFile.Create(DocumentContainer);
 
-                MergeNodes(new SingletonList<FileNode>(files), Nodes, FilesTreeNode.CreateNode, documentPathChanged);
+                MergeNodes(new SingletonList<FileNode>(files), Nodes, FilesTreeNode.CreateNode, _cancellationTokenSource.Token, documentPathChanged);
 
                 Root.Expand(); // Always keep Root expanded
 
-                if (FileNode.IsDocumentSavedToDisk(documentFilePath) && !IsMonitoringFileSystem())
+                if (FileNode.IsDocumentSavedToDisk(DocumentContainer.DocumentFilePath) && !IsMonitoringFileSystem())
                 {
-                    _fsWatcher.Path = Path.GetDirectoryName(documentFilePath);
+                    _monitoredFilePath = DocumentContainer.DocumentFilePath;
+
+                    _fsWatcher.Path = Path.GetDirectoryName(_monitoredFilePath);
                     _fsWatcher.SynchronizingObject = this;
                     _fsWatcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName;
                     _fsWatcher.IncludeSubdirectories = true;
@@ -238,12 +259,16 @@ namespace pwiz.Skyline.Controls.FilesTree
                     _fsWatcher.Deleted += FilesTree_ProjectDirectory_OnDeleted;
                     _fsWatcher.Created += FilesTree_ProjectDirectory_OnCreated;
 
-                    _monitoredFilePath = documentFilePath;
                     _monitoringFileSystem = true;
                 }
 
-                RunUI(this, () =>
+                // CONSIDER: simplify so this is less error-prone
+                var cancellationToken = _cancellationTokenSource.Token;
+                RunUI(this, () => 
                 {
+                    if(cancellationToken.IsCancellationRequested)
+                        return;
+
                     Root.RefreshState();
                 });
             }
@@ -254,7 +279,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         }
 
         // CONSIDER: refactor for more code reuse with SrmTreeNode
-        internal void MergeNodes(IList<FileNode> docFiles, TreeNodeCollection treeNodes, Func<FileNode, FilesTreeNode> createTreeNodeFunc, bool documentPathChanged)
+        internal void MergeNodes(IList<FileNode> docFiles, TreeNodeCollection treeNodes, Func<FileNode, FilesTreeNode> createTreeNodeFunc, CancellationToken cancellationToken, bool documentPathChanged)
         {
             if (docFiles == null)
                 return;
@@ -381,19 +406,25 @@ namespace pwiz.Skyline.Controls.FilesTree
             //
             // This uses a work queue to avoid blocking the UI thread since finding files could be slow, especially
             // if the file is on a network drive.
-            foreach (var node in localFileInitList)
+            foreach (var node in localFileInitList.Where(node => node.Model.ShouldInitializeLocalFile()))
             {
-                if (node.Model.ShouldInitializeLocalFile())
+                _fsWorkQueue.Add(() =>
                 {
-                    _fsWorkQueue.Add(() =>
-                    {
-                        node.InitializeLocalFile();
+                    if(cancellationToken.IsCancellationRequested)
+                        return;
 
-                        // Return to the UI thread and update the FilesTreeNode with any additional
-                        // info about the state of the local file
-                        RunUI(node.TreeView, node.UpdateState);
+                    node.InitializeLocalFile();
+
+                    // Return to the UI thread and update the FilesTreeNode with any additional
+                    // info about the state of the local file
+                    RunUI(node.TreeView, () =>
+                    {
+                        if (cancellationToken.IsCancellationRequested)
+                            return;
+
+                        node.UpdateState();
                     });
-                }
+                });
             }
 
             // Recursively merge any nested files
@@ -404,7 +435,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
                 if (model != null && model.Files.Count > 0)
                 {
-                    MergeNodes(model.Files, treeNode.Nodes, createTreeNodeFunc, documentPathChanged);
+                    MergeNodes(model.Files, treeNode.Nodes, createTreeNodeFunc, cancellationToken, documentPathChanged);
                 }
             }
         }
@@ -604,7 +635,14 @@ namespace pwiz.Skyline.Controls.FilesTree
             {
                 missingFileTreeNode.FileState = FileState.missing;
 
-                RunUI(this, () => FilesTreeNode.UpdateFileImages(missingFileTreeNode));
+                var cancellationToken = _cancellationTokenSource.Token;
+                RunUI(this, () =>
+                {
+                    if (cancellationToken.IsCancellationRequested)
+                        return;
+
+                    FilesTreeNode.UpdateFileImages(missingFileTreeNode);
+                });
             }
         }
 
@@ -619,7 +657,15 @@ namespace pwiz.Skyline.Controls.FilesTree
             {
                 availableFileTreeNode.FileState = FileState.available;
 
-                RunUI(this, () => FilesTreeNode.UpdateFileImages(availableFileTreeNode));
+                var cancellationToken = _cancellationTokenSource.Token;
+                RunUI(this, () =>
+                {
+                    if (cancellationToken.IsCancellationRequested)
+                        return;
+
+                    FilesTreeNode.UpdateFileImages(availableFileTreeNode);
+
+                });
             }
         }
 
@@ -634,20 +680,29 @@ namespace pwiz.Skyline.Controls.FilesTree
 
             // Look for a tree node with the file's previous name. If a node with that name is found
             // treat the file as missing.
-            if (FindTreeNodeForFileName(Root, oldName, out var missingFileTreeNode))
+            if (FindTreeNodeForFileName(Root, oldName, out var treeNodeToUpdate))
             {
-                missingFileTreeNode.FileState = FileState.missing;
-
-                RunUI(this, () => FilesTreeNode.UpdateFileImages(missingFileTreeNode));
+                treeNodeToUpdate.FileState = FileState.missing;
             }
             // Now, look for a tree node with the new file name. If found, a file was restored with
             // a name Files Tree is aware of, so mark the file as available.
-            else if (FindTreeNodeForFileName(Root, newName, out var availableFileTreeNode))
+            else if (FindTreeNodeForFileName(Root, newName, out treeNodeToUpdate))
             {
-                availableFileTreeNode.FileState = FileState.available;
-
-                RunUI(this, () => FilesTreeNode.UpdateFileImages(availableFileTreeNode));
+                treeNodeToUpdate.FileState = FileState.available;
             }
+
+            // If neither the old nor new file names are known to Files Tree, ignore the event.
+            if (treeNodeToUpdate == null)
+                return;
+
+            var cancellationToken = _cancellationTokenSource.Token;
+            RunUI(this, () =>
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    return;
+
+                FilesTreeNode.UpdateFileImages(treeNodeToUpdate);
+            });
         }
 
         #endregion
@@ -666,6 +721,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             _monitoringFileSystem = false;
 
+            // CONSIDER: should this happen last?
             if (disposing)
             {
                 _fsWatcher?.Dispose();
@@ -689,6 +745,8 @@ namespace pwiz.Skyline.Controls.FilesTree
             base.Dispose(disposing);
         }
 
+        // TODO: reconsider whether to propagate the cancellation token to the QueueWorker, especially whether to
+        //       wrap it in a container with a specific CancellationToken taken from FilesTree's CancellationTokenSource.
         private void FilesTree_ProjectDirectory_OnDeleted(object sender, FileSystemEventArgs e)
         {
             _fsWorkQueue.Add(() => {
@@ -724,6 +782,8 @@ namespace pwiz.Skyline.Controls.FilesTree
         }
 
         // TODO: unit tests
+        // CONSIDER: improve performance by caching a map of file names to FilesTreeNodes, especially to improve
+        //           performance of FileRenamed which may need to find two nodes.
         private static bool FindTreeNodeForFileName(TreeNode treeNode, string fileName, out FilesTreeNode value)
         {
             value = null;
@@ -748,6 +808,8 @@ namespace pwiz.Skyline.Controls.FilesTree
             return false;
         }
 
+        // Update UI on the UI thread. All callers must check whether cancellation has been
+        // requested, typically using FilesTree's CancellationTokenSource.
         private static void RunUI(Control control, Action action)
         {
             CommonActionUtil.SafeBeginInvoke(control, action);

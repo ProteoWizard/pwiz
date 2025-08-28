@@ -29,7 +29,7 @@ using pwiz.Skyline.Model.Files;
 // ReSharper disable WrongIndentSize
 namespace pwiz.Skyline.Controls.FilesTree
 {
-    public enum FileState { available, missing, not_initialized }
+    public enum FileState { available, missing, not_initialized, in_memory }
 
     // CONSIDER: customize behavior in subclasses. Overloading FilesTreeNode won't scale long-term.
     public class FilesTreeNode : TreeNodeMS, ITipProvider
@@ -95,7 +95,16 @@ namespace pwiz.Skyline.Controls.FilesTree
 
             LocalFilePath = LookForFileInPotentialLocations(FilePath, FileName, DocumentPath);
 
-            FileState = LocalFilePath != null ? FileState.available : FileState.missing;
+            // After enabling the audit log, the file only exists in-memory until the document is saved.
+            // So assume that's what's happening if LocalFilePath is null.
+            if (Model is SkylineAuditLog && LocalFilePath == null) 
+            {
+                FileState = FileState.in_memory;
+            }
+            else
+            {
+                FileState = LocalFilePath != null ? FileState.available : FileState.missing;
+            }
         }
 
         public void UpdateState()
@@ -108,7 +117,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             Name = Model.Name;
             Text = Model.Name;
 
-            // Special case for the root node
+            // Special handling for .sky file - do not change icon if child files are missing
             if (Model is SkylineFile)
             {
                 ImageIndex = FileState == FileState.missing ? (int)ImageMissing : (int)ImageAvailable;
@@ -122,6 +131,10 @@ namespace pwiz.Skyline.Controls.FilesTree
 
                 if (anyChildMissingFile || FileState == FileState.missing)
                     ImageIndex = (int)ImageMissing;
+                // CONSIDER: use a different icon for in-memory files, maybe grey out the available icon? 
+                //           for now, use the available icon.
+                else if (FileState == FileState.in_memory)
+                    ImageIndex = (int)ImageAvailable;
                 else
                     ImageIndex = (int)ImageAvailable;
             }
@@ -240,12 +253,13 @@ namespace pwiz.Skyline.Controls.FilesTree
                 customTable.AddDetailRow(FilesTreeResources.FilesTreeNode_TreeNode_Tooltip_ReplicateSampleFileCount, sampleFileCount.ToString(), rt);
             }
 
-            if (Model.IsBackedByFile && FileState != FileState.not_initialized)
+            // Only show this section if the file exists (or should exist) on disk
+            if (Model.IsBackedByFile && FileState != FileState.not_initialized && FileState != FileState.in_memory)
             {
                 customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_Tooltip_FileName, FileName, rt);
 
-                // if path == localPath: "File Path: <foo/bar>"
-                // else "Saved File Path: <abc/def>, Local File Path: <foo/bar>"
+                // if saved file path and local file path are the same: show only "File Path: c:\foo\bar"
+                // otherwise, show both "Saved File Path: c:\abc\def" and "Local File Path: c:\foo\bar"
                 if (string.Compare(FilePath, LocalFilePath, StringComparison.Ordinal) == 0)
                 {
                     customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_Tooltip_FilePath, FilePath, rt);
