@@ -218,17 +218,17 @@ namespace pwiz.Skyline.Util
 
         public ShareType DecideShareTypeVersion(SrmDocument document, ShareType shareType)
         {
-            var cacheFormat = GetDocumentCacheFormat(document);
+            var cacheVersion = GetDocumentCacheVersion(document);
 
-            if (cacheFormat == null)
+            if (!cacheVersion.HasValue)
             {
                 // The document may not have any chromatogram data.
                 return shareType;
             }
 
-            var supportedSkylineVersion = GetSupportedVersionForCacheFormat(cacheFormat);
+            var supportedSkylineVersion = GetSupportedVersionForCacheFormat(cacheVersion);
             CacheFormatVersion supportedVersion = supportedSkylineVersion.CacheFormatVersion;
-            if (supportedVersion >= cacheFormat.VersionRequired)
+            if (supportedVersion >= cacheVersion.Value)
             {
                 return shareType;
             }
@@ -236,11 +236,10 @@ namespace pwiz.Skyline.Util
             return shareType.ChangeSkylineVersion(supportedSkylineVersion);
         }
 
-        private SkylineVersion GetSupportedVersionForCacheFormat(CacheFormat cacheFormat)
+        private SkylineVersion GetSupportedVersionForCacheFormat(CacheFormatVersion? cacheVersion)
         {
-            var skydVersion = GetSupportedSkydVersion();
-            SkylineVersion skylineVersion;
-            if (cacheFormat == null || skydVersion >= cacheFormat.VersionRequired)
+            var supportedSkydVersion = GetSupportedSkydVersion();
+            if (cacheVersion == null || supportedSkydVersion >= CacheFormat.GetVersionRequired(cacheVersion.Value))
             {
                 // Either the document does not have any chromatograms or the server supports the document's cache version. 
                 // Since the cache version does not change when the document is shared, it can be shared as the latest Skyline
@@ -250,34 +249,32 @@ namespace pwiz.Skyline.Util
                 // with cache version 15. In this case the document can be shared as the current Skyline version even though
                 // the cache version associated with the current version is higher than what the server supports. When the document
                 // is shared the cache format of the document will remain at 14. Only the document format (.sky XML) will change.
-                skylineVersion = SkylineVersion.SupportedForSharing().First();
+                return SkylineVersion.SupportedForSharing().First();
             }
-            else
+            // The server does not support the document's cache version.
+            // Find the highest Skyline version consistent with the cache version supported by the server.
+            foreach (var skylineVersion in SkylineVersion.SupportedForSharing())
             {
-                // The server does not support the document's cache version.
-                // Find the highest Skyline version consistent with the cache version supported by the server.
-                skylineVersion = SkylineVersion.SupportedForSharing().FirstOrDefault(ver => ver.CacheFormatVersion <= skydVersion);
-                if (skylineVersion == null)
+                if (supportedSkydVersion >= CacheFormat.GetVersionRequired(skylineVersion.CacheFormatVersion))
                 {
-                    throw new PanoramaServerException(string.Format(
-                        Resources.PublishDocumentDlg_ServerSupportsSkydVersion_, (int)cacheFormat.FormatVersion));
+                    return skylineVersion;
                 }
             }
-
-            return skylineVersion;
+            throw new PanoramaServerException(string.Format(
+                Resources.PublishDocumentDlg_ServerSupportsSkydVersion_, (int)cacheVersion.Value));
         }
 
-        private static CacheFormat GetDocumentCacheFormat(SrmDocument document)
+        private static CacheFormatVersion? GetDocumentCacheVersion(SrmDocument document)
         {
             var settings = document.Settings;
             Assume.IsTrue(document.IsLoaded);
-            return settings.HasResults ? settings.MeasuredResults.CacheFormat : null;
+            return settings.HasResults ? settings.MeasuredResults.CacheVersion : null;
         }
 
         public ShareType GetShareType(SrmDocument document,
             string documentFilePath, DocumentFormat? fileFormatOnDisk, Control parent, ref bool cancelled)
         {
-            var cacheVersion = GetDocumentCacheFormat(document);
+            var cacheVersion = GetDocumentCacheVersion(document);
             var supportedSkylineVersion = GetSupportedVersionForCacheFormat(cacheVersion);
             
             using (var dlgType = new ShareTypeDlg(document, documentFilePath, fileFormatOnDisk, supportedSkylineVersion, 

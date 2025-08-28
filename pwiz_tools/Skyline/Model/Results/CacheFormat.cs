@@ -164,7 +164,7 @@ namespace pwiz.Skyline.Model.Results
         public static readonly CacheFormat CURRENT = new CacheFormat
         {
             FormatVersion = CacheFormatVersion.CURRENT,
-            VersionRequired = CacheFormatVersion.Fourteen,
+            VersionRequired = CacheFormatVersion.Eighteen,
             CachedFileSize = Marshal.SizeOf<CachedFileHeaderStruct>(),
             ChromGroupHeaderSize = Marshal.SizeOf<ChromGroupHeaderInfo>(),
             ChromPeakSize = Marshal.SizeOf<ChromPeak>(),
@@ -200,7 +200,7 @@ namespace pwiz.Skyline.Model.Results
         /// However, the required version does need to be updated whenever variable length things are added which older versions
         /// will not know how to skip.
         /// </summary>
-        private static CacheFormatVersion GetVersionRequired(CacheFormatVersion formatVersion)
+        public static CacheFormatVersion GetVersionRequired(CacheFormatVersion formatVersion)
         {
             if (formatVersion <= CacheHeaderStruct.WithStructSizes)
             {
@@ -211,8 +211,13 @@ namespace pwiz.Skyline.Model.Results
             {
                 return CacheHeaderStruct.WithStructSizes;
             }
-            // Version Fourteen added some variable length fields ("lenSampleId", "lenSerialNumber") to the end of CachedFileHeaders.
-            return CacheFormatVersion.Fourteen;
+            if (formatVersion < CacheFormatVersion.Seventeen)
+            {
+                // Version Fourteen added some variable length fields ("lenSampleId", "lenSerialNumber") to the end of CachedFileHeaders.
+                return CacheFormatVersion.Fourteen;
+            }
+            // Version Seventeen completely changed ChromGroupHeaderInfo and ChromTransition
+            return CacheFormatVersion.Seventeen;
         }
 
 

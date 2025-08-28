@@ -142,15 +142,6 @@ namespace pwiz.Skyline.Model.Results
         {
             get { return _rawData.FormatVersion; }
         }
-
-        public CacheFormat CacheFormat
-        {
-            get
-            {
-                return _rawData.CacheFormat;
-            }
-        }
-
         public IList<ChromCachedFile> CachedFiles { get { return _rawData.ChromCacheFiles; } }
         public IPooledStream ReadStream { get; private set; }
 
