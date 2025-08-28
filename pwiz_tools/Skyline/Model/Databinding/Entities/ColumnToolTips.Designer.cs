@@ -883,15 +883,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Fragmentation technique (e.g. CID, HCD, ETD).
-        /// </summary>
-        public static string DissociationMethod {
-            get {
-                return ResourceManager.GetString("DissociationMethod", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Ion mobility drift time (in milliseconds) for fragment ions, which typically move faster due to more energetic collisions. (For backward compatibility only: IonMobilityFragment and IonMobilityUnits are the preferred terms.).
         /// </summary>
         public static string DriftTimeFragment {

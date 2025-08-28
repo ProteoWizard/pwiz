@@ -74,18 +74,12 @@ namespace pwiz.Skyline.Model.Results.Spectra
             _injectionTimes = proto.Spectra.Select(s => s.InjectionTime).Nullables().MaybeConstant();
             _presetScanConfigurations = IntegerList.FromIntegers(proto.Spectra.Select(s => s.PresetScanConfiguration));
             var precursors = new List<PrecursorWithLevel>();
-            var valueCache = new ValueCache();
             foreach (var protoPrecursor in proto.Precursors)
             {
                 var spectrumPrecursor = new SpectrumPrecursor(new SignedMz(protoPrecursor.TargetMz));
                 if (protoPrecursor.CollisionEnergy != 0)
                 {
                     spectrumPrecursor = spectrumPrecursor.ChangeCollisionEnergy(protoPrecursor.CollisionEnergy);
-                }
-
-                if (!string.IsNullOrEmpty(protoPrecursor.DissociationMethod))
-                {
-                    spectrumPrecursor = spectrumPrecursor.ChangeDissociationMethod(valueCache.CacheValue(protoPrecursor.DissociationMethod));
                 }
 
                 if (protoPrecursor.IsolationWindowLower != 0 || protoPrecursor.IsolationWindowUpper != 0)
@@ -164,8 +158,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 CollisionEnergy = p.Precursor.CollisionEnergy ?? 0,
                 IsolationWindowLower = p.Precursor.IsolationWindowLowerWidth ?? 0,
                 IsolationWindowUpper = p.Precursor.IsolationWindowUpperWidth ?? 0,
-                TargetMz = p.Precursor.PrecursorMz,
-                DissociationMethod = p.Precursor.DissociationMethod ?? string.Empty
+                TargetMz = p.Precursor.PrecursorMz
             }));
             var scanDescriptions = ToFactorWithNull(_scanDescriptions);
             proto.ScanDescriptions.AddRange(scanDescriptions.Levels.Skip(1));
@@ -200,6 +193,11 @@ namespace pwiz.Skyline.Model.Results.Spectra
             return proto;
         }
 
+
+        private string MakeScanId(IEnumerable<int> parts)
+        {
+            return string.Join(@".", parts);
+        }
 
         private Tuple<double, double> GetScanWindow(SpectrumMetadata spectrumMetadata)
         {
