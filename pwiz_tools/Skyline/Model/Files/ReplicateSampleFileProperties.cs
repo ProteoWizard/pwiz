@@ -29,16 +29,28 @@ namespace pwiz.Skyline.Model.Files
 {
     public class ReplicateSampleFileProperties : FileNodeProperties
     {
+        private readonly ReplicateSampleFile _model;
+
         public ReplicateSampleFileProperties(ReplicateSampleFile model, string localFilePath)
             : base(model, localFilePath)
         {
             Assume.IsNotNull(model);
+            _model = model;
 
-            MaxRetentionTime = model.MaxRetentionTime;
-            MaxIntensity = model.MaxIntensity;
-            AcquisitionTime = model.AcquisitionTime.ToString();
+            UpdateProperties();
+        }
 
-            var instrumentInfo = model.InstrumentInfoList;
+        public override void OnDocumentChanged() => UpdateProperties();
+
+        private void UpdateProperties()
+        {
+            UpdateBaseProperties();
+
+            MaxRetentionTime = _model.MaxRetentionTime;
+            MaxIntensity = _model.MaxIntensity;
+            AcquisitionTime = _model.AcquisitionTime.ToString();
+
+            var instrumentInfo = _model.InstrumentInfoList;
             if (instrumentInfo.Count > 0)
             {
                 Instruments = instrumentInfo
@@ -51,7 +63,8 @@ namespace pwiz.Skyline.Model.Files
         [Category("Replicate")] public double MaxIntensity { get; set; }
         [Category("Replicate")] public string AcquisitionTime { get; set; }
 
-        [UseCustomHandling] public List<InstrumentProperties> Instruments { get; set; }
+        [UseCustomHandling]
+        [Category("Instruments")] public List<InstrumentProperties> Instruments { get; set; }
 
         /// <summary>
         /// Transforms the list of InstrumentProperties into a form that will display better in the property sheet.
@@ -60,8 +73,6 @@ namespace pwiz.Skyline.Model.Files
         /// </summary>
         protected override void AddCustomizedProperties()
         {
-            const string instrumentsCategoryKey = "Instruments";
-
             if (Instruments?.Count == 1)
             {
                 // if only one instrument, add instrument properties in one category at top level
@@ -82,9 +93,13 @@ namespace pwiz.Skyline.Model.Files
                         { new TypeConverterAttribute(typeof(ExpandableObjectConverter)) };
 
                     AddProperty(new CustomHandledGlobalizedPropertyDescriptor(
-                        typeof(InstrumentProperties), instrumentsCategoryKey + i, Instruments[i], instrumentsCategoryKey,
+                        typeof(InstrumentProperties),
+                        GetBaseDescriptorByName(nameof(Instruments)).Category + i,
+                        Instruments[i],
+                        GetBaseDescriptorByName(nameof(Instruments)).Category,
                         GetResourceManager(),
-                        attributes: expandableAttr, nonLocalizedDisplayName: Instruments[i].Model));
+                        attributes: expandableAttr,
+                        nonLocalizedDisplayName: Instruments[i].Model));
                 }
             }
         }
