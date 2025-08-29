@@ -39,6 +39,13 @@ namespace pwiz.Skyline.Model.Files
         public override string FilePath => null;
         public override string FileName => null;
 
+        // expose some properties of the ChromatogramSet for display in the property sheet
+        public double? AnalyteConcentration => ChromatogramSet?.AnalyteConcentration;
+        public double SampleDilutionFactor => ChromatogramSet.SampleDilutionFactor;
+        public string SampleType => ChromatogramSet.SampleType.ToString();
+        public string BatchName => ChromatogramSet.BatchName;
+        public IList<ChromFileInfo> MSDataFileInfos => ChromatogramSet.MSDataFileInfos;
+
         public override IList<FileNode> Files
         {
             get
@@ -48,6 +55,11 @@ namespace pwiz.Skyline.Model.Files
 
                 return ImmutableList.ValueOf(files.ToList<FileNode>());
             }
+        }
+
+        public override GlobalizedObject GetProperties(string localFilePath)
+        {
+            return new ReplicateProperties(this, localFilePath);
         }
 
         public ModifiedDocument Delete(SrmDocument document, SrmSettingsChangeMonitor monitor, List<FileNode> models)

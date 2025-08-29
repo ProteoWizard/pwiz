@@ -16,6 +16,9 @@
 
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results;
+using System;
+using System.Collections.Generic;
+using pwiz.ProteowizardWrapper;
 
 namespace pwiz.Skyline.Model.Files
 {
@@ -31,6 +34,10 @@ namespace pwiz.Skyline.Model.Files
         public override string Name => ChromFileInfo?.Name ?? string.Empty;
         public override string FilePath => ChromFileInfo?.FilePath.GetFilePath() ?? string.Empty;
         public override string FileName => ChromFileInfo?.FilePath.GetFileName() ?? string.Empty;
+        public double MaxRetentionTime => ChromFileInfo.MaxRetentionTime;
+        public double MaxIntensity => ChromFileInfo.MaxIntensity;
+        public DateTime? AcquisitionTime => ChromFileInfo.RunStartTime;
+        public IList<MsInstrumentConfigInfo> InstrumentInfoList => ChromFileInfo.InstrumentInfoList;
 
         private ChromFileInfo ChromFileInfo
         {
@@ -44,6 +51,11 @@ namespace pwiz.Skyline.Model.Files
                 }
                 else return null;
             }
+        }
+
+        public override GlobalizedObject GetProperties(string localFilePath)
+        {
+            return new ReplicateSampleFileProperties(this, localFilePath);
         }
 
         public override bool ModelEquals(FileNode nodeDoc)

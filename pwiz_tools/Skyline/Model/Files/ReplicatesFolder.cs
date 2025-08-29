@@ -56,6 +56,11 @@ namespace pwiz.Skyline.Model.Files
             }
         }
 
+        public override GlobalizedObject GetProperties(string localFilePath)
+        {
+            return new ReplicatesFolderProperties(this, localFilePath);
+        }
+
         public ModifiedDocument DeleteAll(SrmDocument document, SrmSettingsChangeMonitor monitor)
         {
             var newDocument = document.ChangeMeasuredResults(null, monitor);

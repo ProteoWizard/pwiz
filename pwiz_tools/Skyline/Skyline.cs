@@ -106,6 +106,7 @@ namespace pwiz.Skyline
     {
         private SequenceTreeForm _sequenceTreeForm;
         private FilesTreeForm _filesTreeForm;
+        private PropertyForm _propertyForm;
         private ImmediateWindow _immediateWindow;
 
         private SrmDocument _document;
@@ -1081,6 +1082,9 @@ namespace pwiz.Skyline
                     SequenceTree.KeysOverride = Keys.None;
                     FindNext(true);
                     SequenceTree.UseKeysOverride = false;
+                    return true;
+                case Keys.F4:
+                    ShowPropertyForm(show: !(_propertyForm is { Visible: true }));
                     return true;
             }
             return base.ProcessCmdKey(ref msg, keyData);
@@ -3190,6 +3194,55 @@ namespace pwiz.Skyline
                 _filesTreeForm.Close();
                 _filesTreeForm = null;
             }
+        }
+
+        #endregion
+
+        #region Properties
+
+        public PropertyForm PropertyForm => _propertyForm;
+        public bool PropertyFormIsVisible => _propertyForm is { Visible: true };
+        public bool PropertyFormIsActivated => _propertyForm is { IsActivated: true };
+
+        public void ShowPropertyForm(bool show, string persistentState = null)
+        {
+            if (show)
+            {
+                _propertyForm ??= CreatePropertyForm();
+                _propertyForm.GetProperties(DockPanel.ActiveContent);
+
+                if (_propertyForm.DockPanel != null)
+                    _propertyForm.Activate();
+                else
+                    _propertyForm.Show(dockPanel, DockState.DockRight);
+            }
+            else
+            {
+                _propertyForm.Hide();
+            }
+        }
+
+        private PropertyForm CreatePropertyForm()
+        {
+            _propertyForm = new PropertyForm(this);
+            _propertyForm.GetProperties(DockPanel.ActiveContent);
+            return _propertyForm;
+        }
+
+        public void DestroyPropertyForm()
+        {
+            if (_propertyForm != null)
+            {
+                _propertyForm.Close();
+                _propertyForm = null;
+            }
+        }
+
+        public void PotentialPropertySheetOwnerGotFocus(object sender, EventArgs e)
+        {
+            if ( !(_propertyForm is { Visible: true }) || !(sender is IDockableForm form)) return;
+
+            _propertyForm.GetProperties(form);
         }
 
         #endregion
