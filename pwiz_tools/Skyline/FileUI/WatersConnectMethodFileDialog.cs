@@ -14,7 +14,7 @@ namespace pwiz.Skyline.FileUI
     {
         protected string InstrumentType { get; set; }
         public WatersConnectMethodFileDialog(IList<RemoteAccount> remoteAccounts, IList<string> specificDataSourceFilter = null)
-            : base(null, remoteAccounts, specificDataSourceFilter)
+            : base(null, remoteAccounts, specificDataSourceFilter, true)
         {
             InstrumentType = ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT;
             listView.MultiSelect = false;
