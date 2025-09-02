@@ -639,26 +639,25 @@ namespace pwiz.Skyline.ToolsUI
 
             if (RemoteAccountType.ARDIA.Equals(AccountType))
             {
-                // Skyline only supports one Ardia account so these checks prevent adding second account in two scenarios:
-                // 
-                //   1) Users click the [Add] button and choose "Ardia" as the account type in the new account dialog
-                //   2) Users click the [Edit] button on an existing Ardia account. This allows editing an existing Ardia account.
-                //
-                // Both scenarios are handled here because this combobox event handler runs in both cases.
-
                 wizardPagesByAccountType.SelectedIndex = ARDIA_WIZARD_PAGE_INDEX;
 
                 process_ardiaAccount_CurrentlyLoggedIn_EnableDisableControls();
 
-                // Scenario #2: Allow editing an existing Ardia account.
-                var editingExistingAccount = _originalAccount != null && _originalAccount.AccountType == RemoteAccountType.ARDIA;
-                if (editingExistingAccount)
+                // Skyline only supports one Ardia account so these checks prevent adding second account in two scenarios:
+                // 
+                //   1) Users click the [Edit] button on an existing Ardia account. This allows editing an existing Ardia account.
+                //   2) Users click the [Add] button and choose "Ardia" as the account type in the new account dialog
+                //
+                // Both scenarios are handled here because this combobox event handler runs in both cases.
+
+                // Scenario #1: Allow editing an existing Ardia account by checking the account passed to the edit dialog.
+                if (_originalAccount != null && _originalAccount.AccountType == RemoteAccountType.ARDIA)
                 {
                     return;
                 }
 
-                // Scenario #1: if Skyline gets here, it's not editing an existing Ardia account. So check if one is already
-                // defined, show an error message if so, and switch the new AccountType back to the default (Unifi).
+                // Scenario #2: if Skyline gets here, it's not editing an existing Ardia account so must be adding a new one. So see if
+                // an Ardia account is already defined, show an error message if so, and switch the dialog's AccountType back to the default (Unifi).
                 if (_existing.ToList().Any(account => account.AccountType == RemoteAccountType.ARDIA))
                 {
                     MessageDlg.Show(this, ToolsUIResources.EditRemoteAccountDlg_Ardia_OneAccountSupported, false, MessageBoxButtons.OK);
