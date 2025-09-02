@@ -44,7 +44,6 @@ namespace pwiz.Skyline.Model.Files
 
         [Category("FileInfo")] public int FileNum { get; set; }
 
-
         // Test Support - enforced by code check
         // Invoked via reflection in InspectPropertySheetResources in CodeInspectionTest
         [UsedImplicitly]

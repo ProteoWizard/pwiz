@@ -110,6 +110,7 @@ namespace pwiz.Skyline.Controls
             }
 
             selectedGlobalizedObject.UpdateProperties();
+            // PropertyGrid does not automatically refresh when a property value changes programmatically
             PropertyGrid.Refresh();
         }
     }
