@@ -388,6 +388,15 @@ namespace pwiz.Skyline.ToolsUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Skyline does not support adding a second Ardia account. To use a new account, remove the current one and add a new one..
+        /// </summary>
+        public static string EditRemoteAccountDlg_Ardia_OneAccountSupported {
+            get {
+                return ResourceManager.GetString("EditRemoteAccountDlg_Ardia_OneAccountSupported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error: no Ardia registration code for URL.
         /// </summary>
         public static string EditRemoteAccountDlg_GetBrowserLogoutUrl_Error__no_Ardia_registration_code_for_URL {

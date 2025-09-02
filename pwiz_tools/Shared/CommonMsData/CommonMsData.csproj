@@ -74,6 +74,8 @@
     <Compile Include="OpenMsDataFileParams.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RemoteApi\Ardia\ArdiaAccount.cs" />
+    <Compile Include="RemoteApi\Ardia\ArdiaClient.cs" />
+    <Compile Include="RemoteApi\Ardia\ArdiaCredentialHelper.cs" />
     <Compile Include="RemoteApi\Ardia\ArdiaFileObject.cs" />
     <Compile Include="RemoteApi\Ardia\ArdiaFolderObject.cs" />
     <Compile Include="RemoteApi\Ardia\ArdiaObject.cs" />
@@ -82,8 +84,18 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
+    <Compile Include="RemoteApi\Ardia\ArdiaResult.cs" />
     <Compile Include="RemoteApi\Ardia\ArdiaSession.cs" />
     <Compile Include="RemoteApi\Ardia\ArdiaUrl.cs" />
+    <Compile Include="RemoteApi\Ardia\CompleteMultiPartUploadRequest.cs" />
+    <Compile Include="RemoteApi\Ardia\CreateFolderRequest.cs" />
+    <Compile Include="RemoteApi\Ardia\CreateDocumentRequest.cs" />
+    <Compile Include="RemoteApi\Ardia\EncryptedToken.cs" />
+    <Compile Include="RemoteApi\Ardia\GetParentFolderResponse.cs" />
+    <Compile Include="RemoteApi\Ardia\SrmDocumentArchive.cs" />
+    <Compile Include="RemoteApi\Ardia\StageDocumentRequest.cs" />
+    <Compile Include="RemoteApi\Ardia\StorageInfoResponse.cs" />
+    <Compile Include="RemoteApi\Ardia\UploadPartsResponse.cs" />
     <Compile Include="RemoteApi\RemoteAccount.cs" />
     <Compile Include="RemoteApi\RemoteAccountType.cs" />
     <Compile Include="RemoteApi\RemoteApiResources.designer.cs">
@@ -135,13 +147,17 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="RemoteApi\Ardia\ArdiaResources.ja.resx" />
+    <EmbeddedResource Include="RemoteApi\Ardia\ArdiaResources.ja.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="RemoteApi\Ardia\ArdiaResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>ArdiaResources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="RemoteApi\Ardia\ArdiaResources.zh-CHS.resx" />
+    <EmbeddedResource Include="RemoteApi\Ardia\ArdiaResources.zh-CHS.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="RemoteApi\RemoteApiResources.ja.resx">
       <DependentUpon>RemoteApiResources.resx</DependentUpon>
       <SubType>Designer</SubType>

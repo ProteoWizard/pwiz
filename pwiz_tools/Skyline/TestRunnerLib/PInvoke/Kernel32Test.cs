@@ -89,6 +89,5 @@ namespace TestRunnerLib.PInvoke
                 SetThreadExecutionState(_previousState);
             }
         }
-
     }
 }
