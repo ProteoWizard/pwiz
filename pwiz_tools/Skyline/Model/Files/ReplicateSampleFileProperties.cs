@@ -37,15 +37,11 @@ namespace pwiz.Skyline.Model.Files
             Assume.IsNotNull(model);
             _model = model;
 
-            UpdateProperties();
+            base.UpdateProperties();
         }
 
-        public override void OnDocumentChanged() => UpdateProperties();
-
-        private void UpdateProperties()
+        protected override void UpdateUniqueProperties()
         {
-            UpdateBaseProperties();
-
             MaxRetentionTime = _model.MaxRetentionTime;
             MaxIntensity = _model.MaxIntensity;
             AcquisitionTime = _model.AcquisitionTime.ToString();

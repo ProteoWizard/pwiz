@@ -38,6 +38,14 @@ namespace pwiz.Skyline.Model.Files
             FilePath = localFilePath;
         }
 
+        public override bool BackedByDocument() => _model.Immutable != null;
+
+        public override void UpdateProperties()
+        {
+            UpdateBaseProperties();
+            UpdateUniqueProperties();
+        }
+
         protected void UpdateBaseProperties()
         {
             Name = _model.Name;
@@ -49,6 +57,8 @@ namespace pwiz.Skyline.Model.Files
                     FileSize = new FileSize(fileInfo.Length).ToString();
             }
         }
+
+        protected abstract void UpdateUniqueProperties();
 
         [Category("FileInfo")] public string FilePath { get; set; }
         [Category("FileInfo")] public string FileSize { get; set; }

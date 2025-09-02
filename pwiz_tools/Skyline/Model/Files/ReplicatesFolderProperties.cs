@@ -26,12 +26,20 @@ namespace pwiz.Skyline.Model.Files
 {
     public class ReplicatesFolderProperties : FileNodeProperties
     {
+        private readonly ReplicatesFolder _model;
+
         public ReplicatesFolderProperties(ReplicatesFolder model, string localFilePath)
             : base(model, localFilePath)
         {
             Assume.IsNotNull(model);
-            
-            FileNum = model.Files.Count;
+            _model = model;
+
+            base.UpdateProperties();
+        }
+
+        protected override void UpdateUniqueProperties()
+        {
+            FileNum = _model.Files.Count;
         }
 
         [Category("FileInfo")] public int FileNum { get; set; }

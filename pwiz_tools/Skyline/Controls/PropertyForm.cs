@@ -103,7 +103,13 @@ namespace pwiz.Skyline.Controls
             Assume.IsTrue(PropertyGrid.SelectedObject is GlobalizedObject);
             var selectedGlobalizedObject = (GlobalizedObject)PropertyGrid.SelectedObject;
 
-            selectedGlobalizedObject.OnDocumentChanged();
+            if (!selectedGlobalizedObject.BackedByDocument())
+            {
+                PropertyGrid.SelectedObject = null;
+                return;
+            }
+
+            selectedGlobalizedObject.UpdateProperties();
             PropertyGrid.Refresh();
         }
     }

@@ -70,7 +70,9 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public virtual void OnDocumentChanged() { }
+        public virtual void UpdateProperties() { }
+
+        public virtual bool BackedByDocument() => true;
 
         protected abstract ResourceManager GetResourceManager();
         
