@@ -84,6 +84,7 @@ namespace pwiz.SkylineTestFunctional
 
             selectedObject = SkylineWindow.PropertyForm?.PropertyGrid.SelectedObject;
             Assert.IsNotNull(selectedObject);
+            Assert.AreEqual(typeof(ReplicateSampleFileProperties), selectedObject.GetType());
 
             props = TypeDescriptor.GetProperties(selectedObject, false);
             // only non-null properties end up in the property sheet
