@@ -44,6 +44,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         private FilesTreeNode _triggerLabelEditForNode;
         private TextBox _editTextBox;
         private string _editedLabel;
+        private readonly MemoryDocumentContainer _modelDocumentContainer;
 
         /// <summary>
         /// Used to cancel any pending async work when the document changes including any
@@ -55,6 +56,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         public FilesTree()
         {
+            _modelDocumentContainer = new MemoryDocumentContainer();
             _cancellationTokenSource = new CancellationTokenSource();
 
             _monitoringFileSystem = false;
@@ -186,7 +188,8 @@ namespace pwiz.Skyline.Controls.FilesTree
             if (args == null || DocumentContainer.Document == null)
                 return;
 
-            var newDocumentFilePath = DocumentContainer.DocumentFilePath;
+            // CONSIDER: use DocumentContainer.DocumentFilePath?
+            var newDocumentFilePath = args.DocumentFilePath;
 
             if (IsMonitoringFileSystem() && args.IsSaveAs && !string.Equals(_monitoredFilePath, newDocumentFilePath, StringComparison.OrdinalIgnoreCase))
             {
@@ -195,7 +198,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 _monitoringFileSystem = true;
             }
 
-            UpdateTree(true);
+            UpdateTree(DocumentContainer.Document, newDocumentFilePath, true);
         }
 
         public void OnDocumentChanged(object sender, DocumentChangedEventArgs args)
@@ -213,15 +216,19 @@ namespace pwiz.Skyline.Controls.FilesTree
             // document foo.sky is open and user either creates a new (empty) document or opens a different document (bar.sky).
             var changeAll = args.DocumentPrevious != null && !ReferenceEquals(args.DocumentPrevious.Id, DocumentContainer.Document.Id);
 
-            UpdateTree(false, changeAll);
+            UpdateTree(DocumentContainer.Document, DocumentContainer.DocumentFilePath, false, changeAll);
         }
 
-        // CONSIDER: consider a better, more scalable way of passing flags
-        internal void UpdateTree(bool documentPathChanged = false, bool changeAll = false)
+        // CONSIDER: re-work the parameter list, perhaps relying on DocumentContainer and not passing a series of bool flags
+        internal void UpdateTree(SrmDocument document, string documentFilePath, bool documentPathChanged = false, bool changeAll = false) 
         {
             try
             {
                 BeginUpdateMS();
+
+                var originalDocument = _modelDocumentContainer.Document;
+                _modelDocumentContainer.DocumentFilePath = documentFilePath;
+                _modelDocumentContainer.SetDocument(document, originalDocument);
 
                 // Do this work inside the Begin/EndUpdate calls to avoid flickering the tree
                 if (changeAll)
@@ -233,24 +240,22 @@ namespace pwiz.Skyline.Controls.FilesTree
                     _cancellationTokenSource = new CancellationTokenSource(); // Create a token source for the new document
                 }
 
-                // Output useful for debugging async file monitoring
+                // Output useful for debugging async file monitoring issues
                 // {
                 //     var versionMsg = originalDocument != null ? @$"{originalDocument.RevisionIndex}" : @"null";
                 //     var nameMsg = documentFilePath != null ? $@"{Path.GetFileName(documentFilePath)}" : @"<unsaved>";
                 //     Console.WriteLine($@"===== Updating document {nameMsg} from {versionMsg} to {document.RevisionIndex}. DocumentPathChanged {documentPathChanged}.");
                 // }
 
-                var files = SkylineFile.Create(DocumentContainer);
+                var files = SkylineFile.Create(_modelDocumentContainer);
 
                 MergeNodes(new SingletonList<FileNode>(files), Nodes, FilesTreeNode.CreateNode, _cancellationTokenSource.Token, documentPathChanged);
 
                 Root.Expand(); // Always keep Root expanded
 
-                if (FileNode.IsDocumentSavedToDisk(DocumentContainer.DocumentFilePath) && !IsMonitoringFileSystem())
+                if (FileNode.IsDocumentSavedToDisk(documentFilePath) && !IsMonitoringFileSystem())
                 {
-                    _monitoredFilePath = DocumentContainer.DocumentFilePath;
-
-                    _fsWatcher.Path = Path.GetDirectoryName(_monitoredFilePath);
+                    _fsWatcher.Path = Path.GetDirectoryName(documentFilePath);
                     _fsWatcher.SynchronizingObject = this;
                     _fsWatcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName;
                     _fsWatcher.IncludeSubdirectories = true;
@@ -259,6 +264,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                     _fsWatcher.Deleted += FilesTree_ProjectDirectory_OnDeleted;
                     _fsWatcher.Created += FilesTree_ProjectDirectory_OnCreated;
 
+                    _monitoredFilePath = documentFilePath;
                     _monitoringFileSystem = true;
                 }
 
