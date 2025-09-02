@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Controls
         {
             InitializeComponent();
         }
-
+        
         public PropertyForm(SkylineWindow skylineWindow) : this()
         {
             HideOnClose = true; // Hide the form when closed, but do not dispose it

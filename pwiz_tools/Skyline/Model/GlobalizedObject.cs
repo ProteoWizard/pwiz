@@ -72,6 +72,8 @@ namespace pwiz.Skyline.Model
 
         public virtual void UpdateProperties() { }
 
+        // Used to check if the underlying model is missing due to removal or some other reason.
+        // True by default since we only want to override this in cases where the model can be missing.
         public virtual bool BackedByDocument() => true;
 
         protected abstract ResourceManager GetResourceManager();
