@@ -42,7 +42,7 @@ namespace pwiz.Skyline.Controls
             SkylineWindow = skylineWindow;
 
             PropertyGrid.PropertyValueChanged += PropertyGrid_PropertyValueChanged;
-            SkylineWindow.Listen(OnDocumentChanged);
+            //SkylineWindow.Listen(OnDocumentChanged);
         }
 
         [Browsable(false)]

@@ -112,6 +112,13 @@ namespace pwiz.Skyline.Controls.FilesTree
         private void OnDocumentUIChangedEvent(object sender, DocumentChangedEventArgs e)
         {
             filesTree.OnDocumentChanged(sender, e);
+
+            // if property grid is showing FileNodeProperties, update it
+            var propertyGrid = SkylineWindow.PropertyForm?.PropertyGrid;
+            if (propertyGrid?.SelectedObject is FileNodeProperties)
+            {
+                propertyGrid.SelectedObject = GetSelectedObjectProperties();
+            }
         }
 
         protected override string GetPersistentString()
