@@ -564,15 +564,6 @@ namespace pwiz.Skyline
                 docIdChanged = !ReferenceEquals(DocumentUI.Id, documentPrevious.Id);
             }
 
-            if (null != AlignToFile)
-            {
-                if (!settingsNew.HasResults || !settingsNew.MeasuredResults.Chromatograms
-                    .SelectMany(chromatograms=>chromatograms.MSDataFileInfos)
-                    .Any(chromFileInfo=>ReferenceEquals(chromFileInfo.FileId, AlignToFile)))
-                {
-                    AlignToFile = null;
-                }
-            }
             // Update results combo UI and sequence tree
             var e = new DocumentChangedEventArgs(documentPrevious, IsOpeningFile,
                 _sequenceTreeForm != null && _sequenceTreeForm.IsInUpdateDoc);
