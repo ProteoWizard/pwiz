@@ -39,10 +39,17 @@ namespace pwiz.Skyline.Model.Lib
 
         private Dictionary<MsDataFileUri, int> _msDataFileUriLookup = new Dictionary<MsDataFileUri, int>();
         private ImmutableList<string> _baseNames;
+        private Dictionary<string, int> _fileIndexes;
+
         public LibraryFiles(IEnumerable<string> sourceFilePaths)
         {
             FilePaths = ImmutableList.ValueOf(sourceFilePaths);
             _baseNames = ImmutableList.ValueOf(FilePaths.Select(GetBaseName));
+            _fileIndexes = new Dictionary<string, int>();
+            for (int iFile = FilePaths.Count - 1; iFile >= 0; iFile--)
+            {
+                _fileIndexes[FilePaths[iFile]] = iFile;
+            }
         }
 
         public ImmutableList<string> FilePaths { get; }
@@ -118,6 +125,16 @@ namespace pwiz.Skyline.Model.Lib
             return i;
         }
 
+        public int IndexOfFilePath(string filePath)
+        {
+            if (_fileIndexes.TryGetValue(filePath, out int index))
+            {
+                return index;
+            }
+
+            return -1;
+        }
+
         private static string GetBaseName(string filePath)
         {
             try
@@ -128,6 +145,24 @@ namespace pwiz.Skyline.Model.Lib
             {
                 return null;
             }
+        }
+
+        protected bool Equals(LibraryFiles other)
+        {
+            return Equals(FilePaths, other.FilePaths);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is null) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((LibraryFiles)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return FilePaths.GetHashCode();
         }
     }
 }

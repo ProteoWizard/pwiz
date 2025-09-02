@@ -46,6 +46,11 @@ namespace pwiz.Skyline.Controls.Databinding
             OnKeyUp(keyEventArgs);
         }
 
+        public void ClickCurrentCell()
+        {
+            OnCellContentClick(new DataGridViewCellEventArgs(CurrentCell.ColumnIndex, CurrentCell.RowIndex));
+        }
+
         protected override IEnumerable<PropertyDescriptor> GetColumnsToHide(ReportResults reportResults)
         {
             var baseColumns = base.GetColumnsToHide(reportResults);
