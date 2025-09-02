@@ -58,6 +58,8 @@
             this.label3 = new System.Windows.Forms.Label();
             this.textArdiaServerURL = new System.Windows.Forms.TextBox();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.lblAlias = new System.Windows.Forms.Label();
+            this.textAlias = new System.Windows.Forms.TextBox();
             this.groupBoxUnifi.SuspendLayout();
             this.wizardPagesByAccountType.SuspendLayout();
             this.tabUnifiSettings.SuspendLayout();
@@ -108,6 +110,20 @@
             // 
             resources.ApplyResources(this.textUsername, "textUsername");
             this.textUsername.Name = "textUsername";
+
+            // 
+            // textAlias
+            // 
+            resources.ApplyResources(this.textAlias, "textAlias");
+            this.textAlias.Name = "textAlias";
+            this.toolTip1.SetToolTip(this.textAlias, resources.GetString("btnLogoutArdia.ToolTip"));
+
+            // 
+            // lblAlias
+            // 
+            resources.ApplyResources(this.lblAlias, "lblAlias");
+            this.lblAlias.Name = "lblAlias";
+
             // 
             // btnTest
             // 
@@ -251,6 +267,8 @@
             this.Controls.Add(this.btnOK);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.comboAccountType);
+            this.Controls.Add(this.textAlias);
+            this.Controls.Add(this.lblAlias);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "EditRemoteAccountDlg";
@@ -281,6 +299,10 @@
         private System.Windows.Forms.Button btnTest;
         private System.Windows.Forms.ComboBox comboAccountType;
         private System.Windows.Forms.Label label1;
+
+        internal System.Windows.Forms.TextBox textAlias;
+        private System.Windows.Forms.Label lblAlias;
+
         private System.Windows.Forms.GroupBox groupBoxUnifi;
         private System.Windows.Forms.Label lblIdentityServer;
         private System.Windows.Forms.TextBox tbxClientSecret;

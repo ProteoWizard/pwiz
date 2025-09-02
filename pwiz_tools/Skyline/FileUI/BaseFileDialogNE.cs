@@ -45,6 +45,7 @@ namespace pwiz.Skyline.FileUI
         private readonly IList<RemoteAccount> _remoteAccounts;
         private bool _waitingForData;
         private readonly IList<string> _specificDataSourceFilter; // Specific data sources to look for
+        protected bool IsRemote { get; private set; }
 
         /// <summary>
         /// File picker which is aware of mass spec "files" that are really directories
@@ -52,50 +53,68 @@ namespace pwiz.Skyline.FileUI
         /// <param name="sourceTypes"></param>
         /// <param name="remoteAccounts">For UNIFI</param>
         /// <param name="specificDataSourceFilter">Optional list of specific files the user needs to located, ignoring the rest</param>
-        public BaseFileDialogNE(string[] sourceTypes, IList<RemoteAccount> remoteAccounts, IList<string> specificDataSourceFilter = null)
+        /// <param name="isRemote">Indicates that this dialog is for remote accounts only and local drives and folders should be hidden</param>
+        public BaseFileDialogNE(string[] sourceTypes, IList<RemoteAccount> remoteAccounts, IList<string> specificDataSourceFilter = null, bool isRemote = false)
         {
             InitializeComponent();
             _remoteAccounts = remoteAccounts;
+            IsRemote = isRemote;
 
             listView.ListViewItemSorter = _listViewColumnSorter;
 
             DialogResult = DialogResult.Cancel;
-            
-            sourceTypeComboBox.Items.AddRange(sourceTypes.Cast<object>().ToArray());
-            sourceTypeComboBox.SelectedIndex = 0;
-            // Use the small image list 16x16 to avoid scaling at runtime which produces color inconsistencies
-            listView.SmallImageList = lookInImageListSmall;
-            listView.LargeImageList = lookInImageListSmall;
 
-            // ExportImages(listView.SmallImageList, string.Empty);
+            if (sourceTypes == null)
+            {
+                sourceTypeComboBox.Visible = false;
+                label1.Visible = false;
+            }
+            else
+            {
+                sourceTypeComboBox.Items.AddRange(sourceTypes.Cast<object>().ToArray());
+                sourceTypeComboBox.SelectedIndex = 0;
+            }
+
+            // Create a new image list for the list view that is the default size (16x16)
+            ImageList imageList = new ImageList{ColorDepth = ColorDepth.Depth32Bit};
+            imageList.Images.AddRange(lookInImageList.Images.Cast<Image>().ToArray());
+            listView.SmallImageList = imageList;
+            listView.LargeImageList = imageList;
 
             TreeView tv = new TreeView { Indent = 8 };
             _remoteIndex = lookInComboBox.Items.Count;
-            TreeNode unifiNode = tv.Nodes.Add(@"Remote",
+            TreeNode remoteNode = tv.Nodes.Add(@"Remote",
                 FileUIResources.OpenDataSourceDialog_OpenDataSourceDialog_Remote_Accounts, (int) ImageIndex.MyNetworkPlaces,
                 (int) ImageIndex.MyNetworkPlaces);
-            unifiNode.Tag = RemoteUrl.EMPTY;
-            lookInComboBox.Items.Add(unifiNode);
+            remoteNode.Tag = RemoteUrl.EMPTY;
+            lookInComboBox.Items.Add(remoteNode);
+            lookInComboBox.SelectedIndex = 0;
             remoteAccountsButton.Visible = true;
             recentDocumentsButton.Visible = false;
 
-            TreeNode desktopNode = tv.Nodes.Add(@"Desktop",
-                FileUIResources.OpenDataSourceDialog_OpenDataSourceDialog_Desktop, (int) ImageIndex.Desktop, (int) ImageIndex.Desktop );
-            desktopNode.Tag = new MsDataFilePath(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory));
-            lookInComboBox.Items.Add( desktopNode );
-            TreeNode lookInNode = desktopNode.Nodes.Add(@"My Documents",
-                FileUIResources.OpenDataSourceDialog_OpenDataSourceDialog_My_Documents, (int) ImageIndex.MyDocuments, (int) ImageIndex.MyDocuments );
-            lookInNode.Tag = new MsDataFilePath(Environment.GetFolderPath(Environment.SpecialFolder.Personal));
-            lookInComboBox.Items.Add( lookInNode );
-            _myComputerIndex = lookInComboBox.Items.Count;
-            TreeNode myComputerNode = desktopNode.Nodes.Add(@"My Computer",
-                FileUIResources.OpenDataSourceDialog_OpenDataSourceDialog_My_Computer, (int) ImageIndex.MyComputer, (int) ImageIndex.MyComputer );
-            myComputerNode.Tag = new MsDataFilePath(Environment.GetFolderPath(Environment.SpecialFolder.MyComputer));
-            
-            lookInComboBox.Items.Add( myComputerNode );
+            if (!isRemote)
+            {
+                TreeNode desktopNode = tv.Nodes.Add(@"Desktop",
+                    FileUIResources.OpenDataSourceDialog_OpenDataSourceDialog_Desktop, (int)ImageIndex.Desktop, (int)ImageIndex.Desktop);
+                desktopNode.Tag = new MsDataFilePath(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory));
+                lookInComboBox.Items.Add(desktopNode);
+                TreeNode lookInNode = desktopNode.Nodes.Add(@"My Documents",
+                    FileUIResources.OpenDataSourceDialog_OpenDataSourceDialog_My_Documents, (int)ImageIndex.MyDocuments, (int)ImageIndex.MyDocuments);
+                lookInNode.Tag = new MsDataFilePath(Environment.GetFolderPath(Environment.SpecialFolder.Personal));
+                lookInComboBox.Items.Add(lookInNode);
+                _myComputerIndex = lookInComboBox.Items.Count;
+                TreeNode myComputerNode = desktopNode.Nodes.Add(@"My Computer",
+                    FileUIResources.OpenDataSourceDialog_OpenDataSourceDialog_My_Computer, (int)ImageIndex.MyComputer, (int)ImageIndex.MyComputer);
+                myComputerNode.Tag = new MsDataFilePath(Environment.GetFolderPath(Environment.SpecialFolder.MyComputer));
+                lookInComboBox.Items.Add(myComputerNode);
+                lookInComboBox.SelectedIndex = 1;
+            }
+            else
+            {
+                desktopButton.Enabled = myComputerButton.Enabled = myDocumentsButton.Enabled = recentDocumentsButton.Enabled = false;
+            }
 
-            lookInComboBox.SelectedIndex = 1;
-            lookInComboBox.IntegralHeight = false;
+                lookInComboBox.IntegralHeight = false;
             lookInComboBox.DropDownHeight = lookInComboBox.Items.Count * lookInComboBox.ItemHeight + 2;
 
             _specificDataSourceFilter = specificDataSourceFilter;
@@ -177,7 +196,9 @@ namespace pwiz.Skyline.FileUI
             RemoteSession = null;
         }
 
-        private MsDataFileUri _currentDirectory;
+        protected virtual void OnCurrentDirectoryChange() { }
+
+        protected MsDataFileUri _currentDirectory;
         public MsDataFileUri CurrentDirectory
         {
             get { return _currentDirectory; }
@@ -194,18 +215,23 @@ namespace pwiz.Skyline.FileUI
                     {
                         // If there is exactly one account, then skip the level that
                         // lists the accounts to choose from.
-                        value = _remoteAccounts.First().GetRootUrl();
+                        value = GetRootUrl(_remoteAccounts.First());
                     }
                 }
                 if (value != null)
                 {
                     _currentDirectory = value;
+                    OnCurrentDirectoryChange();
                     populateListViewFromDirectory(_currentDirectory);
                     populateComboBoxFromDirectory(_currentDirectory);
                 }
             }
         }
 
+        protected virtual RemoteUrl GetRootUrl(RemoteAccount account)
+        {
+            return account.GetRootUrl();
+        }
         public RemoteSession RemoteSession
         {
             get { return _remoteSession; }
@@ -440,9 +466,9 @@ namespace pwiz.Skyline.FileUI
                 {
                     foreach (var remoteAccount in _remoteAccounts)
                     {
-                        listSourceInfo.Add(new SourceInfo(remoteAccount.GetRootUrl())
+                        listSourceInfo.Add(new SourceInfo(GetRootUrl(remoteAccount))
                         {
-                            name = remoteAccount.GetKey(),
+                            name = remoteAccount.AccountAlias,
                             type = DataSourceUtil.FOLDER_TYPE,
                             imageIndex = ImageIndex.MyNetworkPlaces,
                         });
@@ -453,15 +479,14 @@ namespace pwiz.Skyline.FileUI
                     RemoteAccount remoteAccount = GetRemoteAccount(remoteUrl);
                     if (RemoteSession == null || !Equals(remoteAccount, RemoteSession.Account))
                     {
-                        RemoteSession = RemoteSession.CreateSession(remoteAccount);
+                        CreateNewRemoteSession(remoteAccount);
                     }
                     RemoteServerException exception;
                     bool isComplete = _remoteSession.AsyncFetchContents(remoteUrl, out exception);
                     foreach (var item in _remoteSession.ListContents(remoteUrl))
                     {
-                        var imageIndex = DataSourceUtil.IsFolderType(item.Type)
-                            ? ImageIndex.Folder
-                            : ImageIndex.MassSpecFile;
+                        var imageIndex = GetRemoteItemImageIndex(item);
+ 
                         listSourceInfo.Add(new SourceInfo(item.MsDataFileUri)
                         {
                             name = item.Label,
@@ -475,7 +500,7 @@ namespace pwiz.Skyline.FileUI
                     {
                         if (MultiButtonMsgDlg.Show(this, exception.Message, FileUIResources.OpenDataSourceDialog_populateListViewFromDirectory_Retry) != DialogResult.Cancel)
                         {
-                            RemoteSession.RetryFetchContents(remoteUrl);
+                            RemoteSession?.RetryFetchContents(remoteUrl);
                             isComplete = false;
                         }
                     }
@@ -555,10 +580,14 @@ namespace pwiz.Skyline.FileUI
             var items = new List<ListViewItem>();
             foreach (var sourceInfo in listSourceInfo)
             {
-                if (sourceTypeComboBox.SelectedIndex == 0 ||
-                            sourceTypeComboBox.SelectedItem.ToString() == sourceInfo.type ||
-                            // Always show folders
-                            sourceInfo.isFolder)
+                if (sourceTypeComboBox == null ||
+                     sourceTypeComboBox.SelectedItem == null || // null if no sourceTypes passed in
+                     (sourceTypeComboBox != null &&
+                        sourceTypeComboBox.SelectedItem != null &&
+                        (sourceTypeComboBox.SelectedIndex == 0 ||
+                         sourceTypeComboBox.SelectedItem.ToString() == sourceInfo.type)) ||
+                     // Always show folders
+                     sourceInfo.isFolder)
                 {
                     // Filter for specifically named data sources (as when called from Skyline File>Share)
                     if (_specificDataSourceFilter != null && !sourceInfo.isFolder)
@@ -573,9 +602,9 @@ namespace pwiz.Skyline.FileUI
 
                     ListViewItem item = new ListViewItem(sourceInfo.ToArray(), (int) sourceInfo.imageIndex)
                     {
-                        Tag = sourceInfo,
+                        Tag = sourceInfo
                     };
-                    item.SubItems[2].Tag = sourceInfo.size;
+                    item.SubItems[2].Tag = sourceInfo.size; // CONSIDER: file size is always 0 for method files
                     item.SubItems[3].Tag = sourceInfo.dateModified;
                         
                     items.Add(item);
@@ -584,11 +613,26 @@ namespace pwiz.Skyline.FileUI
             listView.Items.AddRange(items.ToArray());
         }
 
+        protected virtual ImageIndex GetRemoteItemImageIndex(RemoteItem item)
+        {
+            return item.Type switch
+            {
+                DataSourceUtil.FOLDER_TYPE => ImageIndex.Folder,
+                DataSourceUtil.TYPE_WATERS_ACQUISITION_METHOD => ImageIndex.MethodFile,
+                _ => ImageIndex.MassSpecFile
+            };
+        }
+
         private void RemoteContentsAvailable()
         {
             // ReSharper disable EmptyGeneralCatchClause
             try
             {
+                while (!IsHandleCreated)    // Cannot call BeginInvoke until the handle is created
+                {
+                    // Wait for the handle to be created
+                    System.Threading.Thread.Sleep(100);
+                }
                 BeginInvoke(new Action(() =>
                 {
                     try
@@ -631,6 +675,8 @@ namespace pwiz.Skyline.FileUI
 
         private void populateComboBoxFromDirectory( MsDataFileUri directory )
         {
+            if (IsRemote && !(directory is RemoteUrl))
+                throw new ArgumentException(@"Cannot show a local path when remote mode is requested.");
             lookInComboBox.SuspendLayout();
 
             // remove old items except My Documents, Desktop, My Computer, and the Remote root
@@ -675,101 +721,124 @@ namespace pwiz.Skyline.FileUI
                     lookInComboBox.SelectedIndex = _remoteIndex;
                 }
 
-                TreeNode remoteNode = (TreeNode)lookInComboBox.Items[_remoteIndex];
-
-                ++driveCount;
-                TreeNode serverNode = remoteNode.Nodes.Add(remoteUrl.ServerUrl,
-                                                           remoteUrl.ServerUrl,
-                                                           (int)ImageIndex.MyNetworkPlaces,
-                                                           (int)ImageIndex.MyNetworkPlaces);
-                serverNode.Tag = remoteUrl.ChangePathParts(null);
-                lookInComboBox.Items.Insert(_remoteIndex + driveCount, serverNode);
-
-                var branches = remoteUrl.GetPathParts().ToList();
-                TreeNode pathNode = serverNode;
-                for (int i = 0; i < branches.Count; ++i)
+                if (!ReferenceEquals(remoteUrl, RemoteUrl.EMPTY))
                 {
+                    TreeNode remoteNode = (TreeNode)lookInComboBox.Items[_remoteIndex];
+
                     ++driveCount;
-                    pathNode = pathNode.Nodes.Add(branches[i], branches[i], 8, 8);
-                    pathNode.Tag = remoteUrl.ChangePathParts(branches.GetRange(0, i + 1));
-                    lookInComboBox.Items.Insert(_remoteIndex + driveCount, pathNode);
-                }
-                lookInComboBox.SelectedIndex = _remoteIndex + driveCount;
-            }
+                    var remoteAccount = remoteUrl.FindMatchingAccount();
+                    TreeNode serverNode = remoteNode.Nodes.Add(remoteUrl.ServerUrl,
+                        remoteAccount?.AccountAlias ?? remoteUrl.ServerUrl,
+                        (int)ImageIndex.MyNetworkPlaces,
+                        (int)ImageIndex.MyNetworkPlaces);
+                    // ReSharper disable once PossibleUnintendedReferenceComparison
+                    serverNode.Tag = (remoteUrl != RemoteUrl.EMPTY) ? remoteUrl.ChangePathParts(null) : remoteUrl;
+                    lookInComboBox.Items.Insert(_remoteIndex + driveCount, serverNode);
 
-            TreeNode myComputerNode = (TreeNode)lookInComboBox.Items[_myComputerIndex];
-
-            foreach (DriveInfo driveInfo in DriveInfo.GetDrives())
-            {
-                string label = string.Empty;
-                string sublabel = driveInfo.Name;
-                ImageIndex imageIndex = ImageIndex.Folder;
-                ++driveCount;
-                _driveReadiness[sublabel] = false;
-                try
-                {
-                    switch (driveInfo.DriveType)
-                    {
-                        case DriveType.Fixed:
-                            imageIndex = ImageIndex.LocalDrive;
-                            label = FileUIResources.OpenDataSourceDialog_populateComboBoxFromDirectory_Local_Drive;
-                            if (driveInfo.VolumeLabel.Length > 0)
-                                label = driveInfo.VolumeLabel;
-                            break;
-                        case DriveType.CDRom:
-                            imageIndex = ImageIndex.OpticalDrive;
-                            label = FileUIResources.OpenDataSourceDialog_populateComboBoxFromDirectory_Optical_Drive;
-                            if (driveInfo.IsReady && driveInfo.VolumeLabel.Length > 0)
-                                label = driveInfo.VolumeLabel;
-                            break;
-                        case DriveType.Removable:
-                            imageIndex = ImageIndex.OpticalDrive;
-                            label = FileUIResources.OpenDataSourceDialog_populateComboBoxFromDirectory_Removable_Drive;
-                            if (driveInfo.IsReady && driveInfo.VolumeLabel.Length > 0)
-                                label = driveInfo.VolumeLabel;
-                            break;
-                        case DriveType.Network:
-                            label = FileUIResources.OpenDataSourceDialog_populateComboBoxFromDirectory_Network_Share;
-                            break;
-                    }
-                    _driveReadiness[sublabel] = IsDriveReady(driveInfo);
-                }
-                catch (Exception)
-                {
-                    label += string.Format(@" ({0})", FileUIResources.OpenDataSourceDialog_populateComboBoxFromDirectory_access_failure);
-                }
-                TreeNode driveNode = myComputerNode.Nodes.Add(sublabel,
-                                                              label.Length > 0
-                                                                  ? String.Format(@"{0} ({1})", label, sublabel)
-                                                                  : sublabel,
-                                                              (int)imageIndex,
-                                                              (int)imageIndex);
-                driveNode.Tag = new MsDataFilePath(sublabel);
-                lookInComboBox.Items.Insert(_myComputerIndex + driveCount, driveNode);
-
-                if (dirInfo != null && sublabel == dirInfo.Root.Name)
-                {
-                    List<string> branches = new List<string>(((MsDataFilePath)directory).FilePath.Split(new[] {
-                                                 Path.DirectorySeparatorChar,
-                                                 Path.AltDirectorySeparatorChar },
-                                                 StringSplitOptions.RemoveEmptyEntries));
-                    TreeNode pathNode = driveNode;
-                    for (int i = 1; i < branches.Count; ++i)
+                    var branches = remoteUrl.GetPathParts().ToList();
+                    TreeNode pathNode = serverNode;
+                    for (int i = 0; i < branches.Count; ++i)
                     {
                         ++driveCount;
                         pathNode = pathNode.Nodes.Add(branches[i], branches[i], 8, 8);
-                        pathNode.Tag = new MsDataFilePath(String.Join(Path.DirectorySeparatorChar.ToString(CultureInfo.InvariantCulture),
-                                                    branches.GetRange(0, i + 1).ToArray()));
-                        lookInComboBox.Items.Insert(_myComputerIndex + driveCount, pathNode);
+                        pathNode.Tag = remoteUrl.ChangePathParts(branches.GetRange(0, i + 1));
+                        lookInComboBox.Items.Insert(_remoteIndex + driveCount, pathNode);
                     }
-                    lookInComboBox.SelectedIndex = _myComputerIndex + driveCount;
+                    lookInComboBox.SelectedIndex = _remoteIndex + driveCount;
                 }
             }
-            //desktopNode.Nodes.Add( "My Network Places", "My Network Places", 4, 4 ).Tag = "My Network Places";
+
+            if (!IsRemote)
+            {
+                TreeNode myComputerNode = (TreeNode)lookInComboBox.Items[_myComputerIndex];
+
+                foreach (DriveInfo driveInfo in DriveInfo.GetDrives())
+                {
+                    string label = string.Empty;
+                    string sublabel = driveInfo.Name;
+                    ImageIndex imageIndex = ImageIndex.Folder;
+                    ++driveCount;
+                    _driveReadiness[sublabel] = false;
+                    try
+                    {
+                        switch (driveInfo.DriveType)
+                        {
+                            case DriveType.Fixed:
+                                imageIndex = ImageIndex.LocalDrive;
+                                label = FileUIResources.OpenDataSourceDialog_populateComboBoxFromDirectory_Local_Drive;
+                                if (driveInfo.VolumeLabel.Length > 0)
+                                    label = driveInfo.VolumeLabel;
+                                break;
+                            case DriveType.CDRom:
+                                imageIndex = ImageIndex.OpticalDrive;
+                                label = FileUIResources
+                                    .OpenDataSourceDialog_populateComboBoxFromDirectory_Optical_Drive;
+                                if (driveInfo.IsReady && driveInfo.VolumeLabel.Length > 0)
+                                    label = driveInfo.VolumeLabel;
+                                break;
+                            case DriveType.Removable:
+                                imageIndex = ImageIndex.OpticalDrive;
+                                label = FileUIResources
+                                    .OpenDataSourceDialog_populateComboBoxFromDirectory_Removable_Drive;
+                                if (driveInfo.IsReady && driveInfo.VolumeLabel.Length > 0)
+                                    label = driveInfo.VolumeLabel;
+                                break;
+                            case DriveType.Network:
+                                label = FileUIResources
+                                    .OpenDataSourceDialog_populateComboBoxFromDirectory_Network_Share;
+                                break;
+                        }
+                        _driveReadiness[sublabel] = IsDriveReady(driveInfo);
+                    }
+                    catch (Exception)
+                    {
+                        label += string.Format(@" ({0})",
+                            FileUIResources.OpenDataSourceDialog_populateComboBoxFromDirectory_access_failure);
+                    }
+                    TreeNode driveNode = myComputerNode.Nodes.Add(sublabel,
+                        label.Length > 0
+                            ? String.Format(@"{0} ({1})", label, sublabel)
+                            : sublabel,
+                        (int)imageIndex,
+                        (int)imageIndex);
+                    driveNode.Tag = new MsDataFilePath(sublabel);
+                    lookInComboBox.Items.Insert(_myComputerIndex + driveCount, driveNode);
+
+                    if (dirInfo != null && sublabel == dirInfo.Root.Name)
+                    {
+                        List<string> branches = new List<string>(((MsDataFilePath)directory).FilePath.Split(new[]
+                            {
+                                Path.DirectorySeparatorChar,
+                                Path.AltDirectorySeparatorChar
+                            },
+                            StringSplitOptions.RemoveEmptyEntries));
+                        TreeNode pathNode = driveNode;
+                        for (int i = 1; i < branches.Count; ++i)
+                        {
+                            ++driveCount;
+                            pathNode = pathNode.Nodes.Add(branches[i], branches[i], 8, 8);
+                            pathNode.Tag = new MsDataFilePath(String.Join(
+                                Path.DirectorySeparatorChar.ToString(CultureInfo.InvariantCulture),
+                                branches.GetRange(0, i + 1).ToArray()));
+                            lookInComboBox.Items.Insert(_myComputerIndex + driveCount, pathNode);
+                        }
+                        lookInComboBox.SelectedIndex = _myComputerIndex + driveCount;
+                    }
+                }
+            }
 
             lookInComboBox.DropDownHeight = lookInComboBox.Items.Count * 18 + 2;
 
             lookInComboBox.ResumeLayout();
+        }
+
+        /// <summary>
+        /// Allows override in subclasses
+        /// </summary>
+        /// <param name="remoteAccount"></param>
+        protected virtual void CreateNewRemoteSession(RemoteAccount remoteAccount)
+        {
+            RemoteSession = RemoteSession.CreateSession(remoteAccount);
         }
 
         private void sourcePathTextBox_KeyUp( object sender, KeyEventArgs e )
@@ -783,19 +852,38 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        protected virtual void OnFileNameTyped() {}
+
+        private void sourcePathTextBox_TextChanged(object sender, EventArgs e)
+        {
+            OnFileNameTyped();
+        }
+        private void sourcePathTextBox_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            listView.ItemSelectionChanged -= listView_ItemSelectionChanged;
+            listView.SelectedItems.Clear();
+            listView.ItemSelectionChanged += listView_ItemSelectionChanged;
+        }
+
         private void listView_ItemActivate( object sender, EventArgs e )
         {
-            if (listView.SelectedItems.Count == 0)
+            SelectItem();
+        }
+
+        protected virtual void SelectItem()
+        {
+            var selected = listView.SelectedItems.OfType<ListViewItem>().ToList();
+            if (selected.Count == 0)
                 return;
 
-            ListViewItem item = listView.SelectedItems[0];
-            if( DataSourceUtil.IsFolderType(item.SubItems[1].Text) )
+            ListViewItem item = selected[0];
+            if (DataSourceUtil.IsFolderType(item.SubItems[1].Text))
             {
                 OpenFolderItem(item);
             }
             else
             {
-                FileNames = new[] { ((SourceInfo) item.Tag).MsDataFileUri,  };
+                FileNames = new[] { ((SourceInfo)item.Tag).MsDataFileUri };
                 DialogResult = DialogResult.OK;
                 Close();
             }
@@ -812,6 +900,36 @@ namespace pwiz.Skyline.FileUI
                 _previousDirectories.Push(_currentDirectory);
             CurrentDirectory = uri;
             _abortPopulateList = true;
+            sourcePathTextBox.Clear();
+        }
+
+        protected bool OpenFolderFromTextBox()
+        {
+            var fileOrDirName = sourcePathTextBox.Text;
+            bool exists;
+            bool triedAddingDirectory = false;
+            while (!(exists = ((File.Exists(fileOrDirName) || Directory.Exists(fileOrDirName)))))
+            {
+                if (triedAddingDirectory)
+                    break;
+                MsDataFilePath currentDirectoryPath = CurrentDirectory as MsDataFilePath;
+                if (null == currentDirectoryPath)
+                    break;
+                fileOrDirName = Path.Combine(currentDirectoryPath.FilePath, fileOrDirName);
+                triedAddingDirectory = true;
+            }
+            if (exists)
+            {
+                if (DataSourceUtil.IsDataSource(fileOrDirName))
+                {
+                    FileNames = new[] { MsDataFileUri.Parse(fileOrDirName) };
+                    DialogResult = DialogResult.OK;
+                }
+                else if (Directory.Exists(fileOrDirName))
+                    OpenFolder(new MsDataFilePath(fileOrDirName));
+                return true;
+            }
+            return false;
         }
 
         private void listView_ColumnClick( object sender, ColumnClickEventArgs e )
@@ -947,10 +1065,12 @@ namespace pwiz.Skyline.FileUI
 
         private void listView_ItemSelectionChanged( object sender, ListViewItemSelectionChangedEventArgs e )
         {
-            if( listView.SelectedItems.Count > 1 )
+            var selected = listView.SelectedItems.OfType<ListViewItem>().ToList();
+
+            if (selected.Count > 1 )
             {
                 List<string> dataSourceList = new List<string>();
-                foreach( ListViewItem item in listView.SelectedItems )
+                foreach( ListViewItem item in selected)
                 {
                     if( !DataSourceUtil.IsFolderType(item.SubItems[1].Text) )
                         // ReSharper disable LocalizableElement
@@ -1005,6 +1125,17 @@ namespace pwiz.Skyline.FileUI
                     }
                     break;
             }
+        }
+
+        private void this_KeyDown(object sender, KeyEventArgs e)
+        {
+            KeyPressHandler(e.KeyCode);
+        }
+
+        public void KeyPressHandler(Keys key)
+        {
+            if (key == Keys.Enter)
+                DoMainAction();
         }
 
         private void remoteAccountsButton_Click( object sender, EventArgs e )
@@ -1185,7 +1316,7 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        protected enum ImageIndex
+        public enum ImageIndex
         {
             RecentDocuments,
             Desktop,
@@ -1198,6 +1329,10 @@ namespace pwiz.Skyline.FileUI
             Folder,
             MassSpecFile,
             UnknownFile,
+            MethodFile,
+            NoAccessFolder,
+            ReadOnlyFolder,
+            ReadWriteFolder
         }
 
         private void EnsureRemoteAccount()

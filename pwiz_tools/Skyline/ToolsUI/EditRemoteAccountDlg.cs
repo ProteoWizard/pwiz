@@ -103,7 +103,9 @@ namespace pwiz.Skyline.ToolsUI
         public void SetRemoteAccount(RemoteAccount remoteAccount)
         {
             comboAccountType.SelectedIndex = RemoteAccountType.ALL.IndexOf(remoteAccount.AccountType);
-     
+            if (remoteAccount.HasAlias)
+                textAlias.Text = remoteAccount.AccountAlias;
+
             if (remoteAccount is UnifiAccount unifiAccount)
             {
                 wizardPagesByAccountType.SelectedIndex = UNIFI_WIZARD_PAGE_INDEX;
@@ -199,6 +201,7 @@ namespace pwiz.Skyline.ToolsUI
 
                 remoteAccount = ardiaAccount;
             }
+            remoteAccount.AccountAlias = textAlias.Text.Trim();
             return remoteAccount;
         }
 

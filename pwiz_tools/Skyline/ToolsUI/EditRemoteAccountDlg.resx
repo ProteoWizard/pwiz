@@ -891,4 +891,60 @@
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0 Culture=neutral, PublicKeyToken=null</value>
   </data>
+
+  <data name="lblAlias.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblAlias.Location" type="System.Drawing.Point, System.Drawing">
+    <value>168, 9</value>
+  </data>
+  <data name="lblAlias.Size" type="System.Drawing.Size, System.Drawing">
+    <value>73, 13</value>
+  </data>
+  <data name="lblAlias.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="lblAlias.Text" xml:space="preserve">
+    <value>Account alias:</value>
+  </data>
+  <data name="&gt;&gt;lblAlias.Name" xml:space="preserve">
+    <value>lblAlias</value>
+  </data>
+  <data name="&gt;&gt;lblAlias.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblAlias.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;lblAlias.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="textAlias.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="textAlias.Location" type="System.Drawing.Point, System.Drawing">
+    <value>168, 25</value>
+  </data>
+  <data name="textAlias.Size" type="System.Drawing.Size, System.Drawing">
+    <value>138, 20</value>
+  </data>
+  <data name="textAlias.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="&gt;&gt;textAlias.Name" xml:space="preserve">
+    <value>textAlias</value>
+  </data>
+  <data name="&gt;&gt;textAlias.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textAlias.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;textAlias.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="textAlias.ToolTip" xml:space="preserve">
+    <value>User-friendly name for the account. This is what will be shown in the UI.</value>
+  </data>
+
 </root>
