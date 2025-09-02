@@ -22,7 +22,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
+using pwiz.Common.PeakFinding;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.Lib
 {
@@ -40,6 +42,11 @@ namespace pwiz.Skyline.Model.Lib
         public double StartTime { get; private set; }
         public double EndTime { get; private set; }
         public double Score { get; private set; }
+
+        public PeakBounds PeakBounds
+        {
+            get { return new PeakBounds(StartTime, EndTime); }
+        }
 
         protected bool Equals(ExplicitPeakBounds other)
         {
@@ -73,6 +80,11 @@ namespace pwiz.Skyline.Model.Lib
         public override string ToString()
         {
             return string.Format(@"[{0:F04},{1:F04}]:{2:F04}", StartTime, EndTime, Score);
+        }
+
+        public ScoredPeakBounds ToScoredPeak()
+        {
+            return new ScoredPeakBounds((float)(StartTime + EndTime) / 2, (float)StartTime, (float)EndTime, (float)Score);
         }
     }
 
