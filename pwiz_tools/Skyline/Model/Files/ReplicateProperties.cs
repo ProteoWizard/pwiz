@@ -24,30 +24,24 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Resources;
+using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.Files
 {
     public class ReplicateProperties : FileNodeProperties
     {
-        private readonly Replicate _model;
-
         public ReplicateProperties(Replicate model, string localFilePath)
             : base(model, localFilePath)
         {
             Assume.IsNotNull(model);
-            _model = model;
+            _rename = model.Rename;
 
-            base.UpdateProperties();
-        }
-
-        protected override void UpdateUniqueProperties()
-        {
-            BatchName = _model.BatchName;
-            AnalyteConcentration = _model.AnalyteConcentration;
-            SampleDilutionFactor = _model.SampleDilutionFactor;
-            SampleType = _model.SampleType;
-
-            var dataFileInfo = _model.MSDataFileInfos;
+            BatchName = model.BatchName;
+            AnalyteConcentration = model.AnalyteConcentration;
+            SampleDilutionFactor = model.SampleDilutionFactor;
+            SampleType = model.SampleType;
+            
+            var dataFileInfo = model.MSDataFileInfos;
             if (dataFileInfo.Count == 1)
             {
                 MaxRetentionTime = dataFileInfo[0].MaxRetentionTime;
@@ -81,6 +75,8 @@ namespace pwiz.Skyline.Model.Files
         [UseCustomHandling]
         [Category("FileInfo")] public override string Name { get; set; }
 
+        private readonly Func<SrmDocument, SrmSettingsChangeMonitor, string, ModifiedDocument> _rename;
+
         // Instrument properties need to be added as nested properties, as lists don't render well in PropertyGrid
         [UseCustomHandling]
         [Category("Instruments")] public List<InstrumentProperties> Instruments { get; set; }
@@ -97,7 +93,7 @@ namespace pwiz.Skyline.Model.Files
             AddProperty(new GlobalizedPropertyDescriptor(
                 namePropertyDescriptor,
                 GetResourceManager(),
-                getModifiedDocument: _model.Rename));
+                getModifiedDocument: _rename));
 
             if (Instruments?.Count == 1)
             {

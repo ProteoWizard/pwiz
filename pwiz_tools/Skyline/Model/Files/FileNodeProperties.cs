@@ -25,40 +25,23 @@ namespace pwiz.Skyline.Model.Files
 {
     public abstract class FileNodeProperties : GlobalizedObject
     {
-        private readonly FileNode _model;
-
         protected override ResourceManager GetResourceManager()
         {
             return PropertySheetFileNodeResources.ResourceManager;
         }
 
-        protected FileNodeProperties(FileNode fileNode, string localFilePath)
+        protected FileNodeProperties(FileNode model, string localFilePath)
         {
-            _model = fileNode;
             FilePath = localFilePath;
-        }
+            Name = model.Name;
 
-        public override bool BackedByDocument() => _model.Immutable != null;
-
-        public override void UpdateProperties()
-        {
-            UpdateBaseProperties();
-            UpdateUniqueProperties();
-        }
-
-        protected void UpdateBaseProperties()
-        {
-            Name = _model.Name;
-
-            if (_model.IsBackedByFile && System.IO.File.Exists(FilePath))
+            if (model.IsBackedByFile && System.IO.File.Exists(FilePath))
             {
                 var fileInfo = new System.IO.FileInfo(FilePath);
                 if (fileInfo.Exists)
                     FileSize = new FileSize(fileInfo.Length).ToString();
             }
         }
-
-        protected abstract void UpdateUniqueProperties();
 
         [Category("FileInfo")] public string FilePath { get; set; }
         [Category("FileInfo")] public string FileSize { get; set; }

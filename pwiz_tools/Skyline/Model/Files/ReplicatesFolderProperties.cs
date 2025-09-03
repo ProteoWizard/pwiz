@@ -18,28 +18,21 @@
  */
 
 using JetBrains.Annotations;
+using pwiz.Common.SystemUtil;
 using System.ComponentModel;
 using System.Resources;
-using pwiz.Common.SystemUtil;
+using System.Runtime.InteropServices;
 
 namespace pwiz.Skyline.Model.Files
 {
     public class ReplicatesFolderProperties : FileNodeProperties
     {
-        private readonly ReplicatesFolder _model;
-
         public ReplicatesFolderProperties(ReplicatesFolder model, string localFilePath)
             : base(model, localFilePath)
         {
             Assume.IsNotNull(model);
-            _model = model;
 
-            base.UpdateProperties();
-        }
-
-        protected override void UpdateUniqueProperties()
-        {
-            FileNum = _model.Files.Count;
+            FileNum = model.Files.Count;
         }
 
         [Category("FileInfo")] public int FileNum { get; set; }

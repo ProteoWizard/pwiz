@@ -29,24 +29,16 @@ namespace pwiz.Skyline.Model.Files
 {
     public class ReplicateSampleFileProperties : FileNodeProperties
     {
-        private readonly ReplicateSampleFile _model;
-
         public ReplicateSampleFileProperties(ReplicateSampleFile model, string localFilePath)
             : base(model, localFilePath)
         {
             Assume.IsNotNull(model);
-            _model = model;
 
-            base.UpdateProperties();
-        }
+            MaxRetentionTime = model.MaxRetentionTime;
+            MaxIntensity = model.MaxIntensity;
+            AcquisitionTime = model.AcquisitionTime.ToString();
 
-        protected override void UpdateUniqueProperties()
-        {
-            MaxRetentionTime = _model.MaxRetentionTime;
-            MaxIntensity = _model.MaxIntensity;
-            AcquisitionTime = _model.AcquisitionTime.ToString();
-
-            var instrumentInfo = _model.InstrumentInfoList;
+            var instrumentInfo = model.InstrumentInfoList;
             if (instrumentInfo.Count > 0)
             {
                 Instruments = instrumentInfo

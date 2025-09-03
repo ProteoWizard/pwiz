@@ -117,6 +117,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             var propertyGrid = SkylineWindow.PropertyForm?.PropertyGrid;
             if (propertyGrid?.SelectedObject is FileNodeProperties)
             {
+                // This works if we trust that FilesTreeForm handles current selection recovery after document change correctly
                 propertyGrid.SelectedObject = GetSelectedObjectProperties();
             }
         }
