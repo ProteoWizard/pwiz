@@ -42,7 +42,6 @@ namespace pwiz.Skyline.Controls
             SkylineWindow = skylineWindow;
 
             PropertyGrid.PropertyValueChanged += PropertyGrid_PropertyValueChanged;
-            //SkylineWindow.Listen(OnDocumentChanged);
         }
 
         [Browsable(false)]
@@ -93,25 +92,6 @@ namespace pwiz.Skyline.Controls
 
                 SkylineWindow.ModifyDocument(FilesTreeResources.Change_ReplicateName, DocumentModifier.FromResult(originalDoc, modifiedDoc));
             }
-        }
-
-        private void OnDocumentChanged(object sender, DocumentChangedEventArgs e)
-        {
-            if (PropertyGrid.SelectedObject == null)
-                return;
-
-            Assume.IsTrue(PropertyGrid.SelectedObject is GlobalizedObject);
-            var selectedGlobalizedObject = (GlobalizedObject)PropertyGrid.SelectedObject;
-
-            if (!selectedGlobalizedObject.BackedByDocument())
-            {
-                PropertyGrid.SelectedObject = null;
-                return;
-            }
-
-            selectedGlobalizedObject.UpdateProperties();
-            // PropertyGrid does not automatically refresh when a property value changes programmatically
-            PropertyGrid.Refresh();
         }
     }
 }
