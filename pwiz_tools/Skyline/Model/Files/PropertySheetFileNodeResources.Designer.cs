@@ -70,6 +70,15 @@ namespace pwiz.Skyline.Model.Files {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add Annotations.
+        /// </summary>
+        internal static string AddAnnotations {
+            get {
+                return ResourceManager.GetString("AddAnnotations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Analyte Concentration.
         /// </summary>
         internal static string AnalyteConcentration {

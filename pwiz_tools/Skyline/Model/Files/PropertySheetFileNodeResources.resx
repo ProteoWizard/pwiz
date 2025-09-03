@@ -165,6 +165,9 @@
   <data name="Instrument" xml:space="preserve">
     <value>Instrument</value>
   </data>
+  <data name="AddAnnotations" xml:space="preserve">
+    <value>Add Annotations</value>
+  </data>
   <data name="AcquisitionTime" xml:space="preserve">
     <value>Acquisition time</value>
   </data>
@@ -176,9 +179,6 @@
   </data>
   <data name="Description_FileSize" xml:space="preserve">
     <value>Size of the file</value>
-  </data>
-  <data name="Description_AnalyteConcentration" xml:space="preserve">
-    <value>Measured concentration of the target analyte in this replicate sample</value>
   </data>
   <data name="Description_AnalyteConcentration" xml:space="preserve">
     <value>Measured concentration of the target analyte in this replicate sample</value>
