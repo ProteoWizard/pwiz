@@ -45,6 +45,7 @@ namespace pwiz.Skyline.Model.Files
         public string SampleType => ChromatogramSet.SampleType.ToString();
         public string BatchName => ChromatogramSet.BatchName;
         public IList<ChromFileInfo> MSDataFileInfos => ChromatogramSet.MSDataFileInfos;
+        public Annotations Annotations => ChromatogramSet.Annotations;
 
         public override IList<FileNode> Files
         {

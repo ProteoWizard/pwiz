@@ -97,6 +97,15 @@ namespace pwiz.Skyline.Model.Files {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Annotations.
+        /// </summary>
+        internal static string Category_Annotations {
+            get {
+                return ResourceManager.GetString("Category_Annotations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Files.
         /// </summary>
         internal static string Category_FileInfo {

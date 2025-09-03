@@ -18,12 +18,12 @@
  */
 
 using JetBrains.Annotations;
-using pwiz.Common.SystemUtil;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Resources;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.Files
@@ -40,7 +40,8 @@ namespace pwiz.Skyline.Model.Files
             AnalyteConcentration = model.AnalyteConcentration;
             SampleDilutionFactor = model.SampleDilutionFactor;
             SampleType = model.SampleType;
-            
+            Annotations = model.Annotations.AnnotationsEnumerable.ToList();
+
             var dataFileInfo = model.MSDataFileInfos;
             if (dataFileInfo.Count == 1)
             {
@@ -63,23 +64,25 @@ namespace pwiz.Skyline.Model.Files
             }
         }
 
-        [Category("Replicate")] public string BatchName { get; set; }
-        [Category("Replicate")] public double? AnalyteConcentration { get; set; }
-        [Category("Replicate")] public double SampleDilutionFactor { get; set; }
-        [Category("Replicate")] public string SampleType { get; set; }
-        [Category("Replicate")] public double MaxRetentionTime { get; set; }
-        [Category("Replicate")] public double MaxIntensity { get; set; }
-        [Category("Replicate")] public string AcquisitionTime { get; set; }
+        [Category("Replicate")] public string BatchName { get;}
+        [Category("Replicate")] public double? AnalyteConcentration { get;}
+        [Category("Replicate")] public double SampleDilutionFactor { get;}
+        [Category("Replicate")] public string SampleType { get; }
+        [Category("Replicate")] public double MaxRetentionTime { get; }
+        [Category("Replicate")] public double MaxIntensity { get; }
+        [Category("Replicate")] public string AcquisitionTime { get; }
 
         // Replicate Name is editable and updates the document with model.Rename
         [UseCustomHandling]
         [Category("FileInfo")] public override string Name { get; set; }
-
         private readonly Func<SrmDocument, SrmSettingsChangeMonitor, string, ModifiedDocument> _rename;
 
         // Instrument properties need to be added as nested properties, as lists don't render well in PropertyGrid
         [UseCustomHandling]
-        [Category("Instruments")] public List<InstrumentProperties> Instruments { get; set; }
+        [Category("Instruments")] public List<InstrumentProperties> Instruments { get; }
+
+        [UseCustomHandling]
+        [Category("Annotations")] public List<Annotations.Annotation> Annotations { get; }
 
         /// <summary>
         /// Transforms the list of InstrumentProperties into a form that will display better in the property sheet.
@@ -123,6 +126,17 @@ namespace pwiz.Skyline.Model.Files
                         attributes: expandableAttr, 
                         nonLocalizedDisplayName: Instruments[i].Model));
                 }
+            }
+
+            foreach (var annotation in Annotations)
+            {
+                AddProperty(new CustomHandledGlobalizedPropertyDescriptor(
+                    typeof(string),
+                    annotation.Name,
+                    annotation.Value,
+                    GetBaseDescriptorByName(nameof(Annotations)).Category,
+                    GetResourceManager(),
+                    nonLocalizedDisplayName: annotation.Name));
             }
         }
 

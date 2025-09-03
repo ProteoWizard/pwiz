@@ -231,4 +231,7 @@
   <data name="Category_Instruments" xml:space="preserve">
     <value>Instruments</value>
   </data>
+  <data name="Category_Annotations" xml:space="preserve">
+    <value>Annotations</value>
+  </data>
 </root>
