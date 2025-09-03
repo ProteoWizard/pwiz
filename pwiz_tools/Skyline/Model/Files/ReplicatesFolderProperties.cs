@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Model.Files
             FileNum = model.Files.Count;
         }
 
-        [Category("FileInfo")] public int FileNum { get; set; }
+        [Category("FileInfo")] public int FileNum { get; }
 
         // Test Support - enforced by code check
         // Invoked via reflection in InspectPropertySheetResources in CodeInspectionTest

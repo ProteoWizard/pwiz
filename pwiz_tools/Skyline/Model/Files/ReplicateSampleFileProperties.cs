@@ -47,12 +47,12 @@ namespace pwiz.Skyline.Model.Files
             }
         }
 
-        [Category("Replicate")] public double MaxRetentionTime { get; set; }
-        [Category("Replicate")] public double MaxIntensity { get; set; }
-        [Category("Replicate")] public string AcquisitionTime { get; set; }
+        [Category("Replicate")] public double MaxRetentionTime { get; }
+        [Category("Replicate")] public double MaxIntensity { get; }
+        [Category("Replicate")] public string AcquisitionTime { get; }
 
         [UseCustomHandling]
-        [Category("Instruments")] public List<InstrumentProperties> Instruments { get; set; }
+        [Category("Instruments")] public List<InstrumentProperties> Instruments { get; }
 
         /// <summary>
         /// Transforms the list of InstrumentProperties into a form that will display better in the property sheet.

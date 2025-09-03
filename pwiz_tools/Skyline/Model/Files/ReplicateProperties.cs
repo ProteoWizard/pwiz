@@ -64,9 +64,9 @@ namespace pwiz.Skyline.Model.Files
             }
         }
 
-        [Category("Replicate")] public string BatchName { get;}
-        [Category("Replicate")] public double? AnalyteConcentration { get;}
-        [Category("Replicate")] public double SampleDilutionFactor { get;}
+        [Category("Replicate")] public string BatchName { get; }
+        [Category("Replicate")] public double? AnalyteConcentration { get; }
+        [Category("Replicate")] public double SampleDilutionFactor { get; }
         [Category("Replicate")] public string SampleType { get; }
         [Category("Replicate")] public double MaxRetentionTime { get; }
         [Category("Replicate")] public double MaxIntensity { get; }
@@ -81,6 +81,7 @@ namespace pwiz.Skyline.Model.Files
         [UseCustomHandling]
         [Category("Instruments")] public List<InstrumentProperties> Instruments { get; }
 
+        // Annotations need to be added as individual properties under the Annotations category, for the above reason
         [UseCustomHandling]
         [Category("Annotations")] public List<Annotations.Annotation> Annotations { get; }
 
