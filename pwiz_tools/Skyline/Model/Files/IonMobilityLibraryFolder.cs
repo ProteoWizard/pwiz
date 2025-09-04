@@ -15,39 +15,25 @@
  */
 
 using System.Collections.Generic;
-using pwiz.Common.Collections;
-using pwiz.Common.SystemUtil;
+using System.Linq;
 
 namespace pwiz.Skyline.Model.Files
 {
     // .imsdb
     public class IonMobilityLibraryFolder : FileNode
     {
-        private static readonly Identity IMSDB_FOLDER = new StaticFolderId();
+        private static readonly IdentityPath IDENTITY_PATH = new IdentityPath(new StaticFolderId());
 
-        public IonMobilityLibraryFolder(IDocumentContainer documentContainer) : 
-            base(documentContainer, new IdentityPath(IMSDB_FOLDER), ImageId.folder, ImageId.folder_missing)
+        public IonMobilityLibraryFolder(string documentFilePath, IList<IonMobilityLibrary> files) : 
+            base(documentFilePath, IDENTITY_PATH)
         {
+            Files= files.Cast<FileNode>().ToList();
         }
 
-        public override Immutable Immutable => Document.Settings.TransitionSettings;
         public override string Name => SkylineResources.SkylineWindow_FindIonMobilityLibrary_Ion_Mobility_Library;
         public override string FilePath => string.Empty;
-
-        public override IList<FileNode> Files
-        {
-            get
-            {
-                if (Document.Settings.TransitionSettings is { HasIonMobilityLibraryPersisted: true })
-                {
-                    var model = new IonMobilityLibrary(DocumentContainer, Document.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.Id);
-                    return ImmutableList<FileNode>.Singleton(model);
-                }
-                else 
-                {
-                    return ImmutableList.Empty<FileNode>();
-                }
-            }
-        }
+        public override ImageId ImageAvailable => ImageId.folder;
+        public override ImageId ImageMissing => ImageId.folder_missing;
+        public override IList<FileNode> Files { get; }
     }
 }

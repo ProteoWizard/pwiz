@@ -169,7 +169,7 @@ namespace pwiz.SkylineTestFunctional
             // Now, save document to a new location (Save As)
             monitoredPath = Path.Combine(TestFilesDir.FullPath, saveAsFileName);
             RunUI(() => SkylineWindow.SaveDocument(monitoredPath));
-            WaitForCondition(() => File.Exists(monitoredPath) && SkylineWindow.FilesTree.IsMonitoringFileSystem() && SkylineWindow.FilesTree.WaitForEmptyQueue());
+            WaitForFilesTree();
 
             // Check state of files and paths after saving
             var tree = SkylineWindow.FilesTree;
@@ -841,13 +841,7 @@ namespace pwiz.SkylineTestFunctional
         private static void AssertTreeFolderMatchesDocumentAndModel<T>(int expectedCount) 
             where T : FileNode
         {
-            var documentContainer = new MemoryDocumentContainer
-            {
-                DocumentFilePath = SkylineWindow.DocumentFilePath
-            };
-            documentContainer.SetDocument(SkylineWindow.Document, null);
-
-            var filesModel = SkylineFile.Create(documentContainer);
+            var filesModel = SkylineFile.Create(SkylineWindow.Document, SkylineWindow.DocumentFilePath);
 
             IList<IFile> docNodes = typeof(T) switch
             {
@@ -873,24 +867,26 @@ namespace pwiz.SkylineTestFunctional
             {
                 var filesTreeNode = (FilesTreeNode)treeNodes[i];
         
-                Assert.AreSame(docNodes[i], modelNodes[i].Immutable);
-
-                // Temporary debugging in case of potential race condition
-                try
-                {
-                    Assert.AreSame(docNodes[i], filesTreeNode.Model.Immutable);
-                }
-                catch (Exception)
-                {
-                    Console.WriteLine();
-                    Console.WriteLine($@"== Assert.AreSame({docNodes[i].GetType()}, {filesTreeNode.Model.Immutable.GetType()})");
-                    Console.WriteLine($@"== Assert.AreSame({docNodes[i].Name}, {filesTreeNode.Model.Name})");
-                    Console.WriteLine($@"== Assert.AreSame({docNodes[i].Id.GlobalIndex}, {filesTreeNode.Model.IdentityPath.Child.GlobalIndex})");
-                    throw;
-                }
+                // Assert.AreSame(docNodes[i], modelNodes[i].Immutable);
+                //
+                // // Temporary debugging in case of potential race condition
+                // try
+                // {
+                //     Assert.AreSame(docNodes[i], filesTreeNode.Model.Immutable);
+                // }
+                // catch (Exception)
+                // {
+                //     Console.WriteLine();
+                //     Console.WriteLine($@"== Assert.AreSame({docNodes[i].GetType()}, {filesTreeNode.Model.Immutable.GetType()})");
+                //     Console.WriteLine($@"== Assert.AreSame({docNodes[i].Name}, {filesTreeNode.Model.Name})");
+                //     Console.WriteLine($@"== Assert.AreSame({docNodes[i].Id.GlobalIndex}, {filesTreeNode.Model.IdentityPath.Child.GlobalIndex})");
+                //     throw;
+                // }
 
                 Assert.AreEqual(docNodes[i].Id, modelNodes[i].IdentityPath.GetIdentity(0));
                 Assert.AreEqual(docNodes[i].Id, filesTreeNode.Model.IdentityPath.GetIdentity(0));
+
+                // CONSIDER: check the LoadXYZFromDocument(SrmDocument document) functions?
         
                 Assert.AreEqual(docNodes[i].Name, modelNodes[i].Name);
                 Assert.AreEqual(docNodes[i].Name, treeNodes[i].Name);

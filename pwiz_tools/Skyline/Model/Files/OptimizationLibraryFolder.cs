@@ -15,39 +15,25 @@
  */
 
 using System.Collections.Generic;
-using pwiz.Common.Collections;
-using pwiz.Common.SystemUtil;
+using System.Linq;
 
 namespace pwiz.Skyline.Model.Files
 {
     public class OptimizationLibraryFolder : FileNode
     {
         // ReSharper disable once IdentifierTypo
-        private static readonly Identity OPTDB_FOLDER = new StaticFolderId();
+        private static readonly IdentityPath IDENTITY_PATH = new IdentityPath(new StaticFolderId());
 
-        public OptimizationLibraryFolder(IDocumentContainer documentContainer) : 
-            base(documentContainer, new IdentityPath(OPTDB_FOLDER), ImageId.folder, ImageId.folder_missing)
+        public OptimizationLibraryFolder(string documentFilePath, IList<OptimizationLibrary> files) : 
+            base(documentFilePath, IDENTITY_PATH)
         {
+            Files = files.Cast<FileNode>().ToList();
         }
 
-        public override Immutable Immutable => Document.Settings.TransitionSettings;
         public override string Name => FileResources.FileModel_OptimizationLibrary;
         public override string FilePath => string.Empty;
-
-        public override IList<FileNode> Files
-        {
-            get
-            {
-                if (Document.Settings.TransitionSettings is { HasOptimizationLibraryPersisted: true })
-                {
-                    var model = new OptimizationLibrary(DocumentContainer, Document.Settings.TransitionSettings.Prediction.OptimizedLibrary.Id);
-                    return ImmutableList.Singleton<FileNode>(model);
-                }
-                else
-                {
-                    return ImmutableList.Empty<FileNode>();
-                }
-            }
-        }
+        public override ImageId ImageAvailable => ImageId.folder;
+        public override ImageId ImageMissing => ImageId.folder_missing;
+        public override IList<FileNode> Files { get; }
     }
 }

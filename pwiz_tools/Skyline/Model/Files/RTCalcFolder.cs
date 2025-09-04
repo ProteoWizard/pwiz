@@ -15,39 +15,25 @@
  */
 
 using System.Collections.Generic;
-using pwiz.Common.Collections;
-using pwiz.Common.SystemUtil;
+using System.Linq;
 
 namespace pwiz.Skyline.Model.Files
 {
     // .irtdb
     public class RTCalcFolder : FileNode
     {
-        private static readonly Identity RT_CALC_FOLDER = new StaticFolderId();
+        private static readonly IdentityPath IDENTITY_PATH = new IdentityPath(new StaticFolderId());
 
-        public RTCalcFolder(IDocumentContainer documentContainer) :
-            base(documentContainer, new IdentityPath(RT_CALC_FOLDER), ImageId.folder, ImageId.folder_missing)
+        internal RTCalcFolder(string documentFilePath, IList<RTCalc> files) : 
+            base(documentFilePath, IDENTITY_PATH)
         {
+            Files= files.Cast<FileNode>().ToList();
         }
 
-        public override Immutable Immutable => Document.Settings.PeptideSettings;
         public override string Name => SkylineResources.SkylineWindow_FindIrtDatabase_iRT_Calculator;
         public override string FilePath => string.Empty;
-
-        public override IList<FileNode> Files
-        {
-            get
-            {
-                if (Document.Settings.PeptideSettings is { HasRTCalcPersisted: true })
-                {
-                    var model = new RTCalc(DocumentContainer, Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator.Id);
-                    return ImmutableList<FileNode>.Singleton(model);
-                }
-                else
-                {
-                    return ImmutableList.Empty<FileNode>();
-                }
-            }
-        }
+        public override ImageId ImageAvailable => ImageId.folder;
+        public override ImageId ImageMissing => ImageId.folder_missing;
+        public override IList<FileNode> Files { get; }
     }
 }

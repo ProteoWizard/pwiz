@@ -14,44 +14,35 @@
  * limitations under the License.
  */
 
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.Files
 {
     public class ReplicateSampleFile : FileNode
     {
-        public ReplicateSampleFile(IDocumentContainer documentContainer, ChromatogramSetId chromatogramSetId, ChromFileInfoId chromFileInfoId)
-            : base(documentContainer, new IdentityPath(chromatogramSetId, chromFileInfoId), ImageId.replicate_sample_file)
+        public static ReplicateSampleFile Create(string documentFilePath, IdentityPath chromSetId, ChromFileInfo chromFileInfo)
         {
+            var identityPath = new IdentityPath(chromSetId.GetIdentity(0), chromFileInfo.Id); 
+
+            var name = chromFileInfo?.Name ?? string.Empty;
+            var filePath = chromFileInfo?.FilePath.GetFilePath() ?? string.Empty;
+            var fileName = chromFileInfo?.FilePath.GetFileName() ?? string.Empty;
+
+            return new ReplicateSampleFile(documentFilePath, identityPath, name, fileName, filePath);
+        }
+
+        public ReplicateSampleFile(string documentFilePath, IdentityPath identityPath, string name, string fileName, string filePath) : 
+            base(documentFilePath, identityPath) 
+        {
+            Name = name;
+            FileName = fileName;
+            FilePath = filePath;
         }
 
         public override bool IsBackedByFile => true;
-        public override Immutable Immutable => ChromFileInfo;
-        public override string Name => ChromFileInfo?.Name ?? string.Empty;
-        public override string FilePath => ChromFileInfo?.FilePath.GetFilePath() ?? string.Empty;
-        public override string FileName => ChromFileInfo?.FilePath.GetFileName() ?? string.Empty;
-
-        private ChromFileInfo ChromFileInfo
-        {
-            get
-            {
-                var chromSetId = (ChromatogramSetId)IdentityPath.GetIdentity(0);
-                if (DocumentContainer.Document.MeasuredResults.TryGetChromatogramSet(chromSetId.GlobalIndex, out var chromSet, out _))
-                {
-                    var chromFileInfoId = (ChromFileInfoId)IdentityPath.GetIdentity(1);
-                    return chromSet.GetFileInfo(chromFileInfoId);
-                }
-                else return null;
-            }
-        }
-
-        public override bool ModelEquals(FileNode nodeDoc)
-        {
-            if (nodeDoc == null) return false;
-            if (!(nodeDoc is ReplicateSampleFile sampleFile)) return false;
-
-            return ReferenceEquals(ChromFileInfo, sampleFile.ChromFileInfo);
-        }
+        public override string Name { get; }
+        public override string FilePath { get; }
+        public override string FileName { get; }
+        public override ImageId ImageAvailable => ImageId.replicate_sample_file;
     }
 }

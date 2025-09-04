@@ -17,7 +17,6 @@
 using System.Collections.Generic;
 using System.IO;
 using pwiz.Common.Collections;
-using pwiz.Common.SystemUtil;
 
 /*
   (1) How to check whether a file exists in a separate thread? Where to store file states?
@@ -69,32 +68,24 @@ namespace pwiz.Skyline.Model.Files
     {
         public enum MoveType { move_to, move_last }
 
-        protected FileNode(IDocumentContainer documentContainer,
-                           IdentityPath identityPath,
-                           ImageId available = ImageId.file,
-                           ImageId missing = ImageId.file_missing)
+        protected FileNode(string documentFilePath, IdentityPath identityPath)
         {
-            DocumentContainer = documentContainer;
             IdentityPath = identityPath;
-            ImageAvailable = available;
-            ImageMissing = missing;
+            DocumentPath = documentFilePath;
         }
 
-        internal IDocumentContainer DocumentContainer { get; }
-        internal SrmDocument Document => DocumentContainer.Document;
-        internal string DocumentPath => DocumentContainer.DocumentFilePath;
+        internal string DocumentPath { get; }
 
         public IdentityPath IdentityPath { get; }
         public virtual bool IsBackedByFile => false;
         public virtual bool RequiresSavedSkylineDocument => false;
 
-        public abstract Immutable Immutable { get; }
         public abstract string Name { get; }
         public abstract string FilePath { get; }
         public virtual string FileName => Path.GetFileName(FilePath);
 
-        public ImageId ImageAvailable { get; }
-        public ImageId ImageMissing { get; }
+        public virtual ImageId ImageAvailable => ImageId.file; 
+        public virtual ImageId ImageMissing => ImageId.file_missing;
 
         public virtual IList<FileNode> Files => ImmutableList.Empty<FileNode>();
 
@@ -122,14 +113,6 @@ namespace pwiz.Skyline.Model.Files
 
             // This model represents a file expected to be available locally and can be initialized.
             return true;
-        }
-
-        public virtual bool ModelEquals(FileNode nodeDoc)
-        {
-            if (nodeDoc == null) return false;
-            if (GetType() != nodeDoc.GetType()) return false;
-
-            return ReferenceEquals(Immutable, nodeDoc.Immutable);
         }
 
         // If DocumentFilePath is null, document is not saved to disk

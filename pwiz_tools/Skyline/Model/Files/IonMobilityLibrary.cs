@@ -14,31 +14,31 @@
  * limitations under the License.
  */
 
-using pwiz.Common.SystemUtil;
+using System.Collections.Generic;
+using pwiz.Common.Collections;
 
 namespace pwiz.Skyline.Model.Files
 {
     // .imsdb
     public class IonMobilityLibrary : FileNode
     {
-        public IonMobilityLibrary(IDocumentContainer documentContainer, Identity id) : 
-            base(documentContainer, new IdentityPath(id))
+        public static IList<IonMobilityLibrary> Create(string documentFilePath, IonMobility.IonMobilityLibrary imsDb)
         {
+            var identityPath = new IdentityPath(imsDb.Id);
+            var model = new IonMobilityLibrary(documentFilePath, identityPath, imsDb.Name, imsDb.FilePath);
+
+            return ImmutableList<IonMobilityLibrary>.Singleton(model);
+        }
+
+        private IonMobilityLibrary(string documentFilePath, IdentityPath identityPath, string name, string filePath) :
+            base(documentFilePath, identityPath)
+        {
+            Name = name;
+            FilePath = filePath;
         }
 
         public override bool IsBackedByFile => true;
-        public override Immutable Immutable => ImsDb;
-        public override string Name => ImsDb.Name;
-        public override string FilePath => ImsDb.FilePath;
-
-        public override bool ModelEquals(FileNode nodeDoc)
-        {
-            if (nodeDoc == null) return false;
-            if (!(nodeDoc is IonMobilityLibrary library)) return false;
-
-            return ReferenceEquals(ImsDb, library.ImsDb);
-        }
-
-        private IonMobility.IonMobilityLibrary ImsDb => Document.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary;
+        public override string Name { get; }
+        public override string FilePath { get; }
     }
 }
