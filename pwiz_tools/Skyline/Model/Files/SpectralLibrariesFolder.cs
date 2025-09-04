@@ -17,8 +17,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using pwiz.Common.Collections;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
@@ -27,36 +25,24 @@ namespace pwiz.Skyline.Model.Files
 {
     public class SpectralLibrariesFolder : FileNode
     {
-        private static readonly Identity SPECTRAL_LIBRARIES = new StaticFolderId();
+        private static readonly IdentityPath IDENTITY_PATH = new IdentityPath(new StaticFolderId());
 
-        public SpectralLibrariesFolder(IDocumentContainer documentContainer) :
-            base(documentContainer, new IdentityPath(SPECTRAL_LIBRARIES), ImageId.folder, ImageId.folder_missing)
+        public static SpectralLibrariesFolder Create(string documentFilePath, IList<SpectralLibrary> libraries)
         {
+            return new SpectralLibrariesFolder(documentFilePath, libraries);
         }
 
-        public override Immutable Immutable => Document.Settings.PeptideSettings;
+        internal SpectralLibrariesFolder(string documentFilePath, IList<SpectralLibrary> libraries) : 
+            base(documentFilePath, IDENTITY_PATH)
+        {
+            Files = libraries.Cast<FileNode>().ToList();
+        }
+
         public override string Name => FileResources.FileModel_Libraries;
         public override string FilePath => string.Empty;
-
-        public override IList<FileNode> Files
-        {
-            get
-            {
-                if (Document.Settings.PeptideSettings is { HasLibraries: true })
-                {
-                    var model =
-                        Document.Settings.PeptideSettings.Libraries.LibrarySpecs.
-                            Select(library => new SpectralLibrary(DocumentContainer, library.Id)).
-                            ToList<FileNode>();
-
-                    return ImmutableList.ValueOf(model);
-                }
-                else
-                {
-                    return ImmutableList.Empty<FileNode>();
-                }
-            }
-        }
+        public override ImageId ImageAvailable => ImageId.folder;
+        public override ImageId ImageMissing => ImageId.folder_missing;
+        public override IList<FileNode> Files { get; }
 
         public ModifiedDocument DeleteAll(SrmDocument document, SrmSettingsChangeMonitor monitor)
         {

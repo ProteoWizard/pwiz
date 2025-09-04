@@ -16,8 +16,8 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 using pwiz.Common.Collections;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
@@ -26,31 +26,38 @@ namespace pwiz.Skyline.Model.Files
 {
     public class Replicate : FileNode
     {
-        public Replicate(IDocumentContainer documentContainer, ChromatogramSetId chromSetId) : 
-            base(documentContainer, new IdentityPath(chromSetId), ImageId.replicate, ImageId.replicate_missing)
+        public static Replicate Create(string documentFilePath, [NotNull] ChromatogramSet chromSet)
         {
+            var name = chromSet.Name ?? string.Empty;
+            var identityPath = new IdentityPath((ChromatogramSetId)chromSet.Id);
+            var files = 
+                chromSet.MSDataFileInfos.Select(chromFileInfo => ReplicateSampleFile.Create(documentFilePath, identityPath, chromFileInfo)).ToList();
+
+            return new Replicate(documentFilePath, identityPath, name, files);
         }
 
-        public override Immutable Immutable => ChromatogramSet;
+        private Replicate(string documentFilePath, IdentityPath identityPath, string name, IList<ReplicateSampleFile> files) : 
+            base(documentFilePath, identityPath)
+        {
+            Name = name;
+            Files = files.Cast<FileNode>().ToList();
+        }
 
-        // CONSIDER: improve UI if this ChromatogramSet is invalid because the underlying document changed.
-        //           Similar point for properties on all other file model types
-        public override string Name => ChromatogramSet?.Name ?? string.Empty;
+        public override string Name { get; }
         public override string FilePath => null;
         public override string FileName => null;
+        public override ImageId ImageAvailable => ImageId.replicate;
+        public override ImageId ImageMissing => ImageId.replicate_missing;
+        public override IList<FileNode> Files { get; }
 
-        public override IList<FileNode> Files
+        public static ChromatogramSet LoadChromSetFromDocument(SrmDocument document, Replicate replicate)
         {
-            get
-            {
-                var files = ChromatogramSet.MSDataFileInfos.Select(fileInfo =>
-                    new ReplicateSampleFile(DocumentContainer, (ChromatogramSetId)IdentityPath.GetIdentity(0), (ChromFileInfoId)fileInfo.Id));
-
-                return ImmutableList.ValueOf(files.ToList<FileNode>());
-            }
+            var chromSetId = replicate.IdentityPath.GetIdentity(0);
+            document.MeasuredResults.TryGetChromatogramSet(chromSetId.GlobalIndex, out var chromSet, out _);
+            return chromSet;
         }
 
-        public ModifiedDocument Delete(SrmDocument document, SrmSettingsChangeMonitor monitor, List<FileNode> models)
+        public static ModifiedDocument Delete(SrmDocument document, SrmSettingsChangeMonitor monitor, List<FileNode> models)
         {
             var deleteIds = models.Select(model => ReferenceValue.Of(model.IdentityPath.Child)).ToHashSet();
             var deleteNames = models.Select(item => item.Name).ToList();
@@ -79,9 +86,9 @@ namespace pwiz.Skyline.Model.Files
             return new ModifiedDocument(newDocument).ChangeAuditLogEntry(entry);
         }
 
-        public ModifiedDocument Rearrange(SrmDocument document, SrmSettingsChangeMonitor monitor, List<FileNode> draggedModels, FileNode dropModel, MoveType moveType)
+        public static ModifiedDocument Rearrange(SrmDocument document, SrmSettingsChangeMonitor monitor, List<FileNode> draggedModels, FileNode dropModel, MoveType moveType)
         {
-            var draggedChromSets = draggedModels.Cast<Replicate>().Select(model => model.ChromatogramSet).ToList();
+            var draggedChromSets = draggedModels.Cast<Replicate>().Select(model => LoadChromSetFromDocument(document, model)).ToList();
 
             var newChromatograms = document.MeasuredResults.Chromatograms.Except(draggedChromSets).ToList();
 
@@ -89,7 +96,8 @@ namespace pwiz.Skyline.Model.Files
             {
                 case MoveType.move_to:
                 {
-                    var insertAt = newChromatograms.IndexOf(((Replicate)dropModel).ChromatogramSet);
+                    var dropChromSet = LoadChromSetFromDocument(document, (Replicate)dropModel);
+                    var insertAt = newChromatograms.IndexOf(dropChromSet);
                     newChromatograms.InsertRange(insertAt, draggedChromSets);
                     break;
                 }
@@ -108,7 +116,7 @@ namespace pwiz.Skyline.Model.Files
             var entry = AuditLogEntry.CreateCountChangeEntry(
                 MessageType.files_tree_node_drag_and_drop,
                 MessageType.files_tree_nodes_drag_and_drop,
-                Document.DocumentType, 
+                document.DocumentType, 
                 readableNames,
                 readableNames.Count,
                 str => MessageArgs.Create(str, dropModel.Name),
@@ -125,9 +133,9 @@ namespace pwiz.Skyline.Model.Files
             return new ModifiedDocument(newDocument).ChangeAuditLogEntry(entry);
         }
 
-        public ModifiedDocument Rename(SrmDocument document, SrmSettingsChangeMonitor monitor, string newName)
+        public static ModifiedDocument Rename(SrmDocument document, SrmSettingsChangeMonitor monitor, Replicate replicate, string newName)
         {
-            var chromSet = ChromatogramSet;
+            var chromSet = LoadChromSetFromDocument(document, replicate);
 
             var oldName = chromSet.Name;
             var newChromatogram = (ChromatogramSet)chromSet.ChangeName(newName);
@@ -153,24 +161,6 @@ namespace pwiz.Skyline.Model.Files
                 newName);
 
             return new ModifiedDocument(newDocument).ChangeAuditLogEntry(entry);
-        }
-
-        public override bool ModelEquals(FileNode nodeDoc)
-        {
-            if (nodeDoc == null) return false;
-            if (!(nodeDoc is Replicate replicate)) return false;
-
-            return ReferenceEquals(ChromatogramSet, replicate.ChromatogramSet);
-        }
-
-        private ChromatogramSet ChromatogramSet
-        {
-            get
-            {
-                var chromSetId = (ChromatogramSetId)IdentityPath.GetIdentity(0);
-                DocumentContainer.Document.MeasuredResults.TryGetChromatogramSet(chromSetId.GlobalIndex, out var chromSet, out _);
-                return chromSet;
-            }
         }
     }
 }

@@ -17,7 +17,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
@@ -26,17 +25,33 @@ namespace pwiz.Skyline.Model.Files
 {
     public class SpectralLibrary : FileNode
     {
-        public SpectralLibrary(IDocumentContainer documentContainer, Identity libraryId) : 
-            base(documentContainer, new IdentityPath(libraryId), ImageId.peptide_library)
+        public static SpectralLibrary Create(string documentFilePath, LibrarySpec librarySpec)
         {
+            var identityPath = new IdentityPath(librarySpec.Id);
+            var name = librarySpec.Name ?? string.Empty;
+            var filePath = librarySpec.FilePath ?? string.Empty;
+
+            return new SpectralLibrary(documentFilePath, identityPath, name, filePath);
+        }
+
+        internal SpectralLibrary(string documentFilePath, IdentityPath identityPath, string name, string filePath) :
+            base(documentFilePath, identityPath)
+        {
+            Name = name;
+            FilePath = filePath;
         }
 
         public override bool IsBackedByFile => true;
-        public override Immutable Immutable => LibrarySpec;
-        public override string Name => LibrarySpec?.Name ?? string.Empty;
-        public override string FilePath => LibrarySpec?.FilePath ?? string.Empty;
+        public override string Name { get; }
+        public override string FilePath { get; }
+        public override ImageId ImageAvailable => ImageId.peptide_library;
 
-        public ModifiedDocument Delete(SrmDocument document, SrmSettingsChangeMonitor monitor, List<FileNode> models)
+        public static LibrarySpec LoadLibrarySpecFromDocument(SrmDocument document, SpectralLibrary library)
+        {
+            return document.Settings.PeptideSettings.Libraries.FindLibrarySpec(library.IdentityPath.GetIdentity(0));
+        }
+
+        public static ModifiedDocument Delete(SrmDocument document, SrmSettingsChangeMonitor monitor, List<FileNode> models)
         {
             var deleteIds = models.Select(model => ReferenceValue.Of(model.IdentityPath.Child)).ToHashSet();
             var deleteNames = models.Select(item => item.Name).ToList();
@@ -64,9 +79,9 @@ namespace pwiz.Skyline.Model.Files
             return new ModifiedDocument(newDocument).ChangeAuditLogEntry(entry);
         }
 
-        public ModifiedDocument Rearrange(SrmDocument document, SrmSettingsChangeMonitor monitor, List<FileNode> draggedModels, FileNode dropModel, MoveType moveType)
+        public static ModifiedDocument Rearrange(SrmDocument document, SrmSettingsChangeMonitor monitor, List<FileNode> draggedModels, FileNode dropModel, MoveType moveType)
         {
-            var draggedLibraries = draggedModels.Cast<SpectralLibrary>().Select(model => model.LibrarySpec).ToList();
+            var draggedLibraries = draggedModels.Cast<SpectralLibrary>().Select(model => LoadLibrarySpecFromDocument(document, model)).ToList();
 
             var newLibraries = document.Settings.PeptideSettings.Libraries.LibrarySpecs.Except(draggedLibraries).ToList();
 
@@ -74,7 +89,8 @@ namespace pwiz.Skyline.Model.Files
             {
                 case MoveType.move_to:
                 {
-                    var insertAt = newLibraries.IndexOf(((SpectralLibrary)dropModel).LibrarySpec);
+                    var dropLibrarySpec = LoadLibrarySpecFromDocument(document, (SpectralLibrary)dropModel);
+                    var insertAt = newLibraries.IndexOf(dropLibrarySpec);
                     newLibraries.InsertRange(insertAt, draggedLibraries);
                     break;
                 }
@@ -95,7 +111,7 @@ namespace pwiz.Skyline.Model.Files
             var entry = AuditLogEntry.CreateCountChangeEntry(
                 MessageType.files_tree_node_drag_and_drop,
                 MessageType.files_tree_nodes_drag_and_drop,
-                Document.DocumentType,
+                document.DocumentType,
                 readableNames,
                 readableNames.Count,
                 str => MessageArgs.Create(str, dropModel.Name),
@@ -111,15 +127,5 @@ namespace pwiz.Skyline.Model.Files
 
             return new ModifiedDocument(newDocument).ChangeAuditLogEntry(entry);
         }
-
-        public override bool ModelEquals(FileNode nodeDoc)
-        {
-            if (nodeDoc == null) return false;
-            if (!(nodeDoc is SpectralLibrary library)) return false;
-
-            return ReferenceEquals(LibrarySpec, library.LibrarySpec);
-        }
-
-        private LibrarySpec LibrarySpec => Document.Settings.PeptideSettings.Libraries.FindLibrarySpec(IdentityPath.GetIdentity(0));
     }
 }

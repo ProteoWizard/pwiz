@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-using pwiz.Common.SystemUtil;
+using System.Collections.Generic;
+using pwiz.Common.Collections;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Proteome;
 
@@ -22,28 +23,28 @@ namespace pwiz.Skyline.Model.Files
 {
     public class BackgroundProteome : FileNode
     {
-        public BackgroundProteome(IDocumentContainer documentContainer, Identity backgroundProteomeId) : 
-            base(documentContainer, new IdentityPath(backgroundProteomeId))
+        public static IList<BackgroundProteome> Create(string documentFilePath, Proteome.BackgroundProteome proteome)
         {
+            var identityPath = new IdentityPath(proteome.Id);
+            var model = new BackgroundProteome(documentFilePath, identityPath, proteome.Name, proteome.Name, proteome.FilePath);
+
+            return ImmutableList.Singleton(model);
         }
 
-        private Proteome.BackgroundProteome BgProteome => Document.Settings.PeptideSettings.BackgroundProteome;
+        private BackgroundProteome(string documentFilePath, IdentityPath identityPath, string name, string fileName, string filePath) : 
+            base(documentFilePath, identityPath)
+        {
+            Name = name;
+            FileName = fileName;
+            FilePath = filePath;
+        }
 
         public override bool IsBackedByFile => true;
-        public override Immutable Immutable => BgProteome;
-        public override string Name => BgProteome.Name;
-        public override string FilePath => BgProteome.FilePath;
-        public override string FileName => BgProteome.Name;
+        public override string Name { get; }
+        public override string FilePath { get; }
+        public override string FileName { get; }
 
-        public override bool ModelEquals(FileNode nodeDoc)
-        {
-            if (nodeDoc == null) return false;
-            if (!(nodeDoc is BackgroundProteome library)) return false;
-
-            return ReferenceEquals(BgProteome, library.BgProteome);
-        }
-
-        public ModifiedDocument Edit(SrmDocument doc, BackgroundProteomeSpec bgProteomeSpec)
+        public static ModifiedDocument Edit(SrmDocument doc, BackgroundProteomeSpec bgProteomeSpec)
         {
             var newBgProteome = new Proteome.BackgroundProteome(bgProteomeSpec);
 

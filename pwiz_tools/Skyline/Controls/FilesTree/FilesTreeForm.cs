@@ -187,15 +187,16 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         public void OpenEditBackgroundProteomeDialog(FilesTreeNode treeNode)
         {
-            if (!(treeNode.Model is BackgroundProteome { Immutable: Model.Proteome.BackgroundProteome bgProteome } bgProteomeTreeNode))
+            var docBgProteome = SkylineWindow.DocumentUI.Settings.PeptideSettings.BackgroundProteome;
+            if (!treeNode.Model.IdentityPath.GetIdentity(0).GlobalIndex.Equals(docBgProteome.Id.GlobalIndex))
                 return;
 
-            using var editBackgroundProteomeDlg = new BuildBackgroundProteomeDlg(new[] {bgProteome});
-            editBackgroundProteomeDlg.BackgroundProteomeSpec = bgProteome;
+            using var editBackgroundProteomeDlg = new BuildBackgroundProteomeDlg(new[] {docBgProteome});
+            editBackgroundProteomeDlg.BackgroundProteomeSpec = docBgProteome;
             if (editBackgroundProteomeDlg.ShowDialog(this) == DialogResult.OK)
             {
                 var newBgProteome = editBackgroundProteomeDlg.BackgroundProteomeSpec;
-                var modifier = DocumentModifier.Create(doc => bgProteomeTreeNode.Edit(doc, newBgProteome));
+                var modifier = DocumentModifier.Create(doc => BackgroundProteome.Edit(doc, newBgProteome));
 
                 SkylineWindow.ModifyDocument(FilesTreeResources.FilesTreeForm_Update_BackgroundProteome, modifier);
             }
@@ -280,12 +281,12 @@ namespace pwiz.Skyline.Controls.FilesTree
                         // The selected nodes could include sample files. If so, remove them so the list is only Replicates, which
                         // makes the Audit Log messages more consistent.
                         var deletedModels = nodes.Select(item => item.Model).OfType<Replicate>().Cast<FileNode>().ToList();
-                        modifiedDoc = replicate.Delete(originalDoc, monitor, deletedModels);
+                        modifiedDoc = Replicate.Delete(originalDoc, monitor, deletedModels);
                     }
                     else if (model is SpectralLibrary library)
                     {
                         var deletedModels = nodes.Select(item => item.Model).ToList();
-                        modifiedDoc = library.Delete(originalDoc, monitor, deletedModels);
+                        modifiedDoc = SpectralLibrary.Delete(originalDoc, monitor, deletedModels);
                     }
                 });
 
@@ -317,7 +318,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 {
                     using var monitor = new SrmSettingsChangeMonitor(progressMonitor, longWaitDlg.Text, SkylineWindow);
 
-                    modifiedDoc = replicate.Rename(originalDoc, monitor, newLabel);
+                    modifiedDoc = Replicate.Rename(originalDoc, monitor, replicate, newLabel);
                 });
 
                 SkylineWindow.ModifyDocument(FilesTreeResources.Change_ReplicateName, DocumentModifier.FromResult(originalDoc, modifiedDoc));
@@ -350,13 +351,13 @@ namespace pwiz.Skyline.Controls.FilesTree
                     {
                         using var monitor = new SrmSettingsChangeMonitor(progressMonitor, longWaitDlg.Text, SkylineWindow);
 
-                        if (primaryDraggedNode.Model is Replicate replicate)
+                        if (primaryDraggedNode.Model is Replicate)
                         {
-                            modifiedDoc = replicate.Rearrange(originalDoc, monitor, draggedModels, dropNode.Model, moveType);
+                            modifiedDoc = Replicate.Rearrange(originalDoc, monitor, draggedModels, dropNode.Model, moveType);
                         }
-                        else if (primaryDraggedNode.Model is SpectralLibrary library)
+                        else if (primaryDraggedNode.Model is SpectralLibrary)
                         {
-                            modifiedDoc = library.Rearrange(originalDoc, monitor, draggedModels, dropNode.Model, moveType);
+                            modifiedDoc = SpectralLibrary.Rearrange(originalDoc, monitor, draggedModels, dropNode.Model, moveType);
                         }
                     });
 

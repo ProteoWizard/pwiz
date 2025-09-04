@@ -14,33 +14,31 @@
  * limitations under the License.
  */
 
-using System;
-using pwiz.Common.SystemUtil;
-
 namespace pwiz.Skyline.Model.Files
 {
     public class SkylineAuditLog : FileNode
     {
-        private static readonly Identity AUDIT_LOG_FILE = new StaticFolderId();
+        private static readonly IdentityPath IDENTITY_PATH = new IdentityPath(new StaticFolderId());
 
-        public SkylineAuditLog(IDocumentContainer documentContainer) : 
-            base(documentContainer, new IdentityPath(AUDIT_LOG_FILE), ImageId.audit_log)
+        public static SkylineAuditLog Create(SrmDocument document, string documentFilePath)
         {
+            var name = FileResources.FilesTree_AuditLog;
+            var filePath = SrmDocument.GetAuditLogPath(documentFilePath);
+
+            return new SkylineAuditLog(documentFilePath, name, filePath);
+        }
+
+        internal SkylineAuditLog(string documentFilePath, string name, string filePath) : base(documentFilePath, IDENTITY_PATH)
+        {
+            Name = name;
+            FilePath = filePath;
         }
 
         public override bool IsBackedByFile => true;
         public override bool RequiresSavedSkylineDocument => true;
 
-        public override Immutable Immutable => new Immutable();
-        public override string Name => FileResources.FilesTree_AuditLog;
-        public override string FilePath => SrmDocument.GetAuditLogPath(DocumentPath);
-
-        public override bool ModelEquals(FileNode nodeDoc)
-        {
-            if (nodeDoc == null) return false;
-            if (!(nodeDoc is SkylineAuditLog)) return false;
-        
-            return string.Equals(DocumentPath, nodeDoc.DocumentPath, StringComparison.OrdinalIgnoreCase);
-        }
+        public override string Name { get; }
+        public override string FilePath { get; }
+        public override ImageId ImageAvailable => ImageId.audit_log;
     }
 }
