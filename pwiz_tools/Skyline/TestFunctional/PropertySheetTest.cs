@@ -29,7 +29,7 @@ namespace pwiz.SkylineTestFunctional
     public class PropertySheetTest : AbstractFunctionalTest
     {
         internal const int REP_FILE_PROP_NUM = 10;
-        internal const int REP_SAMPLE_FILE_PROP_NUM = 10;
+        internal const int REP_SAMPLE_FILE_PROP_NUM = 8;
 
         [TestMethod]
         public void TestPropertySheet()

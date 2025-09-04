@@ -425,7 +425,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         public GlobalizedObject GetSelectedObjectProperties()
         {
             var filesTreeNodeSelected = FilesTree.SelectedNodeFTN;
-            return filesTreeNodeSelected.GetProperties(SkylineWindow.Document);
+            return filesTreeNodeSelected?.GetProperties(SkylineWindow.Document);
         }
 
         #endregion
