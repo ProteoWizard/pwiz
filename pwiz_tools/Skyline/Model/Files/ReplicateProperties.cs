@@ -25,6 +25,7 @@ using System.Linq;
 using System.Resources;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Files
 {
@@ -42,7 +43,16 @@ namespace pwiz.Skyline.Model.Files
             AnalyteConcentration = chromSet.AnalyteConcentration;
             SampleDilutionFactor = chromSet.SampleDilutionFactor;
             SampleType = chromSet.SampleType.ToString();
-            Annotations = chromSet.Annotations.AnnotationsEnumerable.ToList();
+
+            Annotations = new List<Annotations.Annotation>();
+            foreach (var annotationDef in Settings.Default.AnnotationDefList)
+            {
+                if (annotationDef.AnnotationTargets.Contains(AnnotationDef.AnnotationTarget.replicate))
+                {
+                    Annotations.Add(new Annotations.Annotation(new KeyValuePair<string, string>(
+                        annotationDef.Name, chromSet.Annotations.GetAnnotation(annotationDef.Name))));
+                }
+            }
 
             var dataFileInfo = chromSet.MSDataFileInfos;
             if (dataFileInfo.Count == 1)
