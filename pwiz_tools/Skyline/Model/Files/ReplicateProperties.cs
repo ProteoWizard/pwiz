@@ -30,19 +30,21 @@ namespace pwiz.Skyline.Model.Files
 {
     public class ReplicateProperties : FileNodeProperties
     {
-        public ReplicateProperties(Replicate model, string localFilePath)
+        public ReplicateProperties(SrmDocument document, Replicate model, string localFilePath)
             : base(model, localFilePath)
         {
             Assume.IsNotNull(model);
-            _rename = model.Rename;
+            var chromSet = Replicate.LoadChromSetFromDocument(document, model);
 
-            BatchName = model.BatchName;
-            AnalyteConcentration = model.AnalyteConcentration;
-            SampleDilutionFactor = model.SampleDilutionFactor;
-            SampleType = model.SampleType;
-            Annotations = model.Annotations.AnnotationsEnumerable.ToList();
+            _rename = (doc, monitor, newValue) => Replicate.Rename(doc, monitor, model, newValue);
 
-            var dataFileInfo = model.MSDataFileInfos;
+            BatchName = chromSet.BatchName;
+            AnalyteConcentration = chromSet.AnalyteConcentration;
+            SampleDilutionFactor = chromSet.SampleDilutionFactor;
+            SampleType = chromSet.SampleType.ToString();
+            Annotations = chromSet.Annotations.AnnotationsEnumerable.ToList();
+
+            var dataFileInfo = chromSet.MSDataFileInfos;
             if (dataFileInfo.Count == 1)
             {
                 MaxRetentionTime = dataFileInfo[0].MaxRetentionTime;

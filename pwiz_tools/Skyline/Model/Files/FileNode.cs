@@ -92,7 +92,7 @@ namespace pwiz.Skyline.Model.Files
         public override string ToString() => @$"{GetType().Name}: " + (Name ?? string.Empty);
 
         // All implementers should override
-        public virtual GlobalizedObject GetProperties(string localFilePath)
+        public virtual GlobalizedObject GetProperties(SrmDocument document, string localFilePath)
         {
             return null;
         }

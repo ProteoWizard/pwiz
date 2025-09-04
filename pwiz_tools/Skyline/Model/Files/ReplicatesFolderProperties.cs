@@ -21,7 +21,6 @@ using JetBrains.Annotations;
 using pwiz.Common.SystemUtil;
 using System.ComponentModel;
 using System.Resources;
-using System.Runtime.InteropServices;
 
 namespace pwiz.Skyline.Model.Files
 {

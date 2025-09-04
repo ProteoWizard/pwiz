@@ -73,9 +73,9 @@ namespace pwiz.Skyline.Controls.FilesTree
         public FilesTree FilesTree => (FilesTree)TreeView;
         public FilesTreeNode ParentFTN => (FilesTreeNode)Parent;
 
-        public GlobalizedObject GetProperties()
+        public GlobalizedObject GetProperties(SrmDocument document)
         {
-            return Model.GetProperties(LocalFilePath);
+            return Model.GetProperties(document, LocalFilePath);
         }
 
         /// <summary>

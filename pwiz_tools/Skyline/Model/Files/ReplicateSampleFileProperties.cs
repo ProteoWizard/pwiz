@@ -29,16 +29,17 @@ namespace pwiz.Skyline.Model.Files
 {
     public class ReplicateSampleFileProperties : FileNodeProperties
     {
-        public ReplicateSampleFileProperties(ReplicateSampleFile model, string localFilePath)
+        public ReplicateSampleFileProperties(SrmDocument document, ReplicateSampleFile model, string localFilePath)
             : base(model, localFilePath)
         {
             Assume.IsNotNull(model);
+            var chromFileInfo = ReplicateSampleFile.LoadChromFileInfoFromDocument(document, model);
 
-            MaxRetentionTime = model.MaxRetentionTime;
-            MaxIntensity = model.MaxIntensity;
-            AcquisitionTime = model.AcquisitionTime.ToString();
+            MaxRetentionTime = chromFileInfo.MaxRetentionTime;
+            MaxIntensity = chromFileInfo.MaxIntensity;
+            AcquisitionTime = chromFileInfo.RunStartTime?.ToString();
 
-            var instrumentInfo = model.InstrumentInfoList;
+            var instrumentInfo = chromFileInfo.InstrumentInfoList;
             if (instrumentInfo.Count > 0)
             {
                 Instruments = instrumentInfo
