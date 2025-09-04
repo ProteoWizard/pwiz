@@ -14,56 +14,50 @@
  * limitations under the License.
  */
 
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results;
-using System;
-using System.Collections.Generic;
-using pwiz.ProteowizardWrapper;
 
 namespace pwiz.Skyline.Model.Files
 {
     public class ReplicateSampleFile : FileNode
     {
-        public ReplicateSampleFile(IDocumentContainer documentContainer, ChromatogramSetId chromatogramSetId, ChromFileInfoId chromFileInfoId)
-            : base(documentContainer, new IdentityPath(chromatogramSetId, chromFileInfoId), ImageId.replicate_sample_file)
+        public static ReplicateSampleFile Create(string documentFilePath, IdentityPath chromSetId, ChromFileInfo chromFileInfo)
         {
+            var identityPath = new IdentityPath(chromSetId.GetIdentity(0), chromFileInfo.Id); 
+
+            var name = chromFileInfo?.Name ?? string.Empty;
+            var filePath = chromFileInfo?.FilePath.GetFilePath() ?? string.Empty;
+            var fileName = chromFileInfo?.FilePath.GetFileName() ?? string.Empty;
+
+            return new ReplicateSampleFile(documentFilePath, identityPath, name, fileName, filePath);
         }
 
-        public override bool IsBackedByFile => true;
-        public override Immutable Immutable => ChromFileInfo;
-        public override string Name => ChromFileInfo?.Name ?? string.Empty;
-        public override string FilePath => ChromFileInfo?.FilePath.GetFilePath() ?? string.Empty;
-        public override string FileName => ChromFileInfo?.FilePath.GetFileName() ?? string.Empty;
-        public double MaxRetentionTime => ChromFileInfo.MaxRetentionTime;
-        public double MaxIntensity => ChromFileInfo.MaxIntensity;
-        public DateTime? AcquisitionTime => ChromFileInfo.RunStartTime;
-        public IList<MsInstrumentConfigInfo> InstrumentInfoList => ChromFileInfo.InstrumentInfoList;
-
-        private ChromFileInfo ChromFileInfo
+        public ReplicateSampleFile(string documentFilePath, IdentityPath identityPath, string name, string fileName, string filePath) : 
+            base(documentFilePath, identityPath) 
         {
-            get
+            Name = name;
+            FileName = fileName;
+            FilePath = filePath;
+        }
+
+        public override string Name { get; }
+        public override string FilePath { get; }
+        public override string FileName { get; }
+        public override ImageId ImageAvailable => ImageId.replicate_sample_file;
+
+        public static ChromFileInfo LoadChromFileInfoFromDocument(SrmDocument document, ReplicateSampleFile replicateSampleFile)
+        {
+            var chromSetId = replicateSampleFile.IdentityPath.GetIdentity(0);
+            if (document.MeasuredResults.TryGetChromatogramSet(chromSetId.GlobalIndex, out var chromSet, out _))
             {
-                var chromSetId = (ChromatogramSetId)IdentityPath.GetIdentity(0);
-                if (DocumentContainer.Document.MeasuredResults.TryGetChromatogramSet(chromSetId.GlobalIndex, out var chromSet, out _))
-                {
-                    var chromFileInfoId = (ChromFileInfoId)IdentityPath.GetIdentity(1);
-                    return chromSet.GetFileInfo(chromFileInfoId);
-                }
-                else return null;
+                var chromFileInfoId = (ChromFileInfoId)replicateSampleFile.IdentityPath.GetIdentity(1);
+                return chromSet.GetFileInfo(chromFileInfoId);
             }
+            else return null;
         }
 
-        public override GlobalizedObject GetProperties(string localFilePath)
+        public override GlobalizedObject GetProperties(SrmDocument document, string localFilePath)
         {
-            return new ReplicateSampleFileProperties(this, localFilePath);
-        }
-
-        public override bool ModelEquals(FileNode nodeDoc)
-        {
-            if (nodeDoc == null) return false;
-            if (!(nodeDoc is ReplicateSampleFile sampleFile)) return false;
-
-            return ReferenceEquals(ChromFileInfo, sampleFile.ChromFileInfo);
+            return new ReplicateSampleFileProperties(document, this, localFilePath);
         }
     }
 }

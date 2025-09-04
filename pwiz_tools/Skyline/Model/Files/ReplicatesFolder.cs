@@ -16,45 +16,27 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using pwiz.Common.Collections;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.Files
 {
     public class ReplicatesFolder : FileNode
     {
-        private static readonly Identity REPLICATES = new StaticFolderId();
+        private static readonly IdentityPath IDENTITY_PATH = new IdentityPath(new StaticFolderId());
 
-        public ReplicatesFolder(IDocumentContainer documentContainer) : 
-            base(documentContainer, new IdentityPath(REPLICATES), ImageId.folder, ImageId.folder_missing)
+        public ReplicatesFolder(string documentFilePath, IList<Replicate> files) : 
+            base(documentFilePath, IDENTITY_PATH)
         {
+            Files = files.Cast<FileNode>().ToList();
         }
 
-        public override Immutable Immutable => Document.Settings.MeasuredResults;
         public override string Name => FileResources.FileModel_Replicates;
         public override string FilePath => string.Empty;
         public override string FileName => string.Empty;
-
-        public override IList<FileNode> Files
-        {
-            get
-            {
-                if (Document.MeasuredResults == null || Document.MeasuredResults.IsEmpty)
-                {
-                    return ImmutableList.Empty<FileNode>(); 
-                }
-                else
-                {
-                    var files = 
-                        Document.MeasuredResults.Chromatograms.Select(chromatogramSet => new Replicate(DocumentContainer, (ChromatogramSetId)chromatogramSet.Id));
-
-                    return ImmutableList.ValueOf(files.ToList<FileNode>());
-                }
-            }
-        }
+        public override ImageId ImageAvailable => ImageId.folder;
+        public override ImageId ImageMissing => ImageId.folder_missing;
+        public override IList<FileNode> Files { get; }
 
         public override GlobalizedObject GetProperties(string localFilePath)
         {

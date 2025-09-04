@@ -69,8 +69,6 @@ namespace pwiz.Skyline.Controls.FilesTree
         
         public bool HasTip => true;
 
-        internal string DocumentPath => Model.DocumentPath;
-
         // Convenience to avoid casts
         public FilesTree FilesTree => (FilesTree)TreeView;
         public FilesTreeNode ParentFTN => (FilesTreeNode)Parent;
@@ -93,7 +91,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             Assume.IsTrue(Model.IsBackedByFile);
 
-            LocalFilePath = LookForFileInPotentialLocations(FilePath, FileName, DocumentPath);
+            LocalFilePath = LookForFileInPotentialLocations(FilePath, FileName, Model.DocumentPath);
 
             // After enabling the audit log, the file only exists in-memory until the document is saved.
             // So assume that's what's happening if LocalFilePath is null.
@@ -282,7 +280,8 @@ namespace pwiz.Skyline.Controls.FilesTree
                 var msg = Model.IsBackedByFile ? $@"{FileState}" : @"Not backed by local file";
                 customTable.AddDetailRow(@"FileState", msg, rt);
 
-                customTable.AddDetailRow(@"Document revision", $@"{Model.Document.RevisionIndex}", rt);
+                // TODO: re-enable
+                // customTable.AddDetailRow(@"Document revision", $@"{Model.Document.RevisionIndex}", rt);
             }
 
             var size = customTable.CalcDimensions(g);

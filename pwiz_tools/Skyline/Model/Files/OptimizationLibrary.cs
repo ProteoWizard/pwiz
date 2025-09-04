@@ -14,31 +14,30 @@
  * limitations under the License.
  */
 
-using pwiz.Common.SystemUtil;
+using System.Collections.Generic;
+using pwiz.Common.Collections;
 
 namespace pwiz.Skyline.Model.Files
 {
     public class OptimizationLibrary : FileNode
     {
-        public OptimizationLibrary(IDocumentContainer documentContainer, Identity optimizedLibraryId) : 
-            base(documentContainer, new IdentityPath(optimizedLibraryId))
+        public static IList<OptimizationLibrary> Create(string documentFilePath, Optimization.OptimizationLibrary predictionOptimizedLibrary)
         {
+            var identityPath = new IdentityPath(predictionOptimizedLibrary.Id);
+            var model = new OptimizationLibrary(documentFilePath, identityPath, predictionOptimizedLibrary.Name, predictionOptimizedLibrary.FilePath);
+
+            return ImmutableList<OptimizationLibrary>.Singleton(model);
+        }
+
+        private OptimizationLibrary(string documentFilePath, IdentityPath identityPath, string name, string filePath) : 
+            base(documentFilePath, identityPath)
+        {
+            Name = name;
+            FilePath = filePath;
         }
 
         public override bool IsBackedByFile => true;
-        public override Immutable Immutable => OptLibrary;
-        public override string Name => OptLibrary.Name;
-        public override string FilePath => OptLibrary.FilePath;
-
-        public override bool ModelEquals(FileNode nodeDoc)
-        {
-            if (nodeDoc == null) return false;
-            if (!(nodeDoc is OptimizationLibrary library)) return false;
-
-            return ReferenceEquals(OptLibrary, library.OptLibrary);
-        }
-
-        private Optimization.OptimizationLibrary OptLibrary => 
-            Document.Settings.TransitionSettings.Prediction.OptimizedLibrary;
+        public override string Name { get; }
+        public override string FilePath { get; }
     }
 }

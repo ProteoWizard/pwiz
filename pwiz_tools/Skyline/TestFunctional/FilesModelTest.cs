@@ -18,7 +18,6 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
-using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Files;
 using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
@@ -44,13 +43,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForOpenForm<SkylineWindow>();
             WaitForDocumentLoaded();
 
-            var documentContainer = new MemoryDocumentContainer
-            {
-                DocumentFilePath = documentPath
-            };
-            documentContainer.SetDocument(SkylineWindow.Document, null);
-
-            var modelFiles = SkylineFile.Create(documentContainer);
+            var modelFiles = SkylineFile.Create(SkylineWindow.Document, documentPath);
 
             var docSettings = SkylineWindow.Document.Settings;
 
@@ -70,9 +63,9 @@ namespace pwiz.SkylineTestFunctional
             var modelReplicate = modelReplicatesFolder.Files[0];
 
             Assert.IsInstanceOfType(modelReplicate, typeof(Replicate));
-            Assert.AreSame(docReplicate, modelReplicate.Immutable);
-            Assert.AreEqual(docReplicate.FileCount, modelReplicate.Files.Count);
             Assert.AreEqual(docReplicate.Id, modelReplicate.IdentityPath.GetIdentity(0));
+            Assert.AreEqual(docReplicate, Replicate.LoadChromSetFromDocument(SkylineWindow.Document, (Replicate)modelReplicate));
+            Assert.AreEqual(docReplicate.FileCount, modelReplicate.Files.Count);
             Assert.AreEqual(docReplicate.Name, modelReplicate.Name);
             Assert.AreEqual(Path.GetFileName(docReplicate.FilePath), modelReplicate.FileName);
             Assert.AreEqual(docSettings.MeasuredResults.Chromatograms[0].FilePath, modelReplicate.FilePath);
@@ -85,7 +78,6 @@ namespace pwiz.SkylineTestFunctional
             var modelSampleFile = modelReplicate.Files[0];
 
             Assert.IsInstanceOfType(modelSampleFile, typeof(ReplicateSampleFile));
-            Assert.AreSame(docSampleFile, modelSampleFile.Immutable);
             Assert.AreEqual(docSampleFile.Id, modelSampleFile.IdentityPath.GetIdentity(1));
             Assert.AreEqual(docSampleFile.Name, modelSampleFile.Name);
             Assert.AreEqual(docSampleFile.FilePath.GetFilePath(), modelSampleFile.FilePath);
@@ -104,8 +96,8 @@ namespace pwiz.SkylineTestFunctional
             var modelLibrary = modelLibrariesFolder.Files[0];
 
             Assert.IsInstanceOfType(modelLibrary, typeof(SpectralLibrary));
-            Assert.AreSame(docSettings.PeptideSettings.Libraries.LibrarySpecs[0], modelLibrary.Immutable);
             Assert.AreEqual(docLibrary.Id, modelLibrary.IdentityPath.GetIdentity(0));
+            Assert.AreSame(docLibrary, SpectralLibrary.LoadLibrarySpecFromDocument(SkylineWindow.Document, (SpectralLibrary)modelLibrary));
             Assert.AreEqual(docLibrary.Name, modelLibrary.Name);
             Assert.AreEqual(docLibrary.FilePath, modelLibrary.FilePath);
 
@@ -115,8 +107,8 @@ namespace pwiz.SkylineTestFunctional
             docLibrary = docSettings.PeptideSettings.Libraries.LibrarySpecs[1];
             modelLibrary = modelLibrariesFolder.Files[1];
 
-            Assert.AreSame(docLibrary, modelLibrary.Immutable);
             Assert.AreEqual(docSettings.PeptideSettings.Libraries.LibrarySpecs[1].Id, modelLibrary.IdentityPath.GetIdentity(0));
+            Assert.AreSame(docLibrary, SpectralLibrary.LoadLibrarySpecFromDocument(SkylineWindow.Document, (SpectralLibrary)modelLibrary));
             Assert.AreEqual(docSettings.PeptideSettings.Libraries.LibrarySpecs[1].Name, modelLibrary.Name);
             Assert.AreEqual(docSettings.PeptideSettings.Libraries.LibrarySpecs[1].FilePath, modelLibrary.FilePath);
 
@@ -138,13 +130,7 @@ namespace pwiz.SkylineTestFunctional
                 });
             });
 
-            documentContainer = new MemoryDocumentContainer
-            {
-                DocumentFilePath = documentPath
-            };
-            documentContainer.SetDocument(SkylineWindow.Document, null);
-
-            modelFiles = SkylineFile.Create(documentContainer);
+            modelFiles = SkylineFile.Create(SkylineWindow.Document, documentPath);
             docSettings = SkylineWindow.Document.Settings;
 
             var newDocReplicate = docSettings.MeasuredResults.Chromatograms[0];
@@ -154,8 +140,8 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(docReplicate.Id, newModelReplicate.IdentityPath.GetIdentity(0));
             Assert.AreEqual(newDocReplicate.Id, newModelReplicate.IdentityPath.GetIdentity(0));
 
-            Assert.AreNotSame(docReplicate, newModelReplicate.Immutable);
-            Assert.AreSame(newDocReplicate, newModelReplicate.Immutable);
+            Assert.AreNotSame(docReplicate, Replicate.LoadChromSetFromDocument(SkylineWindow.Document, (Replicate)newModelReplicate));
+            Assert.AreSame(newDocReplicate, Replicate.LoadChromSetFromDocument(SkylineWindow.Document, (Replicate)newModelReplicate));
 
             Assert.AreEqual(newDocReplicate.FileCount, newModelReplicate.Files.Count);
             Assert.AreEqual(newChromatogramName, newDocReplicate.Name);

@@ -14,24 +14,29 @@
  * limitations under the License.
  */
 
-using pwiz.Common.SystemUtil;
+using System.Collections.Generic;
+using pwiz.Common.Collections;
 using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.Files
 {
     public class RTCalc : FileNode
     {
-        public RTCalc(IDocumentContainer documentContainer, Identity id) : 
-            base(documentContainer, new IdentityPath(id))
+        public static IList<RTCalc> Create(string documentFilePath, RetentionScoreCalculatorSpec irtDb)
         {
+            var identityPath = new IdentityPath(irtDb.Id);
+            return ImmutableList<RTCalc>.Singleton(new RTCalc(documentFilePath, identityPath, irtDb.Name, irtDb.FilePath));
+        }
+
+        private RTCalc(string documentFilePath, IdentityPath identityPath, string name, string filePath) : 
+            base(documentFilePath, identityPath)
+        {
+            Name = name;
+            FilePath = filePath;
         }
 
         public override bool IsBackedByFile => true;
-        public override Immutable Immutable => IrtDb;
-        public override string Name => IrtDb.Name;
-        public override string FilePath => IrtDb.FilePath;
-
-        private RetentionScoreCalculatorSpec IrtDb => 
-            Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator;
+        public override string Name { get; }
+        public override string FilePath { get; }
     }
 }

@@ -18,57 +18,72 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using pwiz.Common.Collections;
-using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.Files
 {
     public class SkylineFile : FileNode
     {
-        public static SkylineFile Create(IDocumentContainer documentContainer)
+        public static SkylineFile Create(SrmDocument document, string documentFilePath) 
         {
-            return new SkylineFile(documentContainer);
-        }
+            string name, fileName, filePath;
 
-        private SkylineFile(IDocumentContainer documentContainer) :
-            base(documentContainer, IdentityPath.ROOT, ImageId.skyline)
-        {
-            if (IsDocumentSavedToDisk())
+            if (IsDocumentSavedToDisk(documentFilePath))
             {
-                Name = FileName = Path.GetFileName(documentContainer.DocumentFilePath);
-                FilePath = documentContainer.DocumentFilePath;
+                var justFileName = Path.GetFileName(documentFilePath);
+
+                name = justFileName;
+                fileName = justFileName;
+                filePath = documentFilePath;
             }
             else
             {
-                Name = FileResources.FileModel_NewDocument;
-                FilePath = null;
-                FileName = null;
+                name = FileResources.FileModel_NewDocument;
+                filePath = null;
+                fileName = null;
             }
 
-            Files = ImmutableList.ValueOf(BuildFileList());
+            var files = BuildFromDocument(document, documentFilePath);
+
+            return new SkylineFile(documentFilePath, name, fileName, filePath, files);
+        }
+
+        private SkylineFile(string documentFilePath, string name, string fileName, string filePath, IList<FileNode> files) :
+            base(documentFilePath, IdentityPath.ROOT)
+        {
+            Name = name;
+            FileName = fileName;
+            FilePath = filePath;
+            Files = files;
         }
 
         public override bool IsBackedByFile => true;
         public override bool RequiresSavedSkylineDocument => true;
-        public override Immutable Immutable => new Immutable();
         public override string Name { get; }
         public override string FilePath { get; }
         public override string FileName { get; }
         public override IList<FileNode> Files { get; }
+        public override ImageId ImageAvailable => ImageId.skyline;
 
         public FileNode Folder<T>() where T : FileNode
         {
             return Files.OfType<T>().FirstOrDefault();
         }
 
-        private IEnumerable<FileNode> BuildFileList()
+        private static IList<FileNode> BuildFromDocument(SrmDocument document, string documentFilePath)
         {
             var list = new List<FileNode>();
 
-            if (Document.Settings.DataSettings.IsAuditLoggingEnabled)
-                list.Add(new SkylineAuditLog(DocumentContainer));
-            
-            if (IsDocumentSavedToDisk())
-                list.Add(new SkylineViewFile(DocumentContainer));
+            if (document.Settings.DataSettings.IsAuditLoggingEnabled)
+            {
+                var log = SkylineAuditLog.Create(document, documentFilePath);
+                list.Add(log);
+            }
+
+            if (IsDocumentSavedToDisk(documentFilePath))
+            {
+                var view = SkylineViewFile.Create(document, documentFilePath);
+                list.Add(view);
+            }
 
             // TODO: put Chromatogram Cache (.skyd) back in the tree - maybe in the Replicates\ folder?
             // CONSIDER: is this correct? See more where Cache files are created in MeasuredResults @ line 1640
@@ -80,43 +95,61 @@ namespace pwiz.Skyline.Model.Files
             //     list.AddRange(cachePaths.Select(_ => new SkylineChromatogramCache(DocumentContainer)));
             // }
 
-            FileNode files = new ReplicatesFolder(DocumentContainer);
-            if (files.Files.Count > 0)
-            {
-                list.Add(files);
+            { // Replicates
+                var measuredResults = document.MeasuredResults;
+                if (measuredResults is { IsEmpty: false })
+                {
+                    var files = measuredResults.Chromatograms.Select(chromatogramSet => Replicate.Create(documentFilePath, chromatogramSet)).ToList();
+                    var folder = new ReplicatesFolder(documentFilePath, files);
+
+                    list.Add(folder);
+                }
             }
 
-            files = new SpectralLibrariesFolder(DocumentContainer);
-            if (files.Files.Count > 0)
-            {
-                list.Add(files);
+            { // SpectralLibraries
+                var peptideSettings = document.Settings.PeptideSettings;
+                if (peptideSettings is { HasLibraries: true })
+                {
+                    var files = peptideSettings.Libraries.LibrarySpecs.Select(library => SpectralLibrary.Create(documentFilePath, library)).ToList();
+                    var folder = new SpectralLibrariesFolder(documentFilePath, files);
+
+                    list.Add(folder);
+                }
             }
 
-            files = new BackgroundProteomeFolder(DocumentContainer);
-            if (files.Files.Count > 0)
+            if (document.Settings.PeptideSettings is { HasBackgroundProteome: true })
             {
-                list.Add(files);
+                var file = BackgroundProteome.Create(documentFilePath, document.Settings.PeptideSettings.BackgroundProteome);
+                var folder = new BackgroundProteomeFolder(documentFilePath, file);
+
+                list.Add(folder);
             }
 
-            files = new RTCalcFolder(DocumentContainer);
-            if (files.Files.Count > 0)
+            if (document.Settings.PeptideSettings is { HasRTCalcPersisted: true })
             {
-                list.Add(files);
+                var file = RTCalc.Create(documentFilePath, document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator);
+                var folder = new RTCalcFolder(documentFilePath, file);
+
+                list.Add(folder);
             }
 
-            files = new IonMobilityLibraryFolder(DocumentContainer);
-            if (files.Files.Count > 0)
+            if (document.Settings.TransitionSettings is { HasIonMobilityLibraryPersisted: true })
             {
-                list.Add(files);
+                var file = IonMobilityLibrary.Create(documentFilePath, document.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary);
+                var folder = new IonMobilityLibraryFolder(documentFilePath, file);
+
+                list.Add(folder);
             }
 
-            files = new OptimizationLibraryFolder(DocumentContainer);
-            if (files.Files.Count > 0)
+            if (document.Settings.TransitionSettings is { HasOptimizationLibraryPersisted: true })
             {
-                list.Add(files);
+                var file = OptimizationLibrary.Create(documentFilePath, document.Settings.TransitionSettings.Prediction.OptimizedLibrary);
+                var folder = new OptimizationLibraryFolder(documentFilePath, file);
+
+                list.Add(folder);
             }
 
-            return list;
+            return ImmutableList.ValueOf(list);
         }
     }
 }

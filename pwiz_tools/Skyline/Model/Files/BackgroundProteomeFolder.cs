@@ -15,37 +15,25 @@
  */
 
 using System.Collections.Generic;
-using pwiz.Common.Collections;
-using pwiz.Common.SystemUtil;
+using System.Linq;
 
 namespace pwiz.Skyline.Model.Files
 {
     public class BackgroundProteomeFolder : FileNode
     {
-        private static readonly Identity BACKGROUND_PROTEOME = new StaticFolderId();
+        private static readonly IdentityPath IDENTITY_PATH = new IdentityPath(new StaticFolderId());
 
-        public BackgroundProteomeFolder(IDocumentContainer documentContainer) : 
-            base(documentContainer, new IdentityPath(BACKGROUND_PROTEOME), ImageId.folder, ImageId.folder_missing)
+        public BackgroundProteomeFolder(string documentFilePath, IList<BackgroundProteome> files) : 
+            base(documentFilePath, IDENTITY_PATH)
         {
+            Files = files.Cast<FileNode>().ToList();
         }
 
-        public override Immutable Immutable => Document.Settings.PeptideSettings;
         public override string Name => FileResources.FileModel_BackgroundProteome;
         public override string FilePath => string.Empty;
         public override string FileName => string.Empty;
-
-        public override IList<FileNode> Files
-        {
-            get
-            {
-                if (Document.Settings.PeptideSettings is { HasBackgroundProteome: true })
-                {
-                    return ImmutableList<FileNode>.Singleton(new BackgroundProteome(DocumentContainer, Document.Settings.PeptideSettings.BackgroundProteome.Id));
-                }
-                else {
-                    return ImmutableList.Empty<FileNode>();
-                }
-            }
-        }
+        public override ImageId ImageAvailable => ImageId.folder;
+        public override ImageId ImageMissing => ImageId.folder_missing;
+        public override IList<FileNode> Files { get; }
     }
 }

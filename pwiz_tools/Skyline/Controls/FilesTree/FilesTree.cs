@@ -208,7 +208,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             if (args == null || DocumentContainer.Document == null)
                 return;
 
-            // Nothing to do if no changes to SrmSettings
+            // Check SrmSettings. If it didn't change, short-circuit since there's nothing to do
             if (ReferenceEquals(DocumentContainer.Document.Settings, args.DocumentPrevious?.Settings))
                 return;
 
@@ -226,15 +226,11 @@ namespace pwiz.Skyline.Controls.FilesTree
             {
                 BeginUpdateMS();
 
-                var originalDocument = _modelDocumentContainer.Document;
-                _modelDocumentContainer.DocumentFilePath = documentFilePath;
-                _modelDocumentContainer.SetDocument(document, originalDocument);
-
                 // Do this work inside the Begin/EndUpdate calls to avoid flickering the tree
                 if (changeAll)
                 {
-                    Nodes.Clear(); // Remove existing nodes from FilesTree
-                    _fsWorkQueue.Clear(); // Clear pending tasks from the QueueWorker
+                    Nodes.Clear();                     // Remove existing nodes from FilesTree
+                    _fsWorkQueue.Clear();              // Clear pending tasks from the QueueWorker
                     _cancellationTokenSource.Cancel(); // Cancel any in-flight tasks from QueWorker and the UI event loop (control.BeginInvoke).
 
                     _cancellationTokenSource = new CancellationTokenSource(); // Create a token source for the new document
@@ -247,11 +243,15 @@ namespace pwiz.Skyline.Controls.FilesTree
                 //     Console.WriteLine($@"===== Updating document {nameMsg} from {versionMsg} to {document.RevisionIndex}. DocumentPathChanged {documentPathChanged}.");
                 // }
 
-                var files = SkylineFile.Create(_modelDocumentContainer);
+                var originalDocument = _modelDocumentContainer.Document;
+                _modelDocumentContainer.DocumentFilePath = documentFilePath;
+                _modelDocumentContainer.SetDocument(document, originalDocument);
+
+                var files = SkylineFile.Create(document, documentFilePath);
 
                 MergeNodes(new SingletonList<FileNode>(files), Nodes, FilesTreeNode.CreateNode, _cancellationTokenSource.Token, documentPathChanged);
 
-                Root.Expand(); // Always keep Root expanded
+                Root.Expand(); // Root is always expanded
 
                 if (FileNode.IsDocumentSavedToDisk(documentFilePath) && !IsMonitoringFileSystem())
                 {
@@ -316,35 +316,26 @@ namespace pwiz.Skyline.Controls.FilesTree
                     if (nodeTree == null)
                         break;
 
-                    // TODO: should this have an else clause that updates the Document on an existing FilesTreeNode's Model? 
-                    //       Otherwise, the FTN's reference to the Document might be old. Or maybe, the root should be an 
-                    //       IDocumentContainer passed to the children so only one update is needed? Hmmm....
-                    if (!nodeTree.Model.ModelEquals(nodeDoc))
+                    // If IDs, match replace the model.
+                    if (nodeTree.Model.IdentityPath.Equals(nodeDoc.IdentityPath))
                     {
-                        // Found a node with the correct ID in the tree so apply a new model
-                        // to an existing node with an equivalent IdentityPath
-                        if(nodeTree.Model.IdentityPath.Equals(nodeDoc.IdentityPath))
-                        {
-                            nodeTree.Model = nodeDoc;
-                            localFileInitList.Add(nodeTree); 
-                        }
-                        else
-                        {
-                            // If no usable equality, and not in the map of nodes already
-                            // removed, then this loop cannot continue.
-                            if(!remaining.TryGetValue(nodeDoc.IdentityPath, out nodeTree))
-                                break;
+                        nodeTree.Model = nodeDoc;
+                        localFileInitList.Add(nodeTree);
+                    }
+                    else
+                    {
+                        // If no usable equality, and not in the map of nodes already
+                        // removed, then this loop cannot continue.
+                        if (!remaining.TryGetValue(nodeDoc.IdentityPath, out nodeTree))
+                            break;
 
-                            nodeTree.Model = nodeDoc;
-                            localFileInitList.Add(nodeTree);
-                            
-                            treeNodes.Insert(i, nodeTree);
-                        }
+                        // Found a match in the map of removed nodes so update its model and re-insert it
+                        nodeTree.Model = nodeDoc;
+                        localFileInitList.Add(nodeTree);
+
+                        treeNodes.Insert(i, nodeTree);
                     }
-                    else if(documentPathChanged)
-                    {
-                        localFileInitList.Add(nodeTree); // cause the FilesTreeNode to update from the file system
-                    }
+                    
                     i++;
                 }
 
@@ -385,6 +376,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 nodeDoc = docFilesList[i];
                 if (remaining.TryGetValue(nodeDoc.IdentityPath, out var nodeTree))
                 {
+                    nodeTree.Model = nodeDoc;
                     nodesToInsert.Add(nodeTree);
                 }
                 else {
