@@ -137,7 +137,7 @@ namespace pwiz.Skyline.Model.Files
 
             return new ModifiedDocument(newDocument).ChangeAuditLogEntry(entry);
         }
-
+        
         public static ModifiedDocument Rename(SrmDocument document, SrmSettingsChangeMonitor monitor, Replicate replicate, string newName)
         {
             var chromSet = LoadChromSetFromDocument(document, replicate);
@@ -164,6 +164,37 @@ namespace pwiz.Skyline.Model.Files
                 document.DocumentType,
                 oldName,
                 newName);
+
+            return new ModifiedDocument(newDocument).ChangeAuditLogEntry(entry);
+        }
+
+        public static ModifiedDocument EditAnnotation(SrmDocument document, SrmSettingsChangeMonitor monitor, Replicate replicate, AnnotationDef annotationDef, string newValue)
+        {
+            var chromSet = LoadChromSetFromDocument(document, replicate);
+
+            var oldName = chromSet.Name;
+            var newChromatogram = chromSet.ChangeAnnotation(annotationDef, newValue);
+            var measuredResults = document.MeasuredResults;
+
+            var chromatograms = measuredResults.Chromatograms.ToArray();
+            for (var i = 0; i < chromatograms.Length; i++)
+            {
+                if (ReferenceEquals(chromatograms[i].Id, newChromatogram.Id))
+                {
+                    chromatograms[i] = newChromatogram;
+                }
+            }
+
+            measuredResults = measuredResults.ChangeChromatograms(chromatograms);
+            var newDocument = document.ChangeMeasuredResults(measuredResults, monitor);
+            newDocument.ValidateResults();
+
+            var entry = AuditLogEntry.CreateSimpleEntry(
+                //TODO: Use a different MessageType
+                MessageType.edited_note,
+                document.DocumentType,
+                oldName,
+                newValue);
 
             return new ModifiedDocument(newDocument).ChangeAuditLogEntry(entry);
         }

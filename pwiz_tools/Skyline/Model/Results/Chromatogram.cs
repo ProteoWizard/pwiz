@@ -16,25 +16,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
+using pwiz.CommonMsData.RemoteApi;
+using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
+using pwiz.Skyline.Model.DocSettings.MetadataExtraction;
+using pwiz.Skyline.Model.IonMobility;
+using pwiz.Skyline.Model.RetentionTimes;
+using pwiz.Skyline.Model.Serialization;
+using pwiz.Skyline.Util;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
-using pwiz.Common.Chemistry;
-using pwiz.Common.Collections;
-using pwiz.Common.SystemUtil;
-using pwiz.CommonMsData;
-using pwiz.ProteowizardWrapper;
-using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
-using pwiz.Skyline.Model.DocSettings.MetadataExtraction;
-using pwiz.Skyline.Model.IonMobility;
-using pwiz.CommonMsData.RemoteApi;
-using pwiz.Skyline.Model.RetentionTimes;
-using pwiz.Skyline.Model.Serialization;
-using pwiz.Skyline.Util;
 using Array = System.Array;
 
 namespace pwiz.Skyline.Model.Results
@@ -496,6 +497,13 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public Annotations Annotations { get; private set; }
+
+        public ChromatogramSet ChangeAnnotation(AnnotationDef annotationDef, string newValue)
+        {
+            var newAnnotations = Annotations.ChangeAnnotation(annotationDef, newValue);
+            // Use ChangeProp to set the new list
+            return ChangeProp(ImClone(this), im => im.Annotations = newAnnotations);
+        }
 
         public OptimizableRegression OptimizationFunction { get; private set; }
 

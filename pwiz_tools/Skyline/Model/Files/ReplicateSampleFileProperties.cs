@@ -66,7 +66,7 @@ namespace pwiz.Skyline.Model.Files
             {
                 // if only one instrument, add instrument properties in one category at top level
                 foreach (var globalizedProp in from PropertyDescriptor prop in TypeDescriptor.GetProperties(typeof(InstrumentProperties))
-                         select new CustomHandledGlobalizedPropertyDescriptor(
+                         select new GlobalizedPropertyDescriptor(
                              prop.PropertyType, prop.Name, prop.GetValue(Instruments[0]), prop.Category,
                              GetResourceManager()))
                 {
@@ -81,7 +81,7 @@ namespace pwiz.Skyline.Model.Files
                     var expandableAttr = new Attribute[]
                         { new TypeConverterAttribute(typeof(ExpandableObjectConverter)) };
 
-                    AddProperty(new CustomHandledGlobalizedPropertyDescriptor(
+                    AddProperty(new GlobalizedPropertyDescriptor(
                         typeof(InstrumentProperties),
                         GetBaseDescriptorByName(nameof(Instruments)).Category + i,
                         Instruments[i],
