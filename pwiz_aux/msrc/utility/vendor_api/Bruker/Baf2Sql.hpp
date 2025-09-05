@@ -160,10 +160,11 @@ struct PWIZ_API_DECL Baf2SqlImpl : public CompassData
     virtual InstrumentFamily getInstrumentFamily() const;
     virtual int getInstrumentRevision() const;
     virtual std::string getInstrumentDescription() const;
-    virtual std::string Baf2SqlImpl::getInstrumentSerialNumber() const;
+    virtual std::string getInstrumentSerialNumber() const;
     virtual InstrumentSource getInstrumentSource() const;
     virtual std::string getAcquisitionSoftware() const;
     virtual std::string getAcquisitionSoftwareVersion() const;
+    virtual std::string getDiaFrameMsMsWindowsTable() const;
 
     private:
     std::string rawpath_;

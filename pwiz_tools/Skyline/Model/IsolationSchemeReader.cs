@@ -151,7 +151,8 @@ namespace pwiz.Skyline.Model
             string path = dataSource.GetFilePath();
             bool isPasef = Directory.Exists(path) &&    // Below can be slow if it is not a directory
                            Equals(DataSourceUtil.GetSourceType(new DirectoryInfo(path)), DataSourceUtil.TYPE_BRUKER);
-            using (var dataFile = new MsDataFileImpl(path, simAsSpectra: true))
+            // CONSIDER: update isolation scheme reader to use WindowGroup?
+            using (var dataFile = new MsDataFileImpl(path, simAsSpectra: true, passEntireDiaPasefFrame:false))
             {
                 int lookAheadCount = Math.Min(MAX_MULTI_CYCLE, dataFile.SpectrumCount);
                 for (int i = 0; i < lookAheadCount; i++)
