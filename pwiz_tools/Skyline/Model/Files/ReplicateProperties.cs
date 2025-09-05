@@ -45,7 +45,7 @@ namespace pwiz.Skyline.Model.Files
             SampleType = chromSet.SampleType.ToString();
 
             Annotations = new List<Annotations.Annotation>();
-            _editAnnotationDictionary = new Dictionary<Annotations.Annotation, Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument>>();
+            _editAnnotationDictionary = new Dictionary<Annotations.Annotation, Func<SrmDocument, SrmSettingsChangeMonitor, string, ModifiedDocument>>();
             foreach (var annotationDef in Settings.Default.AnnotationDefList)
             {
                 if (annotationDef.AnnotationTargets.Contains(AnnotationDef.AnnotationTarget.replicate))
@@ -54,7 +54,7 @@ namespace pwiz.Skyline.Model.Files
                         annotationDef.Name, chromSet.Annotations.GetAnnotation(annotationDef.Name)));
                     Annotations.Add(annotation);
                     _editAnnotationDictionary.Add(annotation,
-                        (doc, monitor, newValue) => Replicate.EditAnnotation(doc, monitor, model, annotationDef, (string)newValue));
+                        (doc, monitor, newValue) => Replicate.EditAnnotation(doc, monitor, model, annotationDef, newValue));
                 }
             }
 
@@ -100,7 +100,7 @@ namespace pwiz.Skyline.Model.Files
         // Annotations need to be added as individual properties under the Annotations category, for the above reason
         [UseCustomHandling]
         [Category("Annotations")] public List<Annotations.Annotation> Annotations { get; }
-        private readonly Dictionary<Annotations.Annotation, Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument>> _editAnnotationDictionary;
+        private readonly Dictionary<Annotations.Annotation, Func<SrmDocument, SrmSettingsChangeMonitor, string, ModifiedDocument>> _editAnnotationDictionary;
 
         /// <summary>
         /// Transforms the list of InstrumentProperties into a form that will display better in the property sheet.
@@ -120,7 +120,7 @@ namespace pwiz.Skyline.Model.Files
             {
                 // if only one instrument, add instrument properties in one category at top level
                 foreach (var globalizedProp in from PropertyDescriptor prop in TypeDescriptor.GetProperties(typeof(InstrumentProperties)) 
-                         select new GlobalizedPropertyDescriptor(
+                         select new CustomHandledGlobalizedPropertyDescriptor(
                              prop.PropertyType, prop.Name, prop.GetValue(Instruments[0]), prop.Category,
                              GetResourceManager()))
                 {
@@ -135,7 +135,7 @@ namespace pwiz.Skyline.Model.Files
                     var expandableAttr = new Attribute[] 
                         { new TypeConverterAttribute(typeof(ExpandableObjectConverter)) };
 
-                    AddProperty(new GlobalizedPropertyDescriptor(
+                    AddProperty(new CustomHandledGlobalizedPropertyDescriptor(
                         typeof(InstrumentProperties), 
                         GetBaseDescriptorByName(nameof(Instruments)).Category + i, 
                         Instruments[i], 
@@ -148,7 +148,7 @@ namespace pwiz.Skyline.Model.Files
 
             foreach (var annotation in Annotations)
             {
-                AddProperty(new GlobalizedPropertyDescriptor(
+                AddProperty(new CustomHandledGlobalizedPropertyDescriptor(
                     typeof(string),
                     annotation.Name,
                     annotation.Value,

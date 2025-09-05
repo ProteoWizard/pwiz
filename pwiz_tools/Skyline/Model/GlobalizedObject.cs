@@ -17,6 +17,7 @@
 using Newtonsoft.Json;
 using JetBrains.Annotations;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Common.SystemUtil;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -65,13 +66,13 @@ namespace pwiz.Skyline.Model
             foreach (var method in methodList)
             {
                 var methodKey = GetConverterKey(method.GetParameters().First().ParameterType, method.ReturnType);
-                if(!TYPE_CONVERTER_DICTIONARY.ContainsKey(methodKey))
+                if (!TYPE_CONVERTER_DICTIONARY.ContainsKey(methodKey))
                     TYPE_CONVERTER_DICTIONARY.Add(methodKey, method);
             }
         }
 
         protected abstract ResourceManager GetResourceManager();
-        
+
         public string GetClassName() => TypeDescriptor.GetClassName(this, true);
 
         public AttributeCollection GetAttributes() => TypeDescriptor.GetAttributes(this, true);
@@ -120,11 +121,11 @@ namespace pwiz.Skyline.Model
                 foreach (PropertyDescriptor oProp in baseProps)
                 {
                     // don't copy over properties that require custom handling
-                    if (oProp.Attributes[typeof(UseCustomHandlingAttribute)] != null || 
+                    if (oProp.Attributes[typeof(UseCustomHandlingAttribute)] != null ||
                         oProp.Attributes[typeof(UsedImplicitlyAttribute)] != null ||
                         oProp.Attributes[typeof(EditablePropertyAttribute)] != null)
                         continue;
-                    
+
                     // Only display properties whose values have been set
                     if (oProp.GetValue(this) == null)
                         continue;
@@ -151,13 +152,13 @@ namespace pwiz.Skyline.Model
         /// <summary>
         /// Override this method to add custom properties to the property collection, like if we needed to dynamically add nested properties.
         /// </summary>
-        protected virtual void AddCustomizedProperties() {}
+        protected virtual void AddCustomizedProperties() { }
 
         #region Test suppport
 
         public List<string> GetDifference(GlobalizedObject other)
         {
-            if(other == null)
+            if (other == null)
                 return new List<string> { @"The other object is null." };
             if (GetType() != other.GetType())
                 return new List<string> { $@"The other object of of type {other.GetType().Name}." };
@@ -170,13 +171,13 @@ namespace pwiz.Skyline.Model
                 .ToDictionary(prop => prop.Name, prop => prop.GetValue(other));
 
             var joinedValues = (from t in thisProps
-                join o in otherProps on t.Key equals o.Key
-                select new {k = t.Key, t = t.Value, o = o.Value }).ToList();
+                                join o in otherProps on t.Key equals o.Key
+                                select new { k = t.Key, t = t.Value, o = o.Value }).ToList();
             if (joinedValues.Count != thisProps.Count)
                 return new List<string> { @"The two objects have different sets of properties." };
             var res = joinedValues.Where(tuple =>
             {
-                if(tuple.t is GlobalizedObject tg && tuple.o is GlobalizedObject to)
+                if (tuple.t is GlobalizedObject tg && tuple.o is GlobalizedObject to)
                     return !tg.IsSameAs(to);
                 return !tuple.t.Equals(tuple.o);
             });
@@ -223,9 +224,9 @@ namespace pwiz.Skyline.Model
         {
             var thisProps = GetProperties().Cast<PropertyDescriptor>()
                 .Where(prop => !prop.Attributes.Contains(UseToCompare.NO) && prop.GetValue(this) != null)
-                .Select(prop => new {name = prop.Name, val = prop.GetValue(this)}).ToList();
+                .Select(prop => new { name = prop.Name, val = prop.GetValue(this) }).ToList();
             sw.WriteLine(@"new Dictionary<string, object> {");
-            for(int i = 0; i < thisProps.Count; i++)
+            for (int i = 0; i < thisProps.Count; i++)
             {
                 sw.Write(@"{");
                 sw.Write('"' + thisProps[i].name + '"');
@@ -234,7 +235,7 @@ namespace pwiz.Skyline.Model
                     nested.SerializeToDictionary(sw);
                 else
                     sw.Write('"' + thisProps[i].val.ToString() + '"');
-                if(i < thisProps.Count - 1)
+                if (i < thisProps.Count - 1)
                     sw.WriteLine(@"},");
                 else
                     sw.WriteLine(@"}");
@@ -245,7 +246,7 @@ namespace pwiz.Skyline.Model
 
         public void Deserialize(Dictionary<string, object> valueDict)
         {
-            if(valueDict == null)
+            if (valueDict == null)
                 return;
 
             var propDict = GetType().GetProperties().ToDictionary(prop => prop.Name, prop => prop);
@@ -257,7 +258,7 @@ namespace pwiz.Skyline.Model
                     var converterKey = GetConverterKey(val.Value.GetType(), actualPropType);
                     if (actualPropType.BaseType == typeof(GlobalizedObject) && val.Value is Dictionary<string, object> nestedDictionary)
                     {
-                        var nestedObject = (GlobalizedObject) actualPropType.InvokeMember(actualPropType.Name, BindingFlags.Public |
+                        var nestedObject = (GlobalizedObject)actualPropType.InvokeMember(actualPropType.Name, BindingFlags.Public |
                             BindingFlags.Instance |
                             BindingFlags.CreateInstance,
                             null, null, new object[] { });
@@ -293,24 +294,18 @@ namespace pwiz.Skyline.Model
     ///     https://www.codeproject.com/script/Articles/ViewDownloads.aspx?aid=2138
     ///
     /// </summary>
-    public class GlobalizedPropertyDescriptor : PropertyDescriptor
+    public class GlobalizedPropertyDescriptor : PropertyDescriptor, IModifiablePropertyDescriptor
     {
         private const string DESCRIPTION_PREFIX = @"Description_";
         private const string CATEGORY_PREFIX = @"Category_";
 
-        private readonly PropertyDescriptor _basePropertyDescriptor;
-        private readonly Func<SrmDocument, SrmSettingsChangeMonitor, string, ModifiedDocument> _getModifiedDocument;
         private readonly ResourceManager _resourceManager;
+        private readonly PropertyDescriptor _basePropertyDescriptor;
 
-        [CanBeNull] private object _value;
-        private readonly string _category;
-        private readonly string _name;
-        private readonly Type _type;
-        private readonly string _nonLocalizedDisplayName;
-        private readonly Func<string, string> _displayNameFormat;
+        private readonly Func<SrmDocument, SrmSettingsChangeMonitor, string, ModifiedDocument> _getModifiedDocument;
 
         public GlobalizedPropertyDescriptor(PropertyDescriptor basePropertyDescriptor, ResourceManager resourceManager,
-            Func<SrmDocument, SrmSettingsChangeMonitor, string, ModifiedDocument> getModifiedDocument = null) 
+            Func<SrmDocument, SrmSettingsChangeMonitor, string, ModifiedDocument> getModifiedDocument = null)
             : base(basePropertyDescriptor)
         {
             _basePropertyDescriptor = basePropertyDescriptor;
@@ -318,10 +313,103 @@ namespace pwiz.Skyline.Model
             _getModifiedDocument = getModifiedDocument;
         }
 
-        public GlobalizedPropertyDescriptor(Type type, string name, object value, string category,
+        public ModifiedDocument GetModifiedDocument(SrmDocument document, SrmSettingsChangeMonitor monitor, string newValue)
+        {
+            // GetModifiedDocument should not be called if the property is read-only.
+            Assume.IsNotNull(_getModifiedDocument);
+            return _getModifiedDocument.Invoke(document, monitor, newValue);
+        }
+
+        public override bool CanResetValue(object component)
+        {
+            return _basePropertyDescriptor.CanResetValue(component);
+        }
+
+        public override Type ComponentType => _basePropertyDescriptor.ComponentType;
+
+        public override string DisplayName
+        {
+            get
+            {
+                // Get display name from CommandArgName
+                var displayNameKey = _basePropertyDescriptor.Name;
+                return _resourceManager.GetString(displayNameKey);
+            }
+        }
+
+        public override string Description => _resourceManager.GetString(DESCRIPTION_PREFIX + _basePropertyDescriptor.Name) ?? string.Empty;
+
+        public override string Category
+        {
+            get
+            {
+                if (_basePropertyDescriptor.Category != null)
+                {
+                    return _resourceManager.GetString(CATEGORY_PREFIX + _basePropertyDescriptor.Category) ?? string.Empty;
+                }
+
+                return null;
+            }
+        }
+
+        public override object GetValue(object component)
+        {
+            // Doesn't display default values to highlight changed ones
+            var value = _basePropertyDescriptor.GetValue(component);
+            if (value == null || (value is bool b && !b))
+                return string.Empty;
+
+            return value;
+        }
+
+        public override bool IsReadOnly => _getModifiedDocument == null;
+
+        public override string Name => _basePropertyDescriptor.Name;
+
+        public override Type PropertyType => _basePropertyDescriptor.PropertyType;
+
+        public override TypeConverter Converter => _basePropertyDescriptor.PropertyType == typeof(double) ? new TwoDecimalDoubleConverter() : _basePropertyDescriptor.Converter;
+
+        public override void ResetValue(object component)
+        {
+            _basePropertyDescriptor.ResetValue(component);
+        }
+
+        public override bool ShouldSerializeValue(object component)
+        {
+            return _basePropertyDescriptor.ShouldSerializeValue(component);
+        }
+
+        public override void SetValue(object component, object value)
+        {
+            _basePropertyDescriptor.SetValue(component, value);
+        }
+    }
+
+    /// <summary>
+    /// Used to support properties returned in GetProperties() that are not present on the globalized object, or need custom handling.
+    /// </summary>
+    public class CustomHandledGlobalizedPropertyDescriptor : PropertyDescriptor, IModifiablePropertyDescriptor
+    {
+        private const string DESCRIPTION_PREFIX = @"Description_";
+        private const string CATEGORY_PREFIX = @"Category_";
+
+        private readonly ResourceManager _resourceManager;
+
+        private readonly Func<SrmDocument, SrmSettingsChangeMonitor, string, ModifiedDocument> _getModifiedDocument;
+
+        private object _value;
+        private readonly string _category;
+        private readonly string _name;
+        private readonly Type _type;
+        private readonly string _nonLocalizedDisplayName;
+        private readonly Func<string, string> _displayNameFormat;
+
+        public CustomHandledGlobalizedPropertyDescriptor(
+            Type type, string name, object value, string category,
             ResourceManager resourceManager, Attribute[] attributes = null,
             string nonLocalizedDisplayName = null, Func<string, string> displayNameFormat = null,
-            Func<SrmDocument, SrmSettingsChangeMonitor, string, ModifiedDocument> getModifiedDocument = null) 
+            Func<SrmDocument, SrmSettingsChangeMonitor, string, ModifiedDocument> getModifiedDocument = null)
             : base(name, attributes)
         {
             _resourceManager = resourceManager;
@@ -336,135 +424,9 @@ namespace pwiz.Skyline.Model
 
         public ModifiedDocument GetModifiedDocument(SrmDocument document, SrmSettingsChangeMonitor monitor, string newValue)
         {
-            return _getModifiedDocument?.Invoke(document, monitor, newValue);
-        }
-
-        public override bool CanResetValue(object component)
-        {
-            return _basePropertyDescriptor?.CanResetValue(component) ?? false;
-        }
-
-        public override Type ComponentType => _basePropertyDescriptor.ComponentType;
-
-        public  string DisplayNam
-        {
-            get
-            {
-                var displayName = _resourceManager.GetString(_name);
-
-                if (_displayNameFormat != null && displayName != null)
-                    displayName = _displayNameFormat(displayName);
-
-                return displayName ?? _nonLocalizedDisplayName ?? string.Empty;
-            }
-        }
-
-        public override string DisplayName
-        {
-            get
-            {
-                if (_nonLocalizedDisplayName != null) 
-                    return _nonLocalizedDisplayName;
-
-                if (_basePropertyDescriptor != null)
-                    return _resourceManager.GetString(_basePropertyDescriptor.Name);
-
-                var displayName = _resourceManager.GetString(_name);
-
-                if (_displayNameFormat != null && displayName != null)
-                    displayName = _displayNameFormat(displayName);
-
-                return displayName ?? _nonLocalizedDisplayName ?? string.Empty;
-            }
-        }
-        
-        public override string Description => _resourceManager.GetString(DESCRIPTION_PREFIX + Name) ?? string.Empty;
-
-        public override string Category
-        {
-            get
-            {
-                if ((_category ?? _basePropertyDescriptor.Category) != null)
-                {
-                    return _resourceManager.GetString(CATEGORY_PREFIX + (_category ?? _basePropertyDescriptor.Category)) ?? string.Empty;
-                }
-
-                return null;
-            }
-        }
-
-        public override object GetValue(object component)
-        {
-            if (_basePropertyDescriptor == null)
-                return _value;
-
-            // Doesn't display default values to highlight changed ones
-            var value = _basePropertyDescriptor.GetValue(component);
-            if (value == null || (value is bool b && !b))
-                return string.Empty;
-
-            return value;
-        }
-
-        public override bool IsReadOnly => _getModifiedDocument == null;
-
-        public override string Name => _name ?? _basePropertyDescriptor.Name;
-
-        public override Type PropertyType => _type ?? _basePropertyDescriptor.PropertyType;
-
-        public override TypeConverter Converter => PropertyType == typeof(double) ? new TwoDecimalDoubleConverter() : _basePropertyDescriptor?.Converter ?? base.Converter;
-
-        public override void ResetValue(object component)
-        {
-            _basePropertyDescriptor?.ResetValue(component);
-        }
-
-        public override bool ShouldSerializeValue(object component)
-        {
-            return _basePropertyDescriptor?.ShouldSerializeValue(component) ?? false;
-        }
-
-        public override void SetValue(object component, object value)
-        {
-            if (_basePropertyDescriptor != null)
-                _basePropertyDescriptor.SetValue(component, value);
-            else
-                _value = value;
-        }
-    }
-
-    /// <summary>
-    /// Used to support properties returned in GetProperties() that are not present on the globalized object, or need custom handling.
-    /// </summary>
-    public class CustomHandledGlobalizedPropertyDescriptor : PropertyDescriptor
-    {
-        private const string DESCRIPTION_PREFIX = @"Description_";
-        private const string CATEGORY_PREFIX = @"Category_";
-
-        private readonly ResourceManager _resourceManager;
-        private object _value;
-        private readonly string _category;
-        private readonly string _name;
-        private readonly Type _type;
-        private readonly string _nonLocalizedDisplayName;
-        private readonly Func<string, string> _displayNameFormat;
-        private readonly Func<SrmDocument, SrmSettingsChangeMonitor, string, ModifiedDocument> _getModifiedDocument;
-
-        public CustomHandledGlobalizedPropertyDescriptor(
-            Type type, string name, object value, string category,
-            ResourceManager resourceManager, Attribute[] attributes = null,
-            string nonLocalizedDisplayName = null, Func<string, string> displayNameFormat = null,
-            Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument> getModifiedDocument = null) 
-            : base(name, attributes)
-        {
-            _resourceManager = resourceManager;
-            _value = value;
-            _category = category;
-            _name = name;
-            _type = type;
-            _nonLocalizedDisplayName = nonLocalizedDisplayName;
-            _displayNameFormat = displayNameFormat;
-            _getModifiedDocument = getModifiedDocument;
+            // GetModifiedDocument should not be called if the property is read-only.
+            Assume.IsNotNull(_getModifiedDocument);
+            return _getModifiedDocument.Invoke(document, monitor, newValue);
         }
 
         public override bool CanResetValue(object component) => false;
@@ -515,6 +477,13 @@ namespace pwiz.Skyline.Model
         {
             _value = value;
         }
+    }
+
+    public interface IModifiablePropertyDescriptor
+    {
+        public bool IsReadOnly { get; }
+
+        public ModifiedDocument GetModifiedDocument(SrmDocument document, SrmSettingsChangeMonitor monitor, string newValue);
     }
 
     public class TwoDecimalDoubleConverter : DoubleConverter

@@ -69,8 +69,8 @@ namespace pwiz.Skyline.Controls
 
         private void PropertyGrid_PropertyValueChanged(object sender, PropertyValueChangedEventArgs e)
         {
-            Assume.IsTrue(e.ChangedItem.PropertyDescriptor is GlobalizedPropertyDescriptor { IsReadOnly: false });
-            var globalizedPropertyDescriptor = (GlobalizedPropertyDescriptor)e.ChangedItem.PropertyDescriptor;
+            Assume.IsTrue(e.ChangedItem.PropertyDescriptor is IModifiablePropertyDescriptor { IsReadOnly: false });
+            var globalizedPropertyDescriptor = (IModifiablePropertyDescriptor)e.ChangedItem.PropertyDescriptor;
 
             Assume.IsTrue(e.ChangedItem.Value is string);
             var newValue = (string)e.ChangedItem.Value;
