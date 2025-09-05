@@ -20,7 +20,7 @@ using System;
 using System.Collections;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline.Util;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.SkylineTestUtil
 {

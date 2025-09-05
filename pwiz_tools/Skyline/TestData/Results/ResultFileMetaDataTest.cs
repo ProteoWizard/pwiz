@@ -18,7 +18,7 @@
  */
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline.Model.Results;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.SkylineTestUtil;
 

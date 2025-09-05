@@ -893,11 +893,11 @@ namespace pwiz.Skyline.Controls.Databinding
             }
 
             colReplicateProperty.Width = nonReplicateWidth;
-            foreach (DataGridViewColumn column in replicatePivotDataGridView.Columns)
+            foreach (var entry in _replicateGridColumns)
             {
-                if (replicateTotalWidthMap.TryGetValue(column.HeaderText, out var replicateTotalWidth))
+                if (replicateTotalWidthMap.TryGetValue(entry.Key, out var replicateTotalWidth))
                 {
-                    column.Width = replicateTotalWidth;
+                    entry.Value.Width = replicateTotalWidth;
                 }
             }
         }
@@ -935,7 +935,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 DataGridViewColumn lastColumn = null;
                 foreach (var column in grouping)
                 {
-                    if (replicateTotalWidthMap.TryGetValue(grouping.Key.ReplicateName, out var replicateTotalWidth)
+                    if (replicateTotalWidthMap.TryGetValue(grouping.Key, out var replicateTotalWidth)
                         && boundColumns.TryGetValue(column.Name, out var dataGridViewColumn))
                     {
                         var columnRatio = (double)dataGridViewColumn.Width / replicateTotalWidth;
@@ -1052,14 +1052,14 @@ namespace pwiz.Skyline.Controls.Databinding
             }
         }
 
-        private Dictionary<string, int> GetMainGridReplicateColumnWidths(ReplicatePivotColumns replicatePivotColumns)
+        private Dictionary<ResultKey, int> GetMainGridReplicateColumnWidths(ReplicatePivotColumns replicatePivotColumns)
         {
             var boundColumns = boundDataGridView.Columns.OfType<DataGridViewColumn>()
                 .Where(col => col.Visible)
                 .ToDictionary(col => col.DataPropertyName);
             var replicateTotalWidthMap = replicatePivotColumns.GetReplicateColumnGroups()
                 .ToDictionary(
-                    kvp => kvp.Key.ReplicateName,
+                    kvp => kvp.Key,
                     kvp => kvp.Where(column => boundColumns.ContainsKey(column.Name)).Sum(column => boundColumns[column.Name].Width));
             return replicateTotalWidthMap;
         }
@@ -1501,6 +1501,14 @@ namespace pwiz.Skyline.Controls.Databinding
                 {
                     return _roundedDifference > 0 ? 1 : -1;
                 }
+            }
+        }
+
+        public DataGridViewColumn ReplicatePropertyColumn
+        {
+            get
+            {
+                return colReplicateProperty;
             }
         }
     }

@@ -37,7 +37,7 @@ namespace pwiz.Skyline.Model.Serialization
     /// When changing the current version number, you should copy "Skyline_Current.xsd" to "Skyline_###.xsd" representing
     /// the old version number.</para>
     /// </summary>
-    public struct DocumentFormat : IComparable<DocumentFormat>
+    public struct DocumentFormat : IComparable<DocumentFormat>, IEquatable<DocumentFormat>
     {
         public static readonly DocumentFormat VERSION_0_1 = new DocumentFormat(0.1);
         public static readonly DocumentFormat VERSION_0_2 = new DocumentFormat(0.2);
@@ -119,7 +119,8 @@ namespace pwiz.Skyline.Model.Serialization
         public static readonly DocumentFormat VERSION_23_13 = new DocumentFormat(23.13); // Relative abundance formatting
         public static readonly DocumentFormat VERSION_24_1 = new DocumentFormat(24.1); // Release format
         public static readonly DocumentFormat VERSION_24_11 = new DocumentFormat(24.11); // Global spectrum filters
-        public static readonly DocumentFormat CURRENT = VERSION_24_11;
+        public static readonly DocumentFormat VERSION_25_1 = new DocumentFormat(25.1); // Release format
+        public static readonly DocumentFormat CURRENT = VERSION_25_1;
 
         private readonly double _versionNumber;
         public DocumentFormat(double versionNumber)
@@ -179,6 +180,21 @@ namespace pwiz.Skyline.Model.Serialization
             }
 
             return string.Format(Resources.SpectrumLibraryInfoDlg_SetDetailsText_Version__0__, ToString());
+        }
+
+        public bool Equals(DocumentFormat other)
+        {
+            return _versionNumber.Equals(other._versionNumber);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is DocumentFormat other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return _versionNumber.GetHashCode();
         }
     }
 }

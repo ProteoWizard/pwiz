@@ -385,4 +385,10 @@
   <data name="LibraryGridViewDriver_DoPaste_The_peptide__0__is_already_present_in_the__1__table__and_may_not_be_pasted_into_the__2__table" xml:space="preserve">
     <value>肽段{0}已经在 {1} 表中存在，并且可能无法粘贴到 {2} 表。</value>
   </data>
+  <data name="CalibrationGridViewDriver_PickPeptides__0__CiRT_peptides_were_found__but_a_valid_regression_could_not_be_calculated_" xml:space="preserve">
+    <value>{0} 检测到 CiRT 肽段，但无法计算有效回归。</value>
+  </data>
+  <data name="CalibrationGridViewDriver_PickPeptides__0__CiRT_peptides_were_found_and_a_regression_was_calculated_using__1__of_them__but_they_did_not_sufficiently_span_the_retention_time_range__2_0____to__3_0____minutes_" xml:space="preserve">
+    <value>{0}检测到 CiRT 肽段并用其中{1}个完成回归计算，但 CiRT 肽段的保留时间未完全覆盖 {2:0.#} 至 {3:0.#} 分钟的范围：</value>
+  </data>
 </root>

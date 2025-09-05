@@ -150,6 +150,10 @@
       <Project>{32CC9B1A-9442-4B56-AF34-FB47595278A1}</Project>
       <Name>BiblioSpec</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Shared\CommonMsData\CommonMsData.csproj">
+      <Project>{86f8e7f5-a3ed-4519-9ad9-bf9abd6dd69f}</Project>
+      <Name>CommonMsData</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Shared\Common\Common.csproj">
       <Project>{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}</Project>
       <Name>Common</Name>
@@ -214,8 +218,8 @@
     <Compile Include="KoinaBuildLibraryTest.cs" />
     <Compile Include="KoinaConnectionTest.cs" />
     <Compile Include="ArdiaFunctionalTest.cs" />
+    <Compile Include="Results\RemoteApi\RemoteApiTest.cs" />
     <Compile Include="UnifiFunctionalTest.cs" />
-    <Compile Include="Results\RemoteApi\UnifiTest.cs" />
     <Compile Include="KoinaBuildLibraryFromCsvTest.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

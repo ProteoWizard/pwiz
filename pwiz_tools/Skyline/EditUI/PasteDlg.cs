@@ -296,12 +296,11 @@ namespace pwiz.Skyline.EditUI
                                       Settings.Default.HeavyModList);
             }
             catch (FormatException e)
-            {
-                MessageDlg.ShowException(this, e);
+            { 
                 ShowPeptideError(new PasteError
                                      {
                                          Column = colPeptideSequence.Index,
-                                         Message = EditUIResources.PasteDlg_AddPeptides_Unable_to_interpret_peptide_modifications
+                                         Message = e.Message
                                      });
                 return null;
             }

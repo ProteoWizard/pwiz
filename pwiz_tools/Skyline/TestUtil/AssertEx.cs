@@ -1182,7 +1182,8 @@ namespace pwiz.SkylineTestUtil
             {
                 foreach (var sep in countsPerLinePerCandidateDelimiter.Keys)
                 {
-                    countsPerLinePerCandidateDelimiter[sep].Add((new DsvFileReader(new StringReader(lines[lineNum]), sep)).NumberOfFields);
+                    using var dsvReader = new DsvFileReader(new StringReader(lines[lineNum]), sep); // Technically unnecessary using with StringReader
+                    countsPerLinePerCandidateDelimiter[sep].Add(dsvReader.NumberOfFields);
                 }
             }
 

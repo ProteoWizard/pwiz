@@ -129,9 +129,9 @@
     <value>{0} was unexpected in '{1}' at position {2}.</value>
   </data>
   <data name="DocumentAnnotations_GetWarningMessage_The_following_element_could_not_be_found_" xml:space="preserve">
-	  <value>The following element could not be found:</value>
+    <value>The following element could not be found:</value>
   </data>
   <data name="DocumentAnnotations_GetWarningMessage_The_following__0__elements_could_not_be_found_" xml:space="preserve">
-	  <value>The following {0} elements could not be found:</value>
+    <value>The following {0} elements could not be found:</value>
   </data>
 </root>

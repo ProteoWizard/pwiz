@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
@@ -694,7 +695,7 @@ namespace pwiz.Skyline.Model.Results
                     // We make some effort to generate unique file names so that more than one instance
                     // of Skyline can load the same raw data file simultaneously.
                     var xicDir = GetSpillDirectory(cachePath);
-                    Helpers.Try<Exception>(() =>
+                    TryHelper.Try<Exception>(() =>
                     {
                         string fileName = FileStreamManager.Default.GetTempFileName(xicDir, string.Format(@"{0:X03}", groupIndex & 0xFFF));    // Need uniquifying groupId because GetTempFileName is limited to 65,535 files with the same prefix in a folder
                         // Create the FileStream with a buffer size of 1 so that it never buffers, and therefore
