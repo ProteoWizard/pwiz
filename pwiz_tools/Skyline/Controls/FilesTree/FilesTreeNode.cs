@@ -23,6 +23,7 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Files;
 
 // ReSharper disable WrongIndentSize
@@ -71,6 +72,11 @@ namespace pwiz.Skyline.Controls.FilesTree
         // Convenience to avoid casts
         public FilesTree FilesTree => (FilesTree)TreeView;
         public FilesTreeNode ParentFTN => (FilesTreeNode)Parent;
+
+        public GlobalizedObject GetProperties(SrmDocument document)
+        {
+            return Model.GetProperties(document, LocalFilePath);
+        }
 
         /// <summary>
         /// Try to find the file locally using a file's name / path and the path to a SrmDocument.

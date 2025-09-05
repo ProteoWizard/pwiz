@@ -38,6 +38,11 @@ namespace pwiz.Skyline.Model.Files
         public override ImageId ImageMissing => ImageId.folder_missing;
         public override IList<FileNode> Files { get; }
 
+        public override GlobalizedObject GetProperties(SrmDocument document, string localFilePath)
+        {
+            return new ReplicatesFolderProperties(this, localFilePath);
+        }
+
         public ModifiedDocument DeleteAll(SrmDocument document, SrmSettingsChangeMonitor monitor)
         {
             var newDocument = document.ChangeMeasuredResults(null, monitor);

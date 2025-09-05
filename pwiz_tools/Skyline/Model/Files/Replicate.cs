@@ -57,6 +57,11 @@ namespace pwiz.Skyline.Model.Files
             return chromSet;
         }
 
+        public override GlobalizedObject GetProperties(SrmDocument document, string localFilePath)
+        {
+            return new ReplicateProperties(document, this, localFilePath);
+        }
+
         public static ModifiedDocument Delete(SrmDocument document, SrmSettingsChangeMonitor monitor, List<FileNode> models)
         {
             var deleteIds = models.Select(model => ReferenceValue.Of(model.IdentityPath.Child)).ToHashSet();
