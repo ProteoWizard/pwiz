@@ -66,7 +66,7 @@ namespace pwiz.Skyline.Model
             foreach (var method in methodList)
             {
                 var methodKey = GetConverterKey(method.GetParameters().First().ParameterType, method.ReturnType);
-                if (!TYPE_CONVERTER_DICTIONARY.ContainsKey(methodKey))
+                if(!TYPE_CONVERTER_DICTIONARY.ContainsKey(methodKey))
                     TYPE_CONVERTER_DICTIONARY.Add(methodKey, method);
             }
         }
@@ -158,7 +158,7 @@ namespace pwiz.Skyline.Model
 
         public List<string> GetDifference(GlobalizedObject other)
         {
-            if (other == null)
+            if(other == null)
                 return new List<string> { @"The other object is null." };
             if (GetType() != other.GetType())
                 return new List<string> { $@"The other object of of type {other.GetType().Name}." };
@@ -172,12 +172,12 @@ namespace pwiz.Skyline.Model
 
             var joinedValues = (from t in thisProps
                                 join o in otherProps on t.Key equals o.Key
-                                select new { k = t.Key, t = t.Value, o = o.Value }).ToList();
+                                select new {k = t.Key, t = t.Value, o = o.Value }).ToList();
             if (joinedValues.Count != thisProps.Count)
                 return new List<string> { @"The two objects have different sets of properties." };
             var res = joinedValues.Where(tuple =>
             {
-                if (tuple.t is GlobalizedObject tg && tuple.o is GlobalizedObject to)
+                if(tuple.t is GlobalizedObject tg && tuple.o is GlobalizedObject to)
                     return !tg.IsSameAs(to);
                 return !tuple.t.Equals(tuple.o);
             });
@@ -224,9 +224,9 @@ namespace pwiz.Skyline.Model
         {
             var thisProps = GetProperties().Cast<PropertyDescriptor>()
                 .Where(prop => !prop.Attributes.Contains(UseToCompare.NO) && prop.GetValue(this) != null)
-                .Select(prop => new { name = prop.Name, val = prop.GetValue(this) }).ToList();
+                .Select(prop => new {name = prop.Name, val = prop.GetValue(this)}).ToList();
             sw.WriteLine(@"new Dictionary<string, object> {");
-            for (int i = 0; i < thisProps.Count; i++)
+            for(int i = 0; i < thisProps.Count; i++)
             {
                 sw.Write(@"{");
                 sw.Write('"' + thisProps[i].name + '"');
@@ -235,7 +235,7 @@ namespace pwiz.Skyline.Model
                     nested.SerializeToDictionary(sw);
                 else
                     sw.Write('"' + thisProps[i].val.ToString() + '"');
-                if (i < thisProps.Count - 1)
+                if(i < thisProps.Count - 1)
                     sw.WriteLine(@"},");
                 else
                     sw.WriteLine(@"}");
@@ -246,7 +246,7 @@ namespace pwiz.Skyline.Model
 
         public void Deserialize(Dictionary<string, object> valueDict)
         {
-            if (valueDict == null)
+            if(valueDict == null)
                 return;
 
             var propDict = GetType().GetProperties().ToDictionary(prop => prop.Name, prop => prop);
