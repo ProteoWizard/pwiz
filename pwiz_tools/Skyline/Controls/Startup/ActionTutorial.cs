@@ -45,7 +45,7 @@ namespace pwiz.Skyline.Controls.Startup
         {
             ExtractPath = extractPath;
             TutorialZipFileLocation = skyFileLocation;
-            PdfFileLocation = pdfFileLocation + @"&show=html&ver=24-1";
+            PdfFileLocation = pdfFileLocation + @"&show=html&ver=25-1";
             SkyFileLocationInZip = skyFileLocationInZip;
         }
 
