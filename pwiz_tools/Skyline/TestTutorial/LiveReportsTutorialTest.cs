@@ -61,7 +61,11 @@ namespace pwiz.SkylineTestTutorial
         public void TestLiveReportsTutorial()
         {
             CoverShotName = "LiveReports";
-            TestFilesZip = "https://skyline.ms/tutorials/LiveReports.zip";
+            TestFilesZipPaths = new []
+            {
+                "https://skyline.ms/tutorials/LiveReports.zip",
+                @"TestTutorial\LiveReportsViews.zip"
+            };
             AuditLogList.IgnoreTestChecks = true;
             RunFunctionalTest();
             AuditLogList.IgnoreTestChecks = false;
@@ -71,7 +75,7 @@ namespace pwiz.SkylineTestTutorial
         {
             RunUI(()=>
             {
-                SkylineWindow.OpenFile(TestFilesDir.GetTestPath("Rat_plasma.sky"));
+                SkylineWindow.OpenFile(TestFilesDirs[0].GetTestPath("Rat_plasma.sky"));
                 SkylineWindow.ShowAuditLog();
             });
             var auditLogForm = FindOpenForm<AuditLogForm>();
@@ -257,7 +261,7 @@ namespace pwiz.SkylineTestTutorial
             Assert.IsNotNull(listGridForm);
             WaitForConditionUI(() => listGridForm.IsComplete && listGridForm.DataGridView.Rows.Count > 0);
             PauseForScreenShot(listGridForm, "List: Samples grid view");
-            var sampleInfoTsvLines = File.ReadAllLines(TestFilesDir.GetTestPath("SampleInfo.txt")).Skip(1).ToList();
+            var sampleInfoTsvLines = File.ReadAllLines(TestFilesDirs[0].GetTestPath("SampleInfo.txt")).Skip(1).ToList();
             Assert.AreEqual(14, sampleInfoTsvLines.Count);
             SetClipboardText(TextUtil.LineSeparate(sampleInfoTsvLines));
             RunUI(() =>
@@ -708,6 +712,11 @@ namespace pwiz.SkylineTestTutorial
             });
             WaitForCondition(() => auditLogForm.IsComplete);
             PauseForScreenShot(auditLogForm, "Audit Log: Summary");
+            if (IsCoverShotMode)
+            {
+                RestoreCoverViewOnScreen();
+                TakeCoverShot();
+            }
             RunLongDlg<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog, exportReportDlg =>
             {
                 PauseForScreenShot(exportReportDlg, "Export Report");
