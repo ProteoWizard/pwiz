@@ -71,11 +71,16 @@ namespace pwiz.SkylineTestTutorial
             AuditLogList.IgnoreTestChecks = false;
         }
 
+        private string GetTestPath(string relativePath)
+        {
+            return TestFilesDirs[0].GetTestPath(relativePath);
+        }
+
         protected override void DoTest()
         {
             RunUI(()=>
             {
-                SkylineWindow.OpenFile(TestFilesDirs[0].GetTestPath("Rat_plasma.sky"));
+                SkylineWindow.OpenFile(GetTestPath("Rat_plasma.sky"));
                 SkylineWindow.ShowAuditLog();
             });
             var auditLogForm = FindOpenForm<AuditLogForm>();
@@ -261,7 +266,7 @@ namespace pwiz.SkylineTestTutorial
             Assert.IsNotNull(listGridForm);
             WaitForConditionUI(() => listGridForm.IsComplete && listGridForm.DataGridView.Rows.Count > 0);
             PauseForScreenShot(listGridForm, "List: Samples grid view");
-            var sampleInfoTsvLines = File.ReadAllLines(TestFilesDirs[0].GetTestPath("SampleInfo.txt")).Skip(1).ToList();
+            var sampleInfoTsvLines = File.ReadAllLines(GetTestPath("SampleInfo.txt")).Skip(1).ToList();
             Assert.AreEqual(14, sampleInfoTsvLines.Count);
             SetClipboardText(TextUtil.LineSeparate(sampleInfoTsvLines));
             RunUI(() =>

@@ -67,5 +67,18 @@ namespace pwiz.Skyline.Controls.Lists
                 return new DataGridId(DataGridType.LIST, ListName);
             }
         }
+
+        protected override string GetPersistentString()
+        {
+            return base.GetPersistentString() + '|' + ListName;
+        }
+
+        public static string GetListName(string persistentString)
+        {
+            string[] values = persistentString.Split('|');
+            if (values.Length == 2)
+                return values[1];
+            return null;
+        }
     }
 }
