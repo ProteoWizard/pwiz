@@ -45,7 +45,7 @@ namespace pwiz.Skyline.Controls.Startup
         {
             ExtractPath = extractPath;
             TutorialZipFileLocation = skyFileLocation;
-            PdfFileLocation = pdfFileLocation + @"&show=html&ver=24-1";
+            PdfFileLocation = pdfFileLocation + @"&show=html&ver=" + Install.TutorialVersionFolder;
             SkyFileLocationInZip = skyFileLocationInZip;
         }
 
@@ -155,7 +155,8 @@ namespace pwiz.Skyline.Controls.Startup
                 var skyFileToOpen = Path.Combine(extractDir ?? string.Empty, SkyFileLocationInZip);
                 foreach (var entry in zip.Entries.ToList())
                 {
-                    entry.FileName = entry.FileName.Substring(entry.FileName.IndexOf('/')); // Gets rid of everything up to and including first '/'.
+                    if (entry.FileName.IndexOf('/') >= 0)
+                        entry.FileName = entry.FileName.Substring(entry.FileName.IndexOf('/')); // Gets rid of everything up to and including first '/'.
                     if (string.IsNullOrEmpty(entry.FileName))
                     {
                         continue;

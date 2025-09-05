@@ -471,15 +471,47 @@ namespace pwiz.Skyline.Controls.Startup
                 },
                 new TutorialActionBoxControl
                 {
-                Caption = TutorialTextResources.SmallMolLibraries_Caption,
-                Icon = TutorialImageResources.SmallMolLibraries_start,
-                EventAction = () => Tutorial(
-                    TutorialLinkResources.SmallMolLibraries_zip,
-                    TutorialLinkResources.SmallMolLibraries_pdf,
-                    string.Empty
-                ),
-                Description = TutorialTextResources.SmallMolLibraries_Description
+                    Caption = TutorialTextResources.SmallMolLibraries_Caption,
+                    Icon = TutorialImageResources.SmallMolLibraries_start,
+                    EventAction = () => Tutorial(
+                        TutorialLinkResources.SmallMolLibraries_zip,
+                        TutorialLinkResources.SmallMolLibraries_pdf,
+                        string.Empty
+                    ),
+                    Description = TutorialTextResources.SmallMolLibraries_Description
                 }
+            };
+            var tutorialReportsBoxPanels = new Control[]
+            {
+                new Label
+                {
+                    Text = TutorialTextResources.Section_Reports_Topics,
+                    Font = labelFont,
+                    Anchor = labelAnchor,
+                    Width = labelWidth
+                },
+                new TutorialActionBoxControl
+                {
+                    Caption = TutorialTextResources.CustomReports_Caption,
+                    Icon = TutorialImageResources.CustomReports_start,
+                    EventAction = ()=>Tutorial(
+                        TutorialLinkResources.CustomReports_zip,
+                        TutorialLinkResources.CustomReports_pdf,
+                        TutorialLinkResources.CustomReports_sky
+                    ),
+                    Description = TutorialTextResources.CustomReports_Description
+                },
+                new TutorialActionBoxControl
+                {
+                    Caption = TutorialTextResources.LiveReports_Caption,
+                    Icon = TutorialImageResources.LiveReports_start,
+                    EventAction = ()=>Tutorial(
+                        TutorialLinkResources.LiveReports_zip,
+                        TutorialLinkResources.LiveReports_pdf,
+                        TutorialLinkResources.LiveReports_sky
+                    ),
+                    Description = TutorialTextResources.CustomReports_Description
+                },
             };
             var tutorialAdvancedBoxPanels = new Control[]
             {
@@ -500,17 +532,6 @@ namespace pwiz.Skyline.Controls.Startup
                         string.Empty
                     ),
                     Description = TutorialTextResources.AbsoluteQuant_Description,
-                },
-                new TutorialActionBoxControl
-                {
-                    Caption = TutorialTextResources.CustomReports_Caption, 
-                    Icon = TutorialImageResources.CustomReports_start, 
-                    EventAction = ()=>Tutorial(
-                        TutorialLinkResources.CustomReports_zip,
-                        TutorialLinkResources.CustomReports_pdf,
-                        TutorialLinkResources.CustomReports_sky
-                    ),
-                    Description = TutorialTextResources.CustomReports_Description
                 },
                 new TutorialActionBoxControl
                 {
@@ -588,6 +609,7 @@ namespace pwiz.Skyline.Controls.Startup
             tutorialBoxPanels.AddRange(ModeUI != SrmDocument.DOCUMENT_TYPE.small_molecules
                 ? tutorialSmallMoleculeBoxPanels
                 : tutorialProteomicBoxPanels);
+            tutorialBoxPanels.AddRange(tutorialReportsBoxPanels);
             tutorialBoxPanels.AddRange(tutorialAdvancedBoxPanels);
             flowLayoutPanelTutorials.Controls.Clear();
             foreach (var box in tutorialBoxPanels)

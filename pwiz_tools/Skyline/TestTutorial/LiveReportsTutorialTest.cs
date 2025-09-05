@@ -17,10 +17,12 @@
  * limitations under the License.
  */
 
+using DigitalRune.Windows.Docking;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Controls.Editor;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.AuditLog;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
@@ -42,12 +44,11 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
-using DigitalRune.Windows.Docking;
-using pwiz.Common.SystemUtil;
 using DatabindingResources = pwiz.Skyline.Controls.Databinding.DatabindingResources;
 using Peptide = pwiz.Skyline.Model.Databinding.Entities.Peptide;
 
@@ -60,24 +61,33 @@ namespace pwiz.SkylineTestTutorial
         public void TestLiveReportsTutorial()
         {
             CoverShotName = "LiveReports";
-            TestFilesZip = "https://skyline.ms/tutorials/LiveReports.zip";
+            TestFilesZipPaths = new []
+            {
+                "https://skyline.ms/tutorials/LiveReports.zip",
+                @"TestTutorial\LiveReportsViews.zip"
+            };
             AuditLogList.IgnoreTestChecks = true;
             RunFunctionalTest();
             AuditLogList.IgnoreTestChecks = false;
+        }
+
+        private string GetTestPath(string relativePath)
+        {
+            return TestFilesDirs[0].GetTestPath(relativePath);
         }
 
         protected override void DoTest()
         {
             RunUI(()=>
             {
-                SkylineWindow.OpenFile(TestFilesDir.GetTestPath("Rat_plasma.sky"));
+                SkylineWindow.OpenFile(GetTestPath("Rat_plasma.sky"));
                 SkylineWindow.ShowAuditLog();
             });
             var auditLogForm = FindOpenForm<AuditLogForm>();
             Assert.IsNotNull(auditLogForm);
-            PauseForScreenShot(auditLogForm);
+            PauseForScreenShot(auditLogForm, "Audit log view empty");
             RunUI(()=>auditLogForm.EnableAuditLogging(true));
-            PauseForScreenShot(auditLogForm);
+            PauseForScreenShot(auditLogForm, "Audit log view populated");
             OkDialog(auditLogForm, auditLogForm.Close);
             PauseForScreenShot("Status bar", null, ClipSelectionStatus);
             RunUI(() =>
@@ -86,7 +96,7 @@ namespace pwiz.SkylineTestTutorial
             });
             var documentGrid = FindOpenForm<DocumentGridForm>();
             ShowReportsDropdown(Resources.SkylineViewContext_GetDocumentGridRowSources_Proteins);
-            PauseForScreenShot(documentGrid);
+            PauseForScreenShot<DocumentGridForm>("Document Grid showing Reports menu");
             HideReportsDropdown();
             RunUI(()=>
             {
@@ -95,7 +105,7 @@ namespace pwiz.SkylineTestTutorial
                         .SkylineViewContext_GetDocumentGridRowSources_Proteins));
             });
             WaitForCondition(() => documentGrid.IsComplete);
-            PauseForScreenShot(documentGrid);
+            PauseForScreenShot<DocumentGridForm>("Document Grid showing Proteins report");
             RunUI(() =>
             {
                 documentGrid.DataGridView.CurrentCell = documentGrid.DataGridView.Rows[3].Cells[0];
@@ -103,24 +113,25 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreEqual(SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.MoleculeGroups, 3), SkylineWindow.SelectedPath);
             });
             var windowLocations = HideFloatingWindows();
-            PauseForScreenShot(SkylineWindow.SequenceTree);
+            FocusDocument();
+            PauseForScreenShot(SkylineWindow.SequenceTree, "Targets tree with protein selected");
             PauseForScreenShot("Status bar", null, ClipSelectionStatus);
             RestoreFloatingWindows(windowLocations);
-            PauseForScreenShot(documentGrid.NavBar, processShot:ClipControl(documentGrid.NavBar));
+            PauseForScreenShot(documentGrid.NavBar, "Document Grid nav bar", processShot:ClipControl(documentGrid.NavBar));
             RunUI(()=>
             {
                 documentGrid.DataboundGridControl.ChooseView(
                     ViewGroup.BUILT_IN.Id.ViewName(Resources.SkylineViewContext_GetDocumentGridRowSources_Replicates));
             });
             WaitForCondition(() => documentGrid.IsComplete);
-            PauseForScreenShot(documentGrid);
+            PauseForScreenShot<DocumentGridForm>("Document Grid showing Replicates report");
             RunLongDlg<DocumentSettingsDlg>(()=>SkylineWindow.ShowDocumentSettingsDialog(), documentSettingsDlg =>
             {
                 RunUI(()=>documentSettingsDlg.SelectTab(DocumentSettingsDlg.TABS.annotations));
-                PauseForScreenShot(documentSettingsDlg);
+                PauseForScreenShot(documentSettingsDlg, "Document Settings - Annotations empty");
                 RunLongDlg<DefineAnnotationDlg>(documentSettingsDlg.AddAnnotation, defineAnnotationDlg =>
                 {
-                    PauseForScreenShot(defineAnnotationDlg);
+                    PauseForScreenShot(defineAnnotationDlg, "Define Annotation form empty");
                     RunUI(()=>
                     {
                         defineAnnotationDlg.AnnotationName = "Cohort";
@@ -129,9 +140,9 @@ namespace pwiz.SkylineTestTutorial
                         defineAnnotationDlg.AnnotationTargets =
                             AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.replicate);
                     });
-                    PauseForScreenShot(defineAnnotationDlg);
+                    PauseForScreenShot(defineAnnotationDlg, "Define Annotation form for Cohort annotation");
                 }, defineAnnotationDlg=>defineAnnotationDlg.OkDialog());
-                PauseForScreenShot(documentSettingsDlg);
+                PauseForScreenShot(documentSettingsDlg, "Document Settings - Annotations with Cohort annotation");
                 RunLongDlg<DefineAnnotationDlg>(documentSettingsDlg.AddAnnotation, defineAnnotationDlg =>
                 {
                     RunUI(() =>
@@ -141,9 +152,9 @@ namespace pwiz.SkylineTestTutorial
                         defineAnnotationDlg.AnnotationTargets =
                             AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.replicate);
                     });
-                    PauseForScreenShot(defineAnnotationDlg);
+                    PauseForScreenShot(defineAnnotationDlg, "Define Annotation form for SubjectID annotation");
                 }, defineAnnotationDlg => defineAnnotationDlg.OkDialog());
-                PauseForScreenShot(documentSettingsDlg);
+                PauseForScreenShot(documentSettingsDlg, "Document Settings - Annotations with SubjectID annotation");
             }, documentSettingsDlg=>documentSettingsDlg.OkDialog());
             WaitForCondition(() => documentGrid.IsComplete);
             RunUI(()=>
@@ -156,7 +167,7 @@ namespace pwiz.SkylineTestTutorial
             });
             using (new GridTester(documentGrid.DataGridView).ShowComboBox())
             {
-                PauseForScreenShot(documentGrid);
+                PauseForScreenShot<DocumentGridForm>("Document Grid showing Cohort dropdown");
             }
             RunLongDlg<DocumentSettingsDlg>(()=>SkylineWindow.ShowDocumentSettingsDialog(), documentSettingsDlg =>
             {
@@ -165,7 +176,7 @@ namespace pwiz.SkylineTestTutorial
                 {
                     RunLongDlg<MetadataRuleEditor>(()=>metadataRuleSetEditor.EditRule(0), metadataRuleEditor =>
                     {
-                        PauseForScreenShot(metadataRuleEditor);
+                        PauseForScreenShot(metadataRuleEditor, "Rule Editor form empty");
                         RunUI(() =>
                         {
                             metadataRuleEditor.MetadataRule = metadataRuleEditor.MetadataRule.ChangePattern("D")
@@ -173,13 +184,13 @@ namespace pwiz.SkylineTestTutorial
                                     .Property(nameof(ResultFile.Replicate))
                                     .Property(AnnotationDef.GetColumnName("Cohort")));
                         });
-                        PauseForScreenShot(metadataRuleEditor);
+                        PauseForScreenShot(metadataRuleEditor, "Rule Editor form with Diseased rule");
                         RunUI(() =>metadataRuleEditor.PreviewGrid.FirstDisplayedScrollingRowIndex = 17);
-                        PauseForScreenShot(metadataRuleEditor);
+                        PauseForScreenShot(metadataRuleEditor, "Rule Editor form with Diseased rule scrolled");
 
                     }, metadataRuleEditor=>metadataRuleEditor.OkDialog());
                     RunUI(()=>metadataRuleSetEditor.DataGridViewSteps.CurrentCell = metadataRuleSetEditor.DataGridViewSteps.Rows[1].Cells[0]);
-                    PauseForScreenShot(metadataRuleSetEditor);
+                    PauseForScreenShot(metadataRuleSetEditor, "Rule Set Editor form with Diseased rule");
                     RunLongDlg<MetadataRuleEditor>(() => metadataRuleSetEditor.EditRule(1), metadataRuleEditor =>
                     {
                         RunUI(() =>
@@ -189,10 +200,10 @@ namespace pwiz.SkylineTestTutorial
                                     .Property(nameof(ResultFile.Replicate))
                                     .Property(AnnotationDef.GetColumnName("Cohort")));
                         });
-                        PauseForScreenShot(metadataRuleEditor);
+                        PauseForScreenShot(metadataRuleEditor, "Rule Editor form with Healthy rule");
                     }, metadataRuleEditor => metadataRuleEditor.OkDialog());
                     RunUI(() => metadataRuleSetEditor.DataGridViewSteps.CurrentCell = metadataRuleSetEditor.DataGridViewSteps.Rows[2].Cells[0]);
-                    PauseForScreenShot(metadataRuleSetEditor);
+                    PauseForScreenShot(metadataRuleSetEditor, "Rule Set Editor form with Diseased and Healthy rules");
                     RunLongDlg<MetadataRuleEditor>(()=>metadataRuleSetEditor.EditRule(2), metadataRuleEditor =>
                     {
                         RunUI(() =>
@@ -201,10 +212,10 @@ namespace pwiz.SkylineTestTutorial
                                 .Property(nameof(ResultFile.Replicate))
                                 .Property(AnnotationDef.GetColumnName("SubjectID")));
                         });
-                        PauseForScreenShot(metadataRuleEditor);
+                        PauseForScreenShot(metadataRuleEditor, "Rule Editor form with SubjectID rule");
                     }, metadataRuleEditor=>metadataRuleEditor.OkDialog());
                     RunUI(()=>metadataRuleSetEditor.DataGridViewSteps.CurrentCell = metadataRuleSetEditor.DataGridViewSteps.Rows[3].Cells[0]);
-                    PauseForScreenShot(metadataRuleSetEditor);
+                    PauseForScreenShot(metadataRuleSetEditor, "Rule Set Editor form with all 3 rules");
                     RunUI(() =>
                     {
                         metadataRuleSetEditor.RuleName = "Cohort and SubjectID";
@@ -212,7 +223,7 @@ namespace pwiz.SkylineTestTutorial
                 }, metadataRuleSetEditor => metadataRuleSetEditor.OkDialog());
             }, documentSettingsDlg=>documentSettingsDlg.OkDialog());
             WaitForCondition(() => documentGrid.IsComplete);
-            PauseForScreenShot(documentGrid);
+            PauseForScreenShot<DocumentGridForm>("Document Grid showing replicate annotations populated by rules");
             RunLongDlg<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog, documentSettingsDlg =>
             {
                 RunUI(() =>
@@ -221,7 +232,7 @@ namespace pwiz.SkylineTestTutorial
                 });
                 RunLongDlg<ListDesigner>(documentSettingsDlg.AddList, listDesigner =>
                 {
-                    PauseForScreenShot(listDesigner);
+                    PauseForScreenShot(listDesigner, "List Designer form empty");
                     RunUI(() =>
                     {
                         listDesigner.ListName = "Samples";
@@ -242,7 +253,7 @@ namespace pwiz.SkylineTestTutorial
                         listDesigner.IdProperty = "SubjectID";
                         listDesigner.DisplayProperty = "Name";
                     });
-                    PauseForScreenShot(listDesigner);
+                    PauseForScreenShot(listDesigner, "List Designer form showing Samples list");
                 }, listDesigner => listDesigner.OkDialog());
             }, documentSettingsDlg=>documentSettingsDlg.OkDialog());
             var listData = SkylineWindow.Document.Settings.DataSettings.Lists.FirstOrDefault();
@@ -254,22 +265,21 @@ namespace pwiz.SkylineTestTutorial
             var listGridForm = FindOpenForm<ListGridForm>();
             Assert.IsNotNull(listGridForm);
             WaitForConditionUI(() => listGridForm.IsComplete && listGridForm.DataGridView.Rows.Count > 0);
-            PauseForScreenShot(listGridForm);
-            var sampleInfoTsvLines = File.ReadAllLines(TestFilesDir.GetTestPath("SampleInfo.txt")).Skip(1).ToList();
+            PauseForScreenShot(listGridForm, "List: Samples grid view");
+            var sampleInfoTsvLines = File.ReadAllLines(GetTestPath("SampleInfo.txt")).Skip(1).ToList();
             Assert.AreEqual(14, sampleInfoTsvLines.Count);
             SetClipboardText(TextUtil.LineSeparate(sampleInfoTsvLines));
             RunUI(() =>
             {
                 listGridForm.DataGridView.CurrentCell = listGridForm.DataGridView.Rows[0].Cells[0];
             });
-            PauseForScreenShot(listGridForm);
+            PauseForScreenShot(listGridForm, "List: Samples grid view - with selected cell");
             RunUI(() =>
             {
-                listGridForm.DataGridView.CurrentCell = listGridForm.DataGridView.Rows[0].Cells[0];
                 listGridForm.DataGridView.SendPaste();
                 Assert.AreEqual(15, listGridForm.RowCount);
             });
-            PauseForScreenShot(listGridForm);
+            PauseForScreenShot(listGridForm, "List: Samples grid view - with pasted values");
             RunLongDlg<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog, documentSettingsDlg =>
             {
                 RunUI(()=>
@@ -287,7 +297,7 @@ namespace pwiz.SkylineTestTutorial
                         RunLongDlg<DefineAnnotationDlg>(ediListDlg.EditItem, defineAnnotationDlg =>
                         {
                             RunUI(()=>defineAnnotationDlg.ListPropertyType = new ListPropertyType(AnnotationDef.AnnotationType.text, "Samples"));
-                            PauseForScreenShot(defineAnnotationDlg);
+                            PauseForScreenShot(defineAnnotationDlg, "Define Annotation form with SubjectID as a lookup");
                         }, defineAnnotationDlg=>defineAnnotationDlg.OkDialog());
                     }, editListDlg => editListDlg.OkDialog());
             }, documentSettingsDlg=>documentSettingsDlg.OkDialog());
@@ -297,7 +307,7 @@ namespace pwiz.SkylineTestTutorial
                 documentGrid.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Replicates);
             });
             WaitForCondition(() => documentGrid.IsComplete);
-            PauseForScreenShot(documentGrid);
+            PauseForScreenShot<DocumentGridForm>("Document Grid: Replicates showing SubjectID as rat names");
             RunUI(()=>
             {
                 documentGrid.DataboundGridControl.ChooseView(ViewGroup.BUILT_IN.Id.ViewName(Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides));
@@ -316,7 +326,7 @@ namespace pwiz.SkylineTestTutorial
                         .DictionaryValues().Property(nameof(PrecursorResult.TotalArea))));
                     viewEditor.ChooseColumnsTab.AddSelectedColumn();
                 });
-                PauseForScreenShot(viewEditor);
+                PauseForScreenShot<ViewEditor>("Customize Report form with TotalArea above Standard Type");
                 RunUI(() =>
                 {
                     viewEditor.ChooseColumnsTab.MoveColumnsUp(); // Move "Standard Type" to before "Total Area"
@@ -324,14 +334,15 @@ namespace pwiz.SkylineTestTutorial
                     Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(PropertyPath.Root.Property(nameof(SkylineDocument.Replicates)).LookupAllItems()));
                     viewEditor.ChooseColumnsTab.AddSelectedColumn();
                 });
-                PauseForScreenShot(viewEditor);
+                PauseForScreenShot<ViewEditor>("Customize Report form with TotalArea last");
                 RunUI(()=>viewEditor.ViewName = "Peptide Areas");
             }, viewEditor=>viewEditor.OkDialog());
             WaitForCondition(() => documentGrid.IsComplete);
-            PauseForScreenShot(documentGrid);
+            RunUIForScreenShot(() => documentGrid.FloatingPane.FloatingWindow.Width += 100);    // Widen document grid
+            PauseForScreenShot<DocumentGridForm>("Document Grid: Peptide Areas");
             RunLongDlg<ViewEditor>(documentGrid.DataboundGridControl.NavBar.CustomizeView, viewEditor =>
             {
-                PauseForScreenShot(viewEditor);
+                PauseForScreenShot<ViewEditor>("Customize Report form showing 'Peptide Areas' report");
                 RunUI(()=> {
                     var pivotWidget = viewEditor.ViewEditorWidgets.OfType<PivotReplicateAndIsotopeLabelWidget>()
                         .FirstOrDefault();
@@ -340,11 +351,11 @@ namespace pwiz.SkylineTestTutorial
                 });
             }, viewEditor => viewEditor.OkDialog());
             WaitForCondition(() => documentGrid.IsComplete);
-            RunUI(() =>
+            RunUIForScreenShot(() =>
             {
-                documentGrid.FloatingPane.FloatingWindow.Width = 1500;
+                documentGrid.FloatingPane.FloatingWindow.Width = 1074;
             });
-            PauseForScreenShot(documentGrid);
+            PauseForScreenShot<DocumentGridForm>("Document Grid: Peptide Areas with Pivot Replicate Name");
             RunUI(() =>
             {
                 documentGrid.DataGridView.CurrentCell = documentGrid.DataGridView.Rows[0].Cells[0];
@@ -354,7 +365,7 @@ namespace pwiz.SkylineTestTutorial
             WaitForGraphs();
 
             var peakAreaReplicateComparisonGraphSummary = FindGraphSummaryByGraphType<AreaReplicateGraphPane>();
-            PauseForScreenShot(peakAreaReplicateComparisonGraphSummary);
+            PauseForScreenShot(peakAreaReplicateComparisonGraphSummary, "Peak Areas - Replicate Comparison");
             RunLongDlg<ViewEditor>(documentGrid.DataboundGridControl.NavBar.CustomizeView, viewEditor =>
             {
                 RunLongDlg<FindColumnDlg>(viewEditor.ShowFindDialog, findColumnDlg =>
@@ -366,21 +377,34 @@ namespace pwiz.SkylineTestTutorial
                     WaitForConditionUI(findColumnDlg.IsReadyToSearch);
                     RunUI(findColumnDlg.SearchForward);
                 }, findColumnDlg=> findColumnDlg.Close());
-                PauseForScreenShot(viewEditor);
+                PauseForScreenShot<ViewEditor>("Customize Report form showing 'Peptide Areas' with Normalized Area selected");
                 RunUI(()=>viewEditor.ChooseColumnsTab.AddSelectedColumn());
-                PauseForScreenShot(viewEditor);
+                PauseForScreenShot<ViewEditor>("Customize Report form showing 'Peptide Areas' with Normalized Area checked");
             }, viewEditor=>viewEditor.OkDialog());
             WaitForCondition(() => documentGrid.IsComplete);
             RunUI(()=>documentGrid.Activate());
-            PauseForScreenShot(documentGrid);
+            PauseForScreenShot<DocumentGridForm>("Document Grid: Peptide Areas with Pivot Replicate Name and Normalized Area");
             RunDlg<ChooseFormatDlg>(
-                () => documentGrid.DataboundGridControl.ShowFormatDialog(documentGrid.DataGridView.Columns[4]),
+                () => documentGrid.DataboundGridControl.ShowFormatDialog(documentGrid.DataGridView.Columns[5]), // Hidden Replicate column
                 chooseFormatDlg =>
                 {
                     chooseFormatDlg.FormatText = FormatSuggestion.Scientific.FormatString;
                     chooseFormatDlg.DialogResult = DialogResult.OK;
                 });
-            PauseForScreenShot(documentGrid);
+            PauseForScreenShot<DocumentGridForm>("Document Grid: Peptide Areas with Pivot Replicate Name and Total Area in scientific notation",
+                processShot: bmp =>
+                {
+                    // Clean-up the border in the normal way
+                    bmp = bmp.CleanupBorder(true);
+
+                    using var g = Graphics.FromImage(bmp);
+                    g.SmoothingMode = SmoothingMode.AntiAlias;
+
+                    double rows = LocalizationHelper.CurrentCulture.TwoLetterISOLanguageName.Equals("en") ? 10.6 : 11;
+                    g.DrawBoxOnColumn(documentGrid, 5, rows);
+
+                    return bmp;
+                });
 
             RunUI(() =>
             {
@@ -401,7 +425,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreEqual("D_102_REP2", SkylineWindow.ResultNameCurrent);
             });
             windowLocations = HideFloatingWindows();
-            PauseForScreenShot(SkylineWindow);
+            PauseForScreenShot( "Main window");
             RestoreFloatingWindows(windowLocations);
             RunLongDlg<ViewEditor>(documentGrid.DataboundGridControl.NavBar.CustomizeView, viewEditor =>
             {
@@ -418,7 +442,12 @@ namespace pwiz.SkylineTestTutorial
             }, viewEditor => viewEditor.OkDialog());
             WaitForCondition(() => documentGrid.IsComplete);
             RunUI(() => documentGrid.Activate());
-            PauseForScreenShot(documentGrid);
+
+            RunUIForScreenShot(() =>
+            {
+                documentGrid.FloatingPane.FloatingWindow.Width = 1500;
+            });
+            PauseForScreenShot<DocumentGridForm>("Document Grid: Peptide Areas with more Normalized Areas fields");
             RunDlg<ViewEditor>(documentGrid.DataboundGridControl.NavBar.CustomizeView, viewEditor =>
             {
                 var pivotWidget = viewEditor.ViewEditorWidgets.OfType<PivotReplicateAndIsotopeLabelWidget>()
@@ -429,7 +458,7 @@ namespace pwiz.SkylineTestTutorial
             });
             RunUI(()=>documentGrid.FloatingPane.FloatingWindow.Size = new Size(450, 200));
             WaitForCondition(() => documentGrid.IsComplete);
-            PauseForScreenShot(documentGrid,
+            PauseForScreenShot<DocumentGridForm>("Document Grid toolbar Pivot button",
                 processShot: ClipToolStripItem(documentGrid.DataboundGridControl.NavBar.GroupButton));
             RunDlg<PivotEditor>(()=>documentGrid.DataboundGridControl.NavBar.ShowPivotDialog(true), pivotEditor =>
             {
@@ -440,7 +469,7 @@ namespace pwiz.SkylineTestTutorial
                 pivotEditor.AddValue();
                 pivotEditor.OkDialog();
             });
-            PauseForScreenShot(documentGrid);
+            PauseForScreenShot<DocumentGridForm>("Document Grid: Peptide Areas pivoted to 2 document-wide values");
             RunUI(() =>
             {
                 documentGrid.NavBar.GroupButton.DropDown.Closing += DenyMenuClosing;
@@ -453,7 +482,7 @@ namespace pwiz.SkylineTestTutorial
                 transformMenuItem.DropDown.Closing += DenyMenuClosing;
                 transformMenuItem.ShowDropDown();
             });
-            PauseForScreenShot(documentGrid);
+            PauseForScreenShot<DocumentGridForm>("Document Grid showing Pivot button menu");
 
             RunUI(() => {
                 var transformMenuItem = documentGrid.NavBar.GroupButton.DropDown.Items
@@ -471,7 +500,7 @@ namespace pwiz.SkylineTestTutorial
                 documentGrid.FloatingPane.FloatingWindow.Size = new Size(1100, 500);
                 documentGrid.DataGridView.CurrentCell = documentGrid.DataGridView.Rows[0].Cells[0];
             });
-            PauseForScreenShot(documentGrid);
+            PauseForScreenShot<DocumentGridForm>("Document Grid: Peptide Areas without pivot");
             RunLongDlg<ViewEditor>(documentGrid.NavBar.CustomizeView, viewEditor =>
             {
                 var ppSubjectID = PropertyPath.Root.Property(nameof(SkylineDocument.Replicates)).LookupAllItems()
@@ -481,14 +510,14 @@ namespace pwiz.SkylineTestTutorial
                     viewEditor.ChooseColumnsTab.AvailableFieldsTree.SelectColumn(ppSubjectID);
                     viewEditor.ChooseColumnsTab.AddSelectedColumn();
                 });
-                PauseForScreenShot(viewEditor);
+                PauseForScreenShot<ViewEditor>("Customize Report with SubjectID checked");
             }, viewEditor=>viewEditor.OkDialog());
-            RunUI(() => documentGrid.FloatingPane.FloatingWindow.Size = new Size(1200, 500));
+            RunUIForScreenShot(() => documentGrid.FloatingPane.FloatingWindow.Width = 1200);
             WaitForCondition(() => documentGrid.IsComplete);
-            PauseForScreenShot(documentGrid);
+            PauseForScreenShot<DocumentGridForm>("Document Grid: Peptide Areas without pivot and SubjectID added");
             RunLongDlg<PivotEditor>(()=>documentGrid.NavBar.ShowPivotDialog(true), pivotEditor =>
             {
-                PauseForScreenShot(pivotEditor);
+                PauseForScreenShot(pivotEditor, "Pivot Editor form blank");
                 RunUI(()=>
                 {
                     SelectPivotEditorColumns(pivotEditor, nameof(ColumnCaptions.Peptide));
@@ -499,15 +528,16 @@ namespace pwiz.SkylineTestTutorial
                     pivotEditor.SelectAggregateOperation(AggregateOperation.Cv);
                     pivotEditor.AddValue();
                 });
-                PauseForScreenShot(pivotEditor);
+                PauseForScreenShot(pivotEditor, "Pivot Editor form with pivot values");
             }, pivotEditor=>pivotEditor.OkDialog());
             WaitForCondition(() => documentGrid.IsComplete);
             RunUI(()=>documentGrid.DataGridView.CurrentCell = documentGrid.DataGridView.Rows[0].Cells[0]);
-            PauseForScreenShot(documentGrid);
+            RunUIForScreenShot(() => documentGrid.FloatingPane.FloatingWindow.Width = 800);
+            PauseForScreenShot<DocumentGridForm>("Document Grid: Peptide Areas pivoted on SubjectID");
             var captionDrizzleNormalizedArea =
                 TextUtil.SpaceSeparate("Drizzle", AggregateOperation.Cv.QualifyColumnCaption(new ColumnCaption(ColumnCaptions.NormalizedAreaRaw)).GetCaption(SkylineDataSchema.GetLocalizedSchemaLocalizer()));
             SetSortDirection(documentGrid.DataboundGridControl, captionDrizzleNormalizedArea, ListSortDirection.Ascending);
-            PauseForScreenShot(documentGrid);
+            PauseForScreenShot<DocumentGridForm>("Document Grid: Peptide Areas pivoted on SubjectID and sorted");
             RunUI(() =>
             {
                 documentGrid.DataGridView.CurrentCell = documentGrid.DataGridView.Rows[0].Cells[0];
@@ -516,7 +546,7 @@ namespace pwiz.SkylineTestTutorial
             });
             WaitForGraphs();
             peakAreaReplicateComparisonGraphSummary = FindGraphSummaryByGraphType<AreaReplicateGraphPane>();
-            PauseForScreenShot(peakAreaReplicateComparisonGraphSummary);
+            PauseForScreenShot(peakAreaReplicateComparisonGraphSummary, "Peak Areas - Replicate Comparison for SVVDIGLIK");
             SetSortDirection(documentGrid.DataboundGridControl, captionDrizzleNormalizedArea, ListSortDirection.Descending);
             RunUI(() =>
             {
@@ -525,7 +555,7 @@ namespace pwiz.SkylineTestTutorial
                 AssertPeptideSelected("AGSWQITMK");
             });
             WaitForGraphs();
-            PauseForScreenShot(peakAreaReplicateComparisonGraphSummary);
+            PauseForScreenShot(peakAreaReplicateComparisonGraphSummary, "Peak Areas - Replicate Comparison for AGSWQITMK");
             RunLongDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, peptideSettingsUi =>
             {
                 RunUI(() =>
@@ -533,10 +563,10 @@ namespace pwiz.SkylineTestTutorial
                     peptideSettingsUi.SelectedTab = PeptideSettingsUI.TABS.Quantification;
                     peptideSettingsUi.QuantNormalizationMethod = NormalizationMethod.GLOBAL_STANDARDS;
                 });
-                PauseForScreenShot(peptideSettingsUi);
+                PauseForScreenShot(peptideSettingsUi, "Peptide Settings - Quantification");
             }, peptideSettingsUi=>peptideSettingsUi.OkDialog());
             SetSortDirection(documentGrid.DataboundGridControl, captionDrizzleNormalizedArea, ListSortDirection.Ascending);
-            PauseForScreenShot(documentGrid);
+            PauseForScreenShot<DocumentGridForm>("Document Grid: Peptide Areas pivoted on SubjectID and normalized to Global Standards");
             RunUI(() =>
             {
                 var colCvNormalizedArea = documentGrid.DataGridView.Columns.OfType<DataGridViewColumn>()
@@ -557,9 +587,10 @@ namespace pwiz.SkylineTestTutorial
                     viewEditor.FilterTab.AddSelectedColumn();
                     viewEditor.FilterTab.SetFilterOperation(0, FilterOperations.OP_IS_BLANK);
                 });
-                PauseForScreenShot(viewEditor);
+                PauseForScreenShot<ViewEditor>("Customize Report with filter");
             }, viewEditor=>viewEditor.OkDialog());
             WaitForCondition(() => documentGrid.IsComplete);
+            RunUI(() => SkylineWindow.ShowDocumentGrid(false)); // Done with Document Grid
             const string groupComparisonName = "Peptide Group Comparison";
             RunLongDlg<EditGroupComparisonDlg>(SkylineWindow.AddGroupComparison, editGroupComparisonDlg =>
             {
@@ -580,7 +611,7 @@ namespace pwiz.SkylineTestTutorial
             });
             var groupComparisonGrid = FindOpenForm<FoldChangeGrid>();
             Assert.IsNotNull(groupComparisonGrid);
-            PauseForScreenShot(groupComparisonGrid);
+            PauseForScreenShot(groupComparisonGrid, "Peptide Group Comparison:Grid");
             WaitForCondition(() => groupComparisonGrid.IsComplete);
             RunUI(() =>
             {
@@ -588,7 +619,7 @@ namespace pwiz.SkylineTestTutorial
                 groupComparisonGrid.FloatingPane.FloatingWindow.Width = 1000;
             });
             SetSortDirection(groupComparisonGrid.DataboundGridControl, ColumnCaptions.FoldChangeResult, ListSortDirection.Ascending);
-            PauseForScreenShot(groupComparisonGrid.FloatingPane);
+            PauseForScreenShot(groupComparisonGrid.FloatingPane, "Peptide Group Comparison Grid and Bar Graph");
             RunUI(() =>
             {
                 groupComparisonGrid.DataboundGridControl.DataGridView.CurrentCell =
@@ -597,7 +628,7 @@ namespace pwiz.SkylineTestTutorial
                 AssertPeptideSelected("WWGQEITELAQGPGR");
             });
             WaitForGraphs();
-            PauseForScreenShot(peakAreaReplicateComparisonGraphSummary);
+            PauseForScreenShot(peakAreaReplicateComparisonGraphSummary, "Peak Areas - Replicate Comparison for WWGQEITELAQGPGR");
             RunLongDlg<QuickFilterForm>(()=>groupComparisonGrid.DataboundGridControl.QuickFilter(groupComparisonGrid.DataboundGridControl.DataGridView.Columns[3]),
                 quickFilterForm =>
                 {
@@ -607,10 +638,10 @@ namespace pwiz.SkylineTestTutorial
                         quickFilterForm.SetFilterOperation(0, FilterOperations.OP_IS_LESS_THAN);
                         quickFilterForm.SetFilterOperand(0, 0.05.ToString(CultureInfo.CurrentCulture));
                     });
-                    PauseForScreenShot(quickFilterForm);
+                    PauseForScreenShot(quickFilterForm, "Grid filter form");
                 }, quickFilterForm=>quickFilterForm.OkDialog());
             WaitForCondition(() => groupComparisonGrid.IsComplete);
-            PauseForScreenShot(groupComparisonGrid.FloatingPane.FloatingWindow);
+            PauseForScreenShot(groupComparisonGrid.FloatingPane.FloatingWindow, "Peptide Group Comparison Grid and Bar Graph filtered p value < 0.05");
             RunUI(() =>
             {
                 var barGraph = FindOpenForm<FoldChangeBarGraph>();
@@ -626,7 +657,7 @@ namespace pwiz.SkylineTestTutorial
                 viewEditor.OkDialog();
             });
             WaitForCondition(() => groupComparisonGrid.IsComplete);
-            PauseForScreenShot(groupComparisonGrid);
+            PauseForScreenShot(groupComparisonGrid, "Peptide Group Comparison Grid with Abundance values");
             RunUI(() =>
             {
                 var clusterSplitButton = groupComparisonGrid.DataboundGridControl.NavBar.ClusterSplitButton;
@@ -637,7 +668,16 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsNotNull(showHeatMapItem);
                 showHeatMapItem.Select();
             });
-            PauseForScreenShot(groupComparisonGrid);
+            PauseForScreenShot(groupComparisonGrid, "Peptide Group Comparison Grid showing heat map menu", processShot:
+                bmp =>
+                {
+                    var rectBitmap = ScreenshotManager.GetFramedWindowBounds(groupComparisonGrid);
+                    var clusterSplitButtonMenu = groupComparisonGrid.DataboundGridControl.NavBar.ClusterSplitButton.DropDown;
+                    var ptMenuBottomRight = new Point(clusterSplitButtonMenu.Right - rectBitmap.Left,
+                        clusterSplitButtonMenu.Bottom - rectBitmap.Top);
+
+                    return ClipBitmap(bmp, new Rectangle(0, 0, ptMenuBottomRight.X + 14, ptMenuBottomRight.Y + 14));
+                });
             RunUI(() =>
             {
                 var clusterSplitButton = groupComparisonGrid.DataboundGridControl.NavBar.ClusterSplitButton;
@@ -654,7 +694,7 @@ namespace pwiz.SkylineTestTutorial
                 {
                     documentSettingsDlg.SelectTab(DocumentSettingsDlg.TABS.reports);
                 });
-                PauseForScreenShot(documentSettingsDlg);
+                PauseForScreenShot(documentSettingsDlg, "Document Settings - Reports");
                 
                 RunUI(()=>
                 {
@@ -670,16 +710,21 @@ namespace pwiz.SkylineTestTutorial
             auditLogForm = FindOpenForm<AuditLogForm>();
             Assert.IsNotNull(auditLogForm);
             WaitForCondition(() => auditLogForm.IsComplete);
-            PauseForScreenShot(auditLogForm);
+            PauseForScreenShot(auditLogForm, "Audit Log: All Info");
             RunUI(() =>
             {
                 auditLogForm.ChooseView(AuditLogStrings.AuditLogForm_MakeAuditLogForm_Summary);
             });
             WaitForCondition(() => auditLogForm.IsComplete);
-            PauseForScreenShot(auditLogForm);
+            PauseForScreenShot(auditLogForm, "Audit Log: Summary");
+            if (IsCoverShotMode)
+            {
+                RestoreCoverViewOnScreen();
+                TakeCoverShot();
+            }
             RunLongDlg<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog, exportReportDlg =>
             {
-                PauseForScreenShot(exportReportDlg);
+                PauseForScreenShot(exportReportDlg, "Export Report");
             }, exportReportDlg=>exportReportDlg.Close());
             RunUI(() =>
             {

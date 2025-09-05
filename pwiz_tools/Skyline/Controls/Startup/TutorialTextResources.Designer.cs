@@ -97,7 +97,7 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Custom &amp; Live Reports.
+        ///   Looks up a localized string similar to Custom Reports.
         /// </summary>
         internal static string CustomReports_Caption {
             get {
@@ -313,6 +313,24 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Live Reports.
+        /// </summary>
+        internal static string LiveReports_Caption {
+            get {
+                return ResourceManager.GetString("LiveReports_Caption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Get hands-on experience with Skyline Live Reports, a customizable set of tabular views for exploring and reporting quantitative data. These views update in real time as the Skyline document you are working on changes. They also provide direct access to important values you may want to change. You will learn how to enable audit and view logging, work with built-in and user-defined reports, create annotations and lists, pivot and filter data, and perform group comparisons. The tutorial also demonstrates how t [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string LiveReports_Description {
+            get {
+                return ResourceManager.GetString("LiveReports_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Targeted Method Editing.
         /// </summary>
         internal static string MethodEdit_Caption {
@@ -448,6 +466,15 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Reports.
+        /// </summary>
+        internal static string Section_Reports_Topics {
+            get {
+                return ResourceManager.GetString("Section_Reports_Topics", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Small Molecules.
         /// </summary>
         internal static string Section_Small_Molecules {
@@ -484,7 +511,7 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Learn how how to create a Skyline document that targets stable isotope labeled molecules from a literature citation, specified as only precursor m/z, product ion m/z, and collision energy values. Perform retention time scheduling and collision energy optimization for molecules by importing a multi-replicate data set from a Waters Xevo TQ-S using initial CE values from a Sciex triple quad. Learn how many existing Skyline features created initially for targeted proteomics use can now be applied to non-proteom [rest of string was truncated]&quot;;.
+        ///   Looks up a localized string similar to Learn how to create a Skyline document that targets stable isotope labeled molecules from a literature citation, specified as only precursor m/z, product ion m/z, and collision energy values. Perform retention time scheduling and collision energy optimization for molecules by importing a multi-replicate data set from a Waters Xevo TQ-S using initial CE values from a Sciex triple quad. Learn how many existing Skyline features created initially for targeted proteomics use can now be applied to non-proteomic m [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string SmallMoleculeMethodDevCEOpt_Description {
             get {
