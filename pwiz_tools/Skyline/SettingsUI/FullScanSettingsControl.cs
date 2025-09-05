@@ -349,10 +349,16 @@ namespace pwiz.Skyline.SettingsUI
                 comboEnrichments.Enabled = true;
             }
 
-            // EI mode treats MS1 data as fragments
-            textPrecursorRes.Enabled = !MS2Only;
-            textPrecursorAt.Enabled = !MS2Only;
-            comboPrecursorAnalyzerType.Enabled = !MS2Only;
+            // EI mode treats MS1 data as fragments, so grey out MS1 settings in EI mode
+            var enableRes = (PrecursorIsotopesCurrent != FullScanPrecursorIsotopes.None) && !MS2Only;
+            textPrecursorRes.Enabled = enableRes;
+            textPrecursorAt.Enabled = enableRes;
+            comboPrecursorAnalyzerType.Enabled = enableRes;
+            // Set tooltip on MS1 settings label to explain why combo is disabled
+            toolTip.SetToolTip(this.label32,
+                PrecursorIsotopesCurrent == FullScanPrecursorIsotopes.None || !MS2Only
+                    ? string.Empty
+                    : DocSettingsResources.FullScanAcquisitionMethod_EI_TOOLTIP);
 
             UpdateSelectivityOption();
         }
