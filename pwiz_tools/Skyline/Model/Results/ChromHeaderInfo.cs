@@ -156,6 +156,7 @@ namespace pwiz.Skyline.Model.Results
         private eIonMobilityUnits _ionMobilityUnits;
         private byte _numPeaks;
         private byte _maxPeakIndex;
+        private float _maxPeakScore;
         /////////////////////////////////////////////////////////////////////
 
         [Flags]
@@ -168,7 +169,8 @@ namespace pwiz.Skyline.Model.Results
             has_frag_scan_ids = 0x10,
             raw_chromatograms = 0x20,
             dda_acquisition_method = 0x40,
-            extracted_qc_trace = 0x80
+            extracted_qc_trace = 0x80,
+            has_max_peak_score = 0x100
         }
 
         /// <summary>
@@ -179,10 +181,11 @@ namespace pwiz.Skyline.Model.Results
         private const byte NO_MAX_PEAK = 0xFF;
 
         public ChromGroupHeaderInfo(SignedMz precursor, int numTransitions, int numPeaks, int maxPeakIndex,
+            float? maxPeakScore,
             int compressedSize, int uncompressedSize,
             int numPoints, FlagValues flags, float? startTime, float? endTime,
             double? collisionalCrossSection, eIonMobilityUnits ionMobilityUnits)
-            : this(precursor, 0, numTransitions, 0, numPeaks, 0, 0, maxPeakIndex, numPoints, compressedSize, uncompressedSize, 0, flags,
+            : this(precursor, 0, numTransitions, 0, numPeaks, 0, 0, maxPeakIndex, maxPeakScore, numPoints, compressedSize, uncompressedSize, 0, flags,
                 startTime, endTime, collisionalCrossSection, ionMobilityUnits)
         {
         }
@@ -192,7 +195,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public ChromGroupHeaderInfo(SignedMz precursor, int fileIndex,
                                      int numTransitions, int startTransitionIndex,
-                                     int numPeaks, int startPeakIndex, int startScoreIndex, int maxPeakIndex,
+                                     int numPeaks, int startPeakIndex, int startScoreIndex, int maxPeakIndex, float? maxPeakScore,
                                      int numPoints, int compressedSize, int uncompressedSize, long location, FlagValues flags,
                                      float? startTime, float? endTime,
                                      double? collisionalCrossSection, 
@@ -233,6 +236,11 @@ namespace pwiz.Skyline.Model.Results
 
             _textIdIndex = -1;
             _ionMobilityUnits = ionMobilityUnits;
+            if (maxPeakScore.HasValue)
+            {
+                _flagBits |= FlagValues.has_max_peak_score;
+                _maxPeakScore = maxPeakScore.Value;
+            }
         }
         
         public ChromGroupHeaderInfo(ChromGroupHeaderInfo16 headerInfo16, int textIdIndex) : this()
@@ -300,6 +308,18 @@ namespace pwiz.Skyline.Model.Results
         public byte NumPeaks { get { return _numPeaks; } }        // The number of peaks stored per chrom should be well under 128
         public long LocationPoints { get{return _locationPoints;} }
         public int UncompressedSize { get{return _uncompressedSize;} }
+
+        public float? MaxPeakScore
+        {
+            get
+            {
+                if ((_flagBits & FlagValues.has_max_peak_score) == 0)
+                {
+                    return null;
+                }
+                return _maxPeakScore;
+            }
+        }
 
         public override string ToString()
         {
@@ -417,14 +437,30 @@ namespace pwiz.Skyline.Model.Results
 
         #region Fast file I/O
 
-        public static IItemSerializer<ChromGroupHeaderInfo> ItemSerializer(int itemSizeOnDisk)
+        public static IItemSerializer<ChromGroupHeaderInfo> ItemSerializer(CacheFormatVersion formatVersion, int itemSizeOnDisk)
         {
             StructSerializer<ChromGroupHeaderInfo> structSerializer = new StructSerializer<ChromGroupHeaderInfo>
             {
                 ItemSizeOnDisk = itemSizeOnDisk,
                 DirectSerializer = DirectSerializer.Create(ReadArray, WriteArray)
             };
-            return structSerializer;
+            
+            FlagValues unsupportedFlags = 0;
+            if (formatVersion < CacheFormatVersion.Nineteen)
+            {
+                unsupportedFlags |= FlagValues.has_max_peak_score;
+            }
+            if (unsupportedFlags == 0)
+            {
+                return structSerializer;
+            }
+
+            Func<ChromGroupHeaderInfo, ChromGroupHeaderInfo> converter = x =>
+            {
+                x._flagBits &= ~unsupportedFlags;
+                return x;
+            };
+            return ConvertedItemSerializer.Create(structSerializer, converter, converter);
         }
         /// <summary>
         /// Direct read of an entire array throw p-invoke of Win32 WriteFile.  This seems
@@ -484,12 +520,15 @@ namespace pwiz.Skyline.Model.Results
             {
                 return 56;
             }
-
             if (cacheFormatVersion < CacheFormatVersion.Seventeen)
             {
                 return 72;
             }
-            return 68;
+            if (cacheFormatVersion < CacheFormatVersion.Nineteen)
+            {
+                return 68;
+            }
+            return 72;
         }
     }
 
@@ -2841,9 +2880,20 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromPeak CalcPeak(PeakGroupIntegrator peakGroupIntegrator, float startTime, float endTime, ChromPeak.FlagValues flags)
         {
+            if (startTime == endTime)
+            {
+                return ChromPeak.EMPTY;
+            }
+            var existingPeak = Peaks.FirstOrDefault(peak => peak.StartTime == startTime && peak.EndTime == endTime);
+            if (!existingPeak.IsEmpty)
+            {
+                return existingPeak;
+            }
             var peakIntegrator = MakePeakIntegrator(peakGroupIntegrator);
             return peakIntegrator.IntegratePeak(startTime, endTime, flags);
         }
+        
+        
 
         public PeakIntegrator MakePeakIntegrator(PeakGroupIntegrator peakGroupIntegrator)
         {

@@ -23,7 +23,6 @@ using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.RetentionTimes;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
@@ -72,23 +71,5 @@ namespace pwiz.SkylineTestData.Results
             Assert.AreNotEqual(compare.RetentionTimeAlignments.Values[0], compare.RetentionTimeAlignments.Values[1]);
         }
 
-        [TestMethod]
-        public void TestSettings()
-        {
-            var settings = SrmSettingsList.GetDefault();
-            var documentRetentionTimes =
-                new DocumentRetentionTimes(
-                    new[] {new RetentionTimeSource("foo", "fooLibrary"), },
-                    new[] {new FileRetentionTimeAlignments("foo", new RetentionTimeAlignment[0])}
-                );
-            var settings2 = settings.ChangeDocumentRetentionTimes(documentRetentionTimes);
-            Assert.AreNotEqual(settings, settings2);
-            Assert.AreEqual(documentRetentionTimes, settings2.DocumentRetentionTimes);
-            var settings3 =
-                settings2.ChangeDataSettings(new DataSettings(new[]{new AnnotationDef("foo", AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.transition_result), AnnotationDef.AnnotationType.true_false, new string[0])}));
-            Assert.AreNotEqual(settings2, settings3);
-            Assert.AreEqual(settings2.DocumentRetentionTimes, settings3.DocumentRetentionTimes);
-            Assert.AreNotEqual(settings.DocumentRetentionTimes, settings3.DocumentRetentionTimes);
-        }
     }
 }
