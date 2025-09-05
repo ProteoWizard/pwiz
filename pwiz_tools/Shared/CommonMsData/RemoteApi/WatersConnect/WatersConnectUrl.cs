@@ -50,6 +50,11 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
         public string InjectionId { get; private set; }
         public string FolderOrSampleSetId { get; private set; }
         public ItemType Type { get; private set; }
+        
+        public override string SourceType
+        {
+            get { return Type == ItemType.sample_set ? DataSourceUtil.SAMPLE_SET_TYPE : DataSourceUtil.FOLDER_TYPE; }
+        }
 
         public WatersConnectUrl ChangeInjectionId(string id)
         {

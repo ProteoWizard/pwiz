@@ -146,6 +146,8 @@ namespace pwiz.CommonMsData.RemoteApi
             return this;
         }
 
+        public virtual string SourceType => DataSourceUtil.FOLDER_TYPE;
+
         protected virtual NameValueParameters GetParameters()
         {
             var nameValuePairs = new NameValueParameters();
