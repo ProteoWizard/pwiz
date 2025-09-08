@@ -27,6 +27,7 @@ using System.Windows.Forms;
 using pwiz.BiblioSpec;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
@@ -34,7 +35,6 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -494,6 +494,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                          !BuildPepSearchLibControl.PerformDDASearch; }
         }
 
+        private bool GetAreLibrarySpectraDIA()
+        {
+            if (!IsImportingSearchResults)
+                return WorkflowType == Workflow.dia;
+
+            var libraryFiles = ImportPeptideSearch.DocLib.LibraryDetails.DataFiles;
+            return libraryFiles.All(d => d.WorkflowType == Model.Lib.WorkflowType.DIA);
+        }
+
         private Pages LastPage
         {
             get
@@ -617,7 +626,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     var oldImportResultsControl = (Control) ImportResultsControl;
                     getChromatogramsPage.Controls.Remove(oldImportResultsControl);
 
-                    if (WorkflowType != Workflow.dia || HasPeakBoundaries)
+                    if (WorkflowType != Workflow.dia || HasPeakBoundaries || (IsImportingSearchResults && GetAreLibrarySpectraDIA()))
                     {
                         if (!(ImportResultsControl is ImportResultsControl))
                         {

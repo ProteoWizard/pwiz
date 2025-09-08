@@ -47,7 +47,7 @@ namespace pwiz.Skyline.Alerts
             }
             finally
             {
-                Helpers.TryTwice(() => File.Delete(exceptionFile));
+                TryHelper.TryTwice(() => File.Delete(exceptionFile));
             }
 
             string exceptionType = lines.ElementAtOrDefault(0) ?? string.Empty;
@@ -104,7 +104,7 @@ namespace pwiz.Skyline.Alerts
                     if (fileInfo.LastWriteTime < DateTime.Now + TimeSpan.FromDays(1))
                         return true;
                 }
-                Helpers.TryTwice(() => File.Delete(exceptionFile));
+                TryHelper.TryTwice(() => File.Delete(exceptionFile));
             }
             return false;
         }

@@ -62,6 +62,7 @@
 //#include <boost/xpressive/xpressive.hpp>
 #include <iostream>
 #include <thread>
+#include <filesystem>
 
 using std::string;
 using std::vector;
@@ -523,6 +524,11 @@ PWIZ_API_DECL void copy_directory(const bfs::path& from, const bfs::path& to, bo
         else
             bfs::copy(from, to);
     }
+}
+
+PWIZ_API_DECL bfs::path canonical(const bfs::path from)
+{
+    return PWIZ_API_DECL bfs::path(std::filesystem::canonical(std::filesystem::u8path(from.string())).u8string());
 }
 
 

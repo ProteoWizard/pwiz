@@ -34,7 +34,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
     {
         public enum ModType { structural, heavy };
 
-        public struct ListBoxModification
+        public struct ListBoxModification : IEquatable<ListBoxModification>
         {
             public StaticMod Mod { get; private set; }
             public ModType? ModificationType { get; private set; }
@@ -64,6 +64,24 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         sb.Append(PeptideSearchResources.ListBoxModification_ToString__fixed_);
                 }
                 return string.Format(Resources.AbstractModificationMatcherFoundMatches__0__equals__1__, Mod.Name, sb);
+            }
+
+            public bool Equals(ListBoxModification other)
+            {
+                return Equals(Mod, other.Mod) && ModificationType == other.ModificationType;
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is ListBoxModification other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return ((Mod != null ? Mod.GetHashCode() : 0) * 397) ^ ModificationType.GetHashCode();
+                }
             }
         }
 

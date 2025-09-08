@@ -1,0 +1,59 @@
+{
+  "LibraryPeptideCount": 15855,
+  "IrtSlope": 2.624,
+  "IrtIntercept": -48.003,
+  "FinalTargetCounts": [
+    13,
+    271,
+    331,
+    1985
+  ],
+  "MassErrorStats": [
+    [
+      1.61,
+      4.17
+    ],
+    [
+      1.35,
+      4.12
+    ],
+    [
+      1.57,
+      4.36
+    ],
+    [
+      1.83,
+      3.7
+    ],
+    [
+      1.83,
+      4.37
+    ],
+    [
+      1.83,
+      4.12
+    ],
+    [
+      1.24,
+      4.36
+    ]
+  ],
+  "DiffPeptideCounts": [
+    139,
+    47,
+    29,
+    52
+  ],
+  "UnpolishedProteins": 9,
+  "PolishedProteins": 11,
+  "ScoringModelCoefficients": [
+    0.29,
+    -0.7751,
+    5.1146,
+    -0.4415,
+    -0.0802,
+    0.7128,
+    0.106,
+    -0.0559
+  ]
+}

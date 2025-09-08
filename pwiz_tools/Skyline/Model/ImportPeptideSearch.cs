@@ -24,6 +24,7 @@ using System.Linq;
 using pwiz.BiblioSpec;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Irt;
@@ -351,7 +352,19 @@ namespace pwiz.Skyline.Model
             {
                 // Search the directories of the search files
                 foreach (var searchFilename in SearchFilenames)
-                    yield return Path.GetDirectoryName(searchFilename);
+                {
+                    string searchFileDirectory = Path.GetDirectoryName(searchFilename);
+                    yield return searchFileDirectory;
+
+                    if (searchFileDirectory == null)
+                        continue;
+
+                    DirectoryInfo parentDir = Directory.GetParent(searchFileDirectory);
+                    if (parentDir != null)
+                    {
+                        yield return parentDir.ToString();
+                    }
+                }
             }
         }
 

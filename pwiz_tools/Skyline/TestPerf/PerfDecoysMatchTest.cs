@@ -22,11 +22,11 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
@@ -144,10 +144,10 @@ namespace TestPerf
                     foreach (var graphChromatogram in SkylineWindow.GraphChromatograms)
                     {
                         Assert.IsNull(graphChromatogram.RetentionMsMs);
+                        // There are no aligned retention times because the graph has only been asked to show unaligned retention times
                         Assert.IsNull(graphChromatogram.AlignedRetentionMsMs);
-                        Assert.IsNotNull(graphChromatogram.UnalignedRetentionMsMs);
-                        Assert.AreNotEqual(0, graphChromatogram.UnalignedRetentionMsMs.Length);
-                        ValidateTimeRange(graphChromatogram, graphChromatogram.UnalignedRetentionMsMs, 8, 120);
+                        // There are no unaligned retention times because all runs have been successfully aligned to each other
+                        Assert.IsNull(graphChromatogram.UnalignedRetentionMsMs);
                     }
 
                     SkylineWindow.SequenceTree.SelectedNode = SkipInvalidNodes(SkylineWindow.SequenceTree.SelectedNode.NextNode);

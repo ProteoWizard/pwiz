@@ -286,5 +286,10 @@ namespace pwiz.Skyline.SettingsUI.Irt
         {
             return 0 <= rowIndex && rowIndex < dataGridView.RowCount ? dataGridView.Rows[rowIndex] : null;
         }
+
+        public IIrtRegression GetRegressionRefined(int rowIndex)
+        {
+            return (GetRow(rowIndex).Tag as RetentionTimeProviderData)?.RegressionRefined;
+        }
     }
 }

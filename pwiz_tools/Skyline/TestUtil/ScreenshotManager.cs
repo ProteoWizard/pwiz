@@ -30,7 +30,6 @@ using JetBrains.Annotations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
-using pwiz.Skyline.Util;
 using pwiz.Common.SystemUtil.PInvoke;
 using TestRunnerLib.PInvoke;
 using ZedGraph;

@@ -23,6 +23,7 @@ using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Util;
@@ -685,6 +686,7 @@ namespace pwiz.Skyline.Model.Results
 
                 int numPeaks = minimizedChromGroup.NumPeaks;
                 int maxPeakIndex = minimizedChromGroup.MaxPeakIndex;
+                float? maxPeakScore = maxPeakIndex >= 0 ? originalChromGroup.Header.MaxPeakScore : null;
 
                 _cacheFormat.ChromPeakSerializer().WriteItems(_outputStreamPeaks, minimizedChromGroup.MinimizedPeaks);
 
@@ -700,7 +702,8 @@ namespace pwiz.Skyline.Model.Results
                     numPeaks,
                     startPeakIndex,
                     startScoreIndex,
-                    maxPeakIndex,
+                    maxPeakIndex, 
+                    maxPeakScore,
                     timeIntensitiesGroup.NumInterpolatedPoints,
                     lenCompressed,
                     lenUncompressed,

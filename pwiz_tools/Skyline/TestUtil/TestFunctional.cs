@@ -39,6 +39,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.ProteomeDatabase.Fasta;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline;
@@ -749,7 +750,7 @@ namespace pwiz.SkylineTestUtil
                 // When debugger is attached, some vendor readers are S-L-O-W!
                 waitMultiplier = 10;
             }
-            else if (ExtensionTestContext.IsDebugMode || Helpers.RunningResharperAnalysis)
+            else if (ExtensionTestContext.IsDebugMode || TryHelper.RunningResharperAnalysis)
             {
                 // Wait a little longer for debug build.
                 waitMultiplier = 4;
@@ -1639,6 +1640,22 @@ namespace pwiz.SkylineTestUtil
         }
 
         /// <summary>
+        /// Returns a function which clips out the rectangle of a control from its parent form's rectangle.
+        /// </summary>
+        public Func<Bitmap, Bitmap> ClipControl(Control control)
+        {
+            return bmp => CallUI(() =>
+            {
+                var parentWindowRect = ScreenshotManager.GetFramedWindowBounds(control);
+                var controlScreenRect = control.RectangleToScreen(new Rectangle(0, 0, control.Width, control.Height));
+                return ClipBitmap(bmp,
+                    new Rectangle(controlScreenRect.Left - parentWindowRect.Left,
+                        controlScreenRect.Top - parentWindowRect.Top, controlScreenRect.Width,
+                        controlScreenRect.Height));
+            });
+        }
+
+        /// <summary>
         /// Clips a set of windows and pop-up menus from a full screen screenshot on a specified background.
         /// </summary>
         /// <param name="bmp">Full screen screenshot</param>
@@ -2315,7 +2332,7 @@ namespace pwiz.SkylineTestUtil
         {
             var recordedFile = GetLogFilePath(AuditLogDir);
             if (File.Exists(recordedFile))
-                Helpers.TryTwice(() => File.Delete(recordedFile));    // Avoid appending to the same file on multiple runs
+                TryHelper.TryTwice(() => File.Delete(recordedFile));    // Avoid appending to the same file on multiple runs
         }
 
         private string GetLogFilePath(string folderPath)
@@ -2537,7 +2554,7 @@ namespace pwiz.SkylineTestUtil
                 // holds no file handles.
                 var docNew = new SrmDocument(SrmSettingsList.GetDefault());
                 // Try twice, because this operation can fail due to active background processing
-                RunUI(() => Helpers.TryTwice(() => SkylineWindow.SwitchDocument(docNew, null)));
+                RunUI(() => TryHelper.TryTwice(() => SkylineWindow.SwitchDocument(docNew, null)));
 
                 WaitForCondition(1000, () => !FileStreamManager.Default.HasPooledStreams, string.Empty, false);
                 if (FileStreamManager.Default.HasPooledStreams)
@@ -2974,12 +2991,21 @@ namespace pwiz.SkylineTestUtil
 
         public static string ParseIrtProperties(string irtFormula, CultureInfo cultureInfo = null)
         {
+            ParseIrtSlopeAndIntercept(irtFormula, cultureInfo??CultureInfo.CurrentCulture, out var slope, out var intercept);
+            return $"IrtSlope = {slope},\r\nIrtIntercept = {intercept},\r\n";
+        }
+
+        public static void ParseIrtSlopeAndIntercept(string irtFormula, CultureInfo cultureInfo, out double slope, out double intercept)
+        {
             var decimalSeparator = (cultureInfo ?? CultureInfo.CurrentCulture).NumberFormat.NumberDecimalSeparator;
             var match = Regex.Match(irtFormula, $@"iRT = (?<slope>\d+{decimalSeparator}\d+) \* [^+-]+? (?<sign>[+-]) (?<intercept>\d+{decimalSeparator}\d+)");
             Assert.IsTrue(match.Success);
-            string slope = match.Groups["slope"].Value, intercept = match.Groups["intercept"].Value, sign = match.Groups["sign"].Value;
-            if (sign == "+") sign = string.Empty;
-            return $"IrtSlope = {slope},\r\nIrtIntercept = {sign}{intercept},\r\n";
+            slope = double.Parse(match.Groups["slope"].Value, cultureInfo);
+            intercept = double.Parse(match.Groups["intercept"].Value);
+            if (match.Groups["sign"].Value == "-")
+            {
+                intercept = -intercept;
+            }
         }
 
         #region Modification helpers

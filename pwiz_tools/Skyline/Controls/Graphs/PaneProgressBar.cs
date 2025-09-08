@@ -21,12 +21,11 @@ using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
-using pwiz.Skyline.Model;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public class PaneProgressBar : IProgressBar
+    public class PaneProgressBar
     {
         readonly LineObj _left = new LineObj()
         {
@@ -45,20 +44,28 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private float _barWidth = 1f / 3;
         private PointF _barLocation = new PointF(1f/3, .1f);
+        private bool _isVisible; // Track visibility state
+        private Action _onFirstShow; // Callback to execute when first shown
 
         public ZedGraphControl GraphControl { get; private set; }
-        public GraphPane GraphPane {get;private set; }
+        public GraphPane GraphPane { get; private set; }
         public bool IsDisposed { get; private set; }
 
-        public PaneProgressBar(SummaryGraphPane parent) : this(parent.GraphSummary.GraphControl, parent)
+        public PaneProgressBar(SummaryGraphPane parent, Action onFirstShow = null) : this(parent.GraphSummary.GraphControl, parent, onFirstShow)
         {
         }
 
-        public PaneProgressBar(ZedGraphControl graphControl, GraphPane parent)
+        public PaneProgressBar(ZedGraphControl graphControl, GraphPane parent) : this(graphControl, parent, null)
+        {
+        }
+
+        public PaneProgressBar(ZedGraphControl graphControl, GraphPane parent, Action onFirstShow)
         {
             GraphPane = parent;
             GraphControl = graphControl;
+            _onFirstShow = onFirstShow;
 
+            // Set up the bar locations but don't add to GraphObjList yet
             _left.Location.X = _barLocation.X;
             _left.Location.Y = _barLocation.Y;
             _left.Location.Width = 0;
@@ -67,16 +74,35 @@ namespace pwiz.Skyline.Controls.Graphs
             _right.Location.Y = _barLocation.Y;
             _right.Location.Width = _barWidth;
             _right.Location.Height = 0;
-            parent.GraphObjList.Add(_left);
-            parent.GraphObjList.Add(_right);
             IsDisposed = false;
         }
 
         public void Dispose()
         {
-            GraphPane.GraphObjList.Remove(_left);
-            GraphPane.GraphObjList.Remove(_right);
+            if (_isVisible)
+            {
+                GraphPane.GraphObjList.Remove(_left);
+                GraphPane.GraphObjList.Remove(_right);
+                _isVisible = false;
+            }
             IsDisposed = true;
+        }
+
+        private void EnsureVisible()
+        {
+            if (!_isVisible && !IsDisposed)
+            {
+                // Add the progress bar elements to the graph for the first time
+                if (GraphPane.GraphObjList.FirstOrDefault((obj) => ReferenceEquals(obj, _left)) == null)
+                    GraphPane.GraphObjList.Add(_left);
+                if (GraphPane.GraphObjList.FirstOrDefault((obj) => ReferenceEquals(obj, _right)) == null)
+                    GraphPane.GraphObjList.Add(_right);
+
+                // Execute the callback when first showing (e.g., to hide legend, show "Calculating...")
+                _onFirstShow?.Invoke();
+
+                _isVisible = true;
+            }
         }
 
         private void DrawBar(int progress)
@@ -85,10 +111,9 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 return;
             }
-            if (GraphPane.GraphObjList.FirstOrDefault((obj) => ReferenceEquals(obj, _left)) == null)
-                GraphPane.GraphObjList.Add(_left);
-            if (GraphPane.GraphObjList.FirstOrDefault((obj) => ReferenceEquals(obj, _right)) == null)
-                GraphPane.GraphObjList.Add(_right);
+
+            // Only make visible on first draw
+            EnsureVisible();
 
             var len1 = _barWidth * progress / 100;
 
@@ -101,17 +126,17 @@ namespace pwiz.Skyline.Controls.Graphs
             _right.Location.Width = _barWidth - len1;
             _right.Location.Height = 0;
 
-            //CONSIDER: Update the progress bar rectangle only
+            // CONSIDER: Update the progress bar rectangle only
             //  instead of the whole control
             GraphControl.Invalidate();
             GraphControl.Update();
         }
 
-        //Thread-safe method to update the progress bar
+        // Thread-safe method to update the progress bar
         public void UpdateProgress(int progress)
         {
             var graph = GraphControl;
-            graph.Invoke((Action) (() => { this.UpdateProgressUI(progress); }));
+            graph.Invoke((Action)(() => { UpdateProgressUI(progress); }));
         }
 
         //must be called on the UI thread
@@ -119,24 +144,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             var graph = GraphControl;
             if (graph != null && !graph.IsDisposed && graph.IsHandleCreated)
-                graph.Invoke((Action) (() => { this.DrawBar(progress); }));
-        }
-
-        bool IProgressBar.IsDisposed()
-        {
-            var graph = GraphControl;
-            return IsDisposed || graph == null || !graph.IsHandleCreated || graph.IsDisposed;
-        }
-
-        void IProgressBar.UpdateProgress(int progress)
-        {
-            this.UpdateProgress(progress);
-        }
-
-        void IProgressBar.UIInvoke(Action act)
-        {
-            var graph = GraphControl;
-            graph.Invoke(act);
+                graph.Invoke((Action)(() => { DrawBar(progress); }));
         }
     }
 }

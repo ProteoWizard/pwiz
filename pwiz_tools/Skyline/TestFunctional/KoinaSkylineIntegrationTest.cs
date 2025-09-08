@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
@@ -207,7 +208,6 @@ namespace pwiz.SkylineTestFunctional
             var doc = SkylineWindow.Document;
 
             FileEx.SafeDelete(outBlib);
-            FileEx.SafeDelete(Path.ChangeExtension(outBlib, BiblioSpecLiteLibrary.EXT_CACHE));
 
             // Open Peptide Settings -- Library
             var peptideSettings = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
