@@ -39,21 +39,21 @@
     ]
   ],
   "DiffPeptideCounts": [
-    12619,
-    8496,
+    12621,
+    8498,
     2254,
     1854
   ],
-  "UnpolishedProteins": 2313,
+  "UnpolishedProteins": 2314,
   "PolishedProteins": 2686,
   "ScoringModelCoefficients": [
-    -0.3355,
-    -0.9055,
-    4.5024,
+    -0.3356,
+    -0.9056,
+    4.502,
     3.5344,
     -0.1011,
     0.7388,
-    0.4437,
-    -0.132
+    0.4435,
+    -0.1319
   ]
 }
