@@ -43,8 +43,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     {
         protected override bool IsRecordMode => false;
 
-        [TestMethod, NoParallelTesting(TestExclusionReason.VENDOR_FILE_LOCKING), // Bruker wants exclusive read access to raw data
-         NoNightlyTesting(TestExclusionReason.EXCESSIVE_TIME)] // Skip during Nightly
+        // N.B. this test is currently excluded from TeamCity testing by mentioning it in pwiz\scripts\misc\tc-perftests-skiplist.txt
+
+        [TestMethod, NoParallelTesting(TestExclusionReason.VENDOR_FILE_LOCKING)] // Bruker wants exclusive read access to raw data
         public void BrukerDiagonalPasefImportTest()
         {
             // RunPerfTests = true; // Uncomment this to force test to run in IDE
