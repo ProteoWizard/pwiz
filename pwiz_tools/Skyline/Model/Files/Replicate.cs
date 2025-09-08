@@ -168,7 +168,7 @@ namespace pwiz.Skyline.Model.Files
             return new ModifiedDocument(newDocument).ChangeAuditLogEntry(entry);
         }
 
-        public static ModifiedDocument EditAnnotation(SrmDocument document, SrmSettingsChangeMonitor monitor, Replicate replicate, AnnotationDef annotationDef, string newValue)
+        public static ModifiedDocument EditAnnotation(SrmDocument document, SrmSettingsChangeMonitor monitor, Replicate replicate, AnnotationDef annotationDef, object newValue)
         {
             var chromSet = LoadChromSetFromDocument(document, replicate);
 

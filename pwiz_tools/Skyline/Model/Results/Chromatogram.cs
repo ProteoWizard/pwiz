@@ -497,7 +497,7 @@ namespace pwiz.Skyline.Model.Results
 
         public Annotations Annotations { get; private set; }
 
-        public ChromatogramSet ChangeAnnotation(AnnotationDef annotationDef, string newValue)
+        public ChromatogramSet ChangeAnnotation(AnnotationDef annotationDef, object newValue)
         {
             var newAnnotations = Annotations.ChangeAnnotation(annotationDef, newValue);
             // Use ChangeProp to set the new list

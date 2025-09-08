@@ -72,8 +72,7 @@ namespace pwiz.Skyline.Controls
             Assume.IsTrue(e.ChangedItem.PropertyDescriptor is IModifiablePropertyDescriptor { IsReadOnly: false });
             var globalizedPropertyDescriptor = (IModifiablePropertyDescriptor)e.ChangedItem.PropertyDescriptor;
 
-            Assume.IsTrue(e.ChangedItem.Value is string);
-            var newValue = (string)e.ChangedItem.Value;
+            var newValue = e.ChangedItem.Value;
 
             // If the property is editable, acquire the document change lock and modify the document,
             // by calling the GetModifiedDocument delegate of the property descriptor.

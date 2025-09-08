@@ -37,7 +37,8 @@ namespace pwiz.Skyline.Model.Files
             Assume.IsNotNull(model);
             var chromSet = Replicate.LoadChromSetFromDocument(document, model);
 
-            _rename = (doc, monitor, newValue) => Replicate.Rename(doc, monitor, model, newValue);
+            Assume.IsTrue(Name.GetType() == typeof(string));
+            _rename = (doc, monitor, newValue) => Replicate.Rename(doc, monitor, model, (string)newValue);
 
             BatchName = chromSet.BatchName;
             AnalyteConcentration = chromSet.AnalyteConcentration;
@@ -45,7 +46,7 @@ namespace pwiz.Skyline.Model.Files
             SampleType = chromSet.SampleType.ToString();
 
             Annotations = new List<Annotations.Annotation>();
-            _editAnnotationDictionary = new Dictionary<Annotations.Annotation, Func<SrmDocument, SrmSettingsChangeMonitor, string, ModifiedDocument>>();
+            _editAnnotationDictionary = new Dictionary<Annotations.Annotation, Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument>>();
             foreach (var annotationDef in Settings.Default.AnnotationDefList)
             {
                 if (annotationDef.AnnotationTargets.Contains(AnnotationDef.AnnotationTarget.replicate))
@@ -91,7 +92,7 @@ namespace pwiz.Skyline.Model.Files
         // Replicate Name is editable and updates the document with model.Rename
         [UseCustomHandling]
         [Category("FileInfo")] public override string Name { get; set; }
-        private readonly Func<SrmDocument, SrmSettingsChangeMonitor, string, ModifiedDocument> _rename;
+        private readonly Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument> _rename;
 
         // Instrument properties need to be added as nested properties, as lists don't render well in PropertyGrid
         [UseCustomHandling]
@@ -100,7 +101,7 @@ namespace pwiz.Skyline.Model.Files
         // Annotations need to be added as individual properties under the Annotations category, for the above reason
         [UseCustomHandling]
         [Category("Annotations")] public List<Annotations.Annotation> Annotations { get; }
-        private readonly Dictionary<Annotations.Annotation, Func<SrmDocument, SrmSettingsChangeMonitor, string, ModifiedDocument>> _editAnnotationDictionary;
+        private readonly Dictionary<Annotations.Annotation, Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument>> _editAnnotationDictionary;
 
         /// <summary>
         /// Transforms the list of InstrumentProperties into a form that will display better in the property sheet.
@@ -149,9 +150,9 @@ namespace pwiz.Skyline.Model.Files
             foreach (var annotation in Annotations)
             {
                 AddProperty(new CustomHandledGlobalizedPropertyDescriptor(
-                    typeof(string),
+                    annotation.AnnotationDef.ValueType,
                     annotation.Name,
-                    annotation.Value,
+                    annotation.GetAnnotation(),
                     GetBaseDescriptorByName(nameof(Annotations)).Category,
                     GetResourceManager(),
                     nonLocalizedDisplayName: annotation.Name,

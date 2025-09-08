@@ -302,10 +302,10 @@ namespace pwiz.Skyline.Model
         private readonly ResourceManager _resourceManager;
         private readonly PropertyDescriptor _basePropertyDescriptor;
 
-        private readonly Func<SrmDocument, SrmSettingsChangeMonitor, string, ModifiedDocument> _getModifiedDocument;
+        private readonly Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument> _getModifiedDocument;
 
         public GlobalizedPropertyDescriptor(PropertyDescriptor basePropertyDescriptor, ResourceManager resourceManager,
-            Func<SrmDocument, SrmSettingsChangeMonitor, string, ModifiedDocument> getModifiedDocument = null)
+            Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument> getModifiedDocument = null)
             : base(basePropertyDescriptor)
         {
             _basePropertyDescriptor = basePropertyDescriptor;
@@ -313,7 +313,7 @@ namespace pwiz.Skyline.Model
             _getModifiedDocument = getModifiedDocument;
         }
 
-        public ModifiedDocument GetModifiedDocument(SrmDocument document, SrmSettingsChangeMonitor monitor, string newValue)
+        public ModifiedDocument GetModifiedDocument(SrmDocument document, SrmSettingsChangeMonitor monitor, object newValue)
         {
             // GetModifiedDocument should not be called if the property is read-only.
             Assume.IsNotNull(_getModifiedDocument);
@@ -396,7 +396,7 @@ namespace pwiz.Skyline.Model
 
         private readonly ResourceManager _resourceManager;
 
-        private readonly Func<SrmDocument, SrmSettingsChangeMonitor, string, ModifiedDocument> _getModifiedDocument;
+        private readonly Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument> _getModifiedDocument;
 
         private object _value;
         private readonly string _category;
@@ -409,7 +409,7 @@ namespace pwiz.Skyline.Model
             Type type, string name, object value, string category,
             ResourceManager resourceManager, Attribute[] attributes = null,
             string nonLocalizedDisplayName = null, Func<string, string> displayNameFormat = null,
-            Func<SrmDocument, SrmSettingsChangeMonitor, string, ModifiedDocument> getModifiedDocument = null)
+            Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument> getModifiedDocument = null)
             : base(name, attributes)
         {
             _resourceManager = resourceManager;
@@ -422,7 +422,7 @@ namespace pwiz.Skyline.Model
             _getModifiedDocument = getModifiedDocument;
         }
 
-        public ModifiedDocument GetModifiedDocument(SrmDocument document, SrmSettingsChangeMonitor monitor, string newValue)
+        public ModifiedDocument GetModifiedDocument(SrmDocument document, SrmSettingsChangeMonitor monitor, object newValue)
         {
             // GetModifiedDocument should not be called if the property is read-only.
             Assume.IsNotNull(_getModifiedDocument);
@@ -483,7 +483,7 @@ namespace pwiz.Skyline.Model
     {
         public bool IsReadOnly { get; }
 
-        public ModifiedDocument GetModifiedDocument(SrmDocument document, SrmSettingsChangeMonitor monitor, string newValue);
+        public ModifiedDocument GetModifiedDocument(SrmDocument document, SrmSettingsChangeMonitor monitor, object newValue);
     }
 
     public class TwoDecimalDoubleConverter : DoubleConverter
