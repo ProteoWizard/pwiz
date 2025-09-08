@@ -42,6 +42,8 @@
             this.comboAccountType = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
             this.groupBoxUnifi = new System.Windows.Forms.GroupBox();
+            this.tbxClientId = new System.Windows.Forms.TextBox();
+            this.lblClientId = new System.Windows.Forms.Label();
             this.tbxClientSecret = new System.Windows.Forms.TextBox();
             this.lblClientSecret = new System.Windows.Forms.Label();
             this.tbxClientScope = new System.Windows.Forms.TextBox();
@@ -132,6 +134,8 @@
             // groupBoxUnifi
             // 
             resources.ApplyResources(this.groupBoxUnifi, "groupBoxUnifi");
+            this.groupBoxUnifi.Controls.Add(this.tbxClientId);
+            this.groupBoxUnifi.Controls.Add(this.lblClientId);
             this.groupBoxUnifi.Controls.Add(this.tbxClientSecret);
             this.groupBoxUnifi.Controls.Add(this.lblClientSecret);
             this.groupBoxUnifi.Controls.Add(this.tbxClientScope);
@@ -140,6 +144,16 @@
             this.groupBoxUnifi.Controls.Add(this.lblIdentityServer);
             this.groupBoxUnifi.Name = "groupBoxUnifi";
             this.groupBoxUnifi.TabStop = false;
+            // 
+            // tbxClientId
+            // 
+            resources.ApplyResources(this.tbxClientId, "tbxClientId");
+            this.tbxClientId.Name = "tbxClientId";
+            // 
+            // lblClientId
+            // 
+            resources.ApplyResources(this.lblClientId, "lblClientId");
+            this.lblClientId.Name = "lblClientId";
             // 
             // tbxClientSecret
             // 
@@ -179,6 +193,7 @@
             this.wizardPagesByAccountType.Multiline = true;
             this.wizardPagesByAccountType.Name = "wizardPagesByAccountType";
             this.wizardPagesByAccountType.SelectedIndex = 0;
+            this.wizardPagesByAccountType.TabStop = false;
             // 
             // tabUnifiSettings
             // 
@@ -298,5 +313,7 @@
         private System.Windows.Forms.Button btnLogoutArdia;
         private System.Windows.Forms.CheckBox cbArdiaDeleteRawAfterImport;
         private System.Windows.Forms.ToolTip toolTip1;
+        private System.Windows.Forms.TextBox tbxClientId;
+        private System.Windows.Forms.Label lblClientId;
     }
 }
