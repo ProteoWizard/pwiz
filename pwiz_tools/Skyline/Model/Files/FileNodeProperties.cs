@@ -23,14 +23,14 @@ using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.Files
 {
-    public abstract class FileNodeProperties : GlobalizedObject
+    public class FileNodeProperties : GlobalizedObject
     {
         protected override ResourceManager GetResourceManager()
         {
             return PropertySheetFileNodeResources.ResourceManager;
         }
 
-        protected FileNodeProperties(FileNode model, string localFilePath)
+        public FileNodeProperties(FileNode model, string localFilePath)
         {
             FilePath = localFilePath;
             Name = model.Name;
@@ -48,8 +48,9 @@ namespace pwiz.Skyline.Model.Files
 
         // Name is editable for some FileNode types, such as Replicate, so allow override
         // TODO: this needs to be virtual so derived classes can assign their own attributes to it,
-        // but that gives the warning "Virtual member call in constructor" from "Name = fileNode.Name;".
+        // but that gives the warning "Virtual member call in constructor" from "Name = model.Name;".
         // does not throw errors but should be considered.
+        // As long as derived Name has no custom logic, it should be safe.
         [Category("FileInfo")] public virtual string Name { get; set; }
     }
 }

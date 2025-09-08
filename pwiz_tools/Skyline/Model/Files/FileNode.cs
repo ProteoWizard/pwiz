@@ -94,7 +94,7 @@ namespace pwiz.Skyline.Model.Files
         // All implementers should override
         public virtual GlobalizedObject GetProperties(SrmDocument document, string localFilePath)
         {
-            return null;
+            return new FileNodeProperties(this, localFilePath);
         }
 
         /// <summary>
