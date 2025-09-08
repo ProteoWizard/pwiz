@@ -404,12 +404,14 @@ namespace pwiz.Skyline.Model
         private readonly Type _type;
         private readonly string _nonLocalizedDisplayName;
         private readonly Func<string, string> _displayNameFormat;
+        private readonly List<string> _dropDownOptions; // set only if we want a drop-down list of options, and _type is string
 
         public CustomHandledGlobalizedPropertyDescriptor(
             Type type, string name, object value, string category,
             ResourceManager resourceManager, Attribute[] attributes = null,
             string nonLocalizedDisplayName = null, Func<string, string> displayNameFormat = null,
-            Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument> getModifiedDocument = null)
+            Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument> getModifiedDocument = null,
+            List<string> dropDownOptions = null)
             : base(name, attributes)
         {
             _resourceManager = resourceManager;
@@ -420,6 +422,7 @@ namespace pwiz.Skyline.Model
             _nonLocalizedDisplayName = nonLocalizedDisplayName;
             _displayNameFormat = displayNameFormat;
             _getModifiedDocument = getModifiedDocument;
+            _dropDownOptions = dropDownOptions;
         }
 
         public ModifiedDocument GetModifiedDocument(SrmDocument document, SrmSettingsChangeMonitor monitor, object newValue)
@@ -477,6 +480,9 @@ namespace pwiz.Skyline.Model
         {
             _value = value;
         }
+
+        public override TypeConverter Converter => _dropDownOptions != null && _type == typeof(string)
+            ? new DropDownConverter(_dropDownOptions) : base.Converter;
     }
 
     public interface IModifiablePropertyDescriptor
@@ -494,6 +500,22 @@ namespace pwiz.Skyline.Model
                 return d.ToString("F2", culture ?? CultureInfo.CurrentCulture);
             return base.ConvertTo(context, culture, value, destinationType);
         }
+    }
+
+    public class DropDownConverter : StringConverter
+    {
+        private readonly List<string> _options;
+
+        public DropDownConverter(List<string> options)
+        {
+            _options = options;
+        }
+
+        public override bool GetStandardValuesSupported(ITypeDescriptorContext context) => true;
+
+        public override bool GetStandardValuesExclusive(ITypeDescriptorContext context) => true;
+
+        public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext context) => new StandardValuesCollection(_options);
     }
 
     // Used to flag properties that should not be copied directly to the globalized object, as they require custom handling.

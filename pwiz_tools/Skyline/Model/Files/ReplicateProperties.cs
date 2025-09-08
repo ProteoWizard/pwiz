@@ -36,7 +36,7 @@ namespace pwiz.Skyline.Model.Files
         {
             Assume.IsNotNull(model);
             var chromSet = Replicate.LoadChromSetFromDocument(document, model);
-
+            
             Assume.IsTrue(Name.GetType() == typeof(string));
             _rename = (doc, monitor, newValue) => Replicate.Rename(doc, monitor, model, (string)newValue);
 
@@ -149,6 +149,14 @@ namespace pwiz.Skyline.Model.Files
 
             foreach (var annotation in Annotations)
             {
+                List<string> dropDownOptions = null;
+                if (annotation.AnnotationDef.Type == AnnotationDef.AnnotationType.value_list &&
+                    annotation.AnnotationDef.ValueType == typeof(string))
+                {
+                    dropDownOptions = annotation.AnnotationDef.Items.ToList();
+                    dropDownOptions.Insert(0, null); // Allow blank entry
+                }
+
                 AddProperty(new CustomHandledGlobalizedPropertyDescriptor(
                     annotation.AnnotationDef.ValueType,
                     annotation.Name,
@@ -156,7 +164,8 @@ namespace pwiz.Skyline.Model.Files
                     GetBaseDescriptorByName(nameof(Annotations)).Category,
                     GetResourceManager(),
                     nonLocalizedDisplayName: annotation.Name,
-                    getModifiedDocument: _editAnnotationDictionary[annotation]));
+                    getModifiedDocument: _editAnnotationDictionary[annotation],
+                    dropDownOptions: dropDownOptions));
             }
         }
 
