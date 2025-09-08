@@ -17,11 +17,12 @@
  * limitations under the License.
  */
 
-using System.ComponentModel;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using System.ComponentModel;
 
 namespace pwiz.Skyline.Controls.Lists
 {
@@ -70,14 +71,14 @@ namespace pwiz.Skyline.Controls.Lists
 
         protected override string GetPersistentString()
         {
-            return base.GetPersistentString() + '|' + ListName;
+            return PersistentString.FromParts(base.GetPersistentString()).Append(ListName).ToString();
         }
 
         public static string GetListName(string persistentString)
         {
-            string[] values = persistentString.Split('|');
-            if (values.Length == 2)
-                return values[1];
+            var persisted = PersistentString.Parse(persistentString);
+            if (persisted.Parts.Count > 1)
+                return persisted.Parts[1];
             return null;
         }
     }
