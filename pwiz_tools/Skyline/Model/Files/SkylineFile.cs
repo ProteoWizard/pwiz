@@ -27,7 +27,7 @@ namespace pwiz.Skyline.Model.Files
         {
             string name, fileName, filePath;
 
-            if (IsDocumentSavedToDisk(documentFilePath))
+            if (IsDocumentSaved(documentFilePath))
             {
                 var justFileName = Path.GetFileName(documentFilePath);
 
@@ -57,7 +57,7 @@ namespace pwiz.Skyline.Model.Files
         }
 
         public override bool IsBackedByFile => true;
-        public override bool RequiresSavedSkylineDocument => true;
+        public override bool RequiresSavedDocument => true;
         public override string Name { get; }
         public override string FilePath { get; }
         public override string FileName { get; }
@@ -79,7 +79,7 @@ namespace pwiz.Skyline.Model.Files
                 list.Add(log);
             }
 
-            if (IsDocumentSavedToDisk(documentFilePath))
+            if (IsDocumentSaved(documentFilePath))
             {
                 var view = SkylineViewFile.Create(document, documentFilePath);
                 list.Add(view);

@@ -73,16 +73,16 @@ namespace pwiz.SkylineTestFunctional
 
         protected void TestFileSystemWatcherIgnoreList()
         {
-            Assert.IsTrue(FilesTree.IgnoreFileName(@"c:\Users\foobar\file.tmp"));
-            Assert.IsTrue(FilesTree.IgnoreFileName(@"c:\Users\foobar\file.bak"));
-            Assert.IsTrue(FilesTree.IgnoreFileName(null));
-            Assert.IsTrue(FilesTree.IgnoreFileName(string.Empty));
-            Assert.IsTrue(FilesTree.IgnoreFileName(@""));
-            Assert.IsTrue(FilesTree.IgnoreFileName(@"   "));
+            Assert.IsTrue(FileSystemService.IgnoreFileName(@"c:\Users\foobar\file.tmp"));
+            Assert.IsTrue(FileSystemService.IgnoreFileName(@"c:\Users\foobar\file.bak"));
+            Assert.IsTrue(FileSystemService.IgnoreFileName(null));
+            Assert.IsTrue(FileSystemService.IgnoreFileName(string.Empty));
+            Assert.IsTrue(FileSystemService.IgnoreFileName(@""));
+            Assert.IsTrue(FileSystemService.IgnoreFileName(@"   "));
 
-            Assert.IsFalse(FilesTree.IgnoreFileName(@"c:\Users\foobar\file.sky"));
-            Assert.IsFalse(FilesTree.IgnoreFileName(@"c:\Users\foobar\file.xls"));
-            Assert.IsFalse(FilesTree.IgnoreFileName(@"c:\Users\foobar\file.txt"));
+            Assert.IsFalse(FileSystemService.IgnoreFileName(@"c:\Users\foobar\file.sky"));
+            Assert.IsFalse(FileSystemService.IgnoreFileName(@"c:\Users\foobar\file.xls"));
+            Assert.IsFalse(FileSystemService.IgnoreFileName(@"c:\Users\foobar\file.txt"));
         }
 
         protected void TestEmptyDocument()
@@ -111,7 +111,7 @@ namespace pwiz.SkylineTestFunctional
             AssertTopLevelFiles(SkylineWindow, typeof(SkylineAuditLog));
 
             Assert.IsFalse(SkylineWindow.FilesTree.IsMonitoringFileSystem());
-            Assert.AreEqual(string.Empty, SkylineWindow.FilesTree.PathMonitoredForFileSystemChanges());
+            Assert.AreEqual(null, SkylineWindow.FilesTree.PathMonitoredForFileSystemChanges());
 
             const string fileName = "savedFileName.sky";
             var monitoredPath = Path.Combine(TestFilesDir.FullPath, fileName);
@@ -147,9 +147,9 @@ namespace pwiz.SkylineTestFunctional
             WaitForDocumentLoaded();
 
             RunUI(() => { SkylineWindow.ShowFilesTreeForm(true); });
-            WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible);
+            WaitForFilesTree();
 
-            // .sky file's local file path should not be initialized yet
+            // Audit log
             Assert.AreEqual(FileState.not_initialized, SkylineWindow.FilesTree.Root.NodeAt(0).FileState);
             Assert.IsNull(SkylineWindow.FilesTree.Root.NodeAt(0).LocalFilePath);
 
@@ -604,46 +604,46 @@ namespace pwiz.SkylineTestFunctional
                 var indexOfLastReplicate = SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes.Count - 1;
 
                 // A,B,C,D => Drag A to B => A,B,C,D
-                var dnd = DragAndDrop<ReplicatesFolder>(new[] { 0 }, 1, DragDirection.down);
+                var dnd = DragAndDrop<ReplicatesFolder>(new[] { 0 }, 1, DragAndDropDirection.down);
                 AssertDragAndDropResults<ReplicatesFolder>(dnd);
 
                 // A,B,C,D => Drag A to C => B,A,C,D
-                dnd = DragAndDrop<ReplicatesFolder>(new[] { 0 }, 2, DragDirection.down);
+                dnd = DragAndDrop<ReplicatesFolder>(new[] { 0 }, 2, DragAndDropDirection.down);
                 AssertDragAndDropResults<ReplicatesFolder>(dnd);
 
                 // B,A,C,D => Drag A to B => A,B,C,D
-                dnd = DragAndDrop<ReplicatesFolder>(new[] { 1 }, 0, DragDirection.up);
+                dnd = DragAndDrop<ReplicatesFolder>(new[] { 1 }, 0, DragAndDropDirection.up);
                 AssertDragAndDropResults<ReplicatesFolder>(dnd);
 
                 // A,B,C,D => Drag A to D => B,C,A,D
-                dnd = DragAndDrop<ReplicatesFolder>(new[] { 0 }, indexOfLastReplicate, DragDirection.down, MoveType.move_last);
+                dnd = DragAndDrop<ReplicatesFolder>(new[] { 0 }, indexOfLastReplicate, DragAndDropDirection.down, MoveType.move_last);
                 AssertDragAndDropResults<ReplicatesFolder>(dnd);
 
                 // B,C,A,D => Drag D to B => A,B,C,D
-                dnd = DragAndDrop<ReplicatesFolder>(new[] { indexOfLastReplicate }, 0, DragDirection.up);
+                dnd = DragAndDrop<ReplicatesFolder>(new[] { indexOfLastReplicate }, 0, DragAndDropDirection.up);
                 AssertDragAndDropResults<ReplicatesFolder>(dnd);
 
                 // A,B,C,D,E => Drag A,B,C to E => D,A,B,C,E
-                dnd = DragAndDrop<ReplicatesFolder>(new[] { 3, 4, 5 }, 9, DragDirection.down);
+                dnd = DragAndDrop<ReplicatesFolder>(new[] { 3, 4, 5 }, 9, DragAndDropDirection.down);
                 AssertDragAndDropResults<ReplicatesFolder>(dnd);
 
                 // D,A,B,C,E => Drag A,B,C to D => A,B,C,D,E
-                dnd = DragAndDrop<ReplicatesFolder>(new[] { 7, 8, 9 }, 3, DragDirection.up);
+                dnd = DragAndDrop<ReplicatesFolder>(new[] { 7, 8, 9 }, 3, DragAndDropDirection.up);
                 AssertDragAndDropResults<ReplicatesFolder>(dnd);
 
-                dnd = DragAndDrop<ReplicatesFolder>(new[] { 3, 4, 5 }, indexOfLastReplicate, DragDirection.down);
+                dnd = DragAndDrop<ReplicatesFolder>(new[] { 3, 4, 5 }, indexOfLastReplicate, DragAndDropDirection.down);
                 AssertDragAndDropResults<ReplicatesFolder>(dnd);
 
-                dnd = DragAndDrop<ReplicatesFolder>(new[] { indexOfLastReplicate - 2, indexOfLastReplicate - 1, indexOfLastReplicate }, 0, DragDirection.up);
+                dnd = DragAndDrop<ReplicatesFolder>(new[] { indexOfLastReplicate - 2, indexOfLastReplicate - 1, indexOfLastReplicate }, 0, DragAndDropDirection.up);
                 AssertDragAndDropResults<ReplicatesFolder>(dnd);
             }
 
             // Drag-and-drop - spectral libraries
             {
-                var dnd = DragAndDrop<SpectralLibrariesFolder>(new[] { 0 }, 1, DragDirection.down, MoveType.move_last);
+                var dnd = DragAndDrop<SpectralLibrariesFolder>(new[] { 0 }, 1, DragAndDropDirection.down, MoveType.move_last);
                 AssertDragAndDropResults<SpectralLibrariesFolder>(dnd);
 
-                dnd = DragAndDrop<SpectralLibrariesFolder>(new[] { 1 }, 0, DragDirection.up);
+                dnd = DragAndDrop<SpectralLibrariesFolder>(new[] { 1 }, 0, DragAndDropDirection.up);
                 AssertDragAndDropResults<SpectralLibrariesFolder>(dnd);
             }
 
@@ -681,10 +681,10 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible);
 
             // A, B, C, D => Drag B, C to Parent Node => A, D, B, C
-            var dndParams = DragAndDrop<ReplicatesFolder>(new[] { 1, 2, 3 }, -1, DragDirection.down, MoveType.move_last);
+            var dndParams = DragAndDrop<ReplicatesFolder>(new[] { 1, 2, 3 }, -1, DragAndDropDirection.down, MoveType.move_last);
             AssertDragAndDropResults<ReplicatesFolder>(dndParams);
 
-            dndParams = DragAndDrop<SpectralLibrariesFolder>(new[] { 0 }, -1, DragDirection.down, MoveType.move_last);
+            dndParams = DragAndDrop<SpectralLibrariesFolder>(new[] { 0 }, -1, DragAndDropDirection.down, MoveType.move_last);
             AssertDragAndDropResults<SpectralLibrariesFolder>(dndParams);
         }
 
@@ -735,7 +735,7 @@ namespace pwiz.SkylineTestFunctional
 
         private static DragAndDropParams DragAndDrop<T>(int[] dragNodeIndexes,
                                                         int dropNodeIndex,
-                                                        DragDirection direction,
+                                                        DragAndDropDirection direction,
                                                         MoveType moveType = MoveType.move_to)
             where T : FileNode
         {
@@ -795,7 +795,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 dropNodeExpectedIndex = d.DropNodeIndex - d.DraggedNodes.Count;
             }
-            else if (d.Direction == DragDirection.down)
+            else if (d.Direction == DragAndDropDirection.down)
             {
                 dropNodeExpectedIndex = d.DropNodeIndex;
             }
@@ -863,22 +863,7 @@ namespace pwiz.SkylineTestFunctional
             for (var i = 0; i < docNodes.Count; i++)
             {
                 var filesTreeNode = (FilesTreeNode)treeNodes[i];
-        
-                // Assert.AreSame(docNodes[i], modelNodes[i].Immutable);
-                //
-                // // Temporary debugging in case of potential race condition
-                // try
-                // {
-                //     Assert.AreSame(docNodes[i], filesTreeNode.Model.Immutable);
-                // }
-                // catch (Exception)
-                // {
-                //     Console.WriteLine();
-                //     Console.WriteLine($@"== Assert.AreSame({docNodes[i].GetType()}, {filesTreeNode.Model.Immutable.GetType()})");
-                //     Console.WriteLine($@"== Assert.AreSame({docNodes[i].Name}, {filesTreeNode.Model.Name})");
-                //     Console.WriteLine($@"== Assert.AreSame({docNodes[i].Id.GlobalIndex}, {filesTreeNode.Model.IdentityPath.Child.GlobalIndex})");
-                //     throw;
-                // }
+                
 
                 Assert.AreEqual(docNodes[i].Id, modelNodes[i].IdentityPath.GetIdentity(0));
                 Assert.AreEqual(docNodes[i].Id, filesTreeNode.Model.IdentityPath.GetIdentity(0));
@@ -929,13 +914,13 @@ namespace pwiz.SkylineTestFunctional
         }
     }
 
-    internal enum DragDirection { up, down }
+    internal enum DragAndDropDirection { up, down }
 
     internal class DragAndDropParams
     {
         internal int[] DragNodeIndexes;
         internal int DropNodeIndex; // Setting to -1 causes dragged nodes to drop on their parent folder
-        internal DragDirection Direction;
+        internal DragAndDropDirection Direction;
         internal SrmDocument OldDoc;
         internal SrmDocument NewDoc;
         internal FilesTreeNode Folder;

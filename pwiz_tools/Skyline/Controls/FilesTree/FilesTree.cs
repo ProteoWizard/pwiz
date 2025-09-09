@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -34,18 +35,14 @@ namespace pwiz.Skyline.Controls.FilesTree
 {
     public class FilesTree : TreeViewMS
     {
-        private static readonly IList<string> FILE_EXTENSION_IGNORE_LIST = new List<string> { @".tmp", @".bak" };
+        private int _pendingActionCount;
 
         private bool _inhibitOnAfterSelect;
-        private bool _monitoringFileSystem;
-        private string _monitoredFilePath;
-        private int _pendingActionCount;
-        private FileSystemWatcher _fsWatcher;
-        private QueueWorker<Action> _fsWorkQueue;
         private FilesTreeNode _triggerLabelEditForNode;
         private TextBox _editTextBox;
         private string _editedLabel;
-        private readonly MemoryDocumentContainer _modelDocumentContainer;
+
+        private FileSystemService _fileSystemService;
 
         /// <summary>
         /// Used to cancel any pending async work when the document changes including any
@@ -57,17 +54,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         public FilesTree()
         {
-            _fsWorkQueue = new QueueWorker<Action>(null, ProcessTask);
-            _modelDocumentContainer = new MemoryDocumentContainer();
             _cancellationTokenSource = new CancellationTokenSource();
-
-            _monitoringFileSystem = false;
-            _monitoredFilePath = null;
-            _fsWatcher = new FileSystemWatcher();
-
-            // Set to zero to handle work items synchronously
-            var threadCount = ParallelEx.GetThreadCount();
-            _fsWorkQueue.RunAsync(threadCount, @"FilesTree: queue for monitoring the file system");
 
             ImageList = new ImageList
             {
@@ -90,6 +77,18 @@ namespace pwiz.Skyline.Controls.FilesTree
             ImageList.Images.Add(Resources.ViewFile);           // 32bpp
         }
 
+        public bool IsFileAvailable(string filePath)
+        {
+            if (_fileSystemService == null)
+            {
+                return true;
+            }
+            else
+            {
+                return _fileSystemService.IsMonitoring && _fileSystemService.IsFileAvailable(filePath);
+            }
+        }
+
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public FilesTreeNode Root => (FilesTreeNode)Nodes[0];
@@ -102,27 +101,24 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         public bool IsMonitoringFileSystem()
         {
-            return _monitoringFileSystem;
+            return _fileSystemService != null && _fileSystemService.IsMonitoring;
         }
 
         public string PathMonitoredForFileSystemChanges()
         {
-            return _fsWatcher?.Path;
+            return _fileSystemService?.DirectoryPath;
         }
+
+        public bool IsComplete()
+        {
+            return _pendingActionCount == 0 && (_fileSystemService == null || _fileSystemService is { IsComplete: true });
+        }
+
         #endregion
 
         public void ScrollToTop()
         {
             Nodes[0]?.EnsureVisible();
-        }
-
-        public void CollapseNodesInFolder<T>() where T : FileNode
-        {
-            var root = Folder<T>();
-            foreach (TreeNode node in root.Nodes)
-            {
-                node.Collapse(true);
-            }
         }
 
         /// <summary>
@@ -171,17 +167,19 @@ namespace pwiz.Skyline.Controls.FilesTree
             if (args == null || DocumentContainer.Document == null)
                 return;
 
-            // CONSIDER: use DocumentContainer.DocumentFilePath?
-            var newDocumentFilePath = args.DocumentFilePath;
-
-            if (IsMonitoringFileSystem() && args.IsSaveAs && !string.Equals(_monitoredFilePath, newDocumentFilePath, StringComparison.OrdinalIgnoreCase))
+            // TODO: the contract should be fileSystemService is available anytime FilesTree exists and has an implementation 
+            //       that works when the document is unsaved
+            if (args.IsSaveAs && _fileSystemService != null && !_fileSystemService.IsMonitoringDirectory(DocumentContainer.DocumentFilePath))
             {
-                _fsWatcher.Path = Path.GetDirectoryName(newDocumentFilePath);
-                _monitoredFilePath = newDocumentFilePath;
-                _monitoringFileSystem = true;
+                // Stop monitoring the previous directory
+                _cancellationTokenSource.Cancel();
+                _fileSystemService.StopWatching();
+                
+                // Create a token source for the new document
+                _cancellationTokenSource = new CancellationTokenSource();
             }
 
-            UpdateTree(DocumentContainer.Document, newDocumentFilePath, true);
+            UpdateTree(DocumentContainer.Document, DocumentContainer.DocumentFilePath, true);
         }
 
         public void OnDocumentChanged(object sender, DocumentChangedEventArgs args)
@@ -202,56 +200,42 @@ namespace pwiz.Skyline.Controls.FilesTree
             UpdateTree(DocumentContainer.Document, DocumentContainer.DocumentFilePath, false, changeAll);
         }
 
-        // CONSIDER: re-work the parameter list, perhaps relying on DocumentContainer and not passing a series of bool flags
         internal void UpdateTree(SrmDocument document, string documentFilePath, bool documentPathChanged = false, bool changeAll = false) 
         {
+            // Logging used to debug issues monitoring the local file system
+            // {
+            //     var versionMsg = document != null ? @$"{document.RevisionIndex}" : @"null";
+            //     var nameMsg = documentFilePath != null ? $@"{Path.GetFileName(documentFilePath)}" : @"<unsaved>";
+            //     Console.WriteLine($@"===== Updating document {nameMsg} from {versionMsg} to {document.RevisionIndex}. DocumentPathChanged {documentPathChanged}.");
+            // }
+
             try
             {
                 BeginUpdateMS();
 
-                // Do this work inside the Begin/EndUpdate calls to avoid flickering the tree
+                // Remove existing nodes from FilesTree if the document has changed completely
                 if (changeAll)
                 {
-                    Nodes.Clear();                     // Remove existing nodes from FilesTree
-                    _fsWorkQueue.Clear();              // Clear pending tasks from the QueueWorker
-                    _cancellationTokenSource.Cancel(); // Cancel any in-flight tasks from QueWorker and the UI event loop (control.BeginInvoke).
-
-                    _cancellationTokenSource = new CancellationTokenSource(); // Create a token source for the new document
+                    Nodes.Clear();
                 }
 
-                // Output useful for debugging async file monitoring issues
-                // {
-                //     var versionMsg = originalDocument != null ? @$"{originalDocument.RevisionIndex}" : @"null";
-                //     var nameMsg = documentFilePath != null ? $@"{Path.GetFileName(documentFilePath)}" : @"<unsaved>";
-                //     Console.WriteLine($@"===== Updating document {nameMsg} from {versionMsg} to {document.RevisionIndex}. DocumentPathChanged {documentPathChanged}.");
-                // }
+                if (FileNode.IsDocumentSaved(documentFilePath) && (_fileSystemService == null || !_fileSystemService.IsMonitoring))
+                {
+                    // Start monitoring the directory containing the document for changes to files of interest
+                    _fileSystemService = FileSystemService.Create(this, _cancellationTokenSource.Token);
+                    _fileSystemService.FileCreatedAction = FileCreated;
+                    _fileSystemService.FileRenamedAction = FileRenamed;
+                    _fileSystemService.FileDeletedAction = FileDeleted;
 
-                var originalDocument = _modelDocumentContainer.Document;
-                _modelDocumentContainer.DocumentFilePath = documentFilePath;
-                _modelDocumentContainer.SetDocument(document, originalDocument);
+                    _fileSystemService.StartWatching(documentFilePath);
+                }
 
                 var files = SkylineFile.Create(document, documentFilePath);
 
-                MergeNodes(new SingletonList<FileNode>(files), Nodes, FilesTreeNode.CreateNode, _cancellationTokenSource.Token, documentPathChanged);
+                MergeNodes(new SingletonList<FileNode>(files), Nodes, FilesTreeNode.CreateNode, _cancellationTokenSource.Token);
 
-                Root.Expand(); // Root is always expanded
+                Root.Expand(); // Always expand the root node
 
-                if (FileNode.IsDocumentSavedToDisk(documentFilePath) && !IsMonitoringFileSystem())
-                {
-                    _fsWatcher.Path = Path.GetDirectoryName(documentFilePath);
-                    _fsWatcher.SynchronizingObject = this;
-                    _fsWatcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName;
-                    _fsWatcher.IncludeSubdirectories = true;
-                    _fsWatcher.EnableRaisingEvents = true;
-                    _fsWatcher.Renamed += FilesTree_ProjectDirectory_OnRenamed;
-                    _fsWatcher.Deleted += FilesTree_ProjectDirectory_OnDeleted;
-                    _fsWatcher.Created += FilesTree_ProjectDirectory_OnCreated;
-
-                    _monitoredFilePath = documentFilePath;
-                    _monitoringFileSystem = true;
-                }
-
-                // CONSIDER: simplify so this is less error-prone
                 RunUI(this, _cancellationTokenSource.Token, () => 
                 {
                     Root.RefreshState();
@@ -264,14 +248,14 @@ namespace pwiz.Skyline.Controls.FilesTree
         }
 
         // CONSIDER: refactor for more code reuse with SrmTreeNode
-        internal void MergeNodes(IList<FileNode> docFiles, TreeNodeCollection treeNodes, Func<FileNode, FilesTreeNode> createTreeNodeFunc, CancellationToken cancellationToken, bool documentPathChanged)
+        internal void MergeNodes(IList<FileNode> docFiles, TreeNodeCollection treeNodes, Func<FileNode, FilesTreeNode> createTreeNodeFunc, CancellationToken cancellationToken)
         {
             if (docFiles == null)
                 return;
 
             // need to look items up by index, so convert to list
             var docFilesList = docFiles.ToList();
-            var localFileInitList = new List<FilesTreeNode>();
+            // var localFileInitList = new List<FilesTreeNode>();
 
             FileNode nodeDoc = null;
 
@@ -299,7 +283,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                     if (nodeTree.Model.IdentityPath.Equals(nodeDoc.IdentityPath))
                     {
                         nodeTree.Model = nodeDoc;
-                        localFileInitList.Add(nodeTree);
+                        LoadFile(nodeTree);
                     }
                     else
                     {
@@ -310,7 +294,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
                         // Found a match in the map of removed nodes so update its model and re-insert it
                         nodeTree.Model = nodeDoc;
-                        localFileInitList.Add(nodeTree);
+                        LoadFile(nodeTree);
 
                         treeNodes.Insert(i, nodeTree);
                     }
@@ -358,11 +342,12 @@ namespace pwiz.Skyline.Controls.FilesTree
                     nodeTree.Model = nodeDoc;
                     nodesToInsert.Add(nodeTree);
                 }
-                else {
+                else
+                {
                     nodeTree = createTreeNodeFunc(nodeDoc);
 
                     nodesToInsert.Add(nodeTree);
-                    localFileInitList.Add(nodeTree);
+                    LoadFile(nodeTree);
                 }
             }
 
@@ -378,29 +363,6 @@ namespace pwiz.Skyline.Controls.FilesTree
                 }
             }
 
-            // Queue tasks to initialize the local file for a FilesTreeNode that (1) was created or (2) had its model
-            // replaced during this round of merging FilesTree with an SrmDocument.
-            //
-            // This uses a work queue to avoid blocking the UI thread since finding files could be slow, especially
-            // if the file is on a network drive.
-            foreach (var node in localFileInitList.Where(node => node.Model.ShouldInitializeLocalFile()))
-            {
-                AddTask(() =>
-                {
-                    if(cancellationToken.IsCancellationRequested)
-                        return;
-
-                    node.InitializeLocalFile();
-
-                    // Return to the UI thread and update the FilesTreeNode with any additional
-                    // info about the state of the local file
-                    RunUI(node.TreeView, cancellationToken, () =>
-                    {
-                        node.UpdateState();
-                    });
-                });
-            }
-
             // Recursively merge any nested files
             for (i = 0; i < treeNodes.Count; i++)
             {
@@ -409,8 +371,23 @@ namespace pwiz.Skyline.Controls.FilesTree
 
                 if (model != null && model.Files.Count > 0)
                 {
-                    MergeNodes(model.Files, treeNode.Nodes, createTreeNodeFunc, cancellationToken, documentPathChanged);
+                    MergeNodes(model.Files, treeNode.Nodes, createTreeNodeFunc, cancellationToken);
                 }
+            }
+
+            return;
+
+            // Load the file for this tree node. Update the node's UI if needed. Usually runs when (1) the node was just created or (2)
+            // the node's model was replaced when merging models representing the latest SrmDocument with FilesTree's existing nodes.
+            void LoadFile(FilesTreeNode node)
+            {
+                if (!node.Model.ShouldInitializeLocalFile())
+                    return;
+
+                _fileSystemService.LoadFile(node.LocalFilePath, node.FilePath, node.FileName, node.Model.DocumentPath, (localFilePath, isAvailable, token) =>
+                {
+                    node.UpdateState(localFilePath, isAvailable);
+                });
             }
         }
 
@@ -598,29 +575,23 @@ namespace pwiz.Skyline.Controls.FilesTree
             }
         }
 
-        #region FileSystemWatcher Event Handlers
+        #region Event handlers used by FileSystemService to monitor the local file system
 
-        public void FileDeleted(string fileName)
+        public void FileDeleted(string fileName, CancellationToken cancellationToken)
         {
-            if (IgnoreFileName(fileName))
-                return;
-
             if (FindTreeNodeForFileName(Root, fileName, out var missingFileTreeNode))
             {
                 missingFileTreeNode.FileState = FileState.missing;
 
                 RunUI(this, _cancellationTokenSource.Token, () =>
                 {
-                    FilesTreeNode.UpdateFileImages(missingFileTreeNode);
+                    FilesTreeNode.UpdateImagesForTreeNode(missingFileTreeNode);
                 });
             }
         }
 
-        public void FileCreated(string fileName)
+        public void FileCreated(string fileName, CancellationToken cancellationToken)
         {
-            if (IgnoreFileName(fileName))
-                return;
-
             // Look for a tree node associated with the new file name. If Files Tree isn't aware
             // of a file with that name, ignore the event.
             if (FindTreeNodeForFileName(Root, fileName, out var availableFileTreeNode))
@@ -629,21 +600,13 @@ namespace pwiz.Skyline.Controls.FilesTree
 
                 RunUI(this, _cancellationTokenSource.Token, () =>
                 {
-                    FilesTreeNode.UpdateFileImages(availableFileTreeNode);
-
+                    FilesTreeNode.UpdateImagesForTreeNode(availableFileTreeNode);
                 });
             }
         }
 
-        public void FileRenamed(string oldName, string newName)
+        public void FileRenamed(string oldName, string newName, CancellationToken cancellationToken)
         {
-            // Ignore file names with .bak / .tmp extensions as they are temporary files created during the save process.
-            // N.B. it's important to only ignore rename events where the new file name's extension is on the ignore list.
-            // Otherwise, files that actually exist will be marked as missing in Files Tree without a way to force those
-            // nodes to reset their FileState from disk leading to much confusion.
-            if (IgnoreFileName(newName))
-                return;
-
             // Look for a tree node with the file's previous name. If a node with that name is found
             // treat the file as missing.
             if (FindTreeNodeForFileName(Root, oldName, out var treeNodeToUpdate))
@@ -663,7 +626,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
             RunUI(this, _cancellationTokenSource.Token, () =>
             {
-                FilesTreeNode.UpdateFileImages(treeNodeToUpdate);
+                FilesTreeNode.UpdateImagesForTreeNode(treeNodeToUpdate);
             });
         }
 
@@ -681,88 +644,51 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         protected override void Dispose(bool disposing)
         {
-            _monitoringFileSystem = false;
+            _cancellationTokenSource.Cancel();
 
-            // CONSIDER: should this happen last?
-            if (disposing)
+            if (_fileSystemService != null)
             {
-                _fsWatcher?.Dispose();
-                _fsWatcher = null;
-                _fsWorkQueue?.Dispose();
-                _fsWorkQueue = null;
-                _editTextBox?.Dispose();
-                _editTextBox = null;
+                _fileSystemService.StopWatching();
+                _fileSystemService = null;
             }
 
             if (_editTextBox != null)
             {
                 _editTextBox.KeyDown -= LabelEditTextBox_KeyDown;
                 _editTextBox.LostFocus -= LabelEditTextBox_LostFocus;
+                _editTextBox.Dispose();
+                _editTextBox = null;
             }
 
             base.Dispose(disposing);
         }
 
-        // TODO: reconsider whether to propagate the cancellation token to the QueueWorker, especially whether to
-        //       wrap it in a container with a specific CancellationToken taken from FilesTree's CancellationTokenSource.
-        private void FilesTree_ProjectDirectory_OnDeleted(object sender, FileSystemEventArgs e)
-        {
-            AddTask(() =>
-            {
-                FileDeleted(e.Name);
-            });
-        }
-
-        private void FilesTree_ProjectDirectory_OnCreated(object sender, FileSystemEventArgs e)
-        {
-            AddTask(() =>
-            {
-                FileCreated(e.Name);
-            });
-        }
-
-        private void FilesTree_ProjectDirectory_OnRenamed(object sender, RenamedEventArgs e)
-        {
-            AddTask(() =>
-            {
-                FileRenamed(e.OldName, e.Name);
-            });
-        }
-
-        // FileSystemWatcher notifications may reference files we should ignore.
-        // For example, .tmp / .bak files created when saving .sky or .sky.view
-        // files.
-        public static bool IgnoreFileName(string fileName)
-        {
-            if (string.IsNullOrWhiteSpace(fileName))
-                return true;
-
-            var extension = Path.GetExtension(fileName);
-
-            return FILE_EXTENSION_IGNORE_LIST.Contains(extension);
-        }
-
+        /// <summary>
+        /// Recursively search FilesTree for a node whose LocalFilePath matches the specified file path.
+        /// If found, return true and set value to the matching node. Otherwise, return false and set
+        /// value to null.
+        /// </summary>
+        /// <param name="filesTreeNode">Current tree node</param>
+        /// <param name="filePath">Looking for a node with this file path.</param>
+        /// <param name="value">The matching node</param>
+        /// <returns></returns>
         // TODO: unit tests
-        // CONSIDER: improve performance by caching a map of file names to FilesTreeNodes, especially to improve
-        //           performance of FileRenamed which may need to find two nodes.
-        private static bool FindTreeNodeForFileName(TreeNode treeNode, string fileName, out FilesTreeNode value)
+        // CONSIDER: improve performance with a dictionary mapping file paths to tree nodes
+        private static bool FindTreeNodeForFileName(FilesTreeNode filesTreeNode, string filePath, out FilesTreeNode value)
         {
             value = null;
 
-            if (!(treeNode is FilesTreeNode filesTreeNode))
-                return false;
-
             if (filesTreeNode.Model.IsBackedByFile && 
-                filesTreeNode.FileName != null && 
-                filesTreeNode.FileName.Equals(fileName, StringComparison.OrdinalIgnoreCase))
+                filesTreeNode.LocalFilePath != null && 
+                filesTreeNode.LocalFilePath.Equals(filePath, StringComparison.OrdinalIgnoreCase))
             {
                 value = filesTreeNode;
                 return true;
             }
 
-            foreach (TreeNode n in filesTreeNode.Nodes)
+            foreach (FilesTreeNode n in filesTreeNode.Nodes)
             {
-                if (FindTreeNodeForFileName(n, fileName, out value))
+                if (FindTreeNodeForFileName(n, filePath, out value))
                     return true;
             }
 
@@ -784,23 +710,218 @@ namespace pwiz.Skyline.Controls.FilesTree
                 }
                 finally
                 {
-                    var result = Interlocked.Decrement(ref _pendingActionCount);
-                    Assume.IsTrue(result >= 0);
+                    Interlocked.Decrement(ref _pendingActionCount);
+                    Assume.IsTrue(_pendingActionCount >= 0);
+                }
+            });
+        }
+    }
+
+    // TODO: add a new background task that refreshes the state of all items in the cache periodically. For example, when Skyline gains focus
+    //       after being minimized or after the user switches from a different application back to Skyline. 
+    // TODO: merge RunUI and Add/ProcessTask into a new service that FilesTree can use for background processing
+    // TODO: provide an implementation of FileSystemService that runs when the document is unsaved (so monitoring is not running)
+    // CONSIDER: does FileSystemService work properly when a (1) a new document is created or (2) an existing document is opened and internal state is reset for the new Skyline document?
+    public class FileSystemService
+    {
+        private static readonly IList<string> FILE_EXTENSION_IGNORE_LIST = new List<string> { @".tmp", @".bak" };
+
+        internal static FileSystemService Create(Control synchronizingObject, CancellationToken cancellationToken)
+        {
+            return new FileSystemService(synchronizingObject, cancellationToken);
+        }
+
+        private FileSystemWatcher _watcher;
+        private QueueWorker<Action> _workQueue;
+
+        private FileSystemService(Control synchronizingObject, CancellationToken cancellationToken)
+        {
+            SynchronizingObject = synchronizingObject;
+            Cache = new ConcurrentDictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
+            CancellationToken = cancellationToken;
+
+            {
+                var threadCount = ParallelEx.GetThreadCount(); // set to zero to process tasks synchronously
+                _workQueue = new QueueWorker<Action>(null, ProcessTask);
+                _workQueue.RunAsync(threadCount, @"FileSystemService: sub-system of FilesTree used to process work in the background");
+            }
+        }
+
+        public Action<string, CancellationToken> FileDeletedAction { get; set; }
+        public Action<string, CancellationToken> FileCreatedAction { get; set; }
+        public Action<string, string, CancellationToken> FileRenamedAction { get; set; }
+
+        internal Control SynchronizingObject { get; }
+        internal string DirectoryPath => _watcher?.Path;
+        internal CancellationToken CancellationToken { get; }
+        private ConcurrentDictionary<string, bool> Cache { get; }
+
+        internal void StartWatching(string directoryPath)
+        {
+            Assume.IsTrue(!IsMonitoring);
+
+            _watcher = new FileSystemWatcher();
+
+            _watcher.Path = Path.GetDirectoryName(directoryPath);
+            _watcher.SynchronizingObject = SynchronizingObject;
+            _watcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName;
+            _watcher.IncludeSubdirectories = true;
+            _watcher.EnableRaisingEvents = true;
+            _watcher.Renamed += FileSystemWatcher_OnRenamed;
+            _watcher.Deleted += FileSystemWatcher_OnDeleted;
+            _watcher.Created += FileSystemWatcher_OnCreated;
+
+            IsMonitoring = true;
+        }
+
+        public void LoadFile(string localFilePath, string filePath, string fileName, string documentPath, Action<string, bool, CancellationToken> callback)
+        {
+            // See if the file is already loaded into the cache - if so, queue work to update to invoke the callback with the cached file state.
+            if (localFilePath != null && Cache.TryGetValue(localFilePath, out var isAvailable))
+            {
+                Assume.IsFalse(SynchronizingObject.InvokeRequired);
+
+                RunUI(() =>
+                {
+                    callback(localFilePath, isAvailable, CancellationToken);
+                });
+            }
+            // Not in the cache, so (1) determine the path to the local file and (2) if found, queue work to invoke the callback with info about the local file path.
+            else
+            {
+                AddTask(() =>
+                {
+                    if (CancellationToken.IsCancellationRequested)
+                        return;
+
+                    localFilePath = LocateFile(filePath, fileName, documentPath);
+
+                    if (localFilePath != null)
+                    {
+                        Cache[localFilePath] = true;
+
+                        RunUI(() =>
+                        {
+                            callback(localFilePath, true, CancellationToken);
+                        });
+                    }
+                });
+            }
+        }
+
+        public bool IsMonitoring { get; private set; }
+
+        public bool IsMonitoringDirectory(string directoryPath)
+        {
+            return IsMonitoring && DirectoryPath.Equals(directoryPath, StringComparison.OrdinalIgnoreCase);
+        }
+
+        public bool IsFileAvailable(string fullPath)
+        {
+            return Cache.ContainsKey(fullPath);
+        }
+
+        private void FileSystemWatcher_OnDeleted(object sender, FileSystemEventArgs e)
+        {
+            if (IgnoreFileName(e.FullPath) || CancellationToken.IsCancellationRequested)
+                return;
+
+            Cache[e.FullPath] = false;
+
+            AddTask(() =>
+            {
+                if (!CancellationToken.IsCancellationRequested)
+                {
+                    FileDeletedAction(e.FullPath, CancellationToken);
                 }
             });
         }
 
-        public bool IsComplete()
+        private void FileSystemWatcher_OnCreated(object sender, FileSystemEventArgs e)
         {
-            return _pendingActionCount == 0;
+            if (IgnoreFileName(e.FullPath) || CancellationToken.IsCancellationRequested)
+                return;
+
+            Cache[e.FullPath] = true;
+
+            AddTask(() => 
+            {
+                if (!CancellationToken.IsCancellationRequested)
+                {
+                    FileCreatedAction(e.FullPath, CancellationToken);
+                }
+            });
         }
+
+        private void FileSystemWatcher_OnRenamed(object sender, RenamedEventArgs e)
+        {
+            // Ignore file names with .bak / .tmp extensions as they are temporary files created during the save process.
+            //
+            // N.B. it's important to only ignore rename events where the new file name's extension is on the ignore list.
+            // Otherwise, files that actually exist will be marked as missing in Files Tree without a way to force those
+            // nodes to reset their FileState from disk leading to much confusion.
+            if (IgnoreFileName(e.FullPath) || CancellationToken.IsCancellationRequested)
+                return;
+
+            if (Cache.ContainsKey(e.OldFullPath))
+            {
+                Cache[e.OldFullPath] = false;
+            }
+            else if (Cache.ContainsKey(e.FullPath)) 
+            {
+                Cache[e.FullPath] = true;
+            }
+
+            AddTask(() =>
+            {
+                if (!CancellationToken.IsCancellationRequested)
+                {
+                    FileRenamedAction(e.OldFullPath, e.FullPath, CancellationToken);
+                }
+            });
+        }
+
+        internal void StopWatching()
+        {
+            // Require the caller to cancel in-flight work before calling StopWatching
+            Assume.IsTrue(CancellationToken.IsCancellationRequested);
+
+            Cache?.Clear();
+
+            if (_watcher != null)
+            {
+                _watcher.Renamed -= FileSystemWatcher_OnRenamed;
+                _watcher.Deleted -= FileSystemWatcher_OnDeleted;
+                _watcher.Created -= FileSystemWatcher_OnCreated;
+                _watcher.EnableRaisingEvents = false;
+                _watcher.Dispose();
+                _watcher = null;
+            }
+
+            FileCreatedAction = null;
+            FileDeletedAction = null;
+            FileRenamedAction = null;
+
+            if (_workQueue != null)
+            {
+                _workQueue.Clear();
+                _workQueue.Dispose();
+                _workQueue = null;
+            }
+
+            IsMonitoring = false;
+        }
+
+        private int _pendingActionCount;
+
+        public bool IsComplete => _pendingActionCount == 0;
 
         private void AddTask(Action action)
         {
             Interlocked.Increment(ref _pendingActionCount);
-            _fsWorkQueue.Add(action);
+            _workQueue.Add(action);
         }
-
+        
         private void ProcessTask(Action action, int threadIndex)
         {
             try
@@ -812,6 +933,62 @@ namespace pwiz.Skyline.Controls.FilesTree
                 var result = Interlocked.Decrement(ref _pendingActionCount);
                 Assume.IsTrue(result >= 0);
             }
+        }
+
+        // Update UI on the UI thread. All callers must check whether cancellation has been
+        // requested, typically using FilesTree's CancellationTokenSource.
+        private void RunUI(Action action)
+        {
+            Assume.IsNotNull(SynchronizingObject);
+
+            Interlocked.Increment(ref _pendingActionCount);
+            CommonActionUtil.SafeBeginInvoke(SynchronizingObject, () =>
+            {
+                try
+                {
+                    if (!CancellationToken.IsCancellationRequested)
+                    {
+                        action();
+                    }
+                }
+                finally
+                {
+                    Interlocked.Decrement(ref _pendingActionCount);
+                    Assume.IsTrue(_pendingActionCount >= 0);
+                }
+            });
+        }
+
+        /// Find Skyline files on the local file system.
+        ///
+        /// SkylineFiles uses this approach to locate file paths found in SrmSettings. It starts with
+        /// the given path but those paths may be set on others machines. If not available locally, use
+        /// <see cref="PathEx.FindExistingRelativeFile"/> to search for the file locally.
+        ///
+        // Looks for a file on the file system. Can make one or more calls to File.Exists or Directory.Exists while 
+        // checking places Skyline might have stored the file. Should be called from a worker thread to avoid blocking the UI.
+        // TODO: what other ways does Skyline use to find files of various types? For example, Chromatogram.GetExistingDataFilePath or other possible locations for spectral libraries
+        public static string LocateFile(string filePath, string fileName, string documentPath)
+        {
+            string localPath;
+
+            if (File.Exists(filePath) || Directory.Exists(filePath))
+                localPath = filePath;
+            else localPath = PathEx.FindExistingRelativeFile(documentPath, fileName);
+
+            return localPath;
+        }
+
+        // FileSystemWatcher events may reference files we should ignore. For example, .tmp or .bak files
+        // created when saving a Skyline document or view file. So, check paths against an ignore list.
+        public static bool IgnoreFileName(string filePath)
+        {
+            if (string.IsNullOrWhiteSpace(filePath))
+                return true;
+
+            var extension = Path.GetExtension(filePath);
+
+            return FILE_EXTENSION_IGNORE_LIST.Contains(extension);
         }
     }
 }
