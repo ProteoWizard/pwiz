@@ -39,8 +39,9 @@ namespace pwiz.Skyline.Controls.FilesTree
         private bool _inhibitOnAfterSelect;
         private bool _monitoringFileSystem;
         private string _monitoredFilePath;
+        private int _pendingActionCount;
         private FileSystemWatcher _fsWatcher;
-        private QueueWorker<Action> _fsWorkQueue = new QueueWorker<Action>(null, (a, i) => a());
+        private QueueWorker<Action> _fsWorkQueue;
         private FilesTreeNode _triggerLabelEditForNode;
         private TextBox _editTextBox;
         private string _editedLabel;
@@ -56,6 +57,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         public FilesTree()
         {
+            _fsWorkQueue = new QueueWorker<Action>(null, ProcessTask);
             _modelDocumentContainer = new MemoryDocumentContainer();
             _cancellationTokenSource = new CancellationTokenSource();
 
@@ -103,12 +105,6 @@ namespace pwiz.Skyline.Controls.FilesTree
         public bool IsMonitoringFileSystem()
         {
             return _monitoringFileSystem;
-        }
-
-        public bool WaitForEmptyQueue()
-        {
-            _fsWorkQueue.Wait();
-            return true;
         }
 
         public string PathMonitoredForFileSystemChanges()
@@ -269,12 +265,8 @@ namespace pwiz.Skyline.Controls.FilesTree
                 }
 
                 // CONSIDER: simplify so this is less error-prone
-                var cancellationToken = _cancellationTokenSource.Token;
-                RunUI(this, () => 
+                RunUI(this, _cancellationTokenSource.Token, () => 
                 {
-                    if(cancellationToken.IsCancellationRequested)
-                        return;
-
                     Root.RefreshState();
                 });
             }
@@ -406,7 +398,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             // if the file is on a network drive.
             foreach (var node in localFileInitList.Where(node => node.Model.ShouldInitializeLocalFile()))
             {
-                _fsWorkQueue.Add(() =>
+                AddTask(() =>
                 {
                     if(cancellationToken.IsCancellationRequested)
                         return;
@@ -415,11 +407,8 @@ namespace pwiz.Skyline.Controls.FilesTree
 
                     // Return to the UI thread and update the FilesTreeNode with any additional
                     // info about the state of the local file
-                    RunUI(node.TreeView, () =>
+                    RunUI(node.TreeView, cancellationToken, () =>
                     {
-                        if (cancellationToken.IsCancellationRequested)
-                            return;
-
                         node.UpdateState();
                     });
                 });
@@ -633,12 +622,8 @@ namespace pwiz.Skyline.Controls.FilesTree
             {
                 missingFileTreeNode.FileState = FileState.missing;
 
-                var cancellationToken = _cancellationTokenSource.Token;
-                RunUI(this, () =>
+                RunUI(this, _cancellationTokenSource.Token, () =>
                 {
-                    if (cancellationToken.IsCancellationRequested)
-                        return;
-
                     FilesTreeNode.UpdateFileImages(missingFileTreeNode);
                 });
             }
@@ -655,12 +640,8 @@ namespace pwiz.Skyline.Controls.FilesTree
             {
                 availableFileTreeNode.FileState = FileState.available;
 
-                var cancellationToken = _cancellationTokenSource.Token;
-                RunUI(this, () =>
+                RunUI(this, _cancellationTokenSource.Token, () =>
                 {
-                    if (cancellationToken.IsCancellationRequested)
-                        return;
-
                     FilesTreeNode.UpdateFileImages(availableFileTreeNode);
 
                 });
@@ -693,12 +674,8 @@ namespace pwiz.Skyline.Controls.FilesTree
             if (treeNodeToUpdate == null)
                 return;
 
-            var cancellationToken = _cancellationTokenSource.Token;
-            RunUI(this, () =>
+            RunUI(this, _cancellationTokenSource.Token, () =>
             {
-                if (cancellationToken.IsCancellationRequested)
-                    return;
-
                 FilesTreeNode.UpdateFileImages(treeNodeToUpdate);
             });
         }
@@ -730,10 +707,6 @@ namespace pwiz.Skyline.Controls.FilesTree
                 _editTextBox = null;
             }
 
-            if (_fsWorkQueue != null)
-            {
-            }
-
             if (_editTextBox != null)
             {
                 _editTextBox.KeyDown -= LabelEditTextBox_KeyDown;
@@ -747,21 +720,24 @@ namespace pwiz.Skyline.Controls.FilesTree
         //       wrap it in a container with a specific CancellationToken taken from FilesTree's CancellationTokenSource.
         private void FilesTree_ProjectDirectory_OnDeleted(object sender, FileSystemEventArgs e)
         {
-            _fsWorkQueue.Add(() => {
+            AddTask(() =>
+            {
                 FileDeleted(e.Name);
             });
         }
 
         private void FilesTree_ProjectDirectory_OnCreated(object sender, FileSystemEventArgs e)
         {
-            _fsWorkQueue.Add(() => {
+            AddTask(() =>
+            {
                 FileCreated(e.Name);
             });
         }
 
         private void FilesTree_ProjectDirectory_OnRenamed(object sender, RenamedEventArgs e)
         {
-            _fsWorkQueue.Add(() => {
+            AddTask(() =>
+            {
                 FileRenamed(e.OldName, e.Name);
             });
         }
@@ -806,11 +782,49 @@ namespace pwiz.Skyline.Controls.FilesTree
             return false;
         }
 
-        // Update UI on the UI thread. All callers must check whether cancellation has been
-        // requested, typically using FilesTree's CancellationTokenSource.
-        private static void RunUI(Control control, Action action)
+        private void RunUI(Control control, CancellationToken cancellationToken, Action action)
         {
-            CommonActionUtil.SafeBeginInvoke(control, action);
+            Interlocked.Increment(ref _pendingActionCount);
+
+            CommonActionUtil.SafeBeginInvoke(control, () =>
+            {
+                try
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        action();
+                    }
+                }
+                finally
+                {
+                    var result = Interlocked.Decrement(ref _pendingActionCount);
+                    Assume.IsTrue(result >= 0);
+                }
+            });
+        }
+
+        public bool IsComplete()
+        {
+            return _pendingActionCount == 0;
+        }
+
+        private void AddTask(Action action)
+        {
+            Interlocked.Increment(ref _pendingActionCount);
+            _fsWorkQueue.Add(action);
+        }
+
+        private void ProcessTask(Action action, int threadIndex)
+        {
+            try
+            {
+                action();
+            }
+            finally
+            {
+                var result = Interlocked.Decrement(ref _pendingActionCount);
+                Assume.IsTrue(result >= 0);
+            }
         }
     }
 }

@@ -24,9 +24,9 @@ namespace pwiz.Skyline.Model.Files
         {
             var identityPath = new IdentityPath(chromSetId.GetIdentity(0), chromFileInfo.Id); 
 
-            var name = chromFileInfo?.Name ?? string.Empty;
-            var filePath = chromFileInfo?.FilePath.GetFilePath() ?? string.Empty;
-            var fileName = chromFileInfo?.FilePath.GetFileName() ?? string.Empty;
+            var name = chromFileInfo.Name;
+            var filePath = chromFileInfo.FilePath?.GetFilePath() ?? string.Empty;
+            var fileName = chromFileInfo.FilePath?.GetFileName() ?? string.Empty;
 
             return new ReplicateSampleFile(documentFilePath, identityPath, name, fileName, filePath);
         }

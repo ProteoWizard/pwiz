@@ -4320,6 +4320,7 @@
     <None Include="Resources\Properties.bmp" />
     <None Include="Resources\prosit_logo_dark_blue.png" />
     <None Include="Resources\Skyline_Daily.bmp" />
+    <None Include="Resources\FolderSampleSet.png" />
     <Content Include="SkylineDocPointer.ico" />
     <Content Include="SkylineProcessRunner.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
