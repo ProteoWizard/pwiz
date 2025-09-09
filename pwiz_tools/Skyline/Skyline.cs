@@ -74,6 +74,7 @@ using pwiz.Skyline.Model.Koina.Communication;
 using pwiz.Skyline.Model.Koina.Models;
 using pwiz.CommonMsData.RemoteApi;
 using pwiz.CommonMsData.RemoteApi.Ardia;
+using pwiz.Skyline.Model.PropertySheets;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.SettingsUI;
@@ -204,6 +205,9 @@ namespace pwiz.Skyline
 
             checkForUpdatesMenuItem.Visible =
                 checkForUpdatesSeparator.Visible = ApplicationDeployment.IsNetworkDeployed;
+
+            // Track active content to update what PropertyGrid displays
+            DockPanel.ActiveContentChanged += DockPanel_ActiveContentChanged;
 
             // Begin ToolStore check for updates to currently installed tools, if any
             if (ToolStoreUtil.UpdatableTools(Settings.Default.ToolList).Any())
@@ -3209,7 +3213,7 @@ namespace pwiz.Skyline
             if (show)
             {
                 _propertyForm ??= CreatePropertyForm();
-                _propertyForm.GetProperties(DockPanel.ActiveContent);
+                PotentialPropertyProviderGotFocus(DockPanel.ActiveContent);
 
                 if (_propertyForm.DockPanel != null)
                     _propertyForm.Activate();
@@ -3225,7 +3229,8 @@ namespace pwiz.Skyline
         private PropertyForm CreatePropertyForm()
         {
             _propertyForm = new PropertyForm(this);
-            _propertyForm.GetProperties(DockPanel.ActiveContent);
+            PotentialPropertyProviderGotFocus(DockPanel.ActiveContent);
+
             return _propertyForm;
         }
 
@@ -3238,11 +3243,17 @@ namespace pwiz.Skyline
             }
         }
 
-        public void PotentialPropertySheetOwnerGotFocus(object sender, EventArgs e)
+        public void PotentialPropertyProviderGotFocus(IDockableForm form)
         {
-            if ( !(_propertyForm is { Visible: true }) || !(sender is IDockableForm form)) return;
+            if (_propertyForm == null) return;
 
-            _propertyForm.GetProperties(form);
+            if (form is IPropertyProvider propertyProvider)
+                _propertyForm.SetPropertyObject(propertyProvider.GetSelectedObjectProperties());
+        }
+
+        public void DockPanel_ActiveContentChanged(object sender, EventArgs e)
+        {
+            PotentialPropertyProviderGotFocus(DockPanel.ActiveContent);
         }
 
         #endregion

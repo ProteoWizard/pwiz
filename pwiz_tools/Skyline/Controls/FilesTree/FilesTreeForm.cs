@@ -114,12 +114,8 @@ namespace pwiz.Skyline.Controls.FilesTree
             filesTree.OnDocumentChanged(sender, e);
 
             // if property grid is showing FileNodeProperties, update it
-            var propertyGrid = SkylineWindow.PropertyForm?.PropertyGrid;
-            if (propertyGrid?.SelectedObject is FileNodeProperties)
-            {
-                // This works if we trust that FilesTreeForm handles current selection recovery after document change correctly
-                propertyGrid.SelectedObject = GetSelectedObjectProperties();
-            }
+            if (SkylineWindow.PropertyForm?.GetPropertyObject() is FileNodeProperties)
+                SkylineWindow.PropertyForm.SetPropertyObject(GetSelectedObjectProperties());
         }
 
         protected override string GetPersistentString()
@@ -419,7 +415,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         public void NotifyPropertySheetOwnerGotFocus(SkylineWindow skyline, EventArgs e)
         {
-            SkylineWindow.PotentialPropertySheetOwnerGotFocus(this, e);
+            SkylineWindow.PotentialPropertyProviderGotFocus(this);
         }
 
         public GlobalizedObject GetSelectedObjectProperties()

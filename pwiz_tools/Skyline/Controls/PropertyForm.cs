@@ -17,11 +17,9 @@
  * limitations under the License.
  */
 
-using DigitalRune.Windows.Docking;
 using pwiz.Skyline.Controls.FilesTree;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.PropertySheets;
 using pwiz.Skyline.Util;
 using pwiz.Common.SystemUtil;
 using System.ComponentModel;
@@ -41,30 +39,22 @@ namespace pwiz.Skyline.Controls
             HideOnClose = true; // Hide the form when closed, but do not dispose it
             SkylineWindow = skylineWindow;
 
-            PropertyGrid.PropertyValueChanged += PropertyGrid_PropertyValueChanged;
+            propertyGrid.PropertyValueChanged += PropertyGrid_PropertyValueChanged;
         }
 
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public SkylineWindow SkylineWindow { get; }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public PropertyGrid PropertyGrid => propertyGrid;
-
-        public void GetProperties(IDockableForm form)
+        public void SetPropertyObject(GlobalizedObject properties)
         {
-            if (form is IPropertyProvider propertyProviderForm)
-            {
-                PropertyGrid.SelectedObject = propertyProviderForm.GetSelectedObjectProperties();
-                // TODO: Fix bug where PropertyGrid does not expand all nested properties when the form is first shown.
-                // Highly possible it has to do with multiple expandable properties having the same display name.
-                PropertyGrid.ExpandAllGridItems();
-            }
-            else
-            {
-                PropertyGrid.SelectedObject = null;
-            }
+            propertyGrid.SelectedObject = properties;
+            propertyGrid.ExpandAllGridItems();
+        }
+
+        public GlobalizedObject GetPropertyObject()
+        {
+            return propertyGrid.SelectedObject as GlobalizedObject;
         }
 
         private void PropertyGrid_PropertyValueChanged(object sender, PropertyValueChangedEventArgs e)
