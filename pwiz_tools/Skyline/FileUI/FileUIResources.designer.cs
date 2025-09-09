@@ -89,6 +89,15 @@ namespace pwiz.Skyline.FileUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add/Edit Account....
+        /// </summary>
+        public static string BaseFileDialogNE_populateListViewFromDirectory_Add_Edit_Account___ {
+            get {
+                return ResourceManager.GetString("BaseFileDialogNE_populateListViewFromDirectory_Add_Edit_Account___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Import Transition List (iRT standards).
         /// </summary>
         public static string ChooseIrtStandardPeptides_ImportTextFile_Import_Transition_List__iRT_standards_ {

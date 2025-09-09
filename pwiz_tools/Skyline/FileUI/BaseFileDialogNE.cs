@@ -57,7 +57,7 @@ namespace pwiz.Skyline.FileUI
         public BaseFileDialogNE(string[] sourceTypes, IList<RemoteAccount> remoteAccounts, IList<string> specificDataSourceFilter = null, bool isRemote = false)
         {
             InitializeComponent();
-            _remoteAccounts = remoteAccounts;
+            _remoteAccounts = new List<RemoteAccount>(remoteAccounts);
             IsRemote = isRemote;
 
             listView.ListViewItemSorter = _listViewColumnSorter;
@@ -473,6 +473,12 @@ namespace pwiz.Skyline.FileUI
                             imageIndex = ImageIndex.MyNetworkPlaces,
                         });
                     }
+                    listSourceInfo.Add(new SourceInfo(null)  // Add the item to edit accounts
+                    {
+                        name = FileUIResources.BaseFileDialogNE_populateListViewFromDirectory_Add_Edit_Account___,
+                        type = DataSourceUtil.EDIT_ACCOUNT,
+                        imageIndex = ImageIndex.BlankImage,
+                    });
                 }
                 else
                 {
@@ -723,6 +729,7 @@ namespace pwiz.Skyline.FileUI
 
                 if (!ReferenceEquals(remoteUrl, RemoteUrl.EMPTY))
                 {
+                    upOneLevelButton.Enabled = true;
                     TreeNode remoteNode = (TreeNode)lookInComboBox.Items[_remoteIndex];
 
                     ++driveCount;
@@ -737,14 +744,21 @@ namespace pwiz.Skyline.FileUI
 
                     var branches = remoteUrl.GetPathParts().ToList();
                     TreeNode pathNode = serverNode;
-                    for (int i = 0; i < branches.Count; ++i)
+                    if (!string.IsNullOrEmpty(remoteUrl.EncodedPath))
                     {
-                        ++driveCount;
-                        pathNode = pathNode.Nodes.Add(branches[i], branches[i], 8, 8);
-                        pathNode.Tag = remoteUrl.ChangePathParts(branches.GetRange(0, i + 1));
-                        lookInComboBox.Items.Insert(_remoteIndex + driveCount, pathNode);
+                        for (int i = 0; i < branches.Count; ++i)
+                        {
+                            ++driveCount;
+                            pathNode = pathNode.Nodes.Add(branches[i], branches[i], 8, 8);
+                            pathNode.Tag = remoteUrl.ChangePathParts(branches.GetRange(0, i + 1));
+                            lookInComboBox.Items.Insert(_remoteIndex + driveCount, pathNode);
+                        }
                     }
                     lookInComboBox.SelectedIndex = _remoteIndex + driveCount;
+                }
+                else
+                {
+                    upOneLevelButton.Enabled = false;
                 }
             }
 
@@ -823,6 +837,7 @@ namespace pwiz.Skyline.FileUI
                             lookInComboBox.Items.Insert(_myComputerIndex + driveCount, pathNode);
                         }
                         lookInComboBox.SelectedIndex = _myComputerIndex + driveCount;
+                        upOneLevelButton.Enabled = (branches.Count > 1);
                     }
                 }
             }
@@ -867,7 +882,8 @@ namespace pwiz.Skyline.FileUI
 
         private void listView_ItemActivate( object sender, EventArgs e )
         {
-            SelectItem();
+            if (!EditAccount())
+                SelectItem();
         }
 
         protected virtual void SelectItem()
@@ -887,6 +903,38 @@ namespace pwiz.Skyline.FileUI
                 DialogResult = DialogResult.OK;
                 Close();
             }
+        }
+
+        private bool EditAccount()
+        {
+            var selected = listView.SelectedItems.OfType<ListViewItem>().ToList();
+            if (selected.Count == 0)
+                return false;
+
+            ListViewItem selectedItem = selected[0];
+            if (DataSourceUtil.IsEditAccount(selectedItem.SubItems[1].Text))
+            {
+                var list = Settings.Default.RemoteAccountList;
+                var listNew = list.EditList(this, null);
+                if (listNew != null)
+                {
+                    list.Clear();
+                    list.AddRange(listNew);
+                    SetRemoteAccounts(Settings.Default.RemoteAccountList);
+                }
+                // clear listView contents if all remote accounts have been removed
+                if (!list.Any())
+                    listView.Clear();
+                CurrentDirectory = RemoteUrl.EMPTY;
+                return true;
+            }
+            return false;
+        }
+
+        protected virtual void SetRemoteAccounts(IEnumerable<RemoteAccount> accounts)
+        {
+            _remoteAccounts.Clear();
+            _remoteAccounts.AddRange(accounts);
         }
 
         protected void OpenFolderItem(ListViewItem listViewItem)
@@ -956,7 +1004,8 @@ namespace pwiz.Skyline.FileUI
 
         private void openButton_Click( object sender, EventArgs e )
         {
-            DoMainAction();
+            if (!EditAccount())
+                DoMainAction();
         }
 
         protected virtual void DoMainAction()
@@ -1039,8 +1088,12 @@ namespace pwiz.Skyline.FileUI
             else if (_currentDirectory is RemoteUrl remoteUrl)
             {
                 var pathParts = remoteUrl.GetPathParts().ToList();
-                if (pathParts.Count > 1)
+                if (!string.IsNullOrEmpty(remoteUrl.EncodedPath))
                     parent = remoteUrl.ChangePathParts(remoteUrl.GetPathParts().Take(pathParts.Count - 1));
+                else if (!RemoteUrl.EMPTY.Equals(remoteUrl))
+                {
+                    parent = RemoteUrl.EMPTY;
+                }
             }
             else
             {
@@ -1072,14 +1125,14 @@ namespace pwiz.Skyline.FileUI
                 List<string> dataSourceList = new List<string>();
                 foreach( ListViewItem item in selected)
                 {
-                    if( !DataSourceUtil.IsFolderType(item.SubItems[1].Text) )
+                    if( !DataSourceUtil.IsFolderType(item.SubItems[1].Text) && !DataSourceUtil.IsEditAccount(item.SubItems[1].Text) )
                         // ReSharper disable LocalizableElement
                         dataSourceList.Add(string.Format("\"{0}\"", GetItemPath(item)));
                         // ReSharper restore LocalizableElement
                 }
                 sourcePathTextBox.Text = string.Join(@" ", dataSourceList.ToArray());
             }
-            else if (listView.SelectedItems.Count > 0)
+            else if (listView.SelectedItems.Count > 0 && !DataSourceUtil.IsEditAccount(listView.SelectedItems[0].SubItems[1].Text))
             {
                 sourcePathTextBox.Text = GetItemPath(listView.SelectedItems[0]);
             }
@@ -1332,7 +1385,8 @@ namespace pwiz.Skyline.FileUI
             MethodFile,
             NoAccessFolder,
             ReadOnlyFolder,
-            ReadWriteFolder
+            ReadWriteFolder,
+            BlankImage
         }
 
         private void EnsureRemoteAccount()

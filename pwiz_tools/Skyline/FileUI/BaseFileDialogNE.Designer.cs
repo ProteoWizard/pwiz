@@ -122,9 +122,9 @@ namespace pwiz.Skyline.FileUI
             this.sourcePathTextBox.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.Suggest;
             this.sourcePathTextBox.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.FileSystem;
             this.sourcePathTextBox.Name = "sourcePathTextBox";
+            this.sourcePathTextBox.TextChanged += new System.EventHandler(this.sourcePathTextBox_TextChanged);
             this.sourcePathTextBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.sourcePathTextBox_KeyPress);
             this.sourcePathTextBox.KeyUp += new System.Windows.Forms.KeyEventHandler(this.sourcePathTextBox_KeyUp);
-            this.sourcePathTextBox.TextChanged += new EventHandler(sourcePathTextBox_TextChanged);
             // 
             // labelSourcePath
             // 
@@ -255,6 +255,7 @@ namespace pwiz.Skyline.FileUI
             this.lookInImageList.Images.SetKeyName(12, "noAccessFolder.png");
             this.lookInImageList.Images.SetKeyName(13, "ReadOnlyFolder.png");
             this.lookInImageList.Images.SetKeyName(14, "ReadWriteFolder.png");
+            this.lookInImageList.Images.SetKeyName(15, "Blank.bmp");
             // 
             // recentDocumentsButton
             // 
@@ -311,6 +312,7 @@ namespace pwiz.Skyline.FileUI
             this.lookInImageListSmall.Images.SetKeyName(12, "noAccessFolder.png");
             this.lookInImageListSmall.Images.SetKeyName(13, "ReadOnlyFolder.png");
             this.lookInImageListSmall.Images.SetKeyName(14, "ReadWriteFolder.png");
+            this.lookInImageListSmall.Images.SetKeyName(15, "Blank.bmp");
             // 
             // BaseFileDialogNE
             // 

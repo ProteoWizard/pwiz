@@ -688,5 +688,8 @@ Would you like to remove some or all of this suffix to shorten the names used in
   <data name="WatersConnectSelectMethodFileDialog_SelectButtonText" xml:space="preserve">
     <value>Select</value>
   </data>
-  
+  <data name="BaseFileDialogNE_populateListViewFromDirectory_Add_Edit_Account___" xml:space="preserve">
+    <value>Add/Edit Account...</value>
+  </data>
+
 </root>

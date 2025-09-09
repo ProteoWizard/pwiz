@@ -86,6 +86,11 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        protected override void SetRemoteAccounts(IEnumerable<RemoteAccount> accounts)
+        {
+            base.SetRemoteAccounts(accounts.OfType<WatersConnectAccount>());
+        }
+
         protected override void DoMainAction()
         {
             Open();
@@ -160,7 +165,7 @@ namespace pwiz.Skyline.FileUI
             base.OnCurrentDirectoryChange();
             if (RemoteSession is WatersConnectSession session && _currentDirectory is WatersConnectUrl currentDir)
             {
-                if (session.TryGetFolderByUrl(currentDir, out var folder))
+                if (!string.IsNullOrEmpty(currentDir.EncodedPath?.Trim()) && session.TryGetFolderByUrl(currentDir, out var folder))
                     _currentDirectory = currentDir.ChangeFolderOrSampleSetId(folder.Id);
             }
         }

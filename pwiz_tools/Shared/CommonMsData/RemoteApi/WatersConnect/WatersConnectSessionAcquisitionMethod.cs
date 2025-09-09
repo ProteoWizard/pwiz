@@ -116,10 +116,8 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             {
                 foreach (var folderObject in folders)
                 {
-                    if (watersConnectUrl.EncodedPath != null && folderObject.ParentId == null)
-                        continue; // path is set but FolderOrSampleSetId may be null
-
-                    if (folderObject.ParentId == watersConnectUrl.FolderOrSampleSetId)
+                    if (folderObject.ParentId == watersConnectUrl.FolderOrSampleSetId || 
+                        string.IsNullOrEmpty(watersConnectUrl.EncodedPath) && string.IsNullOrEmpty(folderObject.ParentId)) //root folder condition
                     {
                         var childUrl = watersConnectUrl.ChangeFolderOrSampleSetId(folderObject.Id)
                             .ChangeType(WatersConnectUrl.ItemType.folder_with_methods)

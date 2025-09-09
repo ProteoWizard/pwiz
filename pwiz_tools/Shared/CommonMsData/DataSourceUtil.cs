@@ -62,6 +62,7 @@ namespace pwiz.CommonMsData
         public const string TYPE_CHORUSRESPONSE = "Chorus Response";
         public const string FOLDER_TYPE = "File Folder";
         public const string UNKNOWN_TYPE = "unknown";
+        public const string EDIT_ACCOUNT = "edit account";
         public const string TYPE_WATERS_ACQUISITION_METHOD = "Waters Acquisition Method";
         // ReSharper restore LocalizableElement
 
@@ -181,6 +182,11 @@ namespace pwiz.CommonMsData
         public static bool IsFolderType(string type)
         {
             return Equals(type, FOLDER_TYPE);
+        }
+
+        public static bool IsEditAccount(string type)
+        {
+            return Equals(type, EDIT_ACCOUNT);
         }
 
         public static bool IsUnknownType(string type)

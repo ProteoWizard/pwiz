@@ -104,9 +104,8 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
         public bool TryGetFolderByUrl(WatersConnectUrl url, out WatersConnectFolderObject folder)
         {
             folder = null;
-            if (url.EncodedPath == null)
+            if (string.IsNullOrEmpty(url.EncodedPath))
                 return false;
-            // CONSIDER: verify that the url is from the same server as the current session.
             ImmutableList<WatersConnectFolderObject> folders;
             if (TryGetData(GetRootContentsUrl(), out folders))
             {
