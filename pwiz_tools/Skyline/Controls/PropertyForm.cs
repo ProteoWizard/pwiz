@@ -17,11 +17,11 @@
  * limitations under the License.
  */
 
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.FilesTree;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
-using pwiz.Common.SystemUtil;
 using System.ComponentModel;
 using System.Windows.Forms;
 
@@ -57,15 +57,15 @@ namespace pwiz.Skyline.Controls
             return propertyGrid.SelectedObject as GlobalizedObject;
         }
 
-        private void PropertyGrid_PropertyValueChanged(object sender, PropertyValueChangedEventArgs e)
+        private void PropertyGrid_PropertyValueChanged(object sender, PropertyValueChangedEventArgs e) =>
+            UpdateDocument(e.ChangedItem.PropertyDescriptor, e.ChangedItem.Value);
+
+        private void UpdateDocument(PropertyDescriptor propertyDescriptor, object newValue)
         {
-            Assume.IsTrue(e.ChangedItem.PropertyDescriptor is IModifiablePropertyDescriptor { IsReadOnly: false });
-            var globalizedPropertyDescriptor = (IModifiablePropertyDescriptor)e.ChangedItem.PropertyDescriptor;
+            Assume.IsTrue(propertyDescriptor is IModifiablePropertyDescriptor { IsReadOnly: false });
+            var modifiablePropertyDescriptor = (IModifiablePropertyDescriptor)propertyDescriptor;
 
-            var newValue = e.ChangedItem.Value;
-
-            // If the property is editable, acquire the document change lock and modify the document,
-            // by calling the GetModifiedDocument delegate of the property descriptor.
+            // acquire the document change lock and modify the document by calling the GetModifiedDocument delegate of the property descriptor. 
             lock (SkylineWindow.GetDocumentChangeLock())
             {
                 var originalDoc = SkylineWindow.Document;
@@ -76,11 +76,18 @@ namespace pwiz.Skyline.Controls
                 {
                     using var monitor = new SrmSettingsChangeMonitor(progressMonitor, longWaitDlg.Text, SkylineWindow);
 
-                    modifiedDoc = globalizedPropertyDescriptor.GetModifiedDocument(SkylineWindow.Document, monitor, newValue);
+                    modifiedDoc = modifiablePropertyDescriptor.GetModifiedDocument(SkylineWindow.Document, monitor, newValue);
                 });
 
                 SkylineWindow.ModifyDocument(FilesTreeResources.Change_ReplicateName, DocumentModifier.FromResult(originalDoc, modifiedDoc));
             }
         }
+
+        #region Test Support
+
+        public void PropertyObjectValuesModifiedManually(PropertyDescriptor propertyDescriptor)
+            => UpdateDocument(propertyDescriptor, propertyDescriptor.GetValue(GetPropertyObject()));
+
+        #endregion
     }
 }
