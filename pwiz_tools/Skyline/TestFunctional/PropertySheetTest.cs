@@ -67,7 +67,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.FilesTreeForm.FilesTree.SelectNodeWithoutResettingSelection(replicateNode));
             RunUI(() => SkylineWindow.FilesTreeForm.NotifyPropertySheetOwnerGotFocus(SkylineWindow, EventArgs.Empty));
 
-            var selectedObject = SkylineWindow.PropertyForm?.PropertyGrid.SelectedObject;
+            var selectedObject = SkylineWindow.PropertyForm?.GetPropertyObject();
             Assert.IsNotNull(selectedObject);
             Assert.AreEqual(typeof(ReplicateProperties), selectedObject.GetType());
 
@@ -82,7 +82,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.FilesTreeForm.FilesTree.SelectNodeWithoutResettingSelection(sampleFileNode));
             RunUI(() => SkylineWindow.FilesTreeForm.NotifyPropertySheetOwnerGotFocus(SkylineWindow, EventArgs.Empty));
 
-            selectedObject = SkylineWindow.PropertyForm?.PropertyGrid.SelectedObject;
+            selectedObject = SkylineWindow.PropertyForm?.GetPropertyObject();
             Assert.IsNotNull(selectedObject);
             Assert.AreEqual(typeof(ReplicateSampleFileProperties), selectedObject.GetType());
 
