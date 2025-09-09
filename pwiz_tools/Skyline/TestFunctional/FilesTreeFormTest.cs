@@ -116,8 +116,7 @@ namespace pwiz.SkylineTestFunctional
             const string fileName = "savedFileName.sky";
             var monitoredPath = Path.Combine(TestFilesDir.FullPath, fileName);
             RunUI(() => SkylineWindow.SaveDocument(monitoredPath));
-
-            WaitForCondition(() => File.Exists(monitoredPath) && SkylineWindow.FilesTree.IsMonitoringFileSystem() && SkylineWindow.FilesTree.WaitForEmptyQueue());
+            WaitForFilesTree();
 
             Assert.AreEqual(Path.GetDirectoryName(monitoredPath), SkylineWindow.FilesTree.PathMonitoredForFileSystemChanges());
 
@@ -157,7 +156,7 @@ namespace pwiz.SkylineTestFunctional
             // Save document for the first time
             var monitoredPath = Path.Combine(TestFilesDir.FullPath, origFileName);
             RunUI(() => SkylineWindow.SaveDocument(monitoredPath));
-            WaitForCondition(() => File.Exists(monitoredPath) && SkylineWindow.FilesTree.IsMonitoringFileSystem() && SkylineWindow.FilesTree.WaitForEmptyQueue());
+            WaitForFilesTree();
 
             Assert.AreEqual(Path.GetDirectoryName(monitoredPath), SkylineWindow.FilesTree.PathMonitoredForFileSystemChanges());
 
@@ -209,7 +208,7 @@ namespace pwiz.SkylineTestFunctional
             // now, show files tree
             RunUI(() => SkylineWindow.ShowFilesTreeForm(true));
             Assert.IsNotNull(SkylineWindow.FilesTree);
-            WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible && SkylineWindow.FilesTree.IsMonitoringFileSystem() && SkylineWindow.FilesTree.WaitForEmptyQueue());
+            WaitForFilesTree();
 
             Assert.AreEqual(RAT_PLASMA_FILE_NAME, SkylineWindow.FilesTree.Root.Text);
 
@@ -729,11 +728,9 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(@"NEW NAME", SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[0].Name);
         }
 
-        // CONSIDER: replace WaitForGraphs with a way to FilesTree to check for a pending update
         private static void WaitForFilesTree()
         {
-            WaitForGraphs();
-            WaitForConditionUI(() => SkylineWindow.FilesTree.WaitForEmptyQueue());
+            WaitForConditionUI(() => SkylineWindow.FilesTree.IsComplete());
         }
 
         private static DragAndDropParams DragAndDrop<T>(int[] dragNodeIndexes,
