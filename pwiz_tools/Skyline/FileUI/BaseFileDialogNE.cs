@@ -459,9 +459,11 @@ namespace pwiz.Skyline.FileUI
                     bool isComplete = _remoteSession.AsyncFetchContents(remoteUrl, out exception);
                     foreach (var item in _remoteSession.ListContents(remoteUrl))
                     {
-                        var imageIndex = DataSourceUtil.IsFolderType(item.Type)
-                            ? ImageIndex.Folder
-                            : ImageIndex.MassSpecFile;
+                        ImageIndex imageIndex = ImageIndex.MassSpecFile;
+                        if (DataSourceUtil.IsFolderType(item.Type))
+                            imageIndex = ImageIndex.Folder;
+                        else if (DataSourceUtil.IsSampleSetType(item.Type))
+                            imageIndex = ImageIndex.SampleSet;
                         listSourceInfo.Add(new SourceInfo(item.MsDataFileUri)
                         {
                             name = item.Label,
@@ -690,7 +692,10 @@ namespace pwiz.Skyline.FileUI
                 for (int i = 0; i < branches.Count; ++i)
                 {
                     ++driveCount;
-                    pathNode = pathNode.Nodes.Add(branches[i], branches[i], 8, 8);
+                    int imageIndex = (int)ImageIndex.Folder;
+                    if (i + 1 == branches.Count && DataSourceUtil.IsSampleSetType(remoteUrl.SourceType))
+                        imageIndex = (int)ImageIndex.SampleSet; // only last branch can be a sample set
+                    pathNode = pathNode.Nodes.Add(branches[i], branches[i], imageIndex, imageIndex);
                     pathNode.Tag = remoteUrl.ChangePathParts(branches.GetRange(0, i + 1));
                     lookInComboBox.Items.Insert(_remoteIndex + driveCount, pathNode);
                 }
@@ -757,7 +762,7 @@ namespace pwiz.Skyline.FileUI
                     for (int i = 1; i < branches.Count; ++i)
                     {
                         ++driveCount;
-                        pathNode = pathNode.Nodes.Add(branches[i], branches[i], 8, 8);
+                        pathNode = pathNode.Nodes.Add(branches[i], branches[i], (int)ImageIndex.Folder, (int)ImageIndex.Folder);
                         pathNode.Tag = new MsDataFilePath(String.Join(Path.DirectorySeparatorChar.ToString(CultureInfo.InvariantCulture),
                                                     branches.GetRange(0, i + 1).ToArray()));
                         lookInComboBox.Items.Insert(_myComputerIndex + driveCount, pathNode);
@@ -783,13 +788,18 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        private bool TreatAsFolder(string itemText)
+        {
+            return DataSourceUtil.IsFolderType(itemText) || DataSourceUtil.IsSampleSetType(itemText);
+        }
+
         private void listView_ItemActivate( object sender, EventArgs e )
         {
             if (listView.SelectedItems.Count == 0)
                 return;
 
             ListViewItem item = listView.SelectedItems[0];
-            if( DataSourceUtil.IsFolderType(item.SubItems[1].Text) )
+            if (TreatAsFolder(item.SubItems[1].Text))
             {
                 OpenFolderItem(item);
             }
@@ -952,7 +962,7 @@ namespace pwiz.Skyline.FileUI
                 List<string> dataSourceList = new List<string>();
                 foreach( ListViewItem item in listView.SelectedItems )
                 {
-                    if( !DataSourceUtil.IsFolderType(item.SubItems[1].Text) )
+                    if( !TreatAsFolder(item.SubItems[1].Text) )
                         // ReSharper disable LocalizableElement
                         dataSourceList.Add(string.Format("\"{0}\"", GetItemPath(item)));
                         // ReSharper restore LocalizableElement
@@ -1106,18 +1116,18 @@ namespace pwiz.Skyline.FileUI
             {
                 bool isReady = false;
                 string location = ((MsDataFilePath) msDataFileUri).FilePath;
-                                    foreach (var drivePair in _driveReadiness)
+                foreach (var drivePair in _driveReadiness)
+                {
+                    if (location.StartsWith(drivePair.Key))
                     {
-                        if (location.StartsWith(drivePair.Key))
+                        // If it is ready switch to it
+                        if (drivePair.Value)
                         {
-                            // If it is ready switch to it
-                            if (drivePair.Value)
-                            {
-                                isReady = true;
-                            }
-                            break;
+                            isReady = true;
                         }
+                        break;
                     }
+                }
                 if (!isReady)
                 {
                     return;
@@ -1196,6 +1206,7 @@ namespace pwiz.Skyline.FileUI
             OpticalDrive,
             NetworkDrive,
             Folder,
+            SampleSet,
             MassSpecFile,
             UnknownFile,
         }

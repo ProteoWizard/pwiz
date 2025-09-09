@@ -55,6 +55,7 @@ namespace pwiz.CommonMsData.RemoteApi.Unifi
             }
             ClientScope = ApiVersion == 3 ? @"unifi" : @"webapi";
             ClientSecret = @"secret";
+            ClientId = @"resourceownerclient";
         }
 
         private int ApiVersion { get; set; }
@@ -77,12 +78,19 @@ namespace pwiz.CommonMsData.RemoteApi.Unifi
         {
             return ChangeProp(ImClone(this), im => im.ClientSecret = clientSecret);
         }
+        public string ClientId { get; private set; }
+
+        public UnifiAccount ChangeClientId(string clientId)
+        {
+            return ChangeProp(ImClone(this), im => im.ClientId = clientId);
+        }
 
         private enum ATTR
         {
             identity_server,
             client_scope,
             client_secret,
+            client_id
         }
 
         protected override void ReadXElement(XElement xElement)
@@ -90,6 +98,7 @@ namespace pwiz.CommonMsData.RemoteApi.Unifi
             base.ReadXElement(xElement);
             IdentityServer = (string) xElement.Attribute(ATTR.identity_server.ToString());
             ClientScope = (string) xElement.Attribute(ATTR.client_scope.ToString());
+            ClientId = (string)xElement.Attribute(ATTR.client_id.ToString()) ?? DEFAULT.ClientId;
             string clientSecret = (string) xElement.Attribute(ATTR.client_secret.ToString());
             if (clientSecret != null)
             {
@@ -102,6 +111,7 @@ namespace pwiz.CommonMsData.RemoteApi.Unifi
             base.WriteXml(writer);
             writer.WriteAttributeIfString2(ATTR.identity_server, IdentityServer);
             writer.WriteAttributeIfString2(ATTR.client_scope, ClientScope);
+            writer.WriteAttributeIfString2(ATTR.client_id, ClientId);
             if (ClientSecret != null)
             {
                 writer.WriteAttributeIfString2(ATTR.client_secret, CommonTextUtil.EncryptString(ClientSecret));
@@ -117,7 +127,7 @@ namespace pwiz.CommonMsData.RemoteApi.Unifi
 
         public TokenResponse Authenticate()
         {
-            var tokenClient = new TokenClient(IdentityServer + IdentityConnectEndpoint, @"resourceownerclient",
+            var tokenClient = new TokenClient(IdentityServer + IdentityConnectEndpoint, ClientId,
                 ClientSecret, new HttpClientHandler());
             return tokenClient.RequestResourceOwnerPasswordAsync(Username, Password, ClientScope).Result;
         }
