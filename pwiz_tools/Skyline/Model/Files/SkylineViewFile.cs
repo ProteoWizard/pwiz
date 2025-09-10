@@ -33,7 +33,7 @@ namespace pwiz.Skyline.Model.Files
         }
 
         public override bool IsBackedByFile => true;
-        public override bool RequiresSavedSkylineDocument => true;
+        public override bool RequiresSavedDocument => true;
 
         public override string Name => FileResources.FileModel_ViewFile;
         public override string FilePath { get; }

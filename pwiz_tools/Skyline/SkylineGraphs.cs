@@ -55,6 +55,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Skyline.Controls.Lists;
 using ZedGraph;
 using PeptideDocNode = pwiz.Skyline.Model.PeptideDocNode;
 using User32 = pwiz.Common.SystemUtil.PInvoke.User32;
@@ -670,6 +671,10 @@ namespace pwiz.Skyline
             if (Equals(persistentString, typeof(AuditLogForm).ToString()))
             {
                 return _auditLogForm ?? CreateAuditLogForm();
+            }
+            if (persistentString.StartsWith(typeof(ListGridForm).ToString()))
+            {
+                return CreateListForm(ListGridForm.GetListName(persistentString));
             }
             if (Equals(persistentString, typeof(ImmediateWindow).ToString()))
             {

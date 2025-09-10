@@ -18,7 +18,6 @@ using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
-using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
@@ -77,32 +76,21 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             return Model.GetProperties(document, LocalFilePath);
         }
-
-        /// <summary>
-        /// Try to find the file locally using a file's name / path and the path to a SrmDocument.
-        /// Each invocation of this method may access the file system multiple times while searching for the local file.
-        /// It should be invoked rarely, never on the UI thread, and always using FilesTree's work queue.
-        ///
-        /// Callers should guard calls to this function with a check of model.ShouldInitializeLocalFile() == true.
-        /// </summary>
-        /// CONSIDER: Consider keeping an in-memory representation of the file system separate from
-        ///           FilesTree to avoid accessing the file system whenever possible.
-        public void InitializeLocalFile()
+        
+        public void UpdateState(string localFilePath, bool isAvailable)
         {
-            Assume.IsTrue(Model.IsBackedByFile);
+            LocalFilePath = localFilePath;
 
-            LocalFilePath = LookForFileInPotentialLocations(FilePath, FileName, Model.DocumentPath);
-
-            // After enabling the audit log, the file only exists in-memory until the document is saved.
-            // So assume that's what's happening if LocalFilePath is null.
-            if (Model is SkylineAuditLog && LocalFilePath == null) 
+            if (LocalFilePath == null && Model is SkylineAuditLog)
             {
                 FileState = FileState.in_memory;
             }
             else
             {
-                FileState = LocalFilePath != null ? FileState.available : FileState.missing;
+                FileState = isAvailable && LocalFilePath != null ? FileState.available : FileState.missing;
             }
+
+            UpdateState();
         }
 
         public void UpdateState()
@@ -349,31 +337,12 @@ namespace pwiz.Skyline.Controls.FilesTree
             return $@"FilesTreeNode: {Name} {Model.GetType().Name}";
         }
 
-        ///
-        /// LOOK FOR A FILE ON DISK
-        ///
-        /// SkylineFiles uses this approach to locate file paths found in SrmSettings. It starts with
-        /// the given path but those paths may be set on others machines. If not available locally, use
-        /// <see cref="PathEx.FindExistingRelativeFile"/> to search for the file locally.
-        ///
-        // TODO: what other ways does Skyline use to find files of various types? For example, Chromatogram.GetExistingDataFilePath or other possible locations for spectral libraries
-        internal static string LookForFileInPotentialLocations(string filePath, string fileName, string documentPath)
-        {
-            string localPath;
-
-            if (File.Exists(filePath) || Directory.Exists(filePath))
-                localPath = filePath;
-            else localPath = PathEx.FindExistingRelativeFile(documentPath, fileName);
-
-            return localPath;
-        }
-
         /// <summary>
         /// Update images for a branch of tree starting with the node whose FileState changed and walking up
         /// to the root calling <see cref="OnModelChanged"/> on each visited node.
         /// </summary>
         /// <param name="filesTreeNode"></param>
-        internal static void UpdateFileImages(FilesTreeNode filesTreeNode)
+        internal static void UpdateImagesForTreeNode(FilesTreeNode filesTreeNode)
         {
             Assume.IsNotNull(filesTreeNode);
 

@@ -78,7 +78,7 @@ namespace pwiz.Skyline.Model.Files
 
         public IdentityPath IdentityPath { get; }
         public virtual bool IsBackedByFile => false;
-        public virtual bool RequiresSavedSkylineDocument => false;
+        public virtual bool RequiresSavedDocument => false;
 
         public abstract string Name { get; }
         public abstract string FilePath { get; }
@@ -114,7 +114,7 @@ namespace pwiz.Skyline.Model.Files
                 return false;
 
             // Files like .skyl / .view are only saved to disk once a Skyline document is saved.
-            if (RequiresSavedSkylineDocument && !IsDocumentSavedToDisk())
+            if (RequiresSavedDocument && !IsDocumentSaved())
                 return false;
 
             // This model represents a file expected to be available locally and can be initialized.
@@ -122,14 +122,14 @@ namespace pwiz.Skyline.Model.Files
         }
 
         // If DocumentFilePath is null, document is not saved to disk
-        public static bool IsDocumentSavedToDisk(string documentFilePath)
+        public static bool IsDocumentSaved(string documentFilePath)
         {
             return !string.IsNullOrEmpty(documentFilePath);
         }
 
-        internal bool IsDocumentSavedToDisk()
+        internal bool IsDocumentSaved()
         {
-            return IsDocumentSavedToDisk(DocumentPath);
+            return IsDocumentSaved(DocumentPath);
         }
     }
 }
