@@ -522,40 +522,48 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        public static void GetResultsTextForComparison(SrmDocument doc, string skyFileContents, string comparisonFileName, out double maxObservedHeight)
+        public static void GetResultsTextForComparison(SrmDocument doc, string skyFileContents,
+            string comparisonFileName, out double maxObservedHeight)
         {
             var tolerance = (float)doc.Settings.TransitionSettings.Instrument.MzMatchTolerance;
             var results = doc.Settings.MeasuredResults;
             maxObservedHeight = 0.0;
 
-            using (var streamWriter = new StreamWriter(comparisonFileName))
+            using var streamWriter = new StreamWriter(comparisonFileName);
+
+            var fileNames = doc.MeasuredResults.MSDataFilePaths.ToArray();
+            for (var index = 0; index < fileNames.Length; index++)
             {
-                var fileNames = doc.MeasuredResults.MSDataFilePaths.ToArray();
-                for (var index = 0; index < fileNames.Length; index++)
+                var fileName = fileNames[index].GetFileName();
+                if (!skyFileContents.Contains(fileName))
                 {
-                    var fileName = fileNames[index].GetFileName();
-                    if (skyFileContents == null ||
-                        skyFileContents.Contains(fileName)) // Did we remove the replicate for debug?
+                    continue; // Replicate was removed for debug purposes
+                }
+                streamWriter.WriteLine($@"f{index}: {fileName}");
+                foreach (var chrom in doc.MeasuredResults.Chromatograms)
+                {
+                    foreach (var pair in doc.PeptidePrecursorPairs)
                     {
-                        foreach (var pair in doc.PeptidePrecursorPairs)
+                        if (!results.TryLoadChromatogram(chrom, pair.NodePep, pair.NodeGroup,
+                                tolerance, out var chromGroupInfo) ||
+                            !(chrom.MSDataFilePaths.Any(p=>Equals(fileName, p.GetFileName()))))
                         {
-                            if (!results.TryLoadChromatogram(index, pair.NodePep, pair.NodeGroup,
-                                    tolerance, out var chromGroupInfo))
+                            var observation =
+                                $@"f{index} {pair.NodePep.RawTextIdDisplay} no chromatogram ";
+                            streamWriter.WriteLine(observation);
+                            continue;
+                        }
+
+                        foreach (var chromGroup in chromGroupInfo.Where(cg => Equals(cg.FilePath.GetFileName(), fileName)))
+                        {
+                            foreach (var tranInfo in chromGroup.TransitionPointSets)
                             {
-                                var observation = $@"{fileName} {pair.NodePep.RawTextIdDisplay} no chromatogram ";
-                                streamWriter.WriteLine(observation);
-                                continue;
-                            }
-                            foreach (var chromGroup in chromGroupInfo)
-                            {
-                                foreach (var tranInfo in chromGroup.TransitionPointSets)
+                                maxObservedHeight = Math.Max(maxObservedHeight, tranInfo.MaxIntensity);
+                                foreach (var peak in tranInfo.Peaks)
                                 {
-                                    maxObservedHeight = Math.Max(maxObservedHeight, tranInfo.MaxIntensity);
-                                    foreach (var peak in tranInfo.Peaks)
-                                    {
-                                        var observation = $@"{chromGroup.FilePath.GetFileName()} {chromGroup.ChromatogramGroupId} tran {tranInfo.PrecursorMz:F4}/{tranInfo.ProductMz:F4} peak {peak}";
-                                        streamWriter.WriteLine(observation);
-                                    }
+                                    var observation =
+                                        $@"f{index} {chromGroup.ChromatogramGroupId} tran {tranInfo.PrecursorMz:F4}/{tranInfo.ProductMz:F4} peak {peak}";
+                                    streamWriter.WriteLine(observation);
                                 }
                             }
                         }

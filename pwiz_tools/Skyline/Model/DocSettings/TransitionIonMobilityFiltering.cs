@@ -1015,7 +1015,7 @@ namespace pwiz.Skyline.Model.DocSettings
             boundsLow += offsetLow;
             boundsHigh += offsetHigh;
             var width = Math.Abs(boundsHigh - boundsLow);
-            return GetIonMobilityFilter(boundsLow + 0.5*width, IonMobilityUnits, width, CollisionalCrossSectionSqA);
+            return GetIonMobilityFilter(Math.Min(boundsHigh, boundsLow) + 0.5*width, IonMobilityUnits, width, CollisionalCrossSectionSqA);
         }
 
         public bool ContainsIonMobility(double val, bool useHighEnergyOffset)
