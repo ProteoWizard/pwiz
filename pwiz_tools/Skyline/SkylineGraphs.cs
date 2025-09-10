@@ -680,7 +680,7 @@ namespace pwiz.Skyline
             {
                 return _immediateWindow ?? CreateImmediateWindow();
             }
-            if (Equals(persistentString, typeof(PropertyForm).ToString()))
+            if (Equals(persistentString, typeof(PropertyGridForm).ToString()))
             {
                 return _propertyForm ?? CreatePropertyForm();
             }

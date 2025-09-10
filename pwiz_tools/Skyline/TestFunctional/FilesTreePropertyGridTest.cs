@@ -28,7 +28,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
-    public class PropertySheetTest : AbstractFunctionalTest
+    public class FilesTreePropertyGridTest : AbstractFunctionalTest
     {
         internal const int REP_FILE_PROP_NUM = 10;
         internal const int REP_SAMPLE_FILE_PROP_NUM = 8;
@@ -39,7 +39,7 @@ namespace pwiz.SkylineTestFunctional
         private const string LIST_ANNOTATION_NAME = "ListAnnotation";
 
         [TestMethod]
-        public void TestPropertySheet()
+        public void TestFilesTreePropertyGrid()
         {
             // These test files are large (90MB) so reuse rather than duplicate
             TestFilesZip = FilesTreeFormTest.TEST_FILES_ZIP;
@@ -57,8 +57,11 @@ namespace pwiz.SkylineTestFunctional
             TestEditProperties();
 
             // Destroy the property form and files tree form to avoid test freezing
-            RunUI(() => { SkylineWindow.DestroyPropertyForm(); });
-            RunUI(() => { SkylineWindow.DestroyFilesTreeForm(); });
+            RunUI(() =>
+            {
+                SkylineWindow.DestroyPropertyForm();
+                SkylineWindow.DestroyFilesTreeForm();
+            });
         }
 
         private void VerifySetup()
@@ -84,8 +87,11 @@ namespace pwiz.SkylineTestFunctional
             var replicateNode = SkylineWindow.FilesTree.File<Replicate>(replicateFolder);
             Assert.IsNotNull(replicateNode);
 
-            RunUI(() => SkylineWindow.FilesTreeForm.FilesTree.SelectNodeWithoutResettingSelection(replicateNode));
-            RunUI(() => SkylineWindow.FilesTreeForm.NotifyPropertySheetOwnerGotFocus(SkylineWindow, EventArgs.Empty));
+            RunUI(() =>
+            {
+                SkylineWindow.FilesTreeForm.FilesTree.SelectNodeWithoutResettingSelection(replicateNode);
+                SkylineWindow.ShowProperties(SkylineWindow.FilesTreeForm.GetSelectedObjectProperties());
+            });
 
             var selectedObject = SkylineWindow.PropertyForm?.GetPropertyObject();
             Assert.IsNotNull(selectedObject);
@@ -99,8 +105,11 @@ namespace pwiz.SkylineTestFunctional
             var sampleFileNode = SkylineWindow.FilesTree.File<ReplicateSampleFile>(replicateNode);
             Assert.IsNotNull(sampleFileNode);
 
-            RunUI(() => SkylineWindow.FilesTreeForm.FilesTree.SelectNodeWithoutResettingSelection(sampleFileNode));
-            RunUI(() => SkylineWindow.FilesTreeForm.NotifyPropertySheetOwnerGotFocus(SkylineWindow, EventArgs.Empty));
+            RunUI(() =>
+            {
+                SkylineWindow.FilesTreeForm.FilesTree.SelectNodeWithoutResettingSelection(sampleFileNode);
+                SkylineWindow.ShowProperties(SkylineWindow.FilesTreeForm.GetSelectedObjectProperties());
+            });
 
             selectedObject = SkylineWindow.PropertyForm?.GetPropertyObject();
             Assert.IsNotNull(selectedObject);
@@ -124,8 +133,11 @@ namespace pwiz.SkylineTestFunctional
             replicateNode = SkylineWindow.FilesTree.File<Replicate>(replicateFolder);
             Assert.IsNotNull(replicateNode);
 
-            RunUI(() => SkylineWindow.FilesTreeForm.FilesTree.SelectNodeWithoutResettingSelection(replicateNode));
-            RunUI(() => SkylineWindow.FilesTreeForm.NotifyPropertySheetOwnerGotFocus(SkylineWindow, EventArgs.Empty));
+            RunUI(() =>
+            {
+                SkylineWindow.FilesTreeForm.FilesTree.SelectNodeWithoutResettingSelection(replicateNode);
+                SkylineWindow.ShowProperties(SkylineWindow.FilesTreeForm.GetSelectedObjectProperties());
+            });
 
             var selectedObject = SkylineWindow.PropertyForm?.GetPropertyObject();
             Assert.IsNotNull(selectedObject);
@@ -211,16 +223,13 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // Verify that the annotation values were applied correctly to document
-            RunUI(() =>
-            {
-                var doc = SkylineWindow.Document;
-                var chromSet = doc.MeasuredResults.Chromatograms[0];
-                var annotations = chromSet.Annotations;
-                Assert.AreEqual(stringAnnotationValue, annotations.GetAnnotation(defString));
-                Assert.AreEqual(numberAnnotationValue, annotations.GetAnnotation(defNumber));
-                Assert.AreEqual(boolAnnotationValue, annotations.GetAnnotation(defBool));
-                Assert.AreEqual(listAnnotationValue, annotations.GetAnnotation(defList));
-            });
+            var doc = SkylineWindow.Document;
+            var chromSet = doc.MeasuredResults.Chromatograms[0];
+            var annotations = chromSet.Annotations;
+            Assert.AreEqual(stringAnnotationValue, annotations.GetAnnotation(defString));
+            Assert.AreEqual(numberAnnotationValue, annotations.GetAnnotation(defNumber));
+            Assert.AreEqual(boolAnnotationValue, annotations.GetAnnotation(defBool));
+            Assert.AreEqual(listAnnotationValue, annotations.GetAnnotation(defList));
         }
 
         private static void TestEditProperties()
@@ -239,7 +248,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 SkylineWindow.ShowPropertyForm(true);
                 SkylineWindow.FilesTreeForm.FilesTree.SelectNodeWithoutResettingSelection(replicateNode);
-                SkylineWindow.FilesTreeForm.NotifyPropertySheetOwnerGotFocus(SkylineWindow, EventArgs.Empty);
+                SkylineWindow.ShowProperties(SkylineWindow.FilesTreeForm.GetSelectedObjectProperties());
             });
 
             var defs = SkylineWindow.Document.Settings.DataSettings.AnnotationDefs;
@@ -285,16 +294,13 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // Verify the document reflects the edits
-            RunUI(() =>
-            {
-                var doc = SkylineWindow.Document;
-                var chromSet = doc.MeasuredResults.Chromatograms[0];
-                var annotations = chromSet.Annotations;
-                Assert.AreEqual(stringEditedValue, annotations.GetAnnotation(defString));
-                Assert.AreEqual(numberEditedValue, annotations.GetAnnotation(defNumber));
-                Assert.AreEqual(boolEditedValue, annotations.GetAnnotation(defBool)); // Stored as string
-                Assert.AreEqual(listEditedValue, annotations.GetAnnotation(defList));
-            });
+            var doc = SkylineWindow.Document;
+            var chromSet = doc.MeasuredResults.Chromatograms[0];
+            var annotations = chromSet.Annotations;
+            Assert.AreEqual(stringEditedValue, annotations.GetAnnotation(defString));
+            Assert.AreEqual(numberEditedValue, annotations.GetAnnotation(defNumber));
+            Assert.AreEqual(boolEditedValue, annotations.GetAnnotation(defBool)); // Stored as string
+            Assert.AreEqual(listEditedValue, annotations.GetAnnotation(defList));
         }
     }
 }

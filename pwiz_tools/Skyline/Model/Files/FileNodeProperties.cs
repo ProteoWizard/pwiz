@@ -28,7 +28,7 @@ namespace pwiz.Skyline.Model.Files
     {
         protected override ResourceManager GetResourceManager()
         {
-            return PropertySheetFileNodeResources.ResourceManager;
+            return PropertyGridFileNodeResources.ResourceManager;
         }
 
         public FileNodeProperties(FileNode model, string localFilePath)
@@ -57,6 +57,6 @@ namespace pwiz.Skyline.Model.Files
         // Test Support - enforced by code check
         // Invoked via reflection in InspectPropertySheetResources in CodeInspectionTest
         [UsedImplicitly]
-        private static ResourceManager ResourceManager() => PropertySheetFileNodeResources.ResourceManager;
+        private static ResourceManager ResourceManager() => PropertyGridFileNodeResources.ResourceManager;
     }
 }

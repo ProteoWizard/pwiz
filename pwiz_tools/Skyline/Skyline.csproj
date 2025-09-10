@@ -449,11 +449,11 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Controls\Lists\ListViewContext.cs" />
-    <Compile Include="Controls\PropertyForm.cs">
+    <Compile Include="Controls\PropertyGridForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Controls\PropertyForm.Designer.cs">
-      <DependentUpon>PropertyForm.cs</DependentUpon>
+    <Compile Include="Controls\PropertyGridForm.Designer.cs">
+      <DependentUpon>PropertyGridForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\SeqNode\PeptideFormatter.cs" />
     <Compile Include="Controls\KoinaUIHelpers.cs" />
@@ -634,11 +634,11 @@
     <Compile Include="Model\IdPeptideDocNode.cs" />
     <Compile Include="Model\Lib\AlphaPeptDeep\AbstractDeepLibraryBuilder.cs" />
     <Compile Include="Model\Lib\Carafe\CarafeLibraryBuilder.cs" />
-    <Compile Include="Model\PropertySheets\IPropertyProvider.cs" />
-    <Compile Include="Model\Files\PropertySheetFileNodeResources.Designer.cs">
+    <Compile Include="Controls\IPropertyProvider.cs" />
+    <Compile Include="Model\Files\PropertyGridFileNodeResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
-      <DependentUpon>PropertySheetFileNodeResources.resx</DependentUpon>
+      <DependentUpon>PropertyGridFileNodeResources.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\Files\FileNodeProperties.cs" />
     <Compile Include="Model\Files\ReplicateProperties.cs" />
@@ -2991,8 +2991,8 @@
     <EmbeddedResource Include="Controls\Lists\ListDesigner.zh-CHS.resx">
       <DependentUpon>ListDesigner.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Controls\PropertyForm.resx">
-      <DependentUpon>PropertyForm.cs</DependentUpon>
+    <EmbeddedResource Include="Controls\PropertyGridForm.resx">
+      <DependentUpon>PropertyGridForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Spectra\SpectrumGridForm.ja.resx">
@@ -3798,10 +3798,10 @@
       <DependentUpon>FullScanPropertiesRes.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Model\Files\PropertySheetFileNodeResources.resx">
+    <EmbeddedResource Include="Model\Files\PropertyGridFileNodeResources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
-      <LastGenOutput>PropertySheetFileNodeResources.Designer.cs</LastGenOutput>
+      <LastGenOutput>PropertyGridFileNodeResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\RetentionTimes\RetentionTimesResources.ja.resx">
       <DependentUpon>RetentionTimesResources.resx</DependentUpon>
@@ -7261,6 +7261,7 @@
   <ItemGroup>
     <Folder Include="Model\AlphaPeptDeep\" />
     <Folder Include="Model\Carafe\" />
+    <Folder Include="Model\PropertySheets\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterPublish">

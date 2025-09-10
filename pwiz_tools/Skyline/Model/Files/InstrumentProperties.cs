@@ -18,9 +18,9 @@
  */
 
 using pwiz.ProteowizardWrapper;
-using pwiz.Skyline.Model.PropertySheets;
 using System.ComponentModel;
 using System.Resources;
+using JetBrains.Annotations;
 
 namespace pwiz.Skyline.Model.Files
 {
@@ -28,7 +28,7 @@ namespace pwiz.Skyline.Model.Files
     {
         protected override ResourceManager GetResourceManager()
         {
-            return PropertySheetFileNodeResources.ResourceManager;
+            return PropertyGridFileNodeResources.ResourceManager;
         }
 
         public override string ToString()
@@ -52,6 +52,7 @@ namespace pwiz.Skyline.Model.Files
 
         // Test Support - enforced by code check
         // Invoked via reflection in InspectPropertySheetResources in CodeInspectionTest
-        private static ResourceManager ResourceManager() => PropertySheetFileNodeResources.ResourceManager;
+        [UsedImplicitly]
+        private static ResourceManager ResourceManager() => PropertyGridFileNodeResources.ResourceManager;
     }
 }

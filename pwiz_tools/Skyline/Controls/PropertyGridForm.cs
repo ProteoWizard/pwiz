@@ -27,14 +27,14 @@ using System.Windows.Forms;
 
 namespace pwiz.Skyline.Controls
 {
-    public partial class PropertyForm : DockableFormEx
+    public partial class PropertyGridForm : DockableFormEx
     {
-        private PropertyForm()
+        private PropertyGridForm()
         {
             InitializeComponent();
         }
         
-        public PropertyForm(SkylineWindow skylineWindow) : this()
+        public PropertyGridForm(SkylineWindow skylineWindow) : this()
         {
             HideOnClose = true; // Hide the form when closed, but do not dispose it
             SkylineWindow = skylineWindow;

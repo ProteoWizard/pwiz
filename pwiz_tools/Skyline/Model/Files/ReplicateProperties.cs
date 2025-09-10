@@ -36,9 +36,9 @@ namespace pwiz.Skyline.Model.Files
         {
             Assume.IsNotNull(model);
             var chromSet = Replicate.LoadChromSetFromDocument(document, model);
-            
-            Assume.IsTrue(Name.GetType() == typeof(string));
-            _rename = (doc, monitor, newValue) => Replicate.Rename(doc, monitor, model, (string)newValue);
+
+            // cast to string is safe as newValue only takes values Name can take
+            _editNameFunc = (doc, monitor, newValue) => Replicate.Rename(doc, monitor, model, (string)newValue);
 
             BatchName = chromSet.BatchName;
             AnalyteConcentration = chromSet.AnalyteConcentration;
@@ -46,7 +46,7 @@ namespace pwiz.Skyline.Model.Files
             SampleType = chromSet.SampleType.ToString();
 
             Annotations = new List<Annotations.Annotation>();
-            _editAnnotationDictionary = new Dictionary<Annotations.Annotation, Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument>>();
+            _editAnnotationFuncDictionary = new Dictionary<Annotations.Annotation, Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument>>();
             foreach (var annotationDef in Settings.Default.AnnotationDefList)
             {
                 if (annotationDef.AnnotationTargets.Contains(AnnotationDef.AnnotationTarget.replicate))
@@ -54,7 +54,7 @@ namespace pwiz.Skyline.Model.Files
                     var annotation = new Annotations.Annotation(new KeyValuePair<string, string>(
                         annotationDef.Name, chromSet.Annotations.GetAnnotation(annotationDef.Name)));
                     Annotations.Add(annotation);
-                    _editAnnotationDictionary.Add(annotation,
+                    _editAnnotationFuncDictionary.Add(annotation,
                         (doc, monitor, newValue) => Replicate.EditAnnotation(doc, monitor, model, annotationDef, newValue));
                 }
             }
@@ -92,7 +92,7 @@ namespace pwiz.Skyline.Model.Files
         // Replicate Name is editable and updates the document with model.Rename
         [UseCustomHandling]
         [Category("FileInfo")] public override string Name { get; set; }
-        private readonly Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument> _rename;
+        private readonly Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument> _editNameFunc;
 
         // Instrument properties need to be added as nested properties, as lists don't render well in PropertyGrid
         [UseCustomHandling]
@@ -101,7 +101,7 @@ namespace pwiz.Skyline.Model.Files
         // Annotations need to be added as individual properties under the Annotations category, for the above reason
         [UseCustomHandling]
         [Category("Annotations")] public List<Annotations.Annotation> Annotations { get; }
-        private readonly Dictionary<Annotations.Annotation, Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument>> _editAnnotationDictionary;
+        private readonly Dictionary<Annotations.Annotation, Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument>> _editAnnotationFuncDictionary;
 
         /// <summary>
         /// Transforms the list of InstrumentProperties into a form that will display better in the property sheet.
@@ -115,7 +115,7 @@ namespace pwiz.Skyline.Model.Files
             AddProperty(new GlobalizedPropertyDescriptor(
                 namePropertyDescriptor,
                 GetResourceManager(),
-                getModifiedDocument: _rename));
+                getModifiedDocument: _editNameFunc));
 
             if (Instruments?.Count == 1)
             {
@@ -164,7 +164,7 @@ namespace pwiz.Skyline.Model.Files
                     GetBaseDescriptorByName(nameof(Annotations)).Category,
                     GetResourceManager(),
                     nonLocalizedDisplayName: annotation.Name,
-                    getModifiedDocument: _editAnnotationDictionary[annotation],
+                    getModifiedDocument: _editAnnotationFuncDictionary[annotation],
                     dropDownOptions: dropDownOptions));
             }
         }
@@ -172,6 +172,6 @@ namespace pwiz.Skyline.Model.Files
         // Test Support - enforced by code check
         // Invoked via reflection in InspectPropertySheetResources in CodeInspectionTest
         [UsedImplicitly]
-        private static ResourceManager ResourceManager() => PropertySheetFileNodeResources.ResourceManager;
+        private static ResourceManager ResourceManager() => PropertyGridFileNodeResources.ResourceManager;
     }
 }

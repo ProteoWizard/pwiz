@@ -26,7 +26,6 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Files;
-using pwiz.Skyline.Model.PropertySheets;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using static pwiz.Skyline.Model.Files.FileNode;
@@ -413,11 +412,6 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         #region IPropertySheetOwner implementation
 
-        public void NotifyPropertySheetOwnerGotFocus(SkylineWindow skyline, EventArgs e)
-        {
-            SkylineWindow.PotentialPropertyProviderGotFocus(this);
-        }
-
         public GlobalizedObject GetSelectedObjectProperties()
         {
             var filesTreeNodeSelected = FilesTree.SelectedNodeFTN;
@@ -510,7 +504,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         private void FilesTree_AfterSelect(object sender, TreeViewEventArgs e)
         {
-            NotifyPropertySheetOwnerGotFocus(SkylineWindow, e);
+            SkylineWindow.ShowProperties(GetSelectedObjectProperties());
         }
         
         private void FilesTree_BeforeCollapse(object sender, TreeViewCancelEventArgs e)

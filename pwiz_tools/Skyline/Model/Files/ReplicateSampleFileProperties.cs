@@ -96,6 +96,6 @@ namespace pwiz.Skyline.Model.Files
         // Test Support - enforced by code check
         // Invoked via reflection in InspectPropertySheetResources in CodeInspectionTest
         [UsedImplicitly]
-        private static ResourceManager ResourceManager() => PropertySheetFileNodeResources.ResourceManager;
+        private static ResourceManager ResourceManager() => PropertyGridFileNodeResources.ResourceManager;
     }
 }

@@ -74,7 +74,6 @@ using pwiz.Skyline.Model.Koina.Communication;
 using pwiz.Skyline.Model.Koina.Models;
 using pwiz.CommonMsData.RemoteApi;
 using pwiz.CommonMsData.RemoteApi.Ardia;
-using pwiz.Skyline.Model.PropertySheets;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.SettingsUI;
@@ -107,7 +106,7 @@ namespace pwiz.Skyline
     {
         private SequenceTreeForm _sequenceTreeForm;
         private FilesTreeForm _filesTreeForm;
-        private PropertyForm _propertyForm;
+        private PropertyGridForm _propertyForm;
         private ImmediateWindow _immediateWindow;
 
         private SrmDocument _document;
@@ -3204,7 +3203,7 @@ namespace pwiz.Skyline
 
         #region Properties
 
-        public PropertyForm PropertyForm => _propertyForm;
+        public PropertyGridForm PropertyForm => _propertyForm;
         public bool PropertyFormIsVisible => _propertyForm is { Visible: true };
         public bool PropertyFormIsActivated => _propertyForm is { IsActivated: true };
 
@@ -3226,9 +3225,9 @@ namespace pwiz.Skyline
             }
         }
 
-        private PropertyForm CreatePropertyForm()
+        private PropertyGridForm CreatePropertyForm()
         {
-            _propertyForm = new PropertyForm(this);
+            _propertyForm = new PropertyGridForm(this);
             PotentialPropertyProviderGotFocus(DockPanel.ActiveContent);
 
             return _propertyForm;
@@ -3243,15 +3242,19 @@ namespace pwiz.Skyline
             }
         }
 
-        public void PotentialPropertyProviderGotFocus(IDockableForm form)
+        private void PotentialPropertyProviderGotFocus(IDockableForm form)
         {
-            if (_propertyForm == null) return;
-
             if (form is IPropertyProvider propertyProvider)
-                _propertyForm.SetPropertyObject(propertyProvider.GetSelectedObjectProperties());
+                ShowProperties(propertyProvider.GetSelectedObjectProperties());
         }
 
-        public void DockPanel_ActiveContentChanged(object sender, EventArgs e)
+        public void ShowProperties(GlobalizedObject properties)
+        {
+            if (_propertyForm is { Visible:true })
+                _propertyForm.SetPropertyObject(properties);
+        }
+
+        private void DockPanel_ActiveContentChanged(object sender, EventArgs e)
         {
             PotentialPropertyProviderGotFocus(DockPanel.ActiveContent);
         }
