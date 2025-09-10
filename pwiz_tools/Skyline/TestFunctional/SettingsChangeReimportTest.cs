@@ -33,7 +33,7 @@ namespace pwiz.SkylineTestFunctional
     /// peaks are integrated using the new settings.
     /// </summary>
     [TestClass]
-    public class SettingsChangeReimportTest : AbstractFunctionalTest
+    public class SettingsChangeReimportTest : AbstractFunctionalTestEx
     {
         [TestMethod]
         public void TestSettingsChangeReimport()
@@ -44,7 +44,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("SettingsChangeReimportTest.sky")));
+            SafeOpenDocument(TestFilesDir.GetTestPath("SettingsChangeReimportTest.sky"));
             var idPath = SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.TransitionGroups, 0);
             var transitionGroup = (TransitionGroupDocNode)SkylineWindow.Document.FindNode(idPath);
             Assert.IsNull(transitionGroup.Results);

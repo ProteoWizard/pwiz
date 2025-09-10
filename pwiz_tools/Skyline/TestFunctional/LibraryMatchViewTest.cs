@@ -31,7 +31,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
-    public class LibraryMatchViewTest : AbstractFunctionalTest
+    public class LibraryMatchViewTest : AbstractFunctionalTestEx
     {
         [TestMethod]
         public void TestLibraryMatchView()
@@ -48,7 +48,7 @@ namespace pwiz.SkylineTestFunctional
             var docPath = testFilesDir.GetTestPath("MPDS.sky");
 
             // Open document
-            RunUI(() => SkylineWindow.OpenFile(docPath));
+            SafeOpenDocument(docPath);
 
             // Add spectral library
             var peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);

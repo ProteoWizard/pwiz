@@ -29,7 +29,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
-    public class ReplicateNameMetadataRuleTest : AbstractFunctionalTest
+    public class ReplicateNameMetadataRuleTest : AbstractFunctionalTestEx
     {
         [TestMethod]
         public void TestReplicateNameMetadataRule()
@@ -46,7 +46,7 @@ namespace pwiz.SkylineTestFunctional
             var replicateRule = new MetadataRule().ChangeSource(PropertyPath.Root.Property(nameof(ResultFile.FileName)))
                 .ChangeTarget(PropertyPath.Root.Property(nameof(ResultFile.Replicate))
                     .Property(nameof(Replicate.Name)));
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("Rat_plasma.sky")));
+            SafeOpenDocument(TestFilesDir.GetTestPath("Rat_plasma.sky"));
 
             ImportResultsFile(TestFilesDir.GetTestPath("D_102_REP1.mzML"));
             ImportResultsFile(TestFilesDir.GetTestPath("H_146_REP1.mzML"));

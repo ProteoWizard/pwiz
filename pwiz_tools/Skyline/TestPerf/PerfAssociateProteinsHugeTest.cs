@@ -29,7 +29,7 @@ using Resources = pwiz.Skyline.Properties.Resources;
 namespace TestPerf
 {
     [TestClass]
-    public class PerfAssociateProteinsHugeTest : AbstractFunctionalTest
+    public class PerfAssociateProteinsHugeTest : AbstractFunctionalTestEx
     {
         private enum ImportType { FASTA, BGPROTEOME }
         private String _fastaFile;
@@ -54,7 +54,7 @@ namespace TestPerf
         private void TestUseFasta()
 
         {
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("PerfAssociateProteinsHugeTest.sky")));
+            SafeOpenDocument(TestFilesDir.GetTestPath("PerfAssociateProteinsHugeTest.sky"));
             //PauseTest();
             TestDialog(ImportType.FASTA);
         }
@@ -64,7 +64,7 @@ namespace TestPerf
         /// </summary>
         private void TestUseBackgroundProteome()
         {
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("AssociateProteinsTest-NoBg.sky")));
+            SafeOpenDocument(TestFilesDir.GetTestPath("AssociateProteinsTest-NoBg.sky"));
             var associateProteinsDlg = ShowDialog<AssociateProteinsDlg>(SkylineWindow.ShowAssociateProteinsDlg);
             RunDlg<MessageDlg>(associateProteinsDlg.UseBackgroundProteome, messageDlg =>
             {
@@ -72,7 +72,7 @@ namespace TestPerf
                 messageDlg.OkDialog();
             });
             OkDialog(associateProteinsDlg, associateProteinsDlg.CancelDialog);
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("AssociateProteinsTest.sky")));
+            SafeOpenDocument(TestFilesDir.GetTestPath("AssociateProteinsTest.sky"));
             var proteinsDlg = ShowDialog<AssociateProteinsDlg>(SkylineWindow.ShowAssociateProteinsDlg);
             RunUI(proteinsDlg.UseBackgroundProteome);
             TestDialog(ImportType.BGPROTEOME);

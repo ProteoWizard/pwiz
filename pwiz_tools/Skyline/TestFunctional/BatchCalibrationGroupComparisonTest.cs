@@ -40,7 +40,7 @@ namespace pwiz.SkylineTestFunctional
     /// yields the correct fold change numbers.
     /// </summary>
     [TestClass]
-    public class BatchCalibrationGroupComparisonTest : AbstractFunctionalTest
+    public class BatchCalibrationGroupComparisonTest : AbstractFunctionalTestEx
     {
         private const string GROUP_COMPARISON_NAME = "AD vs HC";
         [TestMethod]
@@ -52,7 +52,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("BatchCalibrationGroupComparisonTest.sky")));
+            SafeOpenDocument(TestFilesDir.GetTestPath("BatchCalibrationGroupComparisonTest.sky"));
             AnnotationDef conditionAnnotation =
                 SkylineWindow.Document.Settings.DataSettings.AnnotationDefs.FirstOrDefault(def =>
                     def.Name == "Condition");

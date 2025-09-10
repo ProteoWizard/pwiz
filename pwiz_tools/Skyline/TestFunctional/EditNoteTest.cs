@@ -32,7 +32,7 @@ namespace pwiz.SkylineTestFunctional
     /// Summary description for EditNoteTest
     /// </summary>
     [TestClass]
-    public class EditNoteTest : AbstractFunctionalTest
+    public class EditNoteTest : AbstractFunctionalTestEx
     {
         [TestMethod]
         public void TestEditNote()
@@ -47,7 +47,7 @@ namespace pwiz.SkylineTestFunctional
         {
 
             // Open the .sky file
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("CE_Vantage_15mTorr_scheduled_mini.sky")));
+            SafeOpenDocument(TestFilesDir.GetTestPath("CE_Vantage_15mTorr_scheduled_mini.sky"));
 
             // Select the first transition group.
             RunUI(() =>

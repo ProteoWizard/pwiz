@@ -60,8 +60,8 @@ namespace TestPerf
         protected override void DoTest()
         {
             // Empty doc with suitable full scan settings
-            RunUI(() => SkylineWindow.OpenFile(
-                TestFilesDirs[0].GetTestPath(@"DriftTimePredictorSmallMoleculesTest.sky")));
+            SafeOpenDocument(
+                TestFilesDirs[0].GetTestPath(@"DriftTimePredictorSmallMoleculesTest.sky"));
 
             var docCurrent = SkylineWindow.Document;
             var transitionList = TestFilesDirs[0].GetTestPath(@"Skyline Transition List wo CCS.csv");

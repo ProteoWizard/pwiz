@@ -476,7 +476,7 @@ namespace pwiz.SkylineTestTutorial
                       });
 
             // Recalibrate method to 90-minute gradient, p. 20
-            RunUI(() => SkylineWindow.OpenFile(GetTestPath("iRT Human+Standard.sky"))); // Not L10N
+            SafeOpenDocument(GetTestPath("iRT Human+Standard.sky")); // Not L10N
             RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findDlg =>
                     {
                         findDlg.FindOptions = new FindOptions().ChangeText("NSAQ"); // Not L10N

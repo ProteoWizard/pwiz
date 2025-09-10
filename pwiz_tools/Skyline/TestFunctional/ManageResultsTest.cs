@@ -40,7 +40,7 @@ namespace pwiz.SkylineTestFunctional
     /// Functional test for CE Optimization.
     /// </summary>
     [TestClass]
-    public class ManageResultsTest : AbstractFunctionalTest
+    public class ManageResultsTest : AbstractFunctionalTestEx
     {
         [TestMethod]
         public void TestManageResults()
@@ -58,7 +58,7 @@ namespace pwiz.SkylineTestFunctional
         {
             // Open the .sky file
             string documentPath = TestFilesDir.GetTestPath("160109_Mix1_calcurve.sky");
-            RunUI(() => SkylineWindow.OpenFile(documentPath));
+            SafeOpenDocument(documentPath);
 
             var listGraphChroms = new List<GraphChromatogram>(SkylineWindow.GraphChromatograms);
             Assert.AreEqual(4, listGraphChroms.Count);

@@ -28,7 +28,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
-    public class ArrangeGraphsTest : AbstractFunctionalTest
+    public class ArrangeGraphsTest : AbstractFunctionalTestEx
     {
         [TestMethod]
         public void TestArrangeGraphs()
@@ -40,7 +40,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             string documentPath = TestFilesDir.GetTestPath("11-16-10mz_manual.sky");
-            RunUI(() => SkylineWindow.OpenFile(documentPath));
+            SafeOpenDocument(documentPath);
 
             // Tests that elements show up in correct groups and order as type "tiled" in grouped window.
             RunGroupDlg(9, DisplayGraphsType.Tiled, GroupGraphsType.separated, GroupGraphsOrder.Acquired_Time);

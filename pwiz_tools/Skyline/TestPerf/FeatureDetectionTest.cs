@@ -181,7 +181,7 @@ namespace TestPerf
             if (pass != SMALL_MOL_ONLY_PASS) 
             {
                 // Load a data set that was processed by MaxQuant
-                RunUI(() => SkylineWindow.OpenFile(GetDataPath("Label-free.sky")));
+                SafeOpenDocument(GetDataPath("Label-free.sky"));
                 AssertEx.IsDocumentState(SkylineWindow.Document, null, expectedPeptideGroups, expectedPeptides, expectedPeptideTransitionGroups, expectedPeptideTransitions);
             }
             else

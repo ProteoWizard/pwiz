@@ -32,7 +32,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
-    public class ClusteredHeatMapTest : AbstractFunctionalTest
+    public class ClusteredHeatMapTest : AbstractFunctionalTestEx
     {
         [TestMethod]
         public void TestClusteredHeatMap()
@@ -114,7 +114,7 @@ namespace pwiz.SkylineTestFunctional
                 heatMap.Close();
             });
             Assert.IsNull(FindOpenForm<HeatMapGraph>());
-            RunUI(() => SkylineWindow.OpenFile(filePath));
+            SafeOpenDocument(filePath);
             heatMap = FindOpenForm<HeatMapGraph>();
             Assert.IsNotNull(heatMap);
             WaitForConditionUI(() => heatMap.IsComplete && heatMap.TabText == expectedHeatMapTitle);
@@ -143,7 +143,7 @@ namespace pwiz.SkylineTestFunctional
                 pcaPlot.Close();
             });
             Assert.IsNull(FindOpenForm<PcaPlot>());
-            RunUI(() => SkylineWindow.OpenFile(filePath));
+            SafeOpenDocument(filePath);
             pcaPlot = FindOpenForm<PcaPlot>();
             WaitForConditionUI(() => pcaPlot.IsComplete && pcaPlot.TabText == expectedPcaPlotTitle);
             Assert.AreEqual(curveCount, pcaPlot.GraphControl.GraphPane.CurveList.Count);

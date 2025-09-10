@@ -43,7 +43,7 @@ namespace pwiz.SkylineTestFunctional
     /// </summary>
     // ReSharper disable LocalizableElement
     [TestClass]
-    public class AnnotationTest : AbstractFunctionalTest
+    public class AnnotationTest : AbstractFunctionalTestEx
     {
         [TestMethod]
         public void TestAnnotations()
@@ -105,7 +105,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(editListDlg, () => editListDlg.DialogResult = DialogResult.OK);
             OkDialog(chooseAnnotationsDlg, chooseAnnotationsDlg.Close);
             // Open the .sky file
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("CE_Vantage_15mTorr_scheduled_mini_missing_results.sky")));
+            SafeOpenDocument(TestFilesDir.GetTestPath("CE_Vantage_15mTorr_scheduled_mini_missing_results.sky"));
             // Turn on the annotations
             chooseAnnotationsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
             RunUI(() =>

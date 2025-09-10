@@ -37,7 +37,7 @@ namespace pwiz.SkylineTestFunctional
     /// Functional test for UI Mode handling.
     /// </summary>
     [TestClass]
-    public class UIModeTest : AbstractFunctionalTest
+    public class UIModeTest : AbstractFunctionalTestEx
     {
 
         private bool _showStartPage;
@@ -98,7 +98,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // Verify handling of start page invoked from Skyline menu with a populated document
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("Proteomic.sky")));
+            SafeOpenDocument(TestFilesDir.GetTestPath("Proteomic.sky"));
             Assert.IsTrue(SkylineWindow.HasProteomicMenuItems);
             startPage = ShowDialog<StartPage>(SkylineWindow.OpenStartPage);
             RunDlg<AlertDlg>(() => startPage.SetUIMode(SrmDocument.DOCUMENT_TYPE.small_molecules), alertDlg => alertDlg.ClickYes());

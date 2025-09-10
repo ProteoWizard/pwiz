@@ -36,7 +36,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
-    public class ExplicitAnalyteConcentrationTest : AbstractFunctionalTest
+    public class ExplicitAnalyteConcentrationTest : AbstractFunctionalTestEx
     {
         private const string ExplictionConcentrationsReportName = "ExplicitConcentrations";
         [TestMethod]
@@ -49,7 +49,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             string skylinePath = TestFilesDir.GetTestPath("ExplicitAnalyteConcentrationTest.sky");
-            RunUI(() => SkylineWindow.OpenFile(skylinePath));
+            SafeOpenDocument(skylinePath);
             SetSampleTypes();
             CreatExplicitConcentrationReport();
             FillInExplicitConcentrations();

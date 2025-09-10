@@ -39,7 +39,7 @@ namespace pwiz.SkylineTestFunctional
     /// Functional test for CopyPaste.
     /// </summary>
     [TestClass]
-    public class CopyPasteTest : AbstractFunctionalTest
+    public class CopyPasteTest : AbstractFunctionalTestEx
     {
         private const string TEXT_INDENT = "    ";
         private const string TEXT_LINE_BREAK = "\r\n";
@@ -56,7 +56,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("CE_Vantage_15mTorr_scheduled_mini_withMod.sky")));
+            SafeOpenDocument(TestFilesDir.GetTestPath("CE_Vantage_15mTorr_scheduled_mini_withMod.sky"));
             WaitForGraphs();
 
             RunUI(() =>

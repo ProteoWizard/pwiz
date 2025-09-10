@@ -99,7 +99,7 @@ namespace pwiz.SkylineTestTutorial
         protected override void DoTest()
         {
             // Skyline Collision Energy Optimization
-            RunUI(() => SkylineWindow.OpenFile(GetTestPath("CE_Vantage_15mTorr.sky"))); // Not L10N
+            SafeOpenDocument(GetTestPath("CE_Vantage_15mTorr.sky")); // Not L10N
 
             if (AsSmallMolecules)
             {

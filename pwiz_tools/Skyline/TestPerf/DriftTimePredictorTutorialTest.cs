@@ -91,7 +91,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
         {
             // Check backward compatibility with 19.1.9.338 and 350 when combined IMS got written to MsDataFilePath
             string legacyFile_19_1_9 = TestFilesDirs[1].GetTestPath(@"BSA-Training.sky");
-            RunUI(() => SkylineWindow.OpenFile(legacyFile_19_1_9));
+            SafeOpenDocument(legacyFile_19_1_9);
             VerifyCombinedIonMobility(WaitForDocumentLoaded());
             RunUI(() =>
             {

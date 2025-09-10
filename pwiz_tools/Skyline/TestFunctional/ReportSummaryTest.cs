@@ -36,7 +36,7 @@ namespace pwiz.SkylineTestFunctional
     /// Functional test of summary reports.
     /// </summary>
     [TestClass]
-    public class ReportSummaryTest : AbstractFunctionalTest
+    public class ReportSummaryTest : AbstractFunctionalTestEx
     {
         [TestMethod]
         public void TestReportSummary()
@@ -66,7 +66,7 @@ namespace pwiz.SkylineTestFunctional
         {
             // Open the .sky file
             string documentPath = TestFilesDir.GetTestPath(DOCUMENT_NAME);
-            RunUI(() => SkylineWindow.OpenFile(documentPath));
+            SafeOpenDocument(documentPath);
 
             var exportLiveReportDlg = ShowDialog<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog);
             RunUI(() => exportLiveReportDlg.SetUseInvariantLanguage(true));

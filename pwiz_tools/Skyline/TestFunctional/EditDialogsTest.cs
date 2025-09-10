@@ -29,7 +29,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
-    public class EditDialogsTest : AbstractFunctionalTest
+    public class EditDialogsTest : AbstractFunctionalTestEx
     {
         [TestMethod]
         public void TestEditDialogs()
@@ -43,7 +43,7 @@ namespace pwiz.SkylineTestFunctional
             RunEditDialogs(); // no data needed to test these
 
             // Open a .sky file
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("CE_Vantage_15mTorr_scheduled_mini.sky")));
+            SafeOpenDocument(TestFilesDir.GetTestPath("CE_Vantage_15mTorr_scheduled_mini.sky"));
             RunOtherDialogs();
         }
 

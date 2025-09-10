@@ -38,7 +38,7 @@ namespace pwiz.SkylineTestFunctional
 {
     // ReSharper disable LocalizableElement
     [TestClass]
-    public class PivotEditorTest : AbstractFunctionalTest
+    public class PivotEditorTest : AbstractFunctionalTestEx
     {
         private const string pivotTestViewName = "PivotTest";
         private const string meanCvByConditionNumber = "meanCvByConditionNumber";
@@ -54,7 +54,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("Rat_plasma.sky")));
+            SafeOpenDocument(TestFilesDir.GetTestPath("Rat_plasma.sky"));
             RunUI(() => SkylineWindow.ShowDocumentGrid(true));
             var documentGrid = FindOpenForm<DocumentGridForm>();
             CreateBaseView(documentGrid);

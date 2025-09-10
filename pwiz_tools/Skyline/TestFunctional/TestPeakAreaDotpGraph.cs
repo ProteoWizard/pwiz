@@ -28,8 +28,8 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            RunUI(() => SkylineWindow.OpenFile(
-                TestFilesDir.GetTestPath("ABSciex4000_Study9-1_Site19_CalCurves only.sky")));
+            SafeOpenDocument(
+                TestFilesDir.GetTestPath("ABSciex4000_Study9-1_Site19_CalCurves only.sky"));
             var replicates = new[]
             {
                 "A1_CalCurve_run_063", "J1_CalCurve_run_074", "9-1_Site19_B2_CalCurve_run_106",
@@ -82,8 +82,8 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => AssertNoDotp());
 
 
-            RunUI(() => SkylineWindow.OpenFile(
-                TestFilesDir.GetTestPath("DIA-QE-tutorial.sky")));
+            SafeOpenDocument(
+                TestFilesDir.GetTestPath("DIA-QE-tutorial.sky"));
             SkylineWindow.ShowSplitChromatogramGraph(true);
             replicates = new[]{"1-A", "2-B", "3-A","4-B", "5-A", "6-B"};
             var expectedIDotp = new[] {0.93, 0.82, 0.95, 0.92, 0.95, 0.74};

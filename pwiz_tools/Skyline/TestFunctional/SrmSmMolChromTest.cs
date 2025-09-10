@@ -28,7 +28,7 @@ namespace pwiz.SkylineTestFunctional
     /// matched up to a chromatogram in the SRM result files.
     /// </summary>
     [TestClass]
-    public class SrmSmMolChromTest : AbstractFunctionalTest
+    public class SrmSmMolChromTest : AbstractFunctionalTestEx
     {
         [TestMethod]
         public void TestSrmSmallMoleculeChromatograms()
@@ -40,7 +40,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             var testPath = TestFilesDir.GetTestPath("SrmSmMolChromTest.sky");
-            RunUI(() => SkylineWindow.OpenFile(testPath));
+            SafeOpenDocument(testPath);
             ImportResultsFiles(new[]
             {
                 new MsDataFilePath(TestFilesDir.GetTestPath("ID36310_01_WAA263_3771_030118" + ExtensionTestContext.ExtMz5)),
@@ -60,7 +60,7 @@ namespace pwiz.SkylineTestFunctional
             // That info should survive serialization round trip
             RunUI(() => SkylineWindow.SaveDocument(testPath));
             RunUI(() => SkylineWindow.NewDocument());
-            RunUI(() => SkylineWindow.OpenFile(testPath));
+            SafeOpenDocument(testPath);
             VerifyAllTransitionsHaveChromatograms();
         }
 

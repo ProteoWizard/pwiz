@@ -25,7 +25,7 @@ using pwiz.SkylineTestUtil;
 namespace TestPerf
 {
     [TestClass]
-    public class PerfImportHundredsOfReplicatesTest : AbstractFunctionalTest
+    public class PerfImportHundredsOfReplicatesTest : AbstractFunctionalTestEx
     {
         const int REPLICATE_COUNT_TO_TEST = 1500;
         [TestMethod]
@@ -37,7 +37,7 @@ namespace TestPerf
 
         protected override void DoTest()
         {
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("test_b.sky")));
+            SafeOpenDocument(TestFilesDir.GetTestPath("test_b.sky"));
             string templateFile = TestFilesDir.GetTestPath("mzmlfile.template");
             for (int i = 0; i < REPLICATE_COUNT_TO_TEST; i++)
             {

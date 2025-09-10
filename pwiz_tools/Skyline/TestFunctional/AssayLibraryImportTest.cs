@@ -860,7 +860,7 @@ importIrt => importIrt.Btn1Click());
             var documentInterleaved = TestFilesDir.GetTestPath("Consensus_Dario_iRT_new_blank.sky");
             var textInterleaved = TestFilesDir.GetTestPath("Interleaved.csv");
             RemoveColumn(textInterleaved, 22);
-            RunUI(() => SkylineWindow.OpenFile(documentInterleaved));
+            SafeOpenDocument(documentInterleaved);
             ImportTransitionListSkipColumnSelectWithMessage(textInterleaved,
                 Resources.SkylineWindow_ImportMassList_The_transition_list_appears_to_contain_iRT_library_values___Add_these_iRT_values_to_the_iRT_calculator_,
                 addIrtDlg => addIrtDlg.Btn0Click());
@@ -903,7 +903,7 @@ importIrt => importIrt.Btn1Click());
             var documentInterleavedIrt = TestFilesDir.GetTestPath("Consensus_Dario_iRT_new_blank.sky");
             var textInterleavedIrt = TestFilesDir.GetTestPath("InterleavedDiffIrt.csv");
             RemoveColumn(textInterleavedIrt, 22);
-            RunUI(() => SkylineWindow.OpenFile(documentInterleavedIrt));
+            SafeOpenDocument(documentInterleavedIrt);
             ImportTransitionListSkipColumnSelectWithMessage(textInterleavedIrt,
                 Resources.SkylineWindow_ImportMassList_The_transition_list_appears_to_contain_iRT_library_values___Add_these_iRT_values_to_the_iRT_calculator_,
                 addIrtDlg => addIrtDlg.Btn0Click());
@@ -928,7 +928,7 @@ importIrt => importIrt.Btn1Click());
             // Make sure all the iRT magic works even when no spectral library info is present
             // (regression test in response to crash when libraries not present)
             var textInterleavedIrtNoLib = TestFilesDir.GetTestPath("InterleavedDiffIrt.csv");
-            RunUI(() => SkylineWindow.OpenFile(documentInterleavedIrt));
+            SafeOpenDocument(documentInterleavedIrt);
             ImportTransitionListSkipColumnSelectWithMessage(textInterleavedIrtNoLib,
                 Resources.SkylineWindow_ImportMassList_The_transition_list_appears_to_contain_spectral_library_intensities___Create_a_document_library_from_these_intensities_,
                 addIrtDlg => addIrtDlg.Btn0Click());

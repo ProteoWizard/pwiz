@@ -48,7 +48,7 @@ namespace pwiz.SkylineTestTutorial
     /// </summary>
     // ReSharper disable LocalizableElement
     [TestClass]
-    public class CustomReportsTutorialTest : AbstractFunctionalTest
+    public class CustomReportsTutorialTest : AbstractFunctionalTestEx
     {
         const string customReportName = "Overview";
 
@@ -78,7 +78,7 @@ namespace pwiz.SkylineTestTutorial
         protected override void DoTest()
         {
             // Data Overview, p. 2
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath(@"CustomReports\Study7_example.sky")));
+            SafeOpenDocument(TestFilesDir.GetTestPath(@"CustomReports\Study7_example.sky"));
                 // Not L10N
             RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findPeptideDlg =>
             {

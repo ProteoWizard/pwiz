@@ -53,7 +53,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("ABSciex4000_Study9-1_Site19_CalCurves only.sky")));
+            SafeOpenDocument(TestFilesDir.GetTestPath("ABSciex4000_Study9-1_Site19_CalCurves only.sky"));
             if (_asSmallMolecules)
             {
                 ConvertDocumentToSmallMolecules(RefinementSettings.ConvertToSmallMoleculesMode.formulas,

@@ -162,7 +162,7 @@ namespace pwiz.SkylineTestConnected
 
         protected override void DoTest()
         {
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("caffeicquinic acid.sky")));
+            SafeOpenDocument(TestFilesDir.GetTestPath("caffeicquinic acid.sky"));
             var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
             var openDataSourceDialog = ShowDialog<OpenDataSourceDialog>(importResultsDlg.OkDialog);
             var editAccountDlg = ShowDialog<EditRemoteAccountDlg>(() => openDataSourceDialog.CurrentDirectory = RemoteUrl.EMPTY);
@@ -193,7 +193,7 @@ namespace pwiz.SkylineTestConnected
             }
 
             RunUI(() => SkylineWindow.SaveDocument());
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("caffeicquinic acid.sky")));
+            SafeOpenDocument(TestFilesDir.GetTestPath("caffeicquinic acid.sky"));
 
             if (!_account.DeleteRawAfterImport)
             {

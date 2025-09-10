@@ -30,7 +30,7 @@ namespace pwiz.SkylineTestFunctional
     /// Functional test for MultiSelect.
     /// </summary>
     [TestClass]
-    public class MultiSelectTest : AbstractFunctionalTest
+    public class MultiSelectTest : AbstractFunctionalTestEx
     {
         private IList<Identity> _expectedSelNodes;
         private Identity _expectedSelNode;
@@ -47,7 +47,7 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         protected override void DoTest()
         {
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("CE_Vantage_15mTorr_scheduled_mini.sky")));
+            SafeOpenDocument(TestFilesDir.GetTestPath("CE_Vantage_15mTorr_scheduled_mini.sky"));
             
             _expectedSelNodes = new List<Identity>();
 

@@ -365,7 +365,7 @@ namespace pwiz.SkylineTestFunctional
             var docEmpty = NewDocument();
 
             // Load a document whose settings understand heavy labeling
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("heavy.sky")));
+            SafeOpenDocument(TestFilesDir.GetTestPath("heavy.sky"));
 
             var fullColumnOrder = new[]
             {
@@ -1127,7 +1127,7 @@ namespace pwiz.SkylineTestFunctional
             }
 
             // Load a document whose settings call for different mass type for precursors and fragments
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("mixed_mass_types.sky")));
+            SafeOpenDocument(TestFilesDir.GetTestPath("mixed_mass_types.sky"));
             docOrig = SkylineWindow.Document;
 
             const string precursorOnly = "15xT\tC150H197N30O103P14\t-3";

@@ -40,7 +40,7 @@ namespace pwiz.SkylineTestFunctional
     /// Tests ExportMethodDlg 
     /// </summary>
     [TestClass]
-    public class ExportMethodDlgTest : AbstractFunctionalTest
+    public class ExportMethodDlgTest : AbstractFunctionalTestEx
     {
 
         [TestMethod]
@@ -443,7 +443,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Success cases exporting for document with both results on some peptides and a library match on
             // a peptide without results
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("Bovine_std_curated_seq_small2-trigger.sky")));
+            SafeOpenDocument(TestFilesDir.GetTestPath("Bovine_std_curated_seq_small2-trigger.sky"));
             string agilentExpected = TestFilesDir.GetTestPath("TranListTriggered.csv");
             string agilentActual = IsTriggeredRecordMode ? agilentExpected : TestFilesDir.GetTestPath("TranListTriggered-actual.csv");
             string thermoExpected = TestFilesDir.GetTestPath("TranListIsrm.csv");
@@ -856,7 +856,7 @@ namespace pwiz.SkylineTestFunctional
         private void ABSciexShortNameTest()
         {
             // Failure trying to export to file with a peptide lacking results or library match 
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("mods_shortNameTest.sky")));
+            SafeOpenDocument(TestFilesDir.GetTestPath("mods_shortNameTest.sky"));
             string modsShortNameExpected = TestFilesDir.GetTestPath("ModShortName.csv");
             string modsShortNameActual = TestFilesDir.GetTestPath("ModShortName-Actual.csv");
 
@@ -868,7 +868,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("shortnames_4peptide.sky")));
             string modsShortNameExplicit = TestFilesDir.GetTestPath("ModShortName-Explicit.csv");
             ExportAbTransitionList(modsShortNameExplicit);
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("shortnames_4peptide-var.sky")));
+            SafeOpenDocument(TestFilesDir.GetTestPath("shortnames_4peptide-var.sky"));
             string modsShortNameVariable = TestFilesDir.GetTestPath("ModShortName-Variable.csv");
             ExportAbTransitionList(modsShortNameVariable);
             AssertEx.NoDiff(File.ReadAllText(modsShortNameExplicit), File.ReadAllText(modsShortNameVariable));

@@ -36,7 +36,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestTutorial
 {
     [TestClass]
-    public class QuasarTutorialTest : AbstractFunctionalTest
+    public class QuasarTutorialTest : AbstractFunctionalTestEx
     {
         [TestMethod, NoLocalization]
         public void TestQuasarTutorialLegacy()
@@ -59,7 +59,7 @@ namespace pwiz.SkylineTestTutorial
             // p. 1 open the file
             string documentFile = GetTestPath(@"QuaSAR_Tutorial.sky"); // Not L10N
             WaitForCondition(() => File.Exists(documentFile));
-            RunUI(() => SkylineWindow.OpenFile(documentFile));
+            SafeOpenDocument(documentFile);
 
             var document = SkylineWindow.Document;
             AssertEx.IsDocumentState(document, null, 34, 125, 250, 750);

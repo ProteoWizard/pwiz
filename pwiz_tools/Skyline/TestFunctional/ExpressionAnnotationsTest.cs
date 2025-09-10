@@ -32,7 +32,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
-    public class ExpressionAnnotationsTest : AbstractFunctionalTest
+    public class ExpressionAnnotationsTest : AbstractFunctionalTestEx
     {
         [TestMethod]
         public void TestExpressionAnnotations()
@@ -44,7 +44,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("ExpressionAnnotationsTest.sky")));
+            SafeOpenDocument(TestFilesDir.GetTestPath("ExpressionAnnotationsTest.sky"));
             var documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
             RunDlg<DefineAnnotationDlg>(documentSettingsDlg.AddAnnotation, defineAnnotationDlg=>
             {

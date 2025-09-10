@@ -41,7 +41,7 @@ namespace pwiz.SkylineTestFunctional
 {
     
     [TestClass]
-    public class AssociateProteinsDlgTest : AbstractFunctionalTest
+    public class AssociateProteinsDlgTest : AbstractFunctionalTestEx
     {
         private enum ImportType { FASTA, BGPROTEOME, OVERRIDE }
         private String _fastaFile;
@@ -67,7 +67,7 @@ namespace pwiz.SkylineTestFunctional
 
         private void TestInvalidFasta()
         {
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("AssociateProteinsTest.sky")));
+            SafeOpenDocument(TestFilesDir.GetTestPath("AssociateProteinsTest.sky"));
 
             AssociateProteinsDlg associateProteinsDlg = ShowDialog<AssociateProteinsDlg>(SkylineWindow.ShowAssociateProteinsDlg);
 
@@ -96,11 +96,11 @@ namespace pwiz.SkylineTestFunctional
         private void TestUseFasta()
 
         {
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("AssociateProteinsTest.sky")));
+            SafeOpenDocument(TestFilesDir.GetTestPath("AssociateProteinsTest.sky"));
             TestDialog(ImportType.FASTA);
 
             // test again without needing to set the FASTA
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("AssociateProteinsTest.sky")));
+            SafeOpenDocument(TestFilesDir.GetTestPath("AssociateProteinsTest.sky"));
             TestDialog(ImportType.FASTA);
         }
 
@@ -109,7 +109,7 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         private void TestUseBackgroundProteome()
         {
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("AssociateProteinsTest.sky")));
+            SafeOpenDocument(TestFilesDir.GetTestPath("AssociateProteinsTest.sky"));
             TestDialog(ImportType.BGPROTEOME);
         }
 
@@ -118,7 +118,7 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         private void TestFastaOverride()
         {
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("AssociateProteinsTest.sky")));
+            SafeOpenDocument(TestFilesDir.GetTestPath("AssociateProteinsTest.sky"));
             TestDialog(ImportType.OVERRIDE);
 
             // test again with existing associations

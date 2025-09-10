@@ -46,7 +46,7 @@ namespace pwiz.SkylineTestFunctional
     ///     and Replicate combobox is disabled.
     /// </summary>
     [TestClass]
-    public class ScheduleMethodDlgTest : AbstractFunctionalTest
+    public class ScheduleMethodDlgTest : AbstractFunctionalTestEx
     {
         [TestMethod]
         public void TestScheduleMethodDlg()
@@ -59,7 +59,7 @@ namespace pwiz.SkylineTestFunctional
         {
             // Open 160109_Mix1_calcurve.sky under TestFunctional\ManageResultsTest.zip
             string documentPath = TestFilesDir.GetTestPath("160109_Mix1_calcurve.sky");
-            RunUI(() => SkylineWindow.OpenFile(documentPath));
+            SafeOpenDocument(documentPath);
 
             // Make sure collision energy equation matches with instrument type to be used
             RunUI(() => SkylineWindow.ModifyDocument("Change settings", doc =>

@@ -37,7 +37,7 @@ namespace pwiz.SkylineTestFunctional
     /// menu item so that the ratios on TransitionTreeNodes can be verified.
     /// </summary>
     [TestClass]
-    public class TargetRatiosTest : AbstractFunctionalTest
+    public class TargetRatiosTest : AbstractFunctionalTestEx
     {
         private bool _testingTransitions;
         /// <summary>
@@ -74,7 +74,7 @@ namespace pwiz.SkylineTestFunctional
             VerifyNormalizationMethodDisplayed(ratioToHeavy);
             RunUI(()=>SkylineWindow.AreaNormalizeOption = NormalizeOption.GLOBAL_STANDARDS);
             VerifyNormalizationMethodDisplayed(NormalizationMethod.GLOBAL_STANDARDS);
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("Human_plasma.sky")));
+            SafeOpenDocument(TestFilesDir.GetTestPath("Human_plasma.sky"));
             VerifyNormalizationMethodDisplayed(ratioToHeavy);
             RunUI(()=>
             {

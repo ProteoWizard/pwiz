@@ -33,7 +33,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     /// Compare performance of vendor readers vs mz5 for results import.
     /// </summary>
     [TestClass]
-    public class PerformanceOptimizeCeImportVsMz5Test : AbstractFunctionalTest
+    public class PerformanceOptimizeCeImportVsMz5Test : AbstractFunctionalTestEx
     {
 
         // Note to developers considering this as a template for new tests:
@@ -126,7 +126,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         protected override void DoTest()
         {
-            RunUI(() => SkylineWindow.OpenFile(_skyFile));
+            SafeOpenDocument(_skyFile);
 
             Stopwatch loadStopwatch = new Stopwatch();
             loadStopwatch.Start();

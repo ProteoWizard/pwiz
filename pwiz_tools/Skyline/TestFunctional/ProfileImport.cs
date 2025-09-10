@@ -27,7 +27,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
-    public class ProfileImport : AbstractFunctionalTest
+    public class ProfileImport : AbstractFunctionalTestEx
     {
         private string _skyFile;
         private object _dataFile;
@@ -86,7 +86,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            RunUI(() => SkylineWindow.OpenFile(_skyFile));
+            SafeOpenDocument(_skyFile);
 
             RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, dlg =>
             {

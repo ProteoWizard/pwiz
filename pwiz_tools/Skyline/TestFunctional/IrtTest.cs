@@ -73,7 +73,7 @@ namespace pwiz.SkylineTestFunctional
             string databasePath = testFilesDir.GetTestPath("irt-c18.irtdb");
 
             string documentPath = testFilesDir.GetTestPath("iRT Test.sky");
-            RunUI(() => SkylineWindow.OpenFile(documentPath));
+            SafeOpenDocument(documentPath);
 
             var peptideSettingsDlg1 = ShowDialog<PeptideSettingsUI>(
                 () => SkylineWindow.ShowPeptideSettingsUI(PeptideSettingsUI.TABS.Prediction));
@@ -740,7 +740,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var testFilesDir = new TestFilesDir(TestContext, TestFilesZip);
 
-            RunUI(() => SkylineWindow.OpenFile(testFilesDir.GetTestPath("RePLiCal data for Skyline team - Pierce.sky")));
+            SafeOpenDocument(testFilesDir.GetTestPath("RePLiCal data for Skyline team - Pierce.sky"));
             var peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             var editIrtCalcDlg = ShowDialog<EditIrtCalcDlg>(peptideSettingsDlg.AddCalculator);
 
@@ -831,7 +831,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(SkylineWindow.Document.Peptides.All(pep => standardPeptides.Contains(pep.Target)));
 
             // CiRT calibration test (use predefined values)
-            RunUI(() => SkylineWindow.OpenFile(testFilesDir.GetTestPath("Bruker_diaPASEF_HYE-cirtonly.sky")));
+            SafeOpenDocument(testFilesDir.GetTestPath("Bruker_diaPASEF_HYE-cirtonly.sky"));
             var peptideSettingsDlg3 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             var editIrtCalcDlg2 = ShowDialog<EditIrtCalcDlg>(peptideSettingsDlg3.AddCalculator);
             var calibrateIrtDlg2 = ShowDialog<CalibrateIrtDlg>(editIrtCalcDlg2.Calibrate);

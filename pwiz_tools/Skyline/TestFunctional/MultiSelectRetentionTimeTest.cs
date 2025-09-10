@@ -27,7 +27,7 @@ using ZedGraph;
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
-    public class MultiSelectRetentionTimeTest : AbstractFunctionalTest
+    public class MultiSelectRetentionTimeTest : AbstractFunctionalTestEx
     {
         [TestMethod]
         public void TestMultiSelectRetentionTime()
@@ -38,7 +38,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("MultiSelectRetentionTimeTest.sky")));
+            SafeOpenDocument(TestFilesDir.GetTestPath("MultiSelectRetentionTimeTest.sky"));
             Assert.AreEqual(BarType.Cluster, SkylineWindow.GraphRetentionTime.GraphControl.GraphPane.BarSettings.Type);
             // Test select all
             RunUI(() =>

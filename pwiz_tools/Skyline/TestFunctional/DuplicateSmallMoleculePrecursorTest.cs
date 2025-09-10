@@ -62,7 +62,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Now test fix for "an item with the same key has already been added" as in https://skyline.ms/announcements/home/support/thread.view?rowId=51494
             LoadNewDocument(true);
-            RunUI(() => { SkylineWindow.OpenFile(TestFilesDir.GetTestPath("402.sky")); });
+            SafeOpenDocument(TestFilesDir.GetTestPath("402.sky"));
             var mzML = TestFilesDir.GetTestPath("402.mzML");
             ImportResultsFile(mzML);
             WaitForDocumentLoaded(240000);

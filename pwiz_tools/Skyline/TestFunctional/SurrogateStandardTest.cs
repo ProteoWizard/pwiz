@@ -33,7 +33,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
-    public class SurrogateStandardTest : AbstractFunctionalTest
+    public class SurrogateStandardTest : AbstractFunctionalTestEx
     {
         [TestMethod]
         public void TestSurrogateStandards()
@@ -44,7 +44,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("p180test_calibration_DukeApril2016.sky")));
+            SafeOpenDocument(TestFilesDir.GetTestPath("p180test_calibration_DukeApril2016.sky"));
             var surrogateStandards = new Dictionary<string, string>
             {
                 {"Leu","Ile" },

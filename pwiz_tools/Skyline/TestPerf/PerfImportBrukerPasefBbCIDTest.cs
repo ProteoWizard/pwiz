@@ -58,7 +58,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             // Load a .sky with mising .skyd, forcing re-import with existing parameters
             // This simplifies the test code since we have six different PASEF modes to deal with here
             string skyfile = TestFilesDir.GetTestPath("timsTOF_Lipidomics_test.sky");
-            RunUI(() => SkylineWindow.OpenFile(skyfile));
+            SafeOpenDocument(skyfile);
             ImportResults(TestFilesDir.GetTestPath("HESI_Celegans_MTBE-2_150ul_bbCID_4ul_neg_19_1_3206.d"));
             var doc1 = WaitForDocumentLoaded();
             AssertEx.IsDocumentState(doc1, null, 1, 1, 1, 10);

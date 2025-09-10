@@ -30,7 +30,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
-    public class AlertDlgTest : AbstractFunctionalTest
+    public class AlertDlgTest : AbstractFunctionalTestEx
     {
         [TestMethod]
         public void TestAlertDlg()
@@ -41,9 +41,9 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            SafeOpenDocument(TestFilesDir.GetTestPath("SmallMoleculePredictedRetentionTime.sky"));
             RunUI(()=>
             {
-                SkylineWindow.OpenFile(TestFilesDir.GetTestPath("SmallMoleculePredictedRetentionTime.sky"));
                 Assert.AreEqual(SrmDocument.DOCUMENT_TYPE.small_molecules, SkylineWindow.Document.DocumentType);
                 Assert.AreEqual(SrmDocument.DOCUMENT_TYPE.small_molecules, SkylineWindow.ModeUI);
             });
