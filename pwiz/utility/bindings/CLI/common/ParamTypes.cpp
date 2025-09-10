@@ -106,7 +106,7 @@ CVParam::CVParam(void* base)
 : base_(new boost::shared_ptr<b::CVParam>(static_cast<b::CVParam*>(base))), owner_(nullptr), value_(gcnew CVParamValue(base_))
 {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(CVParam), base_)}
 
-CVParam::~CVParam() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(CVParam), base_, (owner_ == nullptr)) SAFEDELETE(base_); delete value_;}
+CVParam::~CVParam() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(CVParam), base_, (owner_ == nullptr)) SAFEDELETE(base_);}
 
 CVParam::!CVParam()
 {LOG_FINALIZE(BOOST_PP_STRINGIZE(CVParam), base_) delete this;}
@@ -346,6 +346,7 @@ void ParamGroup::id::set(System::String^ value) {(*base_)->id = ToStdString(valu
 bool ParamGroup::empty()
 {
     return (*base_)->empty();
+
 }
 
 
