@@ -248,15 +248,8 @@ namespace pwiz.Skyline.Controls.FilesTree
         }
 
         // CONSIDER: refactor for more code reuse with SrmTreeNode
-        internal void MergeNodes(IList<FileNode> docFiles, TreeNodeCollection treeNodes, Func<FileNode, FilesTreeNode> createTreeNodeFunc, CancellationToken cancellationToken)
+        internal void MergeNodes(IList<FileNode> docFilesList, TreeNodeCollection treeNodes, Func<FileNode, FilesTreeNode> createTreeNodeFunc, CancellationToken cancellationToken)
         {
-            if (docFiles == null)
-                return;
-
-            // need to look items up by index, so convert to list
-            var docFilesList = docFiles.ToList();
-            // var localFileInitList = new List<FilesTreeNode>();
-
             FileNode nodeDoc = null;
 
             // Keep remaining tree nodes into a map by the identity global index.
@@ -369,7 +362,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 var treeNode = (FilesTreeNode)treeNodes[i];
                 var model = treeNode?.Model;
 
-                if (model != null && model.Files.Count > 0)
+                if (model?.Files.Count > 0)
                 {
                     MergeNodes(model.Files, treeNode.Nodes, createTreeNodeFunc, cancellationToken);
                 }
