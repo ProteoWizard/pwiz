@@ -70,15 +70,6 @@ namespace pwiz.Skyline.Model.Files {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Add Annotations.
-        /// </summary>
-        internal static string AddAnnotations {
-            get {
-                return ResourceManager.GetString("AddAnnotations", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Analyte Concentration.
         /// </summary>
         internal static string AnalyteConcentration {
@@ -153,9 +144,9 @@ namespace pwiz.Skyline.Model.Files {
         /// <summary>
         ///   Looks up a localized string similar to Timestamp of when this replicate&apos;s MS data collection began.
         /// </summary>
-        internal static string Description_AcquistionTime {
+        internal static string Description_AcquisitionTime {
             get {
-                return ResourceManager.GetString("Description_AcquistionTime", resourceCulture);
+                return ResourceManager.GetString("Description_AcquisitionTime", resourceCulture);
             }
         }
         
