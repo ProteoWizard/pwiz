@@ -17,9 +17,10 @@
  * limitations under the License.
  */
 
+using JetBrains.Annotations;
+using pwiz.Common.SystemUtil;
 using System.ComponentModel;
 using System.Resources;
-using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.Files
 {
@@ -52,5 +53,10 @@ namespace pwiz.Skyline.Model.Files
         // does not throw errors but should be considered.
         // As long as derived Name has no custom logic, it should be safe.
         [Category("FileInfo")] public virtual string Name { get; set; }
+
+        // Test Support - enforced by code check
+        // Invoked via reflection in InspectPropertySheetResources in CodeInspectionTest
+        [UsedImplicitly]
+        private static ResourceManager ResourceManager() => PropertySheetFileNodeResources.ResourceManager;
     }
 }
