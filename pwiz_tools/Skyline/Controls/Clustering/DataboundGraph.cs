@@ -277,7 +277,7 @@ namespace pwiz.Skyline.Controls.Clustering
 
         protected override string GetPersistentString()
         {
-            return PersistentString.FromParts(GetType().ToString())
+            return PersistentString.FromParts(base.GetPersistentString())
                 .Concat(OwnerGridForm?.DataGridId?.ToPersistedString()).ToString();
         }
 
