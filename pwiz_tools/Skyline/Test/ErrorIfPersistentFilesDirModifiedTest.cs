@@ -18,7 +18,7 @@
 
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline.Util;
+using pwiz.Common.SystemUtil;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest

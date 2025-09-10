@@ -20,10 +20,13 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
+using pwiz.Common.PeakFinding;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.ElementLocators;
@@ -116,6 +119,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public double? AverageMassErrorPPM { get { return ChromInfo.MassError; } }
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public int? CountTruncated { get { return ChromInfo.Truncated; } }
+        [Format(Formats.Percent, NullValue = TextUtil.EXCEL_NA)]
+        public double? ProportionTruncated { get { return CalculateProportionTruncated(); } }
         public PeakIdentification Identified { get { return ChromInfo.Identified; } }
         [Format(Formats.STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
         public double? LibraryDotProduct { get { return ChromInfo.LibraryDotProduct; } }
@@ -232,6 +237,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        [ChildDisplayName("Original{0}")]
+        [Format(Formats.RETENTION_TIME)]
+        public ScoredPeakValue OriginalPeak {
+            get
+            {
+                return ScoredPeakValue.FromScoredPeak(ChromInfo.OriginalPeak);
+            }
+        }
+
+        [ChildDisplayName("Reintegrated{0}")]
+        [Format(Formats.RETENTION_TIME)]
+        public ScoredPeakValue ReintegratedPeak
+        {
+            get
+            {
+                return ScoredPeakValue.FromScoredPeak(ChromInfo.ReintegratedPeak);
+            }
+        }
 
         [InvariantDisplayName("PrecursorReplicateNote")]
         [Importable]
@@ -278,6 +301,18 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public PeptideResult PeptideResult 
         {
             get { return _peptideResult = _peptideResult ?? new PeptideResult(Precursor.Peptide, GetResultFile()); }
+        }
+
+        [ChildDisplayName("Imputed{0}")]
+        [Format(Formats.RETENTION_TIME)]
+        public ImputedPeakBounds ImputedPeak
+        {
+            get
+            {
+                return ImputedPeakBounds.FromPeakBounds(DataSchema.PeakBoundaryImputer
+                    .GetImputedPeakQuick(PeptideResult.Peptide.DocNode,
+                        GetResultFile().Replicate.ChromatogramSet, GetResultFile().ChromFileInfo.FilePath)?.PeakBounds);
+            }
         }
 
         [InvariantDisplayName("PrecursorResultLocator")]
@@ -487,6 +522,85 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
 
             return lcPeakIonMetrics;
+        }
+
+        private double? CalculateProportionTruncated()
+        {
+            double totalArea = 0;
+            double truncatedArea = 0;
+            var srmSettings = DataSchema.Document.Settings;
+            var resultFile = GetResultFile();
+            foreach (var transition in Precursor.DocNode.Transitions)
+            {
+                if (!transition.IsQuantitative(srmSettings))
+                {
+                    continue;
+                }
+
+                foreach (var transitionChromInfo in transition.GetSafeChromInfo(
+                             resultFile.Replicate.ReplicateIndex))
+                {
+                    if (transitionChromInfo.OptimizationStep != resultFile.OptimizationStep ||
+                        !ReferenceEquals(transitionChromInfo.FileId, resultFile.ChromFileInfoId))
+                    {
+                        continue;
+                    }
+
+                    if (!transitionChromInfo.IsTruncated.HasValue || transitionChromInfo.Area <= 0)
+                    {
+                        continue;
+                    }
+
+                    totalArea += transitionChromInfo.Area;
+                    if (transitionChromInfo.IsTruncated.Value)
+                    {
+                        truncatedArea += transitionChromInfo.Area;
+                    }
+                }
+            }
+
+            if (totalArea <= 0)
+            {
+                return null;
+            }
+
+            return truncatedArea / totalArea;
+        }
+
+        
+        public class ImputedPeakBounds : IFormattable
+        {
+            public ImputedPeakBounds(double startTime, double endTime)
+            {
+                StartTime = startTime;
+                EndTime = endTime;
+            }
+
+            [Format(Formats.RETENTION_TIME)]
+            public double StartTime { get; }
+            [Format(Formats.RETENTION_TIME)]
+            public double EndTime { get; }
+
+            public string ToString(string format, IFormatProvider formatProvider)
+            {
+                return string.Format(EntitiesResources.CandidatePeakGroup_ToString___0___1__,
+                    StartTime.ToString(format, formatProvider), EndTime.ToString(format, formatProvider));
+            }
+
+            public static ImputedPeakBounds FromPeakBounds(PeakBounds peakBounds)
+            {
+                if (peakBounds == null)
+                {
+                    return null;
+                }
+
+                return new ImputedPeakBounds(peakBounds.StartTime, peakBounds.EndTime);
+            }
+
+            public override string ToString()
+            {
+                return ToString(null, CultureInfo.CurrentCulture);
+            }
         }
     }
 }

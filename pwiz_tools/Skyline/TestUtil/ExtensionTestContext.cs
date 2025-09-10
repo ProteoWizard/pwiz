@@ -23,6 +23,8 @@ using System.Linq;
 using System.Reflection;
 using Ionic.Zip;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline;
 using pwiz.Skyline.Util;
 
@@ -45,6 +47,12 @@ namespace pwiz.SkylineTestUtil
             var value = testContext.Properties[property];
             return (value == null) ? defaultValue :
                 string.Compare(value.ToString(), "true", true, CultureInfo.InvariantCulture) == 0;
+        }
+
+        public static long GetLongValue(this TestContext testContext, string property, long defaultValue)
+        {
+            var value = testContext.Properties[property];
+            return (value == null) ? defaultValue : Convert.ToInt64(value.ToString());
         }
 
         public static TValue GetEnumValue<TValue>(this TestContext testContext, string property, TValue defaultValue)
@@ -137,7 +145,7 @@ namespace pwiz.SkylineTestUtil
             {
                 try
                 {
-                    Helpers.Try<Exception>(() =>
+                    TryHelper.Try<Exception>(() =>
                     {
                         using ZipFile zipFile = ZipFile.Read(pathZip);
                         foreach (ZipEntry zipEntry in zipFile)

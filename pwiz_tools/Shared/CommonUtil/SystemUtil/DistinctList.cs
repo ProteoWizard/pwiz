@@ -70,5 +70,15 @@ namespace pwiz.Common.SystemUtil
                 return _values[index];
             }
         }
+
+        public int IndexOf(T item)
+        {
+            if (_dictionary.TryGetValue(ValueTuple.Create(item), out int index))
+            {
+                return index;
+            }
+
+            return -1;
+        }
     }
 }

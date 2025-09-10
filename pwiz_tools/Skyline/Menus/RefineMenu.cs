@@ -29,6 +29,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Menus
@@ -61,10 +62,28 @@ namespace pwiz.Skyline.Menus
                 MessageDlg.Show(SkylineWindow, Resources.SkylineWindow_ShowReintegrateDialog_The_document_must_have_targets_in_order_to_reintegrate_chromatograms_);
                 return;
             }
+
             if (!documentOrig.IsLoaded)
             {
-                MessageDlg.Show(SkylineWindow, MenusResources.SkylineWindow_ShowReintegrateDialog_The_document_must_be_fully_loaded_before_it_can_be_re_integrated_);
-                return;
+                using var longWaitDlg = new LongWaitDlg();
+                longWaitDlg.Message = MenusResources.RefineMenu_ShowReintegrateDialog_Waiting_for_document_to_finish_loading;
+                longWaitDlg.PerformWork(SkylineWindow, 1000, (ILongWaitBroker broker) =>
+                {
+                    while (!broker.IsCanceled)
+                    {
+                        SrmDocument documentUi = null;
+                        SkylineWindow.Invoke(new Action(() => { documentUi = SkylineWindow.DocumentUI; }));
+                        if (true == documentUi?.IsLoaded)
+                        {
+                            break;
+                        }
+                    }
+                });
+                documentOrig = SkylineWindow.DocumentUI;
+                if (!documentOrig.IsLoaded)
+                {
+                    return;
+                }
             }
             using (var dlg = new ReintegrateDlg(documentOrig))
             {
@@ -116,7 +135,12 @@ namespace pwiz.Skyline.Menus
             {
                 if (decoysDlg.ShowDialog(owner ?? SkylineWindow) == DialogResult.OK)
                 {
-                    var refinementSettings = new RefinementSettings { NumberOfDecoys = decoysDlg.NumDecoys, DecoysMethod = decoysDlg.DecoysMethod };
+                    var refinementSettings = new RefinementSettings
+                    {
+                        NumberOfDecoys = decoysDlg.NumDecoys, 
+                        DecoysMethod = decoysDlg.DecoysMethod,
+                        NeverShiftDecoyPrecursorMass = decoysDlg.PreservePrecursorMass
+                    };
                     SkylineWindow.ModifyDocument(MenusResources.SkylineWindow_ShowGenerateDecoysDlg_Generate_Decoys, 
                         DocumentModifier.Create(refinementSettings.ModifyDocumentByGeneratingDecoys));
 
@@ -228,15 +252,8 @@ namespace pwiz.Skyline.Menus
 
         public void ShowAssociateProteinsDlg(IWin32Window owner = null)
         {
-            using (var associateProteinsDlg = new AssociateProteinsDlg(DocumentUI))
-            {
-                if (associateProteinsDlg.ShowDialog(owner ?? SkylineWindow) == DialogResult.OK)
-                {
-                    ModifyDocument(Resources.AssociateProteinsDlg_ApplyChanges_Associated_proteins,
-                        current => associateProteinsDlg.DocumentFinal,
-                        associateProteinsDlg.FormSettings.EntryCreator.Create);
-                }
-            }
+            using var associateProteinsDlg = new AssociateProteinsDlg(SkylineWindow);
+            associateProteinsDlg.ShowDialog(owner ?? SkylineWindow);
         }
 
         private void renameProteinsToolStripMenuItem_Click(object sender, EventArgs e)
@@ -367,24 +384,25 @@ namespace pwiz.Skyline.Menus
 
         public void ShowRefineDlg()
         {
-            using (var refineDlg = new RefineDlg(SkylineWindow))
+            using var refineDlg = new RefineDlg(SkylineWindow);
+            if (refineDlg.ShowDialog(SkylineWindow) == DialogResult.OK)
             {
-                if (refineDlg.ShowDialog(SkylineWindow) == DialogResult.OK)
+                lock (SkylineWindow.GetDocumentChangeLock())
                 {
                     ModifyDocument(MenusResources.SkylineWindow_ShowRefineDlg_Refine,
                         doc =>
                         {
-                            using (var longWaitDlg = new LongWaitDlg(SkylineWindow))
+                            using var longWaitDlg = new LongWaitDlg(SkylineWindow);
+                            longWaitDlg.Message = MenusResources.SkylineWindow_ShowRefineDlg_Refining_document;
+                            longWaitDlg.PerformWork(refineDlg, 1000, progressMonitor =>
                             {
-                                longWaitDlg.Message = MenusResources.SkylineWindow_ShowRefineDlg_Refining_document;
-                                longWaitDlg.PerformWork(refineDlg, 1000, progressMonitor =>
-                                {
-                                    var srmSettingsChangeMonitor =
-                                        new SrmSettingsChangeMonitor(progressMonitor, MenusResources.SkylineWindow_ShowRefineDlg_Refining_document, SkylineWindow, doc);
+                                var srmSettingsChangeMonitor =
+                                    new SrmSettingsChangeMonitor(progressMonitor,
+                                        MenusResources.SkylineWindow_ShowRefineDlg_Refining_document, SkylineWindow,
+                                        doc);
 
-                                    doc = refineDlg.RefinementSettings.Refine(doc, srmSettingsChangeMonitor);
-                                });
-                            }
+                                doc = refineDlg.RefinementSettings.Refine(doc, srmSettingsChangeMonitor);
+                            });
 
                             return doc;
                         }, refineDlg.FormSettings.EntryCreator.Create);

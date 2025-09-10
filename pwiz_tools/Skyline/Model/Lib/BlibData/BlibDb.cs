@@ -561,9 +561,8 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                 dbRefSpectrum.Copies,
                                 dbRefSpectrum.NumPeaks,
                                 (int)(dbRefSpectrum.Id ?? 0),
-                                spectrum.Protein,
-                                default(IndexedRetentionTimes),
-                                ionMobilitiesByFileId));
+                                (int?)dbRefSpectrum.FileId,
+                                spectrum.Protein).ChangeIonMobilities(ionMobilitiesByFileId));
                             proteinTablesBuilder.Add(dbRefSpectrum, spectrum.Protein);
                             if (progressMonitor != null)
                             {
@@ -879,6 +878,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                             new BiblioLiteSpectrumInfo(newLibKey, refSpectra.Copies,
                                                 refSpectra.NumPeaks,
                                                 (int) (refSpectra.Id ?? 0),
+                                                (int?) refSpectra.FileId,
                                                 proteinName));
                                     }
 
@@ -927,7 +927,8 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                         new BiblioLiteSpectrumInfo(newLibKey,
                                             refSpectra.Copies,
                                             refSpectra.NumPeaks,
-                                            (int) (refSpectra.Id ?? 0),
+                                            (int)(refSpectra.Id ?? 0),
+                                            (int?)refSpectra.FileId,
                                             proteinName));
 
                                     // Save entries in the redundant library.
@@ -1279,7 +1280,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             if (!dictFiles.TryGetValue(filePath, out var spectrumSourceId))
             {
                 spectrumSourceId = SaveSourceFile(session, filePath, spectrumSourceFile?.IdFilePath,
-                    spectrumSourceFile?.GetScoreTypeCutoff(scoreName));
+                    spectrumSourceFile?.GetScoreTypeCutoff(scoreName), spectrumSourceFile?.WorkflowType);
                 if (spectrumSourceId == 0)
                 {
                     throw new SQLiteException(string.Format(BlibDataResources.BlibDb_BuildRefSpectra_Error_getting_database_Id_for_file__0__, filePath));
@@ -1305,9 +1306,9 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             return scoreTypeId;
         }
 
-        private static long SaveSourceFile(ISession session, string filePath, string idFileName, double? cutoffScore)
+        private static long SaveSourceFile(ISession session, string filePath, string idFileName, double? cutoffScore, WorkflowType? workflowType)
         {
-            var sourceFile = new DbSpectrumSourceFiles {FileName = filePath, IdFileName = idFileName, CutoffScore = cutoffScore};
+            var sourceFile = new DbSpectrumSourceFiles {FileName = filePath, IdFileName = idFileName, CutoffScore = cutoffScore, WorkflowType = (int?) workflowType};
             session.Save(sourceFile);
             return sourceFile.Id.GetValueOrDefault();
         }

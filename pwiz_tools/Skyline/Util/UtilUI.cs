@@ -131,6 +131,11 @@ namespace pwiz.Skyline.Util
             get { return _broker.IsCanceled; }
         }
 
+        public CancellationToken CancellationToken
+        {
+            get { return _broker.CancellationToken;  }
+        }
+
         public UpdateProgressResponse UpdateProgress(IProgressStatus status)
         {
             _broker.ProgressValue = status.PercentComplete;

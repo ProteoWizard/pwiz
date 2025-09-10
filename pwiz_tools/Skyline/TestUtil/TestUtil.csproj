@@ -166,9 +166,9 @@
     <Compile Include="AuditLogUtil.cs" />
     <Compile Include="CheckDocumentState.cs" />
     <Compile Include="CheckReportCompatibility.cs" />
+    <Compile Include="DllFinderTestUtil.cs" />
     <Compile Include="ExampleText.cs" />
     <Compile Include="ExtensionTestContext.cs" />
-    <Compile Include="FileLockingProcessFinder.cs" />
     <Compile Include="GitFileHelper.cs" />
     <Compile Include="KoinaTestUtil.cs" />
     <Compile Include="MultiFormActivator.cs" />
@@ -215,9 +215,14 @@
     <Compile Include="TestFunctional.cs" />
     <Compile Include="TypeInspector.cs" />
     <Compile Include="ArdiaTestUtil.cs" />
+    <Compile Include="WatersConnectTestUtil.cs" />
     <Compile Include="UnifiTestUtil.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Shared\CommonMsData\CommonMsData.csproj">
+      <Project>{86f8e7f5-a3ed-4519-9ad9-bf9abd6dd69f}</Project>
+      <Name>CommonMsData</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Shared\Common\Common.csproj">
       <Project>{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}</Project>
       <Name>Common</Name>
@@ -297,8 +302,8 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\DiskFailure.png" />
-    <EmbeddedResource Include="Resources\larrow-cur.bmp" />
+    <None Include="Resources\DiskFailure.png" />
+    <None Include="Resources\larrow-cur.bmp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

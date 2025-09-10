@@ -128,7 +128,7 @@
         Proteome Machine (GPM). You can explore their coverage by doing the following:
     </p>
     <ul>
-        <li>On the <b>View</b> menu, click <b>Document Grid</b>.</li>
+        <li>On the <b>View</b> menu, choose <b>Live Reports</b>, and click <b>Document Grid</b> (Alt-3).</li>
         <li>On the <b>Reports</b> menu in the upper-left corner of the <b>Document Grid</b> form, click
             <b>Precursors</b>.</li>
         <li>Scroll to the right in the <b>Document Grid</b> to find the “Library Name” column, click it and click <b>Sort
@@ -310,11 +310,9 @@
     <ul>
         <li>Click-and-drag beneath the x-axis at about 30.4 minutes, just after the truncated peak.</li>
         <li>Drag left until the integration boundary stops moving, and release the left mouse button.</li>
-        <li>Click the bars for D_108_REP2 in the <b>Retention Times</b> view to activate its
-            chromatogram graph.</li>
+        <li>Click the bars for D_108_REP2 in the <b>Retention Times</b> view to activate its chromatogram graph.</li>
         <li>Click-and-drag beneath the x-axis of the graph from about 30.5 minutes to the far left.</li>
-        <li>Click the bars for D_162_REP3 in the <b>Retention Times</b> view to activate its
-            chromatogram graph.</li>
+        <li>Click the bars for D_162_REP3 in the <b>Retention Times</b> view to activate its chromatogram graph.</li>
     </ul>
     <p>
         The peak for D_162_REP3 is also truncated. However, Skyline has already chosen it correctly, as it has in several other cases. You might be
@@ -330,7 +328,7 @@
     </p>
     <p>
         Skyline defines a truncated peak as any peak where one of its boundaries is at a terminal point of the chromatogram and the intensity at that
-        terminal end is more than 1% of the peak height higher than the intensity at the other integration boundary.
+        terminal end is more than 25% of the peak height higher than the intensity at the other integration boundary.
     </p>
     <p>
         To see other automatically integrated peaks which Skyline has identified as truncated, perform the following steps:
@@ -363,7 +361,7 @@
         You can also use the <b>Document Grid</b> to create a list of all precursors with any peak truncation by doing the following:
     </p>
     <ul>
-        <li>On the <b>View</b> menu, click <b>Document Grid</b>.</li>
+        <li>On the <b>View</b> menu, choose <b>Live Reports</b>, and click <b>Document Grid</b> (Alt-3).</li>
         <li>On the <b>Reports</b> menu in the <b>Document Grid</b> view, click <b>Precursors</b>.</li>
         <li>On the <b>Reports</b> menu in the <b>Document Grid</b> view, click <b>Customize Report</b>.</li>
         <li>In the <b>Report name</b> field, enter “Truncated Precursors”.</li>
@@ -396,7 +394,7 @@
         <li>Click the “Count Truncated” column header and click <b>Sort Descending</b>.</li>
     </ul>
     <p class="keep-next">
-        The <b>Document Grid</b> will show 221 truncated peaks that Skyline has already chosen automatically:
+        The <b>Document Grid</b> will show 129 truncated peaks that Skyline has already chosen automatically:
     </p>
     <p>
         <img src="s-19.png" />
@@ -445,10 +443,18 @@
         <img src="s-22.png" />
     </p>
     <p>
+        Notice the red line and its legend entry "dotp cutoff - 0.90". The right cut-off will depend on the expected similarity between the
+        peak areas and the spectral library used. In thise, case 0.9 is a bit too strict. Do the following to lower the cut-off:
+    </p>
+    <ul>
+        <li>Right-click on the <b>Peak Areas</b> graph, and click <b>Properties</b>.</li>
+        <li>Change the <b>Cutoff</b> value for "dotp" to "0.8".</li>
+        <li>Click <b>OK</b>.</li>
+    </ul>
+    <p>
         Return the <b>Peak Areas</b> view to its former state by doing the following:
     </p>
     <ul>
-        <li>If you used zooming, right-click and click <b>Undo All Zoom/Pan</b>.</li>
         <li>Right-click, choose <b>Normalize To</b> and click <b>Total</b>.</li>
     </ul>
     <p>
@@ -493,9 +499,9 @@
         this case, the spectrum comes from a NIST public library, and we have no information on the instrument type that generated it.
     </p>
     <p>
-        At a glance, this integration looks good enough that you should be able to continue to the next peptide, R.GSYNLQDLLAQAK.L [378, 390], without further inspection. For this next peptide, both the <b>Retention
-            Times</b> and <b>Peak Areas</b> views show issues. To understand what is going on with these measurements, do the
-        following:
+        At a glance, this integration looks good enough that you should be able to continue to the next peptide, R.GSYNLQDLLAQAK.L [378, 390], without
+        further inspection. For this next peptide, both the <b>Retention Times</b> and <b>Peak Areas</b> views show issues. To
+        understand what is going on with these measurements, do the following:
     </p>
     <ul>
         <li>On the <b>View</b> menu, choose <b>Auto-Zoom</b> and click <b>None</b> (Shift-F11).</li>
@@ -531,8 +537,8 @@
     </p>
     <p>
         Continuing through the chromatogram plots, you will see this pattern repeated several times. Keep removing the missing peaks. You will even
-        start to see some cases of peak truncation. When you get to H_148_REP2, you will see a case
-        where Skyline has chosen the peak at 33.9 minutes, but part of the correct peak is still visible.
+        start to see some cases of peak truncation. When you get to H_148_REP2, you will see a case where Skyline has chosen the peak at 33.9 minutes,
+        but part of the correct peak is still visible.
     </p>
     <p>
         <img src="s-30.png" />
@@ -569,8 +575,7 @@
         grouped together.
     </p>
     <p class="keep-next">
-        For the peptide TSDQIHFFFAK the retention times look
-        like this:
+        For the peptide TSDQIHFFFAK the retention times look like this:
     </p>
     <p>
         <img src="s-33.png" />
@@ -613,9 +618,8 @@
         be easier to remove the peaks for these replicates.
     </p>
     <p>
-        Finishing this section with the peptide FGLYSDQMR, you can see in the <b>Retention
-            Times</b> view that Skyline has mostly picked a peak close to 19 minutes. However, the <b>Peak Areas</b> view shows very
-        poor consistency in relative ion abundance.
+        Finishing this section with the peptide FGLYSDQMR, you can see in the <b>Retention Times</b> view that Skyline has mostly picked a
+        peak close to 19 minutes. However, the <b>Peak Areas</b> view shows very poor consistency in relative ion abundance.
     </p>
     <p>
         <img src="s-37.png" />
@@ -635,10 +639,10 @@
         <li>Press the End key and then the Up-Arrow key on the keyboard.</li>
     </ul>
     <p>
-        This should move the selection to AFGLSSPR, the last peptide in the document. The three peptides
-        HLNGFSVPR, VVLSGSDATLAYSAFK and AFGLSSPR grouped in the list named “S”
-        are the injected synthetic peptides for this experiment. You can gain immediate confidence in the automatic integration of the last two
-        peptides from the two summary plots we have been examining. The retention times and peak areas are relatively consistent.
+        This should move the selection to AFGLSSPR, the last peptide in the document. The three peptides HLNGFSVPR, VVLSGSDATLAYSAFK and AFGLSSPR
+        grouped in the list named “S” are the injected synthetic peptides for this experiment. You can gain immediate confidence in the automatic
+        integration of the last two peptides from the two summary plots we have been examining. The retention times and peak areas are relatively
+        consistent.
     </p>
     <p>
         <img src="s-38.png" />
@@ -647,8 +651,8 @@
         <img src="s-39.png" />
     </p>
     <p>
-        Moving to the peptide HLNGFSVPR, you will observe consistent retention times. However, there is
-        much more variance in the peak areas. The relative area for y4 and sometimes y3 seems to vary throughout the data set.
+        Moving to the peptide HLNGFSVPR, you will observe consistent retention times. However, there is much more variance in the peak areas. The
+        relative area for y4 and sometimes y3 seems to vary throughout the data set.
     </p>
     <p>
         <img src="s-40.png" />
@@ -672,7 +676,7 @@
     <p>
         Now you can see that the peak area for peptide HLNGFSVPR decreases dramatically from the results acquired for the first sample to the last. The
         total peak area goes from roughly 6,000,000 to 30,000, spanning a 200-fold difference. See if you able to use the <b>Results
-            Grid</b> (under <b>View</b> &gt; <b>Other Grids</b> &gt; <b>Results Grid</b>) with the HLNGFSVPR
+            Grid</b> (under <b>View</b> &gt; <b>Live Reports</b> &gt; <b>Results Grid</b>) with the HLNGFSVPR
         peptide precursor 513.7776++ selected to determine the exact maximum and minimum total peak areas. Looking at the other two standard peptides,
         you will see that they too decrease over time (VVLSGSDATLAYSAFK 2.3 to 1.1 million and AFGLSSPR 23 to 1 million). All 42 runs are supposed to
         be essentially technical replicates for these three peptides. While there is clearly systematic signal degradation for all peptides over time
@@ -766,7 +770,8 @@
     </p>
     <h2>Continuing multi-replicate data processing</h2>
     <p>
-        Now you will continue to review and correct peak integrations for this experiment by selecting the peptide DVFSQQADLSR above the “S” standard peptides list.
+        Now you will continue to review and correct peak integrations for this experiment by selecting the peptide DVFSQQADLSR above the “S” standard
+        peptides list.
     </p>
     <ul>
         <li>On the <b>View</b> menu, choose <b>Retention Times</b> and click <b>Replicate Comparison</b>.</li>
@@ -777,10 +782,9 @@
         without further review of this peptide. This should also be true of the next two peptides.
     </p>
     <p>
-        Continue up the list until you reach the peptide IFSQQADLSR. You should notice that every
-        replicate except H_146_REP1 has consistent relative ion abundances in the <b>Peak Areas</b> graph. Again, when you click on the bar
-        for this run, you will see that the peak in H_146_REP1 was not fully captured by the 5-minute
-        scheduling window. (You might need to turn off x-axis zooming – Shift-F11 – to see this.)
+        Continue up the list until you reach the peptide IFSQQADLSR. You should notice that every replicate except H_146_REP1 has consistent relative
+        ion abundances in the <b>Peak Areas</b> graph. Again, when you click on the bar for this run, you will see that the peak in
+        H_146_REP1 was not fully captured by the 5-minute scheduling window. (You might need to turn off x-axis zooming – Shift-F11 – to see this.)
     </p>
     <p>
         <img src="s-47.png" />
@@ -813,8 +817,7 @@
         need to correct any of the default peak picking performed by Skyline or even give these peptides much more than just a glance.
     </p>
     <p>
-        When you reach the peptide MLSGFIPLKPTVK, however, you will see much more variance in the
-        <b>Peak Areas</b> graph.
+        When you reach the peptide MLSGFIPLKPTVK, however, you will see much more variance in the <b>Peak Areas</b> graph.
     </p>
     <p>
         <img src="s-50.png" />
@@ -852,7 +855,7 @@
     <p class="keep-next">
         And also in the <b>Peak Areas</b> plot, as the run with no visible integrated signal.
     </p>
-    <p>
+    <p class="keep-next">
         <img src="s-54.png" />
     </p>
     <p>
@@ -880,10 +883,10 @@
         You will see the corrected peak now appears much more consistent with the other runs in the summary plots.
     </p>
     <p>
-        Continue to the peptides above. At the peptide GMYESLPVVAVK, you will see such poor consistency
-        in the summary plots that you should likely just delete this peptide and not bother adjusting the integration. The peptide ETGLMAFTNLK requires adjustment only in one run. The run should be obvious in the <b>Peak
-            Areas</b> graph. By this point in the tutorial, you should be well equipped to understand what went wrong, and how to fix the
-        problem.
+        Continue to the peptides above. At the peptide GMYESLPVVAVK, you will see such poor consistency in the summary plots that you should likely
+        just delete this peptide and not bother adjusting the integration. The peptide ETGLMAFTNLK requires adjustment only in one run. The run should
+        be obvious in the <b>Peak Areas</b> graph. By this point in the tutorial, you should be well equipped to understand what went wrong,
+        and how to fix the problem.
     </p>
     <p>
         After making this correction, if you are still not fully convinced that the same peak for the same peptide is being integrated in all cases for
@@ -907,9 +910,9 @@
         <img src="s-56.png" />
     </p>
     <p>
-        Continuing up the <b>Targets</b> list, you will find several peptides (YANVIAYDHSR and
-        TDEDVPSGPPR) where the difference between the relative ion abundances of the measured peak and
-        the matching library spectrum is pronounced. You can see these differences in the <b>Peak Areas</b> graph:
+        Continuing up the <b>Targets</b> list, you will find several peptides (YANVIAYDHSR and TDEDVPSGPPR) where the difference between the
+        relative ion abundances of the measured peak and the matching library spectrum is pronounced. You can see these differences in the
+        <b>Peak Areas</b> graph:
     </p>
     <p>
         <img src="s-57.png" />
@@ -946,11 +949,12 @@
         return the deleted y3 transition to the Skyline document.
     </p>
     <p>
-        Among the 7 peptides above TDEDVPSGPPR, you should see only one incorrectly integrated peak for the peptide SPQGLGASTAEISAR. This issue should now be relatively easy for you to identify and correct.
+        Among the 7 peptides above TDEDVPSGPPR, you should see only one incorrectly integrated peak for the peptide SPQGLGASTAEISAR. This issue should
+        now be relatively easy for you to identify and correct.
     </p>
     <p>
-        This will bring you to the peptide <b><u>C</u></b>SSLLWAGAAWLR. Based on the variance you will observe in the
-        summary plots (see below), you may initially be tempted to delete this peptide and move on:
+        This will bring you to the peptide <b><u>C</u></b>SSLLWAGAAWLR. Based on the variance you will observe in the summary plots (see
+        below), you may initially be tempted to delete this peptide and move on:
     </p>
     <p>
         <img src="s-59.png" />
@@ -1117,7 +1121,7 @@
         To set the annotations you have added to the document, do the following:
     </p>
     <ul>
-        <li>On the <b>View</b> menu, click <b>Document Grid</b>.</li>
+        <li>On the <b>View</b> menu, choose <b>Live Reports</b>, and click <b>Document Grid</b> (Alt-3).</li>
         <li>On the <b>Reports</b> menu, in the upper left corner of the <b>Document Grid</b>, click <b>Replicates</b>.
         </li>
     </ul>
@@ -1217,7 +1221,7 @@
         <img src="s-77.png" />
     </p>
     <p>
-        Depending on how you processed the rest of your document, there may or may not be exactly 223 truncated precursor peak groups. You could check
+        Depending on how you processed the rest of your document, there may or may not be exactly 133 truncated precursor peak groups. You could check
         the “MissingData” check boxes one peptide at a time. Once you check a box for any peptide, the rest will check automatically, because the
         annotations apply only once to any peptide. Try this now by doing the following:
     </p>
@@ -1232,17 +1236,17 @@
         <img src="s-78.png" />
     </p>
     <p>
-        You can also use Excel and the <b>Document Grid</b> support for pasting values to set all 163 rows in a single paste as follows:
+        You can also use Excel and the <b>Document Grid</b> support for pasting values to set all 133 rows in a single paste as follows:
     </p>
     <ul>
-        <li>In a blank spreadsheet in Excel, scroll down to row 163.</li>
-        <li>Enter “TRUE” in the first column of row 163.</li>
+        <li>In a blank spreadsheet in Excel, scroll down to row 133.</li>
+        <li>Enter “TRUE” in the first column of row 133.</li>
         <li>Select the cell you just entered.</li>
         <li>Click-and-drag the range extension square in the lower right corner of the selection rectangle to fill cells in the first column from row
-            163 to 1 with the value “TRUE”.</li>
+            133 to 1 with the value “TRUE”.</li>
         <li>Press Ctrl-C to copy these cells.</li>
         <li>Return to Skyline and select the first cell in the “MissingData” column.</li>
-        <li>Press Ctrl-V to paste ‘TRUE’ values into all 163 rows from “MissingData”.</li>
+        <li>Press Ctrl-V to paste ‘TRUE’ values into all 133 rows for “MissingData”.</li>
     </ul>
     <p>
         You may realize that this seems a little redundant. You only need to set the MissingData annotation to true once for every peptide. However,
@@ -1494,7 +1498,7 @@
         To inspect the group comparison you just defined do the following:
     </p>
     <ul>
-        <li>On the <b>View</b> menu, choose <b>Group Comparisons</b> and click <b>Health v. Diseased</b>.</li>
+        <li>On the <b>View</b> menu, choose <b>Live Reports</b>, then <b>Group Comparisons</b>, and click <b>Health v. Diseased</b>.</li>
     </ul>
     <p class="keep-next">
         Skyline will show a grid view that looks like this:

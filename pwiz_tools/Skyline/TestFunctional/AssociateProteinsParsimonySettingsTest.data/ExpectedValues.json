@@ -1,0 +1,482 @@
+[
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3714,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 13801,
+    "MappedSharedPeptides": 3095,
+    "TargetSharedPeptides": 3095
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3270,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 11862,
+    "MappedSharedPeptides": 3095,
+    "TargetSharedPeptides": 0
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3318,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 12326,
+    "MappedSharedPeptides": 3095,
+    "TargetSharedPeptides": 813
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3060,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 10706,
+    "MappedSharedPeptides": 3095,
+    "TargetSharedPeptides": 0
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3170,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 12557,
+    "MappedSharedPeptides": 3095,
+    "TargetSharedPeptides": 1217
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3270,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 11862,
+    "MappedSharedPeptides": 3095,
+    "TargetSharedPeptides": 0
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3166,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 11971,
+    "MappedSharedPeptides": 3095,
+    "TargetSharedPeptides": 214
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3060,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 10706,
+    "MappedSharedPeptides": 3095,
+    "TargetSharedPeptides": 0
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3338,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 12999,
+    "MappedSharedPeptides": 3095,
+    "TargetSharedPeptides": 1876
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3270,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 11862,
+    "MappedSharedPeptides": 3095,
+    "TargetSharedPeptides": 0
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3318,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 12326,
+    "MappedSharedPeptides": 3095,
+    "TargetSharedPeptides": 813
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3060,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 10706,
+    "MappedSharedPeptides": 3095,
+    "TargetSharedPeptides": 0
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3338,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 12999,
+    "MappedSharedPeptides": 3095,
+    "TargetSharedPeptides": 1876
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3270,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 11862,
+    "MappedSharedPeptides": 3095,
+    "TargetSharedPeptides": 0
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3318,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 12326,
+    "MappedSharedPeptides": 3095,
+    "TargetSharedPeptides": 813
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3060,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 10706,
+    "MappedSharedPeptides": 3095,
+    "TargetSharedPeptides": 0
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3436,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 13211,
+    "MappedSharedPeptides": 2270,
+    "TargetSharedPeptides": 2270
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3265,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 11862,
+    "MappedSharedPeptides": 2270,
+    "TargetSharedPeptides": 0
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3163,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 11971,
+    "MappedSharedPeptides": 2270,
+    "TargetSharedPeptides": 214
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3150,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 10941,
+    "MappedSharedPeptides": 2270,
+    "TargetSharedPeptides": 0
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3167,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 12545,
+    "MappedSharedPeptides": 2270,
+    "TargetSharedPeptides": 1193
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3265,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 11862,
+    "MappedSharedPeptides": 2270,
+    "TargetSharedPeptides": 0
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3163,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 11971,
+    "MappedSharedPeptides": 2270,
+    "TargetSharedPeptides": 214
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3150,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 10941,
+    "MappedSharedPeptides": 2270,
+    "TargetSharedPeptides": 0
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3172,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 12558,
+    "MappedSharedPeptides": 2270,
+    "TargetSharedPeptides": 1197
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3265,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 11862,
+    "MappedSharedPeptides": 2270,
+    "TargetSharedPeptides": 0
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3163,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 11971,
+    "MappedSharedPeptides": 2270,
+    "TargetSharedPeptides": 214
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3150,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 10941,
+    "MappedSharedPeptides": 2270,
+    "TargetSharedPeptides": 0
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3172,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 12558,
+    "MappedSharedPeptides": 2270,
+    "TargetSharedPeptides": 1197
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3265,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 11862,
+    "MappedSharedPeptides": 2270,
+    "TargetSharedPeptides": 0
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3163,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 11971,
+    "MappedSharedPeptides": 2270,
+    "TargetSharedPeptides": 214
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3150,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 10941,
+    "MappedSharedPeptides": 2270,
+    "TargetSharedPeptides": 0
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3448,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 13244,
+    "MappedSharedPeptides": 2324,
+    "TargetSharedPeptides": 2324
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3270,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 11862,
+    "MappedSharedPeptides": 2324,
+    "TargetSharedPeptides": 0
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3166,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 11971,
+    "MappedSharedPeptides": 2324,
+    "TargetSharedPeptides": 214
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3151,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 10920,
+    "MappedSharedPeptides": 2324,
+    "TargetSharedPeptides": 0
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3170,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 12557,
+    "MappedSharedPeptides": 2324,
+    "TargetSharedPeptides": 1217
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3270,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 11862,
+    "MappedSharedPeptides": 2324,
+    "TargetSharedPeptides": 0
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3166,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 11971,
+    "MappedSharedPeptides": 2324,
+    "TargetSharedPeptides": 214
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3151,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 10920,
+    "MappedSharedPeptides": 2324,
+    "TargetSharedPeptides": 0
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3176,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 12571,
+    "MappedSharedPeptides": 2324,
+    "TargetSharedPeptides": 1223
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3270,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 11862,
+    "MappedSharedPeptides": 2324,
+    "TargetSharedPeptides": 0
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3166,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 11971,
+    "MappedSharedPeptides": 2324,
+    "TargetSharedPeptides": 214
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3151,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 10920,
+    "MappedSharedPeptides": 2324,
+    "TargetSharedPeptides": 0
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3176,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 12571,
+    "MappedSharedPeptides": 2324,
+    "TargetSharedPeptides": 1223
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3270,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 11862,
+    "MappedSharedPeptides": 2324,
+    "TargetSharedPeptides": 0
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3166,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 11971,
+    "MappedSharedPeptides": 2324,
+    "TargetSharedPeptides": 214
+  },
+  {
+    "MappedProteins": 3714,
+    "UnmappedProteins": 26838,
+    "TargetProteins": 3151,
+    "MappedPeptides": 11862,
+    "UnmappedPeptides": 60,
+    "TargetPeptides": 10920,
+    "MappedSharedPeptides": 2324,
+    "TargetSharedPeptides": 0
+  }
+]

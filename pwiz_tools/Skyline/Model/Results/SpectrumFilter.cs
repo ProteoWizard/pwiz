@@ -24,11 +24,12 @@ using System.Linq;
 using System.Text;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Optimization;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -89,9 +90,14 @@ namespace pwiz.Skyline.Model.Results
         public IEnumerable<SpectrumFilterPair> FilterPairs { get { return _filterMzValues; } }
         public bool HasRangeRT { get; private set; }
 
+        public SpectrumFilter(SrmDocument document) : this(document, null, null, null, null, null,false, null)
+        {
+
+        }
+
         public SpectrumFilter(SrmDocument document, MsDataFileUri msDataFileUri, IFilterInstrumentInfo instrumentInfo,
-            OptimizableRegression optimization = null, double? maxObservedIonMobilityValue = null,
-            IRetentionTimePredictor retentionTimePredictor = null, bool firstPass = false, GlobalChromatogramExtractor gce = null)
+            ChromatogramSet chromatogramSet, double? maxObservedIonMobilityValue,
+            IRetentionTimePredictor retentionTimePredictor, bool firstPass, GlobalChromatogramExtractor gce)
         {
             _fullScan = document.Settings.TransitionSettings.FullScan;
             _instrument = document.Settings.TransitionSettings.Instrument;
@@ -195,7 +201,7 @@ namespace pwiz.Skyline.Model.Results
                 //       times can be shared for MS1 without SIM scans
                 _isSharedTime = !canSchedule && !_isIonMobilityFiltered && 
                                 document.MoleculeTransitionGroups.All(transitionGroup=>transitionGroup.SpectrumClassFilter.IsEmpty);
-
+                var optimization = chromatogramSet?.OptimizationFunction;
                 var ceSteps = Equals(optimization?.OptType, OptimizationType.collision_energy)
                     ? Enumerable.Range(-optimization.StepCount, optimization.StepCount * 2 + 1).Cast<int?>().ToArray()
                     : new[] { (int?)null };
@@ -265,7 +271,7 @@ namespace pwiz.Skyline.Model.Results
                             }
                             else if (RetentionTimeFilterType.ms2_ids == _fullScan.RetentionTimeFilterType)
                             {
-                                var times = document.Settings.GetBestRetentionTimes(nodePep, msDataFileUri);
+                                var times = document.Settings.GetBestRetentionTimes(nodePep, chromatogramSet, msDataFileUri);
                                 if (times.Length > 0)
                                 {
                                     minTime = Math.Max(minTime ?? 0, times.Min() - _fullScan.RetentionTimeFilterLength);
@@ -1077,7 +1083,7 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        private struct IsolationWindowFilter
+        private struct IsolationWindowFilter : IEquatable<IsolationWindowFilter>
         {
             public IsolationWindowFilter(SignedMz? isolationMz, double? isolationWidth) : this()
             {
@@ -1090,10 +1096,9 @@ namespace pwiz.Skyline.Model.Results
 
             #region object overrides
 
-            private bool Equals(IsolationWindowFilter other)
+            public bool Equals(IsolationWindowFilter other)
             {
-                return other.IsolationMz.Equals(IsolationMz) &&
-                    other.IsolationWidth.Equals(IsolationWidth);
+                return other.IsolationMz.Equals(IsolationMz) && other.IsolationWidth.Equals(IsolationWidth);
             }
 
             public override bool Equals(object obj)

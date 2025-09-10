@@ -299,6 +299,7 @@
     <Compile Include="DataBinding\Filtering\FilterPage.cs" />
     <Compile Include="DataBinding\Filtering\FilterPages.cs" />
     <Compile Include="DataBinding\Filtering\IFilterAutoComplete.cs" />
+    <Compile Include="DataBinding\Internal\WrappedDataPropertyDescriptor.cs" />
     <Compile Include="DataBinding\RowItemEnumerator.cs" />
     <Compile Include="DataBinding\TabularFileFormat.cs" />
     <Compile Include="DataBinding\DataSchema.cs" />
@@ -444,6 +445,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\Editor\FindColumnDlg.resx">
       <DependentUpon>FindColumnDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\Editor\FindColumnDlg.zh-CHS.resx">
       <DependentUpon>FindColumnDlg.cs</DependentUpon>
@@ -537,7 +539,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
+      <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
@@ -552,36 +554,37 @@
     <None Include="Resources\up-pro32.bmp" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\DropImageNoBackground.png" />
-    <Content Include="Resources\HiddenColumns.bmp" />
-    <Content Include="Resources\Cluster.bmp" />
+    <None Include="Resources\DropImageNoBackground.png" />
+    <None Include="Resources\FreezeCells.png" />
+    <None Include="Resources\HiddenColumns.bmp" />
+    <None Include="Resources\Cluster.bmp" />
     <None Include="Resources\Alphabetical.bmp" />
-    <Content Include="Resources\UnknownUiMode.png" />
+    <None Include="Resources\UnknownUiMode.png" />
     <EmbeddedResource Include="DataBinding\Documentation\DocumentationGenerator.css" />
-    <Content Include="Resources\agg_mean.bmp" />
-    <Content Include="Resources\agg_median.bmp" />
-    <Content Include="Resources\agg_sum.bmp" />
-    <Content Include="Resources\agg_count.bmp" />
-    <Content Include="Resources\agg_blank.bmp" />
-    <Content Include="Resources\agg_groupby.bmp" />
-    <Content Include="Resources\agg_min.bmp" />
-    <Content Include="Resources\agg_max.bmp" />
-    <Content Include="Resources\agg_stddev.bmp" />
-    <Content Include="Resources\close.bmp" />
-    <Content Include="Resources\BoolColumn.bmp" />
-    <Content Include="Resources\Filter.bmp" />
-    <Content Include="Resources\PlainLayout.bmp" />
-    <Content Include="Resources\PivotAndFilter.bmp" />
-    <Content Include="Resources\Pivot.bmp" />
-    <Content Include="Resources\SublistColumn.bmp" />
-    <Content Include="Resources\LinkColumn.bmp" />
-    <Content Include="Resources\DataColumn.bmp" />
-    <Content Include="Resources\TextColumn.bmp" />
-    <Content Include="Resources\NumberColumn.bmp" />
-    <Content Include="Resources\PivotColumn.bmp" />
-    <Content Include="Resources\restore.bmp" />
-    <Content Include="Resources\maximize.bmp" />
-    <Content Include="Resources\MatchCase.bmp" />
+    <None Include="Resources\agg_mean.bmp" />
+    <None Include="Resources\agg_median.bmp" />
+    <None Include="Resources\agg_sum.bmp" />
+    <None Include="Resources\agg_count.bmp" />
+    <None Include="Resources\agg_blank.bmp" />
+    <None Include="Resources\agg_groupby.bmp" />
+    <None Include="Resources\agg_min.bmp" />
+    <None Include="Resources\agg_max.bmp" />
+    <None Include="Resources\agg_stddev.bmp" />
+    <None Include="Resources\close.bmp" />
+    <None Include="Resources\BoolColumn.bmp" />
+    <None Include="Resources\Filter.bmp" />
+    <None Include="Resources\PlainLayout.bmp" />
+    <None Include="Resources\PivotAndFilter.bmp" />
+    <None Include="Resources\Pivot.bmp" />
+    <None Include="Resources\SublistColumn.bmp" />
+    <None Include="Resources\LinkColumn.bmp" />
+    <None Include="Resources\DataColumn.bmp" />
+    <None Include="Resources\TextColumn.bmp" />
+    <None Include="Resources\NumberColumn.bmp" />
+    <None Include="Resources\PivotColumn.bmp" />
+    <None Include="Resources\restore.bmp" />
+    <None Include="Resources\maximize.bmp" />
+    <None Include="Resources\MatchCase.bmp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MSGraph\MSGraph.csproj">

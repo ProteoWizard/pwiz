@@ -1334,6 +1334,35 @@ namespace pwiz.Skyline.Properties
                 this[nameof(ArdiaRegistrationCodeEntries)] = value;
             }
         }
+
+        [UserScopedSetting]
+        public bool? ShowExemplaryPeakBounds
+        {
+            get
+            {
+                return (bool?)this[nameof(ShowExemplaryPeakBounds)];
+            }
+            set
+            {
+                this[nameof(ShowExemplaryPeakBounds)] = value;
+            }
+        }
+        public RtCalculatorOption RtCalculatorOption
+        {
+            get
+            {
+                var calcName = RTCalculatorName;
+                if (string.IsNullOrEmpty(calcName))
+                {
+                    return null;
+                }
+                return RtCalculatorOption.FromPersistentString(calcName);
+            }
+            set
+            {
+                RTCalculatorName = value?.ToPersistentString();
+            }
+        }
     }
 
     [Serializable]
@@ -3041,7 +3070,7 @@ namespace pwiz.Skyline.Properties
         public override IsolationScheme EditItem(Control owner, IsolationScheme item,
             IEnumerable<IsolationScheme> existing, object tag)
         {
-            using (var editIsolationScheme = new EditIsolationSchemeDlg(existing ?? this))
+            using (var editIsolationScheme = new EditIsolationSchemeDlg(existing ?? this, tag as SrmSettings))
             {
                 editIsolationScheme.IsolationScheme = item;
                 if (editIsolationScheme.ShowDialog(owner) == DialogResult.OK)

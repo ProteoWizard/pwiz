@@ -36,7 +36,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Database;
-using pwiz.Skyline.Model.Results;
+using pwiz.CommonMsData;
 using BiblioSpecLiteLibrary = pwiz.Skyline.Model.Lib.BiblioSpecLiteLibrary;
 
 namespace pwiz.Skyline.FileUI.PeptideSearch

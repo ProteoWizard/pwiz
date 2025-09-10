@@ -190,9 +190,6 @@
         found in the search results that do not already exist in the document. Where possible it will suggest specific modifications from the Unimod
         site that match the amino acid, mass combinations found in the search. 
     </p>
-    <p>
-        *Unimod is a community-supported comprehensive database of protein modifications for mass spectrometry applications (<a target="_blank" href="https://www.unimod.org">https://www.unimod.org</a> ).
-    </p>
     <p class="keep-next">
         For this tutorial, you only need the ‘Phospho (ST)’, ‘Phospho (Y)’ and ‘Oxidation (M)’ modifications. Check them in the list,
         and the wizard should look like this:
@@ -315,7 +312,7 @@
         the following steps:
     </p>
     <ul>
-        <li>On the <b>View</b> menu, click <b>Spectral Libraries</b>.</li>
+        <li>On the <b>View</b> menu, choose <b>Libraries</b>, and click <b>Library Explorer</b>.</li>
     </ul>
     <p class="keep-next">
         Skyline will again offer to use the modifications it detects in the library which you chose not to add to your document
@@ -343,15 +340,15 @@
         chose not to use.
     </p>
     <p>
-        Below the spectrum graph, you can see the text “File: 100803_005b_MCF7_TiTip3.wiff” and “RT: 35.21”. The “RT” value tells you that retention time information is present, and the “File” value
-        tells you that it is correctly associated with the files you have imported into Skyline. The “File” values need not be exact matches of the
-        files you import. Skyline recognizes that many peptide search pipelines involve converting raw instrument data to formats like mzXML, mzML,
-        MGF, MS2, etc. In general, Skyline will look for a base-name match, where ‘basename.mgf’ matches successfully with ‘basename.wiff’. Due to
-        specific instances of pipelines that require greater flexibility, this matching is also done insensitive of case, so that ‘BASENAME.mzML’ will
-        match ‘Basename.RAW’, and finally handling for multiple-dot extensions is included, so that ‘basename.c.mzXML’ matches ‘basename.raw’. If,
-        however, you saw something like ‘F011852.dat’ or some other search output file that does not share a base-name with the data you intend to
-        import into Skyline, then you will need to review your search pipeline, and possibly work with the Skyline team to fix the problem. For Mascot
-        .dat files specifically, you are encourage to consult the “<a
+        Below the spectrum graph, you can see the text “File: 100803_005b_MCF7_TiTip3.wiff” and “RT: 35.21”. The “RT” value tells you that retention
+        time information is present, and the “File” value tells you that it is correctly associated with the files you have imported into Skyline. The
+        “File” values need not be exact matches of the files you import. Skyline recognizes that many peptide search pipelines involve converting raw
+        instrument data to formats like mzXML, mzML, MGF, MS2, etc. In general, Skyline will look for a base-name match, where ‘basename.mgf’ matches
+        successfully with ‘basename.wiff’. Due to specific instances of pipelines that require greater flexibility, this matching is also done
+        insensitive of case, so that ‘BASENAME.mzML’ will match ‘Basename.RAW’, and finally handling for multiple-dot extensions is included, so that
+        ‘basename.c.mzXML’ matches ‘basename.raw’. If, however, you saw something like ‘F011852.dat’ or some other search output file that does not
+        share a base-name with the data you intend to import into Skyline, then you will need to review your search pipeline, and possibly work with
+        the Skyline team to fix the problem. For Mascot .dat files specifically, you are encourage to consult the “<a
             href="https://skyline.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=mascot_missing_rt">ID Annotations Missing with
             Mascot Search Results</a>” page on the Skyline web site. For other issues, you are encouraged to post to the Skyline support board (on the
         <b>Help</b> menu, click <b>Support</b>) for help with issues of this type.
@@ -370,14 +367,14 @@
     <ul>
         <li>Click on the sequence of the first phosphopeptide K.DIDIS<b><u>S</u></b>PEFK.I and the MS/MS spectrum will appear. (Note that
             the bold, underlined residue “<b><u>S</u></b>” in the peptide sequence indicates a serine phosphorylation). </li>
-        <li>If you do not see the MS/MS spectrum, on the <b>View</b> menu, click <b>Library Match</b>.</li>
-        <li>If you do not see as many annotated peaks as in the image below, on the <b>View</b> menu, choose <b>Ion Types</b> and
+        <li>If you do not see the MS/MS spectrum, on the <b>View</b> menu, choose <b>Libraries</b>, and click <b>Library Match</b> (Alt-1).</li>
+        <li>If you do not see as many annotated peaks as in the image below, on the <b>View</b> menu, choose <b>Libraries</b>, then <b>Ion Types</b> and
             check <b>A</b>, <b>B</b>, <b>Y</b> and <b>Precursor</b>.</li>
         <li>If you do not see the entire chromatogram for the peptide, on the <b>View</b> menu, choose <b>Auto-Zoom</b> and click
             <b>None</b> (Shift-F11).</li>
         <li>On the <b>Edit</b> menu, choose <b>Expand All</b> and click <b>Precursors</b>.</li>
     </ul>
-    <p class="keep-next">
+    <p>
         Your Skyline document should look like the following:
     </p>
     <p>
@@ -619,7 +616,7 @@
         <img src="s-23.png" />
     </p>
     <p>
-        The green dots indicate the transitions for which Skyline already has chromatogram data. Skyline automatically extracts chromatograms for all
+        The green circle with white check icons indicate the transitions for which Skyline already has chromatogram data. Skyline automatically extracts chromatograms for all
         peaks in the isotope distribution which it predicts to have at least 1% of the entire distribution. Plus, it always extracts a chromatogram
         for M-1, since a correctly picked peak with no interference will generally have no signal at this <i>m/z</i>.
     </p>

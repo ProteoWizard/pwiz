@@ -30,9 +30,9 @@ using NHibernate.Exceptions;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib.ChromLib.Data;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -563,7 +563,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                                                                           instrumentAnalyzer, instrumentDetector));
                     }
                     _librarySourceFiles = sampleFiles.ToArray();
-
+                    _libraryFiles = new LibraryFiles(_librarySourceFiles.Select(file => file.FilePath));
                     loader.UpdateProgress(status.Complete());
                     return true;
                 }
@@ -578,7 +578,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
         public override bool TryGetRetentionTimes(LibKey key, MsDataFileUri filePath, out double[] retentionTimes)
         {
             int i = FindEntry(key);
-            int j = _librarySourceFiles.IndexOf(info => Equals(filePath.ToString(), info.FilePath));
+            int j = FindSource(filePath);
             if (i != -1 && j != -1)
             {
                 retentionTimes = _libraryEntries[i].RetentionTimesByFileId.GetTimes(_librarySourceFiles[j].Id);
@@ -590,7 +590,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
 
         public override bool TryGetRetentionTimes(MsDataFileUri filePath, out LibraryRetentionTimes retentionTimes)
         {
-            int j = _librarySourceFiles.IndexOf(info => Equals(filePath.ToString(), info.FilePath));
+            int j = FindSource(filePath);
             if (j != -1)
             {
                 var source = _librarySourceFiles[j];
@@ -619,6 +619,21 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
         public override bool TryGetRetentionTimes(int fileIndex, out LibraryRetentionTimes retentionTimes)
         {
             return TryGetRetentionTimes(MsDataFileUri.Parse(_librarySourceFiles[fileIndex].FilePath), out retentionTimes);
+        }
+
+        public override IEnumerable<double> GetRetentionTimesWithSequences(string filePath, IEnumerable<Target> peptideSequences, ref int? fileIndex)
+        {
+            int iFile = FindSource(MsDataFileUri.Parse(filePath));
+            if (iFile < 0)
+            {
+                return Array.Empty<double>();
+            }
+            var times = new List<double[]>();
+            foreach (var item in LibraryEntriesWithSequences(peptideSequences))
+            {
+                times.Add(item.RetentionTimesByFileId.GetTimes(_librarySourceFiles[iFile].Id));
+            }
+            return times.SelectMany(array => array);
         }
 
         public override bool TryGetIrts(out LibraryRetentionTimes retentionTimes)
@@ -985,6 +1000,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                     sampleFiles.Add(ChromatogramLibrarySourceInfo.Read(_stream));
                 }
                 _library._librarySourceFiles = sampleFiles.ToArray();
+                _library._libraryFiles = new LibraryFiles(sampleFiles.Select(file => file.FilePath));
                 _locationEntries = PrimitiveArrays.ReadOneValue<long>(_stream);
             }
 

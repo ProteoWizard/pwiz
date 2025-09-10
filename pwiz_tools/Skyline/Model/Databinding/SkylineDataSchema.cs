@@ -34,6 +34,7 @@ using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lists;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.RetentionTimes.PeakImputation;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using SkylineTool;
@@ -47,9 +48,10 @@ namespace pwiz.Skyline.Model.Databinding
             = new HashSet<IDocumentChangeListener>();
         private readonly CachedValue<ImmutableSortedList<ResultKey, Replicate>> _replicates;
         private readonly CachedValue<IDictionary<ResultFileKey, ResultFile>> _resultFiles;
-        private readonly CachedValue<ElementRefs> _elementRefCache;
         private readonly CachedValue<AnnotationCalculator> _annotationCalculator;
         private readonly CachedValue<NormalizedValueCalculator> _normalizedValueCalculator;
+        private readonly CachedValue<PeakBoundaryImputer> _peakBoundaryImputer;
+        private ElementRefs _elementRefCache;
 
         private BatchChangesState _batchChangesState;
 
@@ -62,9 +64,9 @@ namespace pwiz.Skyline.Model.Databinding
 
             _replicates = CachedValue.Create(this, CreateReplicateList);
             _resultFiles = CachedValue.Create(this, CreateResultFileList);
-            _elementRefCache = CachedValue.Create(this, () => new ElementRefs(Document));
             _annotationCalculator = CachedValue.Create(this, () => new AnnotationCalculator(this));
             _normalizedValueCalculator = CachedValue.Create(this, () => new NormalizedValueCalculator(Document));
+            _peakBoundaryImputer = CachedValue.Create(this, ()=>new PeakBoundaryImputer(Document));
         }
 
         public override string DefaultUiMode
@@ -228,6 +230,10 @@ namespace pwiz.Skyline.Model.Databinding
             using (QueryLock.CancelAndGetWriteLock())
             {
                 _document = _documentContainer.Document;
+                if (!_document.DeferSettingsChanges)
+                {
+                    _elementRefCache = null;
+                }
                 IList<IDocumentChangeListener> listeners;
                 lock (_documentChangedEventHandlers)
                 {
@@ -263,7 +269,15 @@ namespace pwiz.Skyline.Model.Databinding
         }
 
         public ChromDataCache ChromDataCache { get; private set; }
-        public ElementRefs ElementRefs { get { return _elementRefCache.Value; } }
+
+        public ElementRefs ElementRefs
+        {
+            get
+            {
+                _elementRefCache ??= new ElementRefs(Document);
+                return _elementRefCache;
+            }
+        }
 
         public AnnotationCalculator AnnotationCalculator
         {
@@ -589,6 +603,14 @@ namespace pwiz.Skyline.Model.Databinding
         public virtual bool IsDocumentUpToDate()
         {
             return true;
+        }
+
+        public PeakBoundaryImputer PeakBoundaryImputer
+        {
+            get
+            {
+                return _peakBoundaryImputer.Value;
+            }
         }
 
         private class BatchChangesState

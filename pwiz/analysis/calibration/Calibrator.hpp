@@ -55,7 +55,7 @@ class Calibrator
 
     /// Create an instance;
     /// Log output can be suppressed by setting outputDirectory=="" 
-    static std::auto_ptr<Calibrator> create(const MassDatabase& massDatabase,
+    static std::unique_ptr<Calibrator> create(const MassDatabase& massDatabase,
                                             const std::vector<Measurement>& measurements,
                                             const data::CalibrationParameters& initialParameters,
                                             double initialErrorEstimate,

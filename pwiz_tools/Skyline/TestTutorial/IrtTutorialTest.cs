@@ -22,6 +22,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
@@ -31,7 +32,6 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Irt;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.Irt;
@@ -336,11 +336,11 @@ namespace pwiz.SkylineTestTutorial
             PauseForRetentionTimeGraphScreenShot("RT Regression graph metafile");
 
             RunUI(() =>
-                      {
-                          VerifyRTRegression(0.15, 15.09, 0.9991);
-                          Assert.AreEqual(11, SkylineWindow.DocumentUI.PeptideCount -
-                              SkylineWindow.RTGraphController.Outliers.Length);
-                      });
+            {
+                VerifyRTRegression(0.15, 15.09, 0.9991);
+                Assert.AreEqual(11, SkylineWindow.DocumentUI.PeptideCount -
+                                    SkylineWindow.RTGraphController.Outliers.Length);
+            });
 
             // Find all unintegrated transitions, p. 14-15
             {
@@ -823,7 +823,7 @@ namespace pwiz.SkylineTestTutorial
         // Always called in RunUI
         private static void VerifyRTRegression(double slope, double intercept, double r)
         {
-            WaitForCondition(() => SkylineWindow.RTGraphController.RegressionRefined != null);
+            Assert.IsNotNull(SkylineWindow.RTGraphController.RegressionRefined);
             var regressionRT = (RegressionLineElement) SkylineWindow.RTGraphController.RegressionRefined.Conversion;
             Assert.AreEqual(slope, regressionRT.Slope, 0.005);
             Assert.AreEqual(intercept, regressionRT.Intercept, 0.005);
