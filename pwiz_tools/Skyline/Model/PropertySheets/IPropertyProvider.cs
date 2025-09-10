@@ -25,11 +25,11 @@ namespace pwiz.Skyline.Model.PropertySheets
     {
         /// <summary>
         /// Should be called by the implementer when the selection changes and when the owner gains focus.
-        /// Implement to invoke <see cref="SkylineWindow.PotentialPropertySheetOwnerGotFocus"/> with the proper arguments.
+        /// Implement to invoke <see cref="SkylineWindow.PotentialPropertyProviderGotFocus"/> with the proper arguments.
         /// </summary>
         /// <param name="skylineWindow">The main SkylineWindow instance to notify.</param>
         /// <param name="e">The event args associated with the selection/focus change.</param>
-        void NotifyPropertySheetOwnerGotFocus(SkylineWindow skylineWindow, EventArgs e);
+        void NotifyPropertyProviderGotFocus(SkylineWindow skylineWindow, EventArgs e);
 
         public GlobalizedObject GetSelectedObjectProperties();
     }

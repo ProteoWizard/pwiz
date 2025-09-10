@@ -137,7 +137,7 @@ namespace pwiz.Skyline.Model.Files
 
             return new ModifiedDocument(newDocument).ChangeAuditLogEntry(entry);
         }
-        
+
         public static ModifiedDocument Rename(SrmDocument document, SrmSettingsChangeMonitor monitor, Replicate replicate, string newName)
         {
             var chromSet = LoadChromSetFromDocument(document, replicate);

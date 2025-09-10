@@ -413,7 +413,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         #region IPropertySheetOwner implementation
 
-        public void NotifyPropertySheetOwnerGotFocus(SkylineWindow skyline, EventArgs e)
+        public void NotifyPropertyProviderGotFocus(SkylineWindow skyline, EventArgs e)
         {
             SkylineWindow.PotentialPropertyProviderGotFocus(this);
         }
@@ -510,7 +510,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         private void FilesTree_AfterSelect(object sender, TreeViewEventArgs e)
         {
-            NotifyPropertySheetOwnerGotFocus(SkylineWindow, e);
+            NotifyPropertyProviderGotFocus(SkylineWindow, e);
         }
         
         private void FilesTree_BeforeCollapse(object sender, TreeViewCancelEventArgs e)

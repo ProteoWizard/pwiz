@@ -38,7 +38,7 @@ namespace pwiz.Skyline.Model.Files
             var chromSet = Replicate.LoadChromSetFromDocument(document, model);
             
             Assume.IsTrue(Name.GetType() == typeof(string));
-            _rename = (doc, monitor, newValue) => Replicate.Rename(doc, monitor, model, (string)newValue);
+            _rename = (doc, monitor, newValue) => Replicate.Rename(doc, monitor, model, newValue as string);
 
             BatchName = chromSet.BatchName;
             AnalyteConcentration = chromSet.AnalyteConcentration;
