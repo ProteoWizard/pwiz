@@ -2822,14 +2822,14 @@ namespace pwiz.Skyline.Controls.Graphs
 
         protected override string GetPersistentString()
         {
-            return base.GetPersistentString() + '|' + TabText;
+            return PersistentString.FromParts(base.GetPersistentString()).Append(TabText).ToString();
         }
 
         public static string GetTabText(string persistentString)
         {
-            string[] values = persistentString.Split('|');
-            if (values.Length == 2)
-                return values[1];
+            var persisted = PersistentString.Parse(persistentString);
+            if (persisted.Parts.Count > 1)
+                return persisted.Parts[1];
             return null;
         }
 
