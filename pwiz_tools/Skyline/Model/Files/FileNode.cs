@@ -91,6 +91,12 @@ namespace pwiz.Skyline.Model.Files
 
         public override string ToString() => @$"{GetType().Name}: " + (Name ?? string.Empty);
 
+        // All implementers should override
+        public virtual GlobalizedObject GetProperties(SrmDocument document, string localFilePath)
+        {
+            return new FileNodeProperties(this, localFilePath);
+        }
+
         /// <summary>
         /// Use this to decide whether the file represented by this model is ready to be monitored. A model may not be ready if:
         ///     (1) it does not represent a local file
