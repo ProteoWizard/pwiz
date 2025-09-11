@@ -30,8 +30,9 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class FilesTreePropertyGridTest : AbstractFunctionalTest
     {
+        // Both 10, but have different props summing to that
         internal const int REP_FILE_PROP_NUM = 10;
-        internal const int REP_SAMPLE_FILE_PROP_NUM = 8;
+        internal const int REP_SAMPLE_FILE_PROP_NUM = 10;
 
         private const string STRING_ANNOTATION_NAME = "StringAnnotation";
         private const string NUMBER_ANNOTATION_NAME = "NumberAnnotation";
