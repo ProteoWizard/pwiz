@@ -29,7 +29,6 @@ using pwiz.Skyline.Util.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -42,7 +41,6 @@ using Enzyme = pwiz.Skyline.Model.DocSettings.Enzyme;
 
 namespace pwiz.Skyline.Model.DdaSearch
 {
-    [SuppressMessage("ReSharper", "LocalizableElement")]
     public class TideSearchEngine : AbstractDdaSearchEngine, IProgressMonitor
     {
         private List<string> TIDE_SETTINGS = new List<string>();
@@ -64,82 +62,82 @@ namespace pwiz.Skyline.Model.DdaSearch
             };
 
             // Tide-search settings
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("max-precursor-charge", 5, 1, 9));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("min-precursor-charge", 1, 1, 9));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("deisotope", 0.0, 0.0));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("isotope-error", ""));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("min-peaks", 20, 1));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("mz-bin-offset", 0.4, 0, 1));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("fragment-tolerance", 0.02, 0.00001, 2));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("override-charges", false));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("remove-precursor-peak", false));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("remove-precursor-tolerance", 1.5, 0));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("scan-number", ""));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("score-function", "xcorr", "xcorr|combined-p-values".Split('|')));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("skip-preprocessing", false));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("spectrum-max-mz", 1e+09, 0));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("spectrum-min-mz", 0.0, 0));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("use-flanking-peaks", false));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("use-neutral-loss-peaks", true));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"max-precursor-charge", 5, 1, 9));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"min-precursor-charge", 1, 1, 9));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"deisotope", 0.0, 0.0));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"isotope-error", ""));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"min-peaks", 20, 1));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"mz-bin-offset", 0.4, 0, 1));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"fragment-tolerance", 0.02, 0.00001, 2));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"override-charges", false));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"remove-precursor-peak", false));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"remove-precursor-tolerance", 1.5, 0));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"scan-number", ""));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"score-function", @"xcorr", @"xcorr|combined-p-values".Split('|')));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"skip-preprocessing", false));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"spectrum-max-mz", 1e+09, 0));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"spectrum-min-mz", 0.0, 0));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"use-flanking-peaks", false));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"use-neutral-loss-peaks", true));
             
             //AddAdditionalSetting(TIDE_SETTINGS, new Setting("precursor-window", 50));
             //AddAdditionalSetting(TIDE_SETTINGS, new Setting("precursor-window-type", "ppm", "mass|mz|ppm".Split('|')));   // No support for 'mass' unit
 
             // Add param-medic options.
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("pm-charges", "0,2,3,4"));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("pm-max-frag-mz", 1800, 0));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("pm-max-precursor-delta-ppm", 50, 0));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("pm-max-precursor-mz", 1800, 0));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("pm-max-scan-separation", 1000, 1));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("pm-min-common-frag-peaks", 20, 1));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("pm-min-frag-mz", 150, 1));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("pm-min-peak-pairs", 200, 1));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("pm-min-precursor-mz", 400, 1));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("pm-min-scan-frag-peaks", 40, 1));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("pm-pair-top-n-frag-peaks", 5, 1));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("pm-top-n-frag-peaks", 30, 1));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"pm-charges", @"0,2,3,4"));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"pm-max-frag-mz", 1800, 0));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"pm-max-precursor-delta-ppm", 50, 0));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"pm-max-precursor-mz", 1800, 0));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"pm-max-scan-separation", 1000, 1));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"pm-min-common-frag-peaks", 20, 1));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"pm-min-frag-mz", 150, 1));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"pm-min-peak-pairs", 200, 1));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"pm-min-precursor-mz", 400, 1));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"pm-min-scan-frag-peaks", 40, 1));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"pm-pair-top-n-frag-peaks", 5, 1));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"pm-top-n-frag-peaks", 30, 1));
 
             // Input and output 
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("fileroot", ""));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("mass-precision", 4, 0));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("mzid-output", false));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("mztab-output", false));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("precision", 8, 0));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("print-search-progress", 10000));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("spectrum-parser", "pwiz", "pwiz|mstoolkit".Split('|')));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("sqt-output", false));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("store-index", ""));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("store-spectra", ""));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("top-match", 1, 1));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"fileroot", ""));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"mass-precision", 4, 0));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"mzid-output", false));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"mztab-output", false));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"precision", 8, 0));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"print-search-progress", 10000));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"spectrum-parser", @"pwiz", @"pwiz|mstoolkit".Split('|')));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"sqt-output", false));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"store-index", ""));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"store-spectra", ""));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"top-match", 1, 1));
 //            AddAdditionalSetting(TIDE_SETTINGS, new Setting("txt-output", true));   // Must be true
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("use-z-line", true));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("verbosity", 30));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"use-z-line", true));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"verbosity", 30));
 
             // Tide-index settings
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("memory-limit", 4, 1));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("auto-modifications-spectra", ""));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("clip-nterm-methionine", false));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("isotopic-mass", "mono", "mono|average".Split('|')));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("max-length", 50, 1));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("max-mass", 7200, 1));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("min-length", 6, 1));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("min-mass", 200, 1));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"memory-limit", 4, 1));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"auto-modifications-spectra", ""));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"clip-nterm-methionine", false));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"isotopic-mass", @"mono", @"mono|average".Split('|')));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"max-length", 50, 1));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"max-mass", 7200, 1));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"min-length", 6, 1));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"min-mass", 200, 1));
             //AddAdditionalSetting(TIDE_SETTINGS, new Setting("cterm-peptide-mods-spec", ""));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("cterm-protein-mods-spec", ""));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("min-mods", 0, 0));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("mod-precision", 4, 0));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"cterm-protein-mods-spec", ""));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"min-mods", 0, 0));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"mod-precision", 4, 0));
             //AddAdditionalSetting(TIDE_SETTINGS, new Setting("mods-spec", ""));
             //AddAdditionalSetting(TIDE_SETTINGS, new Setting("nterm-peptide-mods-spec", ""));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("nterm-protein-mods-spec", ""));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("auto-modifications", false));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("allow-dups", false));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("decoy-format", "shuffle", "none|shuffle|peptide-reverse".Split('|')));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("num-decoys-per-target", 1, 0));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("seed", 1, 1));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"nterm-protein-mods-spec", ""));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"auto-modifications", false));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"allow-dups", false));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"decoy-format", @"shuffle", @"none|shuffle|peptide-reverse".Split('|')));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"num-decoys-per-target", 1, 0));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"seed", 1, 1));
             //AddAdditionalSetting(TIDE_SETTINGS, new Setting("digestion", "full-digest", "full-digest|partial-digest|non-specific-digest".Split('|')));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("mass-precision", 4, 0));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("peptide-list", false));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("temp-dir", ""));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"mass-precision", 4, 0));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"peptide-list", false));
+            AddAdditionalSetting(TIDE_SETTINGS, new Setting(@"temp-dir", ""));
 
             //// ReSharper restore LocalizableElement
         }
@@ -166,14 +164,10 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         private MzTolerance _precursorMzTolerance;
         private MzTolerance _fragmentMzTolerance;
-        // TODO (code inspection): Field '_fragmentIons' is assigned but its value is never used
-        private SortedSet<string> _fragmentIons;
+        //private SortedSet<string> _fragmentIons; // use when Tide supports specifying fragment ions
         private Enzyme _enzyme;
-        // TODO (code inspection): Field '_ntt' is assigned but its value is never used
-        private int _ntt, _maxMissedCleavages;
+        private int _maxMissedCleavages;
         private int _maxVariableMods = 2;
-        // TODO (code inspection): Content of collection '_variableMods' is only updated but never used
-        private List<CruxModification> _variableMods;
         private string _modParams;
         private string _nTermModParams;
         private string _cTermModParams;
@@ -240,12 +234,12 @@ namespace pwiz.Skyline.Model.DdaSearch
                 var paramsFileText = new StringBuilder();
 
                 SetTideParam(paramsFileText, @"num_threads", 0);
-                SetTideParam(paramsFileText, @"concat", "True");
+                SetTideParam(paramsFileText, @"concat", @"True");
 
                 SetTideParam(paramsFileText, @"decoy_prefix", _decoyPrefix);
-                SetTideParam(paramsFileText, @"pepxml-output", "T");
-                SetTideParam(paramsFileText, @"pin-output", "T");
-                SetTideParam(paramsFileText, @"txt-output", "T");
+                SetTideParam(paramsFileText, @"pepxml-output", @"T");
+                SetTideParam(paramsFileText, @"pin-output", @"T");
+                SetTideParam(paramsFileText, @"txt-output", @"T");
                 SetTideParam(paramsFileText, @"precursor-window", _precursorMzTolerance.Value.ToString(CultureInfo.InvariantCulture));
                 SetTideParam(paramsFileText, @"precursor-window-type", _precursorMzTolerance.UnitName);
                 SetTideParam(paramsFileText, @"mz-bin-width", _fragmentMzTolerance.Value.ToString(CultureInfo.InvariantCulture));
@@ -254,7 +248,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 SetTideParam(paramsFileText, @"mods-spec", _modParams);
                 SetTideParam(paramsFileText, @"nterm-peptide-mods-spec", _nTermModParams);
                 SetTideParam(paramsFileText, @"cterm-peptide-mods-spec", _cTermModParams);
-                SetTideParam(paramsFileText, @"no-analytics", "T");
+                SetTideParam(paramsFileText, @"no-analytics", @"T");
 
 
                 foreach (var settingName in TIDE_SETTINGS)
@@ -266,115 +260,115 @@ namespace pwiz.Skyline.Model.DdaSearch
 
                 if (_enzyme.IsSemiCleaving)
                 {
-                    SetTideParam(paramsFileText, @"digestion", "partial-digest");
+                    SetTideParam(paramsFileText, @"digestion", @"partial-digest");
                 }
                 else
                 {
-                    SetTideParam(paramsFileText, @"digestion", "full-digest");
+                    SetTideParam(paramsFileText, @"digestion", @"full-digest");
                 }
 
                 switch (_enzyme.Name)
-                    {
-                        case "Trypsin (semi)":
-                            SetTideParam(paramsFileText, @"enzyme", "trypsin");
-                            break;
-                        case "Trypsin":
-                            SetTideParam(paramsFileText, @"enzyme", "trypsin");
-                            break;
-                        case "Trypsin/P":
-                            SetTideParam(paramsFileText, @"enzyme", "trypsin/p");
-                            break;
-                        case "TrypsinK":
-                            SetTideParam(paramsFileText, @"enzyme", "lys-c");
-                            break;
-                        case "TrypsinR":
-                            SetTideParam(paramsFileText, @"enzyme", "arg-c");
-                            break;
-                        case "Chymotrypsin":
-                            SetTideParam(paramsFileText, @"enzyme", "chymotrypsin");
-                            break;
-                        case "ArgC":
-                            SetTideParam(paramsFileText, @"enzyme", "arg-c");
-                            break;
-                        case "AspN":
-                            SetTideParam(paramsFileText, @"enzyme", "chymotrypsin");
-                            break;
-                        case "Clostripain":
-                            SetTideParam(paramsFileText, @"enzyme", "clostripain");
-                            break;
-                        case "CNBr":
-                            SetTideParam(paramsFileText, @"enzyme", "custom-enzyme");
-                            SetTideParam(paramsFileText, @"custom-enzyme", "[M]|{P}");
-                            break;
-                        case "Elastase":  // Skyline's digestion rule is different from the one of tide-search
-                            SetTideParam(paramsFileText, @"enzyme", "custom-enzyme");
-                            SetTideParam(paramsFileText, @"custom-enzyme", "[GVLIA]|{P}");
-                            break;
-                        case "Formic Acid":
-                            SetTideParam(paramsFileText, @"enzyme", "custom-enzyme");
-                            SetTideParam(paramsFileText, @"custom-enzyme", "[D]|{P}");
-                            break;
-                        case "GluC":
-                            SetTideParam(paramsFileText, @"enzyme", "glu-c");
-                            break;
-                        case "GluC bicarb":
-                            SetTideParam(paramsFileText, @"enzyme", "custom-enzyme");
-                            SetTideParam(paramsFileText, @"custom-enzyme", "[E]|{P}");
-                            break;
-                        case "Iodosobenzoate":
-                            SetTideParam(paramsFileText, @"enzyme", "iodosobenzoate");
-                            break;
-                        case "LysC":
-                            SetTideParam(paramsFileText, @"enzyme", "lys-c");
-                            break;
-                        case "LysC/P":
-                            SetTideParam(paramsFileText, @"enzyme", "custom-enzyme");
-                            SetTideParam(paramsFileText, @"custom-enzyme", "[K]|[]");
-                            break;
-                        case "LysN":
-                            SetTideParam(paramsFileText, @"enzyme", "lys-n");
-                            break;
-                        case "LysN promisc":
-                            SetTideParam(paramsFileText, @"enzyme", "custom-enzyme");
-                            SetTideParam(paramsFileText, @"custom-enzyme", "[]|[KASR]");
-                            break;
-                        case "PepsinA":
-                            SetTideParam(paramsFileText, @"enzyme", "custom-enzyme");
-                            SetTideParam(paramsFileText, @"custom-enzyme", "[FL]|[]");
-                            break;
-                        case "Protein endopeptidase":
-                            SetTideParam(paramsFileText, @"enzyme", "custom-enzyme");
-                            SetTideParam(paramsFileText, @"custom-enzyme", "[P]|[]");
-                            break;
-                        case "Staph protease":
-                            SetTideParam(paramsFileText, @"enzyme", "staph-protease");
-                            break;
-                        case "Trypsin-CNBr":
-                            SetTideParam(paramsFileText, @"enzyme", "custom-enzyme");
-                            SetTideParam(paramsFileText, @"custom-enzyme", "[KRM]|[P]");
-                            break;
-                        case "Trypsin-GluC":
-                            SetTideParam(paramsFileText, @"enzyme", "custom-enzyme");
-                            SetTideParam(paramsFileText, @"custom-enzyme", "[DEKR]|[P]");
-                            break;
-                        default:
-                            // Handle user defined digestion rule.
-                            // Tide does not allow digestion from both terminal.
-                            // It must be either C-terminal xor N-terminal, but not both.
-                            SetTideParam(paramsFileText, @"enzyme", "custom-enzyme");
-                            string cleavageRule = string.Empty;
-                            if (_enzyme.CleavageC != null)
-                                cleavageRule += $@"[{_enzyme.CleavageC}]";
-                            if (_enzyme.RestrictC != null)
-                                cleavageRule += $@"{{{_enzyme.RestrictC}}}";
-                            cleavageRule += "|";
-                            if (_enzyme.CleavageN != null)
-                                cleavageRule += $@"[{_enzyme.CleavageN}]";
-                            if (_enzyme.RestrictN != null)
-                                cleavageRule += $@"{{{_enzyme.RestrictN}}}";
-                            SetTideParam(paramsFileText, @"custom-enzyme", $@"{cleavageRule}");
+                {
+                    case "Trypsin (semi)":
+                        SetTideParam(paramsFileText, @"enzyme", @"trypsin");
                         break;
-                    }
+                    case "Trypsin":
+                        SetTideParam(paramsFileText, @"enzyme", @"trypsin");
+                        break;
+                    case "Trypsin/P":
+                        SetTideParam(paramsFileText, @"enzyme", @"trypsin/p");
+                        break;
+                    case "TrypsinK":
+                        SetTideParam(paramsFileText, @"enzyme", @"lys-c");
+                        break;
+                    case "TrypsinR":
+                        SetTideParam(paramsFileText, @"enzyme", @"arg-c");
+                        break;
+                    case "Chymotrypsin":
+                        SetTideParam(paramsFileText, @"enzyme", @"chymotrypsin");
+                        break;
+                    case "ArgC":
+                        SetTideParam(paramsFileText, @"enzyme", @"arg-c");
+                        break;
+                    case "AspN":
+                        SetTideParam(paramsFileText, @"enzyme", @"chymotrypsin");
+                        break;
+                    case "Clostripain":
+                        SetTideParam(paramsFileText, @"enzyme", @"clostripain");
+                        break;
+                    case "CNBr":
+                        SetTideParam(paramsFileText, @"enzyme", @"custom-enzyme");
+                        SetTideParam(paramsFileText, @"custom-enzyme", @"[M]|{P}");
+                        break;
+                    case "Elastase":  // Skyline's digestion rule is different from the one of tide-search
+                        SetTideParam(paramsFileText, @"enzyme", @"custom-enzyme");
+                        SetTideParam(paramsFileText, @"custom-enzyme", @"[GVLIA]|{P}");
+                        break;
+                    case "Formic Acid":
+                        SetTideParam(paramsFileText, @"enzyme", @"custom-enzyme");
+                        SetTideParam(paramsFileText, @"custom-enzyme", @"[D]|{P}");
+                        break;
+                    case "GluC":
+                        SetTideParam(paramsFileText, @"enzyme", @"glu-c");
+                        break;
+                    case "GluC bicarb":
+                        SetTideParam(paramsFileText, @"enzyme", @"custom-enzyme");
+                        SetTideParam(paramsFileText, @"custom-enzyme", @"[E]|{P}");
+                        break;
+                    case "Iodosobenzoate":
+                        SetTideParam(paramsFileText, @"enzyme", @"iodosobenzoate");
+                        break;
+                    case "LysC":
+                        SetTideParam(paramsFileText, @"enzyme", @"lys-c");
+                        break;
+                    case "LysC/P":
+                        SetTideParam(paramsFileText, @"enzyme", @"custom-enzyme");
+                        SetTideParam(paramsFileText, @"custom-enzyme", @"[K]|[]");
+                        break;
+                    case "LysN":
+                        SetTideParam(paramsFileText, @"enzyme", @"lys-n");
+                        break;
+                    case "LysN promisc":
+                        SetTideParam(paramsFileText, @"enzyme", @"custom-enzyme");
+                        SetTideParam(paramsFileText, @"custom-enzyme", @"[]|[KASR]");
+                        break;
+                    case "PepsinA":
+                        SetTideParam(paramsFileText, @"enzyme", @"custom-enzyme");
+                        SetTideParam(paramsFileText, @"custom-enzyme", @"[FL]|[]");
+                        break;
+                    case "Protein endopeptidase":
+                        SetTideParam(paramsFileText, @"enzyme", @"custom-enzyme");
+                        SetTideParam(paramsFileText, @"custom-enzyme", @"[P]|[]");
+                        break;
+                    case "Staph protease":
+                        SetTideParam(paramsFileText, @"enzyme", @"staph-protease");
+                        break;
+                    case "Trypsin-CNBr":
+                        SetTideParam(paramsFileText, @"enzyme", @"custom-enzyme");
+                        SetTideParam(paramsFileText, @"custom-enzyme", @"[KRM]|[P]");
+                        break;
+                    case "Trypsin-GluC":
+                        SetTideParam(paramsFileText, @"enzyme", @"custom-enzyme");
+                        SetTideParam(paramsFileText, @"custom-enzyme", @"[DEKR]|[P]");
+                        break;
+                    default:
+                        // Handle user defined digestion rule.
+                        // Tide does not allow digestion from both terminal.
+                        // It must be either C-terminal xor N-terminal, but not both.
+                        SetTideParam(paramsFileText, @"enzyme", @"custom-enzyme");
+                        string cleavageRule = string.Empty;
+                        if (_enzyme.CleavageC != null)
+                            cleavageRule += $@"[{_enzyme.CleavageC}]";
+                        if (_enzyme.RestrictC != null)
+                            cleavageRule += $@"{{{_enzyme.RestrictC}}}";
+                        cleavageRule += @"|";
+                        if (_enzyme.CleavageN != null)
+                            cleavageRule += $@"[{_enzyme.CleavageN}]";
+                        if (_enzyme.RestrictN != null)
+                            cleavageRule += $@"{{{_enzyme.RestrictN}}}";
+                        SetTideParam(paramsFileText, @"custom-enzyme", $@"{cleavageRule}");
+                        break;
+                }
 
                 string defaultOutputDirectory = Path.GetDirectoryName(SpectrumFileNames[0].GetFilePath()) ?? Path.Combine(Environment.CurrentDirectory, "crux-output");
 
@@ -410,9 +404,9 @@ namespace pwiz.Skyline.Model.DdaSearch
 
                 // Tide search produces one output file, even when multiple imput spectrum files were specified.. 
 
-                string fileroot = AdditionalSettings["fileroot"].ValueToString(CultureInfo.InvariantCulture);
+                string fileroot = AdditionalSettings[@"fileroot"].ValueToString(CultureInfo.InvariantCulture);
 
-                string tideOutputFile = Path.Combine(cruxOutputDir, (fileroot.IsNullOrEmpty() ? "" : ".") + "tide-search");
+                string tideOutputFile = Path.Combine(cruxOutputDir, (fileroot.IsNullOrEmpty() ? "" : @".") + "tide-search");
 
                 string TidePepXmlFilepath = tideOutputFile + @".pep.xml" ;
                 string cruxInputFilepath = tideOutputFile + @".pin";
@@ -431,7 +425,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 GetPercolatorScores(percolatorDecoyPsmsTsv, qvalueByPsmId);
 
                 // We have only one percolator output file
-                _finalOutputFilepath = Path.Combine(cruxOutputDir, (fileroot.IsNullOrEmpty() ? "" : ".") + @"percolator.pep.xml");
+                _finalOutputFilepath = Path.Combine(cruxOutputDir, (fileroot.IsNullOrEmpty() ? "" : @".") + @"percolator.pep.xml");
                 FixPercolatorPepXml(TidePepXmlFilepath, _finalOutputFilepath, qvalueByPsmId);
 
                 DeleteIntermediateFiles();
@@ -471,62 +465,6 @@ namespace pwiz.Skyline.Model.DdaSearch
             config.AppendLine(Convert.ToString(value, CultureInfo.InvariantCulture));
         }
 
-        private class CruxModification
-        {
-            public CruxModification(StaticMod mod, double mz, string residues)
-            {
-                Mod = mod;
-                Mz = mz;
-                Residues = residues;
-            }
-
-            public StaticMod Mod { get; }
-            public double Mz { get; }
-            public string Residues { get; }
-
-            public int GetCruxTerminusOrdinal()
-            {
-                switch (Mod.Terminus)
-                {
-                    case ModTerminus.C: return 3;
-                    case ModTerminus.N: return 2;
-                    case null: return 0;
-                    default: throw new ArgumentOutOfRangeException();
-                }
-            }
-
-            public string GetCruxResidues()
-            {
-                switch (Mod.Terminus)
-                {
-                    case ModTerminus.C: return @"null";
-                    case ModTerminus.N: return @"null";
-                    case null: return Residues;
-                    default: throw new ArgumentOutOfRangeException();
-                }
-            }
-        }
-/*   I do not understand why do we need this for Percolator --- AKF
-        private string GetCruxParamsText()
-        {
-            var cruxParamsFileText = new StringBuilder();
-            foreach (var line in _modParams.Split(new[] { Environment.NewLine }, StringSplitOptions.None))
-            {
-                cruxParamsFileText.AppendLine(line);
-            }
-
-
-            int iMod = 0;
-            foreach (var m in _variableMods)
-            {
-                ++iMod;
-                cruxParamsFileText.AppendLine(string.Format(@"kfa--variable_mod{0:D2} = {1} {2} {3} {4} -1 {5} 0", iMod,
-                    m.Mz, m.GetCruxResidues(), iMod, _maxVariableMods, m.GetCruxTerminusOrdinal()));
-            }
-
-            return cruxParamsFileText.ToString();
-        }
-*/
         private void GetPercolatorScores(string percolatorTsvFilepath, Dictionary<string, double> qvalueByPsmId)
         {
             var percolatorTargetPsmsReader = new DsvFileReader(percolatorTsvFilepath, TextUtil.SEPARATOR_TSV);
@@ -539,7 +477,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 string filename = Path.GetFileNameWithoutExtension(percolatorTargetPsmsReader.GetFieldByIndex(filenameColumn));
                 string[] psmIDs = percolatorTargetPsmsReader.GetFieldByIndex(psmIdColumn).Split('_');
                 //                basename       Scan ID              scanID            Charge            Rank
-                string psmKey = filename + "." + psmIDs[2] + "." + psmIDs[2] + "." + psmIDs[3] + "." + psmIDs[4];
+                string psmKey = string.Join(@".", filename, psmIDs[2], psmIDs[2], psmIDs[3], psmIDs[4]);
                 var qvalue = Convert.ToDouble(percolatorTargetPsmsReader.GetFieldByIndex(qvalueColumn), CultureInfo.InvariantCulture);
                 qvalueByPsmId[psmKey] = qvalue;
             }
@@ -564,7 +502,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                         string[] psmIdParts = lastPsmId.Split('.');
                         int.TryParse(psmIdParts[1], out int num);
                         string numStr = num.ToString();
-                        lastPsmId = psmIdParts[0] + "." + numStr + "." + numStr + "." + psmIdParts[3];
+                        lastPsmId = string.Join(@".", psmIdParts[0], numStr, numStr, psmIdParts[3]);
                     }
                     else if (line.Contains(@"<search_hit"))
                     {
@@ -629,7 +567,6 @@ namespace pwiz.Skyline.Model.DdaSearch
         public override void SetModifications(IEnumerable<StaticMod> fixedAndVariableModifs, int maxVariableMods_)
         {
             _maxVariableMods = maxVariableMods_;
-            _variableMods = new List<CruxModification>();
 
             // maximum of 16 variable mods - amino acid codes, * for any amino acid, [ and ] specifies protein termini, n and c specifies peptide termini
             // TODO: alert when there are more than 16 variable mods
@@ -646,7 +583,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             {
                 tideAAs = "";
                 if (mod.AAs != null)
-                     tideAAs = mod.AAs.Replace(" ", "").Replace(",", "");
+                    tideAAs = mod.AAs.Replace(@" ", "").Replace(@",", "");
 
                 // can't use mod with no formula or mass; CONSIDER throwing exception
                 if (mod.LabelAtoms == LabelAtoms.None && ParsedMolecule.IsNullOrEmpty(mod.ParsedMolecule) && mod.MonoisotopicMass == null ||
@@ -679,10 +616,10 @@ namespace pwiz.Skyline.Model.DdaSearch
                             ModTerminus.C => 3,
                             _ => throw new ArgumentException(nameof(mod.Terminus))
                         };
-                        string massSign = mass > 0 ? "+" : "";
+                        string massSign = mass > 0 ? @"+" : @"";
                         string res = residues;
-                        if (residues == "n^" || residues == "c^")
-                            res = "X";
+                        if (residues == @"n^" || residues == @"c^")
+                            res = @"X";
                         switch (position)
                         {
                             case "n":
@@ -695,8 +632,6 @@ namespace pwiz.Skyline.Model.DdaSearch
                                 modParamLines.Add($@"{maxVariableMods_}{res}{massSign}{mass.ToString(CultureInfo.InvariantCulture)}");
                                 break;
                         }
-
-                        _variableMods.Add(new CruxModification(mod, mass, residues));
                     }
                     else
                     {
@@ -711,8 +646,8 @@ namespace pwiz.Skyline.Model.DdaSearch
                             }
                         else  //Terminal static mods
                         {
-                            string massSign = mass > 0 ? "+" : "";
-                            string res = "X";
+                            string massSign = mass > 0 ? @"+" : @"";
+                            string res = @"X";
                             switch (position)
                             {
                                 case "n":
@@ -768,22 +703,21 @@ namespace pwiz.Skyline.Model.DdaSearch
             foreach (var kvp in staticModsByAA)
                 if (AminoAcidFormulas.FullNames.TryGetValue(kvp.Key, out var fullName))
                 {
-                    string massSign = kvp.Value > 0 ? "+" : "";
+                    string massSign = kvp.Value > 0 ? @"+" : @"";
                     modParamLines.Add($@"{kvp.Key}{massSign}{kvp.Value.ToString(CultureInfo.InvariantCulture)}");
                 }
 
             modParamLines.Sort();
             nTermModParamLines.Sort();
             cTermModParamLines.Sort();
-            _modParams = string.Join(",", modParamLines);
-            _nTermModParams = string.Join(",", nTermModParamLines);
-            _cTermModParams = string.Join(",", cTermModParamLines);
+            _modParams = string.Join(@",", modParamLines);
+            _nTermModParams = string.Join(@",", nTermModParamLines);
+            _cTermModParams = string.Join(@",", cTermModParamLines);
         }
 
         public override void SetEnzyme(Enzyme enz, int mmc)
         {
             _enzyme = enz;
-            _ntt = enz.IsSemiCleaving ? 1 : 2;
             _maxMissedCleavages = mmc;
         }
 
@@ -794,7 +728,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         public override void SetFragmentIons(string ions)
         {
-            _fragmentIons = new SortedSet<string>(ions.Split(','));
+            //_fragmentIons = new SortedSet<string>(ions.Split(','));
         }
 
         public override void SetMs2Analyzer(string ms2Analyzer)
