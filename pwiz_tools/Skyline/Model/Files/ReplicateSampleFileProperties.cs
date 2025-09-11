@@ -81,14 +81,17 @@ namespace pwiz.Skyline.Model.Files
                     var expandableAttr = new Attribute[]
                         { new TypeConverterAttribute(typeof(ExpandableObjectConverter)) };
 
-                    AddProperty(new CustomHandledGlobalizedPropertyDescriptor(
+                    var prop = new CustomHandledGlobalizedPropertyDescriptor(
                         typeof(InstrumentProperties),
                         GetBaseDescriptorByName(nameof(Instruments)).Category + i,
                         Instruments[i],
                         GetBaseDescriptorByName(nameof(Instruments)).Category,
                         GetResourceManager(),
-                        attributes: expandableAttr,
-                        nonLocalizedDisplayName: Instruments[i].Model));
+                        attributes: expandableAttr);
+
+                    prop.SetNonLocalizedDisplayName(Instruments[i].Model);
+
+                    AddProperty(prop);
                 }
             }
         }

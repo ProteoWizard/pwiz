@@ -136,14 +136,17 @@ namespace pwiz.Skyline.Model.Files
                     var expandableAttr = new Attribute[] 
                         { new TypeConverterAttribute(typeof(ExpandableObjectConverter)) };
 
-                    AddProperty(new CustomHandledGlobalizedPropertyDescriptor(
+                    var prop = new CustomHandledGlobalizedPropertyDescriptor(
                         typeof(InstrumentProperties), 
                         GetBaseDescriptorByName(nameof(Instruments)).Category + i, 
                         Instruments[i], 
                         GetBaseDescriptorByName(nameof(Instruments)).Category,
                         GetResourceManager(), 
-                        attributes: expandableAttr, 
-                        nonLocalizedDisplayName: Instruments[i].Model));
+                        attributes: expandableAttr);
+
+                    prop.SetNonLocalizedDisplayName(Instruments[i].Model);
+
+                    AddProperty(prop);
                 }
             }
 
@@ -157,15 +160,18 @@ namespace pwiz.Skyline.Model.Files
                     dropDownOptions.Insert(0, null); // Allow blank entry
                 }
 
-                AddProperty(new CustomHandledGlobalizedPropertyDescriptor(
+                var prop = new CustomHandledGlobalizedPropertyDescriptor(
                     annotation.AnnotationDef.ValueType,
                     annotation.Name,
                     annotation.GetAnnotation(),
                     GetBaseDescriptorByName(nameof(Annotations)).Category,
-                    GetResourceManager(),
-                    nonLocalizedDisplayName: annotation.Name,
-                    getModifiedDocument: _editAnnotationFuncDictionary[annotation],
-                    dropDownOptions: dropDownOptions));
+                    GetResourceManager());
+
+                prop.SetNonLocalizedDisplayName(annotation.Name);
+                prop.SetDocumentModifierFunc(_editAnnotationFuncDictionary[annotation]);
+                prop.SetDropDownOptions(dropDownOptions);
+
+                AddProperty(prop);
             }
         }
 

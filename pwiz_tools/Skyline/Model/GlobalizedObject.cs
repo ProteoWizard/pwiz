@@ -396,22 +396,18 @@ namespace pwiz.Skyline.Model
 
         private readonly ResourceManager _resourceManager;
 
-        private readonly Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument> _getModifiedDocument;
-
         private object _value;
         private readonly string _category;
         private readonly string _name;
         private readonly Type _type;
-        private readonly string _nonLocalizedDisplayName;
-        private readonly Func<string, string> _displayNameFormat;
-        private readonly List<string> _dropDownOptions; // set only if we want a drop-down list of options, and _type is string
+
+        private Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument> _getModifiedDocument;
+        private string _nonLocalizedDisplayName;
+        private List<string> _dropDownOptions; // set only if we want a drop-down list of options, and _type is string
 
         public CustomHandledGlobalizedPropertyDescriptor(
-            Type type, string name, object value, string category,
-            ResourceManager resourceManager, Attribute[] attributes = null,
-            string nonLocalizedDisplayName = null, Func<string, string> displayNameFormat = null,
-            Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument> getModifiedDocument = null,
-            List<string> dropDownOptions = null)
+            Type type, string name, object value, string category, ResourceManager resourceManager,
+            Attribute[] attributes = null)
             : base(name, attributes)
         {
             _resourceManager = resourceManager;
@@ -419,11 +415,26 @@ namespace pwiz.Skyline.Model
             _category = category;
             _name = name;
             _type = type;
-            _nonLocalizedDisplayName = nonLocalizedDisplayName;
-            _displayNameFormat = displayNameFormat;
+        }
+
+        #region Factory Methods
+
+        public void SetDocumentModifierFunc(Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument> getModifiedDocument)
+        {
             _getModifiedDocument = getModifiedDocument;
+        }
+
+        public void SetNonLocalizedDisplayName(string name)
+        {
+            _nonLocalizedDisplayName = name;
+        }
+
+        public void SetDropDownOptions(List<string> dropDownOptions)
+        {
             _dropDownOptions = dropDownOptions;
         }
+
+        #endregion
 
         public ModifiedDocument GetModifiedDocument(SrmDocument document, SrmSettingsChangeMonitor monitor, object newValue)
         {
@@ -441,9 +452,6 @@ namespace pwiz.Skyline.Model
             get
             {
                 var displayName = _resourceManager.GetString(_name);
-
-                if (_displayNameFormat != null && displayName != null)
-                    displayName = _displayNameFormat(displayName);
 
                 return displayName ?? _nonLocalizedDisplayName ?? string.Empty;
             }
