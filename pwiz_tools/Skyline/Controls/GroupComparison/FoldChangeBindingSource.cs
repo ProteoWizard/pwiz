@@ -308,7 +308,10 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 {
                     return false;
                 }
-
+                if (!_bindingListSource.IsComplete)
+                {
+                    return false;
+                }
                 return _skylineDataSchema.IsDocumentUpToDate();
             }
         }

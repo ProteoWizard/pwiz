@@ -297,8 +297,9 @@ namespace pwiz.Skyline.FileUI
             this.lookInImageListSmall.Images.SetKeyName(6, "OpticalDrive.png");
             this.lookInImageListSmall.Images.SetKeyName(7, "NetworkDrive.png");
             this.lookInImageListSmall.Images.SetKeyName(8, "Folder.png");
-            this.lookInImageListSmall.Images.SetKeyName(9, "MassSpecFile.png");
-            this.lookInImageListSmall.Images.SetKeyName(10, "UnknownFile.png");
+            this.lookInImageListSmall.Images.SetKeyName(9, "FolderSampleSet.png");
+            this.lookInImageListSmall.Images.SetKeyName(10, "MassSpecFile.png");
+            this.lookInImageListSmall.Images.SetKeyName(11, "UnknownFile.png");
             // 
             // BaseFileDialogNE
             // 
