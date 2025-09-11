@@ -339,8 +339,7 @@ namespace pwiz.SkylineTestFunctional
 
             TestSpectralLibraries();
 
-            //TODO: Make this pass.
-            //TestMonitoringFileSystem();
+            TestMonitoringFileSystem();
 
             TestDragAndDrop();
 

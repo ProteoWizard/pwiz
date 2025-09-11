@@ -39,6 +39,7 @@ namespace pwiz.Skyline.Model.Files
             FilePath = filePath;
         }
 
+        public override bool IsBackedByFile => true;
         public override string Name { get; }
         public override string FilePath { get; }
         public override string FileName { get; }
