@@ -205,6 +205,15 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Fragmentation technique (e.g. CID, HCD, ETD).
+        /// </summary>
+        internal static string Description_DissociationMethod {
+            get {
+                return ResourceManager.GetString("Description_DissociationMethod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Measure of similarity between this spectrum and its library match..
         /// </summary>
         internal static string Description_dotp {
@@ -444,6 +453,15 @@ namespace pwiz.Skyline.Model {
         internal static string Detector {
             get {
                 return ResourceManager.GetString("Detector", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Dissociation Method.
+        /// </summary>
+        internal static string DissociationMethod {
+            get {
+                return ResourceManager.GetString("DissociationMethod", resourceCulture);
             }
         }
         
