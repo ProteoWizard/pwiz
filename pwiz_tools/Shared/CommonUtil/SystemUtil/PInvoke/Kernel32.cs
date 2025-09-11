@@ -14,9 +14,14 @@
  * limitations under the License.
  */
 
+using pwiz.Common.Properties;
 using System;
+using System.ComponentModel;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
+using JetBrains.Annotations;
 
 namespace pwiz.Common.SystemUtil.PInvoke
 {
@@ -27,6 +32,35 @@ namespace pwiz.Common.SystemUtil.PInvoke
             const int parentProcessId = -1;
 
             AttachConsole(parentProcessId);
+        }
+
+        /// <summary>
+        /// Copies a file while providing progress updates to a callback
+        /// </summary>
+        /// <exception cref="IOException">For all errors including cancelled.</exception>
+        public static void CopyFileWithProgress(string source, string destination, bool overwrite,
+            CancellationToken cancellationToken, [InstantHandle] Action<int> onProgress)
+        {
+            var progressRoutine = new CopyProgressRoutine(
+                (totalFileSize, totalBytesTransferred, streamSize, streamBytesTransferred, dwStreamNumber,
+                    dwCallbackReason, hSourceFile, hDestinationFile, lpData) =>
+                {
+                    int progressValue = (int) (totalBytesTransferred * 100 / totalFileSize);
+                    onProgress(progressValue);
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        return CopyProgressResult.PROGRESS_CANCEL;
+                    }
+                    return CopyProgressResult.PROGRESS_CONTINUE;
+                });
+            var dwCopyFlags = overwrite ? 0 : CopyFileFlags.COPY_FILE_FAIL_IF_EXISTS;
+            bool cancelled = false;
+            if (!CopyFileEx(source, destination, progressRoutine, IntPtr.Zero, ref cancelled, dwCopyFlags))
+            {
+                int errorCode = Marshal.GetLastWin32Error();
+                var message = Resources.Kernel32_CopyFileWithProgress_Failed_to_copy___0___to___1__;
+                throw new IOException(message, new Win32Exception(errorCode));
+            }
         }
 
         [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
@@ -46,5 +80,39 @@ namespace pwiz.Common.SystemUtil.PInvoke
 
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern bool AttachConsole(int dwProcessId);
+
+        #region CopyFileEx
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern bool CopyFileEx(string lpExistingFileName, string lpNewFileName,
+            CopyProgressRoutine lpProgressRoutine, IntPtr lpData,
+            ref bool pbCancel, CopyFileFlags dwCopyFlags);
+        private delegate CopyProgressResult CopyProgressRoutine(
+            long totalFileSize, long totalBytesTransferred,
+            long streamSize, long streamBytesTransferred,
+            uint dwStreamNumber, CopyProgressCallbackReason dwCallbackReason,
+            IntPtr hSourceFile, IntPtr hDestinationFile, IntPtr lpData);
+        private enum CopyProgressCallbackReason : uint
+        {
+            CALLBACK_CHUNK_FINISHED = 0x00000000,
+            CALLBACK_STREAM_SWITCH = 0x00000001
+        }
+        [Flags]
+        private enum CopyFileFlags : uint
+        {
+            COPY_FILE_FAIL_IF_EXISTS = 0x00000001,
+            COPY_FILE_RESTARTABLE = 0x00000002,
+            COPY_FILE_OPEN_SOURCE_FOR_WRITE = 0x00000004,
+            COPY_FILE_ALLOW_DECRYPTED_DESTINATION = 0x00000008,
+            COPY_FILE_COPY_SYMLINK = 0x00000800, //NT 6.0+
+            COPY_FILE_NO_BUFFERING = 0x00001000 //NT 6.0+
+        }
+        private enum CopyProgressResult : uint
+        {
+            PROGRESS_CONTINUE = 0,
+            PROGRESS_CANCEL = 1,
+            PROGRESS_STOP = 2,
+            PROGRESS_QUIET = 3
+        }
+        #endregion
     }
 }
