@@ -29,6 +29,7 @@ using pwiz.Skyline.Util.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -41,6 +42,7 @@ using Enzyme = pwiz.Skyline.Model.DocSettings.Enzyme;
 
 namespace pwiz.Skyline.Model.DdaSearch
 {
+    [SuppressMessage("ReSharper", "LocalizableElement")]
     public class TideSearchEngine : AbstractDdaSearchEngine, IProgressMonitor
     {
         private List<string> TIDE_SETTINGS = new List<string>();
@@ -164,10 +166,13 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         private MzTolerance _precursorMzTolerance;
         private MzTolerance _fragmentMzTolerance;
+        // TODO (code inspection): Field '_fragmentIons' is assigned but its value is never used
         private SortedSet<string> _fragmentIons;
         private Enzyme _enzyme;
+        // TODO (code inspection): Field '_ntt' is assigned but its value is never used
         private int _ntt, _maxMissedCleavages;
         private int _maxVariableMods = 2;
+        // TODO (code inspection): Content of collection '_variableMods' is only updated but never used
         private List<CruxModification> _variableMods;
         private string _modParams;
         private string _nTermModParams;
@@ -254,12 +259,12 @@ namespace pwiz.Skyline.Model.DdaSearch
 
                 foreach (var settingName in TIDE_SETTINGS)
                 {
-                    //if (settingName == "digestion")  : TDOD non-specific digestions can be handled somwehere here, in the future
+                    //if (settingName == "digestion")  : TODO non-specific digestions can be handled somewhere here, in the future
                     //    continue;
                     SetTideParam(paramsFileText, settingName, AdditionalSettings[settingName].ValueToString(CultureInfo.InvariantCulture));
                 }
 
-                if (_enzyme.IsSemiCleaving == true)
+                if (_enzyme.IsSemiCleaving)
                 {
                     SetTideParam(paramsFileText, @"digestion", "partial-digest");
                 }
