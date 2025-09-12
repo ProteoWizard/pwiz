@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
@@ -600,6 +601,19 @@ namespace pwiz.SkylineTestFunctional
                 Resources.LibraryGridViewDriver_AddToLibrary_This_can_improve_retention_time_alignment_under_stable_chromatographic_conditions_), recalibrateMessage.Message));
             var emptyProteinsDlg = ShowDialog<AssociateProteinsDlg>(recalibrateMessage.OkDialog);
             WaitForConditionUI(() => emptyProteinsDlg.DocumentFinalCalculated);
+
+            var requiredFiles = SearchSettingsControl.GetSearchEngineRequiredFiles(TestSettings.SearchEngine);
+            foreach(var requiredFile in requiredFiles)
+                Assert.IsTrue(Settings.Default.SearchToolList.ContainsKey(requiredFile.ToolType));
+            
+            if (TestSettings.SearchEngine == SearchSettingsControl.SearchEngine.MSFragger)
+                StringAssert.Matches(Settings.Default.SearchToolList[SearchToolType.Java].ExtraCommandlineArgs, new Regex(@"-Xmx\d+M"));
+            
+            if (TestSettings.SearchEngine == SearchSettingsControl.SearchEngine.Comet)
+            {
+                Assert.IsTrue(Settings.Default.SearchToolList.ContainsKey(SearchToolType.CruxComet));
+                Assert.IsTrue(Settings.Default.SearchToolList.ContainsKey(SearchToolType.CruxPercolator));
+            }
 
             RunUI(()=>
             {
