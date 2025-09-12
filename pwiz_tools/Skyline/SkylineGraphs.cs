@@ -5698,10 +5698,12 @@ namespace pwiz.Skyline
             var listGraphs = GetArrangeableGraphs();
             if (listGraphs.Count < 2)
                 return;
+            var resultsIndex = SelectedResultsIndex;
             using (new DockPanelLayoutLock(dockPanel, true))
             {
                 ArrangeGraphsGrouped(listGraphs, listGraphs.Count, GroupGraphsType.separated, displayGraphsType);
             }
+            SelectedResultsIndex = resultsIndex;
         }
 
         public void ArrangeGraphsTabbed()
@@ -5709,10 +5711,12 @@ namespace pwiz.Skyline
             var listGraphs = GetArrangeableGraphs();
             if (listGraphs.Count < 2)
                 return;
+            var resultsIndex = SelectedResultsIndex;
             using (new DockPanelLayoutLock(dockPanel, true))
             {
                 ArrangeGraphsTabbed(listGraphs);
             }
+            SelectedResultsIndex = resultsIndex;
         }
 
         public void ArrangeGraphsGrouped()
@@ -5730,10 +5734,12 @@ namespace pwiz.Skyline
                     if (listGraphs.Count < 2)
                         return;
 
+                    var resultsIndex = SelectedResultsIndex;
                     using (new DockPanelLayoutLock(dockPanel, true))
                     {
                         ArrangeGraphsGrouped(listGraphs, dlg.Groups, dlg.GroupType, dlg.DisplayType);
                     }
+                    SelectedResultsIndex = resultsIndex;
                 }
             }
         }
