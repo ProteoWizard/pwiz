@@ -107,6 +107,7 @@ namespace SkylineTester
                     {
                         "SkylineNightlyShim.exe",
                         "SkylineNightly.exe",
+                        "SkylineNightly.exe.config",
                         "SkylineNightly.pdb",
                         "Microsoft.Win32.TaskScheduler.dll",
                         "DotNetZip.dll"
@@ -124,7 +125,9 @@ namespace SkylineTester
                     var files = new List<string>
                     {
                         "BlibBuild.exe",
+                        "BlibBuild.exe.config",
                         "BlibFilter.exe",
+                        "BlibFilter.exe.config",
                         "MassLynxRaw.dll",
                         "timsdata.dll",
                         "baf2sql_c.dll",
@@ -323,3 +326,4 @@ namespace SkylineTester
         }
     }
 }
+

@@ -1871,7 +1871,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public const int MIN_MEASUREABLE_MZ = 10;
         public const int MIN_MZ_RANGE = 100;
         public const int MAX_MEASURABLE_MZ = 10000;
-        public const double MIN_MZ_MATCH_TOLERANCE = 0.0001;
+        public const double MIN_MZ_MATCH_TOLERANCE = 0.00005;
         public const double MAX_MZ_MATCH_TOLERANCE = 0.6;
         public const double DEFAULT_MZ_MATCH_TOLERANCE = 0.055;
         public const int MIN_TRANSITION_MAX_ORIGINAL = 50;
