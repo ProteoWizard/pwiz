@@ -20,15 +20,20 @@
 using JetBrains.Profiler.Api;
 
 // ReSharper disable LocalizableElement
+
+using System;
+using System.IO;    
+
 namespace TestRunner
 {
     /// <summary>
-    /// MemoryProfiler creates memory snapshots if the JetBrains DotMemory is running.
+    /// Support for memory snapshots if the JetBrains DotMemory is running (good for managed memory),
+    /// and creating dumpfiles for inspection with WinDbg (good for unmanaged memory).
     /// </summary>
     public static class MemoryProfiler
     {
         /// <summary>
-        /// Take a memory snapshot.
+        /// Take a memory snapshot for dotMemory.
         /// </summary>
         public static void Snapshot(string name)
         {
@@ -41,5 +46,42 @@ namespace TestRunner
             }
             // Consider: support other types of profilers.
         }
+
+        // Capture a memory dump to a specified file for WinDbg
+        public static void CaptureMemoryDump(string dumpName, string dumpDir)
+        {
+            try
+            {
+                var fullDir = Path.GetFullPath(dumpDir);
+                if (!Directory.Exists(fullDir))
+                {
+                    Directory.CreateDirectory(fullDir);
+                }
+                dumpDir = fullDir;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Could not create dmpdir \"{dumpDir}\"\n{e}");
+            }
+            try
+            {
+                var dumpFile =  Path.GetFullPath(Path.Combine(dumpDir,$"{dumpName}.dmp"));
+
+                var result = TestRunnerLib.MiniDump.WriteMiniDump(dumpFile);
+                if (!result)
+                {
+                    Console.WriteLine($"Failed to capture memory dump to {dumpFile}");
+                }
+                else
+                {
+                    Console.WriteLine($"Memory dump captured: {dumpFile}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error capturing memory dump: {ex.Message}");
+            }
+        }
+
     }
 }
