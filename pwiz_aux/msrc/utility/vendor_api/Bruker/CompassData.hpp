@@ -231,7 +231,8 @@ struct PWIZ_API_DECL MSSpectrum
     virtual boost::optional<int> getMaldiChip() const { return boost::optional<int>(); }
     virtual boost::optional<std::string> getMaldiSpotName() const { return boost::optional<std::string>(); }
 
-    virtual void getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities, bool sortAndJitter) const { }
+    virtual void getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities,
+                                         bool includeIsolationArrays, pwiz::util::BinaryData<double>& isolationWindowStart, pwiz::util::BinaryData<double>& isolationWindowEnd, bool sortAndJitter) const { }
     virtual size_t getCombinedSpectrumDataSize() const { return 0; }
     virtual pwiz::util::IntegerSet getMergedScanNumbers() const { return pwiz::util::IntegerSet(); }
 
@@ -291,6 +292,8 @@ struct PWIZ_API_DECL CompassData
                       msdata::detail::Bruker::Reader_Bruker_Format format = msdata::detail::Bruker::Reader_Bruker_Format_Unknown, 
                       int preferOnlyMsLevel = 0, // when nonzero, caller only wants spectra at this ms level
                       bool allowMsMsWithoutPrecursor = true, // when false, PASEF MS2 specta without precursor info will be excluded
+                      bool passEntireDiaPasefFrame = false, // When true, pass DIA-PASEF frames in a single array
+                      bool includeIsolationArrays = true, // When true, include isolation arrays for diagonal PASEF in combined node
                       const std::vector<chemistry::MzMobilityWindow>& isolationMzFilter = std::vector<chemistry::MzMobilityWindow>()); // when non-empty, only scans from precursors matching one of the included m/zs (i.e. within a precursor isolation window) will be enumerated
 
     virtual ~CompassData() {}
@@ -303,6 +306,13 @@ struct PWIZ_API_DECL CompassData
 
     /// returns true if the source is TIMS PASEF data
     virtual bool hasPASEFData() const { return false; }
+
+    /// returns true if the source is TIMS diaPASEF data returned in a single array set e.g. Diagonal PASEF (combined spectra will have isolation m/z arrays)
+    virtual bool isPassEntireDiaPasefFrame() const { return false; };
+
+    // Diagonal PASEF data has isolation m/z that varies with scan number within a frame
+    virtual double getIsolationMzRangeLowByWindowGroup(int windowGroup) const { return 0; }
+    virtual double getIsolationMzRangeHighByWindowGroup(int windowGroup) const { return 0; }
 
     virtual bool canConvertOneOverK0AndCCS() const { return false; }
     virtual double oneOverK0ToCCS(double oneOverK0, double mz, int charge) const { return 0; }
@@ -348,6 +358,7 @@ struct PWIZ_API_DECL CompassData
     virtual int getInstrumentRevision() const = 0;
     virtual std::string getInstrumentDescription() const = 0;
     virtual std::string getInstrumentSerialNumber() const = 0;
+    virtual std::string getDiaFrameMsMsWindowsTable() const = 0;
     virtual InstrumentSource getInstrumentSource() const = 0;
     virtual std::string getAcquisitionSoftware() const = 0;
     virtual std::string getAcquisitionSoftwareVersion() const = 0;

@@ -510,6 +510,9 @@ public ref class SpectrumList_IonMobility : public msdata::SpectrumList
     virtual bool isWatersSonarData();
     virtual void sonarMzToBinRange(double precursorMz, double tolerance, int% binRangeLow, int% binRangeHigh);
     virtual void sonarBinToPrecursorMz(int bin, double% result);
+
+    /// applicable only to Bruker diaPASEF files
+    //virtual bool isPassEntireDiaPasefFrame();
 };
 
 /// <summary>
