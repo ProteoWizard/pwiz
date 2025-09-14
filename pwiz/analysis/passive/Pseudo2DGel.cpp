@@ -254,7 +254,7 @@ class Pseudo2DGel::Impl
 
     // color map
     void instantiateColorMap();
-    auto_ptr<ColorMap> colorMap_;
+    unique_ptr<ColorMap> colorMap_;
     shared_ptr<ColorMap> circleColorMap_;
     Image::Color color(float intensity) const;
     Image::Color circleColor(float intensity) const;
@@ -263,7 +263,7 @@ class Pseudo2DGel::Impl
     size_t countUniquePeptides(const ScanList& scans);
     Image::Color chooseMarkupColor(size_t ms2Index);
     void writeImages(const DataInfo& dataInfo);
-    auto_ptr<IntensityFunction> createIntensityFunction(const ScanList& scans);
+    unique_ptr<IntensityFunction> createIntensityFunction(const ScanList& scans);
     void writeImage(const DataInfo& dataInfo, const string& label, ScanInfo& scans);
 
     void drawScans(Image& image, const ScanInfo& scansInfo,
@@ -918,11 +918,11 @@ public:
 void Pseudo2DGel::Impl::instantiateColorMap()
 {
     if (config_.bry)
-        colorMap_ = auto_ptr<ColorMap>(new ColorMapBRY);
+        colorMap_ = unique_ptr<ColorMap>(new ColorMapBRY);
     else if (config_.grey)
-        colorMap_ = auto_ptr<ColorMap>(new ColorMapGrey);
+        colorMap_ = unique_ptr<ColorMap>(new ColorMapGrey);
     else
-        colorMap_ = auto_ptr<ColorMap>(new ColorMapTouchTable);
+        colorMap_ = unique_ptr<ColorMap>(new ColorMapTouchTable);
 
     circleColorMap_ = shared_ptr<ColorMap>(new ColorMapRB);
 }
@@ -1024,7 +1024,7 @@ void Pseudo2DGel::Impl::writeImages(const DataInfo& dataInfo)
 }
 
 
-auto_ptr<IntensityFunction> 
+unique_ptr<IntensityFunction> 
 Pseudo2DGel::Impl::createIntensityFunction(const ScanList& scans)
 {
     double count = 0;
@@ -1093,7 +1093,7 @@ Pseudo2DGel::Impl::createIntensityFunction(const ScanList& scans)
     // instantiate intensity function centered at mean_log, 
     // with radius == zRadius * (standard deviation)
     float radius = (float)(config_.zRadius * sqrt(variance_log)); 
-    auto_ptr<IntensityFunction> result(new IntensityFunctionLogStats((float)mean_log, radius)); 
+    unique_ptr<IntensityFunction> result(new IntensityFunctionLogStats((float)mean_log, radius)); 
     if (!result.get()) throw runtime_error("[Pseudo2DGel::Impl::createIntensityFunction()] Memory error.");
     return result;
 }
@@ -1134,7 +1134,7 @@ void Pseudo2DGel::Impl::writeImage(const DataInfo& dataInfo, const string& label
     if (scans.empty())
         return;
 
-    auto_ptr<IntensityFunction> intensityFunction = createIntensityFunction(scans);
+    unique_ptr<IntensityFunction> intensityFunction = createIntensityFunction(scans);
 
     const int titleBarHeight = 3*textHeight_;
     const int x1 = 150;
@@ -1144,7 +1144,7 @@ void Pseudo2DGel::Impl::writeImage(const DataInfo& dataInfo, const string& label
                     y1 + 4*textHeight_ + (int)(config_.timeScale * scanInfo.maxTime - scanInfo.minTime));
 
     // User may optionaly specify actual extents for image, scaling is handled in Image class.
-    auto_ptr<Image> image = Image::create(x2, y2, config_.output_width, config_.output_height);
+    unique_ptr<Image> image = Image::create(x2, y2, config_.output_width, config_.output_height);
 
     drawLegend(*image, *intensityFunction, Image::Point(0, titleBarHeight), Image::Point(x1, y1));
     if (config_.binScan)

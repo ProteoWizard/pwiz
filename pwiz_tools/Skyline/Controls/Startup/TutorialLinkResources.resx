@@ -173,12 +173,36 @@
     <value>https://skyline.ms/wiki/home/software/Skyline/page.view?name=tutorial_prm</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
+  <data name="PRMOrbitrap_zip" xml:space="preserve">
+    <value>https://skyline.ms/tutorials/PRMOrbitrap.zip</value>
+    <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
+  </data>
+  <data name="PRMOrbitrap_pdf" xml:space="preserve">
+    <value>https://skyline.ms/wiki/home/software/Skyline/page.view?name=tutorial_prm_orbi</value>
+    <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
+  </data>
+  <data name="DIA_Umpire_TTOF_zip" xml:space="preserve">
+    <value>https://skyline.ms/tutorials/DIA-TTOF.zip</value>
+    <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
+  </data>
+  <data name="DIA_Umpire_TTOF_pdf" xml:space="preserve">
+    <value>https://skyline.ms/wiki/home/software/Skyline/page.view?name=tutorial_dia_umpire_ttof</value>
+    <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
+  </data>
   <data name="CustomReports_zip" xml:space="preserve">
     <value>https://skyline.ms/tutorials/CustomReports.zip</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="CustomReports_pdf" xml:space="preserve">
     <value>https://skyline.ms/wiki/home/software/Skyline/page.view?name=tutorial_custom_reports</value>
+    <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
+  </data>
+  <data name="LiveReports_zip" xml:space="preserve">
+    <value>https://skyline.ms/tutorials/LiveReports.zip</value>
+    <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
+  </data>
+  <data name="LiveReports_pdf" xml:space="preserve">
+    <value>https://skyline.ms/wiki/home/software/Skyline/page.view?name=tutorial_live_reports</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="PeakPicking_zip" xml:space="preserve">
@@ -219,6 +243,10 @@
   </data>
   <data name="CustomReports_sky" xml:space="preserve">
     <value>Study7_example.sky</value>
+    <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
+  </data>
+  <data name="LiveReports_sky" xml:space="preserve">
+    <value>Rat_plasma.sky</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="PeakPicking_sky" xml:space="preserve">

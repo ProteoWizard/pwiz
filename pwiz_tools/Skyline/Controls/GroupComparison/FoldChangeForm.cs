@@ -145,7 +145,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         {
             get
             {
-                return FoldChangeBindingSource.IsComplete;
+                return true == FoldChangeBindingSource?.IsComplete;
             }
         }
 

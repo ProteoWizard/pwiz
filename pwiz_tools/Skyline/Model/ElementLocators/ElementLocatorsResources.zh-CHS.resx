@@ -128,4 +128,10 @@
   <data name="ElementLocator_UnexpectedException__0__was_unexpected_in___1___at_position__2__" xml:space="preserve">
     <value>在位置 {2}，“{1}”意外出现 {0}。</value>
   </data>
+  <data name="DocumentAnnotations_GetWarningMessage_The_following_element_could_not_be_found_" xml:space="preserve">
+    <value>找不到以下元素：</value>
+  </data>
+  <data name="DocumentAnnotations_GetWarningMessage_The_following__0__elements_could_not_be_found_" xml:space="preserve">
+    <value>无法找到以下{0}元素：</value>
+  </data>
 </root>

@@ -29,6 +29,7 @@ namespace BiblioSpec {
 // classes and functions to use with the DelimitedFileReader
 struct RTINFO
 {
+    // Parsed RT info - overrides anythng you'd look up in scan data
     // All times in minutes
     double retentionTime;
     double startTime;
@@ -39,7 +40,7 @@ class sslPSM : public PSM {
   public:
     std::string filename; 
     PSM_SCORE_TYPE scoreType;
-    RTINFO rtInfo; // RT, startT, endT in minutes
+    RTINFO rtInfo; // Parsed RT info, overrides anything that might be looked up in scans
 
     sslPSM() : PSM(), scoreType(UNKNOWN_SCORE_TYPE)
     {
@@ -61,7 +62,7 @@ class sslPSM : public PSM {
             try{// might be a scan number or a string identifier
                 psm.specKey = boost::lexical_cast<int>(trimLeadingZeros(value));
                 psm.specIndex = -1;
-            } catch (bad_lexical_cast) {
+            } catch (bad_lexical_cast&) {
                 if (bal::istarts_with(value, "index="))
                     psm.specIndex = boost::lexical_cast<int>(value.substr(6));
                 else if (bal::istarts_with(value, "scan="))
@@ -80,7 +81,7 @@ class sslPSM : public PSM {
         } else {
             try{
                 psm.charge =  boost::lexical_cast<int>(trimLeadingZeros(value));
-            } catch (bad_lexical_cast) {
+            } catch (bad_lexical_cast&) {
                 throw BlibException(false, "Non-numeric charge value: %s.",
                                     value.c_str());
             }
@@ -106,7 +107,7 @@ class sslPSM : public PSM {
         } else {
             try {
                 psm.score = boost::lexical_cast<double>(value);
-            } catch (bad_lexical_cast) {
+            } catch (bad_lexical_cast&) {
                 throw BlibException(false, "Non-numeric score: %s",
                                     value.c_str());
             }
@@ -116,7 +117,7 @@ class sslPSM : public PSM {
         if (!value.empty()) {
             try {
                 psm.rtInfo.retentionTime = boost::lexical_cast<double>(value);
-            } catch (bad_lexical_cast) {
+            } catch (bad_lexical_cast&) {
                 throw BlibException(false, "Non-numeric retention time: %s",
                                     value.c_str());
             }
@@ -127,7 +128,7 @@ class sslPSM : public PSM {
             try {
                 psm.rtInfo.startTime = boost::lexical_cast<double>(value);
             }
-            catch (bad_lexical_cast) {
+            catch (bad_lexical_cast&) {
                 throw BlibException(false, "Non-numeric start time: %s",
                     value.c_str());
             }
@@ -138,7 +139,7 @@ class sslPSM : public PSM {
             try {
                 psm.rtInfo.endTime = boost::lexical_cast<double>(value);
             }
-            catch (bad_lexical_cast) {
+            catch (bad_lexical_cast&) {
                 throw BlibException(false, "Non-numeric end time: %s",
                     value.c_str());
             }
@@ -149,7 +150,7 @@ class sslPSM : public PSM {
             try {
                 psm.ionMobility = boost::lexical_cast<double>(value);
             }
-            catch (bad_lexical_cast) {
+            catch (bad_lexical_cast&) {
                 throw BlibException(false, "Non-numeric ion mobility value: %s",
                     value.c_str());
             }
@@ -165,7 +166,7 @@ class sslPSM : public PSM {
             try {
                 psm.ccs = boost::lexical_cast<double>(value);
             }
-            catch (bad_lexical_cast) {
+            catch (bad_lexical_cast&) {
                 throw BlibException(false, "Non-numeric CCS: %s",
                     value.c_str());
             }
@@ -216,7 +217,7 @@ class sslPSM : public PSM {
             try {
                 psm.smallMolMetadata.precursorMzDeclared = boost::lexical_cast<double>(value);
             }
-            catch (bad_lexical_cast) {
+            catch (bad_lexical_cast&) {
                 throw BlibException(false, "Non-numeric precursorMZ: %s",
                     value.c_str());
             }
@@ -252,15 +253,11 @@ class SslReader : public BuildParser, DelimitedFileConsumer<sslPSM>, public Pwiz
     vector<PSM_SCORE_TYPE> getScoreTypes(); // inherited from BuildParser
     virtual void addDataLine(sslPSM& data); // from DelimitedFileConsumer
     virtual void setColumnsAndSeparators(DelimitedFileReader<sslPSM> &fileReader);
-
-    virtual bool getSpectrum(int identifier,
-                             SpecData& returnData,
-                             SPEC_ID_TYPE type,
-                             bool getPeaks);
-
-    virtual bool getSpectrum(string specName,
-                             SpecData& returnData,
-                             bool getPeaks);
+    virtual bool getSpectrum(PSM* psm,
+        SPEC_ID_TYPE findBy,
+        SpecData& returnData,
+        bool getPeaks);
+    virtual void applyPsmOverrideValues(PSM* psm, SpecData& specData); // Apply any values carried by subclassed psm (e.g. SSL RT column values) that override those found by spectrum lookup
 
   protected:
     string sslName_;
@@ -269,12 +266,9 @@ class SslReader : public BuildParser, DelimitedFileConsumer<sslPSM>, public Pwiz
     map<string, vector<PSM*> > fileMap_; // vector of PSMs for each spec file
     map<string, PSM_SCORE_TYPE> fileScoreTypes_; // score type for each file
 
-    map<int, RTINFO> overrideRt_; // forced retention times (key is scan number)
-
     void parseModSeq(vector<SeqMod>& mods, string& modSeq);
     void unmodifySequence(string& seq);
     string parseCrosslinkedSequence(vector<SeqMod>& mods, const string& modSeq);
-    static void setRtInfo(SpecData& returnData, const RTINFO& rtInfo);
   };
 
 } // namespace

@@ -63,7 +63,7 @@ namespace pwiz.Skyline.Model.Lists
             {
                 return new string[0];
             }
-            var csvFileReader = new DsvFileReader(new StringReader(row), CSV_SEPARATOR_CHAR, false);
+            using var csvFileReader = new DsvFileReader(new StringReader(row), CSV_SEPARATOR_CHAR, false);
             return csvFileReader.ReadLine();
         }
 

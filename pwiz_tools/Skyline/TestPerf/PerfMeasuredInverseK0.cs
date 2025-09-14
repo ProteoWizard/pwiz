@@ -24,6 +24,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline;
 using pwiz.Skyline.Controls;
@@ -31,11 +32,9 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.IonMobility;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.IonMobility;
-using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
@@ -146,7 +145,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
             // And read some mz5 converted from Bruker in 2-array IMS format, then compare replicates - should be identical
             var mz5 = TestFilesDir.GetTestPath(bsaFmolTimsInfusionesiPrecMz5Mz5);
-            ImportResultsFile(mz5);
+            ImportResultsFile(mz5, waitForLoadSeconds:4200);
             document = WaitForDocumentChange(document);
             var sb = new StringBuilder();
             int trials = 0;

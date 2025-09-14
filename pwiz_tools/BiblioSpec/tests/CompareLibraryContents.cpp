@@ -139,6 +139,12 @@ void getSelectInfo(vector<const char*>& selectStrings,
     deleteText.push_back(fp);
     swapSlash.push_back(false);
     selectStrings.push_back("select * from RetentionTimes");
+    // limit small (or scientific notation) real numbers to 8 digits after decimal place (allowing 4 digits before decimal)
+    // limit large real numbers to 2 digits after decimal place (allowing 5 or more digits before decimal)
+    fp.find_regex_ = "((?:\\d{5,}\\.\\d{0,2})|(?:\\d{1,4}\\.\\d{0,8}))\\d*";
+    fp.replace_str_ = "$1";
+    deleteText.push_back(fp);
+    fp.clear();
     deleteText.push_back(fp);
     swapSlash.push_back(false);
 }

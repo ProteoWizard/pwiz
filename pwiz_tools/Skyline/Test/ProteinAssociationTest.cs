@@ -78,7 +78,7 @@ ADISMIGQFGVGFYSAYLVAEKVVVITKHNDDEQYAWESSAGGSFTVRADHGEPIGRGTK";
             var fastaProteinSource =
                 new ProteinAssociation.FastaSource(new MemoryStream(Encoding.UTF8.GetBytes(fastaFileText)));
 
-            var proteinAssociation = new ProteinAssociation(document, new LongWaitBrokerImpl());
+            var proteinAssociation = new ProteinAssociation(document, CancellationToken.None);
             proteinAssociation.UseProteinSource(fastaProteinSource, enzyme, new LongWaitBrokerImpl());
             return proteinAssociation.AssociatedProteins.ToDictionary(
                 kvp => kvp.Key.Sequence.Name, kvp => kvp.Value.Peptides.Select(p => p.Peptide.Sequence).ToList());
@@ -124,5 +124,5 @@ ADISMIGQFGVGFYSAYLVAEKVVVITKHNDDEQYAWESSAGGSFTVRADHGEPIGRGTK";
 
             public CancellationToken CancellationToken => CancellationToken.None;
         }
-}
+    }
 }

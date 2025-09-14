@@ -423,12 +423,18 @@ namespace TestRunner
                     Console.WriteLine(e.StackTrace);
                 if (e.InnerException != null)
                 {
-                    Console.WriteLine("Inner exception:");
-                    Console.WriteLine(e.InnerException.Message);
-                    if (string.IsNullOrEmpty(e.InnerException.StackTrace))
-                        Console.WriteLine("No stacktrace");
-                    else
-                        Console.WriteLine(e.InnerException.StackTrace);
+                    var inner = e.InnerException;
+                    int i = 0;
+                    while (inner != null)
+                    {
+                        Console.WriteLine($"Inner exception {++i}:");
+                        Console.WriteLine(inner.Message);
+                        if (string.IsNullOrEmpty(inner.StackTrace))
+                            Console.WriteLine("No stacktrace");
+                        else
+                            Console.WriteLine(inner.StackTrace);
+                        inner = inner.InnerException;
+                    }
                 }
                 else
                 {
@@ -986,7 +992,7 @@ namespace TestRunner
                             for (int i = 0; i < normalWorkerCount; ++i)
                             {
                                 int i2 = i;
-                                Helpers.Try<Exception>(() => LaunchAndWaitForDockerWorker(i2, commandLineArgs, ref workerNames, false, perWorkerBytes, workerPort, workerInfoByName, log, coverageSnapshots), 4, 3000);
+                                TryHelper.Try<Exception>(() => LaunchAndWaitForDockerWorker(i2, commandLineArgs, ref workerNames, false, perWorkerBytes, workerPort, workerInfoByName, log, coverageSnapshots), 4, 3000);
                             }
                         }
                         else
@@ -1138,7 +1144,7 @@ namespace TestRunner
                                     if (testInfo.Pass == 2)
                                         testInfo.IncrementLoopCount();
                                     if (loop == 0)
-                                        testQueue.Enqueue(testInfo);
+                                        (testInfo.TestInfo.DoNotRunInParallel ? nonParallelTestQueue : testQueue).Enqueue(testInfo);
                                 }
                                 finally
                                 {
@@ -1147,7 +1153,7 @@ namespace TestRunner
                                         //if (testInfo.TestMethod.Name == "TestSwathIsolationLists")
                                         //    testRequeue = false;
                                         Console.Error.WriteLine($"No result for test {workerInfo.CurrentTest}; requeuing...");
-                                        testQueue.Enqueue(testInfo);
+                                        (testInfo.TestInfo.DoNotRunInParallel ? nonParallelTestQueue : testQueue).Enqueue(testInfo);
                                     }
                                 }
                             }

@@ -150,11 +150,26 @@
   <data name="TargetedMSMS_Caption" xml:space="preserve">
     <value>Parallel Reaction Monitoring (PRM)</value>
   </data>
+  <data name="PRMOrbitraip_Description" xml:space="preserve">
+    <value>Get hands-on experience setting up an acquisition method to quantify 31 peptides from 19 proteins of interest in murine fibroblasts using Parallel Reaction Monitoring (PRM). Work with three biological replicates measured in 9 runs on a Thermo Fusion mass spectrometer employing the Orbitrap mass analyzer.</value>
+  </data>
+  <data name="PRMOrbitrap_Caption" xml:space="preserve">
+    <value>PRM With and Orbitrap Mass Spec</value>
+  </data>
+  <data name="DIA_Umpire_TTOF_Description" xml:space="preserve">
+    <value>Get hands-on experience running a peptide-spectrum search directly on a data independent acquisition (DIA) dataset, from a SCIEX TripleTOF instrument, using a 3-organism mix data set created for instruction, based on the Navarro, Nature Biotech 2016 benchmarking paper.</value>
+  </data>
+  <data name="DIA_Umpire_TTOF_Caption" xml:space="preserve">
+    <value>Library-Free DIA/SWATH</value>
+  </data>
   <data name="iRT_Caption" xml:space="preserve">
     <value>iRT Retention Time Prediction</value>
   </data>
   <data name="CustomReports_Caption" xml:space="preserve">
-    <value>Custom &amp; Live Reports</value>
+    <value>Custom Reports</value>
+  </data>
+  <data name="LiveReports_Caption" xml:space="preserve">
+    <value>Live Reports</value>
   </data>
   <data name="iRT_Description" xml:space="preserve">
     <value>Get hands-on experience with iRT, a technique for storing calibrated, empirically measured peptide retention times in a library for future use in retention time prediction for scheduled acquisition and peak identity validation. In this tutorial, you will calibrate your own iRT calculator and also learn more about the iRT-C18 calibration proposed by Biognosys for the peptide standards in their iRT-Kit. You will calibrate new iRT values from SRM data, a spectral library and chromatogram peaks filtered from MS1 scans in a discovery experiment. And, you will learn how to recalibrate these iRT values to schedule SRM acquisition on a new column with a new gradient. You will see how more accurate retention time prediction based on iRT can give you higher confidence in your chromatogram peak identity validation.</value>
@@ -182,6 +197,9 @@
   </data>
   <data name="CustomReports_Description" xml:space="preserve">
     <value>Get hands-on experience working with the power of Skyline custom Live Reports to view, edit and export a wide range of values from your Skyline documents. These reports are perfect for use in Excel or with custom code written in R, Matlab, Java, C++ and other languages for doing deep statistical analysis after processing your instrument output with Skyline. Also learn to use the Skyline Results Grid view to gain access to these values and to add custom annotations while inspecting your data in Skyline. Follow this tutorial to greatly increase the scope of experiments you can achieve with Skyline. </value>
+  </data>
+  <data name="LiveReports_Description" xml:space="preserve">
+    <value>Get hands-on experience with Skyline Live Reports, a customizable set of tabular views for exploring and reporting quantitative data. These views update in real time as the Skyline document you are working on changes. They also provide direct access to important values you may want to change. You will learn how to enable audit and view logging, work with built-in and user-defined reports, create annotations and lists, pivot and filter data, and perform group comparisons. The tutorial also demonstrates how to generate visualizations such as bar plots and heat maps, and how to export customized report definitions for sharing and reuse. </value>
   </data>
   <data name="MethodEdit_Caption" xml:space="preserve">
     <value>Targeted Method Editing</value>
@@ -255,8 +273,11 @@
   <data name="Section_Advanced_Topics" xml:space="preserve">
     <value>Advanced Topics</value>
   </data>
+  <data name="Section_Reports_Topics" xml:space="preserve">
+    <value>Reports</value>
+  </data>
   <data name="SmallMoleculeMethodDevCEOpt_Description" xml:space="preserve">
-    <value>Learn how how to create a Skyline document that targets stable isotope labeled molecules from a literature citation, specified as only precursor m/z, product ion m/z, and collision energy values. Perform retention time scheduling and collision energy optimization for molecules by importing a multi-replicate data set from a Waters Xevo TQ-S using initial CE values from a Sciex triple quad. Learn how many existing Skyline features created initially for targeted proteomics use can now be applied to non-proteomic molecule data.</value>
+    <value>Learn how to create a Skyline document that targets stable isotope labeled molecules from a literature citation, specified as only precursor m/z, product ion m/z, and collision energy values. Perform retention time scheduling and collision energy optimization for molecules by importing a multi-replicate data set from a Waters Xevo TQ-S using initial CE values from a Sciex triple quad. Learn how many existing Skyline features created initially for targeted proteomics use can now be applied to non-proteomic molecule data.</value>
   </data>
   <data name="SmallMoleculeQuantification_Description" xml:space="preserve">
     <value>Learn how to create a Skyline document that targets molecules specified as precursor ion chemical formulas and adducts, and product ion m/z values. Import a multi-replicate data set collected using LC-MS/MS on a triple quadulpole, and see how many existing Skyline features created initially for targeted proteomics use can now be applied to non-proteomic molecule data.</value>

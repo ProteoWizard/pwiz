@@ -121,10 +121,10 @@
         <li>Click the <b>Save</b> button.</li>
     </ul>
     <p>
-        Now, initiate the <b>Import Peptide Search</b> wizard as follows:
+        Now, initiate the <b>Run Peptide Search</b> wizard as follows:
     </p>
     <ul>
-        <li>On the <b>File</b> menu, choose <b>Import</b> and click <b>Peptide Search</b>.</li>
+        <li>On the <b>File</b> menu, choose <b>Search</b> and click <b>Run Peptide Search</b>.</li>
     </ul>
     <p class="keep-next">
         Skyline should present a form that looks like this:
@@ -133,15 +133,13 @@
         <img src="s-02.png" />
     </p>
     <p>
-        The <b>Build</b> options works on the output from DDA search engines (e.g. pepXML files from Comet, .dat from Mascot) and the
-        <b>Perform DDA Search</b> option works on the raw data (e.g. RAW, WIFF, *.d, mzML, mzXML). The mz5 files for this tutorial are
+        This form can be used to search for peptides in raw data (e.g. RAW, WIFF, *.d, mzML, mz5, mzXML). The mz5 files for this tutorial are
         centroided to make them faster to download than the original profile Thermo RAW files produced by the mass spectrometer.
     </p>
     <p>
         Add the included DDA mz5 files to the search by doing the following:
     </p>
     <ul>
-        <li>Click the <b>Perform DDA Search</b> radio option.</li>
         <li>Click the <b>Add Files</b> button.</li>
         <li>Select all the mz5 files in the DdaSearchMS1Filtering folder you created for this tutorial.</li>
         <li>Click the <b>Open</b> button.</li>
@@ -170,7 +168,7 @@
         called static) modifications are always applied to the specified amino acids. For example, Carbamidomethyl C is usually treated as a fixed
         modification because all cysteines in the data are expected to be alkylated. Oxidation M is almost always treated as a variable modification
         because oxidation is hit-or-miss depending on sample handling. Skyline’s search always treats isotopic labels as variable, but you can change
-        whether other modifications are treated as fixed or variable by clicking on the <b>Edit modifications</b> button.
+        whether other modifications are treated as fixed or variable by clicking the <b>Edit modifications</b> button.
     </p>
     <p class="keep-next">
         You can also add modifications to the document from this page. Since the document was reset to defaults, the list starts with
@@ -185,7 +183,6 @@
     <ul>
         <li>Click the <b>Edit modifications</b> button.</li>
         <li>Click the <b>Edit heavy modifications</b> menu option.</li>
-        <li>Click the <b>Edit List</b> button beside the <b>Isotope modifications</b> list.</li>
         <li>Click the <b>Add</b> button in the <b>Edit Isotope Modifications</b> form.</li>
         <li>In the <b>Name</b> field of the <b>Edit Isotope Modification</b> form, enter “Label:13C(6)15N(2) (C-term K)”.</li>
         <li>Click the down arrow at the right side of the <b>Name</b> field and click the item with the same name. This will populate the
@@ -235,7 +232,6 @@
     <ul>
         <li>Click the <b>Edit modifications</b> button.</li>
         <li>Click the <b>Edit structural modifications</b> menu option.</li>
-        <li>Click the <b>Edit List</b> button beside the <b>Isotope modifications</b> list.</li>
         <li>Click the <b>Add</b> button in the <b>Edit Structural Modifications</b> form.</li>
         <li>In the <b>Name</b> field of the <b>Edit Structural Modification</b> form, enter “Oxidation (M)”.</li>
         <li>Click the down arrow at the right side of the <b>Name</b> field and click the item with the same name. This will populate the
@@ -305,6 +301,10 @@
     <p>
         <img src="s-11.png" />
     </p>
+    <p>
+        The <b>Max q-value</b> field sets a false discovery rate (FDR) limit allowed for the peptide matches in the search results. In this
+        tutorial, you will use a 1% FDR (maximum q value of 0.01), which is the default and the most common limit used in the field of proteomics.
+    </p>
     <ul>
         <li>Click the <b>Next</b> button to start the search.</li>
     </ul>
@@ -339,14 +339,20 @@
     <p>
         <img src="s-14.png" />
     </p>
+    <p>
+        Skyline can merge proteins that match the same set of peptides into protein groups and find a minimal list of proteins that explain all the
+        peptides. You can read more about protein grouping and parsimonious protein inference in this documentation page: <a
+            href="https://skyline.ms/wiki/home/software/Skyline/page.view?name=Skyline%20Protein%20Association%2022.1">Skyline Protein
+            Association</a>. For this tutorial, leave the checkboxes for creating protein groups and finding a minimal list of proteins unchecked.
+    </p>
     <ul>
-        <li>Check the <b>Remove repeated peptides</b> checkbox (i.e. keep first the occurrence for non-unique peptides).</li>
+        <li>Select <b>Assigned to first protein</b> from the <b>Shared peptides are</b>: dropdown list.</li>
         <li>Click the <b>OK</b> button.</li>
     </ul>
     <h1>Configuring Skyline to View the Imported Data</h1>
     <p>
         After the proteins are imported into the document, you will see the main Skyline window with the UPS proteins at the top of the
-        <b>Targets</b> view. You should see <b>6,025</b> proteins there (counted in the status bar). Skyline will also begin
+        <b>Targets</b> view. You should see <b>5,219</b> proteins there (counted in the status bar). Skyline will also begin
         extracting chromatograms with progress displayed in an <b>Importing Results</b> form. You can wait several minutes for chromatogram
         extraction to complete or you can continue with all but the last step below during the import.
     </p>
@@ -356,9 +362,9 @@
         <li>Click on that peptide’s first precursor 835.9140++ and the chromatogram for that precursor and the MS/MS spectrum for that peptide will
             appear. (Note that the bold, underlined residue “<b><u>C</u></b>” in the peptide sequence indicates a carbamidomethyl cysteine).
         </li>
-        <li>If you do not see the MS/MS spectrum, on the <b>View</b> menu, click <b>Library Match</b>.</li>
+        <li>If you do not see the MS/MS spectrum, on the <b>View</b> menu, choose <b>Libraries</b>, and click <b>Library Match</b> (Alt-1).</li>
         <li>If you do not see as many annotated peaks in the <b>Library Match</b> view as in the image below, on the <b>View</b>
-            menu, choose <b>Ion Types</b> and check <b>B</b> and <b>Y</b>.</li>
+            menu, choose <b>Libraries</b>, then <b>Ion Types</b>, and check <b>B</b> and <b>Y</b>.</li>
         <li>If you do not see the entire chromatogram for the peptide, on the <b>View</b> menu, choose <b>Auto-Zoom</b> and click
             <b>None</b> (Shift-F11).</li>
         <li>Right-click the chromatogram graph, choose <b>Peptide ID Times</b>, and click <b>Aligned</b> if it is unchecked.</li>

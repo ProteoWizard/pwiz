@@ -53,10 +53,10 @@ class PeakDetectorNaiveImpl : public PeakDetectorNaive
 };
 
 
-PWIZ_API_DECL auto_ptr<PeakDetectorNaive> PeakDetectorNaive::create(double noiseFactor, 
+PWIZ_API_DECL unique_ptr<PeakDetectorNaive> PeakDetectorNaive::create(double noiseFactor,
                                                       unsigned int detectionRadius)
 {
-    return auto_ptr<PeakDetectorNaive>(new PeakDetectorNaiveImpl(noiseFactor, detectionRadius)); 
+    return std::make_unique<PeakDetectorNaiveImpl>(noiseFactor, detectionRadius);
 }
 
 

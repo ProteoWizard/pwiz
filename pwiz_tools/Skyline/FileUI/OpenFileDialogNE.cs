@@ -18,10 +18,9 @@
 using System.Collections.Generic;
 using System.Windows.Forms;
 using System.IO;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Model.Results.RemoteApi;
-using pwiz.Skyline.Util;
+using pwiz.CommonMsData.RemoteApi;
 
 
 namespace pwiz.Skyline.FileUI
@@ -37,7 +36,6 @@ namespace pwiz.Skyline.FileUI
         public OpenFileDialogNE(string[] sourceTypes, IList<RemoteAccount> remoteAccounts, IList<string> specificDataSourceFilter = null)
             : base(sourceTypes, remoteAccounts, specificDataSourceFilter )
         {
-            actionButton.Text = FileUIResources.OpenFileDialogNE_OpenFileDialogNE_Open;
         }
 
         protected override void DoMainAction()

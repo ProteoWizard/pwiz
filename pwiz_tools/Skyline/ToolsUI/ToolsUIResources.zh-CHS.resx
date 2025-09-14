@@ -356,4 +356,16 @@
   <data name="ToolUpdatesDlg_InstallUpdates_Installing_updates_to__0_" xml:space="preserve">
     <value>安装更新至{0}</value>
   </data>
+  <data name="EditRemoteAccountDlg_TestConnectButton_AltLabelText_Connect" xml:space="preserve">
+    <value>连接</value>
+  </data>
+  <data name="EditRemoteAccountDlg_GetBrowserLogoutUrl_Error__no_Ardia_registration_code_for_URL" xml:space="preserve">
+    <value>错误：没有用于 URL 的 Ardia 注册码</value>
+  </data>
+  <data name="EditRemoteAccountDlg_GetBrowserLogoutUrl_Error__unable_to_compute_URL_for_logout" xml:space="preserve">
+    <value>错误：无法计算用于 Ardia 注销的 URL</value>
+  </data>
+  <data name="EditRemoteAccountDlg_TestArdiaAccount_Login_was_canceled" xml:space="preserve">
+    <value>登录已取消</value>
+  </data>
 </root>

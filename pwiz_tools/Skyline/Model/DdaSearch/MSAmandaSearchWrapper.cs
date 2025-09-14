@@ -34,9 +34,9 @@ using pwiz.BiblioSpec;
 using MSAmandaSettings = MSAmanda.InOutput.Settings;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Results;
 using MSAmandaEnzyme = MSAmanda.Utils.Enzyme;
 using OperationCanceledException = System.OperationCanceledException;
 using pwiz.Skyline.Properties;
@@ -376,8 +376,8 @@ namespace pwiz.Skyline.Model.DdaSearch
         {
             List<Modification> mods = new List<Modification>();
             if (mod.AAs != null)
-                foreach (var a in mod.AAs)
-                mods.Add(GenerateNewModification(mod, a));
+                foreach (var a in mod.AminoAcids)
+                    mods.Add(GenerateNewModification(mod, a));
             else
                 mods.Add(GenerateNewModification(mod, ' '));
             return mods;

@@ -105,8 +105,7 @@
         <img src="s-01.png" />
     </p>
     <p>
-        接下来，您就可以使用本向导从Skyline可支持的诸多肽段搜索引擎的输出结果来创建一个谱图库。关于受支持的搜索管道的完整列表，请参考<a
-            href="https://skyline.ms/tutorial_method_edit_zh.url">靶向方法编辑</a>教程。请注意，为尽可能快速地下载
+        接下来，您就可以使用本向导从Skyline可支持的诸多肽段搜索引擎的输出结果来创建一个谱图库。关于受支持的搜索管道的完整列表，请参考<a href="https://skyline.ms/tutorial_method_edit_zh.url">靶向方法编辑</a>教程。请注意，为尽可能快速地下载
         ZIP 文件，您在本教程中将使用的文件已缩减至完成本教程所需的最小信息量。
     </p>
     <p>
@@ -274,7 +273,7 @@
         要验证您刚刚创建的库是否包含 MS1 筛选峰选择和峰注释的保留时间信息，请执行下列步骤：
     </p>
     <ul>
-        <li>在<b>视图</b>菜单上单击<b>谱图库</b>。</li>
+        <li>在“<b>视图</b>”菜单中选择“<b>库</b>”，并点击“<b>库浏览器</b>”。</li>
     </ul>
     <p class="keep-next">
         Skyline 将再次提出使用在谱图库中检测到的但在<b>导入肽段搜索</b>向导中您选择不添加的修饰。
@@ -301,8 +300,7 @@
         在谱图下方可以看到文本“100803_005b_MCF7_TiTip3.wiff”和“RT: 35.21”。“RT”值表示含有保留时间信息，“文件”值表示已经与您导入 Skyline 的文件正确关联。“文件”值无需与您导入的文件完全匹配。Skyline
         认识到许多肽段搜索管道会涉及到将原始仪器数据转换为 mzXML、mzML、MGF、MG2 等格式的情况。故而大体上， Skyline
         会寻求基础名称匹配，其中“basename.mgf”与“basename.wiff”成功匹配。由于某一特定管道需要更大的灵活性，此匹配也有不敏感的情况，因此“BASENAME.mzML”将匹配“Basename.RAW”，且在处理多点扩展时，会将“basename.c.mzXML”与“basename.raw”匹配。然而，如果您看到一些类似“F011852.dat”或其它与您想导入
-        Skyline 的数据没有相同基础名称的搜索输出文件，则需查看您的搜索管道，并且可能要与 Skyline 团队一起解决此问题。关于具体的 Mascot .dat 文件，建议您查询 Skyline 网站的“<a
-            href="https://skyline.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=mascot_missing_rt">Mascot 搜索结果 ID
+        Skyline 的数据没有相同基础名称的搜索输出文件，则需查看您的搜索管道，并且可能要与 Skyline 团队一起解决此问题。关于具体的 Mascot .dat 文件，建议您查询 Skyline 网站的“<a href="https://skyline.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=mascot_missing_rt">Mascot 搜索结果 ID
             注释缺失</a>”页面。关于其它问题，建议您在 Skyline 支持版块（在<b>帮助</b>菜单上单击<b>支持</b>）上提问，寻求解决此类问题的帮助。
     </p>
     <p>
@@ -317,13 +315,15 @@
     </p>
     <ul>
         <li>单击首个磷酸肽 K.DIDIS<b><u>S</u></b>PEFK.I 序列，将出现串联质谱谱图。（请注意，肽段序列中粗体显示且加下划线的 <b><u>S</u></b> 残基表示丝氨酸磷酸化）。</li>
-        <li>如果您未看到串联质谱谱图，在<b>视图</b>菜单上单击<b>库匹配</b>。</li>
-        <li>如果您未看到如下图所示的尽可能多的注释峰，在<b>视图</b>菜单上选择<b>离子类型</b>，并选中 <br /><b>A</b>、<b>B</b>、<b>Y</b>
-            和<b>母离子</b>。</li>
+        <li>如果未找到 MS/MS 谱图，则在“<b>视图</b>”菜单中选择“<b>库</b>”，然后点击“<b>库匹配</b>” (Alt-1)。</li>
+        <li>
+            如果标注峰数量与下图所示不符，则在“<b>视图</b>”菜单中选择“<b>库</b>”，然后选择“<b>离子类型</b>”，并
+            勾选 <b>A</b>、<b>B</b>、<b>Y</b> 和<b>母离子</b>。
+        </li>
         <li>如果您未看到肽段的整个色谱图，在<b>视图</b>菜单上选择<b>自动缩放</b>，并单击<b>无</b> (Shift-F11)。</li>
         <li>在<b>编辑</b>菜单上选择<b>全部展开</b>，然后单击<b>母离子</b>。</li>
     </ul>
-    <p class="keep-next">
+    <p>
         您的 Skyline 文档将显示如下：
     </p>
     <p>
@@ -448,11 +448,11 @@
     </p>
     <table class="comp-fig">
         <tr>
-            <td  class="comp-fig">
+            <td class="comp-fig">
                 <b>5b_MCF7_TiTip3</b><br />
                 <img src="s-18.png" />
             </td>
-            <td  class="comp-fig">
+            <td class="comp-fig">
                 <b>1_MCF7_TiB_L</b><br />
                 <img src="s-19.png" />
             </td>
@@ -524,7 +524,8 @@
         <img src="s-23.png" />
     </p>
     <p>
-        绿色虚线表示 Skyline 已获得色谱图数据的离子对。Skyline 自动提取同位素分布中所有峰的色谱图，预计至少占据整个分布的 1%。此外，Skyline 始终提取 M-1 的色谱图，因为在该<i>质荷比</i>下，没有干扰的挑选正确的峰一般不会产生信号。
+        带白色勾号的绿色圆圈表示 Skyline 已获取色谱图数据的离子对。Skyline 将自动提取同位素分布中预测占比不低于 1% 的所有
+        峰的色谱图。此外，由于正确选取且无干扰的峰通常在<i>质荷比</i>值处无信号，因此软件总是会提取 M-1 的色谱图。
     </p>
     <ul>
         <li>选中 M+3 和 M+4 离子对。</li>
@@ -838,8 +839,7 @@
         如果您希望查看原始 MS1 筛选文献中实际处理的数据集<sup>1</sup>，请访问下列链接，从中可以下载如上所述的最小化文档：
     </p>
     <p>
-        <a
-            href="http://proteome.gs.washington.edu/supplementary_data/MS1_Filtering/minimized/">http://proteome.gs.washington.edu/supplementary_data/MS1_Filtering/minimized/</a>
+        <a href="http://proteome.gs.washington.edu/supplementary_data/MS1_Filtering/minimized/">http://proteome.gs.washington.edu/supplementary_data/MS1_Filtering/minimized/</a>
     </p>
     <p>
         您可以浏览上一层目录以查看完整的 Skyline 文档和原始数据。

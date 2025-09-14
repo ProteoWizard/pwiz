@@ -24,11 +24,9 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Collections.ObjectModel;
 using System.Net;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -39,62 +37,6 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Util
 {
-    /// <summary>
-    /// Implement on an element for use with <see cref="MappedList{TKey,TValue}"/>.
-    /// </summary>
-    /// <typeparam name="TKey">Key type in the map</typeparam>
-    public interface IKeyContainer<out TKey>
-    {
-        TKey GetKey();
-    }
-
-    public interface IEquivalenceTestable<in T>
-    {
-        bool IsEquivalent(T other);
-    }
-
-    /// <summary>
-    /// Base class for use with elements to be stored in
-    /// <see cref="MappedList{TKey,TValue}"/>.
-    /// </summary>
-    public abstract class NamedElement : IKeyContainer<string>
-    {
-        protected NamedElement(string name)
-        {
-            Name = name;
-        }
-
-        public string Name { get; private set; }
-
-        public virtual string GetKey()
-        {
-            return Name;
-        }
-
-        #region object overrides
-
-        public bool Equals(NamedElement obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            return Equals(obj.Name, Name);
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != typeof(NamedElement)) return false;
-            return Equals((NamedElement)obj);
-        }
-
-        public override int GetHashCode()
-        {
-            return Name.GetHashCode();
-        }
-
-        #endregion
-    }
 
     /// <summary>
     /// Allows access to a default state for a collection that allows
@@ -221,192 +163,6 @@ namespace pwiz.Skyline.Util
         /// <param name="item">The item to copy</param>
         /// <returns>The copied item with empty name</returns>
         TItem CopyItem(TItem item);
-    }
-
-    /// <summary>
-    /// A generic ordered list based on Collection&lt;TValue>, with
-    /// elements also stored in a private dictionary for fast lookup.
-    /// Sort of a substitute for LinkedHashMap in Java.
-    /// </summary>
-    /// <typeparam name="TKey">Type of the key used in the map</typeparam>
-    /// <typeparam name="TValue">Type stored in the collection</typeparam>
-    public class MappedList<TKey, TValue>
-        : Collection<TValue>
-        where TValue : IKeyContainer<TKey>
-    {
-        private readonly Dictionary<TKey, TValue> _dict = new Dictionary<TKey, TValue>();
-
-        public TValue this[TKey name]
-        {
-            get
-            {
-                return _dict[name];
-            }
-        }
-
-        public IEnumerable<TKey> Keys
-        {
-            get
-            {
-                foreach (TValue value in this)
-                    yield return value.GetKey();
-            }
-        }
-
-        public bool ContainsKey(TKey key)
-        {
-            return _dict.ContainsKey(key);
-        }
-
-        public bool TryGetValue(TKey key, out TValue value)
-        {
-            return _dict.TryGetValue(key, out value);
-        }
-
-        public void SetValue(TValue value)
-        {
-            TValue valueCurrent;
-            if (TryGetValue(value.GetKey(), out valueCurrent))
-            {
-                SetItem(IndexOf(valueCurrent), value);
-            }
-            else
-            {
-                Add(value);
-            }
-        }
-
-        public void AddRange(IEnumerable<TValue> collection)
-        {
-            foreach (TValue item in collection)
-                Add(item);
-        }
-
-        #region Collection<TValue> Overrides
-
-        protected override void ClearItems()
-        {
-            _dict.Clear();
-            base.ClearItems();
-        }
-
-        protected override void InsertItem(int index, TValue item)
-        {
-            int i = RemoveExisting(item);
-            if (i != -1 && i < index)
-                index--;
-            // ReSharper disable once PossibleNullReferenceException
-            _dict.Add(item.GetKey(), item);
-            base.InsertItem(index, item);
-        }
-
-        protected override void RemoveItem(int index)
-        {
-            _dict.Remove(this[index].GetKey());
-            base.RemoveItem(index);
-        }
-
-        protected override void SetItem(int index, TValue item)
-        {
-            TKey key = this[index].GetKey();
-
-            // If setting to a list item that has a different key
-            // from what is at this location currently, then any
-            // existing value with the same key must be removed
-            // from its current location.
-            // ReSharper disable once PossibleNullReferenceException
-            if (!Equals(key, item.GetKey()))
-            {
-                int i = RemoveExisting(item);
-                if (i != -1 && i < index)
-                    index--;
-
-                // If the index pointed at an item with a different
-                // key, then removing some other item cannot leave
-                // the index out of range.
-                Debug.Assert(index < Items.Count);
-            }
-            _dict.Remove(key);
-            _dict.Add(item.GetKey(), item);
-            base.SetItem(index, item);                
-        }
-
-        /// <summary>
-        /// Used to help ensure that only one copy of the keyed elements
-        /// can exist in the list at any time.
-        /// </summary>
-        /// <param name="item">An item to remove</param>
-        /// <returns>The index from which it was removed, or -1 if not found</returns>
-        private int RemoveExisting(TValue item)
-        {
-            TKey key = item.GetKey();
-            if (_dict.ContainsKey(key))
-            {
-                _dict.Remove(key);
-                for (int i = 0; i < Items.Count; i++)
-                {
-                    if (Equals(Items[i].GetKey(), item.GetKey()))
-                    {
-                        RemoveAt(i);
-                        return i;
-                    }
-                }
-            }
-            return -1;
-        }
-
-        #endregion // Collection<TValue> Overrides
-    }
-
-    public class MultiMap<TKey, TValue>
-    {
-        readonly Dictionary<TKey, List<TValue>> _dict;
-
-        public MultiMap()            
-        {
-            _dict = new Dictionary<TKey, List<TValue>>();
-        }
-
-        public MultiMap(int capacity)
-        {
-            _dict = new Dictionary<TKey, List<TValue>>(capacity);
-        }
-
-        public void Add(TKey key, TValue value)
-        {
-            List<TValue> values;
-            if (_dict.TryGetValue(key, out values))
-                values.Add(value);
-            else
-                _dict[key] = new List<TValue> { value };
-        }
-
-        public IEnumerable<TKey> Keys { get { return _dict.Keys; } }
-
-        public IList<TValue> this[TKey key] { get { return _dict[key]; } }
-
-        public bool TryGetValue(TKey key, out IList<TValue> values)
-        {
-            List<TValue> listValues;
-            if (_dict.TryGetValue(key, out listValues))
-            {
-                values = listValues;
-                return true;
-            }
-            values = null;
-            return false;
-        }
-    }
-
-    public static class MapUtil
-    {
-        public static MultiMap<TKey, TValue> ToMultiMap<TKey, TValue>(this IEnumerable<TValue> values, Func<TValue, TKey> keySelector)
-        {
-            MultiMap<TKey, TValue> map = new MultiMap<TKey, TValue>();
-            foreach (TValue value in values)
-                map.Add(keySelector(value), value);
-            return map;
-        }
     }
 
     /// <summary>
@@ -923,6 +679,53 @@ namespace pwiz.Skyline.Util
                 if (array[i] > array[i + 1])
                     return true;
             return false;
+        }
+
+        /// <summary>
+        /// Linear time function for finding the n-th item in a list and placing it at that location in
+        /// the list while putting all values greater than it higher in the list and all values less
+        /// than it lower in the list. That is the values in the list get partitioned by the Nth value
+        /// but do not get fully sorted.
+        /// </summary>
+        public static TItem QNthItem<TItem>(this IList<TItem> list, int elementIndex) where TItem : IComparable<TItem>
+        {
+            if (elementIndex < 0 || list.Count <= elementIndex)
+                throw new IndexOutOfRangeException($@"The element index {elementIndex} is outside the range of the {list.Count} element array.");
+            
+            int left = 0;
+            int right = list.Count - 1;
+            while (left < right)
+            {
+                TItem value = list[elementIndex];
+                int splitLeft = left, splitRight = right;
+                Split(list, value, ref splitLeft, ref splitRight);
+                if (splitRight < elementIndex)
+                    left = splitLeft;
+                if (elementIndex < splitLeft)
+                    right = splitRight;
+            }
+            return list[elementIndex];
+        }
+
+        private static void Split<TItem>(IList<TItem> list, TItem value, ref int left, ref int right) where TItem : IComparable<TItem>
+        {
+            // Left and right scan until the pointers cross
+            do
+            {
+                while (list[left].CompareTo(value) < 0)
+                    left++;
+                while (value.CompareTo(list[right]) < 0)
+                    right--;
+
+                if (left <= right)
+                {
+                    // Swap
+                    (list[left], list[right]) = (list[right], list[left]);
+
+                    left++;
+                    right--;
+                }
+            } while (left <= right);
         }
     }
 
@@ -1807,105 +1610,11 @@ namespace pwiz.Skyline.Util
             return s.Length <= length ? s : s.Substring(0, length - ELIPSIS.Length) + ELIPSIS;
         }
 
-        private const int defaultLoopCount = 4;
-        private const int defaultMilliseconds = 500;
-
-        /// <summary>
-        /// Try an action that might throw an exception commonly related to a file move or delete.
-        /// If it fails, sleep for the indicated period and try again.
-        /// 
-        /// N.B. "TryTwice" is a historical misnomer since it actually defaults to trying four times,
-        /// but the intent is clear: try more than once. Further historical note: formerly this only
-        /// handled IOException, but in looping tests we also see UnauthorizedAccessException as a result
-        /// of file locks that haven't been released yet.
-        /// </summary>
-        /// <param name="action">action to try</param>
-        /// <param name="loopCount">how many loops to try before failing</param>
-        /// <param name="milliseconds">how long (in milliseconds) to wait before the action is retried</param>
-        /// <param name="hint">text to show in debug trace on failure</param>
-        public static void TryTwice(Action action, int loopCount = defaultLoopCount, int milliseconds = defaultMilliseconds, string hint = null)
-        {
-            for (int i = 1; i<loopCount; i++)
-            {
-                try
-                {
-                    action();
-                    return;
-                }
-                catch (IOException exIO)
-                {
-                    ReportExceptionForRetry(milliseconds, exIO, i, loopCount, hint);
-                }
-                catch (UnauthorizedAccessException exUA)
-                {
-                    ReportExceptionForRetry(milliseconds, exUA, i, loopCount, hint);
-                }
-            }
-            DetailedTrace.WriteLine(string.Format(@"Final attempt ({0} of {1}):", loopCount, loopCount), true);
-            // Try the last time, and let the exception go.
-            action();
-        }
-
-        public static void TryTwice(Action action, string hint)
-        {
-            TryTwice(action, defaultLoopCount, defaultMilliseconds, hint);
-        }
-
-        private static void ReportExceptionForRetry(int milliseconds, Exception x, int loopCount, int maxLoopCount, string hint)
-        {
-            DetailedTrace.WriteLine(string.Format(@"Encountered the following exception on attempt {0} of {1}{2}:", loopCount, maxLoopCount,
-                string.IsNullOrEmpty(hint) ? string.Empty : (@" of action " + hint)));
-            DetailedTrace.WriteLine(x.Message);
-            if (RunningResharperAnalysis || IsParallelClient)
-            {
-                DetailedTrace.WriteLine(IsParallelClient ?
-                    $@"We're running under a virtual machine, which may throw off timing - adding some extra sleep time":
-                    $@"We're running under ReSharper analysis, which may throw off timing - adding some extra sleep time");
-                // Allow up to 5 sec extra time when running code coverage or other analysis
-                milliseconds += (5000 * (loopCount)) / maxLoopCount; // Each loop a little more desperate
-            }
-            DetailedTrace.WriteLine(string.Format(@"Sleeping {0} ms then retrying...", milliseconds));
-            Thread.Sleep(milliseconds);
-        }
-
         // Detect the use of ReSharper code coverage, memory profiling etc, which may affect timing
         //
         // Per https://youtrack.jetbrains.com/issue/PROF-1093
         // "Set JETBRAINS_DPA_AGENT_ENABLE=0 environment variable for user apps started from dotTrace, and JETBRAINS_DPA_AGENT_ENABLE=1
         // in case of dotCover and dotMemory."
-        public static bool RunningResharperAnalysis => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(@"JETBRAINS_DPA_AGENT_ENABLE"));
-
-        public static bool IsParallelClient => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(@"SKYLINE_TESTER_PARALLEL_CLIENT_ID"));
-
-        /// <summary>
-        /// Try an action that might throw an exception.  If it does, sleep for a little while and
-        /// try the action one more time.  This oddity is necessary because certain file system
-        /// operations (like moving a directory) can fail due to temporary file locks held by
-        /// anti-virus software.
-        /// </summary>
-        /// <typeparam name="TEx">type of exception to catch</typeparam>
-        /// <param name="action">action to try</param>
-        /// <param name="loopCount">how many loops to try before failing</param>
-        /// <param name="milliseconds">how long (in milliseconds) to wait before the action is retried</param>
-        /// <param name="hint">text to show in debug trace on failure</param>
-        public static void Try<TEx>(Action action, int loopCount = defaultLoopCount, int milliseconds = defaultMilliseconds, string hint = null) where TEx : Exception
-        {
-            for (int i = 1; i < loopCount; i++)
-            {
-                try
-                {
-                    action();
-                    return;
-                }
-                catch (TEx x)
-                {
-                    ReportExceptionForRetry(milliseconds, x, i, loopCount, hint);
-                }
-            }
-            DetailedTrace.WriteLine(string.Format(@"Final attempt ({0} of {1}):", loopCount, loopCount), true);
-            // Try the last time, and let the exception go.
-            action();
-        }
 
         public static void WrapAndThrowException(Exception x)
         {
@@ -1935,131 +1644,6 @@ namespace pwiz.Skyline.Util
         public static string NullableDoubleToString(double? d)
         {
             return d.HasValue ? d.Value.ToString(LocalizationHelper.CurrentCulture) : String.Empty;
-        }
-    }
-
-    /// <summary>
-    /// This is a replacement for Debug.Assert, having the advantage that it is not omitted in a retail build.
-    /// </summary>
-    public static class Assume
-    {
-
-        public static bool InvokeDebuggerOnFail { get; private set; } // When set, we will invoke the debugger rather than fail.
-        public class DebugOnFail : IDisposable
-        {
-            private bool _pushPopInvokeDebuggerOnFail;
-
-            public DebugOnFail(bool invokeDebuggerOnFail = true)
-            {
-                _pushPopInvokeDebuggerOnFail = InvokeDebuggerOnFail; // Push
-                InvokeDebuggerOnFail = invokeDebuggerOnFail;
-            }
-
-            public void Dispose()
-            {
-                InvokeDebuggerOnFail = _pushPopInvokeDebuggerOnFail; // Pop
-            }
-        }
-
-        public static void IsTrue(bool condition, string error = "")
-        {
-            if (!condition)
-                Fail(error);
-        }
-
-        public static void IsFalse(bool condition, string error = "")
-        {
-            if (condition)
-                Fail(error);
-        }
-
-        public static void IsNotNull(object o, string parameterName = "")
-        {
-            if (o == null)
-                Fail(string.IsNullOrEmpty(parameterName) ? @"null object" : parameterName + @" is null");
-        }
-
-        public static void IsNull(object o, string parameterName = "")
-        {
-            if (o != null)
-                Fail(string.IsNullOrEmpty(parameterName) ? @"non-null object" : parameterName + @" is not null");
-        }
-
-        public static void AreEqual(object left, object right, string error = "")
-        {
-            if (!Equals(left, right))
-                Fail(error);
-        }
-
-        public static void AreNotEqual(object left, object right, string error = "")
-        {
-            if (Equals(left, right))
-                Fail(error);
-        }
-
-        public static void AreEqual(double expected, double actual, double delta, string error = "")
-        {
-            if (Math.Abs(expected-actual) > delta)
-                Fail(error);
-        }
-
-        public static void Fail(string error = "")
-        {
-            if (InvokeDebuggerOnFail)
-            {
-                // Try to launch devenv with our solution sln so it presents in the list of debugger options.
-                // This makes for better code navigation and easier debugging.
-                try
-                {
-                    var path = @"\pwiz_tools\Skyline";
-                    var basedir = AppDomain.CurrentDomain.BaseDirectory;
-                    if (!string.IsNullOrEmpty(basedir))
-                    {
-                        var index = basedir.IndexOf(path, StringComparison.Ordinal);
-                        var solutionPath = basedir.Substring(0, index + path.Length);
-                        var skylineSln = Path.Combine(solutionPath, "Skyline.sln");
-                        // Try to give user a hint as to which debugger to pick
-                        var skylineTesterSln = Path.Combine(solutionPath, "USE THIS FOR ASSUME FAIL DEBUGGING.sln");
-                        if (File.Exists(skylineTesterSln))
-                            File.Delete(skylineTesterSln);
-                        File.Copy(skylineSln, skylineTesterSln);
-                        Process.Start(skylineTesterSln);
-                        Thread.Sleep(20000); // Wait for it to fire up sp it's offered in the list of debuggers
-                    }
-                }
-                // ReSharper disable once EmptyGeneralCatchClause
-                catch (Exception)
-                {
-                }
-
-                Console.WriteLine();
-                if (!string.IsNullOrEmpty(error))
-                    Console.WriteLine(error);
-                Console.WriteLine(@"error encountered, launching debugger as requested by Assume.DebugOnFail");
-                Debugger.Launch();
-            }
-            throw new AssumptionException(error);
-        }
-
-        /// <summary>
-        /// This function does two things: it returns the value of a nullable that we assume has a value (this
-        /// avoids Resharper warnings), and it throws an exception if the nullable unexpectedly has no value.
-        /// </summary>
-        /// <param name="value">a nullable int that is expected to have a value</param>
-        /// <returns>the value of the nullable int</returns>
-        public static T Value<T>(T? value) where T : struct
-        {
-            if (!value.HasValue)
-                Fail(@"Nullable_was_expected_to_have_a_value"); 
-            return value.Value;
-        }
-    }
-
-    public class AssumptionException : Exception
-    {
-        public AssumptionException(string message)
-            : base(message)
-        {
         }
     }
 
@@ -2164,7 +1748,7 @@ namespace pwiz.Skyline.Util
 
         private class AlarmInfo
         {
-            public System.Windows.Forms.Timer Timer;
+            public Timer Timer;
             public long Ticks;
         }
 
@@ -2183,7 +1767,7 @@ namespace pwiz.Skyline.Util
                                 return;
                             _timers[id].Timer.Dispose();
                         }
-                        var timer = new System.Windows.Forms.Timer {Interval = milliseconds};
+                        var timer = new Timer {Interval = milliseconds};
                         timer.Tick += (sender, args) => TimerTick(id, action);
                         _timers[id] = new AlarmInfo {Timer = timer, Ticks = alarmTicks};
                         timer.Start();
@@ -2256,37 +1840,4 @@ namespace pwiz.Skyline.Util
         }
     }
 
-
-    /// <summary>
-    /// Like Trace.WriteLine, but with considerable detail when running a test
-    /// </summary>
-    public class DetailedTrace
-    {
-        public static void WriteLine(string msg, bool showStackTrace = false)
-        {
-            if (string.IsNullOrEmpty(Program.TestName))
-            {
-                Trace.WriteLine(msg);
-            }
-            else
-            {
-                // Give more detail - useful in case of parallel test interactions
-                Trace.WriteLine(
-                    $@"{msg} [UTC: {DateTime.UtcNow:s} Test: {Program.TestName} PID: {Process.GetCurrentProcess().Id} Thread: {Thread.CurrentThread.ManagedThreadId})]");
-                if (showStackTrace)
-                {
-                    // per https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.stacktrace?view=net-6.0
-                    // Create a StackTrace that captures filename, line number and column information.
-                    var st = new StackTrace(true);
-                    var stackIndent = string.Empty;
-                    for (var i = 0; i < st.FrameCount; i++)
-                    {
-                        var sf = st.GetFrame(i);
-                        Trace.WriteLine($@"{stackIndent}{sf.GetMethod()} at {sf.GetFileName()}({sf.GetFileLineNumber()}:{sf.GetFileColumnNumber()})");
-                        stackIndent += @"  ";
-                    }
-                }
-            }
-        }
-    }
 }

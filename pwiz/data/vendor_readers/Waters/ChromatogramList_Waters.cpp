@@ -245,8 +245,9 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index
         }
         break;
 
-	    case MS_electromagnetic_radiation_chromatogram:
-	    case MS_pressure_chromatogram:
+        case MS_electromagnetic_radiation_chromatogram:
+        case MS_pressure_chromatogram:
+        case MS_temperature_chromatogram:
         case MS_chromatogram_type:
         {
             if (detailLevel < DetailLevel_FullMetadata)
@@ -256,7 +257,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index
             CVID units = MS_number_of_detector_counts;
             if (ie.chromatogramType == MS_pressure_chromatogram && bal::iequals(unitsName, "psi"))
                 units = UO_pounds_per_square_inch;
-            else if (ie.chromatogramType == MS_chromatogram_type && bal::iends_with(unitsName, "C"))
+            else if (ie.chromatogramType == MS_temperature_chromatogram && bal::iends_with(unitsName, "C"))
                 units = UO_degree_Celsius;
             else if (unitsName == "%")
                 units = UO_percent;
@@ -365,7 +366,7 @@ PWIZ_API_DECL void ChromatogramList_Waters::createIndex() const
         }
     }
 
-    int analogChannels = (int) rawdata_ -> AnalogIntensitiesByChannel().size();
+    int analogChannels = (int) rawdata_->AnalogIntensitiesByChannel().size();
 
     for(int ch=0; ch < analogChannels; ch++)
     {
@@ -384,7 +385,7 @@ PWIZ_API_DECL void ChromatogramList_Waters::createIndex() const
         bal::trim(units);
 
         if (bal::icontains(name, "temp") && bal::iequals(units, "C"))
-            ie.chromatogramType = MS_chromatogram_type; // TODO: add temperature chromatogram to CV?
+            ie.chromatogramType = MS_temperature_chromatogram;
         else if (bal::iequals(units, "LSU"))
             ie.chromatogramType = MS_electromagnetic_radiation_chromatogram; // TODO: is this correct?
         else if (bal::icontains(name, "pressure"))

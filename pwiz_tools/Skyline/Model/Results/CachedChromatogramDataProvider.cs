@@ -23,6 +23,7 @@ using System.Drawing;
 using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Util;
 
@@ -61,8 +62,8 @@ namespace pwiz.Skyline.Model.Results
                                               ILoadMonitor loader)
             : base(fileInfo, status, startPercent, endPercent, loader)
         {
-            // Need a newly loaded copy to allow for concurrent loading for multiple cached files
-            _cache = ChromatogramCache.Load(cache.CachePath, new ProgressStatus(), loader, document);
+            // Open a new stream for the cache so that we can do concurrent reads
+            _cache = cache = cache.ChangeReadStream(loader.StreamManager.CreatePooledStream(cache.CachePath, false));
 
             _fileIndex = cache.CachedFiles.IndexOf(f => Equals(f.FilePath, dataFilePath));
             _chromKeyIndices = cache.GetChromKeys(dataFilePath).OrderBy(v => v.LocationPoints).ToArray();

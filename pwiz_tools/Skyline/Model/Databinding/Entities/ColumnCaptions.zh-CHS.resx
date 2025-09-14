@@ -144,6 +144,33 @@
   <data name="Analyzer">
     <value>分析器</value>
   </data>
+  <data name="ApexAnalyteIonCount">
+    <value>Apex 分析物离子计数</value>
+  </data>
+  <data name="ApexAnalyteIonCountFragment">
+    <value>Apex 分析物离子计数片段</value>
+  </data>
+  <data name="ApexAnalyteIonCountMS1">
+    <value>Apex 分析物离子计数 MS1</value>
+  </data>
+  <data name="ApexSpectrumId">
+    <value>Apex 谱图 ID</value>
+  </data>
+  <data name="ApexSpectrumIdFragment">
+    <value>Apex 谱图 ID 片段</value>
+  </data>
+  <data name="ApexSpectrumIdMS1">
+    <value>Apex 谱图 ID MS1</value>
+  </data>
+  <data name="ApexTotalIonCount">
+    <value>Apex 总离子计数</value>
+  </data>
+  <data name="ApexTotalIonCountFragment">
+    <value>Apex 总离子计数片段</value>
+  </data>
+  <data name="ApexTotalIonCountMS1">
+    <value>Apex 总离子计数 MS1</value>
+  </data>
   <data name="Area">
     <value>面积</value>
   </data>
@@ -549,6 +576,9 @@
   <data name="IsDecoy">
     <value>是诱饵</value>
   </data>
+  <data name="IsolationWindowWidth">
+    <value>隔离窗口宽度</value>
+  </data>
   <data name="IsotopeDistIndex">
     <value>同位素分布指数</value>
   </data>
@@ -575,6 +605,39 @@
   </data>
   <data name="LastPosition">
     <value>最后一个位置</value>
+  </data>
+  <data name="LcPeakAnalyteIonCount">
+    <value>液相色谱峰分析物离子计数</value>
+  </data>
+  <data name="LcPeakAnalyteIonCountFragment">
+    <value>液相色谱峰分析物离子计数片段</value>
+  </data>
+  <data name="LcPeakAnalyteIonCountMS1">
+    <value>液相色谱峰分析物离子计数 MS1</value>
+  </data>
+  <data name="LcPeakIonMetricsFragment">
+    <value>液相色谱峰离子指标片段</value>
+  </data>
+  <data name="LcPeakIonMetricsMS1">
+    <value>液相色谱峰离子指标 MS1</value>
+  </data>
+  <data name="LcPeakTotalIonCount">
+    <value>液相色谱峰总离子计数</value>
+  </data>
+  <data name="LcPeakTotalIonCountFragment">
+    <value>液相色谱峰总离子计数片段</value>
+  </data>
+  <data name="LcPeakTotalIonCountMS1">
+    <value>液相色谱峰总离子计数 MS1</value>
+  </data>
+  <data name="LcPeakTotalIonCurrentArea">
+    <value>液相色谱峰总离子流面积</value>
+  </data>
+  <data name="LcPeakTotalIonCurrentAreaFragment">
+    <value>液相色谱峰总离子流面积片段</value>
+  </data>
+  <data name="LcPeakTotalIonCurrentAreaMS1">
+    <value>液相色谱峰总离子流面积 MS1</value>
   </data>
   <data name="LibraryCollisionCrossSection">
     <value>库碰撞横截面</value>
@@ -1094,6 +1157,9 @@
   </data>
   <data name="ProductNeutralMass">
     <value>子离子中性质量</value>
+  </data>
+  <data name="ProportionTruncated">
+    <value>截断比例</value>
   </data>
   <data name="Protein">
     <value>蛋白质</value>

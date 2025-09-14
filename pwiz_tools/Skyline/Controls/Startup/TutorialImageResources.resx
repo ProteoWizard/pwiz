@@ -127,6 +127,9 @@
   <data name="CustomReports_start" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\..\resources\startpage\customreports_start.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="LiveReports_start" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\resources\startpage\livereports_start.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="DIA_start" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\..\resources\startpage\dia_start.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -186,5 +189,11 @@
   </data>
   <data name="PRM_start" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\..\resources\startpage\prm_start.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="PRMOrbitrap_start" type="System.Resources.ResXFileRef, System.Windows.Forms">
+      <value>..\..\resources\startpage\prmorbitrap_start.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="DIA_Umpire_TTOF_start" type="System.Resources.ResXFileRef, System.Windows.Forms">
+      <value>..\..\resources\startpage\dia-umpire-ttof_start.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

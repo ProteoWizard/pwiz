@@ -77,6 +77,17 @@ namespace pwiz.Skyline.SettingsUI
             this.comboWeighting = new System.Windows.Forms.ComboBox();
             this.tbxIonRatioThreshold = new System.Windows.Forms.TextBox();
             this.cbxSimpleRatios = new System.Windows.Forms.CheckBox();
+            this.groupBoxPeakImputation = new System.Windows.Forms.GroupBox();
+            this.pictureBoxRunAlignmentError = new System.Windows.Forms.PictureBox();
+            this.comboRunToRunAlignment = new System.Windows.Forms.ComboBox();
+            this.lblRunToRunAlignment = new System.Windows.Forms.Label();
+            this.lblPeakWidthVariationPercent = new System.Windows.Forms.Label();
+            this.tbxMaxPeakWidthVariation = new System.Windows.Forms.TextBox();
+            this.lblMaxPeakWidthVariation = new System.Windows.Forms.Label();
+            this.lblRtDeltaMin = new System.Windows.Forms.Label();
+            this.tbxMaxRtShift = new System.Windows.Forms.TextBox();
+            this.lblMaxRtShift = new System.Windows.Forms.Label();
+            this.cbxImputeMissingPeaks = new System.Windows.Forms.CheckBox();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabDigestion = new System.Windows.Forms.TabPage();
             this.labelPeptideUniquenessConstraint = new System.Windows.Forms.Label();
@@ -114,14 +125,14 @@ namespace pwiz.Skyline.SettingsUI
             this.tabIntegration = new System.Windows.Forms.TabPage();
             this.label36 = new System.Windows.Forms.Label();
             this.tabQuantification = new System.Windows.Forms.TabPage();
-            this.groupBoxFiguresOfMerit = new System.Windows.Forms.GroupBox();
             this.label20 = new System.Windows.Forms.Label();
-            this.lblIonRatioThreshold = new System.Windows.Forms.Label();
+            this.groupBoxFiguresOfMerit = new System.Windows.Forms.GroupBox();
             this.lblCaclulateLodBy = new System.Windows.Forms.Label();
             this.lblMaxLoqBias = new System.Windows.Forms.Label();
             this.lblMaxLoqBiasPct = new System.Windows.Forms.Label();
             this.lblMaxLoqCvPct = new System.Windows.Forms.Label();
             this.lblMaxLoqCv = new System.Windows.Forms.Label();
+            this.lblIonRatioThreshold = new System.Windows.Forms.Label();
             this.lblQuantUnits = new System.Windows.Forms.Label();
             this.lblMsLevel = new System.Windows.Forms.Label();
             this.lblNormalizationMethod = new System.Windows.Forms.Label();
@@ -131,6 +142,8 @@ namespace pwiz.Skyline.SettingsUI
             this.addCalculatorContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editCalculatorCurrentContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editCalculatorListContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.groupBoxPeakImputation.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxRunAlignmentError)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabDigestion.SuspendLayout();
             this.tabPrediction.SuspendLayout();
@@ -445,7 +458,6 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.comboLodMethod, "comboLodMethod");
             this.comboLodMethod.Name = "comboLodMethod";
             this.helpTip.SetToolTip(this.comboLodMethod, resources.GetString("comboLodMethod.ToolTip"));
-            this.comboLodMethod.SelectedIndexChanged += new System.EventHandler(this.comboLodMethod_SelectedIndexChanged);
             // 
             // tbxMaxLoqCv
             // 
@@ -509,6 +521,83 @@ namespace pwiz.Skyline.SettingsUI
             this.helpTip.SetToolTip(this.cbxSimpleRatios, resources.GetString("cbxSimpleRatios.ToolTip"));
             this.cbxSimpleRatios.UseVisualStyleBackColor = true;
             // 
+            // groupBoxPeakImputation
+            // 
+            resources.ApplyResources(this.groupBoxPeakImputation, "groupBoxPeakImputation");
+            this.groupBoxPeakImputation.Controls.Add(this.pictureBoxRunAlignmentError);
+            this.groupBoxPeakImputation.Controls.Add(this.comboRunToRunAlignment);
+            this.groupBoxPeakImputation.Controls.Add(this.lblRunToRunAlignment);
+            this.groupBoxPeakImputation.Controls.Add(this.lblPeakWidthVariationPercent);
+            this.groupBoxPeakImputation.Controls.Add(this.tbxMaxPeakWidthVariation);
+            this.groupBoxPeakImputation.Controls.Add(this.lblMaxPeakWidthVariation);
+            this.groupBoxPeakImputation.Controls.Add(this.lblRtDeltaMin);
+            this.groupBoxPeakImputation.Controls.Add(this.tbxMaxRtShift);
+            this.groupBoxPeakImputation.Controls.Add(this.lblMaxRtShift);
+            this.groupBoxPeakImputation.Controls.Add(this.cbxImputeMissingPeaks);
+            this.groupBoxPeakImputation.Name = "groupBoxPeakImputation";
+            this.groupBoxPeakImputation.TabStop = false;
+            this.helpTip.SetToolTip(this.groupBoxPeakImputation, resources.GetString("groupBoxPeakImputation.ToolTip"));
+            // 
+            // pictureBoxRunAlignmentError
+            // 
+            resources.ApplyResources(this.pictureBoxRunAlignmentError, "pictureBoxRunAlignmentError");
+            this.pictureBoxRunAlignmentError.Image = global::pwiz.Skyline.Properties.Resources.Error;
+            this.pictureBoxRunAlignmentError.Name = "pictureBoxRunAlignmentError";
+            this.pictureBoxRunAlignmentError.TabStop = false;
+            // 
+            // comboRunToRunAlignment
+            // 
+            this.comboRunToRunAlignment.DisplayMember = "Key";
+            this.comboRunToRunAlignment.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboRunToRunAlignment.FormattingEnabled = true;
+            resources.ApplyResources(this.comboRunToRunAlignment, "comboRunToRunAlignment");
+            this.comboRunToRunAlignment.Name = "comboRunToRunAlignment";
+            this.comboRunToRunAlignment.SelectedIndexChanged += new System.EventHandler(this.comboRunToRunAlignment_SelectedIndexChanged);
+            // 
+            // lblRunToRunAlignment
+            // 
+            resources.ApplyResources(this.lblRunToRunAlignment, "lblRunToRunAlignment");
+            this.lblRunToRunAlignment.Name = "lblRunToRunAlignment";
+            // 
+            // lblPeakWidthVariationPercent
+            // 
+            resources.ApplyResources(this.lblPeakWidthVariationPercent, "lblPeakWidthVariationPercent");
+            this.lblPeakWidthVariationPercent.Name = "lblPeakWidthVariationPercent";
+            // 
+            // tbxMaxPeakWidthVariation
+            // 
+            resources.ApplyResources(this.tbxMaxPeakWidthVariation, "tbxMaxPeakWidthVariation");
+            this.tbxMaxPeakWidthVariation.Name = "tbxMaxPeakWidthVariation";
+            this.helpTip.SetToolTip(this.tbxMaxPeakWidthVariation, resources.GetString("tbxMaxPeakWidthVariation.ToolTip"));
+            // 
+            // lblMaxPeakWidthVariation
+            // 
+            resources.ApplyResources(this.lblMaxPeakWidthVariation, "lblMaxPeakWidthVariation");
+            this.lblMaxPeakWidthVariation.Name = "lblMaxPeakWidthVariation";
+            // 
+            // lblRtDeltaMin
+            // 
+            resources.ApplyResources(this.lblRtDeltaMin, "lblRtDeltaMin");
+            this.lblRtDeltaMin.Name = "lblRtDeltaMin";
+            // 
+            // tbxMaxRtShift
+            // 
+            resources.ApplyResources(this.tbxMaxRtShift, "tbxMaxRtShift");
+            this.tbxMaxRtShift.Name = "tbxMaxRtShift";
+            this.helpTip.SetToolTip(this.tbxMaxRtShift, resources.GetString("tbxMaxRtShift.ToolTip"));
+            // 
+            // lblMaxRtShift
+            // 
+            resources.ApplyResources(this.lblMaxRtShift, "lblMaxRtShift");
+            this.lblMaxRtShift.Name = "lblMaxRtShift";
+            // 
+            // cbxImputeMissingPeaks
+            // 
+            resources.ApplyResources(this.cbxImputeMissingPeaks, "cbxImputeMissingPeaks");
+            this.cbxImputeMissingPeaks.Name = "cbxImputeMissingPeaks";
+            this.helpTip.SetToolTip(this.cbxImputeMissingPeaks, resources.GetString("cbxImputeMissingPeaks.ToolTip"));
+            this.cbxImputeMissingPeaks.UseVisualStyleBackColor = true;
+            // 
             // tabControl1
             // 
             resources.ApplyResources(this.tabControl1, "tabControl1");
@@ -561,6 +650,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // tabPrediction
             // 
+            this.tabPrediction.Controls.Add(this.groupBoxPeakImputation);
             this.tabPrediction.Controls.Add(this.btnUpdateCalculator);
             this.tabPrediction.Controls.Add(this.label14);
             this.tabPrediction.Controls.Add(this.textMeasureRTWindow);
@@ -801,6 +891,11 @@ namespace pwiz.Skyline.SettingsUI
             this.tabQuantification.Name = "tabQuantification";
             this.tabQuantification.UseVisualStyleBackColor = true;
             // 
+            // label20
+            // 
+            resources.ApplyResources(this.label20, "label20");
+            this.label20.Name = "label20";
+            // 
             // groupBoxFiguresOfMerit
             // 
             resources.ApplyResources(this.groupBoxFiguresOfMerit, "groupBoxFiguresOfMerit");
@@ -814,16 +909,6 @@ namespace pwiz.Skyline.SettingsUI
             this.groupBoxFiguresOfMerit.Controls.Add(this.lblMaxLoqCv);
             this.groupBoxFiguresOfMerit.Name = "groupBoxFiguresOfMerit";
             this.groupBoxFiguresOfMerit.TabStop = false;
-            // 
-            // label20
-            // 
-            resources.ApplyResources(this.label20, "label20");
-            this.label20.Name = "label20";
-            // 
-            // lblIonRatioThreshold
-            // 
-            resources.ApplyResources(this.lblIonRatioThreshold, "lblIonRatioThreshold");
-            this.lblIonRatioThreshold.Name = "lblIonRatioThreshold";
             // 
             // lblCaclulateLodBy
             // 
@@ -849,6 +934,11 @@ namespace pwiz.Skyline.SettingsUI
             // 
             resources.ApplyResources(this.lblMaxLoqCv, "lblMaxLoqCv");
             this.lblMaxLoqCv.Name = "lblMaxLoqCv";
+            // 
+            // lblIonRatioThreshold
+            // 
+            resources.ApplyResources(this.lblIonRatioThreshold, "lblIonRatioThreshold");
+            this.lblIonRatioThreshold.Name = "lblIonRatioThreshold";
             // 
             // lblQuantUnits
             // 
@@ -916,6 +1006,9 @@ namespace pwiz.Skyline.SettingsUI
             this.MinimizeBox = false;
             this.Name = "PeptideSettingsUI";
             this.ShowInTaskbar = false;
+            this.groupBoxPeakImputation.ResumeLayout(false);
+            this.groupBoxPeakImputation.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxRunAlignmentError)).EndInit();
             this.tabControl1.ResumeLayout(false);
             this.tabDigestion.ResumeLayout(false);
             this.tabDigestion.PerformLayout();
@@ -1043,5 +1136,16 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.TextBox tbxIonRatioThreshold;
         private System.Windows.Forms.Label lblIonRatioThreshold;
         private System.Windows.Forms.CheckBox cbxSimpleRatios;
+        private System.Windows.Forms.GroupBox groupBoxPeakImputation;
+        private System.Windows.Forms.TextBox tbxMaxRtShift;
+        private System.Windows.Forms.Label lblMaxRtShift;
+        private System.Windows.Forms.CheckBox cbxImputeMissingPeaks;
+        private System.Windows.Forms.TextBox tbxMaxPeakWidthVariation;
+        private System.Windows.Forms.Label lblMaxPeakWidthVariation;
+        private System.Windows.Forms.Label lblPeakWidthVariationPercent;
+        private System.Windows.Forms.Label lblRtDeltaMin;
+        private System.Windows.Forms.ComboBox comboRunToRunAlignment;
+        private System.Windows.Forms.Label lblRunToRunAlignment;
+        private System.Windows.Forms.PictureBox pictureBoxRunAlignmentError;
     }
 }

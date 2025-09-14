@@ -151,6 +151,7 @@
     <Compile Include="..\Executables\SkylineRunner\ErrorChecker.cs">
       <Link>ErrorChecker.cs</Link>
     </Compile>
+    <Compile Include="CommandLineEiTest.cs" />
     <Compile Include="CommandLineMetadataRuleTest.cs" />
     <Compile Include="CommandLineNoJoinTest.cs" />
     <Compile Include="CommandLineRefineTest.cs" />
@@ -162,6 +163,7 @@
     <Compile Include="ExportMethodShimadzuTest.cs" />
     <Compile Include="FullScanAcquisitionMethodTest.cs" />
     <Compile Include="InstrumentInfoUtilTest.cs" />
+    <Compile Include="LocalizedResourcesTest.cs" />
     <Compile Include="OptimizationSpacingTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PwizFileInfoTest.cs" />
@@ -204,6 +206,10 @@
       <Project>{32CC9B1A-9442-4B56-AF34-FB47595278A1}</Project>
       <Name>BiblioSpec</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Shared\CommonMsData\CommonMsData.csproj">
+      <Project>{86f8e7f5-a3ed-4519-9ad9-bf9abd6dd69f}</Project>
+      <Name>CommonMsData</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Shared\Common\Common.csproj">
       <Project>{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}</Project>
       <Name>Common</Name>
@@ -238,6 +244,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="CommandLineEiTest.zip" />
     <None Include="CommandLineImportTest.zip" />
     <None Include="CommandLineNoJoinTest.zip" />
     <None Include="CommandLineRefine.zip" />

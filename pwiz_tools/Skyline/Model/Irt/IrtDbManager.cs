@@ -115,13 +115,13 @@ namespace pwiz.Skyline.Model.Irt
                     library.Add(pep);
             }
 
-            // Watch out for stale db read
             if (calc.IsUsable)
             {
+                // Watch out for stale db read
                 var calcStandardPeptides = calc.GetStandardPeptides().ToHashSet();
                 var calcLibraryPeptides = calc.GetLibraryPeptides().ToHashSet();
-                if (standards.Any(s => !calcStandardPeptides.Contains(s.ModifiedTarget))
-                    || library.Any(l => !calcLibraryPeptides.Contains(l.ModifiedTarget)))
+                if (standards.Any(s => !calcStandardPeptides.Contains(s.ModifiedTarget)) ||
+                    library.Any(l => !calcLibraryPeptides.Contains(l.ModifiedTarget)))
                 {
                     calc = calc.ChangeDatabase(IrtDb.GetIrtDb(calc.DatabasePath, null));
                 }

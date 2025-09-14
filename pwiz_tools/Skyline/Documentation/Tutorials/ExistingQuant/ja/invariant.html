@@ -51,6 +51,8 @@
     </p>
     <ul>
         <li>Start Skyline.</li>
+    </ul>
+    <ul class="keep-next">
         <li>On the <b>Start Page</b>, click <b>Blank Document</b> which looks like this: </li>
     </ul>
     <p>
@@ -308,8 +310,8 @@
         selections:
     </p>
     <ul>
-        <li>On the <b>View</b> menu, choose <b>Ion Types</b> and click <b>B</b>.</li>
-        <li>On the <b>View</b> menu, choose <b>Charges</b> and click <b>2</b>.</li>
+        <li>On the <b>View</b> menu, choose <b>Libraries</b>, then <b>Ion Types</b>, and click <b>B</b>.</li>
+        <li>On the <b>View</b> menu, choose <b>Libraries</b>, then <b>Charges</b> and click <b>2</b>.</li>
     </ul>
     <p>
         You may have noticed that Skyline shows the same spectrum for both the light and heavy precursors. This spectral library may contain only
@@ -349,8 +351,8 @@
     </p>
     <p>
         Once the import completes, transitions that have measured signal between the integration boundaries, displayed as dashed black lines, will have
-        green dots added to the left of the transition icon. Transitions without a peak that can be included in the chosen peak group show a red dot.
-        Precursors and peptides containing transitions with only green circles also show green dots. This is very nice data. You will see mostly green
+        a green circle with a white check icon added to the left of the transition icon. Transitions without a peak that can be included in the chosen peak group show a red circle with a white X icon.
+        Precursors and peptides containing transitions with only green circles also show green circles. This is very nice data. You will see mostly green
         dots.
     </p>
     <p>
@@ -476,11 +478,12 @@
         highly similar relative intensities between light and heavy transition peak areas.
     </p>
     <p>
-        Finally, before moving on to the second document in this tutorial, you many notice that 2 peptides (K.YVDPNVLPETESLALVID<b><span class="blue">R</span></b>.L and K.FPEPGYLEGV<b><span
-                class="blue">K</span></b>.T) have transitions with only blank space where the others have green or red circles. This means the
-        mzXML file you imported contained no data for these transitions. You can open the mzXML file in a text editor and search for the precursor
-        <i>m/z</i> values to verify yourself that the precursors lack the transitions indicated by the original transition list. These types of
-        anomalies are fairly typical of working with transition lists created either manually or by tools receiving less use and testing than Skyline.
+        Finally, before moving on to the second document in this tutorial, you many notice that 2 peptides (K.YVDPNVLPETESLALVID<b><span
+                class="blue">R</span></b>.L and K.FPEPGYLEGV<b><span class="blue">K</span></b>.T) have transitions with only blank
+        space where the others have green or red circles. This means the mzXML file you imported contained no data for these transitions. You can open
+        the mzXML file in a text editor and search for the precursor <i>m/z</i> values to verify yourself that the precursors lack the transitions
+        indicated by the original transition list. These types of anomalies are fairly typical of working with transition lists created either
+        manually or by tools receiving less use and testing than Skyline.
     </p>
     <h1>Preparing a Document for CPTAC Study 7</h1>
     <p>
@@ -777,6 +780,8 @@
         <li>Click and drag the window to the bottom edge of the Skyline window to dock it there.</li>
         <li>On the <b>View</b> menu, choose <b>Peak Areas</b> and click <b>Replicate Comparison</b> (F7).</li>
         <li>Click and drag the window to the right edge of the Skyline window to dock it there.</li>
+    </ul>
+    <ul class="keep-next">
         <li>Adjust the view proportions to look something like the image below.</li>
     </ul>
     <p>
@@ -822,7 +827,7 @@
         peak area. This is quite useful during certain phases of method refinement, as discussed in the <a
             href="https://skyline.ms/tutorial_method_refine.url">Targeted Method Refinement</a> tutorial, but for a highly refined method like this,
         it is usually not providing relevant information. For this reason, there is an option to integrate peak areas for all transitions between the
-        boundaries of the most intense peak and change the red dot indicator to show only when the area for a transition is zero.
+        boundaries of the most intense peak and change the red circle indicator to show only when the area for a transition is zero.
     </p>
     <p>
         To turn this on now, do the following:
@@ -832,7 +837,7 @@
     </ul>
     <table>
         <tr>
-            <td>Note: This setting no longer impacts quantitative calculations as it did until Skyline 4.2. It now only impacts the colored dots in
+            <td>Note: This setting no longer impacts quantitative calculations as it did until Skyline 4.2. It now only impacts the colored circle icons in
                 the Targets view and the “Peak Found Ratio” field in Skyline reports.</td>
         </tr>
     </table>
@@ -901,7 +906,8 @@
         <li>Select the light precursor for each peptide.</li>
     </ul>
     <p class="keep-next">
-        For the 6 well behaved peptides, you should see a chart like the one below, with the ESDTSYVSL<b><span class="blue">K</span></b> peptide light precursor 564.7746++ selected:
+        For the 6 well behaved peptides, you should see a chart like the one below, with the ESDTSYVSL<b><span
+                class="blue">K</span></b> peptide light precursor 564.7746++ selected:
     </p>
     <p>
         <img src="s-24.png" />
@@ -995,7 +1001,7 @@
         following:
     </p>
     <ul>
-        <li>On the <b>View</b> menu, click <b>Document Grid</b> (Alt-3).</li>
+        <li>On the <b>View</b> menu, choose <b>Live Reports</b>, and click <b>Document Grid</b> (Alt-3).</li>
         <li>On the <b>Reports</b> menu in the upper left corner of the <b>Document Grid</b>, click <b>Replicates</b>.
         </li>
     </ul>
@@ -1128,8 +1134,7 @@
         <li>Right-click on the <b>Peak Areas</b> graph, choose <b>Normalize To</b> and click <b>Heavy</b>.</li>
     </ul>
     <p>
-        You will find that the charts for all peptides, even INDISHTQSVSA<b><span
-                class="blue">K</span></b> look quite nice in this data set.
+        You will find that the charts for all peptides, even INDISHTQSVSA<b><span class="blue">K</span></b> look quite nice in this data set.
     </p>
     <ul>
         <li>Click the “INDISHTQSVSA<b><span class="blue">K</span></b>” peptide.</li>

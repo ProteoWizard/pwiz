@@ -39,6 +39,7 @@
 #include "boost/make_shared.hpp"
 #include <deque>
 #include <algorithm>
+#include <random>
 
 
 using namespace pwiz::util;
@@ -1007,7 +1008,8 @@ void Merger::merge(const string& mergeTargetFilepath, const std::vector<string>&
     vector<size_t> randomSources;
     for (size_t i = 0; i < mergeSourceFilepaths.size(); ++i)
         randomSources.push_back(i);
-    std::random_shuffle(randomSources.begin(), randomSources.end());
+    std::mt19937 rng(0);
+    std::shuffle(randomSources.begin(), randomSources.end(), rng);
 
     std::deque<shared_ptr<MergeTask> > sourceQueue;
     for(int randomSource : randomSources)

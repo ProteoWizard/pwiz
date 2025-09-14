@@ -24,12 +24,13 @@ using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Results.Spectra;
-using pwiz.Skyline.Model.RetentionTimes;
+using pwiz.Skyline.Model.RetentionTimes.PeakImputation;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -57,6 +58,8 @@ namespace pwiz.Skyline.Model.Results
         private readonly object _writeLock = new object();
 
         private readonly int SCORING_THREADS = ParallelEx.SINGLE_THREADED ? 1 : 4;
+
+        private readonly PeakBoundaryImputer _peakBoundaryImputer;
         //private static readonly Log LOG = new Log<ChromCacheBuilder>();
 
         public ChromCacheBuilder(InjectionGroup injectionGroup, 
@@ -66,6 +69,7 @@ namespace pwiz.Skyline.Model.Results
             var document = _document = injectionGroup.Document;
             InjectionGroup = injectionGroup;
             _cacheRecalc = injectionGroup.CacheRecalc;
+            _destinationStream = _cacheRecalc?.ReadStream;
             MSDataFilePath = msDataFilePath;
 
             // Get peak scoring calculators
@@ -87,8 +91,7 @@ namespace pwiz.Skyline.Model.Results
             DetailedPeakFeatureCalculators = new DetailedFeatureCalculators(calcEnum.Cast<DetailedPeakFeatureCalculator>());
             _listScoreTypes = DetailedPeakFeatureCalculators.FeatureNames;
 
-            string basename = MSDataFilePath.GetFileNameWithoutExtension();
-            FileAlignmentIndices = _document.Settings.DocumentRetentionTimes.GetRetentionTimeAlignmentIndexes(basename);
+            _peakBoundaryImputer = new PeakBoundaryImputer(document);
         }
 
         public InjectionGroup InjectionGroup { get; }
@@ -97,7 +100,9 @@ namespace pwiz.Skyline.Model.Results
         {
             // Score peaks.
             GetPeptideRetentionTimes(chromDataSets);
-            chromDataSets.PickChromatogramPeaks();
+            var explicitPeakBounds = _peakBoundaryImputer.GetExplicitPeakBounds(
+                chromDataSets.NodePep, InjectionGroup.ChromatogramSet, chromDataSets.FileInfo.FilePath);
+            chromDataSets.PickChromatogramPeaks(explicitPeakBounds);
             StorePeptideRetentionTime(chromDataSets);
 
             if (chromDataSets.IsDelayedWrite)
@@ -111,8 +116,6 @@ namespace pwiz.Skyline.Model.Results
         }
 
         private MsDataFileUri MSDataFilePath { get; set; }
-        private RetentionTimeAlignmentIndexes FileAlignmentIndices { get; set; }
-
         private DetailedFeatureCalculators DetailedPeakFeatureCalculators { get; set; }
 
         public void BuildCache()
@@ -445,8 +448,10 @@ namespace pwiz.Skyline.Model.Results
 
             // Write scan ids
             _currentFileInfo.WriteResultFileMetadata(provider.ResultFileData, _fsScans.Stream);
+            var resultFileData = provider.ResultFileData;
             // Release all provider memory before waiting for write completion
             provider.ReleaseMemory();
+
 
             //LOG.InfoFormat(@"Scans read: {0}", MSDataFilePath.GetFileName());
             _chromDataSets.DoneAdding(true);
@@ -470,7 +475,7 @@ namespace pwiz.Skyline.Model.Results
                                      _currentFileInfo.SampleId,
                                      _currentFileInfo.SerialNumber,
                                      _currentFileInfo.InstrumentInfoList));
-            _listResultFileDatas.Add(provider.ResultFileData as ResultFileMetaData);
+            _listResultFileDatas.Add(resultFileData as ResultFileMetaData);
         }
 
         private bool CreateRetentionTimeEquation(ChromDataProvider provider,
@@ -561,8 +566,8 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         private int CompareMaxRetentionTime(PeptideChromDataSets p1, PeptideChromDataSets p2)
         {
-            var time1 = p1.FirstKey.OptionalMaxTime;
-            var time2 = p2.FirstKey.OptionalMaxTime;
+            var time1 = p1.MaxTime;
+            var time2 = p2.MaxTime;
             if (time1.HasValue)
             {
                 if (time2.HasValue)
@@ -695,15 +700,12 @@ namespace pwiz.Skyline.Model.Results
                 return;
             }
             // N.B. No retention time prediction for small molecules (yet?), but may be able to pull from libraries
-            var lookupSequence = nodePep.SourceUnmodifiedTarget;
-            var lookupMods = nodePep.SourceExplicitMods;
-            double[] retentionTimes = _document.Settings.GetRetentionTimes(MSDataFilePath, lookupSequence, lookupMods);
-            bool isAlignedTimes = (retentionTimes.Length == 0);
+            var targets = _document.Settings.GetTargets(nodePep).ToList();
+            double[] retentionTimes = _document.Settings.GetRetentionTimes(MSDataFilePath, targets);
+            bool isAlignedTimes = retentionTimes.Length == 0;
             if (isAlignedTimes)
             {
-                retentionTimes = _document.Settings.GetAlignedRetentionTimes(FileAlignmentIndices,
-                                                                             lookupSequence,
-                                                                             lookupMods);
+                retentionTimes = _document.Settings.GetAlignedRetentionTimes(InjectionGroup.ChromatogramSet, MSDataFilePath, targets);
             }
             peptideChromDataSets.RetentionTimes = retentionTimes;
             peptideChromDataSets.IsAlignedTimes = isAlignedTimes;
@@ -716,7 +718,7 @@ namespace pwiz.Skyline.Model.Results
             if (prediction == null && isFullScan && fullScan.RetentionTimeFilterType == RetentionTimeFilterType.ms2_ids)
             {
                 if (retentionTimes.Length == 0)
-                    retentionTimes = _document.Settings.GetUnalignedRetentionTimes(lookupSequence, lookupMods);
+                    retentionTimes = _document.Settings.GetUnalignedRetentionTimes(targets);
                 if (retentionTimes.Length > 0)
                 {
                     var statTimes = new Statistics(retentionTimes);

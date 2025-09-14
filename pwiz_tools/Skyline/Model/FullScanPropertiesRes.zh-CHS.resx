@@ -265,6 +265,12 @@
   <data name="Description_IonMobilityCount" xml:space="preserve">
     <value>此谱图中唯一离子迁移值的数量。</value>
   </data>
+  <data name="TotalIonCurrent" xml:space="preserve">
+    <value>总离子电流</value>
+  </data>
+  <data name="Description_TotalIonCurrent" xml:space="preserve">
+    <value>本谱图中所有检出离子的强度总和</value>
+  </data>
   <data name="InjectionTime" xml:space="preserve">
     <value>注射时间</value>
   </data>

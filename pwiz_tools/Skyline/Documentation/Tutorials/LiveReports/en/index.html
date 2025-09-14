@@ -1,0 +1,1033 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="../../shared/SkylineStyles.css">
+    <script src="../../shared/skyline.js" type="text/javascript"></script>
+</head>
+
+<body onload="skylineOnload();">
+    <h1 class="document-title">Skyline Live Reports</h1>
+    <p>
+        Skyline provides a powerful set of tools for organizing, visualizing, and analyzing complex quantitative data. Among these, 
+        <b>Live Reports</b> offer a highly flexible and customizable framework for exploring results in real time. Live Reports present 
+        information in rows and columns that can be filtered, sorted, pivoted, and exported, allowing users to move seamlessly between 
+        raw values and higher-level comparisons.
+    </p>
+    <p>
+        This tutorial introduces the Live Reports interface in Skyline and demonstrates how to use it effectively for both exploration 
+        and reporting. You will learn how to enable audit logging, navigate built-in and custom reports, define replicate annotations, 
+        create result file rules, design lists, and customize report definitions. The tutorial also shows how to pivot data, apply 
+        filters, compare groups, generate heat maps, and export reports for sharing with collaborators.
+    </p>
+    <p>
+        By the end of this tutorial, you will understand how to tailor Live Reports to your specific experimental context, ensuring that 
+        you can extract meaningful insights and communicate them clearly.
+    </p>
+    <h1>Getting Started</h1>
+    <p>
+        To start this tutorial, download the following ZIP file: 
+    </p>
+    <p>
+        <a href="https://skyline.ms/tutorials/LiveReports.zip">https://skyline.ms/tutorials/LiveReports.zip</a>
+    </p>
+    <p>
+        Extract the files in it to a folder on your computer, like: 
+    </p>
+    <p>
+        C:\Users\brendanx\Documents 
+    </p>
+    <p>
+        This will create a new folder: 
+    </p>
+    <p>
+        C:\Users\brendanx\Documents\LiveReports
+    </p>
+    <p>
+        To begin processing the data collected for the Differentiation phase of this method refinement study:
+    </p>
+    <ul>
+        <li>Open the “Rat_plasma.sky” file in the “LiveReports” folder.</li>
+    </ul>
+    <h1>Enable Audit Logging</h1>
+    <p>
+        The first thing to do in this document is to enable audit logging. The Audit Log in Skyline keeps track of all of the changes that have been
+        made to the document. When you create a new document in Skyline, the audit log is usually enabled, but in this much older document, the Audit
+        Log has not been enabled.
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, click <b>Live Reports</b> and then click <b>Audit Log</b>.</li>
+    </ul>
+    <p class="keep-next">
+        This brings up the Audit Log form:
+    </p>
+    <p>
+        <img src="s-01.png" />
+    </p>
+    <ul>
+        <li>Check the <b>Enable audit logging</b> checkbox.</li>
+    </ul>
+    <p>
+        The Audit Log grid becomes populated with a set of entries which represent the difference between the current document and default Skyline
+        blank document.
+    </p>
+    <p>
+        <img src="s-02.png" />
+    </p>
+    <ul>
+        <li>Close the <b>Audit Log</b> window.</li>
+    </ul>
+    <p>
+        At the end of this tutorial we will return to the Audit Log and inspect its contents.
+    </p>
+    <p>
+        By inspecting the indicators at the bottom right corner of the Skyline window, you will see that the file you opened contains 48 proteins, 125
+        peptides and 722 transitions.
+    </p>
+    <p>
+        <img src="s-03.png" />
+    </p>
+    <h1>Showing the Document Grid</h1>
+    <ul>
+        <li>On the <b>View</b> menu, choose <b>Live Reports</b> and click <b>Document Grid</b>.</li>
+        <li>Click the <b>Reports</b> button in the top left corner of the <b>Document Grid</b>.</li>
+    </ul>
+    <p class="keep-next">
+        This shows the list of reports that are available to be shown in the <b>Document Grid</b>:
+    </p>
+    <p>
+        <img src="s-04.png" />
+    </p>
+    <p>
+        The first five items in the list, <b>Proteins</b>, <b>Peptides</b>, <b>Precursors</b>,
+        <b>Transitions</b>, and <b>Replicates</b> are the “built-in” reports which cannot be modified. Each of these reports show
+        essential information from basic units in the Skyline document. The set of columns that these reports have may change based on the state of
+        the document. In particular, if there are any user-defined annotations, those annotations will be added to the appropriate built-in report.
+
+    </p>
+    <p>
+        Below the built-in report are the user-defined reports which can be modified. Skyline ships with a small set of user-defined reports that are
+        designed to be helpful. In addition, it is expected that Skyline users will define their own reports and share them with colleagues.
+    </p>
+    <ul>
+        <li>On the <b>Reports</b> menu in the <b>Document Grid</b>, click <b>Proteins</b>.
+        </li>
+    </ul>
+    <p class="keep-next">
+        This displays the built-in “Proteins” report, which shows the list of proteins in the document, in the same order that they appear in the
+        <b>Targets</b> tree.
+    </p>
+    <p>
+        <img src="s-05.png" />
+    </p>
+    <p>
+        The first column in the report is displayed as a hyperlink, and clicking on the blue, underlinded text in those cells will navigate to the particular protein in
+        Skyline.
+    </p>
+    <ul>
+        <li>Click the fourth item in the “Protein” column (“NP_001012027”).</li>
+    </ul>
+    <p class="keep-next">
+        This causes the fourth protein in the <b>Targets</b> tree to be selected:
+    </p>
+    <p>
+        <img src="s-06.png" />
+    </p>
+    <p class="keep-next">
+        The <b>Status Bar</b> at the bottom of the Skyline window also indicates that the fourth protein in the document is selected.
+    </p>
+    <p>
+        <img src="s-07.png" />
+    </p>
+    <p class="keep-next">
+        The record navigator at the top of the <b>Document Grid</b> also indicates that the focus is in the fourth row.
+    </p>
+    <p>
+        <img src="s-08.png" />
+    </p>
+    <p>
+        The <b>Document Grid</b> can be used to inspect many types of data.
+    </p>
+    <ul>
+        <li>On the <b>Reports</b> dropdown at the top of the <b>Document Grid</b>, click <b>Replicates</b>.</li>
+    </ul>
+    <p>
+        <img src="s-09.png" />
+    </p>
+    <p>
+        This document contains 42 Replicates. The names of the Replicates are all in three parts. The first letter of the replicate name is a “D” or
+        “H” indicating whether the sample came from a diseased or a healthy rat. That is followed by an underscore, and then three digits which are
+        the subject identifier of the rat. That is followed by “_REP” and then one more digit which identifies which technical replicate it is.
+    </p>
+    <h1>Defining some Replicate Annotations</h1>
+    <p>
+        Before using features such as “Group Comparisons”, it is necessary to tell Skyline more about these replicates. The way to do that is by
+        defining some “Replicate Annotations”.
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, click <b>Document Settings</b>.</li>
+    </ul>
+    <p>
+        <img src="s-10.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Add</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        This brings up the <b>Define Annotation</b> form:
+    </p>
+    <p>
+        <img src="s-11.png" />
+    </p>
+    <p>
+        Annotations in Skyline must be given a unique name. There are three fundamental value types for annotations: text, numeric, and true/false. In
+        addition, an annotation can be a “value list”, which is treated as a text annotation whose value is restricted to those in a specified list.
+
+    </p>
+    <ul>
+        <li>Fill in the form as follows so that the name of the annotation is “Cohort”, the type is “Value List”, the values are Healthy and Diseased
+            and the checkbox next to “Replicates” is checked.</li>
+    </ul>
+    <p>
+        <img src="s-12.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        The new annotation now shows up in the <b>Document Settings</b> form:
+    </p>
+    <p>
+        <img src="s-13.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Add</b> button.</li>
+        <li>Fill in the form so that the name is “SubjectID”, the type is “Text” and the checkbox next to “Replicates” is checked.</li>
+    </ul>
+    <p>
+        <img src="s-14.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        <img src="s-15.png" />
+    </p>
+    <p>
+        Now, two annotations have been defined and the checked checkbox next to each of them means that they are available in the current document.
+    </p>
+    <ul>
+        <li>Click the OK button.</li>
+    </ul>
+    <p>
+        The <b>Document Grid</b> which is displaying the “Replicates” report will show the new “Cohort” and “SubjectID” annotations which have been added to
+        the document. If you click in a cell in the “Cohort” column you will see that it is a dropdown allowing you to choose the one of the two
+        allowable values “Healthy” or “Diseased” (or blank).
+    </p>
+    <p>
+        <img src="s-16.png" />
+    </p>
+    <p>
+        It is possible to fill in the values in the “Cohort” and “SubjectID” columns by either typing into those cells, or pasting a
+        column of data into them.
+    </p>
+    <h1>Creating Result File Rules</h1>
+    <p>
+        In this case, because the values of the annotations are so closely tied to the names of the result files, there is another feature “Result File
+        Rules” which can be used to set the values.
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, click <b>Document Settings</b>.</li>
+        <li>Click the <b>Result Files</b> tab.</li>
+        <li>Click the <b>Add</b> button.</li>
+    </ul>
+    <p>
+        This brings up the <b>Rule Set Editor</b> which allows you to specify ways of populating values in the Skyline document from values from the Result
+        Files.
+    </p>
+    <ul>
+        <li>Click somewhere in the first row in the <b>Rules</b> list.</li>
+        <li>Click the "<b>…</b>" button located to the right of the <b>Rules</b> list.</li>
+    </ul>
+    <p class="keep-next">
+        This brings up the <b>Rule Editor</b>:
+    </p>
+    <p>
+        <img src="s-17.png" />
+    </p>
+    <ul>
+        <li>In the <b>Pattern</b> textbox, enter the letter "D".</li>
+        <li>In the <b>Replacement</b> textbox, enter the word "Diseased".</li>
+        <li>In the <b>Target</b> dropdown, choose "Cohort".</li>
+    </ul>
+    <p>
+        <img src="s-18.png" />
+    </p>
+    <p>
+        The <b>Preview</b> grid will show the effect that this rule will have. The <b>File Name</b> values in the first 21 rows all contain the
+        letter <b>D</b> so that the <b>Match</b> checkbox is checked and the word <b>Diseased</b> is filled in for the
+        <b>Cohort</b> column.
+    </p>
+    <p class="keep-next">
+        If you move the scrollbar thumb down halfway you will see that the file names which start with “H” are not being matched.
+    </p>
+    <p>
+        <img src="s-19.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        This brings you back to the <b>Rule Set Editor</b> where it is showing the results of that first rule:
+    </p>
+    <p>
+        <img src="s-20.png" />
+    </p>
+    <ul>
+        <li>Click somewhere in the second row of the <b>Rules</b> grid and then click the "<b>…</b>" button to the right of the grid.</li>
+        <li>Fill in the <b>Rule Editor</b> with the letter "H" as the <b>Pattern</b>, the word "Healthy" as <b>Replacement</b> and
+            "Cohort" for <b>Target</b>.</li>
+    </ul>
+    <p>
+        <img src="s-21.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        This brings you back to the <b>Rule Set Editor</b>:
+    </p>
+    <p>
+        <img src="s-22.png" />
+    </p>
+    <ul>
+        <li>Click in the third row of the <b>Rules</b> grid, and then click the "<b>…</b>" button to the right of the grid.</li>
+    </ul>
+    <p>
+        The purpose of the final rule that we create is to set the SubjectID values to D102, H162, etc. by combining the first letter of the file name
+        with the 3 digits that follow the first underscore.
+    </p>
+    <p>
+        To accomplish this, the pattern that we are going to use is <b>(.)_(...)</b> The parentheses denote regular expression groups, which
+        are parts of the matched expression which can be referred back to in the Replacement text with “$1” and “$2”. The period character (dot) will
+        match any character, and the underscore character will only match an underscore.
+    </p>
+    <ul>
+        <li>In the <b>Pattern</b> textbox, enter <b>(.)_(...)</b>.</li>
+        <li>In the <b>Replacement</b> textbox, enter <b>$1$2</b>.</li>
+        <li>In the <b>Target</b> dropdown, choose <b>SubjectID</b>.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Rule Editor</b> should now look like this:
+    </p>
+    <p>
+        <img src="s-23.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        This returns you to the <b>Rule Set Editor</b> which should now look like this:
+    </p>
+    <p>
+        <img src="s-24.png" /> 
+    </p>
+    <ul>
+        <li>In the <b>Name</b> textbox enter “Cohort and SubjectID”.</li>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        This returns you to the <b>Document Settings</b> form where the “Cohort and SubjectID” rule has been added and has a checkmark next to it.
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button in the <b>Document Settings</b> form.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Cohort</b> and <b>SubjectID</b> values in the <b>Replicates</b> report will be filled in from the file
+        names.
+    </p>
+    <p>
+        <img src="s-25.png" />
+    </p>
+    <h1>Creating a list of samples</h1>
+    <ul>
+        <li>On the <b>Settings</b> menu, click <b>Document Settings</b>.</li>
+        <li>Click the <b>Lists</b> tab.</li>
+        <li>Click the <b>Add</b> button.</li>
+    </ul>
+    <p>
+        This brings up the <b>List Designer</b>:
+    </p>
+    <p>
+        <img src="s-26.png" />
+    </p>
+    <ul>
+        <li>In the <b>List name</b> textbox, enter “Samples”.</li>
+        <li>In the first row of the grid, enter “SubjectID” in the <b>Property Name</b> column.</li>
+        <li>In the second row of the grid, enter “Sex” in the <b>Property Name</b> column.</li>
+        <li>In the third row of the grid, enter “Weight” in the <b>Property Name</b> column and choose <b>Number</b> in the
+            <b>Property Type</b> column.</li>
+        <li>In the fourth row of the grid, enter “Name” in the <b>Property Name</b> column.</li>
+        <li>In the ID Property dropdown, choose “SubjectID” and in the Display Property dropdown choose Name.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>List Designer</b> should now look like this:
+    </p>
+    <p>
+        <img src="s-27.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Save</b> button.</li>
+        <li>Click the <b>OK</b> button in the <b>Document Settings</b> form.</li>
+    </ul>
+    <p>
+        This brings you back to the main Skyline window.
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, choose <b>Live Reports</b> and then <b>Lists</b>, and click <b>Samples</b>.
+        </li>
+    </ul>
+    <p>
+        This brings up a grid which shows the list that we just defined. There are no rows in the list, but it has the four columns that we defined:
+        SubjectID, Sex, Weight and Name.
+    </p>
+    <p>
+        <img src="s-28.png" />
+    </p>
+    <p>
+        It is possible to fill in values by typing into the grid, but this tutorial has a prepared text file with data that can be used.
+    </p>
+    <p>
+        You can navigate to that text file using the <b>File</b> menu item in Skyline.
+    </p>
+    <ul>
+        <li>On the <b>File</b> menu, click choose <b>Open containing folder</b>.</li>
+    </ul>
+    <p>
+        This will bring up the Windows File Explorer on the folder containing the active Skyline document. 
+    </p>
+    <ul>
+        <li>Find the file there called “SampleInfo.txt”.</li>
+        <li>Double-click on that file in the Windows File Explorer.</li>
+    </ul>
+    <p>
+        This will most likely bring up Notepad, a simple text editor. The first line of the text editor has the column names “SubjectID”, “Sex”,
+        “Weight” and “Name”.
+    </p>
+    <ul>
+        <li>Select all the text in the document except for the first line and copy it to the clipboard. (Ctrl-C)</li>
+    </ul>
+    <p>
+        Go back to Skyline and make it so that the first column of the first row in the <b>List: Samples</b> is the current cell, but does not have a blinking cursor.
+    </p>
+    <p>
+        <img src="s-29.png" />
+    </p>
+    <ul>
+        <li>Paste the text from the clipboard (<b>Ctrl-V</b>).</li>
+    </ul>
+    <p class="keep-next">
+        This should add 14 rows to the grid.
+    </p>
+    <p>
+        <img src="s-30.png" />
+    </p>
+    <h2>Changing annotation type</h2>
+    <ul>
+        <li>On the <b>Settings</b> menu, click <b>Document Settings</b>.</li>
+        <li>On the <b>Annotations</b> tab of the <b>Document Settings</b> form, click the <b>Edit List</b> button.</li>
+        <li>Click <b>SubjectID</b> in the <b>Define Annotations</b> form.</li>
+        <li>Click the <b>Edit</b> button.</li>
+        <li>In the <b>Type</b> dropdown, choose <b>Lookup: Samples</b>.</li>
+    </ul>
+    <p>
+        <img src="s-31.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button on the <b>Define Annotation</b> form.</li>
+        <li>Click the <b>OK</b> button on the <b>Define Annotations</b> form.</li>
+        <li>Click the <b>OK</b> button on the <b>Document Settings</b> form.</li>
+    </ul>
+    <p>
+        Notice that in the Document Grid, the values displayed in the “SubjectID” column are now the names of rats from the Samples list. For each row
+        where the SubjectID annotation has matched something in the ID Property column from the list, Skyline displays the value from the Display
+        Property of the list.
+    </p>
+    <p>
+        <img src="s-32.png" />
+    </p>
+    <h1>Looking at results in the <b>Document Grid</b>:</h1>
+    <ul>
+        <li>in the <b>Reports</b> dropdown at the top of the <b>Document Grid</b>, Click <b>Peptides</b>.</li>
+        <li>Choose <b>Customize Report</b> in the <b>Reports</b> dropdown at the top of the Document Grid.</li>
+    </ul>
+    <p>
+        This brings up the <b>Customize Report</b> form where the columns from the Peptides report have been selected.
+    </p>
+    <ul>
+        <li>In the listbox on the right, click the name “First Position” .</li>
+        <li>While holding down the shift key, click the name “Peptide Note” in that same listbox.</li>
+    </ul>
+    <p>
+        This causes all the column names between “First Position” and “Peptide Note” to become selected.
+    </p>
+    <ul>
+        <li>Click the red X to the right of the column list.</li>
+    </ul>
+    <p>
+        This removes the selected columns from the column list, so that only “Peptide”, “Protein”, “Peptide Modified Sequence” and “Standard Type”
+        remain.
+    </p>
+    <ul>
+        <li>In the column tree on the left, expand the item “Peptides” and then expand “Precursors” and then “Precursor Results”.</li>
+        <li>Check the checkbox next to “Total Area”.</li>
+    </ul>
+    <p class="keep-next">
+        This adds the “Total Area” column to the list of chosen columns.
+    </p>
+    <p>
+        <img src="s-33.png" />
+    </p>
+    <p>
+        When a column is added to a report, it is usually inserted ahead of whatever column may be selected in the column list. If no column is
+        selected in the column list then newly added columns are added to the end.
+    </p>
+    <p>
+        To have the “Total Area” column appear after “Standard Type” do the following:
+    </p>
+    <ul>
+        <li>Click the up arrow button to the right of the column list so that <b>Standard Type</b> moves before <b>Total Area</b>.
+        </li>
+    </ul>
+    <p>
+        To add another column to the report, and have that column to appear before <b>Total Area</b>:
+    </p>
+    <ul>
+        <li>Click <b>Total Area</b> in the column list on the right.</li>
+        <li>In the <b>Columns</b> tree view on the left, scroll all the way to the bottom.</li>
+        <li>Click the checkbox next to “Replicates” in the tree view.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Customize Report</b> form should now look like this:
+    </p>
+    <p>
+        <img src="s-34.png" />
+    </p>
+    <ul>
+        <li>Type “Peptide Areas” into the <b>Report Name</b> textbox.</li>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Document Grid</b> should now look like this:
+    </p>
+    <p>
+        <img src="s-35.png" />
+    </p>
+    <p>
+        This report has 42 rows for each peptide.
+    </p>
+    <h2>Pivoting on Replicate Name</h2>
+    <ul>
+        <li>In the <b>Reports</b> dropdown at the top of the Document Grid, click <b>Edit Report</b>.</li>
+    </ul>
+    <p class="keep-next">
+        This brings up the <b>Customize Report</b> form again:
+    </p>
+    <p>
+        <img src="s-36.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Pivot Replicate Name</b> checkbox.</li>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        The <b>Document Grid</b> is now displaying one row per peptide.
+    </p>
+    <ul>
+        <li>Make the <b>Document Grid</b> window as wide as you can.</li>
+    </ul>
+    <p>
+        <img src="s-37.png" />
+    </p>
+    <p>
+        The “Replicate” and “Total Area” columns are repeated horizontally, showing values from the different replicates.
+    </p>
+    <ul>
+        <li>Click the first cell in the Peptide column where it says “CSLPRPWALTFSYGR”. This will select that peptide in the <b>Targets</b> view.</li>
+        <li>On the <b>View</b> menu, choose <b>Peak Areas</b> and click <b>Replicate Comparison</b>.</li>
+    </ul>
+    <p>
+        This shows the peak areas for the currently selected peptide across all the replicates. The order of the replicates in the Peak Areas Replicate
+        Comparison graph is the same as the horizontal order of the replicates in the Document Grid. You can visually verify that the Total Area
+        values displayed in the Document Grid are the same as the values displayed in the Peak Areas Replicate Comparison graph.
+    </p>
+    <p>
+        <img src="s-38.png" />
+    </p>
+    <h1>The “Normalized Area” column</h1>
+    <ul>
+        <li>On the <b>Reports</b> dropdown at the top of the Document Grid, click <b>Edit Report</b>.</li>
+        <li>Click the binoculars button on the tool strip at the top of the <b>Customize Report</b> form.</li>
+        <li>Type “Normalized Area” into the textbox in the <b>Find Column</b> form.</li>
+        <li>Click the <b>Find Next</b> button.</li>
+        <li>Click the <b>Close</b> button on the <b>Find Column</b> form.</li>
+    </ul>
+    <p class="keep-next">
+        The “Normalized Area” column is now selected in the column tree on the left.
+    </p>
+    <p>
+        <img src="s-39.png" />
+    </p>
+    <ul>
+        <li>Click the checkbox next to “Normalized Area”.</li>
+    </ul>
+    <p>
+        <img src="s-40.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button in the <b>Customize Report</b> form.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Document Grid</b> now shows the values from the “Normalized Area” column next to each of the “Total Area” values.
+    </p>
+    <p>
+        <img src="s-41.png" />
+    </p>
+    <p>
+        The values shown in the “Total Area” columns are the same as the values in the “Normalized Area” columns although they are formatted
+        differently.
+    </p>
+    <h2>Changing the format on a column</h2>
+    <p>
+        It may be easier to see that the values if you change the format of one of the columns to be the same.
+    </p>
+    <ul>
+        <li>Right Click the column header where it says “D_102_REP1 Total Area” and choose <b>Number Format</b>.</li>
+        <li>In the <b>Choose Format</b> form, choose <b>Scientific 3.1416E+0</b> in the dropdown.</li>
+        <li>Click the <b>OK</b> button on the <b>Choose Format</b> form.</li>
+    </ul>
+    <p>
+        <img src="s-42.png" />
+    </p>
+    <p>
+        It is now much easier to see that the values in the “Total Area” and “Normalized Area” columns are the same.
+    </p>
+    <p>
+        Notice that in the tenth row in the “D_102_REP2 Normalized Area” column there is a red exclamation mark next to the value.
+    </p>
+    <p>
+        If you hover the mouse over the exclamation mark you will see a tooltip which says “All 6 peaks were truncated”.
+    </p>
+    <p>
+        In order to investigate that:
+    </p>
+    <ul>
+        <li>Click the blue underlined text in the first column of the tenth row in the grid (“TGTNLMDFLSR”). This will select that peptide in the
+            Targets tree.</li>
+        <li>Click one of the blue, underlined “D_102_REP2” to select that replicate.</li>
+        <li>Move the <b>Document Grid</b> and other windows out of the way so that you can see the chromatograms in the main window.</li>
+    </ul>
+    <p>
+        <img src="s-43.png" />
+    </p>
+    <p>
+        The red exclamation mark is warning that the integration boundaries of the chosen peak coincide with the edit of the time range of the acquired
+        SRM chromatogram. This could be a problem when comparing peak areas between replicates, as replicates with truncated peaks will tend to have
+        lower peak areas than non-truncated peaks.
+    </p>
+    <h2>Sub-properties of the “Normalized Area” column</h2>
+    <ul>
+        <li>In the <b>Reports</b> dropdown at the top of the <b>Document Grid</b>, click <b>Edit Report</b>.</li>
+        <li>Double-click the “Normalized Area” element in the list on the right.</li>
+    </ul>
+    <p>
+        The “Normalized Area” element in the tree on the left will become selected when the column is double clicked in the list box.
+    </p>
+    <ul>
+        <li>Click the plus button to the left of the “Normalized Area” node in the tree to expand it.</li>
+    </ul>
+    <p>
+        This reveals three additional columns which could be added to the report.
+    </p>
+    <ul>
+        <li>Check the checkboxes next to “Normalized Area Raw”, “Normalized Area Strict” and “Normalized Area
+                Message”.</li>
+        <li>Click the <b>OK</b> button in the <b>Customize Report</b> form.</li>
+        <li>Make the <b>Document Grid</b> as wide as you can so that you can see the cell with the red exclamation mark.</li>
+    </ul>
+    <p>
+        <img src="s-44.png" />
+    </p>
+    <p>
+        The values in the “Normalized Area Raw” and “Normalized Area Strict” are generally the same as each other, except
+        in the place where the “Normalized Area” value has a red exclamation mark and the “Normalized Area Message”
+        value is not blank. In that spot, the value of “Normalized Area Strict” is “#N/A”.
+    </p>
+    <ul>
+        <li>In the <b>Reports</b> dropdown, click <b>Edit Report</b>.</li>
+        <li>In the <b>Customize Report</b> form, uncheck the <b>Pivot Replicate Name</b> checkbox.</li>
+        <li>Click the <b>OK</b> button in the <b>Customize Report</b> form.</li>
+    </ul>
+    <p>
+        This now shows a narrower view of the report with many fewer columns and more rows.
+    </p>
+    <h1>Calculating the average of columns of data</h1>
+    <ul>
+        <li>On the tool strip at the top of the Document Grid, click the second button from the left (<img src="s-45.png" />). That button has two
+            sections. The right section of that button is an inverted triangle. You can either Click the left part of the button which will bring
+            up the <b>Pivot Editor</b>, or you can click the right part of the button which will drop down a menu and click <b>New Pivot</b>.
+        </li>
+    </ul>
+    <p>
+        This brings up the <b>Pivot Editor</b>.
+    </p>
+    <ul>
+        <li>In the column list on the left, click once on “Normalized Area Raw” and then, while holding down the shift key on the
+            keyboard, Click “Normalized Area Strict” so that both of those columns are selected.</li>
+        <li>In the dropdown in the middle at the bottom of the <b>Pivot Editor</b> form, where it currently says “Sum”, choose “Mean”.</li>
+        <li>Click the <b>Add Value &gt;&gt;</b> button above that dropdown.</li>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        <img src="s-46.png" />
+    </p>
+    <p>
+        The <b>Document Grid</b> now shows only a single row where the two columns show the average value from the “Normalized Area Raw” and “Normalized Area
+        Strict”.
+    </p>
+    <p>
+        The average value in the “Normalized Area Strict” cell is a higher number than the value in the “Normalized Area Raw” cell. This is to be expected
+        because truncated peaks tend to have smaller than expected areas and excluding them from a list would tend to result in a higher mean.
+    </p>
+    <h1>Pivoting with row headers and column headers</h1>
+    <ul>
+        <li>Click the inverted triangle in the right portion of the second button from the left on the toolstrip at the top of the <b>Document Grid</b>.
+        </li>
+        <li>Hover the mouse over the <b>Transforms</b> item.</li>
+    </ul>
+    <p>
+        <img src="s-47.png" />
+    </p>
+    <p>
+        This shows a list of the operations which have been performed on the report.
+    </p>
+    <ul>
+        <li>Click the <b>No Transforms</b> item.</li>
+    </ul>
+    <p class="keep-next">
+        This restores the Document Grid to the way that it looked before:
+    </p>
+    <p>
+        <img src="s-48.png" />
+    </p>
+    <ul>
+        <li>In the <b>Reports</b> dropdown at the top of the <b>Document Grid</b>, click <b>Edit Report</b>.</li>
+        <li>Click the “+” button next to “Replicates” at the bottom to expand it and then click the checkbox next to “SubjectID”.</li>
+    </ul>
+    <p>
+        <img src="s-49.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button in the <b>Customize Report</b> form.</li>
+    </ul>
+    <p class="keep-next">
+        This adds the “SubjectID” column to the report.
+    </p>
+    <p>
+        <img src="s-50.png" />
+    </p>
+    <ul>
+        <li>Click the second button from the left on the tool strip at the top of the <b>Document Grid</b> to bring up the <b>Pivot Editor</b>.</li>
+    </ul>
+    <p>
+        <img src="s-51.png" />
+    </p>
+    <ul>
+        <li>Click the “Peptide” item in the list box on the left and then click the <b>Add Row Header</b> button.</li>
+        <li>Click the “SubjectID” item in the list box on the left and click the <b>Add Column Header</b> button.</li>
+        <li>Click the “Normalized Area Raw” button on the left.</li>
+        <li>Choose <b>Coefficient of Variation</b> in the dropdown below the <b>Add Value</b> button.</li>
+        <li>Click the <b>Add Value</b> button.</li>
+    </ul>
+    <p class="keep-next">
+        The <b>Pivot Editor</b> should now look like this:
+    </p>
+    <p>
+        <img src="s-52.png" />
+    </p>
+    <p class="keep-next">
+        The report now shows the Coefficients of Variation (CV) for each peptide between each rat’s technical replicates.
+    </p>
+    <p>
+        <img src="s-53.png" />
+    </p>
+    <ul>
+        <li>Click the column header which says “Drizzle CV Normalized Area Raw” and choose <b>Sort Ascending</b>.</li>
+        <li>Click the peptide “SVVDIGLIK” which is in the first column of the first row.</li>
+    </ul>
+    <p>
+        <img src="s-54.png" />
+    </p>
+    <p>
+        The currently selected peptide now has the lowest CV for the rat named Drizzle of all of the peptides in the document.
+    </p>
+    <p class="keep-next">
+        Look at the <b>Peak Areas - Replicate Comparison</b> window.
+    </p>
+    <p>
+        <img src="s-55.png" />
+    </p>
+    <p>
+        The very large bar at the left edge shows the relative intensities from the spectral library. The three bars immediately to the right of that
+        belong to the rat named “Drizzle”. Their heights are very similar to each other.
+    </p>
+    <ul>
+        <li>In the Document Grid, click the “Drizzle CV Normalized Area Raw” column and choose <b>Sort Descending</b>.</li>
+        <li>The peptide AGSWQITMK now sorts to the top. Click that peptide to select it in the <b>Targets</b> view and look at the <b>Peak Area - Replicate
+            Comparison</b> graph.</li>
+    </ul>
+    <p>
+        <img src="s-56.png" />
+    </p>
+    <p>
+        The currently selected peptide has the most variation in peak areas across the replicates associated with the rat named “Drizzle”. There is a
+        great deal of variation in the heights of the three bars at the left end of the graph.
+    </p>
+    <h1>Changing the Normalization Method in the document</h1>
+    <p>
+        The “Normalized Area” column shows areas normalized according to the normalization method specified on the <b>Quantification</b> tab of the
+        <b>Peptide Settings</b>.
+    </p>
+    <ul>
+        <li>On the <b>Settings</b> menu, click <b>Peptide Settings</b>.</li>
+        <li>Click the <b>Quantification</b> tab.
+        <li>In the <b>Normalization method</b> dropdown, choose <b>Ratio to Global Standards</b>.</li>
+    </ul>
+    <p>
+        <img src="s-57.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> botton on the <b>Peptide Settings</b> form.</li>
+    </ul>
+    <p>
+        The “Normalized Area” values are now the “Total Area” values divided by the area of the “Global Standard” peptide.
+    </p>
+    <ul>
+        <li>Click the Drizzle CV “Normalized Area Raw” column header and choose <b>Sort Ascending</b>.</li>
+    </ul>
+    <p>
+        <img src="s-58.png" />
+    </p>
+    <p>
+        The very first row shows “0%” as the CV for each of the samples. This is to be expected because this document has only one Global Standard
+        normalization peptide. The area of that peptide normalized to itself will always be exactly 1, and therefore the CV of that value will always
+        be zero.
+    </p>
+    <h2>Adding a filter to a report definition</h2>
+    <ul>
+        <li>In the <b>Reports</b> dropdown, click <b>Edit Report</b>.</li>
+        <li>Double-click <b>Standard Type</b> in the column list on the right so that it becomes selected in the tree.</li>
+        <li>Click the <b>Filter</b> tab.</li>
+        <li>Click the <b>Add</b> button.</li>
+        <li>In the dropdown in the <b>Operation</b> column choose “Is Blank”.</li>
+    </ul>
+    <p class="keep-next">
+        The Customize Report form should now look like this:
+    </p>
+    <p>
+        <img src="s-59.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p>
+        The first row with the global standard peptide “VVLSGSDATLAYSAFK” has been removed.
+    </p>
+    <h1>Adding a Group Comparison</h1>
+    <ul>
+        <li>On the <b>View</b> menu, choose <b>Live Reports</b> and then <b>Group Comparisons</b>, and click <b>Add</b>.
+        </li>
+        <li>In the <b>Edit Group Comparison</b> form, set the following values:</li>
+    </ul>
+    <p>
+        <b>Name</b>: Peptide Group Comparison.
+    </p>
+    <p>
+        <b>Control group annotation</b>: Cohort.
+    </p>
+    <p>
+        <b>Control group value</b>: Healthy.
+    </p>
+    <p>
+        <b>Value to compare against</b>: Diseased.
+    </p>
+    <p>
+        <b>Identity annotation</b>: SubjectID.
+    </p>
+    <p>
+        <b>Normalization method</b>: Default.
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button on the <b>Edit Group Comparison</b> form.</li>
+        <li>On the <b>View</b> menu, choose <b>Live Reports</b> and then <b>Group Comparisons</b>, and click <b>Peptide Group
+                Comparison</b>.</li>
+    </ul>
+    <p class="keep-next">
+        This shows the <b>Peptide Group Comparison</b> grid:
+    </p>
+    <p>
+        <img src="s-60.png" />
+    </p>
+    <ul>
+        <li>Click the <b>Bar Graph</b> button at the top of the <b>Group Comparison: Grid</b>.</li>
+    </ul>
+    <p>
+        The bar graph plot shows the fold change values for each of the peptides that is displayed in the grid.
+    </p>
+    <ul>
+        <li>Click the <b>Fold Change Result</b> column header and click <b>Sort Ascending</b>.</li>
+    </ul>
+    <p>
+        <img src="s-61.png" />
+    </p>
+    <p>
+        The data is now sorted so that the peptides with the smallest fold change are displayed first and the peptides with the largest fold changes
+        are displayed last.
+    </p>
+    <ul>
+        <li>Click the first peptide in the grid (WWGQEITELAQGPGR).</li>
+        <li>Look at the <b>Peak Area - Replicate Comparison</b> graph.</li>
+    </ul>
+    <p>
+        <img src="s-62.png" />
+    </p>
+    <p>
+        This peptide clearly has lower abundance in the diseased replicates compared to the healthy replicates.
+    </p>
+    <ul>
+        <li>Right-click the “Adjusted P-Value” column and choose “Filter”.</li>
+        <li>For the <b>Filter Type</b>, choose “Is Less Than” and type “0.05” into the text box below that.</li>
+    </ul>
+    <p>
+        <img src="s-63.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button on the <b>Filter</b> form.</li>
+    </ul>
+    <p class="keep-next">
+        The grid and the graph are now showing only the rows where the adjusted P-value is less than 0.05.
+    </p>
+    <p>
+        <img src="s-64.png" />
+    </p>
+    <ul>
+        <li>Close the <b>Peptide Group Comparison:Bar Graph</b> by clicking the gray X at the right edge of that window’s title bar. Do not click the red X
+            above it because that will close both the grid and the bar graph.</li>
+    </ul>
+    <h2>Showing abundances with the group comparison results</h2>
+    <p>
+        The <b>Group Comparison:Grid</b> can also show the per-replicate abundances which contributed to the fold change calculation.
+    </p>
+    <ul>
+        <li>On the <b>Reports</b> dropdown at the top of the <b>Peptide Group Comparison Grid</b>, click <b>Customize Report</b>.</li>
+        <li>Click the + button next to “Replicate Abundances” at the bottom of the tree in the Customize Report form to expand it.</li>
+        <li>Check the checkbox next to “Abundance”.</li>
+        <li>In the <b>Report Name</b> field, enter “Replicate Abundances”.</li>
+        <li>Click the <b>OK</b> button in the <b>Customize Report</b> form.</li>
+    </ul>
+    <p>
+        <img src="s-65.png" />
+    </p>
+    <p>
+        The grid now shows abundances for each peptide and replicate. The values shown in the cells are equal to the “Normalized Area Strict” values that were seen in the Document Grid, except that the values in the group comparison grid have been divided by the number of
+        transitions in the peptide.
+    </p>
+    <h2>Showing a heat map with dendrograms</h2>
+    <ul>
+        <li>Click the inverted triangle to the right of the third button from the left on the tool strip at the top of the <b>Peptide Group Comparison:Grid</b> window.</li>
+        <li>Choose <b>Show Heat Map</b> from the drop down menu.</li>
+    </ul>
+    <p>
+        <img src="s-66.png" />
+    </p>
+    <p>
+        Skyline displays a heat map where the peptides and replicates have been reordered so that the dendrograms above and to the right of the graph
+        can be drawn to indicate which rows and columns are most similar to each other.
+    </p>
+    <h1>Adding report definitions to the document</h1>
+    <ul>
+        <li>On the <b>View</b> menu, click <b>Document Settings</b>.</li>
+        <li>Click the <b>Reports</b> tab in the <b>Document Settings</b> form.</li>
+    </ul>
+    <p>
+        This shows all the custom reports that Skyline knows about. These reports include the “Peptide Areas” which we created in the Document Grid and
+        the “Replicate Abundances” report from the Group Comparison grid. There are also some small molecule reports which would only show up in the
+        Document Grid if this were a small molecule or mixed mode document instead of a proteomics document.
+    </p>
+    <p>
+        <img src="s-67.png" />
+    </p>
+    <ul>
+        <li>Check the checkbox next to “Peptide Areas” and “Replicate Abundances”.</li>
+        <li>Click the <b>OK</b> button in the <b>Document Settings</b> form.</li>
+    </ul>
+    <p>
+        The “Replicate Abundances” and “Peptide Areas” report definitions are now part of this document and will be saved with it.
+    </p>
+    <p>
+        If you were to use the “File &gt; Share” menu item to create a .sky.zip file containing this document and send that document to someone else,
+        when they opened that document the “Peptide Areas” and “Replicate Abundances” report definitions from this document would be added to the list
+        of reports in their Skyline instance.
+    </p>
+    <h1>Inspecting the audit log</h1>
+    <ul>
+        <li>On the <b>View</b> menu, choose <b>Live Reports</b> and click <b>Audit Log</b>.</li>
+    </ul>
+    <p>
+        <img src="s-68.png" />
+    </p>
+    <p>
+        This shows in detail the operations that have modified this document.
+    </p>
+    <ul>
+        <li>In the <b>Reports</b> dropdown at the top of the <b>Audit Log</b> window, click <b>Summary</b>.</li>
+    </ul>
+    <p class="keep-next">
+        This shows a more concise list of things that have happened to the document with one row per operation:
+    </p>
+    <p>
+        <img src="s-69.png" />
+    </p>
+    <h1>Exporting a report</h1>
+    <ul>
+        <li>On the <b>File</b> menu, choose <b>Export</b> and click <b>Report</b>.</li>
+    </ul>
+    <p>
+        <img src="s-70.png" />
+    </p>
+    <p>
+        This form allows exporting of reports from the Document Grid. The “Peptide Areas” that we designed in this tutorial is one of
+        the choices. The “Replicate Abundances” report from the Group Comparison grid is not one of the choices because this form only allows
+        exporting of Document Grid reports.
+    </p>
+    <h1>Conclusion</h1>
+    <p>
+        In this tutorial, you explored the wide range of capabilities provided by Skyline Live Reports. You learned how to:
+    </p>
+    <ul>
+        <li>Enable and inspect the Audit Log to track document changes.</li>
+        <li>Work with built-in and user-defined report templates in the Document Grid.</li>
+        <li>Define annotations and rules to enrich replicate metadata.</li>
+        <li>Build lists and link annotations for more structured document management.</li>
+        <li>Customize, pivot, and filter reports to highlight specific results.</li>
+        <li>Perform group comparisons and visualize data with bar plots and heat maps.</li>
+        <li>Save and export report definitions for use in future analyses or for sharing with collaborators.</li>
+    </ul>
+    <p>
+        Together, these tools provide a robust and versatile environment for reporting experimental results within Skyline. Mastery of 
+        Live Reports will help you generate clear, reproducible summaries of your work, whether for internal review, publication, or 
+        collaborative projects.
+    </p>
+</body>
+
+</html>

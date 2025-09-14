@@ -119,21 +119,29 @@
         reformatting can be found in the “Energy_TransitionList.csv” file provided in the folder you created at the start of this tutorial.
     </p>
     <p>
-        Because the “Energy_TransitionList.csv” file is formatted with column headers that Skyline recognizes, you can bypass the <b>Insert
-            Transition List</b> form reached through the menu option <b>Edit</b> &gt; <b>Insert</b> &gt; <b>Transition
-            List</b> and simply paste everything (include the header row) into the Skyline <b>Targets</b> view. To do this, perform the
-        following steps:
+        You can bypass the <b>Insert Transition List</b> form reached through the menu option <b>Edit</b> &gt;
+        <b>Insert</b> &gt; <b>Transition List</b> and simply paste everything (include the header row) into the Skyline
+        <b>Targets</b> view. To do this, perform the following steps:
     </p>
     <ul>
         <li>In Excel or any text editor, open “Energy_TransitionList.csv” from the folder you created at the start of this tutorial.</li>
         <li><b>Select All</b> (Ctrl-A), then <b>Copy</b> (Ctrl-C). Make sure you have included the header row.</li>
         <li>Switch back to Skyline and on the <b>Edit</b> menu, click <b>Paste</b> (Ctrl-V).</li>
     </ul>
+    <p>
+        Skyline will present a window confirming its understanding of your column headers:
+    </p>
+    <p>
+        <img src="s-01.png" />
+    </p>
+    <ul>
+        <li>Click the <b>OK</b> button.</li>
+    </ul>
     <p class="keep-next">
         Your Skyline window should now look something like this:
     </p>
     <p>
-        <img src="s-01.png" />
+        <img src="s-02.png" />
     </p>
     <table>
         <tr>
@@ -153,7 +161,7 @@
         <li>On the <b>Prediction</b> tab, in the <b>Collision energy</b> dropdown list, choose “Waters Xevo”.</li>
     </ul>
     <p>
-        <img src="s-02.png" />
+        <img src="s-03.png" />
     </p>
     <p>
         Later you will perform a collision energy optimization refinement on a Waters Xevo as part of method development and optimization, since the
@@ -164,7 +172,7 @@
         <li>In the <b>Precursor adducts</b> and <b>Fragment adducts</b> fields, change the text to “[M-]”.</li>
     </ul>
     <p>
-        <img src="s-03.png" />
+        <img src="s-04.png" />
     </p>
     <p>
         This experiment measures only negatively charged transitions, as you have just indicated in the transition settings. Skyline adduct
@@ -210,7 +218,7 @@
         The <b>Export Method</b> form should now look like this:
     </p>
     <p>
-        <img src="s-04.png" />
+        <img src="s-05.png" />
     </p>
     <ul>
         <li>Click the <b>OK</b> button.</li>
@@ -233,7 +241,7 @@
         The <b>Export Method</b> form should now look like this:
     </p>
     <p>
-        <img src="s-05.png" />
+        <img src="s-06.png" />
     </p>
     <ul>
         <li>Click the <b>OK</b> button.</li>
@@ -265,7 +273,7 @@
         The <b>Import Results Files</b> form should look like this:
     </p>
     <p>
-        <img src="s-06.png" />
+        <img src="s-07.png" />
     </p>
     <ul>
         <li>Click the <b>Open</b> button.</li>
@@ -274,7 +282,7 @@
         Skyline will notice that these file names share a common prefix and suffix and present the following form:
     </p>
     <p>
-        <img src="s-07.png" />
+        <img src="s-08.png" />
     </p>
     <ul>
         <li>Click the <b>OK</b> button to accept the shortened replicate names “1” and “2”.</li>
@@ -283,7 +291,7 @@
         The files should import relatively quickly, leaving your Skyline main window looking something like this:
     </p>
     <p>
-        <img src="s-08.png" /> 
+        <img src="s-09.png" /> 
     </p>
     <p>
         The replicate names “1” and “2” are not very meaningful, but you can change them to something more descriptive by doing the following:
@@ -294,7 +302,7 @@
         <li>In the <b>Name</b> field of the <b>Rename Replicate</b> form, enter “2 min”.</li>
     </ul>
     <p>
-        <img src="s-09.png" />
+        <img src="s-10.png" />
     </p>
     <ul>
         <li>Click the <b>OK</b> button.</li>
@@ -305,7 +313,7 @@
         This should leave the main Skyline window looking like this:
     </p>
     <p>
-        <img src="s-10.png" />
+        <img src="s-11.png" />
     </p>
     <p>
         To take advantage of the Skyline summary graphs for viewing statistics for multiple replicates on a single screen, do the following:
@@ -321,7 +329,7 @@
         The Skyline window should now look something like this:
     </p>
     <p>
-        <img src="s-11.png" />
+        <img src="s-12.png" />
     </p>
     <h1>Comparing Peak Areas and Resolution</h1>
     <p>
@@ -338,12 +346,12 @@
         <li>Right-click on either chromatogram graph and make sure that <b>Synchronize Zooming</b> is checked.</li>
         <li>Click and drag within either chromatogram to zoom into the time range from 0.8 to 1.8 minutes.</li>
     </ul>
-    <!--<p class="keep-next">
+    <p class="keep-next">
         Skyline should look something like the image below, from which you can see that the 5 minute gradient provides much better
         peak separation. This is not surprising, and combined with improved signal intensity it justifies the choice of the longer gradient.
-    </p>-->
+    </p>
     <p>
-        <img src="s-12.png" />
+        <img src="s-13.png" />
     </p>
     <h1>Producing a Scheduled Method</h1>
     <p>
@@ -364,7 +372,7 @@
         The <b>Molecule Settings</b> form should now look like this:
     </p>
     <p>
-        <img src="s-13.png" />
+        <img src="s-14.png" />
     </p>
     <ul>
         <li>Click the <b>OK</b> button.</li>
@@ -381,7 +389,7 @@
         Which should leave the <b>Export Transition List</b> form looking like this:
     </p>
     <p>
-        <img src="s-14.png" />
+        <img src="s-15.png" />
     </p>
     <ul>
         <li>Click the <b>OK</b> button.</li>
@@ -397,7 +405,7 @@
         The <b>Scheduling Data</b> form should look like this:
     </p>
     <p>
-        <img src="s-15.png" />
+        <img src="s-16.png" />
     </p>
     <ul>
         <li>Click the <b>OK</b> button.</li>
@@ -426,7 +434,7 @@
         Skyline will use for the replicate names, as shown below:
     </p>
     <p>
-        <img src="s-16.png" />
+        <img src="s-17.png" />
     </p>
     <ul>
         <li>Click the <b>OK</b> button.</li>
@@ -439,7 +447,7 @@
         <li>Select the “2 min” replicate.</li>
     </ul>
     <p>
-        <img src="s-17.png" />
+        <img src="s-18.png" />
     </p>
     <ul>
         <li>Click the <b>Remove</b> button.</li>
@@ -466,7 +474,7 @@
         When you are done, the <b>Manage Results</b> form should look like this:
     </p>
     <p>
-        <img src="s-18.png" />
+        <img src="s-19.png" />
     </p>
     <ul>
         <li>Click the <b>OK</b> button.</li>
@@ -484,7 +492,10 @@
     <p>
         You can see that the peak areas have the expected ratios based on the known mixture ratios. In the <b>Retention Times – Replicate
             Comparison</b> view you can also see that the chromatography is stable with Acetyl-CoA eluting at around 1.55 minutes in every run,
-        especially consistent among the scheduled runs.<img src="s-19.png" />
+        especially consistent among the scheduled runs.
+    </p>
+    <p>
+        <img src="s-20.png" />
     </p>
     <h1>Evaluating Linearity in Response</h1>
     <p>
@@ -492,7 +503,7 @@
         calibration function.
     </p>
     <ul>
-        <li>On the <b>View</b> menu, click <b>Document Grid</b> (Alt-3).</li>
+        <li>On the <b>View</b> menu, choose <b>Live Reports</b>, and click <b>Document Grid</b> (Alt-3).</li>
         <li>In the <b>Document Grid</b>, click the <b>Reports</b> menu, and then click <b>Replicates</b>.</li>
         <li>Set the <b>Sample Type</b> to in each row to <b>Standard</b></li>
         <li>Set the <b>Analyte Concentration</b> as the appropriate decimal number for the ratio preceding the underscore in the replicate
@@ -502,13 +513,13 @@
         When you are don the <b>Document Grid</b> should look like this:
     </p>
     <p>
-        <img src="s-20.png" />
+        <img src="s-21.png" />
     </p>
     <p>
         You also need to specify some quantification settings before inspecting a calibration curve for these runs by doing the following:
     </p>
     <ul>
-        <li>On the <b>Settings</b> menu, click <b>Peptide Settings</b>.</li>
+        <li>On the <b>Settings</b> menu, click <b>Molecule Settings</b>.</li>
         <li>Click the <b>Quantification</b> tab.</li>
         <li>In the <b>Regression fit</b> dropdown list, choose “Linear”.</li>
         <li>In the <b>Normalization method</b> dropdown list, choose “Ratio to Heavy”.</li>
@@ -518,7 +529,7 @@
         The <b>Molecule Settings</b> form should now look like this:
     </p>
     <p>
-        <img src="s-21.png" />
+        <img src="s-22.png" />
     </p>
     <ul>
         <li>Click the <b>OK</b> button.</li>
@@ -534,7 +545,7 @@
         You should see a graph like this:
     </p>
     <p>
-        <img src="s-22.png" />
+        <img src="s-23.png" />
     </p>
     <p>
         The three dilution ratios evaluated here clearly are not as linear as one might hope. Therefore, you should expect some additional work to be
@@ -567,7 +578,7 @@
         <li>In the <b>Step count</b> field, enter “5” (which should already be set).</li>
     </ul>
     <p>
-        <img src="s-23.png" />
+        <img src="s-24.png" />
     </p>
     <ul>
         <li>Click the <b>OK</b> button.</li>
@@ -590,7 +601,7 @@
         The <b>Transition Settings</b> form should now look like this:
     </p>
     <p>
-        <img src="s-24.png" />
+        <img src="s-25.png" />
     </p>
     <ul>
         <li>Click the <b>OK</b> button.</li>
@@ -619,7 +630,7 @@
         The <b>Export Transition List</b> form should now look like this:
     </p>
     <p>
-        <img src="s-25.png" />
+        <img src="s-26.png" />
     </p>
     <p>
         Note that the <b>Max transitions per sample injection</b> field name changed to <b>Max concurrent transitions</b> when you
@@ -643,7 +654,7 @@
         The <b>Scheduling Data</b> form should look like this:
     </p>
     <p>
-        <img src="s-26.png" />
+        <img src="s-27.png" />
     </p>
     <ul>
         <li>Click the <b>OK</b> button.</li>
@@ -669,6 +680,7 @@
         resulting data files as follows:
     </p>
     <ul>
+        <li>On the <b>File</b> menu, click <b>Save</b>.</li>
         <li>On the <b>File</b> menu, choose <b>Import</b> and click <b>Results</b>.</li>
     </ul>
     <p>
@@ -685,7 +697,7 @@
         The form should now look like this:
     </p>
     <p>
-        <img src="s-27.png" />
+        <img src="s-28.png" />
     </p>
     <ul>
         <li>Click the <b>OK</b> button.</li>
@@ -695,7 +707,7 @@
         The <b>Import Results Files</b> form should look like this:
     </p>
     <p>
-        <img src="s-28.png" />
+        <img src="s-29.png" />
     </p>
     <ul>
         <li>Click the <b>OK</b> button.</li>
@@ -706,7 +718,7 @@
         chromatogram plots, as shown below:
     </p>
     <p>
-        <img src="s-29.png" />
+        <img src="s-30.png" />
     </p>
     <p>
         But you still need to do the following to be able to visualize the 11 different measurements made at 11 different CE voltages for each
@@ -722,7 +734,7 @@
         The main Skyline window should look like this:
     </p>
     <p>
-        <img src="s-30.png" />
+        <img src="s-31.png" />
     </p>
     <p>
         The <b>Peak Areas – Replicate Comparison</b> view now shows the heavy and light transitions in separate panes with the light above
@@ -738,7 +750,7 @@
         Skyline should look like this:
     </p>
     <p>
-        <img src="s-31.png" />
+        <img src="s-32.png" />
     </p>
     <p>
         Now you can explore the other molecules to see how close to optimal the original collision energies were. You can do the following to achieve
@@ -754,7 +766,7 @@
         this molecule on the Waters Xevo TQ-S. The best CE value (Step -5, the blue bar on the far left) is the lowest CE value measured.
     </p>
     <p>
-        <img src="s-32.png" />
+        <img src="s-33.png" />
     </p>
     <p>
         Given the trend toward that end of the range, futher investigation may be warranted to arrive at a truly optimal CE for that compound. For that
@@ -779,7 +791,7 @@
         The <b>Export Transition List</b> form should now look like this:
     </p>
     <p>
-        <img src="s-33.png" />
+        <img src="s-34.png" />
     </p>
     <ul>
         <li>Click the <b>OK</b> button.</li>
@@ -801,7 +813,7 @@
         The <b>Scheduling Data</b> form should look like this:
     </p>
     <p>
-        <img src="s-34.png" />
+        <img src="s-35.png" />
     </p>
     <ul>
         <li>Click the <b>OK</b> button.</li>

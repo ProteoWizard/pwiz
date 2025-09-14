@@ -20,7 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
-using pwiz.Skyline.Util;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.Results
 {

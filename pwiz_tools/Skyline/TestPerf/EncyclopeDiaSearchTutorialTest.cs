@@ -25,7 +25,6 @@ using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model.Koina.Models;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 using System.Drawing;
@@ -33,6 +32,8 @@ using pwiz.Skyline;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Util;
 using System;
+using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.ToolsUI;
@@ -71,12 +72,12 @@ namespace TestPerf
                     //"23aug2017_hela_serum_timecourse_wide_1f.mzML",
                 },
 
-                FinalTargetCounts = new[] { 368, 717, 717, 5050 },
+                FinalTargetCounts = new[] { 369, 719, 719, 5058 },
                 MassErrorStats = new[]
                 {
-                    new[] {-0.2, 2.5},
-                    new[] {-0.2, 2.5},
-                    new[] {-0.2, 2.5},
+                    new[] {-0.2, 2.5 },
+                    new[] {-0.2, 2.5 },
+                    new[] {-0.2, 2.5 },
                 },
                 ChromatogramClickPoint = new PointF(32.2f, 12.5f)
             };
@@ -332,7 +333,6 @@ namespace TestPerf
 
             // Finish wizard and the associate proteins dialog is shown.
             var emptyProteinsDlg = ShowDialog<AssociateProteinsDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
-
             WaitForConditionUI(() => emptyProteinsDlg.DocumentFinalCalculated);
 
             RunUI(() =>
@@ -486,7 +486,7 @@ namespace TestPerf
         {
             double mean = massErrorPane.Mean, stdDev = massErrorPane.StdDev;
             if (IsRecordMode)
-                Console.WriteLine(@"new[] {{{0:0.0}, {1:0.0}}},", mean, stdDev);  // Not L10N
+                Console.WriteLine(@"new[] {{{0:0.0}, {1:0.0} }},", mean, stdDev);  // Not L10N
             else
             {
                 Assert.AreEqual(_analysisValues.MassErrorStats[index][0], mean, 0.05);

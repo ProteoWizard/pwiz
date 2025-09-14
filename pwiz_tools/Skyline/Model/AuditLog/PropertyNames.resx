@@ -1814,4 +1814,34 @@
   <data name="BuildPeptideSearchLibrarySettings_UseDiaUmpire" xml:space="preserve">
     <value>Deconvolute spectra with DIA-Umpire</value>
   </data>
+  <data name="TransitionFilterAndLibrariesSettings_SpectrumFilter" xml:space="preserve">
+    <value>Spectrum Filter</value>
+  </data>
+  <data name="AnnotationDef_Lookup" xml:space="preserve">
+    <value>Lookup</value>
+  </data>
+  <data name="ImputationSettings_ImputeMissingPeaks" xml:space="preserve">
+    <value>Impute Missing Peaks</value>
+  </data>
+  <data name="ImputationSettings_MaxPeakWidthVariation" xml:space="preserve">
+    <value>Max Peak Width Variation</value>
+  </data>
+  <data name="ImputationSettings_MaxRtShift" xml:space="preserve">
+    <value>Max RT Shift</value>
+  </data>
+  <data name="PeptideSettings_Imputation" xml:space="preserve">
+    <value>Imputation</value>
+  </data>
+  <data name="AlignmentTargetSpec_Type" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="AlignmentTargetSpec_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="AlignmentTargetSpec_RegressionMethod" xml:space="preserve">
+    <value>Regression Method</value>
+  </data>
+  <data name="ImputationSettings_AlignmentTarget" xml:space="preserve">
+    <value>Alignment Target</value>
+  </data>
 </root>

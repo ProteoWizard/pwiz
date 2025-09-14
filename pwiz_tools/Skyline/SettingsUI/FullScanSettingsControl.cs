@@ -349,8 +349,26 @@ namespace pwiz.Skyline.SettingsUI
                 comboEnrichments.Enabled = true;
             }
 
+            SetPrecursorResEnabled(); // EI mode treats MS1 data as fragments, so grey out MS1 settings in EI mode
+
             UpdateSelectivityOption();
         }
+
+        private void SetPrecursorResEnabled()
+        {
+            // EI mode treats MS1 data as fragments, so grey out MS1 settings in EI mode
+            var enableRes = (PrecursorIsotopesCurrent != FullScanPrecursorIsotopes.None) && !MS2Only;
+            textPrecursorRes.Enabled = enableRes;
+            textPrecursorAt.Enabled = enableRes;
+            comboPrecursorAnalyzerType.Enabled = enableRes;
+            // Set tooltip on MS1 settings label to explain why combo is disabled
+            toolTip.SetToolTip(this.label32,
+                PrecursorIsotopesCurrent == FullScanPrecursorIsotopes.None || !MS2Only
+                    ? string.Empty
+                    : DocSettingsResources.FullScanAcquisitionMethod_EI_TOOLTIP);
+        }
+
+        private bool MS2Only => AcquisitionMethod == FullScanAcquisitionMethod.EI; // Does MS2 acquisition mode preclude MS1 analysis?
 
         private void comboPrecursorIsotopes_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -405,7 +423,6 @@ namespace pwiz.Skyline.SettingsUI
 
                 comboEnrichments.Enabled = (comboEnrichments.SelectedIndex != -1);
                 textPrecursorIsotopeFilter.Enabled = true;
-                comboPrecursorAnalyzerType.Enabled = true;
             }
             FullScanEnabledChanged?.Invoke(new FullScanEnabledChangeEventArgs(comboPrecursorAnalyzerType.Enabled, null)); // Fire event so Filter iontypes settings can update as needed
             UpdateRetentionTimeFilterUi();
@@ -588,6 +605,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             _driverIsolationScheme = new SettingsListComboDriver<IsolationScheme>(comboIsolationScheme,
                                                                                   Settings.Default.IsolationSchemeList);
+            _driverIsolationScheme.EditItemEvent += DriverIsolationScheme_OnEditItemEvent;
 
             string sel = (FullScan.IsolationScheme != null ? FullScan.IsolationScheme.Name : null);
             _driverIsolationScheme.LoadList(sel);
@@ -613,6 +631,11 @@ namespace pwiz.Skyline.SettingsUI
 
             // Update the product analyzer type in case the SelectedIndex is still -1
             UpdateProductAnalyzerType();
+        }
+
+        private void DriverIsolationScheme_OnEditItemEvent(object sender, SettingsListComboDriver<IsolationScheme>.EditItemEventArgs e)
+        {
+            e.Tag = _documentContainer.Document.Settings;
         }
 
         /// <summary>
@@ -657,6 +680,8 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 comboProductAnalyzerType.Enabled = true;
             }
+
+            SetPrecursorResEnabled(); // EI mode treats MS1 data as fragments, so grey out MS1 settings in EI mode
             FullScanEnabledChanged?.Invoke(new FullScanEnabledChangeEventArgs(null, comboProductAnalyzerType.Enabled));// Fire event so Filter iontypes settings can update as needed
             UpdateRetentionTimeFilterUi();
             AcquisitionMethodChanged?.Invoke();
@@ -894,7 +919,7 @@ namespace pwiz.Skyline.SettingsUI
                 resolvingPower.Value.ToString(@"#,0.####");
         }
 
-        public static void SetAnalyzerType(FullScanMassAnalyzerType analyzerTypeNew,
+        private void SetAnalyzerType(FullScanMassAnalyzerType analyzerTypeNew,
                                     FullScanMassAnalyzerType analyzerTypeCurrent,
                                     double? resCurrent,
                                     double? resMzCurrent,
@@ -1134,6 +1159,9 @@ namespace pwiz.Skyline.SettingsUI
             {
                 // Hide MS/MS filtering groupbox entirely.
                 groupBoxMS2.Visible = false;
+                // Acquisition method cannot be PRM or DIA
+                if (AcquisitionMethod != FullScanAcquisitionMethod.DDA)
+                    AcquisitionMethod = FullScanAcquisitionMethod.None;
 
                 // Reposition selectivity checkbox and retention time filtering groupbox.
                 cbHighSelectivity.Top = groupBoxMS1.Bottom + sepMS2FromSel;
@@ -1233,8 +1261,7 @@ namespace pwiz.Skyline.SettingsUI
                             .FullScanSettingsControl_UpdateRetentionTimeFilterUi_This_document_does_not_contain_any_spectral_libraries_;
                     }
                     else if (document.Molecules.All(peptide =>
-                                 document.Settings.GetUnalignedRetentionTimes(peptide.SourceUnmodifiedTarget,
-                                     peptide.SourceExplicitMods).Length == 0))
+                                 document.Settings.GetUnalignedRetentionTimes(document.Settings.GetTargets(peptide).ToList()).Length == 0))
                     {
                         strTimeAroundMs2IdsWarning = SettingsUIResources
                             .FullScanSettingsControl_UpdateRetentionTimeFilterUi_None_of_the_spectral_libraries_in_this_document_contain_any_retention_times_for_any_of_the_peptides_in_this_document_;

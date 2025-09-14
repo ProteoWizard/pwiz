@@ -32,6 +32,7 @@ using Newtonsoft.Json.Linq;
 using pwiz.PanoramaClient;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -1131,6 +1132,13 @@ namespace pwiz.Skyline
             return false;
         }
 
+        /// <summary>
+        /// Saves the .sky file.
+        /// </summary>
+        /// <param name="fileName">File name to save the .sky file to. If this is different from the current path, the document will be assigned a new GUID</param>
+        /// <param name="includingCacheFile">Whether to also update the .skyd file by copying to a new path and/or removing <see cref="ChromCachedFile"/> entries which are no longer part of the document.
+        /// When saving immediately before a ReScore the .skyd file should not be changed because a new one is about to be created.</param>
+        /// <returns></returns>
         public bool SaveDocument(String fileName, bool includingCacheFile = true)
         {
             if (string.IsNullOrEmpty(DocumentUI.Settings.DataSettings.DocumentGuid) ||
@@ -1198,7 +1206,6 @@ namespace pwiz.Skyline
             {
                 SaveLayout(fileName);
 
-                // CONSIDER: Is this really optional?
                 if (includingCacheFile)
                 {
                     using (var longWaitDlg = new LongWaitDlg(this))
@@ -1292,8 +1299,7 @@ namespace pwiz.Skyline
                 do
                 {
                     docOriginal = Document;
-                    docNew = docOriginal.ChangeSettingsNoDiff(docOriginal.Settings.ChangePeptideLibraries(libraries =>
-                        libraries.ChangeDocumentLibraryPath(newDocFilePath)));                        
+                    docNew = docOriginal.ChangeSettingsNoDiff(docOriginal.Settings.ChangeDocumentLibraryPath(newDocFilePath));                        
                 }
                 while (!SetDocument(docNew, docOriginal));
             }
@@ -1872,7 +1878,7 @@ namespace pwiz.Skyline
                 string extraInfo = null;
                 if (importInfo.File)
                 {
-                    info = new MessageInfo(MessageType.imported_fasta, docPair.NewDocumentType, importInfo.Text);
+                    info = new MessageInfo(MessageType.imported_fasta, docPair.NewDocumentType, AuditLogPath.Create(importInfo.Text));
                 }
                 else
                 {
@@ -3296,9 +3302,6 @@ namespace pwiz.Skyline
                             string redundantDocLibPath = BiblioSpecLiteSpec.GetRedundantName(docLibPath);
                             FileEx.SafeDelete(redundantDocLibPath);
 
-                            string docLibCachePath = BiblioSpecLiteLibrary.GetLibraryCachePath(docLibPath);
-                            FileEx.SafeDelete(docLibCachePath);
-
                             string midasLibPath = MidasLibSpec.GetLibraryFileName(DocumentFilePath);
                             FileEx.SafeDelete(midasLibPath);
                         }
@@ -3684,7 +3687,7 @@ namespace pwiz.Skyline
             {
                 if (e is PanoramaServerException || e is WebException) return false;
 
-                MessageDlg.ShowWithException(this, TextUtil.LineSeparate(Resources.RemoteSession_FetchContents_There_was_an_error_communicating_with_the_server__, e.Message), e);
+                MessageDlg.ShowWithException(this, TextUtil.LineSeparate(CommonMsDataResources.RemoteSession_FetchContents_There_was_an_error_communicating_with_the_server__, e.Message), e);
                 return false;
             }
 
@@ -3711,7 +3714,7 @@ namespace pwiz.Skyline
                 return false;
             }
 
-            var zipFilePath = FileEx.GetTimeStampedFileName(fileName);
+            var zipFilePath = FileTimeEx.GetTimeStampedFileName(fileName);
             if (!ShareDocument(zipFilePath, shareType)) 
                 return false;
 
