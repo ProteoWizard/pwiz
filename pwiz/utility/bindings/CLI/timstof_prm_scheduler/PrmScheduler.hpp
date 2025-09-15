@@ -29,9 +29,9 @@
 
 #define DEFINE_INTERNAL_BASE_CODE_CUSTOM_DTOR(CLIType, NativeType) \
 public:   System::IntPtr void_base() {return (System::IntPtr) base_;} \
-INTERNAL: CLIType(NativeType* base, System::Object^ owner) : base_(base), owner_(owner) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(CLIType))} \
-          CLIType(NativeType* base) : base_(base), owner_(nullptr) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(CLIType))} \
-          !CLIType() {LOG_FINALIZE(BOOST_PP_STRINGIZE(CLIType)) delete this;} \
+INTERNAL: CLIType(NativeType* base, System::Object^ owner) : base_(base), owner_(owner) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(CLIType), base_)} \
+          CLIType(NativeType* base) : base_(base), owner_(nullptr) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(CLIType), base_)} \
+          !CLIType() {LOG_FINALIZE(BOOST_PP_STRINGIZE(CLIType), base_) delete this;} \
           NativeType* base_; \
           System::Object^ owner_; \
           NativeType& base() {return *base_;}
@@ -112,7 +112,7 @@ public ref class MeasurementMode
 
     virtual ~MeasurementMode()
     {
-        LOG_DESTRUCT(BOOST_PP_STRINGIZE(CLIType), (owner_ == nullptr));
+        LOG_DESTRUCT(BOOST_PP_STRINGIZE(CLIType), base_, (owner_ == nullptr));
         if (owner_ == nullptr) { SAFEDELETE(base_); }
     }
 
@@ -152,7 +152,7 @@ public ref class InputTarget
 
     virtual ~InputTarget()
     {
-        LOG_DESTRUCT(BOOST_PP_STRINGIZE(CLIType), (owner_ == nullptr));
+        LOG_DESTRUCT(BOOST_PP_STRINGIZE(CLIType), base_, (owner_ == nullptr));
         if (owner_ == nullptr) { SAFEDELETE(base_); }
     }
 

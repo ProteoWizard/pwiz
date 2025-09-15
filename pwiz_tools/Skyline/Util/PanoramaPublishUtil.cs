@@ -238,9 +238,8 @@ namespace pwiz.Skyline.Util
 
         private SkylineVersion GetSupportedVersionForCacheFormat(CacheFormatVersion? cacheVersion)
         {
-            var skydVersion = GetSupportedSkydVersion();
-            SkylineVersion skylineVersion;
-            if (!cacheVersion.HasValue || skydVersion >= cacheVersion)
+            var supportedSkydVersion = GetSupportedSkydVersion();
+            if (cacheVersion == null || supportedSkydVersion >= CacheFormat.GetVersionRequired(cacheVersion.Value))
             {
                 // Either the document does not have any chromatograms or the server supports the document's cache version. 
                 // Since the cache version does not change when the document is shared, it can be shared as the latest Skyline
@@ -250,21 +249,19 @@ namespace pwiz.Skyline.Util
                 // with cache version 15. In this case the document can be shared as the current Skyline version even though
                 // the cache version associated with the current version is higher than what the server supports. When the document
                 // is shared the cache format of the document will remain at 14. Only the document format (.sky XML) will change.
-                skylineVersion = SkylineVersion.SupportedForSharing().First();
+                return SkylineVersion.SupportedForSharing().First();
             }
-            else
+            // The server does not support the document's cache version.
+            // Find the highest Skyline version consistent with the cache version supported by the server.
+            foreach (var skylineVersion in SkylineVersion.SupportedForSharing())
             {
-                // The server does not support the document's cache version.
-                // Find the highest Skyline version consistent with the cache version supported by the server.
-                skylineVersion = SkylineVersion.SupportedForSharing().FirstOrDefault(ver => ver.CacheFormatVersion <= skydVersion);
-                if (skylineVersion == null)
+                if (supportedSkydVersion >= CacheFormat.GetVersionRequired(skylineVersion.CacheFormatVersion))
                 {
-                    throw new PanoramaServerException(string.Format(
-                        Resources.PublishDocumentDlg_ServerSupportsSkydVersion_, (int)cacheVersion.Value));
+                    return skylineVersion;
                 }
             }
-
-            return skylineVersion;
+            throw new PanoramaServerException(string.Format(
+                Resources.PublishDocumentDlg_ServerSupportsSkydVersion_, (int)cacheVersion.Value));
         }
 
         private static CacheFormatVersion? GetDocumentCacheVersion(SrmDocument document)
