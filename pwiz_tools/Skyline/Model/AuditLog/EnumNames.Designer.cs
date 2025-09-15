@@ -1492,6 +1492,14 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Tide.
+        /// </summary>
+        public static string SearchEngine_Tide {
+            get {
+                return ResourceManager.GetString("SearchEngine_Tide", resourceCulture);
+            }
+        }
+        /// <summary>
         ///   Looks up a localized string similar to Hardklör.
         /// </summary>
         public static string SearchEngine_Hardklor {
