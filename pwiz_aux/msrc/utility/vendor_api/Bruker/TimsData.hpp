@@ -247,7 +247,7 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
     /// returns true if the source is TIMS PASEF data
     virtual bool hasPASEFData() const;
 
-    /// returns true if the source is TIMS diagonal PASEF data (combined spectra will have isolation m/z arrays)
+    /// returns true if the source is TIMS diagonal PASEF data (combined spectra will have isolation m/z arrays by default)
     virtual bool isPassEntireDiaPasefFrame() const;
 
     // Diagonal PASEF data has isolation m/z that varies with scan number within a frame
@@ -320,7 +320,7 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
     int preferOnlyMsLevel_; // when nonzero, caller only wants spectra at this ms level
     bool allowMsMsWithoutPrecursor_; // when false, PASEF MS2 specta without precursor info will be excluded
     vector<chemistry::MzMobilityWindow> isolationMzFilter_; // when non-empty, only scans from precursors matching one of the included m/zs (i.e. within a precursor isolation window) will be enumerated
-    vector<vector<int>> activeScansByWindowGroup_; // for each diaPASEF WindowGroup, a list of scans that are associated with an isolation window
+    vector<vector<int>> activeScansByWindowGroup_; // for each diaPASEF WindowGroup, a list of scans that are associated with an isolation window (some isolation schemes have gaps, so caller may not wish to bother with the scans in the gaps)
     vector<vector<double>> oneOverK0ByScanNumberByCalibration_;
     vector<vector<double>> isolationMzLowByScanNumberByWindowGroup_; // for diaPASEF where isolation m/z varies with scan number within a frame
     vector<vector<double>> isolationMzHighByScanNumberByWindowGroup_; // for diaPASEF where isolation m/z varies with scan number within a frame

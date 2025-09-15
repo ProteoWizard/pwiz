@@ -586,7 +586,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
                         lexical_cast<string>(isolationWidth) + "," +
                         lexical_cast<string>(collisionEnergy) + ";";
 
-                    // Note which scans are actually associated with an isolation window (some isolation schemes have gaps)
+                    // Note which scans are actually associated with an isolation window (some isolation schemes have gaps, so caller may not wish to bother with the scans in the gaps)
                     while (windowGroup > activeScansByWindowGroup_.size())
                     {
                         activeScansByWindowGroup_.emplace_back();
@@ -825,7 +825,7 @@ double TimsDataImpl::getIsolationMzRangeHighByWindowGroup(int windowGroup) const
     return isolationMzRangeHighByWindowGroup_[windowGroup - 1];
 }
 
-const vector<int >& TimsDataImpl::getActiveScansByWindowGroup(int windowGroup) const // for each diaPASEF WindowGroup, a list of scans that are associated with an isolation window
+const vector<int >& TimsDataImpl::getActiveScansByWindowGroup(int windowGroup) const // for each diaPASEF WindowGroup, a list of scans that are associated with an isolation window  (some isolation schemes have gaps, so caller may not wish to bother with the scans in the gaps)
 {
     return activeScansByWindowGroup_[windowGroup - 1];
 }
