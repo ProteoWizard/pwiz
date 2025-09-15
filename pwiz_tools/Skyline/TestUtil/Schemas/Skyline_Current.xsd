@@ -1494,6 +1494,7 @@
       <xs:enumeration value="PRM"/>
       <xs:enumeration value="SureQuant"/>
       <xs:enumeration value="Targeted"/>
+      <xs:enumeration value="EI"/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name="retention_time_filtering_type">
