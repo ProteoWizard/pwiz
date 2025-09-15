@@ -2117,6 +2117,17 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = result.ChangeDocumentRetentionTimes(DocumentRetentionTimes.EMPTY);
             }
 
+            if (documentFormat < DocumentFormat.ELECTRON_IONIZATION)
+            {
+                if (Equals(FullScanAcquisitionMethod.EI, result.TransitionSettings.FullScan.AcquisitionMethod))
+                {
+                    result = result.ChangeTransitionSettings(result.TransitionSettings.ChangeFullScan(
+                        result.TransitionSettings.FullScan.ChangeAcquisitionMethod(FullScanAcquisitionMethod.DIA,
+                            new IsolationScheme(null, Array.Empty<IsolationWindow>(),
+                                IsolationScheme.SpecialHandlingType.ALL_IONS))));
+                }
+            }
+
             return result;
         }
 
