@@ -1301,6 +1301,11 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public double[] GetRetentionTimesNotAlignedTo(ChromatogramSet chromatogramSet, MsDataFileUri fileNotAlignedTo, ICollection<Target> targets, ICollection<SignedMz> precursorMzs)
         {
+            if (null != DocumentRetentionTimes.GetLibraryAlignmentFunction(PeptideSettings.Libraries, fileNotAlignedTo,
+                    true))
+            {
+                return Array.Empty<double>();
+            }
             var result = new List<double>();
             foreach (var library in PeptideSettings.Libraries.Libraries)
             {
@@ -1309,11 +1314,6 @@ namespace pwiz.Skyline.Model.DocSettings
                     continue;
                 }
 
-                if (null != DocumentRetentionTimes.GetLibraryAlignment(library.Name))
-                {
-                    // TODO(nicksh): if there is a batch name, then potentially a subset of the times in this library should be returned.
-                    continue;
-                }
                 result.AddRange(library.GetRetentionTimesWithSequences(null, targets).SelectMany(list=>list));
                 if (library is MidasLibrary)
                 {
