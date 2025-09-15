@@ -1227,7 +1227,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public double[] GetAlignedRetentionTimes(ChromatogramSet chromatogramSet, MsDataFileUri filePath, IList<Target> targets)
         {
-            var alignmentFunction = DocumentRetentionTimes.GetAlignmentFunction(PeptideSettings.Libraries, filePath, true);
+            var alignmentFunction = DocumentRetentionTimes.GetLibraryAlignmentFunction(PeptideSettings.Libraries, filePath, true);
             if (alignmentFunction == null)
             {
                 return Array.Empty<double>();
@@ -2026,13 +2026,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 return true;
             }
 
-            if (DocumentRetentionTimes.HasUnalignedTimes())
-            {
-                return true;
-            }
-
             return MeasuredResults.MSDataFilePaths.Any(file =>
-                DocumentRetentionTimes.GetAlignmentFunction(PeptideSettings.Libraries, file, true) == null);
+                DocumentRetentionTimes.GetLibraryAlignmentFunction(PeptideSettings.Libraries, file, true) == null);
         }
 
         /// <summary>

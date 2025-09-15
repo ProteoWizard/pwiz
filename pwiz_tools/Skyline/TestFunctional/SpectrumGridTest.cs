@@ -17,6 +17,8 @@
  * limitations under the License.
  */
 
+using System.Linq;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
@@ -26,10 +28,6 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.SkylineTestUtil;
-using System.Linq;
-using System.Windows.Forms;
-using pwiz.Skyline.Model.RetentionTimes;
-using pwiz.Skyline.SettingsUI;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -46,13 +44,8 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             RunUI(()=>SkylineWindow.OpenFile(TestFilesDir.GetTestPath("SpectrumGridTest.sky")));
-            RunDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, peptideSettingsUi =>
-            {
-                peptideSettingsUi.SelectedTab = PeptideSettingsUI.TABS.Prediction;
-                peptideSettingsUi.AlignmentTarget = AlignmentTargetSpec.None;
-                peptideSettingsUi.OkDialog();
-            });
             ImportResultsFiles(new[]{new MsDataFilePath(TestFilesDir.GetTestPath("20fmol.mzML")), new MsDataFilePath(TestFilesDir.GetTestPath("80fmol.mzML"))});
+            
             // Most of the testing will be performed on the second peptide in this document
             var peptideIdentityPath = SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.Molecules, 1);
             var peptideDocNode = (PeptideDocNode)SkylineWindow.Document.FindNode(peptideIdentityPath);
