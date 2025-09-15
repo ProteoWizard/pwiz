@@ -323,19 +323,16 @@ namespace pwiz.SkylineTestFunctional
 
         protected void ImportFile(string fileName)
         {
-            using (new WaitDocumentChange())
+            RunDlg<ImportResultsDlg>(SkylineWindow.ImportResults, importResultsDlg =>
             {
-                var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
-                RunUI(() =>
-                {
-                    importResultsDlg.RadioAddNewChecked = true;
-                    var path = new KeyValuePair<string, MsDataFileUri[]>[1];
-                    path[0] = new KeyValuePair<string, MsDataFileUri[]>(Path.GetFileNameWithoutExtension(fileName),
-                                                new[] { MsDataFileUri.Parse(fileName) });
-                    importResultsDlg.NamedPathSets = path;
-                });
-                OkDialog(importResultsDlg, importResultsDlg.OkDialog);
-            }
+                importResultsDlg.RadioAddNewChecked = true;
+                var path = new KeyValuePair<string, MsDataFileUri[]>[1];
+                path[0] = new KeyValuePair<string, MsDataFileUri[]>(Path.GetFileNameWithoutExtension(fileName),
+                    new[] { MsDataFileUri.Parse(fileName) });
+                importResultsDlg.NamedPathSets = path;
+                importResultsDlg.OkDialog();
+            });
+            Assert.IsNotNull(SkylineWindow.Document.Settings.MeasuredResults);
             WaitForCondition(2 * 60 * 1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);    // 2 minutes
         }
 

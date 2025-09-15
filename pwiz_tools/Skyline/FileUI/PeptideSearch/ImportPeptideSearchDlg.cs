@@ -1414,9 +1414,22 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             Settings.Default.ImportResultsDoAutoRetry = ImportResultsControl.DoAutoRetry;
 
             // Import results only on "finish"
-            var namedResults = ImportPeptideSearch.EnsureUniqueNames(ImportResultsControl.FoundResultsFiles)
-                .Select(kvp => new KeyValuePair<string, MsDataFileUri[]>(kvp.Name, new[] { new MsDataFilePath(kvp.Path) }))
-                .ToList();
+            var namedResults = new List<KeyValuePair<string, MsDataFileUri[]>>();
+            bool mergeIrt = false;
+            if (ImportPeptideSearch.IsGpfData)
+            {
+                namedResults.Add(new KeyValuePair<string, MsDataFileUri[]>(Document.Settings.GetNewChromatogramSetDefaultName(), 
+                    ImportResultsControl.FoundResultsFiles.Select(file=>(MsDataFileUri) new MsDataFilePath(file.Path)).ToArray()));
+                mergeIrt = true;
+            }
+            else
+            {
+                foreach (var foundResultFile in ImportPeptideSearch.EnsureUniqueNames(ImportResultsControl
+                             .FoundResultsFiles))
+                {
+                    namedResults.Add(new KeyValuePair<string, MsDataFileUri[]>(foundResultFile.Name, new MsDataFileUri[] { new MsDataFilePath(foundResultFile.Path) }));
+                }
+            }
 
             // Ask about lockmass correction, if needed - lockmass settings in namedResults will be updated by this call as needed
             if (!ImportResultsLockMassDlg.UpdateNamedResultsParameters(this, Document, ref namedResults))
@@ -1428,7 +1441,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 UpdateFullScanSettingsForFeatureDetection(); // Tweak full scan filter values if needed
                 SkylineWindow.ModifyDocument(
                     PeptideSearchResources.ImportResultsControl_GetPeptideSearchChromatograms_Import_results,
-                    doc => SkylineWindow.ImportResults(Document, namedResults, ExportOptimize.NONE, false), FormSettings.EntryCreator.Create);
+                    doc => SkylineWindow.ImportResults(Document, namedResults, ExportOptimize.NONE, mergeIrt), FormSettings.EntryCreator.Create);
                 
                 CloseWizard(DialogResult.OK);
             }

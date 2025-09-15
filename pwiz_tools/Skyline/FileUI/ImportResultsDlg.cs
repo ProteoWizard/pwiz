@@ -46,13 +46,14 @@ namespace pwiz.Skyline.FileUI
         private readonly string _documentSavedPath;
         private readonly bool _warnOnMultiInjection;
         private bool _hasIrt;
+        private string _defaultNewName;
 
         public ImportResultsDlg(SrmDocument document, string savedPath)
         {
             _documentSavedPath = savedPath;
             _warnOnMultiInjection = (document.MoleculeTransitionCount < MIN_MULTIPLE_TRANSITIONS);
             _hasIrt = true == document.Settings.PeptideSettings.Prediction.RetentionTime?.IsAutoCalculated;
-
+            _defaultNewName = document.Settings.GetNewChromatogramSetDefaultName();
             InitializeComponent();
 
             var results = document.Settings.MeasuredResults;
@@ -96,24 +97,6 @@ namespace pwiz.Skyline.FileUI
             cbShowAllChromatograms.Checked = Settings.Default.AutoShowAllChromatogramsGraph;
             cbAutoRetry.Checked = Settings.Default.ImportResultsDoAutoRetry;
             UpdateRadioSelection(radioCreateMultiple);
-        }
-
-        private string DefaultNewName
-        {
-            get
-            {
-                string name = Resources.ImportResultsDlg_DefaultNewName_Default_Name;
-                if (ResultsExist(name))
-                {
-                    int i = 2;
-                    do
-                    {
-                        name = Resources.ImportResultsDlg_DefaultNewName_Default_Name +i++;
-                    }
-                    while (ResultsExist(name));
-                }
-                return name;
-            }
         }
 
         private bool IsMultiple { get { return radioCreateMultiple.Checked || radioCreateMultipleMulti.Checked; } }
@@ -559,7 +542,7 @@ namespace pwiz.Skyline.FileUI
                 comboName.Enabled = labelNameAdd.Enabled = false;
                 bool multiple = IsMultiple;
                 textName.Enabled = labelNameNew.Enabled = !multiple;
-                textName.Text = multiple ? string.Empty : DefaultNewName;
+                textName.Text = multiple ? string.Empty : _defaultNewName;
             }
 
             var controls = flowLayoutPanelReplicates.Controls.Cast<Control>().ToList();
