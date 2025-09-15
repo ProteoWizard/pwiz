@@ -555,7 +555,6 @@ namespace TestPerf
             {
                 OkDialog(emptyProteinsDlg, emptyProteinsDlg.OkDialog);
             }
-
             string proteinNameToSelect = _analysisValues.ProteinToSelect;
             string peptideToSelect = _analysisValues.PeptideToSelect;
             if (Equals(proteinNameToSelect, SkylineWindow.Document.MoleculeGroups.Skip(1).First().Name))

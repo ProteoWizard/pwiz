@@ -16,10 +16,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Linq;
 using System.Collections.Generic;
+using pwiz.Common.Collections;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Irt
@@ -225,7 +229,7 @@ namespace pwiz.Skyline.Model.Irt
             var calculator = rtRegression.Calculator;
             var dictSeqToScore = dictSeqToPeptide.ToDictionary(p => p.Key,
                 p => calculator.ScoreSequence(p.Key) ?? calculator.UnknownScore);
-            var dictFileIdToCorr = new Dictionary<int, IList<TimeScorePair>>();
+            var dictFileIdToCorr = new Dictionary<Tuple<int, ReferenceValue<ChromFileInfoId>>, IList<TimeScorePair>>();
             var listPepCorr = new List<TimeScorePair>();
             foreach (var seqToPeptide in dictSeqToPeptide)
             {
@@ -236,28 +240,58 @@ namespace pwiz.Skyline.Model.Irt
                 double score = dictSeqToScore[seqToPeptide.Key];
                 listPepCorr.Add(new TimeScorePair(time.Value, score));
 
-                foreach (var fileId in nodePep.Results.SelectMany(r => r)
-                                                      .Select(chromInfo => chromInfo.FileId))
+                for (int replicateIndex = 0; replicateIndex < nodePep.Results.Count; replicateIndex++)
                 {
-                    IList<TimeScorePair> listTimeScores;
-                    if (!dictFileIdToCorr.TryGetValue(fileId.GlobalIndex, out listTimeScores))
-                        listTimeScores = dictFileIdToCorr[fileId.GlobalIndex] = new List<TimeScorePair>();
-                    time = nodePep.GetSchedulingTime(fileId);
-                    if (!time.HasValue)
-                        continue;
-                    listTimeScores.Add(new TimeScorePair(time.Value, score));
+                    var chromatogramSet = document.MeasuredResults.Chromatograms[replicateIndex];
+                    IEnumerable<ChromFileInfoId> fileIds;
+
+                    if (chromatogramSet.MergeIrts)
+                    {
+                        fileIds = new ChromFileInfoId[1];
+                    }
+                    else
+                    {
+                        fileIds = chromatogramSet.MSDataFileInfos.Select(info => info.FileId);
+                    }
+
+                    foreach (var fileId in fileIds)
+                    {
+                        time = nodePep.GetSchedulingTime(replicateIndex, fileId);
+                        if (!time.HasValue)
+                        {
+                            continue;
+                        }
+
+                        var key = Tuple.Create(replicateIndex, ReferenceValue.Of(fileId));
+                        if (!dictFileIdToCorr.TryGetValue(key, out var listTimeScores))
+                            listTimeScores = dictFileIdToCorr[key] = new List<TimeScorePair>();
+                        listTimeScores.Add(new TimeScorePair(time.Value, score));
+                    }
                 }
             }
 
-            // If not all standard peptides have at least some retention time value, fail prediction
+            // If insufficient standard peptides have at least some retention time value, fail prediction
             if (listPepCorr.Count < minCount)
                 return rtRegression.ClearEquations(dictStandardPeptides);
 
-            // Only calculate regressions for files with retention times for all of the standards
-            var fileIdToConversions = from p in dictFileIdToCorr
-                                       where p.Value.Count == dictSeqToPeptide.Count
-                                       select new KeyValuePair<int, RegressionLine>(p.Key, CalcConversion(p.Value, minCount));
-
+            var fileIdToConversions = new Dictionary<int, RegressionLine>();
+            foreach (var kvp in dictFileIdToCorr)
+            {
+                var replicateIndex = kvp.Key.Item1;
+                var fileId = kvp.Key.Item2.Value;
+                var conversion = CalcConversion(kvp.Value, minCount);
+                if (fileId == null)
+                {
+                    foreach (var fileInfo in document.MeasuredResults.Chromatograms[replicateIndex].MSDataFileInfos)
+                    {
+                        fileIdToConversions[fileInfo.FileId.GlobalIndex] = conversion;
+                    }
+                }
+                else
+                {
+                    fileIdToConversions[fileId.GlobalIndex] = conversion;
+                }
+            }
             var line = CalcConversion(listPepCorr, minCount);
             return line != null
                 ? rtRegression.ChangeEquations(new RegressionLineElement(line), fileIdToConversions, dictStandardPeptides)
