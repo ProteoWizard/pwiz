@@ -212,7 +212,7 @@ namespace pwiz.Skyline.Util
         /// </summary>
         static Uri JRE_URL = new Uri($@"https://ci.skyline.ms/skyline_tool_testing_mirror/{JRE_FILENAME}.zip");
         public static string JavaDirectory => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory());
-        public static string JavaBinary => Settings.Default.SearchToolList.GetToolPathOrDefault(SearchToolType.Java8, Path.Combine(JavaDirectory, Path.Combine(JRE_SUBDIRECTORY, @"bin", @"java.exe")));
+        public static string JavaBinary => Settings.Default.SearchToolList.GetToolPathOrDefault(SearchToolType.Java8, Path.Combine(JavaDirectory, JRE_SUBDIRECTORY, @"bin", @"java.exe"));
         public static string JavaExtraArgs => Settings.Default.SearchToolList.GetToolArgsOrDefault(SearchToolType.Java8, JavaDownloadInfo.JavaMaxHeapArg(2 * MemoryInfo.TotalBytes / 3));
 
         public static FileDownloadInfo[] FilesToDownload => new[]

@@ -706,7 +706,7 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
-        public static string EXECUTABLE_FILES_FILTER = TextUtil.FileDialogFiltersAll(
+        public static readonly string EXECUTABLE_FILES_FILTER = TextUtil.FileDialogFiltersAll(
             TextUtil.FileDialogFilter(ToolsUIResources.ConfigureToolsDlg_btnFindCommand_Click_All_Executables, ToolDescription.EXTENSIONS),
             TextUtil.FileDialogFilter(ToolsUIResources.ConfigureToolsDlg_btnFindCommand_Click_Exe_Files, ToolDescription.EXTENSIONS[0]),
             TextUtil.FileDialogFilter(ToolsUIResources.ConfigureToolsDlg_btnFindCommand_Click_Command_Files, ToolDescription.EXTENSIONS[1]),

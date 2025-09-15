@@ -744,7 +744,7 @@ namespace pwiz.Skyline.Util
                 }
             }
 
-            throw new InvalidDataException(string.Format(Resources.XmlUtil_GetAttribute_The_value__0__is_not_valid_for_the_attribute__1__, value, name));
+            throw new InvalidDataException(string.Format(Resources.XmlUtil_GetAttribute_The_value__0__is_not_valid_for_the_attribute__1__, value ?? @"<null>", name));
         }
 
         public static TAttr GetEnumAttribute<TAttr>(this XmlReader reader, string name, TAttr defaultValue)
