@@ -166,7 +166,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                             var childUrl = ((WatersConnectUrl) watersConnectUrl.ChangePathParts(watersConnectUrl.GetPathParts().Concat(new[] { sampleSet.Name })))
                                 .ChangeFolderOrSampleSetId(sampleSet.Id)
                                 .ChangeType(WatersConnectUrl.ItemType.sample_set);
-                            yield return new RemoteItem(childUrl, sampleSet.Name, DataSourceUtil.FOLDER_TYPE, null, 0);
+                            yield return new RemoteItem(childUrl, sampleSet.Name, DataSourceUtil.SAMPLE_SET_TYPE, null, 0);
                         }
                 }
             }
