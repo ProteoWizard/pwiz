@@ -61,6 +61,7 @@ namespace pwiz.CommonMsData
         public const string TYPE_MBI = "Mobilion MBI";
         public const string TYPE_CHORUSRESPONSE = "Chorus Response";
         public const string FOLDER_TYPE = "File Folder";
+        public const string SAMPLE_SET_TYPE = "Sample Set";
         public const string UNKNOWN_TYPE = "unknown";
         public const string EDIT_ACCOUNT = "edit account";
         public const string TYPE_WATERS_ACQUISITION_METHOD = "Waters Acquisition Method";
@@ -187,6 +188,11 @@ namespace pwiz.CommonMsData
         public static bool IsEditAccount(string type)
         {
             return Equals(type, EDIT_ACCOUNT);
+        }
+
+        public static bool IsSampleSetType(string type)
+        {
+            return Equals(type, SAMPLE_SET_TYPE);
         }
 
         public static bool IsUnknownType(string type)

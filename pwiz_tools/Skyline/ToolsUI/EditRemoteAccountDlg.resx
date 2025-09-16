@@ -160,7 +160,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>232, 368</value>
+    <value>232, 409</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -190,7 +190,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnOK.Location" type="System.Drawing.Point, System.Drawing">
-    <value>151, 368</value>
+    <value>151, 409</value>
   </data>
   <data name="btnOK.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -246,7 +246,7 @@
   <data name="textPassword.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 63</value>
   </data>
-  <data name="textPassword.PasswordChar" xml:space="preserve" type="System.Char, mscorlib">
+  <data name="textPassword.PasswordChar" type="System.Char, mscorlib" xml:space="preserve">
     <value>*</value>
   </data>
   <data name="textPassword.Size" type="System.Drawing.Size, System.Drawing">
@@ -355,7 +355,7 @@
     <value>Bottom, Right</value>
   </data>
   <data name="btnTest.Location" type="System.Drawing.Point, System.Drawing">
-    <value>70, 368</value>
+    <value>70, 409</value>
   </data>
   <data name="btnTest.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -364,7 +364,7 @@
     <value>9</value>
   </data>
   <data name="btnTest.Text" xml:space="preserve">
-    <value>Test</value>
+    <value>&amp;Test</value>
   </data>
   <data name="&gt;&gt;btnTest.Name" xml:space="preserve">
     <value>btnTest</value>
@@ -412,7 +412,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>Account type:</value>
+    <value>&amp;Account type:</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -429,6 +429,30 @@
   <data name="groupBoxUnifi.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
+  <data name="&gt;&gt;tbxClientId.Name" xml:space="preserve">
+    <value>tbxClientId</value>
+  </data>
+  <data name="&gt;&gt;tbxClientId.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tbxClientId.Parent" xml:space="preserve">
+    <value>groupBoxUnifi</value>
+  </data>
+  <data name="&gt;&gt;tbxClientId.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;lblClientId.Name" xml:space="preserve">
+    <value>lblClientId</value>
+  </data>
+  <data name="&gt;&gt;lblClientId.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblClientId.Parent" xml:space="preserve">
+    <value>groupBoxUnifi</value>
+  </data>
+  <data name="&gt;&gt;lblClientId.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
   <data name="&gt;&gt;tbxClientSecret.Name" xml:space="preserve">
     <value>tbxClientSecret</value>
   </data>
@@ -439,7 +463,7 @@
     <value>groupBoxUnifi</value>
   </data>
   <data name="&gt;&gt;tbxClientSecret.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>2</value>
   </data>
   <data name="&gt;&gt;lblClientSecret.Name" xml:space="preserve">
     <value>lblClientSecret</value>
@@ -451,7 +475,7 @@
     <value>groupBoxUnifi</value>
   </data>
   <data name="&gt;&gt;lblClientSecret.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>3</value>
   </data>
   <data name="&gt;&gt;tbxClientScope.Name" xml:space="preserve">
     <value>tbxClientScope</value>
@@ -463,7 +487,7 @@
     <value>groupBoxUnifi</value>
   </data>
   <data name="&gt;&gt;tbxClientScope.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>4</value>
   </data>
   <data name="&gt;&gt;lblClientScope.Name" xml:space="preserve">
     <value>lblClientScope</value>
@@ -475,7 +499,7 @@
     <value>groupBoxUnifi</value>
   </data>
   <data name="&gt;&gt;lblClientScope.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>5</value>
   </data>
   <data name="&gt;&gt;tbxIdentityServer.Name" xml:space="preserve">
     <value>tbxIdentityServer</value>
@@ -487,7 +511,7 @@
     <value>groupBoxUnifi</value>
   </data>
   <data name="&gt;&gt;tbxIdentityServer.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>6</value>
   </data>
   <data name="&gt;&gt;lblIdentityServer.Name" xml:space="preserve">
     <value>lblIdentityServer</value>
@@ -499,13 +523,13 @@
     <value>groupBoxUnifi</value>
   </data>
   <data name="&gt;&gt;lblIdentityServer.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>7</value>
   </data>
   <data name="groupBoxUnifi.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 142</value>
   </data>
   <data name="groupBoxUnifi.Size" type="System.Drawing.Size, System.Drawing">
-    <value>288, 144</value>
+    <value>288, 182</value>
   </data>
   <data name="groupBoxUnifi.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
@@ -525,13 +549,67 @@
   <data name="&gt;&gt;groupBoxUnifi.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="tbxClientId.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="tbxClientId.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 152</value>
+  </data>
+  <data name="tbxClientId.Size" type="System.Drawing.Size, System.Drawing">
+    <value>276, 20</value>
+  </data>
+  <data name="tbxClientId.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="&gt;&gt;tbxClientId.Name" xml:space="preserve">
+    <value>tbxClientId</value>
+  </data>
+  <data name="&gt;&gt;tbxClientId.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tbxClientId.Parent" xml:space="preserve">
+    <value>groupBoxUnifi</value>
+  </data>
+  <data name="&gt;&gt;tbxClientId.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="lblClientId.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblClientId.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="lblClientId.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 136</value>
+  </data>
+  <data name="lblClientId.Size" type="System.Drawing.Size, System.Drawing">
+    <value>47, 13</value>
+  </data>
+  <data name="lblClientId.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="lblClientId.Text" xml:space="preserve">
+    <value>Client i&amp;d:</value>
+  </data>
+  <data name="&gt;&gt;lblClientId.Name" xml:space="preserve">
+    <value>lblClientId</value>
+  </data>
+  <data name="&gt;&gt;lblClientId.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblClientId.Parent" xml:space="preserve">
+    <value>groupBoxUnifi</value>
+  </data>
+  <data name="&gt;&gt;lblClientId.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
   <data name="tbxClientSecret.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
   <data name="tbxClientSecret.Location" type="System.Drawing.Point, System.Drawing">
     <value>6, 113</value>
   </data>
-  <data name="tbxClientSecret.PasswordChar" xml:space="preserve" type="System.Char, mscorlib">
+  <data name="tbxClientSecret.PasswordChar" type="System.Char, mscorlib" xml:space="preserve">
     <value>*</value>
   </data>
   <data name="tbxClientSecret.Size" type="System.Drawing.Size, System.Drawing">
@@ -539,6 +617,18 @@
   </data>
   <data name="tbxClientSecret.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
+  </data>
+  <data name="&gt;&gt;tbxClientSecret.Name" xml:space="preserve">
+    <value>tbxClientSecret</value>
+  </data>
+  <data name="&gt;&gt;tbxClientSecret.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tbxClientSecret.Parent" xml:space="preserve">
+    <value>groupBoxUnifi</value>
+  </data>
+  <data name="&gt;&gt;tbxClientSecret.ZOrder" xml:space="preserve">
+    <value>2</value>
   </data>
   <data name="lblClientSecret.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -553,7 +643,19 @@
     <value>4</value>
   </data>
   <data name="lblClientSecret.Text" xml:space="preserve">
-    <value>Client secret:</value>
+    <value>Client sec&amp;ret:</value>
+  </data>
+  <data name="&gt;&gt;lblClientSecret.Name" xml:space="preserve">
+    <value>lblClientSecret</value>
+  </data>
+  <data name="&gt;&gt;lblClientSecret.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblClientSecret.Parent" xml:space="preserve">
+    <value>groupBoxUnifi</value>
+  </data>
+  <data name="&gt;&gt;lblClientSecret.ZOrder" xml:space="preserve">
+    <value>3</value>
   </data>
   <data name="tbxClientScope.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -566,6 +668,18 @@
   </data>
   <data name="tbxClientScope.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
+  </data>
+  <data name="&gt;&gt;tbxClientScope.Name" xml:space="preserve">
+    <value>tbxClientScope</value>
+  </data>
+  <data name="&gt;&gt;tbxClientScope.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tbxClientScope.Parent" xml:space="preserve">
+    <value>groupBoxUnifi</value>
+  </data>
+  <data name="&gt;&gt;tbxClientScope.ZOrder" xml:space="preserve">
+    <value>4</value>
   </data>
   <data name="lblClientScope.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -580,7 +694,19 @@
     <value>2</value>
   </data>
   <data name="lblClientScope.Text" xml:space="preserve">
-    <value>Client scope:</value>
+    <value>Client s&amp;cope:</value>
+  </data>
+  <data name="&gt;&gt;lblClientScope.Name" xml:space="preserve">
+    <value>lblClientScope</value>
+  </data>
+  <data name="&gt;&gt;lblClientScope.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblClientScope.Parent" xml:space="preserve">
+    <value>groupBoxUnifi</value>
+  </data>
+  <data name="&gt;&gt;lblClientScope.ZOrder" xml:space="preserve">
+    <value>5</value>
   </data>
   <data name="tbxIdentityServer.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -593,6 +719,18 @@
   </data>
   <data name="tbxIdentityServer.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
+  </data>
+  <data name="&gt;&gt;tbxIdentityServer.Name" xml:space="preserve">
+    <value>tbxIdentityServer</value>
+  </data>
+  <data name="&gt;&gt;tbxIdentityServer.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tbxIdentityServer.Parent" xml:space="preserve">
+    <value>groupBoxUnifi</value>
+  </data>
+  <data name="&gt;&gt;tbxIdentityServer.ZOrder" xml:space="preserve">
+    <value>6</value>
   </data>
   <data name="lblIdentityServer.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -607,10 +745,67 @@
     <value>0</value>
   </data>
   <data name="lblIdentityServer.Text" xml:space="preserve">
-    <value>Identity server:</value>
+    <value>Ide&amp;ntity server:</value>
+  </data>
+  <data name="&gt;&gt;lblIdentityServer.Name" xml:space="preserve">
+    <value>lblIdentityServer</value>
+  </data>
+  <data name="&gt;&gt;lblIdentityServer.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblIdentityServer.Parent" xml:space="preserve">
+    <value>groupBoxUnifi</value>
+  </data>
+  <data name="&gt;&gt;lblIdentityServer.ZOrder" xml:space="preserve">
+    <value>7</value>
   </data>
   <data name="wizardPagesByAccountType.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="&gt;&gt;tabUnifiSettings.Name" xml:space="preserve">
+    <value>tabUnifiSettings</value>
+  </data>
+  <data name="&gt;&gt;tabUnifiSettings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabUnifiSettings.Parent" xml:space="preserve">
+    <value>wizardPagesByAccountType</value>
+  </data>
+  <data name="&gt;&gt;tabUnifiSettings.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;tabPage2.Name" xml:space="preserve">
+    <value>tabPage2</value>
+  </data>
+  <data name="&gt;&gt;tabPage2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabPage2.Parent" xml:space="preserve">
+    <value>wizardPagesByAccountType</value>
+  </data>
+  <data name="&gt;&gt;tabPage2.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="wizardPagesByAccountType.Location" type="System.Drawing.Point, System.Drawing">
+    <value>15, 52</value>
+  </data>
+  <data name="wizardPagesByAccountType.Size" type="System.Drawing.Size, System.Drawing">
+    <value>296, 351</value>
+  </data>
+  <data name="wizardPagesByAccountType.TabIndex" type="System.Int32, mscorlib">
+    <value>12</value>
+  </data>
+  <data name="&gt;&gt;wizardPagesByAccountType.Name" xml:space="preserve">
+    <value>wizardPagesByAccountType</value>
+  </data>
+  <data name="&gt;&gt;wizardPagesByAccountType.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=25.1.1.209, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;wizardPagesByAccountType.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;wizardPagesByAccountType.ZOrder" xml:space="preserve">
+    <value>1</value>
   </data>
   <data name="tabUnifiSettings.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -619,7 +814,7 @@
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabUnifiSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>288, 284</value>
+    <value>288, 325</value>
   </data>
   <data name="tabUnifiSettings.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -638,6 +833,105 @@
   </data>
   <data name="&gt;&gt;tabUnifiSettings.ZOrder" xml:space="preserve">
     <value>0</value>
+  </data>
+  <data name="&gt;&gt;cbArdiaDeleteRawAfterImport.Name" xml:space="preserve">
+    <value>cbArdiaDeleteRawAfterImport</value>
+  </data>
+  <data name="&gt;&gt;cbArdiaDeleteRawAfterImport.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbArdiaDeleteRawAfterImport.Parent" xml:space="preserve">
+    <value>tabPage2</value>
+  </data>
+  <data name="&gt;&gt;cbArdiaDeleteRawAfterImport.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;btnLogoutArdia.Name" xml:space="preserve">
+    <value>btnLogoutArdia</value>
+  </data>
+  <data name="&gt;&gt;btnLogoutArdia.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnLogoutArdia.Parent" xml:space="preserve">
+    <value>tabPage2</value>
+  </data>
+  <data name="&gt;&gt;btnLogoutArdia.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;textArdiaAlias_Username.Name" xml:space="preserve">
+    <value>textArdiaAlias_Username</value>
+  </data>
+  <data name="&gt;&gt;textArdiaAlias_Username.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textArdiaAlias_Username.Parent" xml:space="preserve">
+    <value>tabPage2</value>
+  </data>
+  <data name="&gt;&gt;textArdiaAlias_Username.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;label2.Name" xml:space="preserve">
+    <value>label2</value>
+  </data>
+  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
+    <value>tabPage2</value>
+  </data>
+  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;label3.Name" xml:space="preserve">
+    <value>label3</value>
+  </data>
+  <data name="&gt;&gt;label3.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label3.Parent" xml:space="preserve">
+    <value>tabPage2</value>
+  </data>
+  <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;textArdiaServerURL.Name" xml:space="preserve">
+    <value>textArdiaServerURL</value>
+  </data>
+  <data name="&gt;&gt;textArdiaServerURL.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textArdiaServerURL.Parent" xml:space="preserve">
+    <value>tabPage2</value>
+  </data>
+  <data name="&gt;&gt;textArdiaServerURL.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="tabPage2.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabPage2.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabPage2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>288, 325</value>
+  </data>
+  <data name="tabPage2.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="tabPage2.Text" xml:space="preserve">
+    <value>Ardia</value>
+  </data>
+  <data name="&gt;&gt;tabPage2.Name" xml:space="preserve">
+    <value>tabPage2</value>
+  </data>
+  <data name="&gt;&gt;tabPage2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabPage2.Parent" xml:space="preserve">
+    <value>wizardPagesByAccountType</value>
+  </data>
+  <data name="&gt;&gt;tabPage2.ZOrder" xml:space="preserve">
+    <value>1</value>
   </data>
   <data name="cbArdiaDeleteRawAfterImport.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -666,6 +960,9 @@
   <data name="&gt;&gt;cbArdiaDeleteRawAfterImport.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>155, 17</value>
+  </metadata>
   <data name="btnLogoutArdia.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
@@ -681,9 +978,6 @@
   <data name="btnLogoutArdia.Text" xml:space="preserve">
     <value>Logout Ardia</value>
   </data>
-  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>155, 17</value>
-  </metadata>
   <data name="btnLogoutArdia.ToolTip" xml:space="preserve">
     <value>This will also log out from Ardia session in default browser.</value>
   </data>
@@ -810,54 +1104,9 @@
   <data name="&gt;&gt;textArdiaServerURL.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
-  <data name="tabPage2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
-  </data>
-  <data name="tabPage2.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
-  </data>
-  <data name="tabPage2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>288, 284</value>
-  </data>
-  <data name="tabPage2.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="tabPage2.Text" xml:space="preserve">
-    <value>Ardia</value>
-  </data>
-  <data name="&gt;&gt;tabPage2.Name" xml:space="preserve">
-    <value>tabPage2</value>
-  </data>
-  <data name="&gt;&gt;tabPage2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tabPage2.Parent" xml:space="preserve">
-    <value>wizardPagesByAccountType</value>
-  </data>
-  <data name="&gt;&gt;tabPage2.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="wizardPagesByAccountType.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 52</value>
-  </data>
-  <data name="wizardPagesByAccountType.Size" type="System.Drawing.Size, System.Drawing">
-    <value>296, 310</value>
-  </data>
-  <data name="wizardPagesByAccountType.TabIndex" type="System.Int32, mscorlib">
-    <value>12</value>
-  </data>
-  <data name="&gt;&gt;wizardPagesByAccountType.Name" xml:space="preserve">
-    <value>wizardPagesByAccountType</value>
-  </data>
-  <data name="&gt;&gt;wizardPagesByAccountType.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.WizardPages, Skyline, Version=1.0.0.0 Culture=neutral, PublicKeyToken=null</value>
-  </data>
-  <data name="&gt;&gt;wizardPagesByAccountType.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;wizardPagesByAccountType.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>155, 17</value>
+  </metadata>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
@@ -865,7 +1114,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>323, 403</value>
+    <value>323, 444</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
@@ -877,7 +1126,7 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0 Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=25.1.1.209, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;toolTip1.Name" xml:space="preserve">
     <value>toolTip1</value>
@@ -889,7 +1138,7 @@
     <value>EditRemoteAccountDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0 Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=25.1.1.209, Culture=neutral, PublicKeyToken=null</value>
   </data>
 
   <data name="lblAlias.AutoSize" type="System.Boolean, mscorlib">

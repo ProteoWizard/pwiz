@@ -249,13 +249,14 @@ namespace pwiz.Skyline.FileUI
             this.lookInImageList.Images.SetKeyName(6, "OpticalDrive.png");
             this.lookInImageList.Images.SetKeyName(7, "NetworkDrive.png");
             this.lookInImageList.Images.SetKeyName(8, "folder.png");
-            this.lookInImageList.Images.SetKeyName(9, "DataProcessing.png");
+            this.lookInImageList.Images.SetKeyName(9, "MassSpecFile.png");
             this.lookInImageList.Images.SetKeyName(10, "File.png");
             this.lookInImageList.Images.SetKeyName(11, "MethodFile.png");
             this.lookInImageList.Images.SetKeyName(12, "noAccessFolder.png");
             this.lookInImageList.Images.SetKeyName(13, "ReadOnlyFolder.png");
             this.lookInImageList.Images.SetKeyName(14, "ReadWriteFolder.png");
             this.lookInImageList.Images.SetKeyName(15, "Blank.bmp");
+            this.lookInImageList.Images.SetKeyName(16, "FolderSampleSet.png");
             // 
             // recentDocumentsButton
             // 
@@ -313,6 +314,7 @@ namespace pwiz.Skyline.FileUI
             this.lookInImageListSmall.Images.SetKeyName(13, "ReadOnlyFolder.png");
             this.lookInImageListSmall.Images.SetKeyName(14, "ReadWriteFolder.png");
             this.lookInImageListSmall.Images.SetKeyName(15, "Blank.bmp");
+            this.lookInImageListSmall.Images.SetKeyName(16, "FolderSampleSet.png");
             // 
             // BaseFileDialogNE
             // 

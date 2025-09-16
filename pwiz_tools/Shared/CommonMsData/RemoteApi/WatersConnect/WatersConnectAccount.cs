@@ -83,6 +83,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             }
             ClientScope = @"webapi";
             ClientSecret = @"secret";
+            ClientId = @"resourceownerclient_jwt";
         }
 
         public string IdentityServer { get; private set; }
@@ -103,12 +104,19 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
         {
             return ChangeProp(ImClone(this), im => im.ClientSecret = clientSecret);
         }
+        public string ClientId { get; private set; }
+
+        public WatersConnectAccount ChangeClientId(string clientId)
+        {
+            return ChangeProp(ImClone(this), im => im.ClientId = clientId);
+        }
 
         private enum ATTR
         {
             identity_server,
             client_scope,
             client_secret,
+            client_id
         }
 
         protected override void ReadXElement(XElement xElement)
@@ -116,6 +124,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             base.ReadXElement(xElement);
             IdentityServer = (string) xElement.Attribute(ATTR.identity_server.ToString());
             ClientScope = (string) xElement.Attribute(ATTR.client_scope.ToString());
+            ClientId = (string)xElement.Attribute(ATTR.client_id.ToString()) ?? DEFAULT.ClientId;
             string clientSecret = (string) xElement.Attribute(ATTR.client_secret.ToString());
             if (clientSecret != null)
             {
@@ -128,6 +137,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             base.WriteXml(writer);
             writer.WriteAttributeIfString2(ATTR.identity_server, IdentityServer);
             writer.WriteAttributeIfString2(ATTR.client_scope, ClientScope);
+            writer.WriteAttributeIfString2(ATTR.client_id, ClientId);
             if (ClientSecret != null)
             {
                 writer.WriteAttributeIfString2(ATTR.client_secret, CommonTextUtil.EncryptString(ClientSecret));
@@ -149,7 +159,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             }
             // Get mock handler for testing purposes.
             var authHandler = CommonApplicationSettings.HttpMessageHandlerFactory.getMessageHandler(AUTH_HANDLER_NAME, () => new HttpClientHandler());
-            var tokenClient = new TokenClient(IdentityServer + IdentityConnectEndpoint, @"resourceownerclient_jwt",
+            var tokenClient = new TokenClient(IdentityServer + IdentityConnectEndpoint, ClientId,
                 ClientSecret, authHandler);
             if (_authenticationTokens.TryGetValue(this, out var expiredTokenCacheEntry))
             {
@@ -244,7 +254,8 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
         protected bool Equals(WatersConnectAccount other)
         {
             return base.Equals(other) && string.Equals(IdentityServer, other.IdentityServer) &&
-                   string.Equals(ClientScope, other.ClientScope) && string.Equals(ClientSecret, other.ClientSecret);
+                   string.Equals(ClientScope, other.ClientScope) && string.Equals(ClientSecret, other.ClientSecret) &&
+                   string.Equals(ClientId, other.ClientId);
         }
 
         public override bool Equals(object obj)
@@ -263,6 +274,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                 hashCode = (hashCode * 397) ^ (IdentityServer != null ? IdentityServer.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (ClientScope != null ? ClientScope.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (ClientSecret != null ? ClientSecret.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (ClientId != null ? ClientId.GetHashCode() : 0);
                 return hashCode;
             }
         }

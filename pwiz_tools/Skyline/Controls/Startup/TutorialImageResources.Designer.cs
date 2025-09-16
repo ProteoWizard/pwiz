@@ -203,6 +203,16 @@ namespace pwiz.Skyline.Controls.Startup {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap LiveReports_start {
+            get {
+                object obj = ResourceManager.GetObject("LiveReports_start", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap MethodEdit_start {
             get {
                 object obj = ResourceManager.GetObject("MethodEdit_start", resourceCulture);

@@ -107,10 +107,13 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             folder = null;
             if (string.IsNullOrEmpty(url.EncodedPath))
                 return false;
+            var path = url.EncodedPath;     // remove leading '/' if present since the path returned by the server does not have it
+            if (path.StartsWith(RemoteUrl.PATH_SEPARATOR))
+                path = path.Substring(RemoteUrl.PATH_SEPARATOR.Length);
             ImmutableList<WatersConnectFolderObject> folders;
             if (TryGetData(GetRootContentsUrl(), out folders))
             {
-                folder = folders.FirstOrDefault(f => f.Path.Equals(url.EncodedPath));
+                folder = folders.FirstOrDefault(f => f.Path.Equals(path));
                 return true;
             }
 
@@ -213,7 +216,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                             var childUrl = ((WatersConnectUrl) watersConnectUrl.ChangePathParts(watersConnectUrl.GetPathParts().Concat(new[] { sampleSet.Name })))
                                 .ChangeFolderOrSampleSetId(sampleSet.Id)
                                 .ChangeType(WatersConnectUrl.ItemType.sample_set);
-                            yield return new RemoteItem(childUrl, sampleSet.Name, DataSourceUtil.FOLDER_TYPE, null, 0);
+                            yield return new RemoteItem(childUrl, sampleSet.Name, DataSourceUtil.SAMPLE_SET_TYPE, null, 0);
                         }
                 }
             }
