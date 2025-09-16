@@ -88,27 +88,28 @@ namespace b = pwiz::data;
 
 CVParamValue::CVParamValue(boost::shared_ptr<b::CVParam>* base)
 : base_(new boost::shared_ptr<b::CVParam>(*base))
-{LOG_CONSTRUCT(BOOST_PP_STRINGIZE(CVParamValue))}
+{LOG_CONSTRUCT(BOOST_PP_STRINGIZE(CVParamValue), base_)}
 
 CVParamValue::~CVParamValue()
-{LOG_DESTRUCT(BOOST_PP_STRINGIZE(CVParamValue), true) SAFEDELETE(base_);}
+{LOG_DESTRUCT(BOOST_PP_STRINGIZE(CVParamValue), base_, true) SAFEDELETE(base_);}
 
 CVParamValue::!CVParamValue()
-{delete this;}
+{LOG_FINALIZE(BOOST_PP_STRINGIZE(CVParamValue), base_) delete this;}
 
 CVParam::CVParam(void* base, System::Object^ owner)
-: base_(new boost::shared_ptr<b::CVParam>(static_cast<b::CVParam*>(base))), owner_(owner), value_(gcnew CVParamValue(base_))
-{LOG_CONSTRUCT(BOOST_PP_STRINGIZE(CVParam))}
+: base_(owner == nullptr ? new boost::shared_ptr<b::CVParam>(static_cast<b::CVParam*>(base))
+                         : new boost::shared_ptr<b::CVParam>(static_cast<b::CVParam*>(base), nullDelete)),
+  owner_(owner), value_(gcnew CVParamValue(base_))
+{LOG_CONSTRUCT(BOOST_PP_STRINGIZE(CVParam), base_)}
 
 CVParam::CVParam(void* base)
 : base_(new boost::shared_ptr<b::CVParam>(static_cast<b::CVParam*>(base))), owner_(nullptr), value_(gcnew CVParamValue(base_))
-{LOG_CONSTRUCT(BOOST_PP_STRINGIZE(CVParam))}
+{LOG_CONSTRUCT(BOOST_PP_STRINGIZE(CVParam), base_)}
 
-CVParam::~CVParam()
-{LOG_DESTRUCT(BOOST_PP_STRINGIZE(CVParam), (owner_ == nullptr)) if (owner_ == nullptr) SAFEDELETE(base_);}
+CVParam::~CVParam() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(CVParam), base_, (owner_ == nullptr)) SAFEDELETE(base_);}
 
 CVParam::!CVParam()
-{delete this;}
+{LOG_FINALIZE(BOOST_PP_STRINGIZE(CVParam), base_) delete this;}
 
 CVParam::CVParam(CVID _cvid, bool _value)
 : base_(new boost::shared_ptr<b::CVParam>(new b::CVParam((pwiz::cv::CVID) _cvid, _value)))
@@ -190,27 +191,29 @@ bool CVParam::empty() {return (*base_)->empty();}
 
 UserParamValue::UserParamValue(boost::shared_ptr<b::UserParam>* base)
 : base_(new boost::shared_ptr<b::UserParam>(*base))
-{LOG_CONSTRUCT(BOOST_PP_STRINGIZE(UserParamValue))}
+{LOG_CONSTRUCT(BOOST_PP_STRINGIZE(UserParamValue), base_)}
 
 UserParamValue::~UserParamValue()
-{LOG_DESTRUCT(BOOST_PP_STRINGIZE(UserParamValue), true) SAFEDELETE(base_);}
+{LOG_DESTRUCT(BOOST_PP_STRINGIZE(UserParamValue), base_, true) SAFEDELETE(base_);}
 
 UserParamValue::!UserParamValue()
 {delete this;}
 
 UserParam::UserParam(void* base, System::Object^ owner)
-: base_(new boost::shared_ptr<b::UserParam>(static_cast<b::UserParam*>(base))), owner_(owner), value_(gcnew UserParamValue(base_))
-{LOG_CONSTRUCT(BOOST_PP_STRINGIZE(UserParam))}
+: base_(owner == nullptr ? new boost::shared_ptr<b::UserParam>(static_cast<b::UserParam*>(base))
+                         : new boost::shared_ptr<b::UserParam>(static_cast<b::UserParam*>(base), nullDelete)),
+  owner_(owner), value_(gcnew UserParamValue(base_))
+{LOG_CONSTRUCT(BOOST_PP_STRINGIZE(UserParam), base_)}
 
 UserParam::UserParam(void* base)
 : base_(new boost::shared_ptr<b::UserParam>(static_cast<b::UserParam*>(base))), owner_(nullptr), value_(gcnew UserParamValue(base_))
-{LOG_CONSTRUCT(BOOST_PP_STRINGIZE(UserParam))}
+{LOG_CONSTRUCT(BOOST_PP_STRINGIZE(UserParam), base_)}
 
 UserParam::~UserParam()
-{LOG_DESTRUCT(BOOST_PP_STRINGIZE(UserParam), (owner_ == nullptr)) if (owner_ == nullptr) SAFEDELETE(base_);}
+{LOG_DESTRUCT(BOOST_PP_STRINGIZE(UserParam), base_, (owner_ == nullptr)) SAFEDELETE(base_); delete value_;}
 
 UserParam::!UserParam()
-{delete this;}
+{LOG_FINALIZE(BOOST_PP_STRINGIZE(UserParam), base_) delete this;}
 
 UserParam::UserParam()
 : base_(new boost::shared_ptr<b::UserParam>(new b::UserParam())), owner_(nullptr)
@@ -262,10 +265,10 @@ bool UserParam::operator!=(UserParam^ that) {return (*base_) != *that->base_;}
 
 ParamContainer::ParamContainer(b::ParamContainer* base)
 : base_(base), owner_(nullptr)
-{LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ParamContainer))}
+{}
 
 ParamContainer::~ParamContainer()
-{LOG_DESTRUCT(BOOST_PP_STRINGIZE(ParamContainer), (owner_ == nullptr)) if (owner_ == nullptr) SAFEDELETE(base_);}
+{if (owner_ == nullptr) SAFEDELETE(base_);}
 
 ParamContainer::ParamContainer() : base_(new b::ParamContainer()) {}
 ParamGroupList^ ParamContainer::paramGroups::get() {return gcnew ParamGroupList(&base_->paramGroupPtrs, this);}
@@ -343,6 +346,7 @@ void ParamGroup::id::set(System::String^ value) {(*base_)->id = ToStdString(valu
 bool ParamGroup::empty()
 {
     return (*base_)->empty();
+
 }
 
 

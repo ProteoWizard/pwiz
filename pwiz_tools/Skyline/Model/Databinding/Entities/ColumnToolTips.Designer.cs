@@ -883,6 +883,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Fragmentation technique (e.g. CID, HCD, ETD).
+        /// </summary>
+        public static string DissociationMethod {
+            get {
+                return ResourceManager.GetString("DissociationMethod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Ion mobility drift time (in milliseconds) for fragment ions, which typically move faster due to more energetic collisions. (For backward compatibility only: IonMobilityFragment and IonMobilityUnits are the preferred terms.).
         /// </summary>
         public static string DriftTimeFragment {
@@ -952,6 +961,78 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string ExcludeFromCalibration {
             get {
                 return ResourceManager.GetString("ExcludeFromCalibration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Normalized end retention time of the peak from the best-scoring replicate or library file.
+        /// </summary>
+        public static string ExemplaryEndTime {
+            get {
+                return ResourceManager.GetString("ExemplaryEndTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File path of the result file with the best-scoring peak.
+        /// </summary>
+        public static string ExemplaryFilePath {
+            get {
+                return ResourceManager.GetString("ExemplaryFilePath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Name of the library with the best-scoring peak.
+        /// </summary>
+        public static string ExemplaryLibraryName {
+            get {
+                return ResourceManager.GetString("ExemplaryLibraryName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Best-scoring peak either from one of the Replicates in the document or one of the explicit peak boundaries from a library.
+        /// </summary>
+        public static string ExemplaryPeak {
+            get {
+                return ResourceManager.GetString("ExemplaryPeak", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Name of the replicate with the best-scoring peak.
+        /// </summary>
+        public static string ExemplaryReplicateName {
+            get {
+                return ResourceManager.GetString("ExemplaryReplicateName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Normalized retention time of the apex of the best-scoring peak.
+        /// </summary>
+        public static string ExemplaryRetentionTime {
+            get {
+                return ResourceManager.GetString("ExemplaryRetentionTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Score of the highest scoring peak in either a replicate or a library.
+        /// </summary>
+        public static string ExemplaryScore {
+            get {
+                return ResourceManager.GetString("ExemplaryScore", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Normalized start retention time of the peak from the best-scoring replicate or library file.
+        /// </summary>
+        public static string ExemplaryStartTime {
+            get {
+                return ResourceManager.GetString("ExemplaryStartTime", resourceCulture);
             }
         }
         
@@ -1278,6 +1359,33 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to End time of the peak from the best-scoring replicate mapped using retention time alignment to this replicate.
+        /// </summary>
+        public static string ImputedEndTime {
+            get {
+                return ResourceManager.GetString("ImputedEndTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peak boundaries of the best-scoring replicate mapped using retention time alignment to this replicate.
+        /// </summary>
+        public static string ImputedPeak {
+            get {
+                return ResourceManager.GetString("ImputedPeak", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Start time of the peak from the best-scoring replicate mapped using retention time alignment to this replicate.
+        /// </summary>
+        public static string ImputedStartTime {
+            get {
+                return ResourceManager.GetString("ImputedStartTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Standardized molecular identifier.
         /// </summary>
         public static string InChI {
@@ -1467,7 +1575,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to With of the m/z window in which the precursor was isolated. 
+        ///   Looks up a localized string similar to Width of the m/z window in which the precursor was isolated. 
         ///If more than one precursor was isolated then the Isolation Window Width is the sum of the windows around each precursor..
         /// </summary>
         public static string IsolationWindowWidth {
@@ -2644,6 +2752,51 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to End retention time of the peak chosen by Skyline during chromatogram extraction.
+        /// </summary>
+        public static string OriginalEndTime {
+            get {
+                return ResourceManager.GetString("OriginalEndTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peak boundaries chosen by Skyline during chromatogram extraction.
+        /// </summary>
+        public static string OriginalPeak {
+            get {
+                return ResourceManager.GetString("OriginalPeak", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Retention time of the apex of the peak chosen by Skyline during the initial chromatogram extraction.
+        /// </summary>
+        public static string OriginalRetentionTime {
+            get {
+                return ResourceManager.GetString("OriginalRetentionTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peak score assigned by Skyline during chromatogram extraction.
+        /// </summary>
+        public static string OriginalScore {
+            get {
+                return ResourceManager.GetString("OriginalScore", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Start retention time of the peak chosen by Skyline during chromatogram extraction.
+        /// </summary>
+        public static string OriginalStartTime {
+            get {
+                return ResourceManager.GetString("OriginalStartTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The maximum end time of the individual peaks in the peak group..
         /// </summary>
         public static string PeakGroupEndTime {
@@ -3669,6 +3822,51 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string Reason {
             get {
                 return ResourceManager.GetString("Reason", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to End retention time of the peak chosen when reintegrating with a trained peak scoring model.
+        /// </summary>
+        public static string ReintegratedEndTime {
+            get {
+                return ResourceManager.GetString("ReintegratedEndTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peak boundaries of the peak chosen when reintegrating with a trained peak scoring model.
+        /// </summary>
+        public static string ReintegratedPeak {
+            get {
+                return ResourceManager.GetString("ReintegratedPeak", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Retention time of the apex of the peak chosen when reintegrating with a trained peak scoring model.
+        /// </summary>
+        public static string ReintegratedRetentionTime {
+            get {
+                return ResourceManager.GetString("ReintegratedRetentionTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Score assigned to the peak chosen when reintegrating with a trained peak scoring model.
+        /// </summary>
+        public static string ReintegratedScore {
+            get {
+                return ResourceManager.GetString("ReintegratedScore", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Start retention time of the peak chosen when reintegrating with a trained peak scoring model.
+        /// </summary>
+        public static string ReintegratedStartTime {
+            get {
+                return ResourceManager.GetString("ReintegratedStartTime", resourceCulture);
             }
         }
         
