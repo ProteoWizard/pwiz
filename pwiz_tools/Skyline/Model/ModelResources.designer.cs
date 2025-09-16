@@ -2422,11 +2422,31 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Creating MRM method &apos;{0}&apos; from Skyline document &apos;{1}&apos;.
+        /// </summary>
+        public static string WatersConnectMethodExporter_ExportMethod_Creating_MRM_method___0___from_Skyline_document___1__ {
+            get {
+                return ResourceManager.GetString("WatersConnectMethodExporter_ExportMethod_Creating_MRM_method___0___from_Skyline_d" +
+                        "ocument___1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Folder ID is missing. Cannot upload the method. Folder info: {0}.
         /// </summary>
         public static string WatersConnectMethodExporter_ExportMethod_Folder_ID_is_missing {
             get {
                 return ResourceManager.GetString("WatersConnectMethodExporter_ExportMethod_Folder_ID_is_missing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Method creation from Skyline transition list.
+        /// </summary>
+        public static string WatersConnectMethodExporter_ExportMethod_Method_creation_from_Skyline_transition_list {
+            get {
+                return ResourceManager.GetString("WatersConnectMethodExporter_ExportMethod_Method_creation_from_Skyline_transition_" +
+                        "list", resourceCulture);
             }
         }
         

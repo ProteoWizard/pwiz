@@ -908,4 +908,10 @@ Would you like to continue?
   <data name="PersistedViews_GetDefaults_Detailed_Info" xml:space="preserve">
     <value>Detailed Info</value>
   </data>
+  <data name="WatersConnectMethodExporter_ExportMethod_Creating_MRM_method___0___from_Skyline_document___1__" xml:space="preserve">
+    <value>Creating MRM method '{0}' from Skyline document '{1}'</value>
+  </data>
+  <data name="WatersConnectMethodExporter_ExportMethod_Method_creation_from_Skyline_transition_list" xml:space="preserve">
+    <value>Method creation from Skyline transition list</value>
+  </data>
 </root>

@@ -29,6 +29,9 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
 {
     public class WatersConnectSessionAcquisitionMethod : WatersConnectSession
     {
+        public static readonly string GET_METHODS_ENDPOINT = @"/waters_connect/v2.0/published-methods?methodTypeIds=17C19CE93BBA488A975B1E14AAAA0B9B";
+        public static readonly string UPLOAD_METHOD_ENDPOINT = @"/waters_connect/method-develop/v1.0/tandem/create-mrm-methods";
+
         public WatersConnectSessionAcquisitionMethod(WatersConnectAccount account) : base(account)
         {
         }
@@ -186,14 +189,14 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             if (string.IsNullOrEmpty(id))
                 return null;
 
-            string url = @"/waters_connect/v2.0/published-methods?methodTypeIds=17C19CE93BBA488A975B1E14AAAA0B9B" + string.Format(@"&folderId={0}", id);
+            string url = GET_METHODS_ENDPOINT + string.Format(@"&folderId={0}", id);
 
             return new Uri(WatersConnectAccount.ServerUrl + url);
         }
 
         private Uri GetAquisitionMethodUploadUrl()
         {
-            return new Uri(WatersConnectAccount.ServerUrl + @"/waters_connect/v1.0/acq-method-versions");
+            return new Uri(WatersConnectAccount.ServerUrl + UPLOAD_METHOD_ENDPOINT);
         }
     }
 

@@ -1,8 +1,11 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Schema;
 using pwiz.Common.Mock;
 using pwiz.CommonMsData.RemoteApi;
 using pwiz.CommonMsData.RemoteApi.WatersConnect;
@@ -55,8 +58,9 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsFalse(exportMethodDlg.IsRunLengthVisible);
                 Assert.IsFalse(exportMethodDlg.IsDwellTimeVisible);
                 Assert.IsTrue(string.IsNullOrEmpty(exportMethodDlg.TemplatePathField.Text));
-              
+                exportMethodDlg.ExportStrategy = ExportStrategy.WcDecide;
             });
+
             var templateDlg = ShowDialog<WatersConnectSelectMethodFileDialog>(() => exportMethodDlg.ClickTemplateButton());
             WaitForConditionUI(1000, () => templateDlg.ListViewItems.Count == 1);
             RunUI(() =>
@@ -147,13 +151,40 @@ namespace pwiz.SkylineTestFunctional
             var methodModel = JObject.Parse(jsonPayload);
             Assert.AreNotEqual("FailMethod", methodModel["name"].ToString().Trim());    // FailMethod is used to test the failed upload
             Assert.AreEqual("TestMethod", methodModel["name"].ToString().Trim());
-            Assert.AreEqual(23, methodModel["targets"].Children().Count());
-            Assert.IsTrue(methodModel["targets"].Children().All(item =>
+            Assert.AreEqual("Multiple", methodModel["creationMode"].ToString().Trim());
+            Assert.AreEqual("AcquisitionWindows", methodModel["scheduleType"].ToString().Trim());
+            Assert.AreEqual(23, methodModel["compounds"].Children().Count());
+            Assert.IsTrue(methodModel["compounds"].Children().All(item =>
             {
                 if (double.TryParse(item["startTime"].Value<string>(), out var startTime))
                     return startTime >= 0;
                 return false;
             }), "Negative start time in the method");
+            ValidateJsonAgainstSchema(jsonPayload, TestFilesDir.GetTestPath("method-dev-spec.json"));
+        }
+
+        /// <summary>
+        /// Validates a JSON string against a JSON schema file.
+        /// Throws an exception if validation fails.
+        /// </summary>
+        /// <param name="jsonString">The JSON string to validate.</param>
+        /// <param name="schemaFilePath">The path to the JSON schema file.</param>
+        public static void ValidateJsonAgainstSchema(string jsonString, string schemaFilePath)
+        {
+            // Load the schema
+            var schemaText = File.ReadAllText(schemaFilePath);
+#pragma warning disable CS0618 // Type or member is obsolete
+            var schema = JsonSchema.Parse(schemaText);
+
+            // Parse the JSON
+            var json = JToken.Parse(jsonString);
+
+            // Validate
+            if (!json.IsValid(schema, out IList<string> errorMessages))
+            {
+                throw new InvalidDataException("JSON validation failed: " + string.Join("; ", errorMessages));
+            }
+#pragma warning restore CS0618 // Type or member is obsolete
         }
 
         private void SetRequestHandlers()
@@ -165,15 +196,15 @@ namespace pwiz.SkylineTestFunctional
             // ReSharper disable StringIndexOfIsCultureSpecific.1
             // Folders enumeration request
             wcHandler.AddMatcher(new RequestMatcherFile(
-                req => req.RequestUri.ToString().IndexOf(@"/waters_connect/v1.0/folders") >= 0,
+                req => req.RequestUri.ToString().IndexOf(WatersConnectSession.GET_FOLDERS) >= 0,
                 TestFilesDir.GetTestPath("MockHttpData\\WCFolders.json")));
             // Methods enumeration request
             wcHandler.AddMatcher(new RequestMatcherFile(
-                req => req.RequestUri.ToString().IndexOf(@"/waters_connect/v2.0/published-methods") >= 0,
+                req => req.RequestUri.ToString().IndexOf(WatersConnectSessionAcquisitionMethod.GET_METHODS_ENDPOINT) >= 0,
                 TestFilesDir.GetTestPath("MockHttpData\\WCMethods.json")));
             // Method upload request
             wcHandler.AddMatcher(new RequestMatcherFunction(
-                req => req.RequestUri.ToString().IndexOf(@"/waters_connect/v1.0/acq-method-versions") >= 0,
+                req => req.RequestUri.ToString().IndexOf(WatersConnectSessionAcquisitionMethod.UPLOAD_METHOD_ENDPOINT) >= 0,
                 req =>
                 {
                     var format = "{{\"methods\" : [ {{\"id\" : {0}, \"name\" : {1}, \"description\" : {2} }} ]}}";

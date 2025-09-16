@@ -1245,6 +1245,8 @@ namespace pwiz.Skyline.FileUI
             _exportProperties.PolarityFilter = comboPolarityFilter.Enabled
                 ? (ExportPolarity)comboPolarityFilter.SelectedIndex
                 : ExportPolarity.all;
+            if (Owner is IDocumentContainer skylineWindow)
+                _exportProperties.SkylineDocumentFileName = Path.GetFileName((skylineWindow).DocumentFilePath);
 
             if (Equals(_instrumentType, ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT))
             {

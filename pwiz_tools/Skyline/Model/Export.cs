@@ -22,6 +22,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -507,6 +508,7 @@ namespace pwiz.Skyline.Model
         public virtual bool ExportEdcMass { get; set; }
 
         public virtual double Ms1RepetitionTime { get; set; }
+        public virtual string SkylineDocumentFileName { get; set; }
 
         public TExp InitExporter<TExp>(TExp exporter)
             where TExp : AbstractMassListExporter
@@ -527,6 +529,7 @@ namespace pwiz.Skyline.Model
             exporter.SchedulingReplicateIndex = SchedulingReplicateNum;
             exporter.SchedulingAlgorithm = SchedulingAlgorithm;
             exporter.PolarityFilter = PolarityFilter;
+            exporter.SkylineDocumentFileName = SkylineDocumentFileName;
             return exporter;
         }
 
@@ -1061,6 +1064,8 @@ namespace pwiz.Skyline.Model
                 {
                     exporter.RunLength = RunLength;
                 }
+                exporter.ServerDecidesOnBuckets = (ExportStrategy == ExportStrategy.WcDecide);
+                exporter.MethodType = MethodType;
                 // decode URLs from the string parameters
                 // Convert to JSON and upload
                 PerformLongExport(m => exporter.ExportMethod(methodName, targetFolderUrl, templateMethodUrl, m));
@@ -4598,6 +4603,14 @@ namespace pwiz.Skyline.Model
             writer.Write("rt_window");
             writer.Write(FieldSeparator);
             writer.Write("is_quant_ion");
+            writer.Write(FieldSeparator);
+            writer.Write("compound.info");
+            writer.Write(FieldSeparator);
+            writer.Write("document.name");
+            writer.Write(FieldSeparator);
+            writer.Write("adduct.info");
+            writer.Write(FieldSeparator);
+            writer.Write("compound.internal_standard");
             writer.WriteLine();
         }
         // ReSharper restore LocalizableElement
@@ -4698,13 +4711,15 @@ namespace pwiz.Skyline.Model
             writer.Write(FieldSeparator);
             writer.Write(RTWindow);
             writer.Write(FieldSeparator);
-            if (nodeTran.ExplicitQuantitative)
-                writer.Write(@"true");
-            else if (nodeTran.QuantInfo.Quantititative)
-                writer.Write(@"true");
-            else
-                writer.Write(@"false");
-
+            writer.Write((nodeTran.ResultsRank == 1).ToString());
+            writer.Write(FieldSeparator);
+            writer.Write(nodePepGroup.Name + @"/" + nodePep.ModifiedSequenceDisplay);
+            writer.Write(FieldSeparator);
+            writer.Write(SkylineDocumentFileName);
+            writer.Write(FieldSeparator);
+            writer.Write(nodeTranGroup.PrecursorAdduct.AdductFormula);
+            writer.Write(FieldSeparator);
+            writer.Write((nodePep.GlobalStandardType == StandardType.GLOBAL_STANDARD).ToString());
             writer.WriteLine();
         }
 
@@ -5078,11 +5093,27 @@ namespace pwiz.Skyline.Model
 
             foreach (var methodData in MemoryOutput)
             {
+                ParseableObject.ParsingContext.Clear();
+                if (MethodType == ExportMethodType.Scheduled)
+                    ParseableObject.ParsingContext[@"scheduledMethod"] = @"true";
+
                 var method = ParseMethod(methodData.Value.ToString());
                 method.DestinationFolderId = targetFolderUrl.FolderOrSampleSetId;
                 method.TemplateVersionId = templateUrl.MethodVersionId.ToString();
                 if (ServerDecidesOnBuckets)
-                    method.ServerDecidesOnBuckets = @"Multiple on API";
+                    method.CreationMode = @"Multiple";
+                else 
+                    method.CreationMode = @"Single";
+                if (MethodType == ExportMethodType.Standard)
+                    method.ScheduleType = @"FullGradientTime";
+                else
+                    method.ScheduleType = @"AcquisitionWindows";
+                method.AuditEntry = new AuditEntryType()
+                {
+                    Details = string.Format(CultureInfo.CurrentCulture,
+                        ModelResources.WatersConnectMethodExporter_ExportMethod_Creating_MRM_method___0___from_Skyline_document___1__, _methodName, SkylineDocumentFileName),
+                    Reason = ModelResources.WatersConnectMethodExporter_ExportMethod_Method_creation_from_Skyline_transition_list
+                };
                 if (MemoryOutput.Count == 1)
                     method.Name = _methodName;
                 else
@@ -5091,33 +5122,37 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        [SuppressMessage("ReSharper", "RedundantNameQualifier")]
+        // Using fully-qualified names of the Waters Connect method model for clarity.
         public MethodModel ParseMethod(string outputLines)
         {
             var linesReader = new DsvStreamReader(new StringReader(outputLines), ',');
-            var targets = new List<CommonMsData.RemoteApi.WatersConnect.Target>();
+            var targets = new List<CommonMsData.RemoteApi.WatersConnect.Compound>();
+            CommonMsData.RemoteApi.WatersConnect.Compound currentTarget = null;
             while (!linesReader.EndOfStream)
             {
-                CommonMsData.RemoteApi.WatersConnect.Target currentTarget;
                 linesReader.ReadLine();
                 // we assume that the lines are sorted by target
-                if (targets.Count == 0 || !targets.Last().IsSameTarget(linesReader))
+                if (currentTarget == null || !currentTarget.IsSameCompound(linesReader))
                 {
-                    currentTarget = new CommonMsData.RemoteApi.WatersConnect.Target();
+                    currentTarget = new CommonMsData.RemoteApi.WatersConnect.Compound();
                     targets.Add(currentTarget);
                     currentTarget.ParseObject(linesReader);
-                    currentTarget.Transitions = new List<CommonMsData.RemoteApi.WatersConnect.Transition>();
+                    currentTarget.Adducts = new List<CommonMsData.RemoteApi.WatersConnect.AdductInfo>();
                 }
-                else
+                if (currentTarget.Adducts.Count == 0 || !currentTarget.Adducts.Last().IsSameAdduct(linesReader))
                 {
-                    currentTarget = targets.Last();
+                    currentTarget.Adducts.Add(new CommonMsData.RemoteApi.WatersConnect.AdductInfo());
+                    currentTarget.Adducts.Last().ParseObject(linesReader);
+                    currentTarget.Adducts.Last().Transitions = new List<CommonMsData.RemoteApi.WatersConnect.Transition>();
                 }
                 var currentTransition = new CommonMsData.RemoteApi.WatersConnect.Transition();
-                currentTarget.Transitions.Add(currentTransition);
+                currentTarget.Adducts.Last().Transitions.Add(currentTransition);
                 currentTransition.ParseObject(linesReader);
             }
 
             var res = new MethodModel();
-            res.Targets = targets.ToArray();
+            res.Compounds = targets.ToArray();
             res.Description = ModelResources.WatersConnectMethodExporter_ParseMethod_Exported_from_Skyline;
             res.Name = _methodName;
             return res;

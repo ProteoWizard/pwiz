@@ -27,6 +27,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
 {
     public class WatersConnectSession : RemoteSession
     {
+        public static readonly string GET_FOLDERS = @"/waters_connect/v1.0/folders";
         protected HttpClient _httpClient;
 
         public WatersConnectSession(WatersConnectAccount account) : base(account)
@@ -248,7 +249,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
 
         protected Uri GetRootContentsUrl()
         {
-            return new Uri(WatersConnectAccount.ServerUrl + @"/waters_connect/v1.0/folders");
+            return new Uri(WatersConnectAccount.ServerUrl + GET_FOLDERS);
         }
 
         private WatersConnectUrl GetWatersConnectUrlWithFolderIdAndType(WatersConnectUrl watersConnectUrl)
