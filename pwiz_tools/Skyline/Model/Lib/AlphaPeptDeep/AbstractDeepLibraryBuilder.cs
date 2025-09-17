@@ -37,17 +37,13 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
     {
         private DateTime _nowTime = DateTime.Now;
         private Dictionary<string, PredictionSupport> _warningModSupports;
+        
         protected AbstractDeepLibraryBuilder(SrmDocument document, IrtStandard irtStandard)
         {
             Document = document;
             IrtStandard = irtStandard;
         }
-        protected AbstractDeepLibraryBuilder(SrmDocument document, SrmDocument trainingDocument, IrtStandard irtStandard)
-        {
-            Document = document;
-            TrainingDocument = trainingDocument;
-            IrtStandard = irtStandard;
-        }
+
         public SrmDocument Document { get; private set; }
 
         public SrmDocument TrainingDocument { get; private set; }
@@ -62,7 +58,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         public string TimeStamp => _nowTime.ToString(@"yyyy-MM-dd_HH-mm-ss");
 
         public string WorkDir { get; private set; }
-        
+
         public void EnsureWorkDir(string path, string tool)
         {
             if (WorkDir == null)

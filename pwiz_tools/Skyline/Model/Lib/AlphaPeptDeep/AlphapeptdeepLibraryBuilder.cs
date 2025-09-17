@@ -26,7 +26,6 @@ using System.Linq;
 using pwiz.BiblioSpec;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
@@ -57,8 +56,6 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         public override string ToString() { return TextUtil.SpaceSeparate(Dash + Name, Value); }
     }
 
- 
-    
     public class AlphapeptdeepLibraryBuilder : AbstractDeepLibraryBuilder, IiRTCapableLibraryBuilder
     {
         public const string ALPHAPEPTDEEP = @"AlphaPeptDeep";
@@ -85,8 +82,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         private const string MOD_SITES = @"mod_sites";
         private const string CHARGE = @"charge";
 
-        private static readonly IEnumerable<string> PrecursorTableColumnNames =
-            new[] { SEQUENCE, MODS, MOD_SITES, CHARGE };
+        private static readonly IEnumerable<string> PrecursorTableColumnNames = new[] { SEQUENCE, MODS, MOD_SITES, CHARGE };
 
         // Column names for BlibBuild
         private const string MODIFIED_PEPTIDE = "ModifiedPeptide";
@@ -97,8 +93,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
         public static string PythonVersion => Settings.Default.PythonEmbeddableVersion;
 
-        public static string ScriptsDir =>
-            PythonInstallerUtil.GetPythonVirtualEnvironmentScriptsDir(PythonVersion, ALPHAPEPTDEEP);
+        public static string ScriptsDir => PythonInstallerUtil.GetPythonVirtualEnvironmentScriptsDir(PythonVersion, ALPHAPEPTDEEP);
 
         public static PythonInstaller CreatePythonInstaller(TextWriter writer)
         {
@@ -382,6 +377,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                         line.Add(cell);
                     }
                 }
+                // Only add a row, if there are no modifications or all modifications at least support spectrum prediction
                 if (!modifiedPeptide || LibraryBuilderModificationSupport.PeptideHasOnlyMs2SupportedMod(peptideWithMods))
                     result.Add(string.Join(TextUtil.SEPARATOR_TSV_STR, line));
             }
