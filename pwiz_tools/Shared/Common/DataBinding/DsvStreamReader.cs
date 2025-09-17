@@ -69,6 +69,19 @@ namespace pwiz.Common.DataBinding
             return true;
         }
 
+        public bool TryGetHeadersRange(string startHeader, string endHeader, out IEnumerable<string> values)
+        {
+            int startPos = _headers.IndexOf(startHeader);
+            int endPos = _headers.IndexOf(endHeader);
+            if (startPos == -1 || endPos == -1 || endPos < startPos)
+            {
+                values = null;
+                return false;
+            }
+            values = _currentLineFields.GetRange(startPos, endPos - startPos);
+            return true;
+        }
+
         public void Dispose()
         {
             if (_reader != null)
