@@ -49,6 +49,8 @@ namespace pwiz.Skyline.Controls.Databinding
             this.formatToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.fillDownToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
+            this.boxPlotToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.splitContainerVertical = new System.Windows.Forms.SplitContainer();
             this.rowDendrogram = new pwiz.Common.Controls.Clustering.DendrogramControl();
             this.splitContainerHorizontal = new System.Windows.Forms.SplitContainer();
@@ -92,7 +94,9 @@ namespace pwiz.Skyline.Controls.Databinding
             this.toolStripSeparator2,
             this.formatToolStripMenuItem,
             this.toolStripSeparator3,
-            this.fillDownToolStripMenuItem});
+            this.fillDownToolStripMenuItem,
+            this.toolStripSeparator4,
+            this.boxPlotToolStripMenuItem});
             this.contextMenuStrip.Name = "contextMenuStrip";
             resources.ApplyResources(this.contextMenuStrip, "contextMenuStrip");
             this.contextMenuStrip.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStrip_Opening);
@@ -159,6 +163,17 @@ namespace pwiz.Skyline.Controls.Databinding
             this.fillDownToolStripMenuItem.Name = "fillDownToolStripMenuItem";
             resources.ApplyResources(this.fillDownToolStripMenuItem, "fillDownToolStripMenuItem");
             this.fillDownToolStripMenuItem.Click += new System.EventHandler(this.fillDownToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator4
+            // 
+            this.toolStripSeparator4.Name = "toolStripSeparator4";
+            resources.ApplyResources(this.toolStripSeparator4, "toolStripSeparator4");
+            // 
+            // boxPlotToolStripMenuItem
+            // 
+            this.boxPlotToolStripMenuItem.Name = "boxPlotToolStripMenuItem";
+            resources.ApplyResources(this.boxPlotToolStripMenuItem, "boxPlotToolStripMenuItem");
+            this.boxPlotToolStripMenuItem.Click += new System.EventHandler(this.boxPlotToolStripMenuItem_Click);
             // 
             // splitContainerVertical
             // 
@@ -232,12 +247,12 @@ namespace pwiz.Skyline.Controls.Databinding
             this.colReplicateProperty});
             resources.ApplyResources(this.replicatePivotDataGridView, "replicatePivotDataGridView");
             this.replicatePivotDataGridView.Name = "replicatePivotDataGridView";
-            this.replicatePivotDataGridView.ColumnWidthChanged += new System.Windows.Forms.DataGridViewColumnEventHandler(this.replicatePivotDataGridView_ColumnWidthChanged);
             this.replicatePivotDataGridView.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.replicatePivotDataGridView_OnCellContentClick);
+            this.replicatePivotDataGridView.ColumnWidthChanged += new System.Windows.Forms.DataGridViewColumnEventHandler(this.replicatePivotDataGridView_ColumnWidthChanged);
             // 
             // colReplicateProperty
             // 
-            dataGridViewCellStyle1.BackColor = AbstractViewContext.DefaultReadOnlyCellColor;
+            dataGridViewCellStyle1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(245)))), ((int)(((byte)(245)))), ((int)(((byte)(245)))));
             this.colReplicateProperty.DefaultCellStyle = dataGridViewCellStyle1;
             resources.ApplyResources(this.colReplicateProperty, "colReplicateProperty");
             this.colReplicateProperty.Name = "colReplicateProperty";
@@ -354,5 +369,7 @@ namespace pwiz.Skyline.Controls.Databinding
         private System.Windows.Forms.SplitContainer dataGridSplitContainer;
         private Panel columnDendrogramClipPanel;
         private DataGridViewTextBoxColumn colReplicateProperty;
+        private ToolStripSeparator toolStripSeparator4;
+        private ToolStripMenuItem boxPlotToolStripMenuItem;
     }
 }

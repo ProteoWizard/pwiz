@@ -38,6 +38,7 @@ using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using pwiz.Skyline.Controls.Graphs;
 
 // This code is associated with the DocumentGrid.
 
@@ -407,6 +408,33 @@ namespace pwiz.Skyline.Controls.Databinding
         private void sortDescendingToolStripMenuItem_Click(object sender, EventArgs e)
         {
             SetSortDirection(_columnFilterPropertyDescriptor, ListSortDirection.Descending);
+        }
+
+        private void boxPlotToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowBoxPlot();
+        }
+
+        public bool ShowBoxPlot()
+        {
+            var formGroup = FormGroup.FromControl(this);
+            var boxPlot = formGroup.SiblingForms.OfType<BoxPlotGraph>().FirstOrDefault();
+            if (boxPlot != null)
+            {
+                boxPlot.OwnerGridForm = DataboundGridForm;
+                boxPlot.RefreshData();
+                boxPlot.Activate();
+                return true;
+            }
+            boxPlot = new BoxPlotGraph
+            {
+                SkylineWindow = DataSchemaSkylineWindow,
+                OwnerGridForm = DataboundGridForm,
+            };
+            boxPlot.RefreshData();
+
+            formGroup.ShowSibling(boxPlot);
+            return true;
         }
 
         public void SetSortDirection(PropertyDescriptor propertyDescriptor, ListSortDirection direction)

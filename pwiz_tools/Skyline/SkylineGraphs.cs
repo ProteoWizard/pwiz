@@ -78,6 +78,7 @@ namespace pwiz.Skyline
         private DocumentGridForm _documentGridForm;
         private CalibrationForm _calibrationForm;
         private AuditLogForm _auditLogForm;
+        private BoxPlotGraph _proteinAbundanceGraph;
         private CandidatePeakForm _candidatePeakForm;
         public static int MAX_GRAPH_CHROM = 100; // Never show more than this many chromatograms, lest we hit the Windows handle limit
         private readonly List<GraphChromatogram> _listGraphChrom = new List<GraphChromatogram>(); // List order is MRU, with oldest in position 0
@@ -514,6 +515,7 @@ namespace pwiz.Skyline
             DestroyResultsGrid();
             DestroyDocumentGrid();
             DestroyAuditLogForm();
+            DestroyProteinAbundanceGraph();
             DestroyCalibrationForm();
             DestroyCandidatePeakForm();
 
@@ -4425,6 +4427,11 @@ namespace pwiz.Skyline
             ShowPeakAreaReplicateComparison();
         }
 
+        private void proteinAbundanceReplicateComparisonContextMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowPeakAreaReplicateComparison();
+        }
+
         public void ShowPeakAreaReplicateComparison()
         {
             Settings.Default.AreaGraphTypes.Insert(0, GraphTypeSummary.replicate);
@@ -4491,6 +4498,49 @@ namespace pwiz.Skyline
             ShowGraphPeakArea(true, GraphTypeSummary.peptide);
             UpdatePeakAreaGraph();
             SynchronizeSummaryZooming();
+        }
+
+        public void ShowProteinAbundanceGraph()
+        {
+            if (_proteinAbundanceGraph != null && !Program.SkylineOffscreen)
+            {
+                _proteinAbundanceGraph.Activate();
+            }
+            else
+            {
+                _proteinAbundanceGraph = _proteinAbundanceGraph ?? CreateProteinAbundanceGraph();
+                if (_proteinAbundanceGraph != null)
+                {
+                    var rectFloat = GetFloatingRectangleForNewWindow();
+                    _proteinAbundanceGraph.Show(dockPanel, rectFloat);
+                }
+            }
+        }
+
+        private BoxPlotGraph CreateProteinAbundanceGraph()
+        {
+            if (_proteinAbundanceGraph == null)
+            {
+                _proteinAbundanceGraph = BoxPlotGraph.CreateBoxPlotGraph(this);
+                _proteinAbundanceGraph.FormClosed += __proteinAbundanceGraph_FormClosed;
+            }
+
+            return _proteinAbundanceGraph;
+        }
+
+        private void DestroyProteinAbundanceGraph()
+        {
+            if (_proteinAbundanceGraph != null)
+            {
+                _proteinAbundanceGraph.FormClosed -= __proteinAbundanceGraph_FormClosed;
+                _proteinAbundanceGraph.Close();
+                _proteinAbundanceGraph = null;
+            }
+        }
+
+        private void __proteinAbundanceGraph_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            _proteinAbundanceGraph = null;
         }
 
         public void ShowPeakAreaRelativeAbundanceGraph()
