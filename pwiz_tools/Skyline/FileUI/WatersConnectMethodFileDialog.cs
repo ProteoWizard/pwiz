@@ -79,6 +79,7 @@ namespace pwiz.Skyline.FileUI
                 {
                     if (ItemSelected(selectedItem))
                     {
+                        SetFolderId();
                         DialogResult = DialogResult.OK;
                         Close();
                     }
@@ -103,6 +104,7 @@ namespace pwiz.Skyline.FileUI
             // if no list items are selected check if the text box has a path
             if (RemoteSession is WatersConnectSession watersSession) // if it is a remote open it remotely
             {
+                SetFolderId();
                 if (listView.SelectedItems.Count > 0)
                 {
                     var selectedItem = listView.SelectedItems[0];
@@ -163,6 +165,11 @@ namespace pwiz.Skyline.FileUI
         protected override void OnCurrentDirectoryChange()
         {
             base.OnCurrentDirectoryChange();
+            SetFolderId();
+        }
+
+        protected void SetFolderId()
+        {
             if (RemoteSession is WatersConnectSession session && _currentDirectory is WatersConnectUrl currentDir)
             {
                 if (!string.IsNullOrEmpty(currentDir.EncodedPath?.Trim()) && session.TryGetFolderByUrl(currentDir, out var folder))

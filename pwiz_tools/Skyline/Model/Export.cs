@@ -5129,12 +5129,22 @@ namespace pwiz.Skyline.Model
             var linesReader = new DsvStreamReader(new StringReader(outputLines), ',');
             var targets = new List<CommonMsData.RemoteApi.WatersConnect.Compound>();
             CommonMsData.RemoteApi.WatersConnect.Compound currentTarget = null;
+            CommonMsData.RemoteApi.WatersConnect.Transition quantTransition = null;
             while (!linesReader.EndOfStream)
             {
                 linesReader.ReadLine();
                 // we assume that the lines are sorted by target
                 if (currentTarget == null || !currentTarget.IsSameCompound(linesReader))
                 {
+                    if (currentTarget != null && quantTransition == null )
+                    {
+                        var transitions = currentTarget.Adducts.SelectMany(add => add.Transitions).ToList();
+                        if (transitions.Any())
+                        {
+                            transitions.First().IsQuanIon = true; // if no quant ion specified, make the first one the quant ion
+                        }
+                    }
+                    quantTransition = null;
                     currentTarget = new CommonMsData.RemoteApi.WatersConnect.Compound();
                     targets.Add(currentTarget);
                     currentTarget.ParseObject(linesReader);
@@ -5149,6 +5159,12 @@ namespace pwiz.Skyline.Model
                 var currentTransition = new CommonMsData.RemoteApi.WatersConnect.Transition();
                 currentTarget.Adducts.Last().Transitions.Add(currentTransition);
                 currentTransition.ParseObject(linesReader);
+                if (currentTransition.IsQuanIon && quantTransition == null)
+                    quantTransition = currentTransition;
+                else
+                {
+                    currentTransition.IsQuanIon = false; // only one transition can be the quant ion
+                }
             }
 
             var res = new MethodModel();
