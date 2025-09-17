@@ -6,6 +6,7 @@ AgilentSpectrumMillIMSImportTest
 #AgilentSpectrumMillSpectralLibTest
 AllVsMz5OptimzeCeImportPerformanceTests
 #BrukerAllIonsbbCIDImportTest
+BrukerDiagonalPasefImportTest
 #BrukerDiaPasefImportTest
 #BrukerPrmPasefImportTest
 ConsoleTestDiaPasefFullDataset
