@@ -232,12 +232,12 @@ namespace pwiz.Skyline.Controls.Databinding
             this.colReplicateProperty});
             resources.ApplyResources(this.replicatePivotDataGridView, "replicatePivotDataGridView");
             this.replicatePivotDataGridView.Name = "replicatePivotDataGridView";
-            this.replicatePivotDataGridView.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.replicatePivotDataGridView_OnCellContentClick);
             this.replicatePivotDataGridView.ColumnWidthChanged += new System.Windows.Forms.DataGridViewColumnEventHandler(this.replicatePivotDataGridView_ColumnWidthChanged);
+            this.replicatePivotDataGridView.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.replicatePivotDataGridView_OnCellContentClick);
             // 
             // colReplicateProperty
             // 
-            dataGridViewCellStyle1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(245)))), ((int)(((byte)(245)))), ((int)(((byte)(245)))));
+            dataGridViewCellStyle1.BackColor = AbstractViewContext.DefaultReadOnlyCellColor;
             this.colReplicateProperty.DefaultCellStyle = dataGridViewCellStyle1;
             resources.ApplyResources(this.colReplicateProperty, "colReplicateProperty");
             this.colReplicateProperty.Name = "colReplicateProperty";

@@ -38,7 +38,6 @@ using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
-using pwiz.Skyline.Controls.Graphs;
 
 // This code is associated with the DocumentGrid.
 
