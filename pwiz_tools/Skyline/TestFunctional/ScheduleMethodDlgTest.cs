@@ -17,13 +17,16 @@
  * limitations under the License.
  */
 
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.DataBinding;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -179,7 +182,19 @@ namespace pwiz.SkylineTestFunctional
 
             // With only a single replicate scheduling options should not be presented
             Assert.IsNull(FindOpenForm<SchedulingOptionsDlg>());
-            Assert.AreEqual(File.ReadAllText(csvPath3), File.ReadAllText(csvPath4));
+
+            var csv3 = new DsvStreamReader( File.OpenText(csvPath3), TextUtil.GetCsvSeparator(CultureInfo.CurrentCulture));
+            var csv4 = new DsvStreamReader(File.OpenText(csvPath4), TextUtil.GetCsvSeparator(CultureInfo.CurrentCulture));
+            var startHeader = "protein.name";
+            var endHeader = "cone_voltage";
+            while (!csv3.EndOfStream && !csv4.EndOfStream)
+            {
+                csv3.ReadLine();
+                csv4.ReadLine();
+                Assert.IsTrue(csv3.TryGetHeadersRange(startHeader, endHeader, out var csv3Line) &
+                              csv4.TryGetHeadersRange(startHeader, endHeader, out var csv4Line));
+                Assert.IsTrue(csv3Line.SequenceEqual(csv4Line), "Averaged and single replicate exports do not match.");
+            }
         }
 
         private static void ExportScheduledReplicate(string csvPath2, int replicateCount, int replicateIndex, bool expectSingle)
