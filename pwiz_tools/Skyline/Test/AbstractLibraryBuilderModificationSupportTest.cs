@@ -27,124 +27,118 @@ namespace pwiz.SkylineTest
     [TestClass]
     public class AbstractLibraryBuilderModificationSupportTests : AbstractUnitTest
     {
-
-        public LibraryBuilderModificationSupport Support => new LibraryBuilderModificationSupport(MODEL_SUPPORTED_MODS);
-
-        private static List<ModificationType> MODEL_SUPPORTED_MODS =
+        private static readonly List<ModificationType> MODEL_SUPPORTED_MODS =
             new List<ModificationType>
 
             {
-                {
-                    new ModificationType(1,"TestMod1", "TestOnly", PredictionSupport.ALL)
-                },
-                {
-                    new ModificationType(2, "TestMod2", "TestOnly", PredictionSupport.FRAGMENTATION)
-                },
-                {
-                    new ModificationType(3, "TestMod3", "TestOnly", PredictionSupport.RETENTION_TIME)
-                },
-                {
-                    new ModificationType(4, "TestMod4", "TestOnly", PredictionSupport.CCS)
-                }
-
+                AbstractDeepLibraryBuilder.GetUniModType(4, PredictionSupport.all), // Carbamidomethyl (C)
+                AbstractDeepLibraryBuilder.GetUniModType(21, PredictionSupport.fragmentation), // Phospho
+                AbstractDeepLibraryBuilder.GetUniModType(35, PredictionSupport.retention_time), // Oxidation
+                AbstractDeepLibraryBuilder.GetUniModType(121, PredictionSupport.ccs) // GlyGly (a.k.a. GG)
             };
-       
+
+        private static readonly int ID0 = MODEL_SUPPORTED_MODS[0].Id;
+        private static readonly int ID1 = MODEL_SUPPORTED_MODS[1].Id;
+        private static readonly int ID2 = MODEL_SUPPORTED_MODS[2].Id;
+        private static readonly int ID3 = MODEL_SUPPORTED_MODS[3].Id;
+        private static readonly int ID_ACETYL = 1;
+
+        private static readonly string ACC0 = MODEL_SUPPORTED_MODS[0].Accession;
+        private static readonly string ACC1 = MODEL_SUPPORTED_MODS[1].Accession;
+        private static readonly string ACC2 = MODEL_SUPPORTED_MODS[2].Accession;
+        private static readonly string ACC3 = MODEL_SUPPORTED_MODS[3].Accession;
+
         [TestMethod]
         public void PredictionSupportTest()
         {
-            // Assert
-            Assert.IsNotNull(Support._modificationSupport);
-            Assert.AreEqual(Support._modificationSupport.Count, 4); // TestMod1, TestMod2, TestMod3, TestMod4
-
-            var nullId = 0;
-            var supportNull = Support.GetModificationType(nullId);
+            var support = new LibraryBuilderModificationSupport(MODEL_SUPPORTED_MODS);
+            
+            var supportNull = support.GetModificationType(0);
 
             Assert.IsNull(supportNull);
 
-            var support0 = Support.GetModificationType(MODEL_SUPPORTED_MODS[0].Id);
-            var support1 = Support.GetModificationType(MODEL_SUPPORTED_MODS[1].Id);
-            var support2 = Support.GetModificationType(MODEL_SUPPORTED_MODS[2].Id);
-            var support3 = Support.GetModificationType(MODEL_SUPPORTED_MODS[3].Id);
+            var support0 = support.GetModificationType(ID0);
+            var support1 = support.GetModificationType(ID1);
+            var support2 = support.GetModificationType(ID2);
+            var support3 = support.GetModificationType(ID3);
 
             Assert.IsNotNull(support0);
             Assert.IsNotNull(support1);
             Assert.IsNotNull(support2);
             Assert.IsNotNull(support3);
             
-            Assert.IsTrue(support0!.SupportedModels.Fragmentation);
-            Assert.IsTrue(support0!.SupportedModels.RetentionTime);
-            Assert.IsTrue(support0!.SupportedModels.Ccs);
+            Assert.IsTrue(support0.IsSupported(PredictionSupport.all));
 
-            Assert.IsTrue(support1!.SupportedModels.Fragmentation);
-            Assert.IsFalse(support1!.SupportedModels.RetentionTime);
-            Assert.IsFalse(support1!.SupportedModels.Ccs);
+            Assert.IsTrue(support1.IsSupported(PredictionSupport.fragmentation));
+            Assert.IsFalse(support1.IsSupported(PredictionSupport.all));
 
-            Assert.IsFalse(support2!.SupportedModels.Fragmentation);
-            Assert.IsTrue(support2!.SupportedModels.RetentionTime);
-            Assert.IsFalse(support2!.SupportedModels.Ccs);
+            Assert.IsTrue(support2.IsSupported(PredictionSupport.retention_time));
+            Assert.IsFalse(support2.IsSupported(PredictionSupport.all));
 
-            Assert.IsFalse(support3!.SupportedModels.Fragmentation);
-            Assert.IsFalse(support3!.SupportedModels.RetentionTime);
-            Assert.IsTrue(support3!.SupportedModels.Ccs);
+            Assert.IsTrue(support3.IsSupported(PredictionSupport.ccs));
+            Assert.IsFalse(support3.IsSupported(PredictionSupport.all));
 
-            var support = new LibraryBuilderModificationSupport(new List<ModificationType>());
-
-            Assert.IsNotNull(support._modificationSupport);
-            Assert.AreEqual(support._modificationSupport.Count, 0);
+            support = new LibraryBuilderModificationSupport(new List<ModificationType>());
+            
+            Assert.IsNull(support.GetModificationType(ID0));
+            Assert.IsNull(support.GetModificationType(ID1));
+            Assert.IsNull(support.GetModificationType(ID2));
+            Assert.IsNull(support.GetModificationType(ID3));
         }
 
         [TestMethod]
         public void SupportedModsTest()
         {
-            Assert.IsFalse(Support.IsMs2SupportedMod(null));
-            Assert.IsFalse(Support.IsRtSupportedMod(null));
-            Assert.IsFalse(Support.IsCcsSupportedMod(null));
-            Assert.IsFalse(Support.AreAllModelsSupported(null));
+            var support = new LibraryBuilderModificationSupport(MODEL_SUPPORTED_MODS);
 
-            var nullId = 0;
-            Assert.IsFalse(Support.IsMs2SupportedMod(nullId));
-            Assert.IsFalse(Support.IsRtSupportedMod(nullId));
-            Assert.IsFalse(Support.IsCcsSupportedMod(nullId));
-            Assert.IsFalse(Support.AreAllModelsSupported(nullId));
+            Assert.IsFalse(support.IsSupportedMod(null, PredictionSupport.fragmentation));
+            Assert.IsFalse(support.IsSupportedMod(null, PredictionSupport.retention_time));
+            Assert.IsFalse(support.IsSupportedMod(null, PredictionSupport.ccs));
+            Assert.IsFalse(support.IsSupportedMod(null, PredictionSupport.all));
 
-            Assert.IsTrue(Support.IsMs2SupportedMod(1));
-            Assert.IsTrue(Support.IsMs2SupportedMod(2));
-            Assert.IsFalse(Support.IsMs2SupportedMod(3));
-            Assert.IsFalse(Support.IsMs2SupportedMod(999));
+            Assert.IsFalse(support.IsSupportedMod(0, PredictionSupport.fragmentation));
+            Assert.IsFalse(support.IsSupportedMod(0, PredictionSupport.retention_time));
+            Assert.IsFalse(support.IsSupportedMod(0, PredictionSupport.ccs));
+            Assert.IsFalse(support.IsSupportedMod(0, PredictionSupport.all));
 
-            Assert.IsTrue(Support.IsRtSupportedMod(1));
-            Assert.IsFalse(Support.IsRtSupportedMod(2));
-            Assert.IsTrue(Support.IsRtSupportedMod(3));
-            Assert.IsFalse(Support.IsRtSupportedMod(999));
-  
-            Assert.IsTrue(Support.IsCcsSupportedMod(1));
-            Assert.IsFalse(Support.IsCcsSupportedMod(2));
-            Assert.IsTrue(Support.IsCcsSupportedMod(4));
-            Assert.IsFalse(Support.IsCcsSupportedMod(999));
-   
-            Assert.IsTrue(Support.AreAllModelsSupported(1)); // Supports all
-            Assert.IsFalse(Support.AreAllModelsSupported(2)); // Only MS2
-            Assert.IsFalse(Support.AreAllModelsSupported(3)); // Only RT
-            Assert.IsFalse(Support.AreAllModelsSupported(4)); // Only CCS
-            Assert.IsFalse(Support.AreAllModelsSupported(999));
-  
-            Assert.IsTrue(Support.PeptideHasOnlyMs2SupportedMod("PEPTIDE[TestMod1:1]R[TestMod2:2]")); // Both MS2 supported
-            Assert.IsFalse(Support.PeptideHasOnlyMs2SupportedMod("PEPTIDE[TestMod3:3]")); // TestMod3 not MS2 supported
-            Assert.IsFalse(Support.PeptideHasOnlyMs2SupportedMod("PEPTIDE[UNKNOWN:999]")); // Unknown mod
-            Assert.IsTrue(Support.PeptideHasOnlyMs2SupportedMod("PEPTIDE")); // No mods
+            Assert.IsTrue(support.IsSupportedMod(ID0, PredictionSupport.fragmentation));
+            Assert.IsTrue(support.IsSupportedMod(ID1, PredictionSupport.fragmentation));
+            Assert.IsFalse(support.IsSupportedMod(ID2, PredictionSupport.fragmentation));
+            Assert.IsFalse(support.IsSupportedMod(ID_ACETYL, PredictionSupport.fragmentation));
+
+            Assert.IsTrue(support.IsSupportedMod(ID0, PredictionSupport.retention_time));
+            Assert.IsFalse(support.IsSupportedMod(ID1, PredictionSupport.retention_time));
+            Assert.IsTrue(support.IsSupportedMod(ID2, PredictionSupport.retention_time));
+            Assert.IsFalse(support.IsSupportedMod(ID_ACETYL, PredictionSupport.retention_time));
+
+            Assert.IsTrue(support.IsSupportedMod(ID0, PredictionSupport.ccs));
+            Assert.IsFalse(support.IsSupportedMod(ID1, PredictionSupport.ccs));
+            Assert.IsTrue(support.IsSupportedMod(ID3, PredictionSupport.ccs));
+            Assert.IsFalse(support.IsSupportedMod(ID_ACETYL, PredictionSupport.ccs));
+
+            Assert.IsTrue(support.IsSupportedMod(ID0, PredictionSupport.all));
+            Assert.IsFalse(support.IsSupportedMod(ID1, PredictionSupport.all));
+            Assert.IsFalse(support.IsSupportedMod(ID2, PredictionSupport.all));
+            Assert.IsFalse(support.IsSupportedMod(ID3, PredictionSupport.all));
+            Assert.IsFalse(support.IsSupportedMod(ID_ACETYL, PredictionSupport.all));
+
+            Assert.IsTrue(support.PeptideHasOnlyMs2SupportedMod($"PEPTIDE[{ACC0}]R[{ACC1}]")); // Both MS2 supported
+            Assert.IsFalse(support.PeptideHasOnlyMs2SupportedMod($"PEPTIDE[{ACC2}]")); // Mod index 2 does not support MS2
+            Assert.IsFalse(support.PeptideHasOnlyMs2SupportedMod("PEPTIDE[UNKNOWN:999]")); // Unknown mod
+            Assert.IsTrue(support.PeptideHasOnlyMs2SupportedMod("PEPTIDE")); // No mods
  
-            Assert.IsTrue(Support.PeptideHasOnlyRtSupportedMod("PEPTIDE[TestMod1:1]R[TestMod3:3]")); // Both RT supported
-            Assert.IsFalse(Support.PeptideHasOnlyRtSupportedMod("PEPTIDE[TestMod2:2]")); // TestMod2 not RT supported
-            Assert.IsFalse(Support.PeptideHasOnlyRtSupportedMod("PEPTIDE[UNKNOWN:999]")); // Unknown mod
-            Assert.IsTrue(Support.PeptideHasOnlyRtSupportedMod("PEPTIDE")); // No mods
+            Assert.IsTrue(support.PeptideHasOnlyRtSupportedMod($"PEPTIDE[{ACC0}]R[{ACC2}]")); // Both RT supported
+            Assert.IsFalse(support.PeptideHasOnlyRtSupportedMod($"PEPTIDE[{ACC1}]")); // Mod index 1 does not support RT
+            Assert.IsFalse(support.PeptideHasOnlyRtSupportedMod("PEPTIDE[UNKNOWN:999]")); // Unknown mod
+            Assert.IsTrue(support.PeptideHasOnlyRtSupportedMod("PEPTIDE")); // No mods
  
-            Assert.IsTrue(Support.PeptideHasOnlyCcsSupportedMod("PEPTIDE[TestMod1:1]R[TestMod4:4]")); // Both CCS supported
-            Assert.IsFalse(Support.PeptideHasOnlyCcsSupportedMod("PEPTIDE[TestMod2:2]")); // TestMod2 not CCS supported
-            Assert.IsFalse(Support.PeptideHasOnlyCcsSupportedMod("PEPTIDE[UNKNOWN:999]")); // Unknown mod
-            Assert.IsTrue(Support.PeptideHasOnlyCcsSupportedMod("PEPTIDE")); // No mods
+            Assert.IsTrue(support.PeptideHasOnlyCcsSupportedMod($"PEPTIDE[{ACC0}]R[{ACC3}]")); // Both CCS supported
+            Assert.IsFalse(support.PeptideHasOnlyCcsSupportedMod($"PEPTIDE[{ACC1}]")); // Mod index 1 does not support CCS
+            Assert.IsFalse(support.PeptideHasOnlyCcsSupportedMod("PEPTIDE[UNKNOWN:999]")); // Unknown mod
+            Assert.IsTrue(support.PeptideHasOnlyCcsSupportedMod("PEPTIDE")); // No mods
 
-            Assert.IsTrue(Support.PeptideHasOnlyMs2SupportedMod("PEPTIDE[INVALID]")); // No valid numeric accession
-            Assert.IsTrue(Support.PeptideHasOnlyMs2SupportedMod("PEPTIDE[]")); // Empty brackets
+            Assert.IsTrue(support.PeptideHasOnlyMs2SupportedMod("PEPTIDE[INVALID]")); // No valid numeric accession
+            Assert.IsTrue(support.PeptideHasOnlyMs2SupportedMod("PEPTIDE[]")); // Empty brackets
         }
     }
 }

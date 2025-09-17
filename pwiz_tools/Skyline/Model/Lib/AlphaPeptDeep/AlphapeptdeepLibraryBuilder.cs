@@ -117,34 +117,15 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
         protected override string ToolName => ALPHAPEPTDEEP;
 
-        protected override LibraryBuilderModificationSupport libraryBuilderModificationSupport { get; }
+        protected override LibraryBuilderModificationSupport LibraryBuilderModificationSupport { get; }
 
-        internal static List<ModificationType> MODEL_SUPPORTED_UNIMODS =
-            new List<ModificationType>
-
-            {
-                {
-                    new ModificationType(
-                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 4),
-                        PredictionSupport.ALL)
-                },
-                {
-                    new ModificationType(
-                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 21),
-                        PredictionSupport.FRAGMENTATION)
-                },
-                {
-                    new ModificationType(
-                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 35),
-                        PredictionSupport.ALL)
-                },
-                {
-                    new ModificationType(
-                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 121),
-                        PredictionSupport.FRAGMENTATION)
-                }
-
-            };
+        internal static List<ModificationType> MODEL_SUPPORTED_UNIMODS = new List<ModificationType>
+        {
+            GetUniModType(4, PredictionSupport.all), // Carbamidomethyl (C)
+            GetUniModType(21, PredictionSupport.fragmentation), // Phospho
+            GetUniModType(35, PredictionSupport.all), // Oxidation
+            GetUniModType(121, PredictionSupport.fragmentation) // GlyGly (a.k.a. GG)
+        };
 
         public LibrarySpec LibrarySpec { get; private set; }
 
@@ -217,7 +198,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             SrmDocument document, IrtStandard irtStandard) : base(document, irtStandard)
         {
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
-            libraryBuilderModificationSupport = new LibraryBuilderModificationSupport(MODEL_SUPPORTED_UNIMODS);
+            LibraryBuilderModificationSupport = new LibraryBuilderModificationSupport(MODEL_SUPPORTED_UNIMODS);
             string rootProcessingDir = Path.GetDirectoryName(libOutPath);
             if (string.IsNullOrEmpty(rootProcessingDir))
                 throw new ArgumentException($@"AlphapeptdeepLibraryBuilder libOutputPath {libOutPath} must be a full path.");
@@ -369,7 +350,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             while (null != reader.ReadLine())
             {
                 var line = new List<string>();
-                string peptideWithMods = String.Empty;
+                string peptideWithMods = string.Empty;
                 bool modifiedPeptide = false;
                 foreach (var colName in colNames)
                 {
@@ -388,35 +369,36 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                     }
                     else if (colName == CCS)
                     {
-                        double transformedCell = double.Parse(cell.ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture);
-                        if (modifiedPeptide && !libraryBuilderModificationSupport.PeptideHasOnlyCcsSupportedMod(peptideWithMods))
-                        {
-                            transformedCell *= 0; // Zero-out the value if model doesn't support a mod in the peptide
-                        }
-
-                        line.Add(transformedCell.ToString(CultureInfo.InvariantCulture));
+                        AddDoubleCell(line, cell,
+                            !modifiedPeptide || LibraryBuilderModificationSupport.PeptideHasOnlyCcsSupportedMod(peptideWithMods));
                     }
                     else if (colName == NORMALIZED_RT)
                     {
-                        double transformedCell = double.Parse(cell.ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture);
-                        if (modifiedPeptide && !libraryBuilderModificationSupport.PeptideHasOnlyRtSupportedMod(peptideWithMods))
-                        {
-                            transformedCell *= 0; // Zero-out the value if model doesn't support a mod in the peptide
-                        }
-
-                        line.Add(transformedCell.ToString(CultureInfo.InvariantCulture));
+                        AddDoubleCell(line, cell,
+                            !modifiedPeptide || LibraryBuilderModificationSupport.PeptideHasOnlyRtSupportedMod(peptideWithMods));
                     }
                     else if (colName != ION_MOBILITY)
                     {
                         line.Add(cell);
                     }
                 }
-                if (!modifiedPeptide || libraryBuilderModificationSupport.PeptideHasOnlyMs2SupportedMod(peptideWithMods))
+                if (!modifiedPeptide || LibraryBuilderModificationSupport.PeptideHasOnlyMs2SupportedMod(peptideWithMods))
                     result.Add(string.Join(TextUtil.SEPARATOR_TSV_STR, line));
             }
 
             // Write to new file
             File.WriteAllLines(TransformedOutputSpectraLibFilepath, result);
+        }
+
+        private void AddDoubleCell(List<string> line, string cell, bool allowedValue)
+        {
+            double valueToAdd;
+            if (!allowedValue || !double.TryParse(cell.ToString(CultureInfo.InvariantCulture), NumberStyles.Float,
+                    CultureInfo.InvariantCulture, out valueToAdd))
+            {
+                valueToAdd = 0; // CONSIDER: Zero is a valid value for a normalized-RT
+            }
+            line.Add(valueToAdd.ToString(CultureInfo.InvariantCulture));
         }
 
         public void ImportSpectralLibrary(IProgressMonitor progress, ref IProgressStatus progressStatus)
