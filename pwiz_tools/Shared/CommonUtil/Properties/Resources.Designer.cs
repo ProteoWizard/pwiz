@@ -142,6 +142,15 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to copy &apos;{0}&apos; to &apos;{1}&apos;.
+        /// </summary>
+        internal static string Kernel32_CopyFileWithProgress_Failed_to_copy___0___to___1__ {
+            get {
+                return ResourceManager.GetString("Kernel32_CopyFileWithProgress_Failed_to_copy___0___to___1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Run command:.
         /// </summary>
         internal static string ProcessRunner_Run_Run_command_ {

@@ -75,9 +75,9 @@ namespace TestPerf
                 FinalTargetCounts = new[] { 369, 719, 719, 5058 },
                 MassErrorStats = new[]
                 {
-                    new[] {-0.2, 2.5},
-                    new[] {-0.2, 2.5},
-                    new[] {-0.2, 2.4},
+                    new[] {-0.2, 2.5 },
+                    new[] {-0.2, 2.5 },
+                    new[] {-0.2, 2.5 },
                 },
                 ChromatogramClickPoint = new PointF(32.2f, 12.5f)
             };
@@ -486,7 +486,7 @@ namespace TestPerf
         {
             double mean = massErrorPane.Mean, stdDev = massErrorPane.StdDev;
             if (IsRecordMode)
-                Console.WriteLine(@"new[] {{{0:0.0}, {1:0.0}}},", mean, stdDev);  // Not L10N
+                Console.WriteLine(@"new[] {{{0:0.0}, {1:0.0} }},", mean, stdDev);  // Not L10N
             else
             {
                 Assert.AreEqual(_analysisValues.MassErrorStats[index][0], mean, 0.05);

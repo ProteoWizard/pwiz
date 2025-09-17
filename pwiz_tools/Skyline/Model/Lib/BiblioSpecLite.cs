@@ -307,7 +307,7 @@ namespace pwiz.Skyline.Model.Lib
             }
             foreach (var spectrumSourceFile in _librarySourceFiles)
             {
-                detailsByFileId.Add(spectrumSourceFile.Id, new SpectrumSourceFileDetails(spectrumSourceFile.FilePath, spectrumSourceFile.IdFilePath));
+                detailsByFileId.Add(spectrumSourceFile.Id, new SpectrumSourceFileDetails(spectrumSourceFile.FilePath, spectrumSourceFile.IdFilePath, spectrumSourceFile.WorkflowType));
                 scoreTypesByFileId.Add(spectrumSourceFile.Id, new HashSet<string>());
             }
 
@@ -340,7 +340,7 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     foreach (var scoreTypeName in scoreTypes)
                     {
-                        if (scoreTypesByName.TryGetValue(scoreTypeName, out var scoreType))
+                        if (scoreTypeName != null && scoreTypesByName.TryGetValue(scoreTypeName, out var scoreType))
                         {
                             detailsByFileId[file.Id].ScoreThresholds.Add(scoreType, file.CutoffScore);
                         }
@@ -561,7 +561,8 @@ namespace pwiz.Skyline.Model.Lib
             id,
             fileName,
             idFileName,
-            cutoffScore
+            cutoffScore,
+            workflowType
         }
 
         private enum ScoreTypes
@@ -686,6 +687,7 @@ namespace pwiz.Skyline.Model.Lib
                             reader.GetOrdinal(SpectrumSourceFiles
                                 .idFileName); // Save the search result file, too (may be distinct from the spectra source file)
                         int iIdCutoffScore = reader.GetOrdinal(SpectrumSourceFiles.cutoffScore);
+                        int iWorkflowType = reader.GetOrdinal(SpectrumSourceFiles.workflowType);
                         while (reader.Read())
                         {
                             string filename = reader.GetString(iFilename);
@@ -694,7 +696,10 @@ namespace pwiz.Skyline.Model.Lib
                                 : reader.GetString(iIdFilename);
                             int id = reader.GetInt32(iId);
                             double? cutoffScore = iIdCutoffScore < 0 || reader.IsDBNull(iIdCutoffScore) ? (double?) null : reader.GetDouble(iIdCutoffScore);
-                            librarySourceFiles.Add(new BiblioLiteSourceInfo(id, filename, idFilename ?? string.Empty, cutoffScore));
+                            WorkflowType workflowType = iWorkflowType < 0 || reader.IsDBNull(iWorkflowType)
+                                ? WorkflowType.DDA
+                                : (WorkflowType) reader.GetInt32(iWorkflowType);
+                            librarySourceFiles.Add(new BiblioLiteSourceInfo(id, filename, idFilename ?? string.Empty, cutoffScore, workflowType));
                         }
                     }
 
@@ -1248,21 +1253,18 @@ namespace pwiz.Skyline.Model.Lib
             if (j != -1)
             {
                 var source = _librarySourceFiles[j];
-                ILookup<Target, double[]> timesLookup = _libraryEntries.ToLookup(
-                    entry => entry.Key.Target, 
-                    entry=>entry.RetentionTimesByFileId.GetTimes(source.Id));
-                var timesDict = timesLookup.ToDictionary(
-                    grouping => grouping.Key,
-                    grouping =>
-                        {
-                            var array = grouping.SelectMany(values => values).ToArray();
-                            Array.Sort(array);
-                            return array;
-                        });
-                var nonEmptyTimesDict = timesDict
-                    .Where(kvp => kvp.Value.Length > 0)
-                    .ToDictionary(kvp => kvp.Key, kvp => new Tuple<TimeSource, double[]>(TimeSource.scan, kvp.Value));
-                retentionTimes = new LibraryRetentionTimes(filePath.ToString(), nonEmptyTimesDict);
+                var dictionary = new Dictionary<Target, Tuple<TimeSource, double[]>>();
+                foreach (var grouping in _libraryEntries.GroupBy(entry => entry.Key.Target))
+                {
+                    var times = grouping.SelectMany(entry => entry.RetentionTimesByFileId.GetTimes(source.Id))
+                        .OrderBy(time => time).ToArray();
+                    if (times.Length > 0)
+                    {
+                        dictionary.Add(grouping.Key, Tuple.Create(TimeSource.scan, times));
+                    }
+                }
+
+                retentionTimes = new LibraryRetentionTimes(filePath.ToString(), dictionary);
                 return true;
             }
 
@@ -1399,6 +1401,44 @@ namespace pwiz.Skyline.Model.Lib
                 }
                 peptideTimes.Add(alignedTime);
             }
+        }
+
+
+
+        private double? GetMinRetentionTime(IEnumerable<BiblioLiteSpectrumInfo> spectrumInfos, BiblioLiteSourceInfo sourceInfo)
+        {
+            var minTime = spectrumInfos.SelectMany(spectrum => spectrum.RetentionTimesByFileId.GetTimes(sourceInfo.Id))
+                .Append(double.MaxValue).Min();
+            if (minTime == double.MaxValue)
+            {
+                return null;
+            }
+
+            return minTime;
+        }
+
+        private Dictionary<int, double> GetMinRetentionTimes(IEnumerable<BiblioLiteSpectrumInfo> spectrumInfos, IList<int> fileIds)
+        {
+            var result = new Dictionary<int, double>();
+            foreach (var spectrumInfo in spectrumInfos)
+            {
+                foreach (var entry in spectrumInfo.RetentionTimesByFileId.GetMinRetentionTimes(fileIds))
+                {
+                    if (result.TryGetValue(entry.Key, out var oldMin))
+                    {
+                        if (entry.Value < oldMin)
+                        {
+                            result[entry.Key] = entry.Value;
+                        }
+                    }
+                    else
+                    {
+                        result.Add(entry.Key, entry.Value);
+                    }
+                }
+            }
+
+            return result;
         }
 
         public override bool TryGetIonMobilityInfos(LibKey key, MsDataFileUri filePath, out IonMobilityAndCCS[] ionMobilities)
@@ -1739,6 +1779,7 @@ namespace pwiz.Skyline.Model.Lib
             [CanBeNull] public string IDFileName { get; set; }
 
             [CanBeNull] public string FileName { get; set; }
+            public WorkflowType WorkflowType { get; set; }
 
             public int Count { get; set; }
 
@@ -1801,6 +1842,7 @@ namespace pwiz.Skyline.Model.Lib
                     var iSpecIdInFile = reader.GetOrdinal(RefSpectra.SpecIDinFile);
                     var iIdFileName = reader.GetOrdinal(SpectrumSourceFiles.idFileName);
                     var iFileName = reader.GetOrdinal(SpectrumSourceFiles.fileName);
+                    var iWorkflowType = reader.GetOrdinal(SpectrumSourceFiles.workflowType);
                     var iCopies = reader.GetOrdinal(RefSpectra.copies);
                     var iScore = reader.GetOrdinal(RefSpectra.score);
                     var iScoreType = reader.GetOrdinal(ScoreTypes.scoreType);
@@ -1815,6 +1857,11 @@ namespace pwiz.Skyline.Model.Lib
                             sheetInfo.IDFileName = reader.IsDBNull(iIdFileName) ? null : reader.GetString(iIdFileName);
                             sheetInfo.FileName = reader.IsDBNull(iFileName) ? null : reader.GetString(iFileName);
                         }
+
+                        sheetInfo.WorkflowType = iWorkflowType < 0 || reader.IsDBNull(iWorkflowType)
+                            ? WorkflowType.DDA
+                            : (WorkflowType) reader.GetInt32(iWorkflowType);
+
                         if (hasScores)
                         {
                             sheetInfo.Score = reader.IsDBNull(iScore) ? (double?)null : reader.GetDouble(iScore);
@@ -1988,18 +2035,20 @@ namespace pwiz.Skyline.Model.Lib
 
         private struct BiblioLiteSourceInfo
         {
-            public BiblioLiteSourceInfo(int id, string filePath, string idFilePath, double? cutoffScore) : this()
+            public BiblioLiteSourceInfo(int id, string filePath, string idFilePath, double? cutoffScore, WorkflowType workflowType) : this()
             {
                 Id = id;
                 FilePath = filePath;
                 IdFilePath = idFilePath;
                 CutoffScore = cutoffScore;
+                WorkflowType = workflowType;
             }
 
             public int Id { get; private set; }
             public string FilePath { get; private set; } // File from which the spectra were taken (may be same as idFilePath if spectra are taken from search file)
             public string IdFilePath { get; private set; } // File from which the IDs were taken (e.g. search results file from Mascot etc)
             public double? CutoffScore { get; }
+            public WorkflowType WorkflowType { get; private set; } // DDA or DIA
 
             public string BaseName
             {
@@ -2323,6 +2372,73 @@ namespace pwiz.Skyline.Model.Lib
             newSequence.Append(unmodifiedSequence.Substring(aaCount));
             return new PeptideLibraryKey(newSequence.ToString(), impreciseLibraryKey.Charge);
         }
+
+        public override Dictionary<Target, double>[] GetAllRetentionTimes(IEnumerable<string> spectrumSourceFiles)
+        {
+            var files = GetSourceInfos(spectrumSourceFiles, out var fileIds);
+            var result = files.Select(file => new Dictionary<Target, double>()).ToArray();
+            foreach (var grouping in _libraryEntries.GroupBy(entry => entry.Key.Target))
+            {
+                var minTimes = GetMinRetentionTimes(grouping, fileIds);
+                if (minTimes.Count == 0)
+                {
+                    continue;
+                }
+                for (int iFile = 0; iFile < files.Count; iFile++)
+                {
+                    var file = files[iFile];
+                    if (file.HasValue && minTimes.TryGetValue(file.Value.Id, out var minTime))
+                    {
+                        result[iFile].Add(grouping.Key, minTime);
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        public override IList<double>[] GetRetentionTimesWithSequences(IEnumerable<string> spectrumSourceFiles,
+            ICollection<Target> targets)
+        {
+            var files = GetSourceInfos(spectrumSourceFiles, out var fileIds);
+            var result = files.OfType<BiblioLiteSourceInfo>().ToDictionary(file => file.Id, file => new List<double>());
+            foreach (var entry in targets.SelectMany(target =>
+                         _libraryEntries.ItemsMatching(new LibKey(target, Adduct.EMPTY), false)))
+            {
+                foreach (var fileIdRetentionTimes in entry.RetentionTimesByFileId.GetRetentionTimes(fileIds))
+                {
+                    result[fileIdRetentionTimes.Key].AddRange(fileIdRetentionTimes.Value.Select(t=>(double) t));
+                }
+            }
+
+            return files.Select(file => file == null ? (IList<double>)Array.Empty<double>() : result[file.Value.Id])
+                .ToArray();
+        }
+
+        private IList<BiblioLiteSourceInfo?> GetSourceInfos(IEnumerable<string> spectrumSourceFiles,
+            out IList<int> orderedFileIds)
+        {
+            var files = _librarySourceFiles.Cast<BiblioLiteSourceInfo?>().ToList();
+            if (spectrumSourceFiles != null)
+            {
+                files = spectrumSourceFiles.Select(file => files.ElementAtOrDefault(LibraryFiles.IndexOfFilePath(file))).ToList();
+                orderedFileIds = files.Select(file => file?.Id).OfType<int>().OrderBy(i => i).ToList();
+            }
+            else
+            {
+                orderedFileIds = null;
+            }
+
+            return files;
+        }
+        public BiblioSpecLiteLibrary ChangeLibrarySpec(BiblioSpecLiteSpec newSpec, ConnectionPool connectionPool)
+        {
+            return ChangeProp(ImClone((BiblioSpecLiteLibrary)ChangeName(newSpec.Name)), im =>
+            {
+                im.FilePath = newSpec.FilePath;
+                _sqliteConnection = new PooledSqliteConnection(connectionPool, newSpec.FilePath);
+            });
+        }
     }
 
     public sealed class SpectrumLiteKey : IEquatable<SpectrumLiteKey>
@@ -2394,6 +2510,49 @@ namespace pwiz.Skyline.Model.Lib
                 return new double[0];
             }
             return times.Select(time => (double) time).ToArray();
+        }
+
+        public IEnumerable<KeyValuePair<int, double>> GetMinRetentionTimes(IList<int> fileIds)
+        {
+            foreach (var entry in GetRetentionTimes(fileIds))
+            {
+                if (entry.Value.Length > 0)
+                {
+                    yield return new KeyValuePair<int, double>(entry.Key, entry.Value.Min());
+                }
+            }
+        }
+
+        public IEnumerable<KeyValuePair<int, float[]>> GetRetentionTimes(IList<int> fileIds)
+        {
+            if (_timesById == null)
+            {
+                yield break;
+            }
+
+            using var enFileIds = fileIds?.GetEnumerator();
+            if (false == enFileIds?.MoveNext())
+            {
+                yield break;
+            }
+            foreach (var entry in _timesById)
+            {
+                if (enFileIds != null)
+                {
+                    while (entry.Key > enFileIds.Current)
+                    {
+                        if (!enFileIds.MoveNext())
+                        {
+                            yield break;
+                        }
+                    }
+                }
+
+                if (enFileIds == null || entry.Key == enFileIds.Current)
+                {
+                    yield return new KeyValuePair<int, float[]>(entry.Key, entry.Value);
+                }
+            }
         }
 
         public IEnumerable<KeyValuePair<int, IList<float>>> GetTimesById()

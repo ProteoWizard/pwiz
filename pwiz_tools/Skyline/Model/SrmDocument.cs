@@ -578,7 +578,7 @@ namespace pwiz.Skyline.Model
             if (rtRegression == null || rtRegression.Calculator == null)
                 return new HashSet<Target>();
 
-            var regressionPeps = rtRegression.Calculator.GetStandardPeptides(Peptides.Select(
+            var regressionPeps = rtRegression.Calculator.GetStandardPeptides(Molecules.Select(
                 nodePep => Settings.GetModifiedSequence(nodePep)));
             return new HashSet<Target>(regressionPeps);
         }
@@ -620,7 +620,7 @@ namespace pwiz.Skyline.Model
                     yield return whyNot;
                 if ((whyNot = OptimizationDbManager.IsNotLoadedDocumentExplained(this)) != null)
                     yield return whyNot;
-                if ((whyNot = DocumentRetentionTimes.IsNotLoadedExplained(Settings)) != null)
+                if ((whyNot = DocumentRetentionTimes.IsNotLoadedExplained(this)) != null)
                     yield return whyNot;
                 if ((whyNot = IonMobilityLibraryManager.IsNotLoadedDocumentExplained(this)) != null)
                     yield return whyNot;
@@ -1814,19 +1814,18 @@ namespace pwiz.Skyline.Model
                 var nodeGroup = (TransitionGroupDocNode) FindNode(groupPath);
                 if (nodeGroup == null)
                     throw new IdentityNotFoundException(groupPath.Child);
-                var lookupSequence = nodePep.SourceUnmodifiedTarget;
-                var lookupMods = nodePep.SourceExplicitMods;
-                double[] retentionTimes;
-                Settings.TryGetRetentionTimes(lookupSequence, nodeGroup.TransitionGroup.PrecursorAdduct, lookupMods,
-                                              filePath, out _, out retentionTimes);
+                var targets = Settings.GetTargets(nodePep).ToList();
+                var retentionTimes = Settings.GetRetentionTimes(filePath, targets);
+                Settings.TryGetRetentionTimes(nodePep, nodeGroup.TransitionGroup.PrecursorAdduct, filePath, out _, out retentionTimes);
                 if(ContainsTime(retentionTimes, startTime.Value, endTime.Value))
                 {
                     identified = PeakIdentification.TRUE;
                 }
                 else
                 {
-                    var alignedRetentionTimes = Settings.GetAlignedRetentionTimes(filePath,
-                        lookupSequence, lookupMods);
+                    ChromatogramSet chromatogramSet = null;
+                    MeasuredResults?.TryGetChromatogramSet(nameSet, out chromatogramSet, out _);
+                    var alignedRetentionTimes = Settings.GetAlignedRetentionTimes(chromatogramSet, filePath, Settings.GetTargets(nodePep).ToList());
                     identified = ContainsTime(alignedRetentionTimes, startTime.Value, endTime.Value)
                         ? PeakIdentification.ALIGNED
                         : PeakIdentification.FALSE;
@@ -2084,41 +2083,39 @@ namespace pwiz.Skyline.Model
         public IEnumerable<ChromatogramSet> GetSynchronizeIntegrationChromatogramSets()
         {
             if (!Settings.HasResults)
-                yield break;
+                return Array.Empty<ChromatogramSet>();
 
             if (Settings.TransitionSettings.Integration.SynchronizedIntegrationAll)
             {
-                // Synchronize all
-                foreach (var chromSet in MeasuredResults.Chromatograms)
-                    yield return chromSet;
-                yield break;
+                return MeasuredResults.Chromatograms;
             }
 
             var targets = Settings.TransitionSettings.Integration.SynchronizedIntegrationTargets?.ToHashSet();
             if (targets == null || targets.Count == 0)
             {
                 // Synchronize none
-                yield break;
+                return Array.Empty<ChromatogramSet>();
             }
 
             var groupBy = Settings.TransitionSettings.Integration.SynchronizedIntegrationGroupBy;
             if (string.IsNullOrEmpty(groupBy))
             {
                 // Synchronize individual replicates
-                foreach (var chromSet in MeasuredResults.Chromatograms.Where(chromSet => targets.Contains(chromSet.Name)))
-                    yield return chromSet;
-                yield break;
+                return MeasuredResults.Chromatograms.Where(chromSet => targets.Contains(chromSet.Name));
+            }
+            ReplicateValue replicateValue = ReplicateValue.FromPersistedString(Settings, Settings.TransitionSettings.Integration.SynchronizedIntegrationGroupBy);
+            if (replicateValue == null)
+            {
+                // Annotation no longer exists
+                return Array.Empty<ChromatogramSet>();
             }
 
             // Synchronize by annotation
-            var replicateValue = ReplicateValue.FromPersistedString(Settings, groupBy);
             var annotationCalculator = new AnnotationCalculator(this);
-            foreach (var chromSet in MeasuredResults.Chromatograms)
-            {
-                var value = replicateValue.GetValue(annotationCalculator, chromSet);
-                if (targets.Contains(Convert.ToString(value ?? string.Empty, CultureInfo.InvariantCulture)))
-                    yield return chromSet;
-            }
+            return MeasuredResults.Chromatograms.Where(chromatogramSet =>
+                targets.Contains(Convert.ToString(
+                    replicateValue.GetValue(annotationCalculator, chromatogramSet) ?? string.Empty,
+                    CultureInfo.InvariantCulture)));
         }
 
         private object _referenceId = new object();

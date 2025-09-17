@@ -154,6 +154,7 @@ namespace pwiz.SkylineTestUtil
         public const string MSGFPLUS_UNICODE_ISSUES = "MsgfPlus doesn't handle unicode paths";
         public const string MSFRAGGER_UNICODE_ISSUES = "MsFragger doesn't handle unicode paths";
         public const string COMET_UNICODE_ISSUES = "Comet doesn't handle unicode paths";
+        public const string TIDE_UNICODE_ISSUES = "Tide doesn't handle unicode paths";
         public const string JAVA_UNICODE_ISSUES = "Running Java processes with wild unicode temp paths is problematic";
         public const string HARDKLOR_UNICODE_ISSUES = "Hardklor doesn't handle unicode paths";
         public const string ZIP_INSIDE_ZIP = "ZIP inside ZIP does not seem to work on MACS2";
@@ -1640,6 +1641,22 @@ namespace pwiz.SkylineTestUtil
         }
 
         /// <summary>
+        /// Returns a function which clips out the rectangle of a control from its parent form's rectangle.
+        /// </summary>
+        public Func<Bitmap, Bitmap> ClipControl(Control control)
+        {
+            return bmp => CallUI(() =>
+            {
+                var parentWindowRect = ScreenshotManager.GetFramedWindowBounds(control);
+                var controlScreenRect = control.RectangleToScreen(new Rectangle(0, 0, control.Width, control.Height));
+                return ClipBitmap(bmp,
+                    new Rectangle(controlScreenRect.Left - parentWindowRect.Left,
+                        controlScreenRect.Top - parentWindowRect.Top, controlScreenRect.Width,
+                        controlScreenRect.Height));
+            });
+        }
+
+        /// <summary>
         /// Clips a set of windows and pop-up menus from a full screen screenshot on a specified background.
         /// </summary>
         /// <param name="bmp">Full screen screenshot</param>
@@ -2975,12 +2992,21 @@ namespace pwiz.SkylineTestUtil
 
         public static string ParseIrtProperties(string irtFormula, CultureInfo cultureInfo = null)
         {
+            ParseIrtSlopeAndIntercept(irtFormula, cultureInfo??CultureInfo.CurrentCulture, out var slope, out var intercept);
+            return $"IrtSlope = {slope},\r\nIrtIntercept = {intercept},\r\n";
+        }
+
+        public static void ParseIrtSlopeAndIntercept(string irtFormula, CultureInfo cultureInfo, out double slope, out double intercept)
+        {
             var decimalSeparator = (cultureInfo ?? CultureInfo.CurrentCulture).NumberFormat.NumberDecimalSeparator;
             var match = Regex.Match(irtFormula, $@"iRT = (?<slope>\d+{decimalSeparator}\d+) \* [^+-]+? (?<sign>[+-]) (?<intercept>\d+{decimalSeparator}\d+)");
             Assert.IsTrue(match.Success);
-            string slope = match.Groups["slope"].Value, intercept = match.Groups["intercept"].Value, sign = match.Groups["sign"].Value;
-            if (sign == "+") sign = string.Empty;
-            return $"IrtSlope = {slope},\r\nIrtIntercept = {sign}{intercept},\r\n";
+            slope = double.Parse(match.Groups["slope"].Value, cultureInfo);
+            intercept = double.Parse(match.Groups["intercept"].Value);
+            if (match.Groups["sign"].Value == "-")
+            {
+                intercept = -intercept;
+            }
         }
 
         #region Modification helpers

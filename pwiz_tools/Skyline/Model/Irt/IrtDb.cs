@@ -83,8 +83,13 @@ namespace pwiz.Skyline.Model.Irt
                 _modifiedTime = new DateTime();
             }
 
+            UnknownScore = ChooseUnknownScore(PeptideScores.Select(score => score.Value));
+        }
+
+        public static double ChooseUnknownScore(IEnumerable<double> scores)
+        {
             double min = double.MaxValue, minNext = double.MaxValue;
-            foreach (var score in PeptideScores.Select(score => score.Value))
+            foreach (var score in scores)
             {
                 if (score < min)
                 {
@@ -97,12 +102,13 @@ namespace pwiz.Skyline.Model.Irt
                 }
             }
             if (min == double.MaxValue)
-                UnknownScore = 0;
+                return 0;
             else if (minNext == double.MaxValue)
-                UnknownScore = min - 5;
+                return min - 5;
             else
-                UnknownScore = min - (minNext - min)*2;
+                return min - (minNext - min) * 2;
         }
+
 
         public double UnknownScore { get; private set; }
 

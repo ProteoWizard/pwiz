@@ -48,11 +48,11 @@ namespace msdata {
 MSDataFile::MSDataFile(boost::shared_ptr<b::MSDataFile>* base)
 : MSData(new boost::shared_ptr<b::MSData>(base->get(), nullDelete)),
   base_(base)
-{LOG_CONSTRUCT("MSDataFile")}
+{LOG_CONSTRUCT("MSDataFile", base_)}
 
 MSDataFile::~MSDataFile()
 {
-    LOG_DESTRUCT("MSDataFile", true) SAFEDELETE(base_);
+    LOG_DESTRUCT("MSDataFile", base_, true) SAFEDELETE(base_);
 
     // MCC: forcing garbage collection is the best way I know of to try to clean up 
     //      reclaimable SpectrumList handles which hold on to SpectrumListPtrs
@@ -60,13 +60,13 @@ MSDataFile::~MSDataFile()
     System::GC::WaitForPendingFinalizers();
 }
 
-MSDataFile::!MSDataFile() {LOG_FINALIZE("MSDataFile") delete this;}
+MSDataFile::!MSDataFile() {LOG_FINALIZE("MSDataFile", base_) delete this;}
 b::MSDataFile& MSDataFile::base() {return **base_;}
 
 MSDataFile::MSDataFile(System::String^ path)
 : MSData(0)
 {
-    LOG_CONSTRUCT("MSDataFile")
+    LOG_CONSTRUCT("MSDataFile", base_)
     try
     {
         initializeReaderList();
@@ -79,7 +79,7 @@ MSDataFile::MSDataFile(System::String^ path)
 MSDataFile::MSDataFile(System::String^ path, util::IterationListenerRegistry^ ilr)
 : MSData(0)
 {
-    LOG_CONSTRUCT("MSDataFile")
+    LOG_CONSTRUCT("MSDataFile", base_)
     try
     {
         initializeReaderList();

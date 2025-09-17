@@ -41,10 +41,9 @@
 // [psi-ms.obo]
 #define _PSI_MS_OBO_
 //   format-version: 1.2
-//   data-version: 4.1.182
-//   date: 11:10:2024 07:15
-//   saved-by: Joshua Klein
-//   auto-generated-by: OBO-Edit 2.3.1
+//   data-version: 4.1.197
+//   date: 17:07:2025 21:31
+//   saved-by: David Cox
 //   default-namespace: MS
 //   namespace-id-rule: * MS:$sequence(7,0,9999999)$
 //   namespace-id-rule: * PEFF:$sequence(7,0,9999999)$
@@ -66,6 +65,8 @@
 //   remark: creator: Nils Hoffmann < nils.hoffmann <-at-> cebitec.uni-bielefeld.de>
 //   remark: creator: Julian Uszkoreit <julian.uszkoreit <-at-> ruhr-uni-bochum.de>
 //   remark: creator: Mathias Walzer <walzer <-at-> ebi.ac.uk>
+//   remark: creator: Nithu Sara John <nithu <-at-> ebi.ac.uk>
+//   remark: creator: David Cox <david.cox <-at-> sciex.com>
 //   remark: publisher: HUPO Proteomics Standards Initiative Mass Spectrometry Standards Working Group and HUPO Proteomics Standards Initiative Proteomics Informatics Working Group
 //   remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html and http://mass-spec.lsu.edu/msterms/index.php/Main_Page
 //   remark: For any queries contact psidev-ms-vocab@lists.sourceforge.net
@@ -77,7 +78,7 @@
 // [unimod.obo]
 #define _UNIMOD_OBO_
 //   format-version: 1.4
-//   date: 12:08:2024 11:33
+//   date: 17:06:2025 11:31
 //
 // [unit.obo]
 #define _UNIT_OBO_
@@ -770,7 +771,7 @@ enum PWIZ_API_DECL CVID
     /// transient recorder: A detector acquisition mode used for detecting transient signals.
     MS_transient_recorder = 1000120,
 
-    /// SCIEX instrument model: The brand of instruments from the joint venture between Applied Biosystems and MDS Analytical Technologies (formerly MDS SCIEX). Previously branded as \"Applied Biosystems|MDS SCIEX\".
+    /// SCIEX instrument model: SCIEX instrument model.
     MS_SCIEX_instrument_model = 1000121,
 
     /// Bruker Daltonics instrument model: Bruker Daltonics' instrument model.
@@ -2177,10 +2178,10 @@ enum PWIZ_API_DECL CVID
     /// spectrum attribute: Nonphysical characteristic attributed to a spectrum.
     MS_spectrum_attribute = 1000499,
 
-    /// scan window upper limit: The lower m/z bound of a mass spectrometer scan window.
+    /// scan window upper limit: The upper m/z bound of a mass spectrometer scan window.
     MS_scan_window_upper_limit = 1000500,
 
-    /// scan window lower limit: The upper m/z bound of a mass spectrometer scan window.
+    /// scan window lower limit: The lower m/z bound of a mass spectrometer scan window.
     MS_scan_window_lower_limit = 1000501,
 
     /// dwell time: The time spent gathering data across a peak.
@@ -8741,6 +8742,9 @@ enum PWIZ_API_DECL CVID
     /// measured element: The component or dimension of an object being measured, for example the temperature of an instrument component over time.
     MS_measured_element = 1002716,
 
+    /// Waters DATA Convert: Software for processing and exporting Waters MassLynx and waters_connect data.
+    MS_Waters_DATA_Convert = 1002717,
+
     /// Pegasus BT: LECO bench-top GC time-of-flight mass spectrometer.
     MS_Pegasus_BT = 1002719,
 
@@ -9562,6 +9566,12 @@ enum PWIZ_API_DECL CVID
 
     /// python-psims: python-psims, a library for generating mzML and mzIdentML.
     MS_python_psims = 1002991,
+
+    /// Orbitrap Exploris GC-MS: Thermo Scientific Orbitrap Exploris GC-MS.
+    MS_Orbitrap_Exploris_GC_MS = 1002992,
+
+    /// Q Exactive Focus: Q Exactive Focus Hybrid Quadrupole-Orbitrap Mass Spectrometer.
+    MS_Q_Exactive_Focus = 1002993,
 
     /// Andromeda:PEP: Posterior error probability of the best identified peptide of the Andromeda search engine.
     MS_Andromeda_PEP = 1002995,
@@ -10907,6 +10917,81 @@ enum PWIZ_API_DECL CVID
     /// selected fragment theoretical m/z observed intensity spectrum: Spectrum for which the peaks are limited to a subset of known product ions that are important for subsequent identification, whose m/z values are corrected to theoretical values, and intensity values are experimentally derived.
     MS_selected_fragment_theoretical_m_z_observed_intensity_spectrum = 1003424,
 
+    /// quantms: Cloud-based pipeline for quantitative proteomics that enables the reanalysis of public proteomics data.
+    MS_quantms = 1003425,
+
+    /// xQuest/xProphet: A software to identify cross-linked peptides from LC-MS/MS spectra.
+    MS_xQuest_xProphet = 1003426,
+
+    /// PeakView: A software for spectral analysis and data interrogation in qualitative review of LC-MS and MS/MS data.
+    MS_PeakView = 1003427,
+
+    /// Perseus: A software for interpreting protein quantification, interaction and post-translational modification data.
+    MS_Perseus = 1003428,
+
+    /// FragPipe: A computational platform for analyzing mass spectrometry-based proteomics data.
+    MS_FragPipe = 1003429,
+
+    /// OpenMS: A software for LC-MS data management and analysis.
+    MS_OpenMS = 1003430,
+
+    /// pLink: A tool for the analysis of chemically cross-linked proteins using mass spectrometry.
+    MS_pLink = 1003431,
+
+    /// pLink2: Upgraded version of pLink tool, provides a graphical user interface and faster with newly designed index structure.
+    MS_pLink2 = 1003432,
+
+    /// Andromeda:delta score: Score difference to the second best identified peptide with a different amino acid sequence.
+    MS_Andromeda_delta_score = 1003433,
+
+    /// AlphaLP: A serine protease that hydrolyzes peptide bonds at the C-terminus of threonine, alanine, serine, and valine. (EC:3.4.21.12)
+    MS_AlphaLP = 1003434,
+
+    /// alpha-lytic endopeptidase (AlphaLP): A serine protease that hydrolyzes peptide bonds at the C-terminus of threonine, alanine, serine, and valine. (EC:3.4.21.12)
+    MS_alpha_lytic_endopeptidase = MS_AlphaLP,
+
+    /// alpha-lytic protease (AlphaLP): A serine protease that hydrolyzes peptide bonds at the C-terminus of threonine, alanine, serine, and valine. (EC:3.4.21.12)
+    MS_alpha_lytic_protease = MS_AlphaLP,
+
+    /// (?<=[TSAV]): Regular expression for alphaLP.
+    MS______TSAV__ = 1003435,
+
+    /// lowest observed ion mobility: Lowest ion mobility value observed in the ion mobility measurement array.
+    MS_lowest_observed_ion_mobility = 1003437,
+
+    /// highest observed ion mobility: Highest ion mobility value observed in the ion mobility measurement array.
+    MS_highest_observed_ion_mobility = 1003438,
+
+    /// ion mobility frame representation: Representation of one or more spectra acquired across an ion mobility dimension.
+    MS_ion_mobility_frame_representation = 1003439,
+
+    /// ion mobility profile frame: An ion mobility frame where the ion mobility dimension is continuous.
+    MS_ion_mobility_profile_frame = 1003440,
+
+    /// ion mobility centroid frame: An ion mobility frame where the ion mobility dimension is processed into discrete peaks of zero width.
+    MS_ion_mobility_centroid_frame = 1003441,
+
+    /// Orbitrap Astral Zoom: Thermo Scientific Orbitrap Astral Zoom mass spectrometer contains three mass analyzers: a quadrupole analyzer, an Orbitrap analyzer, and an Astral analyzer.
+    MS_Orbitrap_Astral_Zoom = 1003442,
+
+    /// ZenoTOF 8600: SCIEX ZenoTOF 8600 system.
+    MS_ZenoTOF_8600 = 1003443,
+
+    /// ZenoTOF 7600+: SCIEX ZenoTOF 7600+ system.
+    MS_ZenoTOF_7600_ = 1003444,
+
+    /// SCIEX 7500+: SCIEX 7500+ system.
+    MS_SCIEX_7500_ = 1003445,
+
+    /// SCIEX OS: SCIEX OS software.
+    MS_SCIEX_OS = 1003446,
+
+    /// SCIEX MS Data Converter: A software for converting SCIEX wiff or wiff2 format to mzML.
+    MS_SCIEX_MS_Data_Converter = 1003447,
+
+    /// SCIEX WIFF2 format: SCIEX WIFF2 file format.
+    MS_SCIEX_WIFF2_format = 1003448,
+
     /// Number of Occurrences: The number of times something happened.
     NCIT_Number_of_Occurrences = 103150827,
 
@@ -11015,26 +11100,26 @@ enum PWIZ_API_DECL CVID
     /// XIC-FWHM quantiles: The first to n-th quantile of peak widths for XICs. A metric's value triplet represents the related QuaMeter metrics of XIC-FWHM-Q1,Q2,Q3.
     MS_XIC_FWHM_quantiles = 4000051,
 
-    /// XIC-Height quartile ratios: The log ratio of successive XIC height quartiles. The metric's value triplet represents the log ratios of XIC-height-Q2 to XIC-height-Q1, XIC-height-Q3 to XIC-height-Q2, XIC-height max to XIC-height-Q3.
-    MS_XIC_Height_quartile_ratios = 4000052,
+    /// obsolete XIC-Height quartile ratios: OBSOLETE. The log ratio of successive XIC height quartiles. The metric's value triplet represents the log ratios of XIC-height-Q2 to XIC-height-Q1, XIC-height-Q3 to XIC-height-Q2, XIC-height max to XIC-height-Q3.
+    MS_obsolete_XIC_Height_quartile_ratios_OBSOLETE = 4000052,
 
     /// chromatography duration: The retention time duration of the chromatography in seconds.
     MS_chromatography_duration = 4000053,
 
-    /// TIC quarters RT fraction: The interval when the respective quarter of the TIC accumulates divided by retention time duration.
-    MS_TIC_quarters_RT_fraction = 4000054,
+    /// obsolete TIC quarters RT fraction: OBSOLETE. The interval when the respective quarter of the TIC accumulates divided by retention time duration.
+    MS_obsolete_TIC_quarters_RT_fraction_OBSOLETE = 4000054,
 
-    /// MS1 quarter RT fraction: The interval used for acquisition of the first, second, third, and fourth quarter of all MS1 events divided by retention time duration.
-    MS_MS1_quarter_RT_fraction = 4000055,
+    /// obsolete MS1 quarter RT fraction: OBSOLETE. The interval used for acquisition of the first, second, third, and fourth quarter of all MS1 events divided by retention time duration.
+    MS_obsolete_MS1_quarter_RT_fraction_OBSOLETE = 4000055,
 
-    /// MS2 quarter RT fraction: The interval used for acquisition of the first, second, third, and fourth quarter of all MS2 events divided by retention time duration.
-    MS_MS2_quarter_RT_fraction = 4000056,
+    /// obsolete MS2 quarter RT fraction: OBSOLETE. The interval used for acquisition of the first, second, third, and fourth quarter of all MS2 events divided by retention time duration.
+    MS_obsolete_MS2_quarter_RT_fraction_OBSOLETE = 4000056,
 
-    /// MS1 TIC-change quartile ratios: The log ratios of successive TIC-change quartiles. The TIC changes are the list of MS1 total ion current (TIC) value changes from one to the next scan, produced when each MS1 TIC is subtracted from the preceding MS1 TIC. The metric's value triplet represents the log ratio of the TIC-change Q2 to Q1, Q3 to Q2, TIC-change-max to Q3
-    MS_MS1_TIC_change_quartile_ratios = 4000057,
+    /// obsolete MS1 TIC-change quartile ratios: OBSOLETE. The log ratios of successive TIC-change quartiles. The TIC changes are the list of MS1 total ion current (TIC) value changes from one to the next scan, produced when each MS1 TIC is subtracted from the preceding MS1 TIC. The metric's value triplet represents the log ratio of the TIC-change Q2 to Q1, Q3 to Q2, TIC-change-max to Q3
+    MS_obsolete_MS1_TIC_change_quartile_ratios_OBSOLETE = 4000057,
 
-    /// MS1 TIC quartile ratios: The log ratios of successive TIC quartiles. The metric's value triplet represents the log ratios of TIC-Q2 to TIC-Q1, TIC-Q3 to TIC-Q2, TIC-max to TIC-Q3.
-    MS_MS1_TIC_quartile_ratios = 4000058,
+    /// obsolete MS1 TIC quartile ratios: OBSOLETE. The log ratios of successive TIC quartiles. The metric's value triplet represents the log ratios of TIC-Q2 to TIC-Q1, TIC-Q3 to TIC-Q2, TIC-max to TIC-Q3.
+    MS_obsolete_MS1_TIC_quartile_ratios_OBSOLETE = 4000058,
 
     /// number of MS1 spectra: The number of MS1 events in the run.
     MS_number_of_MS1_spectra = 4000059,
@@ -11435,8 +11520,29 @@ enum PWIZ_API_DECL CVID
     /// table of missed cleavage counts: The number of identified peptides with corresponding number of missed cleavages after user-defined acceptance criteria are applied. The number of missed cleavages per peptide is given in the 'number of missed cleavages' column, the respective count of such peptides identified in the 'Number of Occurrences' column. The highest 'missed cleavages' row is to be interpreted as that number of missed cleavages or higher.
     MS_table_of_missed_cleavage_counts = 4000180,
 
-    /// identified MS2 quarter RT fraction: The interval used for acquisition of the first, second, third, and fourth quarter of all identified MS2 events divided by retention time duration.
-    MS_identified_MS2_quarter_RT_fraction = 4000181,
+    /// obsolete identified MS2 quarter RT fraction: OBSOLETE. The interval used for acquisition of the first, second, third, and fourth quarter of all identified MS2 events divided by retention time duration.
+    MS_obsolete_identified_MS2_quarter_RT_fraction_OBSOLETE = 4000181,
+
+    /// XIC-Height quantile ratios: The log ratio of successive XIC height quantiles. A value triplet represents the original QuaMeter metrics, the log ratios of XIC-Height-Q2 to XIC-Height-Q1, XIC-Height-Q3 to XIC-Height-Q2, XIC-Height max to XIC-Height-Q3. The number of values in the tuple implies the quantile mode.
+    MS_XIC_Height_quantile_ratios = 4000182,
+
+    /// TIC quantile RT fraction: The interval when the respective quantile of the TIC accumulates divided by retention time duration. The number of values in the tuple implies the quantile mode.
+    MS_TIC_quantile_RT_fraction = 4000183,
+
+    /// MS1 quantile RT fraction: The interval used for acquisition of quantiles of all MS1 events divided by retention time duration. The number of values in the tuple implies the quantile mode.
+    MS_MS1_quantile_RT_fraction = 4000184,
+
+    /// MS2 quantile RT fraction: The interval used for acquisition of quantiles of all MS2 events divided by retention time duration. The number of values in the tuple implies the quantile mode.
+    MS_MS2_quantile_RT_fraction = 4000185,
+
+    /// MS1 TIC-change quantile ratios: The log ratios of successive TIC-change quantiles. The TIC changes are the list of MS1 total ion current (TIC) value changes from one to the next scan, produced when each MS1 TIC is subtracted from the preceding MS1 TIC. A value triplet represents the original QuaMeter metrics, the log ratio of the TIC-change Q2 to Q1, Q3 to Q2, TIC-change-max to Q3. The number of values in the tuple implies the quantile mode.
+    MS_MS1_TIC_change_quantile_ratios = 4000186,
+
+    /// MS1 TIC quantile ratios: The log ratios of successive TIC quantiles. A value triplet represents the original QuaMeter metrics, the log ratios of TIC-Q2 to TIC-Q1, TIC-Q3 to TIC-Q2, TIC-max to TIC-Q3. The number of values in the tuple implies the quantile mode.
+    MS_MS1_TIC_quantile_ratios = 4000187,
+
+    /// identified MS2 quantile RT fraction: The interval used for acquisition of quantiles of all identified MS2 events, after user-defined acceptance criteria are applied, divided by retention time duration. The number of values in the tuple implies the quantile mode. In case of multiple acceptance criteria (FDR) available in proteomics, PSM-level FDR should be used for better comparability.
+    MS_identified_MS2_quantile_RT_fraction = 4000188,
 
     /// unimod root node: The root node of the unimod modifications ontology.
     UNIMOD_unimod_root_node = 300000000,
@@ -16069,6 +16175,30 @@ enum PWIZ_API_DECL CVID
 
     /// 2PCA-triazole-ethanethiol: Cleaved 2PCA clicked to biotin-SS-azide.
     UNIMOD_2PCA_triazole_ethanethiol = 300002126,
+
+    /// Desthiobiotin-Phenol: Desthiobiotin-Phenol.
+    UNIMOD_Desthiobiotin_Phenol = 300002127,
+
+    /// Cys-vinyl sulfone amine probe addition: Michael addition of a vinyl sulfone amine desthiobiotin probe to cysteine.
+    UNIMOD_Cys_vinyl_sulfone_amine_probe_addition = 300002128,
+
+    /// Cys->fGly-diol: Formylglycinediol, activated in sulfatases.
+    UNIMOD_Cys__fGly_diol = 300002129,
+
+    /// Cys->sulfo-fGly-dio: Sulphated formylglycinediol, activated in sulfatases.
+    UNIMOD_Cys__sulfo_fGly_dio = 300002130,
+
+    /// Cys->Ser-O-sulfate: Serine O-sulfate.
+    UNIMOD_Cys__Ser_O_sulfate = 300002131,
+
+    /// b-type-ion: Dehydration of C-terminus as reaction inside the mass spectrometer.
+    UNIMOD_b_type_ion = 300002132,
+
+    /// PnTAG: 6-Phosphonohexanoylation.
+    UNIMOD_PnTAG = 300002135,
+
+    /// DMA-PEG3: DimethylaminoPEG3ylation.
+    UNIMOD_DMA_PEG3 = 300002136,
 
     /// unit: A unit of measurement is a standardized quantity of a physical quality.
     UO_unit = 400000000,

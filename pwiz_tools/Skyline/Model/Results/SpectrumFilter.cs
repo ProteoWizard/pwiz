@@ -90,9 +90,14 @@ namespace pwiz.Skyline.Model.Results
         public IEnumerable<SpectrumFilterPair> FilterPairs { get { return _filterMzValues; } }
         public bool HasRangeRT { get; private set; }
 
+        public SpectrumFilter(SrmDocument document) : this(document, null, null, null, null, null,false, null)
+        {
+
+        }
+
         public SpectrumFilter(SrmDocument document, MsDataFileUri msDataFileUri, IFilterInstrumentInfo instrumentInfo,
-            OptimizableRegression optimization = null, double? maxObservedIonMobilityValue = null,
-            IRetentionTimePredictor retentionTimePredictor = null, bool firstPass = false, GlobalChromatogramExtractor gce = null)
+            ChromatogramSet chromatogramSet, double? maxObservedIonMobilityValue,
+            IRetentionTimePredictor retentionTimePredictor, bool firstPass, GlobalChromatogramExtractor gce)
         {
             _fullScan = document.Settings.TransitionSettings.FullScan;
             _instrument = document.Settings.TransitionSettings.Instrument;
@@ -173,16 +178,12 @@ namespace pwiz.Skyline.Model.Results
                     _isHighAccProductFilter = !Equals(_fullScan.ProductMassAnalyzer,
                         FullScanMassAnalyzerType.qit);
 
-                    if (_fullScan.AcquisitionMethod == FullScanAcquisitionMethod.DIA &&
-                        _fullScan.IsolationScheme.IsAllIons)
+                    if (_fullScan.IsAllIons)
                     {
-                        if (instrumentInfo != null)
-                        {
-                            _isWatersMse = _isWatersFile;
-                            _isAgilentMse = instrumentInfo.IsAgilentFile;
-                            _isElectronIonizationMse = instrumentInfo.ConfigInfoList != null &&
-                                   instrumentInfo.ConfigInfoList.Any(c => @"electron ionization".Equals(c.Ionization));
-                        }
+                        _isWatersMse = _isWatersFile;
+                        _isAgilentMse = instrumentInfo?.IsAgilentFile ?? false;
+                        _isElectronIonizationMse = _acquisitionMethod == FullScanAcquisitionMethod.EI ||
+                                                   (instrumentInfo?.ConfigInfoList?.Any(c => @"electron ionization".Equals(c.Ionization)) ?? false);
                         _mseLevel =  _isElectronIonizationMse ? 2 : 1; // Electron ionization produces fragments only
                     }
                 }
@@ -196,7 +197,7 @@ namespace pwiz.Skyline.Model.Results
                 //       times can be shared for MS1 without SIM scans
                 _isSharedTime = !canSchedule && !_isIonMobilityFiltered && 
                                 document.MoleculeTransitionGroups.All(transitionGroup=>transitionGroup.SpectrumClassFilter.IsEmpty);
-
+                var optimization = chromatogramSet?.OptimizationFunction;
                 var ceSteps = Equals(optimization?.OptType, OptimizationType.collision_energy)
                     ? Enumerable.Range(-optimization.StepCount, optimization.StepCount * 2 + 1).Cast<int?>().ToArray()
                     : new[] { (int?)null };
@@ -266,7 +267,7 @@ namespace pwiz.Skyline.Model.Results
                             }
                             else if (RetentionTimeFilterType.ms2_ids == _fullScan.RetentionTimeFilterType)
                             {
-                                var times = document.Settings.GetBestRetentionTimes(nodePep, msDataFileUri);
+                                var times = document.Settings.GetBestRetentionTimes(nodePep, chromatogramSet, msDataFileUri);
                                 if (times.Length > 0)
                                 {
                                     minTime = Math.Max(minTime ?? 0, times.Min() - _fullScan.RetentionTimeFilterLength);
@@ -612,8 +613,7 @@ namespace pwiz.Skyline.Model.Results
 
         public bool IsMseData()
         {
-            return (EnabledMsMs && _fullScan.AcquisitionMethod == FullScanAcquisitionMethod.DIA &&
-                    _fullScan.IsolationScheme.IsAllIons);
+            return (EnabledMsMs && _fullScan.IsAllIons);
         }
 
         /*
@@ -652,14 +652,7 @@ namespace pwiz.Skyline.Model.Results
         public bool IsSharedTime { get { return _isSharedTime; } }
         public bool IsAgilentMse { get { return _isAgilentMse; } }
 
-        public bool IsAllIons
-        {
-            get
-            {
-                return _acquisitionMethod == FullScanAcquisitionMethod.DIA &&
-                       _fullScan.IsolationScheme.IsAllIons;
-            }
-        }
+        public bool IsAllIons => _fullScan.IsAllIons;
 
         public bool ContainsTime(double time)
         {
@@ -1054,7 +1047,8 @@ namespace pwiz.Skyline.Model.Results
             // any isolation m/z.  So, use the instrument range.
             // Agilent MSe high energy scans present varying isolation windows, but always with the same low end - we've traditionally ignored them since it's "all ions"
             // Bruker all ions PASEF makes creative use of isolation windows so we do want to look at those when available
-            if (_mseLevel > 0 && (_isWatersMse || _isAgilentMse || precursors.All(p => p.IsolationMz == null)))
+            // EI data presents as all MS1 but as it's general fragmentation we treat it as all MS2
+            if (_mseLevel > 0 && (_isElectronIonizationMse || _isWatersMse || _isAgilentMse || precursors.All(p => p.IsolationMz == null)))
             {
                 double isolationWidth = _instrument.MaxMz - _instrument.MinMz;
                 double isolationMz = _instrument.MinMz + isolationWidth / 2;
@@ -1078,7 +1072,7 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        private struct IsolationWindowFilter
+        private struct IsolationWindowFilter : IEquatable<IsolationWindowFilter>
         {
             public IsolationWindowFilter(SignedMz? isolationMz, double? isolationWidth) : this()
             {
@@ -1091,10 +1085,9 @@ namespace pwiz.Skyline.Model.Results
 
             #region object overrides
 
-            private bool Equals(IsolationWindowFilter other)
+            public bool Equals(IsolationWindowFilter other)
             {
-                return other.IsolationMz.Equals(IsolationMz) &&
-                    other.IsolationWidth.Equals(IsolationWidth);
+                return other.IsolationMz.Equals(IsolationMz) && other.IsolationWidth.Equals(IsolationWidth);
             }
 
             public override bool Equals(object obj)
@@ -1140,7 +1133,8 @@ namespace pwiz.Skyline.Model.Results
             }
 
             var filterPairs = new List<SpectrumFilterPair>();
-            if (acquisitionMethod == FullScanAcquisitionMethod.DIA)
+            if (acquisitionMethod == FullScanAcquisitionMethod.DIA || 
+                acquisitionMethod == FullScanAcquisitionMethod.EI)
             {
                 var isoTargMz = isoWin.IsolationMz.Value;
                 double? isoTargWidth = isoWin.IsolationWidth;
@@ -1220,6 +1214,11 @@ namespace pwiz.Skyline.Model.Results
         public void CalcDiaIsolationValues(ref SignedMz isolationTargetMz,
                                             ref double? isolationWidth)
         {
+            if (Equals(_fullScan.AcquisitionMethod, FullScanAcquisitionMethod.EI))
+            {
+                return; // isolationWidth is already set
+            }
+
             double isolationWidthValue;
             var isolationScheme = _fullScan.IsolationScheme;
             if (isolationScheme == null)

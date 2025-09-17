@@ -200,16 +200,6 @@ rule without-binary-msdata ( properties * )
    }
 }
 
-
-# do we want to skip all binary file formats (vendors and mz5)?
-rule without-binary-msdata ( properties * )
-{
-   if --without-binary-msdata in [ modules.peek : ARGV ]
-   {
-       return <location-prefix>without-binary-msdata <define>WITHOUT_MZ5 <vendor-api-support>off ;
-   }
-}
-
 local default_build_path = [ MATCH --build-path=(.*) : [ modules.peek : ARGV ] ] ;
 if $(default_build_path)
 {
@@ -386,9 +376,9 @@ project pwiz
 
         # set standard to C++14, 17 for MSVC (due to Arrow)
         <toolset>msvc:<cxxflags>"/std:c++17"
-        <toolset>gcc:<cxxflags>-std=c++14
-        <toolset>darwin:<cxxflags>-std=c++14
-        <toolset>clang:<cxxflags>-std=c++14
+        <toolset>gcc:<cxxflags>-std=c++17
+        <toolset>darwin:<cxxflags>-std=c++17
+        <toolset>clang:<cxxflags>-std=c++17
 
         # prevent warning about _BSD_SOURCE deprecation
         <toolset>gcc:<define>_DEFAULT_SOURCE
