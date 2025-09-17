@@ -410,33 +410,6 @@ namespace pwiz.Skyline.Controls.Databinding
             SetSortDirection(_columnFilterPropertyDescriptor, ListSortDirection.Descending);
         }
 
-        private void boxPlotToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowBoxPlot();
-        }
-
-        public bool ShowBoxPlot()
-        {
-            var formGroup = FormGroup.FromControl(this);
-            var boxPlot = formGroup.SiblingForms.OfType<BoxPlotGraph>().FirstOrDefault();
-            if (boxPlot != null)
-            {
-                boxPlot.OwnerGridForm = DataboundGridForm;
-                boxPlot.RefreshData();
-                boxPlot.Activate();
-                return true;
-            }
-            boxPlot = new BoxPlotGraph
-            {
-                SkylineWindow = DataSchemaSkylineWindow,
-                OwnerGridForm = DataboundGridForm,
-            };
-            boxPlot.RefreshData();
-
-            formGroup.ShowSibling(boxPlot);
-            return true;
-        }
-
         public void SetSortDirection(PropertyDescriptor propertyDescriptor, ListSortDirection direction)
         {
             if (null == propertyDescriptor)
