@@ -135,6 +135,7 @@
             this.toolStripSeparator36 = new System.Windows.Forms.ToolStripSeparator();
             this.toolBarToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.proteinAbundanceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -786,7 +787,8 @@
             this.areaPeptideComparisonMenuItem,
             this.areaRelativeAbundanceMenuItem,
             this.areaCVHistogramMenuItem,
-            this.areaCVHistogram2DMenuItem});
+            this.areaCVHistogram2DMenuItem,
+            this.proteinAbundanceToolStripMenuItem});
             resources.ApplyResources(this.peakAreasMenuItem, "peakAreasMenuItem");
             this.peakAreasMenuItem.Name = "peakAreasMenuItem";
             this.peakAreasMenuItem.DropDownOpening += new System.EventHandler(this.areaGraphMenuItem_DropDownOpening);
@@ -802,6 +804,12 @@
             this.areaPeptideComparisonMenuItem.Name = "areaPeptideComparisonMenuItem";
             resources.ApplyResources(this.areaPeptideComparisonMenuItem, "areaPeptideComparisonMenuItem");
             this.areaPeptideComparisonMenuItem.Click += new System.EventHandler(this.areaPeptideComparisonMenuItem_Click);
+            // 
+            // proteinAbundanceToolStripMenuItem
+            // 
+            this.proteinAbundanceToolStripMenuItem.Name = "proteinAbundanceToolStripMenuItem";
+            resources.ApplyResources(this.proteinAbundanceToolStripMenuItem, "proteinAbundanceToolStripMenuItem");
+            this.proteinAbundanceToolStripMenuItem.Click += new System.EventHandler(this.proteinAbundanceToolStripMenuItem_Click);
             // 
             // areaRelativeAbundanceMenuItem
             // 
@@ -1027,5 +1035,6 @@
         private System.Windows.Forms.ToolStripMenuItem viewTargetsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem spectrumGridMenuItem;
         private System.Windows.Forms.ToolStripMenuItem librariesMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem proteinAbundanceToolStripMenuItem;
     }
 }

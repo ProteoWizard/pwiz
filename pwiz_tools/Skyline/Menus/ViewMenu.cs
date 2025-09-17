@@ -764,6 +764,11 @@ namespace pwiz.Skyline.Menus
         {
             SkylineWindow.ShowPeakAreaPeptideGraph();
         }
+
+        private void proteinAbundanceToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SkylineWindow.ShowProteinAbundanceGraph();
+        }
         private void areaRelativeAbundanceMenuItem_Click(object sender, EventArgs e)
         {
             SkylineWindow.ShowPeakAreaRelativeAbundanceGraph();

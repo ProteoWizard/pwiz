@@ -45,9 +45,9 @@ namespace pwiz.Skyline.Controls.Databinding
             return ItemProperties.OfType<ColumnPropertyDescriptor>().GroupBy(GetResultKey).Where(g => g.Key != null);
         }
 
-        protected abstract ResultKey GetResultKey(PivotKey pivotKey);
+        public abstract ResultKey GetResultKey(PivotKey pivotKey);
 
-        protected ResultKey GetResultKey(ColumnPropertyDescriptor columnPropertyDescriptor)
+        public ResultKey GetResultKey(ColumnPropertyDescriptor columnPropertyDescriptor)
         {
             return GetResultKey(columnPropertyDescriptor.PivotKey);
         }
@@ -228,7 +228,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 ResultFilePropertyPath = DocumentViewTransformer.GetResultFilePropertyPath(RowType);
             }
 
-            protected override ResultKey GetResultKey(PivotKey pivotKey)
+            public override ResultKey GetResultKey(PivotKey pivotKey)
             {
                 return pivotKey?.FindValue(PROPERTY_PATH_RESULT_KEY) as ResultKey;
             }
@@ -262,7 +262,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 ReplicatePropertyPath = PROPERTY_PATH_REPLICATE;
             }
 
-            protected override ResultKey GetResultKey(PivotKey pivotKey)
+            public override ResultKey GetResultKey(PivotKey pivotKey)
             {
                 var replicate = pivotKey?.FindValue(PROPERTY_PATH_REPLICATE_ABUNDANCES) as Replicate;
                 if (replicate == null)
