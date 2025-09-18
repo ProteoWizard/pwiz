@@ -195,7 +195,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public string AddLibraryFile { get; private set; }
 
-        private bool ValidateBuilder(bool validateInputFiles)
+        public bool ValidateBuilder(bool validateInputFiles)
         {
             string name;
             if (!_helper.ValidateNameTextBox(textName, out name))

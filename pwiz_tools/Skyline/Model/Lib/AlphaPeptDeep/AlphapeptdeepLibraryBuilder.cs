@@ -27,7 +27,6 @@ using pwiz.BiblioSpec;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Irt;
-using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
@@ -55,49 +54,6 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         public string Dash { get; set; }
 
         public override string ToString() { return TextUtil.SpaceSeparate(Dash + Name, Value); }
-    }
-
-    public class ModificationType
-    {
-        public ModificationType(string accession, string name, string comment)
-        {
-            Accession = accession;
-            Name = name;
-            Comment = comment;
-        }
-        public string Accession { get; private set; }
-        public string Name { get; private set; }
-        public string Comment { get; private set; }
-
-        public string AlphaNameWithAminoAcid(string unmodifiedSequence, int index)
-        {
-            string modification = Name.Replace(@"(", "").Replace(@")", "").Replace(@" ", @"@").Replace(@"Acetyl@N-term", @"Acetyl@Protein_N-term");
-            char delimiter = '@';
-            string[] name = modification.Split(delimiter);
-            string alphaName = name[0] + @"@" + unmodifiedSequence[index];
-            if (index == 0 && modification.EndsWith(@"term"))
-            {
-                alphaName = modification;
-            }
-            return alphaName;
-        }
-        public override string ToString() { return string.Format(ModelsResources.BuildPrecursorTable_ModificationType, Accession, Name, Comment); }
-    }
-
-    public class ModificationIndex
-    {
-        public ModificationIndex(int index, ModificationType modification)
-        {
-            Index = index;
-            Modification = modification;
-        }
-        public ModificationType Modification { get; private set; }
-        public int Index { get; private set; }
-
-        public override string ToString()
-        {
-            return Index + @":" + Modification;
-        }
     }
 
     public class AlphapeptdeepLibraryBuilder : AbstractDeepLibraryBuilder, IiRTCapableLibraryBuilder
@@ -136,6 +92,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         private const string COLLISIONAL_CROSS_SECTION = "CollisionalCrossSection";
 
         public static string PythonVersion => Settings.Default.PythonEmbeddableVersion;
+
         public static string ScriptsDir => PythonInstallerUtil.GetPythonVirtualEnvironmentScriptsDir(PythonVersion, ALPHAPEPTDEEP);
 
         public static PythonInstaller CreatePythonInstaller(TextWriter writer)
@@ -143,7 +100,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             var packages = new[]
             {
                 new PythonPackage { Name = @"peptdeep", Version = null },
-                
+
                 // We manually set numpy to the latest version before 2.0 because of a backward incompatibility issue
                 // See details for tracking issue in AlphaPeptDeep repo: https://github.com/MannLabs/alphapeptdeep/issues/190
                 // TODO: delete the following line after the issue above is resolved
@@ -153,14 +110,17 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             return new PythonInstaller(packages, writer, AlphapeptdeepLibraryBuilder.ALPHAPEPTDEEP);
         }
 
-        /// <summary>
-        /// List of UniMod Modifications available
-        /// </summary>
-        public static readonly IList<ModificationType> MODIFICATION_NAMES = PopulateUniModList(null);
-
         protected override string ToolName => ALPHAPEPTDEEP;
-        
-        protected override IList<ModificationType> ModificationTypes => MODIFICATION_NAMES;
+
+        protected override LibraryBuilderModificationSupport LibraryBuilderModificationSupport { get; }
+
+        internal static List<ModificationType> MODEL_SUPPORTED_UNIMODS = new List<ModificationType>
+        {
+            GetUniModType(4, PredictionSupport.all), // Carbamidomethyl (C)
+            GetUniModType(21, PredictionSupport.fragmentation), // Phospho
+            GetUniModType(35, PredictionSupport.all), // Oxidation
+            GetUniModType(121, PredictionSupport.fragmentation) // GlyGly (a.k.a. GG)
+        };
 
         public LibrarySpec LibrarySpec { get; private set; }
 
@@ -233,7 +193,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             SrmDocument document, IrtStandard irtStandard) : base(document, irtStandard)
         {
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
-
+            LibraryBuilderModificationSupport = new LibraryBuilderModificationSupport(MODEL_SUPPORTED_UNIMODS);
             string rootProcessingDir = Path.GetDirectoryName(libOutPath);
             if (string.IsNullOrEmpty(rootProcessingDir))
                 throw new ArgumentException($@"AlphapeptdeepLibraryBuilder libOutputPath {libOutPath} must be a full path.");
@@ -264,7 +224,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             // Note: Segments are distributed to balance the expected work of each task
             var segmentEndPercentages = new[] { 5, 10, 15, 95 };
             progressStatus = progressStatus.ChangeSegments(0, ImmutableList<int>.ValueOf(segmentEndPercentages));
-            PreparePrecursorInputFile(MODIFICATION_NAMES, progress, ref progressStatus);
+            PreparePrecursorInputFile(progress, ref progressStatus);
             progressStatus = progressStatus.NextSegment();
             PrepareSettingsFile(progress, ref progressStatus);
             progressStatus = progressStatus.NextSegment();
@@ -385,7 +345,8 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             while (null != reader.ReadLine())
             {
                 var line = new List<string>();
-                
+                string peptideWithMods = string.Empty;
+                bool modifiedPeptide = false;
                 foreach (var colName in colNames)
                 {
                     var cell = reader.GetFieldByName(colName);
@@ -395,23 +356,45 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                             .Replace(TextUtil.LEFT_SQUARE_BRACKET, TextUtil.LEFT_PARENTHESIS)
                             .Replace(TextUtil.RIGHT_SQUARE_BRACKET, TextUtil.RIGHT_PARENTHESIS);
                         line.Add(transformedCell);
+                        if (transformedCell.Contains('('))
+                        {
+                            modifiedPeptide = true;
+                        }
+                        peptideWithMods = cell;
+                    }
+                    else if (colName == CCS)
+                    {
+                        AddDoubleCell(line, cell,
+                            !modifiedPeptide || LibraryBuilderModificationSupport.PeptideHasOnlyCcsSupportedMod(peptideWithMods));
                     }
                     else if (colName == NORMALIZED_RT)
                     {
-                        double transformedCell = double.Parse(cell.ToString(CultureInfo.InvariantCulture),
-                            CultureInfo.InvariantCulture);// * 100;
-                        line.Add(transformedCell.ToString(CultureInfo.InvariantCulture));
+                        AddDoubleCell(line, cell,
+                            !modifiedPeptide || LibraryBuilderModificationSupport.PeptideHasOnlyRtSupportedMod(peptideWithMods));
                     }
                     else if (colName != ION_MOBILITY)
                     {
                         line.Add(cell);
                     }
                 }
-                result.Add(string.Join(TextUtil.SEPARATOR_TSV_STR, line));
+                // Only add a row, if there are no modifications or all modifications at least support spectrum prediction
+                if (!modifiedPeptide || LibraryBuilderModificationSupport.PeptideHasOnlyMs2SupportedMod(peptideWithMods))
+                    result.Add(string.Join(TextUtil.SEPARATOR_TSV_STR, line));
             }
 
             // Write to new file
             File.WriteAllLines(TransformedOutputSpectraLibFilepath, result);
+        }
+
+        private void AddDoubleCell(List<string> line, string cell, bool allowedValue)
+        {
+            double valueToAdd;
+            if (!allowedValue || !double.TryParse(cell.ToString(CultureInfo.InvariantCulture), NumberStyles.Float,
+                    CultureInfo.InvariantCulture, out valueToAdd))
+            {
+                valueToAdd = 0; // CONSIDER: Zero is a valid value for a normalized-RT
+            }
+            line.Add(valueToAdd.ToString(CultureInfo.InvariantCulture));
         }
 
         public void ImportSpectralLibrary(IProgressMonitor progress, ref IProgressStatus progressStatus)
