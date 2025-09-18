@@ -1032,7 +1032,7 @@ void TimsSpectrum::getCombinedSpectrumData(BinaryData<double>& mz, BinaryData<do
     int range = scanEnd() - scanBegin_;
 
     // If caller wants the entire frame in one go, skip any gaps in the DiaFrameMsMsWindows table
-    auto activeScansOnly = (frame_.msLevel_ >  1 && frame_.timsDataImpl_.isPassEntireDiaPasefFrame());
+    auto activeScansOnly = frame_.msLevel_ > 1 && frame_.windowGroup_ > 0 && frame_.timsDataImpl_.isPassEntireDiaPasefFrame();
     if (activeScansOnly)
     {
         auto activeScans = frame_.timsDataImpl_.getActiveScansByWindowGroup(frame_.windowGroup_.get());
