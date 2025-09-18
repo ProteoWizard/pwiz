@@ -178,6 +178,7 @@
     <Compile Include="CmdLineAssociateProteinsTest.cs" />
     <Compile Include="CommandLineThermoMethodTest.cs" />
     <Compile Include="ElibQuantifiableTransitionTest.cs" />
+    <Compile Include="EncryptedTokenTest.cs" />
     <Compile Include="ErrorIfPersistentFilesDirModifiedTest.cs" />
     <Compile Include="FastaSequenceTest.cs" />
     <Compile Include="CopyFileWithProgressTest.cs" />
@@ -198,6 +199,7 @@
     <Compile Include="ProtocolBuffers\GeneratedCode\LegacySkylineDocumentProto.cs" />
     <Compile Include="ProtocolBuffers\LegacyProtocolBufferFormatsTest.cs" />
     <Compile Include="ReferenceValueTest.cs" />
+    <Compile Include="ArdiaMarshalingTest.cs" />
     <Compile Include="ScoreQValueMapTest.cs" />
     <Compile Include="MeasuredIonTest.cs" />
     <Compile Include="SchemaDocumentsTest.cs" />
