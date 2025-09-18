@@ -181,13 +181,13 @@ namespace pwiz.SkylineTestFunctional
             supportedVersions.AddRange(SkylineVersion.SupportedForSharing().Select(v => v.ToString()));
             CheckPublishSuccess(WRITE_TARGETED, true, supportedVersions, testPanoramaClient);
             
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("skyd15.sky")));
+            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("skyd18.sky")));
             WaitForDocumentLoaded();
             testPanoramaClient.ServerSkydVersion = "14";
             // Document's cache version is higher than what the server supports. The available options in ShareTypeDlg should not 
             // include the current saved file format or any Skyline versions associated with a cache version higher than 14.
             supportedVersions = SkylineVersion.SupportedForSharing()
-                .Where(ver => ver.CacheFormatVersion <= CacheFormatVersion.Fourteen)
+                .Where(ver => CacheFormat.GetVersionRequired(ver.CacheFormatVersion) <= CacheFormatVersion.Fourteen)
                 .Select(v => v.ToString()).ToList();
             CheckPublishSuccess(WRITE_TARGETED, false, supportedVersions, testPanoramaClient);
             

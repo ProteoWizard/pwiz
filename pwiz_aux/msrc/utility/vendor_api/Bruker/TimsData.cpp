@@ -119,7 +119,7 @@ namespace vendor_api {
 namespace Bruker {
 
 
-TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra, int preferOnlyMsLevel, bool allowMsMsWithoutPrecursor, const vector<chemistry::MzMobilityWindow>& isolationMzFilter)
+TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra, int preferOnlyMsLevel, bool allowMsMsWithoutPrecursor, bool passEntireDiaPasefFrame, bool includeIsolationArrays, const vector<chemistry::MzMobilityWindow>& isolationMzFilter)
     : tdfFilepath_((bfs::path(rawpath) / "analysis.tdf").string()),
       combineSpectra_(combineIonMobilitySpectra),
       hasPASEFData_(false),
@@ -127,6 +127,8 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
       allowMsMsWithoutPrecursor_(allowMsMsWithoutPrecursor),
       isolationMzFilter_(isolationMzFilter),
       currentFrameId_(-1),
+      passEntireDiaPasefFrame_(passEntireDiaPasefFrame),
+      includeIsolationArrays_(includeIsolationArrays),
       tdfStoragePtr_(new TimsBinaryData(rawpath)),
       tdfStorage_(*tdfStoragePtr_)
 {
@@ -196,13 +198,14 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
     bpcMs1_->times.reserve(count / 2);
     bpcMs1_->intensities.reserve(count / 2);
 
+    size_t maxNumScans = sqlite::query(db, "SELECT MAX(NumScans) FROM Frames").begin()->get<sqlite3_int64>(0);
     if (!combineIonMobilitySpectra)
     {
         // get anticipated scan count
         std::string queryNonEmpty = queryFrameCount + queryMsFilter + " AND NumPeaks > 0";
         size_t countNonEmpty = sqlite::query(db, queryNonEmpty.c_str()).begin()->get<sqlite3_int64>(0);
-        size_t nScans = sqlite::query(db, "SELECT MAX(NumScans) FROM Frames").begin()->get<sqlite3_int64>(0);
-        spectra_.reserve(countNonEmpty * nScans);
+        
+        spectra_.reserve(countNonEmpty * maxNumScans);
     }
 
     string queryCalibrations = "SELECT MAX(TimsCalibration) FROM Frames";
@@ -224,7 +227,6 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
         " ORDER BY Id"; // we currently depend on indexing the frames_ vector by Id (which so far has always been sorted by time)
     sqlite::query q(db, querySelect.c_str());
 
-    int maxNumScans = 0;
     vector<TimsFramePtr> representativeFrameByCalibrationIndex(calibrationsCount); // the first frame for each calibration index
 
     for (sqlite::query::iterator itr = q.begin(); itr != q.end(); ++itr)
@@ -261,8 +263,6 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
             bpcMs1_->intensities.push_back(bpi);
         }
 
-        maxNumScans = max(maxNumScans, numScans);
-
         optional<uint64_t> parentId(row.get<optional<sqlite3_int64> >(++idx));
         optional<double> precursorMz(row.get<optional<double> >(++idx));
         optional<double> isolationWidth(row.get<optional<double> >(++idx));
@@ -291,7 +291,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
 
     // pre-cache scan number to 1/k0 mapping for each calibration (and also the inverse, for 1/k0 filtering, which is why it has to be done here instead of on-demand)
     vector<double> scanNumbers(maxNumScans+1);
-    for (int i = 0; i <= maxNumScans; ++i)
+    for (size_t i = 0; i <= maxNumScans; ++i)
         scanNumbers[i] = i;
     for (size_t i = 0; i < oneOverK0ByScanNumberByCalibration_.size(); ++i)
     {
@@ -300,6 +300,58 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
 
         for (int j = 0; j < scanNumbers.size(); ++j)
             scanNumberByOneOverK0ByCalibrationIndex[i][oneOverK0[j]] = scanNumbers[j];
+    }
+
+    // for diaPASEF, build a map of scan number to isolation m/z for each window group
+    if (isDiaPasef)
+    {
+        string checkDiagPasefSql = "SELECT MAX(cnt) FROM (SELECT COUNT(*) AS cnt FROM DiaFrameMsMsWindows GROUP BY WindowGroup)";
+        sqlite::query checkDiagPasefQuery(db, checkDiagPasefSql.c_str());
+        int countMaxIsolationMzPerGroup = checkDiagPasefQuery.begin()->get<sqlite3_int64>(0);
+        passEntireDiaPasefFrame_ |= (maxNumScans - countMaxIsolationMzPerGroup < 10); // heuristic for DiagonalPASEF from Bruker based on MCC email 2/11/2025
+
+        if (passEntireDiaPasefFrame_)
+        {
+            string queryIsolationWindowGroupCount = "SELECT COUNT(*) FROM DiaFrameMsMsWindowGroups";
+            size_t isolationWindowGroupCount = sqlite::query(db, queryIsolationWindowGroupCount.c_str()).begin()->get<sqlite3_int64>(0);
+            isolationMzLowByScanNumberByWindowGroup_.resize(isolationWindowGroupCount); // assume groups are numbered 1 ... n
+            isolationMzHighByScanNumberByWindowGroup_.resize(isolationWindowGroupCount); // assume groups are numbered 1 ... n
+
+            isolationMzRangeLowByWindowGroup_.resize(isolationWindowGroupCount, numeric_limits<double>::max()); // assume groups are numbered 1 ... n
+            isolationMzRangeHighByWindowGroup_.resize(isolationWindowGroupCount, 0.0); // assume groups are numbered 1 ... n
+            for (auto wg = 0; wg < isolationWindowGroupCount; wg++)
+            {
+                auto& isolationMzLowByScanNumber = isolationMzLowByScanNumberByWindowGroup_[wg];
+                isolationMzLowByScanNumber.resize(maxNumScans + 1);
+                auto& isolationMzHighByScanNumber = isolationMzHighByScanNumberByWindowGroup_[wg];
+                isolationMzHighByScanNumber.resize(maxNumScans + 1);
+            }
+
+            string queryWindows = "SELECT WindowGroup, IsolationMz, IsolationWidth, ScanNumBegin, ScanNumEnd FROM DiaFrameMsMsWindows";
+            sqlite::query q(db, queryWindows.c_str());
+
+            for (auto itr = q.begin(); itr != q.end(); ++itr)
+            {
+                sqlite::query::rows row = *itr;
+                int windowGroup, scanBegin, scanEnd;
+                double isolationMz;
+                double isolationWidth;
+                row.getter() >> windowGroup >> isolationMz >> isolationWidth >> scanBegin >> scanEnd;
+
+                auto& isolationMzLowByScanNumber = isolationMzLowByScanNumberByWindowGroup_[windowGroup - 1];
+                auto& isolationMzHighByScanNumber = isolationMzHighByScanNumberByWindowGroup_[windowGroup - 1];
+                auto isoMzLow = isolationMz - isolationWidth / 2;
+                auto isoMzHigh = isolationMz + isolationWidth / 2;
+                for (; scanBegin <= scanEnd; ++scanBegin)
+                {
+                    isolationMzLowByScanNumber[scanBegin] = isoMzLow;
+                    isolationMzHighByScanNumber[scanBegin] = isoMzHigh;
+                }
+                isolationMzRangeLowByWindowGroup_[windowGroup - 1] = min(isolationMzRangeLowByWindowGroup_[windowGroup - 1], isoMzLow);
+                isolationMzRangeHighByWindowGroup_[windowGroup - 1] = max(isolationMzRangeHighByWindowGroup_[windowGroup - 1], isoMzHigh);
+
+            }
+        }
     }
 
     string pasefIsolationMzFilter;
@@ -394,9 +446,15 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
             string querySql = "SELECT Frame, MIN(ScanNumBegin), MAX(ScanNumEnd), IsolationMz, IsolationWidth, AVG(CollisionEnergy), f.WindowGroup "
                               "FROM DiaFrameMsMsInfo f "
                               "JOIN DiaFrameMsMsWindows w ON w.WindowGroup=f.WindowGroup " +
-                              pasefIsolationMzFilter +
-                              "GROUP BY Frame, IsolationMz, IsolationWidth "
-                              "ORDER BY Frame, ScanNumBegin";
+                              pasefIsolationMzFilter;
+
+            if (passEntireDiaPasefFrame_)
+                querySql += "GROUP BY Frame "
+                            "ORDER BY Frame, ScanNumBegin";
+            else
+                querySql += "GROUP BY Frame, IsolationMz, IsolationWidth "
+                            "ORDER BY Frame, ScanNumBegin";
+
             sqlite::query q(db, querySql.c_str());
             DiaPasefIsolationInfo info;
             for (sqlite::query::iterator itr = q.begin(); itr != q.end(); ++itr)
@@ -500,6 +558,45 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
 
                 ms2Time = frame->rt_;
                 ms2Intensities.push_back(frame->tic_);
+            }
+
+            // Note contents of DiaFrameMsMsWindows, with scan range translated to 1/K0 range
+            if (oneOverK0ByScanNumberByCalibration_.size() == 1) // Only works if calibration doesn't change in run
+            {
+                querySql = "SELECT WindowGroup, ScanNumBegin, ScanNumEnd, IsolationMz, IsolationWidth, CollisionEnergy FROM DiaFrameMsMsWindows";
+                string table = "WindowGroup,invK0Begin,invK0End,IsolationMz,IsolationWidth,CollisionEnergy;";
+
+                sqlite::query qTable(db, querySql.c_str());
+                for (sqlite::query::iterator itr = qTable.begin(); itr != qTable.end(); ++itr)
+                {
+                    sqlite::query::rows row = *itr;
+                    int idx = -1;
+                    int windowGroup = row.get<int>(++idx);
+                    int scanBegin = row.get<int>(++idx);
+                    int scanEnd = row.get<int>(++idx) - 1; // scan end in TDF is exclusive, but in pwiz is inclusive
+
+                    double isolationMz = row.get<double>(++idx);
+                    double isolationWidth = row.get<double>(++idx);
+                    double collisionEnergy = row.get<double>(++idx);
+
+                    table += lexical_cast<string>(windowGroup) + "," +
+                        lexical_cast<string>(oneOverK0ByScanNumberByCalibration_[0][scanBegin]) + "," +
+                        lexical_cast<string>(oneOverK0ByScanNumberByCalibration_[0][scanEnd]) + "," +
+                        lexical_cast<string>(isolationMz) + "," +
+                        lexical_cast<string>(isolationWidth) + "," +
+                        lexical_cast<string>(collisionEnergy) + ";";
+
+                    // Note which scans are actually associated with an isolation window (some isolation schemes have gaps, so caller may not wish to bother with the scans in the gaps)
+                    while (windowGroup > activeScansByWindowGroup_.size())
+                    {
+                        activeScansByWindowGroup_.emplace_back();
+                    }
+                    for (int s = scanBegin; s <= scanEnd; s++)
+                    {
+                        activeScansByWindowGroup_[windowGroup-1].push_back(s);
+                    }
+                }
+                diaFrameMsMsWindowsTable_ = table;
             }
         }
         else // PrmPasef
@@ -716,6 +813,22 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
 bool TimsDataImpl::hasMSData() const { return true; }
 bool TimsDataImpl::hasLCData() const { return false; }
 bool TimsDataImpl::hasPASEFData() const { return hasPASEFData_; }
+bool TimsDataImpl::isPassEntireDiaPasefFrame() const { return passEntireDiaPasefFrame_; } // When true, pass entire MS2 frame as a single chunk as in Diagonal PASEF
+
+// Diagonal PASEF data has isolation m/z that varies with scan number within a frame
+double TimsDataImpl::getIsolationMzRangeLowByWindowGroup(int windowGroup) const
+{
+    return isolationMzRangeLowByWindowGroup_[windowGroup - 1];
+}
+double TimsDataImpl::getIsolationMzRangeHighByWindowGroup(int windowGroup) const
+{
+    return isolationMzRangeHighByWindowGroup_[windowGroup - 1];
+}
+
+const vector<int >& TimsDataImpl::getActiveScansByWindowGroup(int windowGroup) const // for each diaPASEF WindowGroup, a list of scans that are associated with an isolation window  (some isolation schemes have gaps, so caller may not wish to bother with the scans in the gaps)
+{
+    return activeScansByWindowGroup_[windowGroup - 1];
+}
 
 bool TimsDataImpl::canConvertOneOverK0AndCCS() const { return true; }
 
@@ -771,6 +884,7 @@ InstrumentFamily TimsDataImpl::getInstrumentFamily() const { return instrumentFa
 int TimsDataImpl::getInstrumentRevision() const { return instrumentRevision_; }
 std::string TimsDataImpl::getInstrumentDescription() const { return ""; }
 std::string TimsDataImpl::getInstrumentSerialNumber() const { return serialNumber_; }
+std::string TimsDataImpl::getDiaFrameMsMsWindowsTable() const { return diaFrameMsMsWindowsTable_; }
 InstrumentSource TimsDataImpl::getInstrumentSource() const { return instrumentSource_; }
 std::string TimsDataImpl::getAcquisitionSoftware() const { return acquisitionSoftware_; }
 std::string TimsDataImpl::getAcquisitionSoftwareVersion() const { return acquisitionSoftwareVersion_; }
@@ -905,46 +1019,123 @@ std::pair<double, double> TimsSpectrum::getIonMobilityRange() const
 }
 
 
-void TimsSpectrum::getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities, bool sortAndJitter) const
+void TimsSpectrum::getCombinedSpectrumData(BinaryData<double>& mz, BinaryData<double>& intensities, BinaryData<double>& mobilities, bool includeIsolationArrays,
+                                           BinaryData<double>& isolationWindowStart, BinaryData<double>& isolationWindowEnd, bool sortAndJitter) const
 {
     auto& storage = frame_.timsDataImpl_.tdfStorage_;
     
+    // Read the frame, just the range in use omitting 0->scanBegin_ and ScanEnd()->rest of frame
+    // FrameProxy position 0 corresponds to frame position scanBegin_
     const auto& frameProxy = storage.readScans(frame_.frameId_, scanBegin_, scanEnd() + 1, false);
     vector<double> mzIndicesAsDoubles;
     mzIndicesAsDoubles.reserve(frameProxy.getTotalNbrPeaks());
     int range = scanEnd() - scanBegin_;
-    for (int i = 0; i <= range; ++i)
-    {
-        auto mzIndices = frameProxy.getScanX(i);
-        for (size_t j = 0; j < mzIndices.size(); ++j)
-            mzIndicesAsDoubles.push_back(mzIndices[j]);
-    }
-    storage.indexToMz(frame_.frameId_, mzIndicesAsDoubles, mz);
 
-    intensities.resize(frameProxy.getTotalNbrPeaks());
-    mobilities.resize(intensities.size());
-    if (intensities.empty())
-        return;
-    double* itr = &intensities[0];
-    double* itr2 = &mobilities[0];
-    for (int i = 0; i <= range; ++i)
+    // If caller wants the entire frame in one go, skip any gaps in the DiaFrameMsMsWindows table
+    auto activeScansOnly = (frame_.msLevel_ >  1 && frame_.timsDataImpl_.isPassEntireDiaPasefFrame());
+    if (activeScansOnly)
     {
-        auto intensityCounts = frameProxy.getScanY(i);
-        for (size_t j = 0; j < intensityCounts.size(); ++j, ++itr, ++itr2)
+        auto activeScans = frame_.timsDataImpl_.getActiveScansByWindowGroup(frame_.windowGroup_.get());
+        range =  activeScans.size()-1;
+        for (int i = 0; i <= range; ++i)
         {
-            *itr = intensityCounts[j];
-            *itr2 = frame_.oneOverK0_[scanBegin_ + i];
-            /*if (*itr2 < 0.0001 || *itr2 > 2)
-                throw runtime_error("bad 1/k0 value at i=" + lexical_cast<string>(i) +
-                                    " j=" + lexical_cast<string>(j) +
-                                    " scanBegin_=" + lexical_cast<string>(scanBegin_));*/
+            auto proxyScanNumber = activeScans[i] - scanBegin_;
+            auto mzIndices = frameProxy.getScanX(proxyScanNumber);
+            for (size_t j = 0; j < mzIndices.size(); ++j)
+                mzIndicesAsDoubles.push_back(mzIndices[j]);
+        }
+    }
+    else
+    {
+        for (int i = 0; i <= range; ++i)
+        {
+            auto mzIndices = frameProxy.getScanX(i);
+            for (size_t j = 0; j < mzIndices.size(); ++j)
+                mzIndicesAsDoubles.push_back(mzIndices[j]);
         }
     }
 
-    if (!sortAndJitter)
-        return;
+    storage.indexToMz(frame_.frameId_, mzIndicesAsDoubles, mz);
 
-    sort_together(mz, vector<boost::iterator_range<BinaryData<double>::iterator>> { intensities, mobilities });
+    intensities.resize(mzIndicesAsDoubles.size());
+    mobilities.resize(intensities.size());
+    if (intensities.empty())
+        return;
+    double* itrIntensity = &intensities[0];
+    double* itrMobility = &mobilities[0];
+    if (activeScansOnly)
+    {
+        // CONSIDER: need an array of CE per scan?
+
+        auto activeScans = frame_.timsDataImpl_.getActiveScansByWindowGroup(frame_.windowGroup_.get());
+        const auto& isolationMzLowByScanNumber = frame_.timsDataImpl_.isolationMzLowByScanNumberByWindowGroup_[frame_.windowGroup_.get() - 1];
+        const auto& isolationMzHighByScanNumber = frame_.timsDataImpl_.isolationMzHighByScanNumberByWindowGroup_[frame_.windowGroup_.get() - 1];
+        double* itrIsolationMzLow;
+        double* itrIsolationMzHigh;
+        if (includeIsolationArrays)
+        {
+            isolationWindowStart.resize(intensities.size());
+            isolationWindowEnd.resize(intensities.size());
+            itrIsolationMzLow = &isolationWindowStart[0];
+            itrIsolationMzHigh = &isolationWindowEnd[0];
+        }
+
+        for (int i = 0; i < activeScans.size(); ++i)
+        {
+            // If caller doesn't want the isolation arrays in single-chunk diaPasef frame passimg, also skip any gaps in the DiaFrameMsMsWindows table
+            auto activeScan = activeScans[i];
+            auto proxyScanNumber = activeScan - scanBegin_;
+
+            auto intensityCounts = frameProxy.getScanY(proxyScanNumber);
+            auto im = frame_.oneOverK0_[activeScan];
+            for (size_t j = 0; j < intensityCounts.size();)
+            {
+                *itrIntensity++ = intensityCounts[j++];
+                *itrMobility++ = im;
+                /*if (*itrMobility < 0.0001 || *itrMobility > 2)
+                    throw runtime_error("bad 1/k0 value at i=" + lexical_cast<string>(i) +
+                                        " j=" + lexical_cast<string>(j) +
+                                        " scanBegin_=" + lexical_cast<string>(scanBegin_));*/
+            }
+            if (includeIsolationArrays)
+            {
+                auto isoMzLow = isolationMzLowByScanNumber[activeScan];
+                auto isoMzHigh = isolationMzHighByScanNumber[activeScan];
+                for (size_t j = intensityCounts.size(); j-- > 0;)
+                {
+                    *itrIsolationMzLow++ = isoMzLow;
+                    *itrIsolationMzHigh++ = isoMzHigh;
+                }
+            }
+        }
+
+        if (!sortAndJitter)
+            return;
+
+        sort_together(mz, vector<boost::iterator_range<BinaryData<double>::iterator>> { intensities, mobilities, isolationWindowStart, isolationWindowEnd });
+    }
+    else
+    {
+        for (int i = 0; i <= range; ++i)
+        {
+            auto intensityCounts = frameProxy.getScanY(i);
+            auto im = frame_.oneOverK0_[scanBegin_ + i];
+            /*if (im < 0.0001 || im > 2)
+                    throw runtime_error("bad 1/k0 value at i=" + lexical_cast<string>(i) +
+                                        " j=" + lexical_cast<string>(j) +
+                                        " scanBegin_=" + lexical_cast<string>(scanBegin_));*/
+            for (size_t j = 0; j < intensityCounts.size();)
+            {
+                *itrIntensity++ = intensityCounts[j++];
+                *itrMobility++ = im;
+            }
+        }
+
+        if (!sortAndJitter)
+            return;
+
+        sort_together(mz, vector<boost::iterator_range<BinaryData<double>::iterator>> { intensities, mobilities });
+    }
 
     // add jitter to identical m/z values (which come from different mobility bins)
     for (size_t i = 1; i < mz.size(); ++i)

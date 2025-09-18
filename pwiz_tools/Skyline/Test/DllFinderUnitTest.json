@@ -207,6 +207,38 @@
     "ExpectedVersion": 1.0
   },
   {
+    "TestName": "ThermoDllFinder finds all required DLLs with 2-version registry like Philip Remes reported on his Stellar",
+    "SkylineExePath": "C:\\Program Files\\Skyline\\Skyline.exe",
+    "Files": [
+      {
+        "Path": "C:\\Thermo\\stallarSoftwarePath\\1.1\\Thermo.TNG.MethodXMLFactory.dll"
+      },
+      {
+        "Path": "C:\\Thermo\\stallarSoftwarePath\\1.1\\Thermo.TNG.MethodXMLInterface.dll"
+      }
+    ],
+    "RegistrySubKeys": [
+      {
+        "SubKeyName": "DataAccess"
+      },
+      {
+        "SubKeyName": "Stellar",
+        "SubKeys": [
+          {
+            "SubKeyName": "1.0",
+            "ProgramPath": "C:\\Thermo\\stallarSoftwarePath\\1.0"
+          },
+          {
+            "SubKeyName": "1.1",
+            "ProgramPath": "C:\\Thermo\\stallarSoftwarePath\\1.1"
+          }
+        ]
+      }
+    ],
+    "ExpectedInstrumentType": "Stellar",
+    "ExpectedVersion": 1.1
+  },
+  {
     "TestName": "ThermoDllFinder finds all required DLLs with registry like MacCoss lab Exploris",
     "SkylineExePath": "C:\\Program Files\\Skyline\\Skyline.exe",
     "Files": [

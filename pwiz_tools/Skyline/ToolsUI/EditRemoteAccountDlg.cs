@@ -117,9 +117,14 @@ namespace pwiz.Skyline.ToolsUI
                 tbxIdentityServer.Text = unifiAccount.IdentityServer;
                 tbxClientScope.Text = unifiAccount.ClientScope;
                 tbxClientSecret.Text = unifiAccount.ClientSecret;
+                tbxClientId.Text = unifiAccount.ClientId;
             }
             else if (remoteAccount is WatersConnectAccount wcAccount)
             {
+                wizardPagesByAccountType.SelectedIndex = UNIFI_WIZARD_PAGE_INDEX;
+                
+                btnTest.Text = _btnTest_OriginalLabel_Test;
+
                 textUsername.Text = remoteAccount.Username;
                 textPassword.Text = remoteAccount.Password;
                 textServerURL.Text = remoteAccount.ServerUrl;
@@ -127,6 +132,7 @@ namespace pwiz.Skyline.ToolsUI
                 tbxIdentityServer.Text = wcAccount.IdentityServer;
                 tbxClientScope.Text = wcAccount.ClientScope;
                 tbxClientSecret.Text = wcAccount.ClientSecret;
+                tbxClientId.Text = wcAccount.ClientId;
             }
             else if (remoteAccount is ArdiaAccount ardiaAccount)
             {
@@ -164,7 +170,8 @@ namespace pwiz.Skyline.ToolsUI
                 var unifiAccount = (UnifiAccount) remoteAccount;
                 unifiAccount = unifiAccount.ChangeIdentityServer(tbxIdentityServer.Text)
                     .ChangeClientScope(tbxClientScope.Text)
-                    .ChangeClientSecret(tbxClientSecret.Text);
+                    .ChangeClientSecret(tbxClientSecret.Text)
+                    .ChangeClientId(tbxClientId.Text);
                 remoteAccount = unifiAccount;
             }
             else if (accountType == RemoteAccountType.WATERS_CONNECT)
@@ -175,7 +182,8 @@ namespace pwiz.Skyline.ToolsUI
                 var wcAccount = (WatersConnectAccount) remoteAccount;
                 wcAccount = wcAccount.ChangeIdentityServer(tbxIdentityServer.Text)
                     .ChangeClientScope(tbxClientScope.Text)
-                    .ChangeClientSecret(tbxClientSecret.Text);
+                    .ChangeClientSecret(tbxClientSecret.Text)
+                    .ChangeClientId(tbxClientId.Text);
                 remoteAccount = wcAccount;
             }
             else if (accountType == RemoteAccountType.ARDIA)
@@ -670,7 +678,7 @@ namespace pwiz.Skyline.ToolsUI
 
         private void process_ardiaAccount_CurrentlyLoggedIn_EnableDisableControls()
         {
-            if (RemoteAccountType.UNIFI.Equals(AccountType))
+            if (RemoteAccountType.UNIFI.Equals(AccountType) || RemoteAccountType.WATERS_CONNECT.Equals(AccountType))
             {
                 if (!btnTest.Text.Equals(_btnTest_OriginalLabel_Test))
                 {

@@ -4397,16 +4397,33 @@ namespace pwiz.Skyline
 
         public void ShowList(string listName)
         {
-            var listForm = Application.OpenForms.OfType<ListGridForm>()
-                .FirstOrDefault(form => form.ListName == listName);
+            var listForm = FindListForm(listName);
             if (listForm != null)
             {
                 listForm.Activate();
                 return;
             }
-            listForm = new ListGridForm(this, listName);
+            listForm = CreateListForm(listName);
             var rectFloat = GetFloatingRectangleForNewWindow();
             listForm.Show(dockPanel, rectFloat);
+        }
+
+        private ListGridForm FindListForm(string listName)
+        {
+            return Application.OpenForms.OfType<ListGridForm>()
+                .FirstOrDefault(form => form.ListName == listName);
+        }
+
+        private ListGridForm CreateListForm(string listName)
+        {
+            if (string.IsNullOrEmpty(listName))
+            {
+                var listDefault = Document.Settings.DataSettings.Lists.FirstOrDefault();
+                if (listDefault == null)
+                    return null;
+                listName = listDefault.ListName;
+            }
+            return FindListForm(listName) ?? new ListGridForm(this, listName);
         }
 
         public void SelectElement(ElementRef elementRef)
