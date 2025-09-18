@@ -34,6 +34,8 @@ namespace pwiz.Skyline.Model.DocSettings
             () => EnumNames.FullScanAcquisitionMethod_PRM, () => DocSettingsResources.FullScanAcquisitionMethod_PRM_TOOLTIP);
         public static readonly FullScanAcquisitionMethod DDA = new FullScanAcquisitionMethod(@"DDA",
             () => EnumNames.FullScanAcquisitionMethod_DDA, () => DocSettingsResources.FullScanAcquisitionMethod_DDA_TOOLTIP);
+        public static readonly FullScanAcquisitionMethod EI = new FullScanAcquisitionMethod(@"EI",
+            () => EnumNames.FullScanAcquisitionMethod_EI, () => DocSettingsResources.FullScanAcquisitionMethod_EI_TOOLTIP);
         public static readonly FullScanAcquisitionMethod SureQuant = new FullScanAcquisitionMethod(@"SureQuant",
             () => EnumNames.FullScanAcquisitionMethod_SureQuant,
             () => DocSettingsResources.FullScanAcquisitionMethod_SureQuant_TOOLTIP);
@@ -42,10 +44,10 @@ namespace pwiz.Skyline.Model.DocSettings
             () => DocSettingsResources.FullScanAcquisitionMethod_Targeted_TOOLTIP);
 
         public static readonly ImmutableList<FullScanAcquisitionMethod> ALL =
-            ImmutableList.ValueOf(new[] {None, DIA, PRM, DDA, SureQuant, Targeted });
+            ImmutableList.ValueOf(new[] {None, DIA, PRM, DDA, SureQuant, Targeted, EI });
 
         public static readonly ImmutableList<FullScanAcquisitionMethod> AVAILABLE =
-            ImmutableList.ValueOf(new[] { None, DIA, PRM, DDA, SureQuant });
+            ImmutableList.ValueOf(new[] { None, DIA, PRM, DDA, SureQuant, EI });
         private readonly Func<string> _getLabelFunc;
         private readonly Func<string> _getTooltipFunc;
         private readonly string _name;

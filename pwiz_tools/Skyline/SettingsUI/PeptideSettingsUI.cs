@@ -36,6 +36,7 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.Midas;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.Util;
@@ -198,6 +199,10 @@ namespace pwiz.Skyline.SettingsUI
             tbxIonRatioThreshold.Text = _peptideSettings.Quantification.QualitativeIonRatioThreshold.ToString();
             cbxSimpleRatios.Checked = _peptideSettings.Quantification.SimpleRatios;
             UpdateComboNormalizationMethod();
+            cbxImputeMissingPeaks.Checked = _peptideSettings.Imputation.ImputeMissingPeaks;
+            tbxMaxRtShift.Text = _peptideSettings.Imputation.MaxRtShift?.ToString() ?? string.Empty;
+            tbxMaxPeakWidthVariation.Text = (_peptideSettings.Imputation.MaxPeakWidthVariation * 100)?.ToString() ?? string.Empty;
+            UpdateAlignmentDropdown();
         }
 
         /// <summary>
@@ -406,6 +411,22 @@ namespace pwiz.Skyline.SettingsUI
             var prediction = new PeptidePrediction(retentionTime, useMeasuredRT, measuredRTWindow);
             Helpers.AssignIfEquals(ref prediction, Prediction);
 
+            var imputation = ImputationSettings.DEFAULT.ChangeAlignmentTarget(AlignmentTarget)
+                .ChangeImputeMissing(ImputeMissingPeaks).ChangeAlignmentTarget(AlignmentTarget);
+            if (!string.IsNullOrEmpty(tbxMaxRtShift.Text))
+            {
+                if (!helper.ValidateDecimalTextBox(tbxMaxRtShift, 0, null, out var maxRtShift))
+                    return null;
+                imputation = imputation.ChangeMaxRtShift(maxRtShift);
+            }
+
+            if (!string.IsNullOrEmpty(tbxMaxPeakWidthVariation.Text))
+            {
+                if (!helper.ValidateDecimalTextBox(tbxMaxPeakWidthVariation, 0, null, out var maxPeakWidthVariation))
+                    return null;
+                imputation = imputation.ChangeMaxPeakWidthVariation(maxPeakWidthVariation / 100);
+            }
+
             // Validate and hold filter settings
             int excludeNTermAAs;
             if (!helper.ValidateNumberTextBox(textExcludeAAs,
@@ -445,54 +466,7 @@ namespace pwiz.Skyline.SettingsUI
             Helpers.AssignIfEquals(ref filter, Filter);
 
             // Validate and hold libraries
-            PeptideLibraries libraries;
-            IList<LibrarySpec> librarySpecs = _driverLibrary.Chosen;
-            if (librarySpecs.Count == 0)
-                libraries = new PeptideLibraries(PeptidePick.library, null, null, false, librarySpecs, new Library[0]);
-            else
-            {
-                int? peptideCount = null;
-                if (cbLimitPeptides.Checked)
-                {
-                    int peptideCountVal;
-                    if (!helper.ValidateNumberTextBox(textPeptideCount, PeptideLibraries.MIN_PEPTIDE_COUNT,
-                            PeptideLibraries.MAX_PEPTIDE_COUNT, out peptideCountVal))
-                        return null;
-                    peptideCount = peptideCountVal;
-                }
-                PeptidePick pick = (PeptidePick) comboMatching.SelectedIndex;
-
-                IList<Library> librariesLoaded = new Library[librarySpecs.Count];
-                bool documentLibrary = false;
-                if (Libraries != null)
-                {
-                    // Use existing library spec's, if nothing was changed.
-                    // Avoid changing the libraries, just because the the picking
-                    // algorithm changed.
-                    if (ArrayUtil.EqualsDeep(librarySpecs, Libraries.LibrarySpecs))
-                    {
-                        librarySpecs = Libraries.LibrarySpecs;
-                        librariesLoaded = Libraries.Libraries;
-                        documentLibrary = Libraries.HasDocumentLibrary;
-                    }
-                    else
-                    {
-                        // Set to true only if one of the selected libraries is a document library.
-                        documentLibrary = librarySpecs.Any(libSpec => libSpec != null && libSpec.IsDocumentLibrary);
-                    }
-
-                    // Otherwise, leave the list of loaded libraries empty,
-                    // and let the LibraryManager refill it.  This ensures a
-                    // clean save of library specs only in the user config, rather
-                    // than a mix of library specs and libraries.
-                }
-
-                PeptideRankId rankId = (PeptideRankId) comboRank.SelectedItem;
-                if (comboRank.SelectedIndex == 0)
-                    rankId = null;
-
-                libraries = new PeptideLibraries(pick, rankId, peptideCount, documentLibrary, librarySpecs, librariesLoaded);
-            }
+            PeptideLibraries libraries = GetPeptideLibraries(showMessages);
             Helpers.AssignIfEquals(ref libraries, Libraries);
 
             // Validate and hold modifications
@@ -517,7 +491,8 @@ namespace pwiz.Skyline.SettingsUI
                 Settings.Default.StaticModList, Settings.Default.HeavyModList);
             Helpers.AssignIfEquals(ref modifications, _peptideSettings.Modifications);
 
-            PeptideIntegration integration = new PeptideIntegration(_driverPeakScoringModel.SelectedItem);
+            PeptideIntegration integration = new PeptideIntegration(_driverPeakScoringModel.SelectedItem)
+                .ChangeScoreQValueMap(ScoreQValueMap.FromDocument(_parent.DocumentUI));
             Helpers.AssignIfEquals(ref integration, Integration);
 
             QuantificationSettings quantification = QuantificationSettings.DEFAULT
@@ -567,7 +542,56 @@ namespace pwiz.Skyline.SettingsUI
             quantification = quantification.ChangeSimpleRatios(cbxSimpleRatios.Checked);
 
             return new PeptideSettings(enzyme, digest, prediction, filter, libraries, modifications, integration, backgroundProteome, _peptideSettings.ProteinAssociationSettings)
-                    .ChangeAbsoluteQuantification(quantification);
+                .ChangeAbsoluteQuantification(quantification).ChangeImputation(imputation);
+        }
+
+        private PeptideLibraries GetPeptideLibraries(bool showMessages)
+        {
+            var helper = new MessageBoxHelper(this, showMessages);
+            IList<LibrarySpec> librarySpecs = _driverLibrary.Chosen;
+            if (librarySpecs.Count == 0)
+                return new PeptideLibraries(PeptidePick.library, null, null, false, librarySpecs, new Library[0]);
+            int? peptideCount = null;
+            if (cbLimitPeptides.Checked)
+            {
+                int peptideCountVal;
+                if (!helper.ValidateNumberTextBox(textPeptideCount, PeptideLibraries.MIN_PEPTIDE_COUNT,
+                        PeptideLibraries.MAX_PEPTIDE_COUNT, out peptideCountVal))
+                    return null;
+                peptideCount = peptideCountVal;
+            }
+            PeptidePick pick = (PeptidePick)comboMatching.SelectedIndex;
+
+            IList<Library> librariesLoaded = new Library[librarySpecs.Count];
+            bool documentLibrary = false;
+            if (Libraries != null)
+            {
+                // Use existing library spec's, if nothing was changed.
+                // Avoid changing the libraries, just because the picking
+                // algorithm changed.
+                if (ArrayUtil.EqualsDeep(librarySpecs, Libraries.LibrarySpecs))
+                {
+                    librarySpecs = Libraries.LibrarySpecs;
+                    librariesLoaded = Libraries.Libraries;
+                    documentLibrary = Libraries.HasDocumentLibrary;
+                }
+                else
+                {
+                    // Set to true only if one of the selected libraries is a document library.
+                    documentLibrary = librarySpecs.Any(libSpec => libSpec != null && libSpec.IsDocumentLibrary);
+                }
+
+                // Otherwise, leave the list of loaded libraries empty,
+                // and let the LibraryManager refill it.  This ensures a
+                // clean save of library specs only in the user config, rather
+                // than a mix of library specs and libraries.
+            }
+
+            PeptideRankId rankId = (PeptideRankId)comboRank.SelectedItem;
+            if (comboRank.SelectedIndex == 0)
+                rankId = null;
+
+            return new PeptideLibraries(pick, rankId, peptideCount, documentLibrary, librarySpecs, librariesLoaded);
         }
 
         public void OkDialog()
@@ -1406,6 +1430,11 @@ namespace pwiz.Skyline.SettingsUI
             {
                 UpdateComboNormalizationMethod();
             }
+
+            if (tabControl1.SelectedTab == tabPrediction)
+            {
+                UpdateAlignmentDropdown();
+            }
         }
         #region Functional testing support
 
@@ -1774,6 +1803,42 @@ namespace pwiz.Skyline.SettingsUI
         {
             get { return comboLodMethod.SelectedItem as LodCalculation; }
             set { comboLodMethod.SelectedItem = value; }
+        }
+
+        public bool ImputeMissingPeaks
+        {
+            get
+            {
+                return cbxImputeMissingPeaks.Checked;
+            }
+            set
+            {
+                cbxImputeMissingPeaks.Checked = value;
+            }
+        }
+
+        public double? MaxRtShift
+        {
+            get
+            {
+                return string.IsNullOrEmpty(tbxMaxRtShift.Text) ? (double?) null : double.Parse(tbxMaxRtShift.Text);
+            }
+            set
+            {
+                tbxMaxRtShift.Text = value.ToString();
+            }
+        }
+
+        public double? MaxPeakWidthVariation
+        {
+            get
+            {
+                return string.IsNullOrEmpty(tbxMaxPeakWidthVariation.Text) ? (double?)null : double.Parse(tbxMaxPeakWidthVariation.Text);
+            }
+            set
+            {
+                tbxMaxPeakWidthVariation.Text = value.ToString();
+            }
         }
 
         #endregion
@@ -2179,6 +2244,55 @@ namespace pwiz.Skyline.SettingsUI
         public void SetSelectedLibrary(string name)
         {
             listLibraries.SelectedItem = name;
+        }
+
+        private bool _firstAlignmentOptionInvalid;
+        private void UpdateAlignmentDropdown()
+        {
+            var peptideSettings = _peptideSettings.ChangeLibraries(GetPeptideLibraries(false) ?? _peptideSettings.Libraries);
+            var options = AlignmentTargetSpec.GetOptions(peptideSettings).ToList();
+            var current = AlignmentTarget ?? peptideSettings.Imputation.AlignmentTarget ?? AlignmentTargetSpec.Default;
+            if (!options.Contains(current))
+            {
+                _firstAlignmentOptionInvalid = true;
+                pictureBoxRunAlignmentError.Visible = true;
+                options.Insert(0, current);
+            }
+            else
+            {
+                _firstAlignmentOptionInvalid = false;
+                pictureBoxRunAlignmentError.Visible = false;
+            }
+            comboRunToRunAlignment.Items.Clear();
+            comboRunToRunAlignment.Items.AddRange(options.Select(option => (object)
+                    new KeyValuePair<string, AlignmentTargetSpec>(option.GetLabel(peptideSettings), option))
+                .ToArray());
+            comboRunToRunAlignment.SelectedIndex = options.IndexOf(current);
+            ComboHelper.AutoSizeDropDown(comboRunToRunAlignment);
+        }
+
+        public AlignmentTargetSpec AlignmentTarget
+        {
+            get
+            {
+                return (comboRunToRunAlignment.SelectedItem as KeyValuePair<string, AlignmentTargetSpec>?)?.Value;
+            }
+            set
+            {
+                var options = comboRunToRunAlignment.Items.Cast<KeyValuePair<string, AlignmentTargetSpec>>()
+                    .Select(kvp => kvp.Value).ToList();
+                int selectedIndex = options.IndexOf(value);
+                if (selectedIndex < 0)
+                {
+                    throw new ArgumentException();
+                }
+                comboRunToRunAlignment.SelectedIndex = selectedIndex;
+            }
+        }
+
+        private void comboRunToRunAlignment_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            pictureBoxRunAlignmentError.Visible = _firstAlignmentOptionInvalid && comboRunToRunAlignment.SelectedIndex == 0;
         }
     }
 }

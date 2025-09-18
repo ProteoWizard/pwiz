@@ -79,6 +79,15 @@ namespace pwiz.Skyline.Controls.Clustering {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Calculating....
+        /// </summary>
+        public static string HeatMapGraph_HeatMapGraph_Calculating___ {
+            get {
+                return ResourceManager.GetString("HeatMapGraph_HeatMapGraph_Calculating___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Refresh.
         /// </summary>
         public static string HeatMapGraph_zedGraphControl1_ContextMenuBuilder_Refresh {

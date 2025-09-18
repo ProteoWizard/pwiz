@@ -141,6 +141,7 @@
     <Compile Include="BullseyeSharpTest.cs" />
     <Compile Include="CarafeBuildLibraryTest.cs" />
     <Compile Include="CarafeBuildLibraryTutorial.cs" />
+    <Compile Include="DiaNnPeakImputationTest.cs" />
     <Compile Include="DiaSearchTutorialTest.cs" />
     <Compile Include="FeatureDetectionTest.cs" />
     <Compile Include="PerfCreateLibraryFromSpectraTest.cs" />
@@ -155,6 +156,7 @@
     <Compile Include="EncyclopeDiaSearchTutorialTest.cs" />
     <Compile Include="PerfHighEnergyIonMobilityOffsetForPRM.cs" />
     <Compile Include="PerfImportBrukerPasefBbCIDTest.cs" />
+    <Compile Include="PerfImportDiagonalPasefTest.cs" />
     <Compile Include="PerfImportHundredsOfReplicatesTest.cs" />
     <Compile Include="HiResMetabolomicsTutorial.cs" />
     <Compile Include="ImportMassOnlyMoleculesTest.cs" />

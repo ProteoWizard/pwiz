@@ -79,6 +79,15 @@ namespace pwiz.Skyline.Model.Lists {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Name cannot be blank.
+        /// </summary>
+        public static string ListDesigner_OkDialog_Name_cannot_be_blank {
+            get {
+                return ResourceManager.GetString("ListDesigner_OkDialog_Name_cannot_be_blank", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Column &apos;{0}&apos; does not exist..
         /// </summary>
         public static string ListExceptionDetail_ColumnNotFound_Column___0___does_not_exist_ {

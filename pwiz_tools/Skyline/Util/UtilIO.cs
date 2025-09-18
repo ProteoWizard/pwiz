@@ -333,6 +333,7 @@ namespace pwiz.Skyline.Util
         /// <summary>
         /// The actual connection as stored in the pool, or newly created.
         /// </summary>
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public TDisp Connection
         {
             get { return (TDisp) _connectionPool.GetConnection(this, Connect); }
@@ -486,6 +487,7 @@ namespace pwiz.Skyline.Util
         /// The pooled stream.  Use of this property may actually create
         /// the connection.
         /// </summary>
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public Stream Stream
         {
             get { return Connection; }

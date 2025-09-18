@@ -569,6 +569,13 @@ bool SpectrumList_IonMobility::isWatersSonarData()
     try { return base_->isWatersSonarData(); } CATCH_AND_FORWARD
 }
 
+
+/// applicable only to Bruker diaPASEF files
+//bool SpectrumList_IonMobility::isPassEntireDiaPasefFrame()
+//{
+//    try { return base_->isPassEntireDiaPasefFrame(); } CATCH_AND_FORWARD
+//}
+
 void SpectrumList_IonMobility::sonarMzToBinRange(double precursorMz, double tolerance, int% binRangeLow, int% binRangeHigh)
 {
     try
