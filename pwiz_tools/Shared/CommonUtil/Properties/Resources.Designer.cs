@@ -61,6 +61,15 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Process Finished in {0} minutes {1} seconds.
+        /// </summary>
+        internal static string ProcessRunner_Process_Finished_in_time {
+            get {
+                return ResourceManager.GetString("ProcessRunner_Process_Finished_in_time", resourceCulture);
+	    }
+	}
+
+        /// <summary>
         ///   Looks up a localized string similar to Directory could not be found: {0}.
         /// </summary>
         internal static string FileEx_SafeDelete_Directory_could_not_be_found___0_ {
@@ -156,6 +165,15 @@ namespace pwiz.Common.Properties {
         internal static string ProcessRunner_Run_Run_command_ {
             get {
                 return ResourceManager.GetString("ProcessRunner_Run_Run_command_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Working....
+        /// </summary>
+        internal static string ProcessRunner_Run_Working_ {
+            get {
+                return ResourceManager.GetString("ProcessRunner_Run_Working_", resourceCulture);
             }
         }
         

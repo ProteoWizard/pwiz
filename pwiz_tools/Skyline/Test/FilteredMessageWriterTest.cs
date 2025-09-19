@@ -72,7 +72,14 @@ namespace pwiz.SkylineTest
         {
             _originalWriteUserMessage = Messages.WriteUserMessage; // Save the original delegate
             CapturedMessages = new List<string>();
-            Messages.WriteUserMessage = (message, args) => CapturedMessages.Add(string.Format(message, args));
+            Messages.WriteUserMessage = (message, args) =>
+            {
+                CapturedMessages.Add(string.Format(message, args));
+            };
+            Messages.WriteUserMessageUnformatted = (message) =>
+            {
+                CapturedMessages.Add(message);
+            };
         }
         
         public List<string> CapturedMessages { get; private set; }
