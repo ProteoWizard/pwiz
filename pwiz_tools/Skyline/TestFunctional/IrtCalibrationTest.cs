@@ -52,7 +52,7 @@ namespace pwiz.SkylineTestFunctional
 
         private void CalibrateIrtCalculator()
         {
-            var doc = OpenDocument(TestFilesDir.GetTestPath("CoralEggs-dda-min.sky"));
+            var doc = SafeOpenDocument(TestFilesDir.GetTestPath("CoralEggs-dda-min.sky"));
             var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             RunUI(() => peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Prediction);
             var irtCalcDlg = ShowDialog<EditIrtCalcDlg>(peptideSettingsUI.AddCalculator);

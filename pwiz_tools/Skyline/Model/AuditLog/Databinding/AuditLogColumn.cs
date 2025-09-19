@@ -26,22 +26,26 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
 {
     public class AuditLogColumn : TextImageColumn
     {
-        private readonly Image[] _images;
+        private static readonly Image[] _images = new Image[]
+            {
+                Resources.magnifier_zoom_in,
+                _undoRedoImage,
+                _undoRedoMultipleImage,
+            };
 
         public enum ImageIndex { extra_info, undo_redo, multi_undo_redo }
 
+        private static Bitmap _undoRedoImage = InitBitmap(Resources.Edit_Undo);
+        private static Bitmap _undoRedoMultipleImage = InitBitmap(Resources.Edit_Undo_Multiple);
+        private static Bitmap InitBitmap(Bitmap bitmap)
+        {
+            var bmp = new Bitmap(bitmap);
+            bmp.MakeTransparent(Color.Magenta);
+            return bmp;
+        }
+
         public AuditLogColumn()
         {
-            var undoRedoImage = new Bitmap(Resources.Edit_Undo);
-            undoRedoImage.MakeTransparent(Color.Magenta);
-            var undoRedoMultipleImage = new Bitmap(Resources.Edit_Undo_Multiple);
-            undoRedoMultipleImage.MakeTransparent(Color.Magenta);
-            _images = new Image[]
-            {
-                Resources.magnifier_zoom_in,
-                undoRedoImage,
-                undoRedoMultipleImage,
-            };
         }
 
         public override bool ShouldDisplay(object cellValue, int imageIndex)

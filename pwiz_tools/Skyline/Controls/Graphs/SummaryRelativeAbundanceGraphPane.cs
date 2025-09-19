@@ -469,7 +469,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 lineItem = new LineItem(null, points, Color.Black, symbolType)
                 {
                     Line = { IsVisible = false },
-                    Symbol = { Border = { IsVisible = false }, Fill = new Fill(color), Size = size, IsAntiAlias = true }
+                    Symbol = { Border = { IsVisible = false }, Fill = Fill.GetCachedFill(color), Size = size, IsAntiAlias = true }
                 };
             }
             else

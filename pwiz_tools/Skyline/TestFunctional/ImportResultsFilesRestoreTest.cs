@@ -43,7 +43,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            var doc = OpenDocument("test.sky");
+            var doc = SafeOpenDocument("test.sky");
             string docFile = SkylineWindow.DocumentFilePath;
             string importFile = TestFilesDir.GetTestPath(@"level1\level2\" + DATA_FILE_NAME);
             string importNewFile = TestFilesDir.GetTestPath(@"level1\level2\" +

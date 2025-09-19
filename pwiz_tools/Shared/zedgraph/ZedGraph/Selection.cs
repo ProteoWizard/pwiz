@@ -52,7 +52,7 @@ namespace ZedGraph
 		/// <see cref="PieItem" />, <see cref="BarItem" />, <see cref="HiLowBarItem" />,
 		/// and <see cref="JapaneseCandleStickItem" /> item types.
 		/// </summary>
-		public static Fill Fill = new Fill( Color.Gray );
+		public static Fill Fill = Fill.GetCachedFill( Color.Gray );
 		/// <summary>
 		/// The <see cref="Line" /> type to be used for drawing "selected"
 		/// <see cref="LineItem" /> and <see cref="StickItem" /> types

@@ -139,7 +139,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             //  b) Proper changes to document when we eventually don't cancel
             LogToConsole("Begin debug output...");
             LogToConsole($@"load {_skyfile}");
-            OpenDocument(_skyfile);
+            SafeOpenDocument(_skyfile);
             LogToConsole("loaded");
             if (_quickexit)
             {

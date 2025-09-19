@@ -65,7 +65,7 @@ namespace pwiz.SkylineTestFunctional
         {
             scenario(0, 0, PeptideFilter.PeptideUniquenessConstraint.gene, new Dictionary<string, int>()); // Verify that empty docs don't cause problems
 
-            OpenDocument("UniqueTestBogus.sky"); // Contains all the same proteins that are found in the protDB file, bogus version has missing metadata in the protdb
+            SafeOpenDocument("UniqueTestBogus.sky"); // Contains all the same proteins that are found in the protDB file, bogus version has missing metadata in the protdb
 
             scenario(UNIQUE_BY_PROTEINS_PEPTIDE_COUNT, PROTEINS_COUNT, PeptideFilter.PeptideUniquenessConstraint.protein,
                 new Dictionary<string, int>
@@ -94,7 +94,7 @@ namespace pwiz.SkylineTestFunctional
                     {"sp|P10636|TAU_HUMAN", TAU_HUMAN_PEPTIDE_COUNT}, // "this protein is is seen in human, and mouse.  In both cases, there are a ton of isoforms (9 for human, 6 for mouse)."
                 });
 
-            OpenDocument("UniqueTest.sky"); // Contains all the same proteins that are found in the protDB file
+            SafeOpenDocument("UniqueTest.sky"); // Contains all the same proteins that are found in the protDB file
 
             scenario(UNFILTERED_PEPTIDE_COUNT, PROTEINS_COUNT, PeptideFilter.PeptideUniquenessConstraint.none, // No change from initial state
                 new Dictionary<string, int>

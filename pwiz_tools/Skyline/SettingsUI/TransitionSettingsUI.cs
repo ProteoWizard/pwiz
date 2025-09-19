@@ -91,10 +91,12 @@ namespace pwiz.Skyline.SettingsUI
             // Populate the small mol adduct filter helper menu
             AppendAdductMenus(contextMenuStripPrecursorAdduct, precursorAdductStripMenuItem_Click);
             AppendAdductMenus(contextMenuStripFragmentAdduct, fragmentAdductStripMenuItem_Click);
-            Bitmap bm = Resources.PopupBtn;
-            bm.MakeTransparent(Color.Fuchsia);
-            btnPrecursorAdduct.Image = bm;
-            btnFragmentAdduct.Image = bm;
+            using (var bm = new Bitmap(Resources.PopupBtn))
+            {
+                bm.MakeTransparent(Color.Fuchsia);
+                btnPrecursorAdduct.Image = new Bitmap(bm); // Image dispose will be handled by the buttons
+                btnFragmentAdduct.Image = new Bitmap(bm);
+            }
 
             // Initialize prediction settings
             comboPrecursorMass.SelectedItem = Prediction.PrecursorMassType.GetLocalizedString();

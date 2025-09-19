@@ -71,10 +71,12 @@ namespace pwiz.SkylineTestUtil
         }
 
         /// <summary>
-        /// Open a document and wait for loading completion.
+        /// Open a document and wait for loading completion. 
+        /// Makes sure the test isn't trying to open a document while a modal dialog is open.
+        /// Handles .sky.zip files correctly.
         /// </summary>
         /// <param name="documentPath">File path of document</param>
-        public SrmDocument OpenDocument(string documentPath)
+        public SrmDocument SafeOpenDocument(string documentPath)
         {
             // In a test it's possible to programatically open a document while forms like
             // PeptideSettingsUI or TransitionSettingsUI are open, but this isn't possible

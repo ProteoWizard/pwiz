@@ -48,7 +48,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         protected override void DoTest()
         {
             var skyfile = TestFilesDir.GetTestPath("test.sky"); // Has Full Scan settings good to go
-            OpenDocument(skyfile);
+            SafeOpenDocument(skyfile);
             var doc0 = PasteSmallMoleculeListNoAutoManage(TestFilesDir.GetTestPath("Testing_list_for_skyline.csv"));  // Paste into targets window, say no to the offer to set new nodes to automanage
 
             // Enable automanage children so settings change will act on doc structure

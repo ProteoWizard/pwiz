@@ -135,14 +135,14 @@ namespace pwiz.Skyline.Controls.Graphs
             var curve = AddCurve(GraphsResources.RegressionGraphPane_RegressionGraphPane_Values, graphData.RegularPoints, Color.Black, SymbolType.Diamond);
             curve.Line.IsVisible = false;
             curve.Symbol.Border.IsVisible = false;
-            curve.Symbol.Fill = new Fill(COLOR_REGRESSION);
+            curve.Symbol.Fill = Fill.GetCachedFill(COLOR_REGRESSION);
 
             if (graphData.MissingPoints.Any())
             {
                 var curveMissing = AddCurve(GraphsResources.RegressionGraphPane_RegressionGraphPane_Missing, graphData.MissingPoints, COLOR_MISSING, SymbolType.Diamond);
                 curveMissing.Line.IsVisible = false;
                 curveMissing.Symbol.Border.IsVisible = false;
-                curveMissing.Symbol.Fill = new Fill(COLOR_MISSING);
+                curveMissing.Symbol.Fill = Fill.GetCachedFill(COLOR_MISSING);
                 curveMissing.Symbol.Size = 12;
             }
 
@@ -151,7 +151,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var curveOutliers = AddCurve(GraphsResources.RegressionGraphPane_RegressionGraphPane_Outliers, graphData.OutlierPoints, COLOR_OUTLIERS, SymbolType.Diamond);
                 curveOutliers.Line.IsVisible = false;
                 curveOutliers.Symbol.Border.IsVisible = false;
-                curveOutliers.Symbol.Fill = new Fill(COLOR_OUTLIERS);
+                curveOutliers.Symbol.Fill = Fill.GetCachedFill(COLOR_OUTLIERS);
             }
 
             var regressionLine = graphData.RegressionLine;

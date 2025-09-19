@@ -470,7 +470,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var width = end.DisplayTime - start.DisplayTime;
             var originalPeakShadingBox = new BoxObj(start.DisplayTime, 0, width, 1)
             {
-                Fill = new Fill(color),
+                Fill = Fill.GetCachedFill(color),
                 ZOrder = ZOrder.F_BehindGrid,
                 Border = new Border { IsVisible = false },
                 IsClippedToChartRect = true,

@@ -132,7 +132,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            OpenDocument(TestFilesDir.GetTestPath(@"Rat_plasma.sky"));
+            SafeOpenDocument(TestFilesDir.GetTestPath(@"Rat_plasma.sky"));
             
             // Add a bunch of unmeasured precursors and transitions which should not impact the statistics
             // This once caused the CV graphs to fail to complete calculating
@@ -142,10 +142,10 @@ namespace pwiz.SkylineTestFunctional
             TestHistogram<AreaCVHistogramGraphPane>(SkylineWindow.ShowPeakAreaCVHistogram, HISTOGRAM_DATA_START);
             TestHistogram<AreaCVHistogram2DGraphPane>(SkylineWindow.ShowPeakAreaCVHistogram2D, HISTOGRAM2D_DATA_START);
 
-            OpenDocument(TestFilesDir.GetTestPath(@"iPRG 2015 Study mini.sky"));
+            SafeOpenDocument(TestFilesDir.GetTestPath(@"iPRG 2015 Study mini.sky"));
             TestRefinementTransitions();
 
-            OpenDocument(TestFilesDir.GetTestPath(@"PRM_technical_variability_tocheck.sky"));
+            SafeOpenDocument(TestFilesDir.GetTestPath(@"PRM_technical_variability_tocheck.sky"));
             TestNormalizeToHeavyHistogram();
 
             if (RecordData)

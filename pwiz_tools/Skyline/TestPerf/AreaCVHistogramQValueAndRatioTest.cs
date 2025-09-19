@@ -69,13 +69,13 @@ namespace TestPerf
                 AreaGraphController.GroupByAnnotation = AreaGraphController.GroupByGroup = null;
             });
 
-            OpenDocument(TestFilesDir.GetTestPath(@"BrukerDIA3_0.sky"));
+            SafeOpenDocument(TestFilesDir.GetTestPath(@"BrukerDIA3_0.sky"));
 
             TestHistogramQValues<AreaCVHistogramGraphPane>(SkylineWindow.ShowPeakAreaCVHistogram, 0);
             TestHistogramQValues<AreaCVHistogram2DGraphPane>(SkylineWindow.ShowPeakAreaCVHistogram2D, 4);
             TestRefinementQvalue();
 
-            OpenDocument(TestFilesDir.GetTestPath(@"Site54_Study9-1_standardcurves_083011_v1.sky"));
+            SafeOpenDocument(TestFilesDir.GetTestPath(@"Site54_Study9-1_standardcurves_083011_v1.sky"));
 
             TestHistogramRatios<AreaCVHistogramGraphPane>(SkylineWindow.ShowPeakAreaCVHistogram, 8);
             TestHistogramRatios<AreaCVHistogram2DGraphPane>(SkylineWindow.ShowPeakAreaCVHistogram2D, 11);

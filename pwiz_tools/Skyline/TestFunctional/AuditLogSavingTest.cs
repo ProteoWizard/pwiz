@@ -36,7 +36,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            OpenDocument("Rat_plasma.sky");
+            SafeOpenDocument("Rat_plasma.sky");
 
             var blockHash = new BlockHash(new SHA1CryptoServiceProvider());
             var fileHashBytes = blockHash.HashFile(TestFilesDir.GetTestPath("Rat_plasma.sky"));
@@ -182,7 +182,7 @@ namespace pwiz.SkylineTestFunctional
             // Re-open document without saving
             RunUI(() => SkylineWindow.NewDocument(true));
 
-            OpenDocument("Rat_plasma.sky");
+            SafeOpenDocument("Rat_plasma.sky");
             RunUI(SkylineWindow.ShowAuditLog);
             var auditLogForm2 = WaitForOpenForm<AuditLogForm>();
             RunUI(() => auditLogForm2.ChooseView(AuditLogStrings.AuditLogForm_MakeAuditLogForm_Undo_Redo));

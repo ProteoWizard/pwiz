@@ -103,13 +103,19 @@ namespace pwiz.Skyline.Controls.Graphs
                 // Allocate or resize image.
                 if (pictureBox.Image == null || pictureBox.Width != Width || pictureBox.Height != Height)
                 {
+                    var oldImage = pictureBox.Image;
                     pictureBox.Image = new Bitmap(Width, Height);
+                    oldImage?.Dispose(); // Dispose the old image
                     _renderRect = new Rectangle(0, 0, Width, Height);
                 }
 
                 // Allocate or resize offscreen buffer.
                 if (_bitmap == null || _bitmap.Width != Width || _bitmap.Height != Height)
+                {
+                    var oldBitmap = _bitmap;
                     _bitmap = new Bitmap(Width, Height);
+                    oldBitmap?.Dispose(); // Dispose the old bitmap
+                }
                 _bitmapFinished = false;
 
                 // Copy data to render, and start background rendering.

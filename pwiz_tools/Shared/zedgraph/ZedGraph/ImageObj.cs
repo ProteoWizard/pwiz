@@ -274,7 +274,7 @@ namespace ZedGraph
 					g.DrawImage( _image, tmpRect );
 				else
 				{
-					Region clip = g.Clip.Clone();
+					using Region clip = g.Clip.Clone();
 					g.IntersectClip( tmpRect );
 					g.DrawImageUnscaled( _image, Rectangle.Round( tmpRect ) );
 					g.Clip = clip;

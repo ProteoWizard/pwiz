@@ -40,7 +40,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            OpenDocument("Bovine_std_curated_seq_small2.sky");
+            SafeOpenDocument("Bovine_std_curated_seq_small2.sky");
             string succeedsFile = TestFilesDir.GetTestPath(SUCCEEDS_FILE_NAME);
             string succeeds2File = TestFilesDir.GetTestPath(SUCCEEDS2_FILE_NAME);
             string failsFile = TestFilesDir.GetTestPath(FAILS_FILE_NAME);

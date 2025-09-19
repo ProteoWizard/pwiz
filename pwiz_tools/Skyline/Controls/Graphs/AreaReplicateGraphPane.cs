@@ -679,7 +679,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var dotpLine = new LineItem(DotpLabelText, graphData.DotpData, Color.DimGray, SymbolType.Circle )
                 {
                     IsY2Axis = true, Line = new Line() { Style = DashStyle.Dash, Color = Color.DimGray, Width = 2.0f},
-                    Symbol = new Symbol() { Type = SymbolType.Diamond, Size = 5f, Fill = new Fill(Color.DimGray)}
+                    Symbol = new Symbol() { Type = SymbolType.Diamond, Size = 5f, Fill = Fill.GetCachedFill(Color.DimGray)}
                 };
                 dotpLine.Tag = selectedTreeNode.Path;
                 CurveList.Insert(0, dotpLine);                  // Add dotp graph line
@@ -714,7 +714,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 IsY2Axis = true,
                 Line = new Line() { Color = Color.Transparent },
                 Symbol = new Symbol()
-                    { Type = SymbolType.Diamond, Size = 9f, Fill = new Fill(Color.Red), Border = new Border(Color.Red, 1) }
+                    { Type = SymbolType.Diamond, Size = 9f, Fill = Fill.GetCachedFill(Color.Red), Border = new Border(Color.Red, 1) }
             };
             cutoffHighlightLine.Label.IsVisible = false;
             CurveList.Insert(Math.Min(CurveList.Count, 1), cutoffHighlightLine); // Add below cutoff highlight markers
@@ -729,7 +729,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 ZOrder = ZOrder.E_BehindCurves,
                 FontSpec = GraphSummary.CreateFontSpec(Color.Black),
             };
-            labelObject.FontSpec.Fill = new Fill(Color.Transparent);
+            labelObject.FontSpec.Fill = Fill.GetCachedFill(Color.Transparent);
             GraphObjList.Add(labelObject);
             _labelHeight = (int)labelObject.FontSpec.GetHeight(CalcScaleFactor());
             var cutoffLine = new LineObj()
@@ -1063,7 +1063,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     textObj.FontSpec.Border.IsVisible = false;
                     textObj.FontSpec.Size = pointSize.Value;
-                    textObj.FontSpec.Fill = new Fill(Color.Transparent);
+                    textObj.FontSpec.Fill = Fill.GetCachedFill(Color.Transparent);
                     var labelHeight = (int) textObj.FontSpec.GetHeight(CalcScaleFactor());
                     if (labelHeight > _labelHeight)
                         _labelHeight = labelHeight;

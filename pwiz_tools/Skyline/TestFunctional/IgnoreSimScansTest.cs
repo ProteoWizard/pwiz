@@ -57,7 +57,7 @@ namespace pwiz.SkylineTestFunctional
 
             using (new WaitDocumentChange(null, true))
             {
-                OpenDocument(TestFilesDir.GetTestPath("IgnoreSim.sky"));
+                SafeOpenDocument(TestFilesDir.GetTestPath("IgnoreSim.sky"));
                 // Originally a Thermo RAW file containing SIM scans for all of the PRTC peptides filtered
                 // to just the first PRTC peptide in time and m/z ranges
                 ImportResults(TestFilesDir.GetTestPath(replicateName + ".mzML"));

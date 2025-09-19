@@ -45,7 +45,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            OpenDocument("BSA_Agilent.sky");
+            SafeOpenDocument("BSA_Agilent.sky");
             foreach (TransformChrom transformChrom in new[] {TransformChrom.raw, TransformChrom.interpolated})
             {
                 Settings.Default.TransformTypeChromatogram = transformChrom.ToString();

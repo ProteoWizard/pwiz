@@ -33,7 +33,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            OpenDocument(@"Rat_plasma.sky");
+            SafeOpenDocument(@"Rat_plasma.sky");
 
             CreateGroupComparison("Test Group Comparison", "Condition", "Healthy", "Diseased");
 

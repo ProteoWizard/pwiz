@@ -197,7 +197,7 @@ namespace ZedGraph
 			set
 			{
 				_color = value;
-				Fill = new Fill( _color );
+				Fill = Fill.GetCachedFill( _color );
 			}
 		}
 
@@ -430,7 +430,7 @@ namespace ZedGraph
 					g.DrawLine( p, pts[0].X, pts[0].Y, pts[1].X, pts[1].Y );
 
 					//Fill center 10% with Black dot;
-					Fill f = new Fill( Color.Black );
+					Fill f = Fill.GetCachedFill( Color.Black );
 					RectangleF r = new RectangleF( ( tRect.X + ( tRect.Width / 2 ) ) - 1.0f, ( tRect.Y + ( tRect.Height / 2 ) ) - 1.0f, 1.0f, 1.0f );
 					r.Inflate( ( tRect.Height * .10f ), ( tRect.Height * .10f ) );
 					Brush b = f.MakeBrush( r );

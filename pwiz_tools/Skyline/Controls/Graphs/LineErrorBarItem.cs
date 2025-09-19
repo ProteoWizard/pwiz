@@ -60,7 +60,7 @@ namespace pwiz.Skyline.Controls.Graphs
             Type = SymbolType.Circle;
             Size = 4;
             Border = new Border(color, 0);
-            Fill = new Fill(color);
+            Fill = Fill.GetCachedFill(color);
         }
 
         public Pen ErrorPen { get; private set; }

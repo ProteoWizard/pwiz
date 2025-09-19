@@ -41,7 +41,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            OpenDocument(@"Rat_plasma.sky");
+            SafeOpenDocument(@"Rat_plasma.sky");
             Settings.Default.PeakAreaDotpDisplay = DotProductDisplayOption.none.ToString();
 
             RunUI(SkylineWindow.ShowRTReplicateGraph);

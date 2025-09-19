@@ -18,6 +18,7 @@
 //=============================================================================
 
 using System;
+using System.Collections.Concurrent;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
@@ -35,7 +36,7 @@ namespace ZedGraph
 	/// <author> John Champion </author>
 	/// <version> $Revision: 3.22 $ $Date: 2007-01-26 09:01:49 $ </version>
 	[Serializable]
-	public class Fill : ISerializable, ICloneable
+	public class Fill : ISerializable, ICloneable, IDisposable
 	{
 	#region Fields
 
@@ -840,23 +841,36 @@ namespace ZedGraph
 			set { _rangeDefault = value; }
 		}
 
-	#endregion
+        #endregion
 
-	#region Methods
+        #region Caching
+		static ConcurrentDictionary<Color, Fill> _fillCache = new ConcurrentDictionary<Color, Fill>();
+		static public Fill GetCachedFill(Color color)
+		{
+			if (!_fillCache.TryGetValue(color, out Fill fill))
+			{
+				fill = new Fill(color);
+				_fillCache[color] = fill;
+            }
+			return fill;
+        }
+        #endregion
 
-		/// <summary>
-		/// Create a fill brush using current properties.  This method will construct a brush based on the
-		/// settings of <see cref="ZedGraph.Fill.Type"/>, <see cref="ZedGraph.Fill.Color"/>
-		/// and <see cref="ZedGraph.Fill.Brush"/>.  If
-		/// <see cref="ZedGraph.Fill.Type"/> is set to <see cref="ZedGraph.FillType.Brush"/> and
-		/// <see cref="ZedGraph.Fill.Brush"/>
-		/// is null, then a <see cref="LinearGradientBrush"/> will be created between the colors of
-		/// <see cref="System.Drawing.Color.White"/> and <see cref="ZedGraph.Fill.Color"/>.
-		/// </summary>
-		/// <param name="rect">A rectangle that bounds the object to be filled.  This determines
-		/// the start and end of the gradient fill.</param>
-		/// <returns>A <see cref="System.Drawing.Brush"/> class representing the fill brush</returns>
-		public Brush MakeBrush( RectangleF rect )
+        #region Methods
+
+        /// <summary>
+        /// Create a fill brush using current properties.  This method will construct a brush based on the
+        /// settings of <see cref="ZedGraph.Fill.Type"/>, <see cref="ZedGraph.Fill.Color"/>
+        /// and <see cref="ZedGraph.Fill.Brush"/>.  If
+        /// <see cref="ZedGraph.Fill.Type"/> is set to <see cref="ZedGraph.FillType.Brush"/> and
+        /// <see cref="ZedGraph.Fill.Brush"/>
+        /// is null, then a <see cref="LinearGradientBrush"/> will be created between the colors of
+        /// <see cref="System.Drawing.Color.White"/> and <see cref="ZedGraph.Fill.Color"/>.
+        /// </summary>
+        /// <param name="rect">A rectangle that bounds the object to be filled.  This determines
+        /// the start and end of the gradient fill.</param>
+        /// <returns>A <see cref="System.Drawing.Brush"/> class representing the fill brush</returns>
+        public Brush MakeBrush( RectangleF rect )
 		{
 			// just provide a default value for the valueFraction
 			// return MakeBrush( rect, new PointPair( 0.5, 0.5, 0.5 ) );
@@ -971,9 +985,9 @@ namespace ZedGraph
 			{
 				RectangleF rect = new RectangleF( 0, 0, 100, 1 );
 				_gradientBM = new Bitmap( 100, 1 );
-				Graphics gBM = Graphics.FromImage( _gradientBM );
+				using Graphics gBM = Graphics.FromImage( _gradientBM );
 
-				Brush tmpBrush = ScaleBrush( rect, _brush, true );
+				using Brush tmpBrush = ScaleBrush( rect, _brush, true );
 				gBM.FillRectangle( tmpBrush, rect );
 			}
 
@@ -1139,7 +1153,13 @@ namespace ZedGraph
 			}
 		}
 
+        public void Dispose()
+        {
+            _brush?.Dispose();
+            _gradientBM?.Dispose();
+            _image?.Dispose();
+        }
 
-	#endregion
-	}
+        #endregion
+    }
 }

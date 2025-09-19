@@ -437,7 +437,7 @@ namespace pwiz.SkylineTestFunctional
         private void TestOlderSmallMoleculeFormats()
         {
             // This pre-adduct-era file has isotope labels in the molecule declaration
-            OpenDocument(TestFilesDir.GetTestPath("HILIC_QE_NEGATIVE.sky"));
+            SafeOpenDocument(TestFilesDir.GetTestPath("HILIC_QE_NEGATIVE.sky"));
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 11, 11, 11);
 
             RunUI(() => SkylineWindow.NewDocument(true) ); // Clean up for next test step

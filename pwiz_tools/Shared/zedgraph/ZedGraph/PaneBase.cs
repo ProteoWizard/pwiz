@@ -430,7 +430,7 @@ namespace ZedGraph
 
 			_isFontsScaled = Default.IsFontsScaled;
 			_isPenWidthScaled = Default.IsPenWidthScaled;
-			_fill = new Fill( Default.FillColor );
+			_fill = Fill.GetCachedFill( Default.FillColor );
 			_border = new Border( Default.IsBorderVisible, Default.BorderColor,
 				Default.BorderPenWidth );
 
@@ -628,8 +628,11 @@ namespace ZedGraph
 
 	    protected void PopClip(Graphics g, Region clipRegion)
 	    {
-	        g.Clip = clipRegion;
-	    }
+            // Graphics clones the region when setting the Clip property,
+            // so it is safe to dispose our clone after assignment.
+            g.Clip = clipRegion;
+            clipRegion.Dispose();
+        }
 
 		/// <summary>
 		/// Calculate the client area rectangle based on the <see cref="PaneBase.Rect"/>.
@@ -943,7 +946,7 @@ namespace ZedGraph
 			// since we're only mimicing the draw.  If you use the 'bitmapGraphics' already created,
 			// then you will be drawing back into the bitmap that will be returned.
 
-			Bitmap bm = new Bitmap( 1, 1 );
+			using Bitmap bm = new Bitmap( 1, 1 );
 			using ( Graphics bmg = Graphics.FromImage( bm ) )
 			{
 				this.ReSize( bmg, this.Rect );
@@ -968,11 +971,11 @@ namespace ZedGraph
 		/// <seealso cref="GetMetafile()"/>
 		public Metafile GetMetafile( int width, int height, bool isAntiAlias )
 		{
-			Bitmap bm = new Bitmap( 1, 1 );
+			using Bitmap bm = new Bitmap( 1, 1 );
 			using ( Graphics g = Graphics.FromImage( bm ) )
 			{
 				IntPtr hdc = g.GetHdc();
-				Stream stream = new MemoryStream();
+				Stream stream = new MemoryStream(); // Must remain alive as long as the Metafile
 				Metafile metafile = new Metafile( stream, hdc, _rect,
 							MetafileFrameUnit.Pixel, EmfType.EmfPlusDual );
 				g.ReleaseHdc( hdc );
@@ -990,7 +993,7 @@ namespace ZedGraph
 					MakeImage( metafileGraphics, width, height, isAntiAlias );
 					//this.Draw( metafileGraphics );
 
-					return metafile;
+					return metafile;  // caller is responsible for disposing; stream will be GC'd later
 				}
 			}
 		}
@@ -1021,11 +1024,11 @@ namespace ZedGraph
 		/// <seealso cref="GetMetafile(int,int)"/>
 		public Metafile GetMetafile()
 		{
-			Bitmap bm = new Bitmap( 1, 1 );
+			using Bitmap bm = new Bitmap( 1, 1 );
 			using ( Graphics g = Graphics.FromImage( bm ) )
 			{
 				IntPtr hdc = g.GetHdc();
-				Stream stream = new MemoryStream();
+				Stream stream = new MemoryStream(); // must remain alive as long as the Metafile
 				Metafile metafile = new Metafile( stream, hdc, _rect,
 							MetafileFrameUnit.Pixel, EmfType.EmfPlusDual );
 
@@ -1042,7 +1045,7 @@ namespace ZedGraph
 					this.Draw( metafileGraphics );
 
 					g.ReleaseHdc( hdc );
-					return metafile;
+					return metafile; // caller is responsible for disposing; stream will be GC'd later
 				}
 			}
 		}
@@ -1053,11 +1056,11 @@ namespace ZedGraph
         /// <param name="filepath"></param>
         public void SaveAsEmf(string filepath)
         {
-            Bitmap bm = new Bitmap(1, 1);
+            using Bitmap bm = new Bitmap(1, 1);
             using (Graphics g = Graphics.FromImage(bm))
             {
                 IntPtr hdc = g.GetHdc();
-                Metafile metaFile = this.GetMetafile();
+                using Metafile metaFile = this.GetMetafile();
                 ZedGraphControl.ClipboardMetafileHelper.SaveEnhMetafileToFile(metaFile, filepath);
 
                 g.ReleaseHdc(hdc);

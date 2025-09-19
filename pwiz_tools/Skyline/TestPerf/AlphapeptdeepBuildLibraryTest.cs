@@ -91,7 +91,7 @@ namespace TestPerf
         {
             TestEmptyDocumentMessage();
             
-            RunUI(() => OpenDocument(TestFilesDir.GetTestPath(@"Rat_plasma.sky")));
+            RunUI(() => SafeOpenDocument(TestFilesDir.GetTestPath(@"Rat_plasma.sky")));
 
             const string answerWithoutIrt = "without_iRT/predict_transformed.speclib.tsv";
             const string libraryWithoutIrt = "AlphaPeptDeepLibraryWithoutIrt";

@@ -276,10 +276,11 @@ namespace pwiz.MSGraph
                 return;
 
             _overlapDetector = AllowLabelOverlap ? null : new OverlapDetector();
-            Region chartRegion = new Region( Chart.Rect );
-            Region clipRegion = new Region();
+            using Region chartRegion = new Region( Chart.Rect );
+            using Region clipRegion = new Region();
             clipRegion.MakeEmpty();
-            var previousClip = g.Clip.Clone();
+            using var currentClip = g.Clip;
+            using var previousClip = currentClip.Clone();
             g.SetClip( Rect, CombineMode.Replace );
             g.SetClip( chartRegion, CombineMode.Exclude );
 

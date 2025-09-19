@@ -82,7 +82,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected void TryToDoTest()
         {
-            OpenDocument(FILE_NAME);
+            SafeOpenDocument(FILE_NAME);
 
             // Make extra sure that the test tool isn't around before or after the
             // test starts. Either will cause problems

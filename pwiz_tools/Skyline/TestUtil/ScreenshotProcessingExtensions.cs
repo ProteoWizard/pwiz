@@ -324,7 +324,7 @@ namespace pwiz.SkylineTestUtil
             var backgroundColor = color ?? Color.White;
 
             using var g = Graphics.FromImage(bmp);
-            var font = new Font(@"Tahoma", 16);
+            using var font = new Font(@"Tahoma", 16);
             var size = TextRenderer.MeasureText(g, text, font);
 
             TextRenderer.DrawText(g,
@@ -460,7 +460,7 @@ namespace pwiz.SkylineTestUtil
         {
             // CONSIDER(ekoneil): support wrapping text on narrow images
             using var g = Graphics.FromImage(bmp);
-            var font = new Font(@"Tahoma", 12);
+            using var font = new Font(@"Tahoma", 12);
             var text = "Placeholder screenshot, see test for more info";
             var size = TextRenderer.MeasureText(g, text, font);
 
@@ -478,9 +478,10 @@ namespace pwiz.SkylineTestUtil
 
         public static void DrawBoxOnColumn(this Graphics g, DocumentGridForm documentGridForm, int column, double rows, Color? color = null, int lineWidth = 3)
         {
-            var rect = GetBitmapCellRectangle(documentGridForm, 0, column); // column's top data cell
-            rect.Height = (int)(rect.Height * rows); // draw rectangle around all rows
-            g.DrawRectangle(new Pen(color ?? ANNOTATION_COLOR, lineWidth), rect);
+            var rect = GetBitmapCellRectangle(documentGridForm, 0, column);
+            rect.Height = (int)(rect.Height * rows);
+            using var pen = new Pen(color ?? ANNOTATION_COLOR, lineWidth);
+            g.DrawRectangle(pen, rect);
         }
 
         public static void DrawEllipseOnCell(this Graphics g, DocumentGridForm documentGridForm, int row, int column, Color? color = null, int lineWidth = 3)
@@ -492,8 +493,8 @@ namespace pwiz.SkylineTestUtil
             var rect = GetBitmapCellRectangle(documentGridForm, row, column); // column's top data cell
 
             rect.Width = Convert.ToInt16(stringSize.Width * 1.1); // scale-up ellipse size so shape isn't too tight around text
-
-            g.DrawEllipse(new Pen(color ?? ANNOTATION_COLOR, lineWidth), rect);
+            using var pen = new Pen(color ?? ANNOTATION_COLOR, lineWidth);
+            g.DrawEllipse(pen, rect);
         }
 
         private static Rectangle GetBitmapCellRectangle(DocumentGridForm documentGridForm, int row, int column)
@@ -570,7 +571,7 @@ namespace pwiz.SkylineTestUtil
                     
                     Gdi32.DeleteObject(hBmp);
 
-                    return result;
+                    return result; // Caller must dispose
                 }
                 finally
                 {

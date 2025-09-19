@@ -67,7 +67,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             Stopwatch loadStopwatch = new Stopwatch();
             loadStopwatch.Start();
             var doc = SkylineWindow.Document;
-            OpenDocument("PRM_LIH_01102019.sky");
+            SafeOpenDocument("PRM_LIH_01102019.sky");
             var doc1 = WaitForDocumentChange(doc);
 
             ImportResults("PRM_LIH1250_Slot1-20_1_6588.d");

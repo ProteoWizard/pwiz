@@ -71,7 +71,7 @@ namespace pwiz.MSGraph
                     {
                         Border = new Border { IsVisible = false },
                         Size = (int)(minDotRadius + i / (double)(curves.Length - 1) * (maxDotRadius - minDotRadius)),
-                        Fill = new Fill(color),
+                        Fill = Fill.GetCachedFill(color),
                         Type = SymbolType.Circle,
                         IsAntiAlias = true
                     },

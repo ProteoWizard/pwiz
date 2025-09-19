@@ -131,7 +131,7 @@ namespace pwiz.SkylineTestFunctional
             double? expectedRT = null)
         {
             var oldDoc = SkylineWindow.Document;
-            OpenDocument(docName);
+            SafeOpenDocument(docName);
             WaitForDocumentChangeLoaded(oldDoc);
             Assume.AreEqual(expectedDocumentType, SkylineWindow.Document.DocumentType);
             WaitForClosedForm<DocumentGridForm>();

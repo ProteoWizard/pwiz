@@ -42,7 +42,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            OpenDocument(@"Rat_plasma.sky");
+            SafeOpenDocument(@"Rat_plasma.sky");
 
             // Create new group comparison
             CreateGroupComparison("Test Group Comparison", "Condition", "Healthy", "Diseased");
@@ -146,7 +146,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Verify that the grid and the volcano plot are open after re-opening the document
             RunUI(() => SkylineWindow.SaveDocument());
-            OpenDocument(@"Rat_plasma.sky");
+            SafeOpenDocument(@"Rat_plasma.sky");
 
             var openForms = FormUtil.OpenForms.OfType<FoldChangeForm>().ToArray();
             Assert.AreEqual(2, openForms.Length);

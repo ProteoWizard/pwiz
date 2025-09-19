@@ -305,7 +305,7 @@ namespace pwiz.MSGraph
                 line.IsAntiAlias = true;
                 if (item.GraphItemDrawMethod == MSGraphItemDrawMethod.fill)
                 {
-                    line.Fill = new Fill(item.Color);
+                    line.Fill = Fill.GetCachedFill(item.Color);
                     line.Color = Color.FromArgb(200, 140, 140, 200);
                 }
             }

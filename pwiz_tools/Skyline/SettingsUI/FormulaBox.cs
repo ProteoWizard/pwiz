@@ -93,9 +93,11 @@ namespace pwiz.Skyline.SettingsUI
             helpToolStripMenuItem.Text = SettingsUIResources.FormulaBox_FormulaBox_Help;
 
 
-            Bitmap bm = Resources.PopupBtn;
-            bm.MakeTransparent(Color.Fuchsia);
-            btnFormula.Image = bm;
+            using (var bm = new Bitmap(Resources.PopupBtn))
+            {
+                bm.MakeTransparent(Color.Fuchsia);
+                btnFormula.Image = new Bitmap(bm); // Image will dispose of bitmap
+            }
         }
 
         public FormulaBox(string labelFormulaText, string labelAverageText, string labelMonoText) :

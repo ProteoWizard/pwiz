@@ -58,7 +58,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            OpenDocument(TestFilesDir.GetTestPath(@"Rat_plasma.sky"));
+            SafeOpenDocument(TestFilesDir.GetTestPath(@"Rat_plasma.sky"));
 
             /*var doc = SkylineWindow.Document;
             RunUI(() =>

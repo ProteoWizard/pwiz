@@ -607,7 +607,7 @@ namespace pwiz.Skyline.SettingsUI
                         Line =
                             {
                                 Width = 2, 
-                                Fill = new Fill(color),
+                                Fill = Fill.GetCachedFill(color),
                                 IsAntiAlias = true, 
                                 SmoothTension = 1
                             }

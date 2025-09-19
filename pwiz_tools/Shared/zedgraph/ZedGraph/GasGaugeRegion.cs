@@ -245,7 +245,7 @@ namespace ZedGraph
 			set
 			{
 				_color = value;
-				Fill = new Fill( _color );
+				Fill = Fill.GetCachedFill( _color );
 			}
 		}
 

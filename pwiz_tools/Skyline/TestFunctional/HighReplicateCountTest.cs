@@ -151,7 +151,7 @@ namespace pwiz.SkylineTestFunctional
             var documentFile = TestFilesDir.GetTestPath(docPath);
             WaitForCondition(() => File.Exists(documentFile));
             
-            OpenDocument(docPath);
+            SafeOpenDocument(docPath);
             return SkylineWindow.Document;
         }
 

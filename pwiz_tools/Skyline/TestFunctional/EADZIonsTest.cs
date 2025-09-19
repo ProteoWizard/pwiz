@@ -48,7 +48,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(Enumerable.Range(0, (int) IonType.zhh + 1).SelectMany(i => ((IonType) i).GetInputAliases(), (i, s) => s)
                 .GroupBy(s => s, (s, enumerable) => enumerable.Count()).All(i => i == 1));
 
-            OpenDocument("EADZIonsTest.sky");
+            SafeOpenDocument("EADZIonsTest.sky");
             var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
             RunUI(() =>
             {

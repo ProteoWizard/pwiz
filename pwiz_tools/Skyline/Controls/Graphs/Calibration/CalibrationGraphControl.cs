@@ -285,7 +285,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                     var lineItem = zedGraphControl.GraphPane.AddCurve(curveLabel, pointPairList,
                         sampleType.Color, sampleType.SymbolType);
                     lineItem.Line.IsVisible = false;
-                    lineItem.Symbol.Fill = new Fill(sampleType.Color);
+                    lineItem.Symbol.Fill = Fill.GetCachedFill(sampleType.Color);
                     _scatterPlots.Add(lineItem);
                 }
 

@@ -59,7 +59,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             // IsPauseForScreenShots = true; // For a quick demo when you need it
             var errors = new List<string>();
             var measuredMobilities = new List<List<ValidatingIonMobilityPrecursor>>();
-            var document = OpenDocument("IMSFiltering\\BSA-Training.sky");
+            var document = SafeOpenDocument("IMSFiltering\\BSA-Training.sky");
             AssertEx.IsDocumentState(document, null, 1, 34, 38, 404);
             for (var pass = 0; pass < 2; pass++)
             {

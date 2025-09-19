@@ -39,7 +39,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             // Test no summary graphs open by default
-            OpenDocument(@"small.sky");
+            SafeOpenDocument(@"small.sky");
             WaitForGraphs();
             RunUI(() =>
             {
@@ -77,7 +77,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // Re-open the document (still without .sky.view) and verify the same graphs become visible
-            OpenDocument(@"small.sky");
+            SafeOpenDocument(@"small.sky");
             WaitForGraphs();
             RunUI(() =>
             {
@@ -172,7 +172,7 @@ namespace pwiz.SkylineTestFunctional
             });
             RunUI(SkylineWindow.NewDocument);
             WaitForGraphs();
-            OpenDocument("small.sky");
+            SafeOpenDocument("small.sky");
             WaitForGraphs();
             RunUI(() =>
             {

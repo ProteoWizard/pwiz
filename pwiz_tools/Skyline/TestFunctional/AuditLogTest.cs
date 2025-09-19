@@ -364,7 +364,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            OpenDocument(@"Rat_plasma.sky");
+            SafeOpenDocument(@"Rat_plasma.sky");
             // Test audit log messages
             LogEntry.ResetLogEntryCount();
             CollectionUtil.ForEach(LOG_ENTRIES, e => { e.Verify(); });

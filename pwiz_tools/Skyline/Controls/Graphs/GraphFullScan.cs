@@ -434,7 +434,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     label.FontSpec.Border.IsVisible = false;
                     label.FontSpec.FontColor = GraphHelper.Blend(GetTransitionColor(transition), Color.Black, 0.30);
                     label.FontSpec.IsBold = true;
-                    label.FontSpec.Fill = new Fill(Color.FromArgb(180, Color.White));
+                    label.FontSpec.Fill = Fill.GetCachedFill(Color.FromArgb(180, Color.White));
                     GraphPane.GraphObjList.Add(label);
                 }
             }

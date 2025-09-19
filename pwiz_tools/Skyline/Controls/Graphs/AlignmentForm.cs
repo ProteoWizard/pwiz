@@ -157,7 +157,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     Line = {IsVisible = false}
                 };
             goodPointsLineItem.Symbol.Border.IsVisible = false;
-            goodPointsLineItem.Symbol.Fill = new Fill(RTLinearRegressionGraphPane.COLOR_REFINED);
+            goodPointsLineItem.Symbol.Fill = Fill.GetCachedFill(RTLinearRegressionGraphPane.COLOR_REFINED);
             
             if (outliers.Count > 0)
             {
@@ -166,7 +166,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 outlierLineItem.Symbol.Size = 8f;
                 outlierLineItem.Line.IsVisible = false;
                 outlierLineItem.Symbol.Border.IsVisible = false;
-                outlierLineItem.Symbol.Fill = new Fill(RTLinearRegressionGraphPane.COLOR_OUTLIERS);
+                outlierLineItem.Symbol.Fill = Fill.GetCachedFill(RTLinearRegressionGraphPane.COLOR_OUTLIERS);
                 goodPointsLineItem.Label.Text = ModeUIAwareStringFormat(GraphsResources.GraphData_Graph_Peptides_Refined);
             }
             zedGraphControl.GraphPane.CurveList.Add(goodPointsLineItem);

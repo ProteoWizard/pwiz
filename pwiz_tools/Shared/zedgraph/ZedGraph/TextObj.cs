@@ -516,7 +516,7 @@ namespace ZedGraph
             FontSpec.Size = 14;
             FontSpec.StringAlignment = StringAlignment.Near;
             FontSpec.Border = new Border(Color.Black, 1);
-            FontSpec.Fill = new Fill(Color.LightYellow);
+            FontSpec.Fill = Fill.GetCachedFill(Color.LightYellow);
 
             GraphPane pane = control.MasterPane.FindPane(mousePt);
             var textSize = GetSize(pane);

@@ -128,7 +128,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 FontSpec = new FontSpec(@"Arial", 24, Color.Gray, true, false, false)
                 {
                     Border = new Border { IsVisible = false },
-                    Fill = new Fill()
+                    Fill = Fill.GetCachedFill(Color.White)
                 },
                 Location = { AlignH = AlignH.Center, AlignV = AlignV.Center, CoordinateFrame = CoordType.ChartFraction },
                 ZOrder = ZOrder.A_InFront
@@ -527,7 +527,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     175 + 80 * peptideColor.B / 255);
                 Curve = new LineItem(string.Empty, new PointPairList(), peptideColor, SymbolType.None)
                 {
-                    Line = { Fill = new Fill(fillColor), Width = 1, IsAntiAlias = true },
+                    Line = { Fill = Fill.GetCachedFill(fillColor), Width = 1, IsAntiAlias = true },
                     Label = { IsVisible = false }
                 };
                 Curve.AddPoint(retentionTime - ChromatogramLoadingStatus.TIME_RESOLUTION, 0);

@@ -123,7 +123,7 @@ namespace ZedGraph
 			: base( x, y, width, height )
 		{
 			this.Border = new Border( borderColor, Default.PenWidth );
-			this.Fill = new Fill( fillColor );
+			this.Fill = Fill.GetCachedFill( fillColor );
 		}
 
 		/// <summary>
@@ -143,7 +143,7 @@ namespace ZedGraph
 			base( x, y, width, height )
 		{
 			this.Border = new Border( Default.BorderColor, Default.PenWidth );
-			this.Fill = new Fill( Default.FillColor );
+			this.Fill = Fill.GetCachedFill( Default.FillColor );
 		}
 
 		/// <summary>

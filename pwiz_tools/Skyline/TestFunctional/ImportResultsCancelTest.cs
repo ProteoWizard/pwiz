@@ -61,7 +61,7 @@ namespace pwiz.SkylineTestFunctional
             int initialStatusHeight = 0;
             RunUI(() => initialStatusHeight = SkylineWindow.StatusBarHeight);
             var files = new[] {"8fmol" + mz5, "20fmol" + mz5, "40fmol" + mz5, "200fmol" + mz5};
-            OpenDocument("RetentionTimeFilterTest.sky");
+            SafeOpenDocument("RetentionTimeFilterTest.sky");
             var skyfile = initiallyVisible ? "TestImportResultsCancelA.sky" : "TestImportResultsCancelB.sky";
             RunUI(() => { SkylineWindow.SaveDocument(TestFilesDir.GetTestPath(skyfile)); });  // Make a clean copy
 
@@ -70,7 +70,7 @@ namespace pwiz.SkylineTestFunctional
             for (; retry < maxTries; retry++)
             {
                 RemovePartialCacheFiles(files);
-                OpenDocument(skyfile);
+                SafeOpenDocument(skyfile);
                 Assert.IsFalse(SkylineWindow.Document.Settings.HasResults);
                 Settings.Default.AutoShowAllChromatogramsGraph = initiallyVisible; // Start with progress window hidden?
                 Settings.Default.ImportResultsSimultaneousFiles =
@@ -170,7 +170,7 @@ namespace pwiz.SkylineTestFunctional
                 // Now try a proper import
                 Settings.Default.AutoShowAllChromatogramsGraph = initiallyVisible;
                 RemovePartialCacheFiles(files);
-                OpenDocument("RetentionTimeFilterTest.sky");
+                SafeOpenDocument("RetentionTimeFilterTest.sky");
                 ImportResultsAsync(files);
                 if (!TryWaitForConditionUI(() =>
                     SkylineWindow.ImportingResultsWindow != null &&
@@ -212,7 +212,7 @@ namespace pwiz.SkylineTestFunctional
             for (int retry = 0; retry < maxTries; retry++)
             {
                 RemovePartialCacheFiles(files);
-                OpenDocument("RetentionTimeFilterTest.sky");
+                SafeOpenDocument("RetentionTimeFilterTest.sky");
                 Assert.IsFalse(SkylineWindow.Document.Settings.HasResults);
                 var docUnloaded = SkylineWindow.Document;
                 ImportResultsAsync(files);

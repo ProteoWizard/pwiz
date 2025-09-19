@@ -52,7 +52,7 @@ namespace TestPerf // Tests in this namespace are skipped unless the RunPerfTest
         protected override void DoTest()
         {
             // Open the prepoulated .sky file (has no chromatograms)
-            OpenDocument(GetTestPath(@"ThermoSureQuantFAIMSTest.sky"));
+            SafeOpenDocument(GetTestPath(@"ThermoSureQuantFAIMSTest.sky"));
 
             // While developing this test I discovered that Share Minimized was leaving an empty .imsdb file
             // when it should have had 2 entries
@@ -61,7 +61,7 @@ namespace TestPerf // Tests in this namespace are skipped unless the RunPerfTest
             RunUI(() => SkylineWindow.ShareDocument(zipPath, ShareType.MINIMAL));
             File.Delete(GetTestPath(@"FAIMS_SureQuant.imsdb")); // Make sure we don't use original
             LoadNewDocument(true); // Reset
-            OpenDocument(zipPath); // Load minimized doc
+            SafeOpenDocument(zipPath); // Load minimized doc
             // Inspect the minimized ion mobility library
             var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
             RunUI(() => { transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.IonMobility; });

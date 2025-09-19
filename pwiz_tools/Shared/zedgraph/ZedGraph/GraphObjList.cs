@@ -237,16 +237,16 @@ namespace ZedGraph
 				GraphObj item = this[i];
 				if ( item.ZOrder == zOrder && item.IsVisible )
 				{
-					Region region = null;
-					if ( item.IsClippedToChartRect && pane is GraphPane )
+                    bool isClipped = item.IsClippedToChartRect && pane is GraphPane;
+					using Region region = isClipped ? g.Clip.Clone() : null;
+                    if ( isClipped )
 					{
-						region = g.Clip.Clone();
                         g.IntersectClip( ((GraphPane)pane).Chart._rect );
 					}
 
 					item.Draw( g, pane, scaleFactor );
 
-					if ( item.IsClippedToChartRect && pane is GraphPane )
+					if ( isClipped )
 						g.Clip = region;
 				}
 			}

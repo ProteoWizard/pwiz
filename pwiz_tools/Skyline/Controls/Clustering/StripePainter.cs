@@ -63,7 +63,10 @@ namespace pwiz.Skyline.Controls.Clustering
 
             if (yEnd > yStart + 1)
             {
-                Graphics.FillRectangle(new SolidBrush(color), X, yStart + 1, Width, yEnd - yStart - 1);
+                using (var brush = new SolidBrush(color))
+                {
+                    Graphics.FillRectangle(brush, X, yStart + 1, Width, yEnd - yStart - 1);
+                }
             }
             AddColor(color, y2 - yEnd);
             _yLast = yEnd;
@@ -83,7 +86,10 @@ namespace pwiz.Skyline.Controls.Clustering
             {
                 if (_totalWeight > 0)
                 {
-                    Graphics.FillRectangle(new SolidBrush(GetAverageColor()), X, _yLast.Value, Width, 1);
+                    using (var brush = new SolidBrush(GetAverageColor()))
+                    {
+                        Graphics.FillRectangle(brush, X, _yLast.Value, Width, 1);
+                    }
                 }
                 _yLast = null;
                 _totalWeight = 0;

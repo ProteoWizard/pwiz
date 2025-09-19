@@ -728,7 +728,7 @@ namespace SkylineTester
             var bars = pane.AddBar(name, null, data, color);
             for (int i = 0; i < bars.NPts; i++)
                 bars[i].Tag = "{0}  ({1})".With(data[i], labels[i]);
-            bars.Bar.Fill = new Fill(color);
+            bars.Bar.Fill = Fill.GetCachedFill(color);
             pane.Title.FontSpec.Size = 11;
             pane.XAxis.Scale.TextLabels = labels;
             pane.XAxis.Type = AxisType.Text;

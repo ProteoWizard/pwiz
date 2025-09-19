@@ -51,7 +51,7 @@ namespace pwiz.SkylineTestFunctional
             const string reportName = "ChromatogramData";
             string successfulPath = TestFilesDir.GetTestPath("successful.txt");
             string cancellablePath = TestFilesDir.GetTestPath("cancellable.txt");
-            OpenDocument(TestFilesDir.GetTestPath("CancelExportReportTest.sky"));
+            SafeOpenDocument(TestFilesDir.GetTestPath("CancelExportReportTest.sky"));
             var exportLiveReportDlg = ShowDialog<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog);
             RunUI(()=>exportLiveReportDlg.ReportName = reportName);
            

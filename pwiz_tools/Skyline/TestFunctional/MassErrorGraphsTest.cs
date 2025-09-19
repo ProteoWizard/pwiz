@@ -37,7 +37,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            OpenDocument("BrukerDIATest.sky");
+            SafeOpenDocument("BrukerDIATest.sky");
 
             #region Repicate
             //just test the mass error graph with some normal data

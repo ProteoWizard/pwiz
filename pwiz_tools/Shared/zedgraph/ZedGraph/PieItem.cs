@@ -417,7 +417,7 @@ namespace ZedGraph
 			: base( label )
 		{
 			_pieValue = pieValue;
-			_fill = new Fill( color.IsEmpty ? _rotator.NextColor : color );
+			_fill = Fill.GetCachedFill( color.IsEmpty ? _rotator.NextColor : color );
 			_displacement = displacement;
 			_border = new Border( Default.BorderColor, Default.BorderWidth );
 			_labelDetail = new TextObj();

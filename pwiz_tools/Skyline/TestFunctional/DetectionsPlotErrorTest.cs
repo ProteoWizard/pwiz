@@ -40,7 +40,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            OpenDocument(TestFilesDir.GetTestPath(@"DIA-TTOF-tutorial.sky"));
+            SafeOpenDocument(TestFilesDir.GetTestPath(@"DIA-TTOF-tutorial.sky"));
             WaitForDocumentLoaded();
             // Delete all the peptides from the document so that the detections plots will show errors
             RunUI(()=>

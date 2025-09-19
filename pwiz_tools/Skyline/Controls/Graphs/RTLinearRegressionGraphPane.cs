@@ -1174,7 +1174,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var curveOut = AddCurve(null, new[] { Data.GetX(selectedPoint) }, new[] { Data.GetYCorrelation(selectedPoint) },
                     colorSelected, SymbolType.Diamond);
                 curveOut.Line.IsVisible = false;
-                curveOut.Symbol.Fill = new Fill(colorSelected);
+                curveOut.Symbol.Fill = Fill.GetCachedFill(colorSelected);
                 curveOut.Symbol.Size = 8f;
             }
 
@@ -1199,7 +1199,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 Data.RefinedPoints.Select(Data.GetYCorrelation).ToArray(), Color.Black, SymbolType.Diamond);
             curve.Line.IsVisible = false;
             curve.Symbol.Border.IsVisible = false;
-            curve.Symbol.Fill = new Fill(COLOR_REFINED);
+            curve.Symbol.Fill = Fill.GetCachedFill(COLOR_REFINED);
 
             if (Data.Outliers != null)
             {
@@ -1207,7 +1207,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     Data.Outliers.Select(Data.GetYCorrelation).ToArray(), Color.Black, SymbolType.Diamond);
                 curveOut.Line.IsVisible = false;
                 curveOut.Symbol.Border.IsVisible = false;
-                curveOut.Symbol.Fill = new Fill(COLOR_OUTLIERS);
+                curveOut.Symbol.Fill = Fill.GetCachedFill(COLOR_OUTLIERS);
             }
         }
 
@@ -1230,7 +1230,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var curveOut = AddCurve(null, new[] { Data.GetX(ptSelected) }, new[] { Data.GetYResidual(ptSelected) },
                     colorSelected, SymbolType.Diamond);
                 curveOut.Line.IsVisible = false;
-                curveOut.Symbol.Fill = new Fill(colorSelected);
+                curveOut.Symbol.Fill = Fill.GetCachedFill(colorSelected);
                 curveOut.Symbol.Size = 8f;
             }
 
@@ -1240,7 +1240,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 Data.RefinedPoints.Select(Data.GetYResidual).ToArray(), Color.Black, SymbolType.Diamond);
             curve.Line.IsVisible = false;
             curve.Symbol.Border.IsVisible = false;
-            curve.Symbol.Fill = new Fill(COLOR_REFINED);
+            curve.Symbol.Fill = Fill.GetCachedFill(COLOR_REFINED);
 
             if (Data.Outliers != null)
             {
@@ -1248,7 +1248,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     Data.Outliers.Select(Data.GetYResidual).ToArray(), Color.Black, SymbolType.Diamond);
                 curveOut.Line.IsVisible = false;
                 curveOut.Symbol.Border.IsVisible = false;
-                curveOut.Symbol.Fill = new Fill(COLOR_OUTLIERS);
+                curveOut.Symbol.Fill = Fill.GetCachedFill(COLOR_OUTLIERS);
             }
         }
 

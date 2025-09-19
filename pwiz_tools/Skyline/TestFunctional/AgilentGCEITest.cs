@@ -43,7 +43,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             var docPath = TestFilesDir.GetTestPath(@"AgilentGCEITest.sky");
-            OpenDocument(docPath);
+            SafeOpenDocument(docPath);
 
             // Read in a small .MSP file describing GC EI data as MS1
             AddToDocumentFromSpectralLibrary("GC EI test", TestFilesDir.GetTestPath(@"test.MSP"));

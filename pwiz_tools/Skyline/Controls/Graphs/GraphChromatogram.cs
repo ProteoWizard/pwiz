@@ -1726,7 +1726,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (lineItem != null)
             {
                 const int fillAlpha = 50;
-                lineItem.Line.Fill = new Fill(Color.FromArgb(fillAlpha, lineItem.Color));
+                lineItem.Line.Fill = Fill.GetCachedFill(Color.FromArgb(fillAlpha, lineItem.Color));
             }
 
             float? backgroundLevel = null;
@@ -1765,7 +1765,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (lineItem2 != null)
                 {
                     const int fillAlpha = 70;
-                    lineItem2.Line.Fill = new Fill(Color.FromArgb(fillAlpha, Color.Black));
+                    lineItem2.Line.Fill = Fill.GetCachedFill(Color.FromArgb(fillAlpha, Color.Black));
                 }
             }
         }
@@ -1777,7 +1777,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 Symbol =
                 {
                     Size = FullScanPointSize,
-                    Fill = new Fill(Color.Black),
+                    Fill = Fill.GetCachedFill(Color.Black),
                     IsAntiAlias = true,
                     Border = { Color = color, IsAntiAlias = true, Width = 2 }
                 },
@@ -2308,7 +2308,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var curveItem = _graphHelper.AddChromatogram(new PaneKey(), graphItem);
                 // Make the fill color under the curve more opaque if the curve is selected.
                 var fillAlpha = graphItem.GraphInfo.IsSelected ? 60 : 15;
-                ((LineItem)curveItem).Line.Fill = new Fill(Color.FromArgb(fillAlpha, graphItem.GraphInfo.Color));
+                ((LineItem)curveItem).Line.Fill = Fill.GetCachedFill(Color.FromArgb(fillAlpha, graphItem.GraphInfo.Color));
             }
             // ReSharper restore PossibleInvalidCastException
         }

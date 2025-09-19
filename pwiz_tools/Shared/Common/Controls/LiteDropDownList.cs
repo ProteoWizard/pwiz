@@ -43,6 +43,9 @@ namespace pwiz.Common.Controls
         private Font _specialFont;
         private ContextMenuStrip _contextMenuStrip;
 
+        // Own the tinted arrow bitmap
+        private Bitmap _dropArrowBitmap;
+
         public LiteDropDownList()
         {
             Items = new List<object>();
@@ -57,24 +60,16 @@ namespace pwiz.Common.Controls
             FlatAppearance.MouseOverBackColor = _backColorActive = SystemColors.GradientInactiveCaption; // Very light system color
             FlatAppearance.BorderColor = SystemColors.ControlDark;
             FlatAppearance.BorderSize = 1;
-            // Show a dropdown hint down arrow in the same color as the text
-            var scrBitmap = Resources.DropImageNoBackground;
-            var newBitmap = new Bitmap(scrBitmap.Width, scrBitmap.Height);
-            for (var i = 0; i < scrBitmap.Width; i++)
-            {
-                for (var j = 0; j < scrBitmap.Height; j++)
-                {
-                    var pixel = scrBitmap.GetPixel(i, j);
-                    newBitmap.SetPixel(i, j, pixel.A != 0 ? base.ForeColor : pixel); // Leave 0-alpha pixels alone
-                }
-            }
-            Image = newBitmap;
+
+            BuildArrowBitmap();     // Create recolored arrow
             ImageAlign = ContentAlignment.MiddleRight;
             TextImageRelation = TextImageRelation.Overlay;
+
             LostFocus += RestoreBackgroundColor;
             Leave += RestoreBackgroundColor;
             _normalFont = new Font(base.Font, FontStyle.Regular);
             _specialFont = new Font(base.Font, FontStyle.Italic);
+
             _contextMenuStrip = new ContextMenuStrip
             {
                 ShowImageMargin = false,
@@ -85,6 +80,21 @@ namespace pwiz.Common.Controls
 
         }
 
+        private void BuildArrowBitmap()
+        {
+            // Dispose old arrow if rebuilding
+            _dropArrowBitmap?.Dispose();
+
+            var src = Resources.DropImageNoBackground;
+            _dropArrowBitmap = new Bitmap(src.Width, src.Height);
+            for (int x = 0; x < src.Width; x++)
+            for (int y = 0; y < src.Height; y++)
+            {
+                var p = src.GetPixel(x, y);
+                _dropArrowBitmap.SetPixel(x, y, p.A != 0 ? ForeColor : p);
+            }
+            Image = _dropArrowBitmap;
+        }
 
         public List<object> Items;
         public List<object> SpecialItems; // Items which also appear in this list will be formatted in italics
@@ -170,10 +180,13 @@ namespace pwiz.Common.Controls
 
         private void ShowDropdown()
         {
-            // Show the dropdown menu
+            // Dispose existing items to avoid handle buildup
+            foreach (ToolStripItem item in _contextMenuStrip.Items)
+                item.Dispose();
             _contextMenuStrip.Items.Clear();
+
             _contextMenuStrip.Items.AddRange(Items.Select(CreateMenuItem).ToArray());
-            _contextMenuStrip.Show(this, new Point(0, this.Height)); // Show menu just below our button
+            _contextMenuStrip.Show(this, new Point(0, Height)); // Show menu just below our button
             BackColor = _backColorActive;
         }
 
@@ -275,9 +288,18 @@ namespace pwiz.Common.Controls
             {
                 _normalFont?.Dispose();
                 _specialFont?.Dispose();
-                _contextMenuStrip.Dispose();
-            }
 
+                if (_contextMenuStrip != null)
+                {
+                    foreach (ToolStripItem item in _contextMenuStrip.Items)
+                        item.Dispose();
+                    _contextMenuStrip.Dispose();
+                    _contextMenuStrip = null;
+                }
+
+                _dropArrowBitmap?.Dispose();
+                _dropArrowBitmap = null;
+            }
             base.Dispose(disposing);
         }
 

@@ -44,7 +44,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            OpenDocument("160109_Mix1_calcurve.sky");
+            SafeOpenDocument("160109_Mix1_calcurve.sky");
 
             // Test simple prefix removal (0 and 1)
             string importFilePath = TestFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzML");

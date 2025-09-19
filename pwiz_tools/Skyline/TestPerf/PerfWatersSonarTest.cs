@@ -50,7 +50,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         {
             Program.ExtraRawFileSearchFolder = TestFilesDir.PersistentFilesDir; // So we can reimport the raw file, which has moved relative to skyd file 
             Settings.Default.TransformTypeChromatogram = TransformChrom.interpolated.ToString();
-            OpenDocument("SkylineSonarTiny.sky");
+            SafeOpenDocument("SkylineSonarTiny.sky");
             var doc = WaitForDocumentLoaded();
             // Reimport data for a replicate
             RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, dlg =>

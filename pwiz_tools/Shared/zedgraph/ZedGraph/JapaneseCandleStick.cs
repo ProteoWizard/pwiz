@@ -181,8 +181,8 @@ namespace ZedGraph
 		/// </summary>
 		public JapaneseCandleStick() : base()
 		{
-			_risingFill = new Fill( Default.RisingColor );
-			_fallingFill = new Fill( Default.FallingColor );
+			_risingFill = Fill.GetCachedFill( Default.RisingColor );
+			_fallingFill = Fill.GetCachedFill( Default.FallingColor );
 
 			_risingBorder = new Border( Default.RisingBorder, LineBase.Default.Width );
 			_fallingBorder = new Border( Default.FallingBorder, LineBase.Default.Width );

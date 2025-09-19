@@ -252,7 +252,7 @@ namespace pwiz.Skyline.Controls.Clustering
                 {
                     Tag = entry.Key
                 };
-                lineItem.Symbol.Fill = new Fill(color);
+                lineItem.Symbol.Fill = Fill.GetCachedFill(color);
                 lineItem.Line.IsVisible = false;
                 zedGraphControl1.GraphPane.CurveList.Add(lineItem);
             }

@@ -195,7 +195,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private static FontSpec CreateFontSpec(Color color, float size)
         {
-            return new FontSpec(FONT_FACE, size, color, false, false, false) { Border = { IsVisible = false }, Fill = new Fill(Color.FromArgb(180, Color.White)) };
+            return new FontSpec(FONT_FACE, size, color, false, false, false) { Border = { IsVisible = false }, Fill = Fill.GetCachedFill(Color.FromArgb(180, Color.White)) };
         }
 
         private FontSpec GetFontSpec(Color color, ref FontSpec fontSpec)

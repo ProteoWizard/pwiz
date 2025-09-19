@@ -105,6 +105,9 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         {
             return VisibleColumns.Select(dc => dc.PropertyPath);
         }
+
+        private Font _boldFont;
+
         private ListViewItem MakeListViewColumnItem(DisplayColumn gridColumn)
         {
             string listItemText = gridColumn.GetColumnCaption(null, ColumnCaptionType.localized);
@@ -113,7 +116,8 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             Debug.Assert(!gridColumn.ColumnSpec.Hidden);
             if (!string.IsNullOrEmpty(gridColumn.ColumnSpec.Caption))
             {
-                listViewItem.Font = new Font(listViewItem.Font, FontStyle.Bold | listViewItem.Font.Style);
+                _boldFont ??= new Font(listViewItem.Font, FontStyle.Bold | listViewItem.Font.Style);
+                listViewItem.Font = _boldFont;
                 DataSchema dataSchema = gridColumn.DataSchema;
                 var columnCaption = dataSchema.GetColumnCaption(gridColumn.ColumnDescriptor);
                 listViewItem.ToolTipText = columnCaption.GetCaption(dataSchema.DataSchemaLocalizer);

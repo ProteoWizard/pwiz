@@ -156,7 +156,7 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.SaveDocument(documentFile.Replace(".sky", "_updated.sky")); // These are some of our oldest small mol docs, save an updated version for debug ease
             });
             
-            OpenDocument(docPath);
+            SafeOpenDocument(docPath);
             return SkylineWindow.Document;
         }
 

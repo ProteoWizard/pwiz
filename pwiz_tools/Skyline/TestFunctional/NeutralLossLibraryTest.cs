@@ -330,7 +330,7 @@ namespace pwiz.SkylineTestFunctional
 
         private void TestGlycanLossAnnotationsControl()
         {
-            OpenDocument(TestFilesDir.GetTestPath("CD166_neutral_loss_test_small.sky"));
+            SafeOpenDocument(TestFilesDir.GetTestPath("CD166_neutral_loss_test_small.sky"));
             RunUI(() => SkylineWindow.ShowPrecursorIon(true));  // Interesting losses are from the precursor
             MenuControl<IonTypeSelectionPanel> menuControl = null;
             WaitForGraphs();

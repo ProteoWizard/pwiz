@@ -544,9 +544,17 @@ namespace pwiz.Skyline.Controls
                     return;
             }
 
-            using (Graphics g = Graphics.FromHdc(hDC))
+            try
             {
-                OnNCPaint(new NcPaintEventArgs(g, bounds));
+                using (Graphics g = Graphics.FromHdc(hDC))
+                {
+                    OnNCPaint(new NcPaintEventArgs(g, bounds));
+                }
+            }
+            finally
+            {
+                // Release the DC regardless of how it was acquired
+                User32.ReleaseDC(hWnd, hDC);
             }
         }
 

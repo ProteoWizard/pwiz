@@ -38,7 +38,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         protected override void DoTest()
         {
-            OpenDocument("FIATestMix_26OCT17.sky");
+            SafeOpenDocument("FIATestMix_26OCT17.sky");
             // If the problem persists, this will fail with a message about "custom molecules must specify a formula or mass" during skyd stitching
             ImportResults(new[]{"1_FIATestmix_25OCT17_1.raw","2_FIATestmix_25OCT17_2.raw"});
         }
