@@ -200,6 +200,19 @@ void fillInMetadata(const bfs::path& rootpath, MSData& msd, Reader_Bruker_Format
         auto serialNumber = compassDataPtr->getInstrumentSerialNumber();
         if (!serialNumber.empty())
             msd.run.defaultInstrumentConfigurationPtr->set(MS_instrument_serial_number, serialNumber);
+
+        // Write DIA-PASEF window group information if available
+        auto diaFrameMsMsWindowsTable = compassDataPtr->getDiaFrameMsMsWindowsTable();
+        if (!diaFrameMsMsWindowsTable.empty())
+        {
+            std::vector<std::string> lines;
+            boost::split(lines, diaFrameMsMsWindowsTable, boost::is_any_of(";"));
+            msd.run.defaultInstrumentConfigurationPtr->userParams.push_back(UserParam("DiaFrameMsMsWindowsTable", lines[0]));
+            for (size_t i = 1; i < lines.size(); ++i)
+            {
+                msd.run.defaultInstrumentConfigurationPtr->userParams.push_back(UserParam("WindowGroup", lines[i]));
+            }
+        }
     }
 
     msd.run.id = msd.id;
@@ -233,7 +246,7 @@ void Reader_Bruker::read(const string& filename,
         rootpath = rootpath.parent_path();
 
     CompassDataPtr compassDataPtr(CompassData::create(rootpath.string(), config.combineIonMobilitySpectra, format, 
-        config.preferOnlyMsLevel, config.allowMsMsWithoutPrecursor, config.isolationMzAndMobilityFilter));
+        config.preferOnlyMsLevel, config.allowMsMsWithoutPrecursor, config.passEntireDiaPasefFrame, config.includeIsolationArrays, config.isolationMzAndMobilityFilter));
 
     SpectrumList_Bruker* sl = new SpectrumList_Bruker(result, rootpath.string(), format, compassDataPtr, config);
     ChromatogramList_Bruker* cl = new ChromatogramList_Bruker(result, rootpath.string(), format, compassDataPtr, config);
