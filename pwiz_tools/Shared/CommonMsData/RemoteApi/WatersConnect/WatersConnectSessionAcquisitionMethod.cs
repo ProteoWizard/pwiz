@@ -83,7 +83,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                 .Select(f => new WatersConnectAcquisitionMethodObject(f)));
         }
 
-        public void UploadMethod(MethodModel method, IProgressMonitor progressMonitor)
+        public string UploadMethod(MethodModel method, IProgressMonitor progressMonitor)
         {
             JsonSerializer serializer = new JsonSerializer();
             var json = JsonConvert.SerializeObject(method,
@@ -105,6 +105,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             request.Content.Headers.ContentType.CharSet = @"utf-8";
             var response = _httpClient.SendAsync(request).Result;
             EnsureSuccess(response);
+            return response.Content?.ReadAsStringAsync().Result;
         }
         
         public override IEnumerable<RemoteItem> ListContents(MsDataFileUri parentUrl)

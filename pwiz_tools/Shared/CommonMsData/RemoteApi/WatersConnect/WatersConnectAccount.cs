@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Net.Http;
+using System.Security.Authentication;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
@@ -35,6 +36,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
     {
         public static readonly string HANDLER_NAME = "WatersConnect.Handler.Main";
         public static readonly string AUTH_HANDLER_NAME = "WatersConnect.Handler.Authentication";
+        public static readonly string TOKEN_DATA = "token";
 
         public class TokenCacheEntry
         {
@@ -176,9 +178,15 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             var newToken = tokenClient.RequestResourceOwnerPasswordAsync(Username, Password, ClientScope).Result;
             if (newToken.IsError)
             {
-                throw new InvalidOperationException(
-                    string.Format(CultureInfo.CurrentCulture, @"Failed to authenticate Waters Connect account {0} with error: {1}",
-                        Username, newToken.Error));
+                AuthenticationException ex;
+                if (newToken.ErrorType == ResponseErrorType.Exception)
+                    ex = new AuthenticationException(newToken.Error);
+                else 
+                    ex = new AuthenticationException(string.Format(CultureInfo.CurrentCulture,
+                        @"Failed to authenticate Waters Connect account {0} with error: {1}",
+                        Username, newToken.ErrorDescription));
+                ex.Data[TOKEN_DATA] = newToken.Raw;
+                throw ex;
             }
             _authenticationTokens[this] = new TokenCacheEntry()
                 { TokenResponse = newToken, ExpirationDateTime = DateTime.UtcNow.AddSeconds(newToken.ExpiresIn) };

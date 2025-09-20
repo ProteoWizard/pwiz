@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using pwiz.Common.DataBinding;
 
@@ -38,8 +39,6 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
 
     public class AuditEntryType
     {
-        [JsonProperty("reason")]
-        public string Reason { get; set; }
         [JsonProperty("details")]
         public string Details { get; set; }
     }
@@ -135,25 +134,27 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
 
         [ColumnName("precursor.retT")]
         [JsonProperty("retentionTime")]
-        public float RetentionTime { get; set; }
+        public float? RetentionTime { get; set; }
 
         [ColumnName("compound.internal_standard")]
         [JsonProperty("internalStandard")]
         public bool IsInternalStandard { get; set; }
 
         [JsonProperty("startTime")]
-        public float StartTime { get; set; }
+        public float? StartTime { get; set; }
 
         [ColumnName("rt_window")]
         [JsonProperty("endTime")]
-        public float EndTime { get; set; }
+        public float? EndTime { get; set; }
 
         [JsonProperty("adducts", Order = 8)]
         public List<AdductInfo> Adducts;
 
+        private static readonly Regex _adductRegEx = new Regex(@"\.\[.+\]$");
         public override void ParseObject(DsvStreamReader reader)
         {
             base.ParseObject(reader);
+            Name = _adductRegEx.Replace(Name, "");
 
             //Id = Guid.NewGuid().ToString();
 
@@ -164,12 +165,17 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                 Information = string.Format(CultureInfo.CurrentCulture, "Compound from Skyline document {0} - {1}", documentName, info );
             }
 
-            if (ParsingContext.ContainsKey(@"scheduledMethod"))
+            if (RetentionTime.Value == 0)
+                RetentionTime = null;
+            if (ParsingContext.ContainsKey(@"scheduledMethod") && EndTime.HasValue && RetentionTime.HasValue)
             {
-                StartTime = Math.Max(0, RetentionTime - EndTime/2);  //rt_window is stored in the EndTime field
+                StartTime = Math.Max(0, RetentionTime.Value - EndTime.Value/2);  //rt_window is stored in the EndTime field
                 EndTime = RetentionTime + EndTime / 2; 
             }
-
+            else
+            {
+                StartTime = EndTime = null;
+            }
         }
         
         /// <summary>
@@ -180,7 +186,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             var colAttribute =  GetType().GetProperty("Name")?.GetCustomAttribute(typeof(ColumnNameAttribute)) as ColumnNameAttribute;
             if (colAttribute != null)
             {
-                var name = reader[colAttribute.ColumnName];
+                var name = _adductRegEx.Replace(reader[colAttribute.ColumnName], ""); 
                 return string.Equals(Name, name, StringComparison.OrdinalIgnoreCase);
             }
             return false;

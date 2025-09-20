@@ -108,10 +108,18 @@ namespace pwiz.Common.Mock
         }
         public override HttpResponseMessage GetResponse(HttpRequestMessage request)
         {
-            return new HttpResponseMessage(_statusCode)
+            try
             {
-                Content = new StringContent(_responseFunction.Invoke(request))
-            };
+                var content = _responseFunction.Invoke(request);
+                return new HttpResponseMessage(_statusCode) { Content = new StringContent(content) };
+            }
+            catch (Exception e)
+            {
+                return new HttpResponseMessage(HttpStatusCode.BadRequest)
+                {
+                    Content = new StringContent(e.Message + "\n" + e.StackTrace)
+                };
+            }
         }
     }
 

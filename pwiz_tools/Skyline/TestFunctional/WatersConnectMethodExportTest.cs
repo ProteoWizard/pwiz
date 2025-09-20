@@ -122,9 +122,10 @@ namespace pwiz.SkylineTestFunctional
             });
             RunUI(() =>
             {
-                var uploadErrorDlg = TryWaitForOpenForm<MessageDlg>(200);
-                Assert.IsNull(uploadErrorDlg, "Method upload error: \n" + uploadErrorDlg?.DetailMessage);
-                uploadErrorDlg?.OkDialog();
+                var uploadResultDlg = TryWaitForOpenForm<MessageDlg>(2000);
+                Assert.IsNotNull(uploadResultDlg);
+                Assert.IsTrue(uploadResultDlg.Message.StartsWith("Upload successful"), "Method upload error: \n" + uploadResultDlg.DetailMessage);
+                uploadResultDlg.OkDialog();
             });
         }
 
@@ -153,13 +154,21 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual("TestMethod", methodModel["name"].ToString().Trim());
             Assert.AreEqual("Multiple", methodModel["creationMode"].ToString().Trim());
             Assert.AreEqual("AcquisitionWindows", methodModel["scheduleType"].ToString().Trim());
-            Assert.AreEqual(23, methodModel["compounds"].Children().Count());
+            Assert.AreEqual(12, methodModel["compounds"].Children().Count());
             Assert.IsTrue(methodModel["compounds"].Children().All(item =>
             {
                 if (double.TryParse(item["startTime"].Value<string>(), out var startTime))
                     return startTime >= 0;
                 return false;
             }), "Negative start time in the method");
+            methodModel["compounds"].Children().ToList().ForEach(compound =>
+            {
+                var badAdducts = compound["adducts"].Children().ToList().FindAll(
+                    adduct => adduct["transitions"].Children().Count(transition => transition["isQuanIon"].Value<bool>()) != 1);
+                if (badAdducts.Count > 0)
+                    Assert.Fail($"Compound {compound["name"]} has adducts with incorrect number of quant ions.");
+            });
+
             ValidateJsonAgainstSchema(jsonPayload, TestFilesDir.GetTestPath("method-dev-spec.json"));
         }
 
@@ -182,7 +191,7 @@ namespace pwiz.SkylineTestFunctional
             // Validate
             if (!json.IsValid(schema, out IList<string> errorMessages))
             {
-                throw new InvalidDataException("JSON validation failed: " + string.Join("; ", errorMessages));
+                throw new InvalidDataException("JSON schema validation failed: " + string.Join("; ", errorMessages));
             }
 #pragma warning restore CS0618 // Type or member is obsolete
         }

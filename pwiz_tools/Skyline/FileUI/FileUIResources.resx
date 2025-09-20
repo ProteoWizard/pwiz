@@ -691,5 +691,8 @@ Would you like to remove some or all of this suffix to shorten the names used in
   <data name="BaseFileDialogNE_populateListViewFromDirectory_Add_Edit_Account___" xml:space="preserve">
     <value>Add/Edit Account...</value>
   </data>
-
+  <data name="ExportMethodDlg_OkDialog_WC_Upload_Successful" xml:space="preserve">
+    <value>Upload successful. Server returns: 
+</value>
+  </data>
 </root>

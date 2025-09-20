@@ -5072,6 +5072,8 @@ namespace pwiz.Skyline.Model
         private WatersConnectAccount _wcAccount;
         private string _methodName;
         public bool ServerDecidesOnBuckets { get; set; }
+        public string UploadResult { get; private set; }
+        public bool UploadSuccessful { get; private set; }
         public WatersConnectMethodExporter(SrmDocument document, WatersConnectAccount account)
             : base(document)
         {
@@ -5079,6 +5081,7 @@ namespace pwiz.Skyline.Model
         }
         public void ExportMethod(string fileName, WatersConnectUrl targetFolderUrl, WatersConnectAcquisitionMethodUrl templateUrl, IProgressMonitor progressMonitor)
         {
+            UploadSuccessful = false;
             _methodName = fileName;
             if (!InitExport(fileName, progressMonitor))
                 return;
@@ -5112,13 +5115,13 @@ namespace pwiz.Skyline.Model
                 {
                     Details = string.Format(CultureInfo.CurrentCulture,
                         ModelResources.WatersConnectMethodExporter_ExportMethod_Creating_MRM_method___0___from_Skyline_document___1__, _methodName, SkylineDocumentFileName),
-                    Reason = ModelResources.WatersConnectMethodExporter_ExportMethod_Method_creation_from_Skyline_transition_list
                 };
                 if (MemoryOutput.Count == 1)
                     method.Name = _methodName;
                 else
                     method.Name = methodData.Key.Replace(MEMORY_KEY_ROOT, _methodName);
-                wcSession.UploadMethod(method, progressMonitor);
+                UploadResult = wcSession.UploadMethod(method, progressMonitor);
+                UploadSuccessful = true;
             }
         }
 
@@ -5129,22 +5132,13 @@ namespace pwiz.Skyline.Model
             var linesReader = new DsvStreamReader(new StringReader(outputLines), ',');
             var targets = new List<CommonMsData.RemoteApi.WatersConnect.Compound>();
             CommonMsData.RemoteApi.WatersConnect.Compound currentTarget = null;
-            CommonMsData.RemoteApi.WatersConnect.Transition quantTransition = null;
+            CommonMsData.RemoteApi.WatersConnect.AdductInfo currentAdduct = null;
             while (!linesReader.EndOfStream)
             {
                 linesReader.ReadLine();
                 // we assume that the lines are sorted by target
                 if (currentTarget == null || !currentTarget.IsSameCompound(linesReader))
                 {
-                    if (currentTarget != null && quantTransition == null )
-                    {
-                        var transitions = currentTarget.Adducts.SelectMany(add => add.Transitions).ToList();
-                        if (transitions.Any())
-                        {
-                            transitions.First().IsQuanIon = true; // if no quant ion specified, make the first one the quant ion
-                        }
-                    }
-                    quantTransition = null;
                     currentTarget = new CommonMsData.RemoteApi.WatersConnect.Compound();
                     targets.Add(currentTarget);
                     currentTarget.ParseObject(linesReader);
@@ -5152,19 +5146,16 @@ namespace pwiz.Skyline.Model
                 }
                 if (currentTarget.Adducts.Count == 0 || !currentTarget.Adducts.Last().IsSameAdduct(linesReader))
                 {
-                    currentTarget.Adducts.Add(new CommonMsData.RemoteApi.WatersConnect.AdductInfo());
-                    currentTarget.Adducts.Last().ParseObject(linesReader);
-                    currentTarget.Adducts.Last().Transitions = new List<CommonMsData.RemoteApi.WatersConnect.Transition>();
+                    if (currentAdduct != null && !currentAdduct.Transitions.Any(t => t.IsQuanIon))
+                        currentAdduct.Transitions.First().IsQuanIon = true; // make sure that there is always a quant ion
+                    currentAdduct = new CommonMsData.RemoteApi.WatersConnect.AdductInfo();
+                    currentTarget.Adducts.Add(currentAdduct);
+                    currentAdduct.ParseObject(linesReader);
+                    currentAdduct.Transitions = new List<CommonMsData.RemoteApi.WatersConnect.Transition>();
                 }
                 var currentTransition = new CommonMsData.RemoteApi.WatersConnect.Transition();
-                currentTarget.Adducts.Last().Transitions.Add(currentTransition);
+                currentAdduct?.Transitions.Add(currentTransition);
                 currentTransition.ParseObject(linesReader);
-                if (currentTransition.IsQuanIon && quantTransition == null)
-                    quantTransition = currentTransition;
-                else
-                {
-                    currentTransition.IsQuanIon = false; // only one transition can be the quant ion
-                }
             }
 
             var res = new MethodModel();

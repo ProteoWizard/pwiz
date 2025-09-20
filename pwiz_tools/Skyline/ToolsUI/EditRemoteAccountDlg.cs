@@ -22,10 +22,12 @@ using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Security.Authentication;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -373,42 +375,51 @@ namespace pwiz.Skyline.ToolsUI
 
         private bool TestWatersConnectAccount(WatersConnectAccount wcAccount)
         {
-            using (var wcSession = new WatersConnectSession(wcAccount))
+            try
             {
-                try
+                using (var wcSession = new WatersConnectSession(wcAccount))
                 {
-                    var tokenResponse = wcAccount.Authenticate();
-                    if (tokenResponse.IsError)
-                    {
-                        string error = tokenResponse.ErrorDescription ?? tokenResponse.Error;
-                        MessageDlg.Show(this, TextUtil.LineSeparate(ToolsUIResources.EditRemoteAccountDlg_TestUnifiAccount_An_error_occurred_while_trying_to_authenticate_, error));
-                        if (tokenResponse.Error == @"invalid_scope")
-                        {
-                            tbxClientScope.Focus();
-                        }
-                        else if (tokenResponse.Error == @"invalid_client")
-                        {
-                            tbxClientSecret.Focus();
-                        }
-                        else if (tokenResponse.HttpStatusCode == HttpStatusCode.NotFound)
-                        {
-                            tbxIdentityServer.Focus();
-                        }
-                        else
-                        {
-                            textPassword.Focus();
-                        }
-                        return false;
-                    }
+                    return TestAccount(wcSession);
                 }
-                catch (Exception e)
+            }
+            catch (AuthenticationException ae)
+            {
+                if (!ae.Data.Contains(WatersConnectAccount.TOKEN_DATA) ||
+                    ae.Data[WatersConnectAccount.TOKEN_DATA] == null)
                 {
-                    MessageDlg.ShowWithException(this, ToolsUIResources.EditRemoteAccountDlg_TestUnifiAccount_An_error_occurred_while_trying_to_authenticate_, e);
-                    tbxIdentityServer.Focus();
+                    MessageDlg.Show(this,
+                        TextUtil.LineSeparate(
+                            ToolsUIResources
+                                .EditRemoteAccountDlg_TestUnifiAccount_An_error_occurred_while_trying_to_authenticate_,
+                            ae.Message));
                     return false;
                 }
-
-                return TestAccount(wcSession);
+                var tokenResponse = JObject.Parse((string)ae.Data[WatersConnectAccount.TOKEN_DATA]);
+                string error = tokenResponse[@"error_description"].ToString();
+                MessageDlg.Show(this, TextUtil.LineSeparate(ToolsUIResources.EditRemoteAccountDlg_TestUnifiAccount_An_error_occurred_while_trying_to_authenticate_, error));
+                if (tokenResponse[@"error"].ToString() == @"invalid_scope")
+                {
+                    tbxClientScope.Focus();
+                }
+                else if (tokenResponse[@"error"].ToString() == @"invalid_client")
+                {
+                    tbxClientSecret.Focus();
+                }
+                else if (tokenResponse[@"error"].ToString() == @"invalid_grant")
+                {
+                    textPassword.Focus();
+                }
+                else
+                {
+                    tbxIdentityServer.Focus();
+                }
+                return false;
+            }
+            catch (Exception e)
+            {
+                MessageDlg.ShowWithException(this, ToolsUIResources.EditRemoteAccountDlg_TestUnifiAccount_An_error_occurred_while_trying_to_authenticate_, e);
+                tbxIdentityServer.Focus();
+                return false;
             }
         }
 

@@ -1327,7 +1327,11 @@ namespace pwiz.Skyline.FileUI
             _exportProperties.ShowMessages = true;
             try
             {
-                _exportProperties.ExportFile(_instrumentType, _fileType, outputPath, documentExport, templateName);
+                var exporter = _exportProperties.ExportFile(_instrumentType, _fileType, outputPath, documentExport, templateName);
+                if (exporter is WatersConnectMethodExporter wcExporter && wcExporter.UploadSuccessful)
+                {
+                    MessageDlg.Show(this, FileUIResources.ExportMethodDlg_OkDialog_WC_Upload_Successful + wcExporter.UploadResult, false, MessageBoxButtons.OK);
+                }
             }
             catch (UnauthorizedAccessException x)
             {

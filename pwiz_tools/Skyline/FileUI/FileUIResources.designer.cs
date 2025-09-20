@@ -711,6 +711,16 @@ namespace pwiz.Skyline.FileUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Upload successful. Server returns: 
+        ///.
+        /// </summary>
+        public static string ExportMethodDlg_OkDialog_WC_Upload_Successful {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_OkDialog_WC_Upload_Successful", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Would you like to use the defaults instead?.
         /// </summary>
         public static string ExportMethodDlg_OkDialog_Would_you_like_to_use_the_defaults_instead {
