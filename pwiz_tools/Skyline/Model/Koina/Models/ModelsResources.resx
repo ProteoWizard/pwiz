@@ -133,7 +133,10 @@
     <value>Warning: Peptide {0} has modification {1}, which is missing a Unimod ID and is unknown to the {2} prediction tool. This peptide will be skipped!</value>
   </data>
   <data name="BuildPrecursorTable_Unimod_UnsupportedModification" xml:space="preserve">
-    <value>Warning: Peptide {0} has modification {1} with Unimod ID of UNIMOD:{2}, which is not yet supported by the {2} prediction tool. This peptide will be skipped!</value>
+    <value>Warning: Peptide {0} has modification {1} with Unimod ID of UNIMOD:{2}, which is not yet supported by the {3} prediction tool. This peptide will be skipped!</value>
+  </data>
+  <data name="BuildPrecursorTable_Unimod_limited_Modification" xml:space="preserve">
+    <value>Warning: Peptide {0} has modification {1} with Unimod ID of UNIMOD:{2}, which has limited support by the default model in {3} prediction tool. Please consider using a fine-tuned model for your predictions or the predicted spectrum, retention time or collisional cross-section may not be trust-worthy for this peptide!</value>
   </data>
   <data name="BuildPrecursorTable_ModificationType" xml:space="preserve">
     <value>Accession: {0}, Name: {1}, Comment: {2}</value>

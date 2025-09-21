@@ -760,6 +760,10 @@ namespace pwiz.Skyline.SettingsUI
             dlg.LibraryKeepRedundant = _parent.DocumentUI.Settings.TransitionSettings.FullScan.IsEnabled;
             if (dlg.ShowDialog(this) == DialogResult.OK)
             {
+
+                Cursor.Current = Cursors.WaitCursor;
+
+
                 if (!string.IsNullOrEmpty(dlg.AddLibraryFile))
                 {
                     using var editLibDlg = new EditLibraryDlg(Settings.Default.SpectralLibraryList);
@@ -773,6 +777,7 @@ namespace pwiz.Skyline.SettingsUI
                     return;
                 }
 
+                Cursor.Current = Cursors.Default;
                 BuildLibrary(dlg.Builder);
             }
         }
@@ -792,12 +797,13 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             var buildState = new BuildState(builder.LibrarySpec, _libraryManager.BuildLibraryBackground);
-
+            
             bool retry;
             do
             {
                 using (var longWaitDlg = new LongWaitDlg(_parent))
                 {
+                    //longWaitDlg.Text = string.Format(ModelResources.BuildingPrecursorTable_Build_Library);
                     var status = longWaitDlg.PerformWork(_parent, 500, progressMonitor =>
                         _libraryManager.BuildLibraryBackground(_parent, builder, progressMonitor, buildState));
 
@@ -1098,6 +1104,8 @@ namespace pwiz.Skyline.SettingsUI
             {
                 FilterLibraryEnabled = false;
             }
+
+            btnExplore.Enabled = listLibraries.Items.Count > 0;
         }
 
         private void comboMatching_SelectedIndexChanged(object sender, EventArgs e)

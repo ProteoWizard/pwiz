@@ -250,7 +250,7 @@ namespace TestRunner
             "parallelmode=off;workercount=0;waitforworkers=off;keepworkerlogs=off;checkdocker=on;workername;queuehost;workerport;workertimeout;alwaysupcltpassword;" +
             "coverage=off;dotcoverexe=jetbrains.dotcover.commandlinetools\\2023.3.3\\tools\\dotCover.exe;" +
             "maxsecondspertest=-1;" +
-            "demo=off;showformnames=off;status=off;buildcheck=0;" +
+            "demo=off;showformnames=off;status=off;driveinfo=off;buildcheck=0;" +
             "quality=off;pass0=off;pass1=off;pass2=on;" +
             "perftests=off;" +
             "retrydatadownloads=off;" +
@@ -1371,6 +1371,7 @@ namespace TestRunner
             bool recordauditlogs = commandLineArgs.ArgAsBool("recordauditlogs"); // Replace or create audit logs for tutorial tests
             bool useVendorReaders = commandLineArgs.ArgAsBool("vendors");
             bool showStatus = commandLineArgs.ArgAsBool("status");
+            bool logDriveInfo = commandLineArgs.ArgAsBool("driveinfo");
             bool showFormNames = commandLineArgs.ArgAsBool("showformnames");
             bool qualityMode = commandLineArgs.ArgAsBool("quality");
             bool pass0 = commandLineArgs.ArgAsBool("pass0");
@@ -1438,6 +1439,7 @@ namespace TestRunner
                 offscreen = true;
                 useVendorReaders = true;
                 showStatus = false;
+                logDriveInfo = false;
                 qualityMode = false;
                 pauseSeconds = 0;
             }
@@ -1461,7 +1463,7 @@ namespace TestRunner
                 runsmallmoleculeversions, recordauditlogs, teamcityTestDecoration,
                 retrydatadownloads,
                 pauseDialogs, pauseSeconds, pauseStartingScreenshot, useVendorReaders, timeoutMultiplier, 
-                results, log, verbose, clientMode);
+                results, log, verbose, clientMode, logDriveInfo);
 
             var timer = new Stopwatch();
             timer.Start();

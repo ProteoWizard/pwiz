@@ -3304,7 +3304,7 @@ namespace SkylineTester
             this.Margin = new System.Windows.Forms.Padding(4);
             this.MinimumSize = new System.Drawing.Size(700, 700);
             this.Name = "SkylineTesterWindow";
-            this.Text = "Skyline Tester";
+            this.Text = "SkylineTester";
             this.Load += new System.EventHandler(this.SkylineTesterWindow_Load);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.SkylineTesterWindow_KeyDown);
             this.Move += new System.EventHandler(this.SkylineTesterWindow_Move);
