@@ -125,13 +125,13 @@ namespace pwiz.SkylineTestFunctional
 
             // Skyline File
             Assert.AreEqual(fileName, SkylineWindow.FilesTree.Root.Name);
-            AssertFileState(true, FileState.available, SkylineWindow.FilesTree.Root);
+            AssertFileState(FileState.available, SkylineWindow.FilesTree.Root);
 
             // Audit Log
-            AssertFileState(true, FileState.available, SkylineWindow.FilesTree.Root.NodeAt(0));
+            AssertFileState(FileState.available, SkylineWindow.FilesTree.Root.NodeAt(0));
 
             // Window Layout
-            AssertFileState(true, FileState.available, SkylineWindow.FilesTree.Root.NodeAt(1));
+            AssertFileState(FileState.available, SkylineWindow.FilesTree.Root.NodeAt(1));
 
             // Close FilesTreeForm so test framework doesn't fail the test due to an unexpected open dialog
             RunUI(() => { SkylineWindow.DestroyFilesTreeForm(); });
@@ -178,15 +178,15 @@ namespace pwiz.SkylineTestFunctional
 
             Assert.AreEqual(saveAsFileName, tree.Root.Name);
             Assert.AreEqual(monitoredPath, tree.Root.FilePath);
-            AssertFileState(true, FileState.available, tree.Root);
+            AssertFileState(FileState.available, tree.Root);
 
             // Audit Log (.skyl)
             Assert.AreEqual(SrmDocument.GetAuditLogPath(monitoredPath), tree.Root.NodeAt(0).LocalFilePath);
-            AssertFileState(true, FileState.available, tree.Root.NodeAt(0));
+            AssertFileState(FileState.available, tree.Root.NodeAt(0));
 
             // View Layout (.sky.view)
             Assert.AreEqual(SkylineWindow.GetViewFile(monitoredPath), tree.Root.NodeAt(1).LocalFilePath);
-            AssertFileState(true, FileState.available, tree.Root.NodeAt(1));
+            AssertFileState(FileState.available, tree.Root.NodeAt(1));
 
             // Close FilesTreeForm so test framework doesn't fail the test due to an unexpected open dialog
             RunUI(() => { SkylineWindow.DestroyFilesTreeForm(); });
@@ -215,7 +215,7 @@ namespace pwiz.SkylineTestFunctional
             AssertTopLevelFiles(SkylineWindow, typeof(SkylineViewFile), typeof(ReplicatesFolder), typeof(SpectralLibrariesFolder));
 
             Assert.AreEqual(Path.GetDirectoryName(documentPath), SkylineWindow.FilesTree.PathMonitoredForFileSystemChanges());
-            AssertFileState(true, FileState.available, SkylineWindow.FilesTree.Root);
+            AssertFileState(FileState.available, SkylineWindow.FilesTree.Root);
 
             AssertFilesTreeOnlyIncludesFilesTreeNodes(SkylineWindow.FilesTree.Root);
 
@@ -905,12 +905,9 @@ namespace pwiz.SkylineTestFunctional
             }
         }
 
-        protected static void AssertFileState(bool expectedIsFileInitialized, FileState expectedFileState, FilesTreeNode filesTreeNode)
+        protected static void AssertFileState(FileState expected, FilesTreeNode filesTreeNode)
         {
-            if(expectedIsFileInitialized)
-                Assert.AreNotEqual(FileState.not_initialized, filesTreeNode.FileState);
-
-            Assert.AreEqual(expectedFileState, filesTreeNode.FileState);
+            Assert.AreEqual(expected, filesTreeNode.FileState);
         }
     }
 

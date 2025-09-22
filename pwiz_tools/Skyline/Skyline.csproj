@@ -387,6 +387,7 @@
     <Compile Include="Controls\Databinding\IDataboundGridForm.cs" />
     <Compile Include="Controls\Databinding\SkylineViewContext.cs" />
     <Compile Include="Controls\Databinding\SkylineWindowDataSchema.cs" />
+    <Compile Include="Controls\FilesTree\BackgroundActionService.cs" />
     <Compile Include="Controls\FilesTree\FilesTree.cs">
       <SubType>Component</SubType>
     </Compile>
