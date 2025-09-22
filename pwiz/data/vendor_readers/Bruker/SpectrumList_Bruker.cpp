@@ -270,7 +270,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
         }
 
         double oneOverK0 = spectrum->oneOverK0();
-        int windowGroup = spectrum->getWindowGroup();
+        int windowGroup = msLevel > 1 ? spectrum->getWindowGroup() : 0; // If > 0, this is diaPASEF MS2
         if (oneOverK0 > 0)
         {
             if (!config_.combineIonMobilitySpectra)
@@ -283,11 +283,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
             return result;
 
         Precursor precursor;
+        auto isPassEntireDiaPasefFrame = windowGroup > 0 && compassDataPtr_->isPassEntireDiaPasefFrame();
         if (msLevel > 1)
         {
-            int windowGroup = spectrum->getWindowGroup();
-            auto isPassEntireDiaPasefFrame = compassDataPtr_->isPassEntireDiaPasefFrame();
-
             vector<double> fragMZs;
             vector<FragmentationMode> fragModes;
             vector<IsolationInfo> isolationInfo;
@@ -342,8 +340,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
                         case FragmentationMode_PTR:
                             break;
                         }
-                        if (!compassDataPtr_->isPassEntireDiaPasefFrame())
-                            precursor.selectedIons.push_back(selectedIon); // Isolation window is reported in arrays
+                        if (!isPassEntireDiaPasefFrame)
+                            precursor.selectedIons.push_back(selectedIon); // Isolation window is reported in arrays for diaPASEF
                     }
 
                     if (isolationInfo[i].isolationMz > 0)
@@ -441,7 +439,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
                 arrayType.units = MS_Vs_cm_2;
                 mobility->cvParams.emplace_back(arrayType);
 
-                if (msLevel > 1 && compassDataPtr_->isPassEntireDiaPasefFrame() && config_.includeIsolationArrays)
+                if (isPassEntireDiaPasefFrame && config_.includeIsolationArrays)
                 {
                     // Each point has [m/z, intensity, IM, isoLow, isoHigh]
                     BinaryDataArrayPtr isolationMzStart(new BinaryDataArray);

@@ -116,6 +116,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             // Change the paths to match the test locations
             text = text.Replace(@"database_path=""C:\Dev\WinGroups\pwiz_tools\Skyline\SkylineTester Results\PerfImportBrukerDiagonalPasef\", $@"database_path=""{PathEx.EscapePathForXML(TestFilesDir.FullPath)}\");
             text = text.Replace(@"file_path=""c:\Skyline T&amp;est ^Data\Perftests\PerfImportBrukerDiagonalPasef\", $@"file_path=""{PathEx.EscapePathForXML(TestFilesDir.PersistentFilesDir)}\");
+            text = text.Replace(@"D:\data\DiagonalPASEF\dia-PASEF", PathEx.EscapePathForXML(TestFilesDir.PersistentFilesDir));
+            text = text.Replace(@"D:\data\DiagonalPASEF\midia-PASEF", PathEx.EscapePathForXML(TestFilesDir.PersistentFilesDir));
+            text = text.Replace(@"D:\data\DiagonalPASEF\synchro-pasef", PathEx.EscapePathForXML(TestFilesDir.PersistentFilesDir));
 
             File.WriteAllText(skyfile, text);
 
