@@ -42,11 +42,11 @@ ref class WrapperName : public System::Collections::Generic::IList<CLIHandle> \
               /* void* downcast is needed for cross-assembly calls; */ \
               /* native types are private by default and */ \
               /* #pragma make_public doesn't work on templated types */ \
-              WrapperName(void* base, System::Object^ owner) : base_(static_cast<WrappedType*>(base)), owner_(owner) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(WrapperName))} \
-              WrapperName(void* base) : base_(static_cast<WrappedType*>(base)), owner_(nullptr) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(WrapperName))} \
+              WrapperName(void* base, System::Object^ owner) : base_(static_cast<WrappedType*>(base)), owner_(owner) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(WrapperName), base)} \
+              WrapperName(void* base) : base_(static_cast<WrappedType*>(base)), owner_(nullptr) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(WrapperName), base)} \
 \
-              virtual ~WrapperName() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(WrapperName), (owner_ == nullptr)) if (owner_ == nullptr) SAFEDELETE(base_);} \
-              !WrapperName() {delete this;} \
+              virtual ~WrapperName() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(WrapperName), base_, (owner_ == nullptr)) if (owner_ == nullptr) SAFEDELETE(base_);} \
+              !WrapperName() {LOG_FINALIZE(BOOST_PP_STRINGIZE(WrapperName), base_) delete this;} \
               WrappedType* base_; \
               System::Object^ owner_; \
               WrappedType& base() {return *base_;} \
@@ -93,6 +93,7 @@ ref class WrapperName : public System::Collections::Generic::IList<CLIHandle> \
         } \
         virtual void Reset() {isReset_ = true; *itr_ = base_->end();} \
         ~Enumerator() {delete itr_;} \
+        !Enumerator() {delete this;} \
 \
         internal: \
         WrappedType* base_; \

@@ -151,6 +151,7 @@
     <Compile Include="..\Executables\SkylineRunner\ErrorChecker.cs">
       <Link>ErrorChecker.cs</Link>
     </Compile>
+    <Compile Include="CommandLineEiTest.cs" />
     <Compile Include="CommandLineMetadataRuleTest.cs" />
     <Compile Include="CommandLineNoJoinTest.cs" />
     <Compile Include="CommandLineRefineTest.cs" />
@@ -159,6 +160,7 @@
     <Compile Include="CommandLineWiffTest.cs" />
     <Compile Include="ConsoleAddAnnotationsTest.cs" />
     <Compile Include="ConsoleVerboseExceptionsTest.cs" />
+    <Compile Include="DataFileMemoryLeakTest.cs" />
     <Compile Include="ExportMethodShimadzuTest.cs" />
     <Compile Include="FullScanAcquisitionMethodTest.cs" />
     <Compile Include="InstrumentInfoUtilTest.cs" />
@@ -243,6 +245,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="CommandLineEiTest.zip" />
     <None Include="CommandLineImportTest.zip" />
     <None Include="CommandLineNoJoinTest.zip" />
     <None Include="CommandLineRefine.zip" />

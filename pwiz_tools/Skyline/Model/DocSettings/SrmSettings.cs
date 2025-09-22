@@ -1199,6 +1199,11 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public double[] GetAlignedRetentionTimes(ChromatogramSet chromatogramSet, MsDataFileUri filePath, IList<Target> targets)
         {
+            var alignmentFunction = DocumentRetentionTimes.GetLibraryAlignmentFunction(PeptideSettings.Libraries, filePath, true);
+            if (alignmentFunction == null)
+            {
+                return Array.Empty<double>();
+            }
             var batchNames = new List<string> { null };
             if (!string.IsNullOrEmpty(chromatogramSet?.BatchName))
             {
@@ -1231,22 +1236,17 @@ namespace pwiz.Skyline.Model.DocSettings
                         }
                     }
 
-                    var alignmentFunction = libraryAlignment.Alignments.GetAlignmentFunction(filePath, true);
-                    if (alignmentFunction != null)
+                    var times = new List<double>();
+                    foreach (var normalizedTime in libraryAlignment.GetNormalizedRetentionTimes(spectrumSourceFiles,
+                                 targets))
                     {
-                        var times = new List<double>();
-                        foreach (var normalizedTime in libraryAlignment.GetNormalizedRetentionTimes(spectrumSourceFiles,
-                                     targets))
-                        {
-                            var alignedTime = alignmentFunction.GetY(normalizedTime);
-                            // Console.Out.WriteLine("Mapping normalized time {0} to {1} for file {2}", normalizedTime, alignedTime, filePath.GetFileName());
-                            times.Add(alignedTime);
-                        }
-                        if (times.Count > 0)
-                        {
-                            return times.ToArray();
-                        }
-
+                        var alignedTime = alignmentFunction.GetY(normalizedTime);
+                        // Console.Out.WriteLine("Mapping normalized time {0} to {1} for file {2}", normalizedTime, alignedTime, filePath.GetFileName());
+                        times.Add(alignedTime);
+                    }
+                    if (times.Count > 0)
+                    {
+                        return times.ToArray();
                     }
                 }
             }
@@ -1273,6 +1273,11 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public double[] GetRetentionTimesNotAlignedTo(ChromatogramSet chromatogramSet, MsDataFileUri fileNotAlignedTo, ICollection<Target> targets, ICollection<SignedMz> precursorMzs)
         {
+            if (null != DocumentRetentionTimes.GetLibraryAlignmentFunction(PeptideSettings.Libraries, fileNotAlignedTo,
+                    true))
+            {
+                return Array.Empty<double>();
+            }
             var result = new List<double>();
             foreach (var library in PeptideSettings.Libraries.Libraries)
             {
@@ -1281,11 +1286,6 @@ namespace pwiz.Skyline.Model.DocSettings
                     continue;
                 }
 
-                if (null != DocumentRetentionTimes.GetLibraryAlignment(library.Name))
-                {
-                    // TODO(nicksh): if there is a batch name, then potentially a subset of the times in this library should be returned.
-                    continue;
-                }
                 result.AddRange(library.GetRetentionTimesWithSequences(null, targets).SelectMany(list=>list));
                 if (library is MidasLibrary)
                 {
@@ -1993,7 +1993,13 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         public bool HasUnalignedTimes()
         {
-            return DocumentRetentionTimes.HasUnalignedTimes();
+            if (TryGetAlignmentTarget(out var alignmentTarget) && alignmentTarget == null)
+            {
+                return true;
+            }
+
+            return MeasuredResults.MSDataFilePaths.Any(file =>
+                DocumentRetentionTimes.GetLibraryAlignmentFunction(PeptideSettings.Libraries, file, true) == null);
         }
 
         /// <summary>
@@ -2081,6 +2087,17 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
 
                 result = result.ChangeDocumentRetentionTimes(DocumentRetentionTimes.EMPTY);
+            }
+
+            if (documentFormat < DocumentFormat.ELECTRON_IONIZATION)
+            {
+                if (Equals(FullScanAcquisitionMethod.EI, result.TransitionSettings.FullScan.AcquisitionMethod))
+                {
+                    result = result.ChangeTransitionSettings(result.TransitionSettings.ChangeFullScan(
+                        result.TransitionSettings.FullScan.ChangeAcquisitionMethod(FullScanAcquisitionMethod.DIA,
+                            new IsolationScheme(null, Array.Empty<IsolationWindow>(),
+                                IsolationScheme.SpecialHandlingType.ALL_IONS))));
+                }
             }
 
             return result;
