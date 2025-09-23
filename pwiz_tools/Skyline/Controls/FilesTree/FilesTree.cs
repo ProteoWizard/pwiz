@@ -380,7 +380,10 @@ namespace pwiz.Skyline.Controls.FilesTree
             // the node's model was replaced when merging models representing the latest SrmDocument with FilesTree's existing nodes.
             void LoadFile(FilesTreeNode node)
             {
-                if (!node.Model.ShouldInitializeLocalFile())
+                Assume.IsNotNull(node);
+                Assume.IsNotNull(node.Model);
+
+                if (!node.Model.ShouldInitializeLocalFile() || _fileSystemService == null )
                     return;
 
                 _fileSystemService.LoadFile(node.LocalFilePath, node.FilePath, node.FileName, node.Model.DocumentPath, (localFilePath, isAvailable, token) =>
