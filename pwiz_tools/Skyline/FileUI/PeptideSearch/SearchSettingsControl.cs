@@ -143,7 +143,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             MSGFPlus,
             MSFragger,
             Comet,
+            Tide,
             Hardklor
+
         }
 
         public SearchEngine SelectedSearchEngine
@@ -231,6 +233,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     return EnsureRequiredFilesDownloaded(MsFraggerSearchEngine.FilesToDownload, ShowDownloadMsFraggerDialog);
                 case SearchEngine.Comet:
                     return EnsureRequiredFilesDownloaded(CometSearchEngine.FilesToDownload);
+                case SearchEngine.Tide:
+                    return EnsureRequiredFilesDownloaded(TideSearchEngine.FilesToDownload);
                 case SearchEngine.Hardklor:
                 case SearchEngine.MSAmanda:
                     return true;
@@ -252,6 +256,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     return MsFraggerSearchEngine.FilesToDownload;
                 case SearchEngine.Comet:
                     return CometSearchEngine.FilesToDownload;
+                case SearchEngine.Tide:
+                    return TideSearchEngine.FilesToDownload;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -280,6 +286,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     return new MsFraggerSearchEngine(dataType);
                 case SearchEngine.Comet:
                     return new CometSearchEngine(CutoffScore);
+                case SearchEngine.Tide:
+                    return new TideSearchEngine(CutoffScore);
                 case SearchEngine.Hardklor:
                     return new HardklorSearchEngine(ImportPeptideSearch);
                 default:

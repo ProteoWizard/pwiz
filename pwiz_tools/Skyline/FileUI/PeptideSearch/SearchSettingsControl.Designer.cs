@@ -165,7 +165,8 @@
             resources.GetString("searchEngineComboBox.Items"),
             resources.GetString("searchEngineComboBox.Items1"),
             resources.GetString("searchEngineComboBox.Items2"),
-            resources.GetString("searchEngineComboBox.Items3")});
+            resources.GetString("searchEngineComboBox.Items3"),
+            resources.GetString("searchEngineComboBox.Items4")});
             resources.ApplyResources(this.searchEngineComboBox, "searchEngineComboBox");
             this.searchEngineComboBox.Name = "searchEngineComboBox";
             // 

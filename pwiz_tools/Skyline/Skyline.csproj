@@ -53,8 +53,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>147</ApplicationRevision>
-    <ApplicationVersion>25.1.1.147</ApplicationVersion>
+    <ApplicationRevision>258</ApplicationRevision>
+    <ApplicationVersion>25.1.1.258</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -561,6 +561,7 @@
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
     </Compile>
     <Compile Include="Controls\Databinding\ReplicatePivotColumns.cs" />
+    <Compile Include="Model\DdaSearch\TideSearchEngine.cs" />
     <Compile Include="Model\DllFinder.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\IFiguresOfMeritCalculator.cs" />
     <Compile Include="Model\Databinding\Entities\ColumnToolTips.Designer.cs">

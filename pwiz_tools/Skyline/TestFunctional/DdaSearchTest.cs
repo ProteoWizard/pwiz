@@ -219,6 +219,32 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
             Assert.IsFalse(IsRecordMode);
         }
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.TIDE_UNICODE_ISSUES)]
+        public void TestDdaSearchTide()
+        {
+            TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
+
+            if (RedownloadTools)
+                foreach (var requiredFile in CometSearchEngine.FilesToDownload)
+                    if (requiredFile.Unzip)
+                        DirectoryEx.SafeDelete(requiredFile.InstallPath);
+                    else
+                        FileEx.SafeDelete(Path.Combine(requiredFile.InstallPath, requiredFile.Filename));
+
+            TestSettings = new DdaTestSettings
+            {
+                SearchEngine = SearchSettingsControl.SearchEngine.Tide,
+                FragmentIons = "b,y",
+                Ms2Analyzer = "Default",
+                PrecursorTolerance = new MzTolerance(15, MzTolerance.Units.ppm),
+                FragmentTolerance = new MzTolerance(1.0005),
+                AdditionalSettings = new Dictionary<string, string>(),
+                ExpectedResultsFinal = new ExpectedResults(107, 245, 297, 891, 118)
+            };
+
+            RunFunctionalTest();
+            Assert.IsFalse(IsRecordMode);
+        }
 
         [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MSFRAGGER_UNICODE_ISSUES)]
         public void TestDdaSearchMsFragger()
