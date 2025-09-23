@@ -71,7 +71,12 @@ namespace pwiz.Skyline.Controls.FilesTree
         public FilesTree FilesTree => (FilesTree)TreeView;
         public FilesTreeNode ParentFTN => (FilesTreeNode)Parent;
 
-        public void UpdateState(string localFilePath, bool isAvailable)
+        /// <summary>
+        /// Update the node's state given a local file path. If the local file path is non-null,
+        /// the file is available either in-memory or on the local file system.
+        /// </summary>
+        /// <param name="localFilePath"></param>
+        public void UpdateState(string localFilePath)
         {
             LocalFilePath = localFilePath;
 
@@ -81,7 +86,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             }
             else
             {
-                FileState = isAvailable && LocalFilePath != null ? FileState.available : FileState.missing;
+                FileState = LocalFilePath != null ? FileState.available : FileState.missing;
             }
 
             UpdateState();
@@ -165,20 +170,21 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         public override Brush SelectionBrush => IsCurrentDropTarget() ? new SolidBrush(BackColorMS) : base.SelectionBrush;
 
-        public new Rectangle Bounds
-        {
-            get
-            {
-                var boundsModified = base.Bounds;
-                // Keep this check in-sync with TreeViewMS.WidthCustom
-                if (_widthCustom > 0)
-                {
-                    boundsModified.Width = _widthCustom;
-                }
-        
-                return boundsModified;
-            }
-        }
+        // Override useful for debugging TreeViewMS layout issues. For example, not being able to drag the right-hand-side of a tree node.
+        // public new Rectangle Bounds
+        // {
+        //     get
+        //     {
+        //         var boundsModified = base.Bounds;
+        //         // Keep this check in-sync with TreeViewMS.WidthCustom
+        //         if (_widthCustom > 0)
+        //         {
+        //             boundsModified.Width = _widthCustom;
+        //         }
+        //
+        //         return boundsModified;
+        //     }
+        // }
 
         protected override void DrawFocus(Graphics g)
         {

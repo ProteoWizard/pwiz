@@ -103,8 +103,16 @@ namespace pwiz.Skyline.Controls.FilesTree
             }
         }
 
-        public void CancelAll()
+        /// <summary>
+        /// Stop this service, clearing pending tasks and preventing new tasks from being added.
+        /// This action is irreversible and should be used only when the owner is sure it no longer
+        /// needs the service - for example, when a Control is disposed.
+        /// </summary>
+        public void Shutdown()
         {
+            Assume.IsNotNull(_workQueue);
+
+            _workQueue?.Clear();
             _workQueue?.DoneAdding(true);
         }
 
@@ -112,8 +120,8 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             if (_workQueue != null)
             {
-                _workQueue.Clear();
-                _workQueue.DoneAdding(true);
+                Shutdown();
+
                 _workQueue.Dispose();
                 _workQueue = null;
 

@@ -398,6 +398,7 @@
       <DependentUpon>FilesTreeForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\FilesTree\FilesTreeNode.cs" />
+    <Compile Include="Controls\FilesTree\FileSystemService.cs" />
     <Compile Include="Controls\Graphs\Calibration\CalibrationCurveOptionsDlg.cs">
       <SubType>Form</SubType>
     </Compile>

@@ -250,17 +250,24 @@ namespace pwiz.Skyline.Controls.FilesTree
             var model = nodes.First().Model;
             Assume.IsTrue(model is Replicate || model is SpectralLibrary);
 
-            var replicateMessages = ValueTuple.Create(
-                FilesTreeResources.FilesTreeForm_Confirm_Remove_Replicate,
-                FilesTreeResources.FilesTreeForm_Confirm_Remove_Spectral_Library, 
-                FilesTreeResources.Remove_Replicate);
-
-            var libraryMessages = ValueTuple.Create(
-                FilesTreeResources.FilesTreeForm_Confirm_Remove_Replicates,
-                FilesTreeResources.FilesTreeForm_Confirm_Remove_Spectral_Libraries,
-                FilesTreeResources.Remove_Spectral_Library);
-
-            var messages = model is Replicate ? replicateMessages : libraryMessages;
+            ValueTuple<string, string, string> messages;
+            switch (model)
+            {
+                case Replicate _:
+                    messages = ValueTuple.Create(
+                        FilesTreeResources.FilesTreeForm_Confirm_Remove_Replicate,
+                        FilesTreeResources.FilesTreeForm_Confirm_Remove_Spectral_Library,
+                        FilesTreeResources.Remove_Replicate);
+                    break;
+                case SpectralLibrary _:
+                    messages = ValueTuple.Create(
+                        FilesTreeResources.FilesTreeForm_Confirm_Remove_Replicates,
+                        FilesTreeResources.FilesTreeForm_Confirm_Remove_Spectral_Libraries,
+                        FilesTreeResources.Remove_Spectral_Library);
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
 
             // Confirm delete
             if(ConfirmDelete(nodes.Count, messages.Item1, messages.Item2) == DialogResult.No)
@@ -276,14 +283,14 @@ namespace pwiz.Skyline.Controls.FilesTree
                 {
                     using var monitor = new SrmSettingsChangeMonitor(progressMonitor, longWaitDlg.Text, SkylineWindow);
 
-                    if (model is Replicate replicate)
+                    if (model is Replicate)
                     {
                         // The selected nodes could include sample files. If so, remove them so the list is only Replicates, which
                         // makes the Audit Log messages more consistent.
                         var deletedModels = nodes.Select(item => item.Model).OfType<Replicate>().Cast<FileNode>().ToList();
                         modifiedDoc = Replicate.Delete(originalDoc, monitor, deletedModels);
                     }
-                    else if (model is SpectralLibrary library)
+                    else if (model is SpectralLibrary)
                     {
                         var deletedModels = nodes.Select(item => item.Model).ToList();
                         modifiedDoc = SpectralLibrary.Delete(originalDoc, monitor, deletedModels);
@@ -461,6 +468,12 @@ namespace pwiz.Skyline.Controls.FilesTree
             }
         }
 
+        /// <summary>
+        /// Use this method for debugging - it forces a refresh of the entire tree and is a convenient place
+        /// to set a breakpoint that can be triggered by a context menu action.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void FilesTree_DebugRefreshTreeMenuItem(object sender, EventArgs e)
         {
             FilesTree.Root.RefreshState();
@@ -833,7 +846,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             var confirmDlg = new MultiButtonMsgDlg(confirmMsg, MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false);
 
-            // Activate the "No" button
+            // Activate the "No" button so a keystroke cancels the delete action
             confirmDlg.ActiveControl = confirmDlg.VisibleButtons.Last();
             confirmDlg.KeyUp += (sender, e) =>
             {

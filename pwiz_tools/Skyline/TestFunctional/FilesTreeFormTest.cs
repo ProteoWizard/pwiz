@@ -42,6 +42,8 @@ using static pwiz.Skyline.Model.Files.FileNode;
 
 // TODO: test double-click on Background Proteome. Need an additional Skyline document with a Background Proteome
 // TODO: test new .sky document, import asset backed file (ex: .protdb), assert file system watching before document saved for the first time
+// TODO: add a new helper for getting a FilesTree node by model type to make this more readable: SkylineWindow.FilesTree.Root.NodeAt(0).FileState).
+
 // ReSharper disable WrongIndentSize
 namespace pwiz.SkylineTestFunctional
 {
@@ -68,10 +70,10 @@ namespace pwiz.SkylineTestFunctional
             // UI tests
             TestEmptyDocument();
             ResetFilesTree();
-
+            
             TestSave();
             ResetFilesTree();
-
+            
             TestSaveAs();
             ResetFilesTree();
 
@@ -81,16 +83,16 @@ namespace pwiz.SkylineTestFunctional
 
         protected void TestFileSystemWatcherIgnoreList()
         {
-            Assert.IsTrue(FileSystemService.IgnoreFileName(@"c:\Users\foobar\file.tmp"));
-            Assert.IsTrue(FileSystemService.IgnoreFileName(@"c:\Users\foobar\file.bak"));
-            Assert.IsTrue(FileSystemService.IgnoreFileName(null));
-            Assert.IsTrue(FileSystemService.IgnoreFileName(string.Empty));
-            Assert.IsTrue(FileSystemService.IgnoreFileName(@""));
-            Assert.IsTrue(FileSystemService.IgnoreFileName(@"   "));
+            Assert.IsTrue(LocalFileSystem.IgnoreFileName(@"c:\Users\foobar\file.tmp"));
+            Assert.IsTrue(LocalFileSystem.IgnoreFileName(@"c:\Users\foobar\file.bak"));
+            Assert.IsTrue(LocalFileSystem.IgnoreFileName(null));
+            Assert.IsTrue(LocalFileSystem.IgnoreFileName(string.Empty));
+            Assert.IsTrue(LocalFileSystem.IgnoreFileName(@""));
+            Assert.IsTrue(LocalFileSystem.IgnoreFileName(@"   "));
 
-            Assert.IsFalse(FileSystemService.IgnoreFileName(@"c:\Users\foobar\file.sky"));
-            Assert.IsFalse(FileSystemService.IgnoreFileName(@"c:\Users\foobar\file.xls"));
-            Assert.IsFalse(FileSystemService.IgnoreFileName(@"c:\Users\foobar\file.txt"));
+            Assert.IsFalse(LocalFileSystem.IgnoreFileName(@"c:\Users\foobar\file.sky"));
+            Assert.IsFalse(LocalFileSystem.IgnoreFileName(@"c:\Users\foobar\file.xls"));
+            Assert.IsFalse(LocalFileSystem.IgnoreFileName(@"c:\Users\foobar\file.txt"));
         }
 
         protected void TestEmptyDocument()
@@ -118,7 +120,7 @@ namespace pwiz.SkylineTestFunctional
 
             AssertTopLevelFiles(typeof(SkylineAuditLog));
 
-            Assert.IsFalse(SkylineWindow.FilesTree.IsMonitoringFileSystem());
+            Assert.AreEqual(FileSystemType.in_memory, SkylineWindow.FilesTree.FileSystemType);
             Assert.AreEqual(null, SkylineWindow.FilesTree.PathMonitoredForFileSystemChanges());
         }
 
@@ -135,7 +137,7 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() => { SkylineWindow.ShowFilesTreeForm(true); });
                 WaitForFilesTree();
 
-                Assert.IsFalse(SkylineWindow.FilesTree.IsMonitoringFileSystem());
+                Assert.AreEqual(FileSystemType.in_memory, SkylineWindow.FilesTree.FileSystemType);
                 Assert.AreEqual(null, SkylineWindow.FilesTree.PathMonitoredForFileSystemChanges());
             }
 
@@ -143,7 +145,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.SaveDocument(monitoredPath));
             WaitForFilesTree();
 
-            Assert.IsTrue(SkylineWindow.FilesTree.IsMonitoringFileSystem());
+            Assert.AreEqual(FileSystemType.local_file_system, SkylineWindow.FilesTree.FileSystemType);
             Assert.AreEqual(Path.GetDirectoryName(monitoredPath), SkylineWindow.FilesTree.PathMonitoredForFileSystemChanges());
 
             // After saving, Window Layout (.sky.view) is present
@@ -175,7 +177,8 @@ namespace pwiz.SkylineTestFunctional
                 WaitForFilesTree();
             }
 
-            Assert.IsFalse(SkylineWindow.FilesTree.IsMonitoringFileSystem());
+            Assert.AreEqual(FileSystemType.in_memory, SkylineWindow.FilesTree.FileSystemType);
+
             Assert.AreEqual(FileState.not_initialized, SkylineWindow.FilesTree.Root.NodeAt(0).FileState);
             Assert.IsNull(SkylineWindow.FilesTree.Root.NodeAt(0).LocalFilePath);
 
@@ -189,7 +192,6 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(Path.GetDirectoryName(monitoredPath), SkylineWindow.FilesTree.PathMonitoredForFileSystemChanges());
 
             // Audit Log
-            // TODO: make tests more readable by adding new helper on FilesTree for getting node of certain type 
             Assert.AreEqual(FileState.available, SkylineWindow.FilesTree.Root.NodeAt(0).FileState);
             Assert.IsNotNull(SkylineWindow.FilesTree.Root.NodeAt(0).LocalFilePath);
 
@@ -202,6 +204,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Check state of files and paths after saving
             var tree = SkylineWindow.FilesTree;
+            Assert.AreEqual(FileSystemType.local_file_system, tree.FileSystemType);
             Assert.AreEqual(Path.GetDirectoryName(monitoredPath), tree.PathMonitoredForFileSystemChanges());
 
             AssertTopLevelFiles(typeof(SkylineAuditLog), typeof(SkylineViewFile));
@@ -227,7 +230,7 @@ namespace pwiz.SkylineTestFunctional
             // Wait until SequenceTree is visible - does not wait on FilesTree because it's not visible yet
             WaitForConditionUI(() => SkylineWindow.SequenceTreeFormIsVisible);
 
-            // FilesTree should exist and not be visible
+            // FilesTree should exist but not be visible
             Assert.AreEqual(1, SkylineWindow.DockPanel.Contents.OfType<FilesTreeForm>().Count());
             WaitForConditionUI(() => !SkylineWindow.FilesTreeFormIsVisible);
 
