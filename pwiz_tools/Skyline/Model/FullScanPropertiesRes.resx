@@ -283,6 +283,12 @@
   <data name="Description_IsCentroided" xml:space="preserve">
     <value>Is this a centroided or high resolution spectrum.</value>
   </data>
+  <data name="WindowGroup" xml:space="preserve">
+      <value>Window Group</value>
+  </data>
+  <data name="Description_WindowGroup" xml:space="preserve">
+      <value>PASEF MS2 window group</value>
+  </data>
   <data name="HighEnergyOffset" xml:space="preserve">
     <value>High Energy Offset</value>
   </data>

@@ -61,6 +61,10 @@ namespace pwiz.Skyline.Model.RetentionTimes
         private double _maxX;
         private double _minY;
         private double _maxY;
+        private int _maxXi;
+        private int _minXi;
+        private int _maxYi;
+        private int _minYi;
         private int[] _consolidatedXY;
         private int[] _consolidatedYX;
         private double _rmsd;
@@ -92,6 +96,25 @@ namespace pwiz.Skyline.Model.RetentionTimes
         /// size is a fraction of the entire window
         /// </summary>
         public double StartingWindowSizeProportion { get; set; }
+
+        public double GetScaledX(int coordinate)
+        {
+            return _minX + coordinate * (_maxX - _minX) / _resolution;
+        }
+        public int GetXCoordinate(double x)
+        {
+            return (int)Math.Round(_resolution * (x - _minX) / (_maxX - _minX));
+        }
+
+        public double GetScaledY(int coordinate)
+        {
+            return _minY + coordinate * (_maxY - _minY) / _resolution;
+        }
+
+        public int GetYCoordinate(double y)
+        {
+            return (int)Math.Round(_resolution * (y - _minY) / (_maxY - _minY));
+        }
 
         public override void Train(double[] xArr, double[] yArr, CancellationToken token)
         {
@@ -232,6 +255,8 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         private void TraceNorthEast(float[,] histogram, int bestXi, int bestYi, LinkedList<Tuple<int, int>> points)
         {
+            _maxXi = bestXi;
+            _maxYi = bestYi;
             int xi = bestXi;
             int yi = bestYi;
             while (true)
@@ -247,14 +272,18 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 {
                     xi++;
                     yi++;
+                    _maxXi++;
+                    _maxYi++;
                 }
                 else if (east == max)
                 {
                     xi++;
+                    _maxXi++;
                 }
                 else if (north == max)
                 {
                     yi++;
+                    _maxYi++;
                 }
                 points.AddLast(new Tuple<int, int>(xi, yi));
             }
@@ -262,6 +291,8 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         private void TraceSouthWest(float[,] histogram, int bestXi, int bestYi, LinkedList<Tuple<int, int>> points)
         {
+            _minXi = bestXi;
+            _minYi = bestYi;
             var xi = bestXi;
             var yi = bestYi;
             while (true)
@@ -277,14 +308,18 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 {
                     xi--;
                     yi--;
+                    _minXi--;
+                    _minYi--;
                 }
                 else if (south == max)
                 {
                     yi--;
+                    _minYi--;
                 }
                 else
                 {
                     xi--;
+                    _minXi--;
                 }
                 points.AddFirst(new Tuple<int, int>(xi, yi));
             }
@@ -380,62 +415,30 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         public override double GetValue(double x)
         {
-            if (x <= _minX)
-            {
-                return _minY;
-            }
-
-            if (x >= _maxX)
-            {
-                return _maxY;
-            }
-
-            var scaledX = (_consolidatedXY.Length - 1) * (x - _minX) / (_maxX - _minX);
-            int prevBucket = (int)Math.Floor(scaledX);
-            int nextBucket = (int)Math.Ceiling(scaledX);
-            double scaledY;
-            if (prevBucket == nextBucket)
-            {
-                scaledY = _consolidatedXY[prevBucket];
-            }
-            else
-            {
-                scaledY = _consolidatedXY[prevBucket] * (nextBucket - scaledX) +
-                          _consolidatedXY[nextBucket] * (scaledX - prevBucket);
-            }
-
-            return _minY + scaledY * (_maxY - _minY) / _consolidatedXY.Length;
+            return _GetValueFor(x, _minX, _maxX, _minXi, _maxXi, _minY, _maxY, _minYi, _maxYi, _consolidatedXY);
         }
 
         public override double GetValueReversed(double y)
         {
-            if (_consolidatedYX == null)
+            if (!CanCalculateReverseRegression)
                 throw new Exception(@"KDE has not calculated reverse regression");
-            if (y <= _minY)
-            {
-                return _minX;
-            }
+            return _GetValueFor(y, _minY, _maxY, _minYi, _maxYi, _minX, _maxX, _minXi, _maxXi, _consolidatedYX);
+        }
 
-            if (y >= _maxY)
-            {
-                return _maxX;
-            }
-
-            var scaledY = (_consolidatedYX.Length - 1) * (y - _minY) / (_maxY - _minY);
-            var prevBucket = (int)Math.Floor(scaledY);
-            var nextBucket = (int)Math.Ceiling(scaledY);
-            double scaledX;
-            if (prevBucket == nextBucket)
-            {
-                scaledX = _consolidatedYX[prevBucket];
-            }
+        private double _GetValueFor(double ind, double minInd, double maxInd, int minIndNormal, int maxIndNormal,
+            double minDep, double maxDep, int minDepNormal, int maxDepNormal, int[] arr)
+        {
+            int dep_i = -1;
+            if (ind <= minInd)
+                dep_i = minIndNormal;
+            else if (ind >= maxInd)
+                dep_i = maxIndNormal;
             else
             {
-                scaledX = _consolidatedYX[prevBucket] * (nextBucket - scaledY) +
-                          _consolidatedYX[nextBucket] * (scaledY - prevBucket);
+                int ind_i = IntegerInterpolate(ind, minInd, maxInd, minIndNormal, maxIndNormal);
+                dep_i = arr[ind_i];
             }
-
-            return _minX + scaledX * (_maxX - _minX) / _consolidatedYX.Length;
+            return Interpolate(dep_i, minDepNormal, maxDepNormal, minDep, maxDep);
         }
 
         public override double GetRmsd()
