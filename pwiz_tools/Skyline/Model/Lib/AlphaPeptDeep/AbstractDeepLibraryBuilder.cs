@@ -271,8 +271,8 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             var warnings = new List<string>();
             AddWarning(warnings, ModelResources.Alphapeptdeep_Warn_unknown_modification,
                 warningModSupports.Where(kvp => kvp.Value == PredictionSupport.none).Select(kvp => kvp.Key));
-            AddWarning(warnings, ModelResources.Alphapeptdeep_Warn_unknown_modification,
-                warningModSupports.Where(kvp => kvp.Value == PredictionSupport.none).Select(kvp => kvp.Key));
+            AddWarning(warnings, ModelResources.Alphapeptdeep_Warn_limited_modification,
+                warningModSupports.Where(kvp => kvp.Value != PredictionSupport.all).Select(kvp => kvp.Key));
             return TextUtil.LineSeparate(warnings);
         }
 
