@@ -97,8 +97,9 @@ namespace pwiz.Skyline.ToolsUI
             this.tbPath.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
             this.tbPath.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.FileSystem;
             this.tbPath.Name = "tbPath";
+            this.tbPath.TextChanged += new System.EventHandler(this.tbPath_TextChanged);
             // 
-            // EditInternalToolDlg
+            // EditSearchToolDlg
             // 
             this.AcceptButton = this.btnOK;
             resources.ApplyResources(this, "$this");

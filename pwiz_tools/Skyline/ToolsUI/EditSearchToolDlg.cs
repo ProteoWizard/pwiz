@@ -17,15 +17,16 @@
  * limitations under the License.
  */
 
+using pwiz.Common.Collections;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
-using pwiz.Common.Collections;
-using pwiz.Skyline.Model;
 
 namespace pwiz.Skyline.ToolsUI
 {
@@ -129,6 +130,14 @@ namespace pwiz.Skyline.ToolsUI
                     tbPath.Text = dlg.FileName;
                 }
             }
+        }
+
+        private void tbPath_TextChanged(object sender, EventArgs e)
+        {
+            if (File.Exists(tbPath.Text))
+                tbPath.ForeColor = Color.Black;
+            else
+                tbPath.ForeColor = Color.Red;
         }
     }
 }

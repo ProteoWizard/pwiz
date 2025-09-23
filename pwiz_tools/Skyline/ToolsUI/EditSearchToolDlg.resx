@@ -305,13 +305,13 @@ at which cleavage occurs</value>
     <value>8, 105</value>
   </data>
   <data name="lblExtraArgs.Size" type="System.Drawing.Size, System.Drawing">
-    <value>160, 13</value>
+    <value>154, 13</value>
   </data>
   <data name="lblExtraArgs.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
   </data>
   <data name="lblExtraArgs.Text" xml:space="preserve">
-    <value>&amp;Extra Command-Line Arguments:</value>
+    <value>&amp;Extra command-line arguments:</value>
   </data>
   <data name="&gt;&gt;lblExtraArgs.Name" xml:space="preserve">
     <value>lblExtraArgs</value>

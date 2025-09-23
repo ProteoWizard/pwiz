@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Chemistry;
@@ -176,9 +177,28 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private bool EnsureRequiredFilesDownloaded(IEnumerable<FileDownloadInfo> requiredFiles, Func<bool> extraDownloadAction = null)
         {
             var requiredFilesList = requiredFiles.ToList();
+
             var filesNotAlreadyDownloaded = SimpleFileDownloader.FilesNotAlreadyDownloaded(requiredFilesList).ToList();
             if (!filesNotAlreadyDownloaded.Any())
                 return true;
+
+            while(true)
+            {
+                var missingTools = SimpleFileDownloader.SearchToolsConfiguredButMissing(requiredFilesList).ToList();
+                if (missingTools.Any())
+                {
+                    var allTools = Settings.Default.SearchToolList.Select(i => i).ToList();
+                    foreach (var missingTool in missingTools)
+                    {
+                        var updatedItem = Settings.Default.SearchToolList.EditItem(this, missingTool, allTools, null);
+                        if (updatedItem == null)
+                            return false; // user canceled
+                        Settings.Default.SearchToolList.Add(updatedItem);
+                    }
+                }
+                else
+                    break;
+            }
 
             if (extraDownloadAction != null && !extraDownloadAction())
                 return false;
@@ -192,14 +212,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 SimpleFileDownloaderDlg.Show(TopLevelControl,
                     string.Format(PeptideSearchResources.SearchSettingsControl_EnsureRequiredFilesDownloaded_Download__0_,
                         searchEngineComboBox.SelectedItem), filesNotAlreadyDownloaded);
+
+                return !SimpleFileDownloader.FilesNotAlreadyDownloaded(filesNotAlreadyDownloaded).Any();
             }
             catch (Exception exception)
             {
                 MessageDlg.ShowWithException(this, exception.Message, exception);
                 return false;
             }
-
-            return !SimpleFileDownloader.FilesNotAlreadyDownloaded(filesNotAlreadyDownloaded).Any();
         }
 
         private bool EnsureRequiredFilesDownloaded()
@@ -676,6 +696,19 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 setting => setting.ValidValues);
 
             InitializeControls();
+        }
+
+        private void btnEditSearchTools_Click(object sender, EventArgs e)
+        {
+            ShowSearchToolsDlg();
+        }
+
+        public void ShowSearchToolsDlg()
+        {
+            using var listbox = new ListBox();
+            var driverTools = new SettingsListBoxDriver<SearchTool>(listbox, Settings.Default.SearchToolList);
+            driverTools.LoadList();
+            driverTools.EditList();
         }
     }
 

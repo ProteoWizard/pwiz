@@ -275,7 +275,7 @@ namespace pwiz.SkylineTestUtil
 
             var desiredCleanupLevel = TestContext.GetEnumValue("DesiredCleanupLevel", DesiredCleanupLevel.none);
 
-            CheckForFileLocks(RootPath, desiredCleanupLevel == DesiredCleanupLevel.all);
+            CheckForFileLocks(RootPath, desiredCleanupLevel != DesiredCleanupLevel.none);
             // Also check for file locks on the persistent files directory
             // since it is essentially an extension of the test directory.
             if (!TestContext.Properties.Contains("ParallelTest")) // It is a shared directory in parallel tests, though, so leave it alone in parallel mode

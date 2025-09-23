@@ -91,6 +91,7 @@ namespace pwiz.SkylineTestConnected
             });
             foreach (var filename in _filenames)
                 OpenFile(openDataSourceDialog, filename, false);
+            PauseTest();
             RunUI(openDataSourceDialog.Open);
 
             if (_filenames.Length > 1)

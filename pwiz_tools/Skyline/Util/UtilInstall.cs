@@ -231,30 +231,37 @@ namespace pwiz.Skyline.Util
 
         public static bool FileAlreadyDownloaded(FileDownloadInfo requiredFile)
         {
-            if (Settings.Default.SearchToolList.ContainsKey(requiredFile.ToolType))
-                return true;
-            
-            bool alreadyDownloaded;
-            if (requiredFile.Unzip)
-            {
-                if (requiredFile.CheckInstalledPath != null)
-                    alreadyDownloaded = File.Exists(requiredFile.CheckInstalledPath) || Directory.Exists(requiredFile.CheckInstalledPath);
-                else
-                    alreadyDownloaded = Directory.Exists(requiredFile.InstallPath);
-            }
-            else
-                alreadyDownloaded = File.Exists(Path.Combine(requiredFile.InstallPath, requiredFile.Filename));
+            string requiredFilePath = requiredFile.Unzip
+                ? requiredFile.CheckInstalledPath ?? requiredFile.InstallPath
+                : Path.Combine(requiredFile.InstallPath, requiredFile.Filename);
+            requiredFilePath = Settings.Default.SearchToolList.GetToolPathOrDefault(requiredFile.ToolType, requiredFilePath);
+
+            bool alreadyDownloaded = File.Exists(requiredFilePath) || Directory.Exists(requiredFilePath);
 
             if (!alreadyDownloaded)
                 return false;
             
-            Settings.Default.SearchToolList.Add(new SearchTool(requiredFile.ToolType, requiredFile.ToolPath, requiredFile.ToolExtraArgs, requiredFile.InstallPath, true));
+            if (!Settings.Default.SearchToolList.ContainsKey(requiredFile.ToolType))
+                Settings.Default.SearchToolList.Add(new SearchTool(requiredFile.ToolType, requiredFile.ToolPath, requiredFile.ToolExtraArgs, requiredFile.InstallPath, true));
             return true;
         }
 
         public static IEnumerable<FileDownloadInfo> FilesNotAlreadyDownloaded(IEnumerable<FileDownloadInfo> requiredFiles)
         {
             return requiredFiles.Where(f => !FileAlreadyDownloaded(f));
+        }
+
+        public static IEnumerable<SearchTool> SearchToolsConfiguredButMissing(IEnumerable<FileDownloadInfo> requiredFiles)
+        {
+            foreach(var requiredFile in requiredFiles)
+            {
+                if (Settings.Default.SearchToolList.ContainsKey(requiredFile.ToolType))
+                {
+                    var searchTool = Settings.Default.SearchToolList[requiredFile.ToolType];
+                    if (!searchTool.AutoInstalled && !File.Exists(searchTool.Path))
+                        yield return searchTool;
+                }
+            }
         }
 
         private static void LogToConsole(string message)
@@ -279,8 +286,16 @@ namespace pwiz.Skyline.Util
                     unzipTimer = new Stopwatch();
                 }
 
-                foreach (var requiredFile in filesNotAlreadyDownloaded)
+                void addSearchToolsForRequiredFilesGroup(IEnumerable<FileDownloadInfo> requiredFiles)
                 {
+                    foreach(var requiredFile in requiredFiles)
+                        Settings.Default.SearchToolList.Add(new SearchTool(requiredFile.ToolType, requiredFile.ToolPath, requiredFile.ToolExtraArgs, requiredFile.InstallPath, true));
+                }
+
+                foreach (var requiredFileGroup in filesNotAlreadyDownloaded.GroupBy(f => f.InstallPath))
+                {
+                    var requiredFile = requiredFileGroup.First();
+                    
                     // For testing, replace the hostname with the Skyline tool testing mirror path on AWS
                     var downloadUrl = requiredFile.DownloadUrl;
                     if (Program.UnitTest && !Program.UseOriginalURLs)
@@ -331,7 +346,7 @@ namespace pwiz.Skyline.Util
                     {
                         if (useCachedDownloads && !File.Exists(destinationFilename))
                             File.Copy(downloadFilename, destinationFilename);
-                        Settings.Default.SearchToolList.Add(new SearchTool(requiredFile.ToolType, requiredFile.ToolPath, requiredFile.ToolExtraArgs, requiredFile.InstallPath, true));
+                        addSearchToolsForRequiredFilesGroup(requiredFileGroup);
                         continue;
                     }
 
@@ -358,7 +373,7 @@ namespace pwiz.Skyline.Util
                     {
                         FileEx.SafeDelete(downloadFilename);
                     }
-                    Settings.Default.SearchToolList.Add(new SearchTool(requiredFile.ToolType, requiredFile.ToolPath, requiredFile.ToolExtraArgs, requiredFile.InstallPath, true));
+                    addSearchToolsForRequiredFilesGroup(requiredFileGroup);
                 }
 
                 if (downloadTimer != null)
