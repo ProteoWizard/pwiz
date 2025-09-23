@@ -292,7 +292,7 @@ namespace pwiz.Skyline.Util
                         Settings.Default.SearchToolList.Add(new SearchTool(requiredFile.ToolType, requiredFile.ToolPath, requiredFile.ToolExtraArgs, requiredFile.InstallPath, true));
                 }
 
-                foreach (var requiredFileGroup in filesNotAlreadyDownloaded.GroupBy(f => f.InstallPath))
+                foreach (var requiredFileGroup in filesNotAlreadyDownloaded.GroupBy(f => f.Filename))
                 {
                     var requiredFile = requiredFileGroup.First();
                     

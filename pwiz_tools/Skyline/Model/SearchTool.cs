@@ -21,6 +21,7 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
@@ -39,7 +40,7 @@ namespace pwiz.Skyline.Model
     }
     
     [XmlRoot("search_tool")]
-    public sealed class SearchTool : IKeyContainer<string>, IXmlSerializable
+    public sealed class SearchTool : Immutable, IKeyContainer<string>, IXmlSerializable
     {
         /// <summary>
         /// The enum-based value for this tool in the SearchTool system (that allows users to provide their own local versions of tools).
