@@ -29,6 +29,7 @@ namespace pwiz.Skyline.Model
     {
         CruxComet,
         CruxPercolator,
+        CruxTide,
         DIANN,
         EncyclopeDIA,
         Java,
