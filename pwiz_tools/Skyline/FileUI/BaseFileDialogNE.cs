@@ -788,7 +788,7 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        private bool TreatAsFolder(string itemText)
+        protected static bool TreatAsFolder(string itemText)
         {
             return DataSourceUtil.IsFolderType(itemText) || DataSourceUtil.IsSampleSetType(itemText);
         }
@@ -811,8 +811,7 @@ namespace pwiz.Skyline.FileUI
             else
             {
                 FileNames = new[] { ((SourceInfo) item.Tag).MsDataFileUri,  };
-                DialogResult = DialogResult.OK;
-                Close();
+                DoMainAction();
             }
         }
 
