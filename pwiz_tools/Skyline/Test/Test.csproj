@@ -161,6 +161,7 @@
     <Compile Include="..\Executables\AssortResources\ResourceReference.cs">
       <Link>ResourceReference.cs</Link>
     </Compile>
+    <Compile Include="AbstractLibraryBuilderModificationSupportTest.cs" />
     <Compile Include="AddTransitionsTest.cs" />
     <Compile Include="AdductTest.cs" />
     <Compile Include="AlphapeptdeepLibraryBuilderTest.cs" />
