@@ -54,7 +54,6 @@ namespace pwiz.Skyline.Controls.FilesTree
         public FilesTree()
         {
             _backgroundActionService = BackgroundActionService.Create(this);
-
             _fileSystemService = FileSystemService.Create(this, _backgroundActionService, FileDeleted, FileCreated, FileRenamed);
 
             _cancellationTokenSource = new CancellationTokenSource();
@@ -94,7 +93,6 @@ namespace pwiz.Skyline.Controls.FilesTree
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public FileSystemType FileSystemType => _fileSystemService.FileSystemType;
-
         public string PathMonitoredForFileSystemChanges() => _fileSystemService.MonitoredDirectory;
         public bool IsComplete() => _backgroundActionService.IsComplete;
 
@@ -103,7 +101,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         public void ScrollToTop() => Nodes[0]?.EnsureVisible();
 
         /// <summary>
-        /// Get the Folder associated with a model type.
+        /// Get the first folder associated with type <see cref="T"/>.
         /// </summary>
         /// <typeparam name="T">The model type</typeparam>
         /// <returns></returns>
@@ -375,7 +373,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 base.OnAfterSelect(e);
         }
 
-        [Browsable(true)]
+        [Browsable(false)]
         public event EventHandler<NodeLabelEditEventArgs> BeforeNodeEdit;
 
         [Browsable(false)]
@@ -666,7 +664,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         /// <param name="value">The matching node</param>
         /// <returns></returns>
         // TODO: unit tests
-        // CONSIDER: improve performance with a dictionary mapping file paths to tree nodes
+        // CONSIDER: a dictionary mapping paths to FilesTreeNode would improve performance
         private static bool FindTreeNodeForFileName(FilesTreeNode filesTreeNode, string filePath, out FilesTreeNode value)
         {
             value = null;

@@ -434,7 +434,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             if (filesTreeNode.SupportsOpenContainingFolder())
             {
                 openContainingFolderMenuItem.Visible = true;
-                openContainingFolderMenuItem.Enabled = filesTreeNode.FileState == FileState.available;
+                openContainingFolderMenuItem.Enabled = filesTreeNode.LocalFileIsAvailable();
             }
 
             if (filesTreeNode.SupportsRemoveItem())

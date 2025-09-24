@@ -146,6 +146,26 @@ namespace pwiz.Skyline.Controls.FilesTree
             node.UpdateState();
         }
 
+        /// <summary>
+        /// Check if a file is available locally. This check is subtle so see in-line docs.
+        /// </summary>
+        /// <returns>true if the file is available locally - either on disk or in-memory. false otherwise.</returns>
+        public bool LocalFileIsAvailable()
+        {
+            if (!Model.IsBackedByFile)
+                return false;
+
+            // Model is backed by a file and the file is available locally, as of the last check
+            if (LocalFilePath != null && FileState == FileState.available)
+                return true;
+
+            // Model is backed by a file and the file is available - but only in-memory
+            if (FileState == FileState.in_memory)
+                return true;
+
+            return false;
+        }
+
         private bool IsCurrentDropTarget()
         {
             return FilesTree.IsDuringDragAndDrop && IsDraggable() && ReferenceEquals(FilesTree.SelectedNode, this);
@@ -169,22 +189,6 @@ namespace pwiz.Skyline.Controls.FilesTree
         public override Color BackColorMS => IsCurrentDropTarget() ? BackColor : base.BackColorMS;
 
         public override Brush SelectionBrush => IsCurrentDropTarget() ? new SolidBrush(BackColorMS) : base.SelectionBrush;
-
-        // Override useful for debugging TreeViewMS layout issues. For example, not being able to drag the right-hand-side of a tree node.
-        // public new Rectangle Bounds
-        // {
-        //     get
-        //     {
-        //         var boundsModified = base.Bounds;
-        //         // Keep this check in-sync with TreeViewMS.WidthCustom
-        //         if (_widthCustom > 0)
-        //         {
-        //             boundsModified.Width = _widthCustom;
-        //         }
-        //
-        //         return boundsModified;
-        //     }
-        // }
 
         protected override void DrawFocus(Graphics g)
         {
@@ -263,13 +267,17 @@ namespace pwiz.Skyline.Controls.FilesTree
             if (Debugger.IsAttached)
             {
                 customTable.AddDetailRow(@" ", @" ", rt);
-                customTable.AddDetailRow(@"Debug Info", @" ", rt);
+                customTable.AddDetailRow(@"Debug Info", @"(only visible when debugger attached) ", rt);
 
+                customTable.AddDetailRow(@"FileName", FileName, rt);
                 var msg = Model.IsBackedByFile ? $@"{FileState}" : @"Not backed by local file";
                 customTable.AddDetailRow(@"FileState", msg, rt);
 
-                // TODO: re-enable
-                // customTable.AddDetailRow(@"Document revision", $@"{Model.Document.RevisionIndex}", rt);
+                customTable.AddDetailRow(@"FilePath", FilePath, rt);
+                customTable.AddDetailRow(@"LocalFilePath", LocalFilePath, rt);
+
+                // CONSIDER: add SrmDocument.RevisionIndex to FileNode
+                // customTable.AddDetailRow(@"Document revision", $@"{Model.DocumentRevisionIndex}", rt);
             }
 
             var size = customTable.CalcDimensions(g);
