@@ -396,9 +396,9 @@ namespace pwiz.Skyline.Model
             get { return AverageMeasuredRetentionTime; }
         }
 
-        public float? GetSchedulingTime(ChromFileInfoId fileId)
+        public float? GetSchedulingTime(int replicateIndex, ChromFileInfoId fileId)
         {
-            return GetMeasuredRetentionTime(fileId);
+            return GetMeasuredRetentionTime(replicateIndex, fileId);
         }
 
         public float? GetMeasuredRetentionTime(int i)
@@ -441,11 +441,11 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public float? GetMeasuredRetentionTime(ChromFileInfoId fileId)
+        public float? GetMeasuredRetentionTime(int replicateIndex, ChromFileInfoId fileId)
         {
             double totalTime = 0;
             int countTime = 0;
-            foreach (var chromInfo in TransitionGroups.SelectMany(nodeGroup => nodeGroup.ChromInfos))
+            foreach (var chromInfo in TransitionGroups.SelectMany(nodeGroup => replicateIndex == -1 ? nodeGroup.ChromInfos : nodeGroup.GetSafeChromInfo(replicateIndex)))
             {
                 if (fileId != null && !ReferenceEquals(fileId, chromInfo.FileId))
                     continue;

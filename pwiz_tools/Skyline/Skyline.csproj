@@ -596,6 +596,7 @@
     <Compile Include="Model\Proteome\AssociateProteinsResults.cs" />
     <Compile Include="Model\ReintegrateResultsHandler.cs" />
     <Compile Include="Model\Lib\LibraryFiles.cs" />
+    <Compile Include="Model\Results\InjectionGroup.cs" />
     <Compile Include="Model\Results\LcPeakIonMetrics.cs" />
     <Compile Include="Model\Results\ScoredPeakBounds.cs" />
     <Compile Include="Model\Results\Scoring\ReintegrateDlgSettings.cs" />

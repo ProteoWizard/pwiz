@@ -47,9 +47,8 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public static bool REPICK_IRTS_AFTER_TRAINING => false;
 
-        // Lock on this to access these variables
         private readonly SrmDocument _document;
-        private readonly ChromatogramSet _chromatogramSet;
+        // Lock on this to access these variables
         private FileBuildInfo _currentFileInfo;
 
         private readonly ChromatogramCache _cacheRecalc;
@@ -58,26 +57,20 @@ namespace pwiz.Skyline.Model.Results
         private QueueWorker<PeptideChromDataSets> _chromDataSets;
         private readonly object _writeLock = new object();
 
-        // Accessed only on the write thread
-        private readonly RetentionTimePredictor _retentionTimePredictor;
-
         private readonly int SCORING_THREADS = ParallelEx.SINGLE_THREADED ? 1 : 4;
 
         private readonly PeakBoundaryImputer _peakBoundaryImputer;
         //private static readonly Log LOG = new Log<ChromCacheBuilder>();
 
-        public ChromCacheBuilder(SrmDocument document, ChromatogramCache cacheRecalc,
-            string cachePath, MsDataFileUri msDataFilePath, ILoadMonitor loader, IProgressStatus status,
-            Action<ChromatogramCache, IProgressStatus> complete)
-            : base(cachePath, loader, status, complete)
+        public ChromCacheBuilder(InjectionGroup injectionGroup, 
+            string cachePath, MsDataFileUri msDataFilePath, ILoadMonitor loader, IProgressStatus status)
+            : base(cachePath, loader, status, injectionGroup.CompleteAction)
         {
-            _document = document;
-            _cacheRecalc = cacheRecalc;
+            var document = _document = injectionGroup.Document;
+            InjectionGroup = injectionGroup;
+            _cacheRecalc = injectionGroup.CacheRecalc;
             _destinationStream = _cacheRecalc?.ReadStream;
             MSDataFilePath = msDataFilePath;
-
-            // Initialize retention time prediction
-            _retentionTimePredictor = new RetentionTimePredictor(document.Settings.PeptideSettings.Prediction.RetentionTime);
 
             // Get peak scoring calculators
             IEnumerable<IPeakFeatureCalculator> calcEnum;
@@ -99,17 +92,16 @@ namespace pwiz.Skyline.Model.Results
             _listScoreTypes = DetailedPeakFeatureCalculators.FeatureNames;
 
             _peakBoundaryImputer = new PeakBoundaryImputer(document);
-            _chromatogramSet =
-                document.Settings.MeasuredResults?.Chromatograms.FirstOrDefault(chromSet =>
-                    chromSet.IndexOfPath(msDataFilePath) >= 0);
         }
+
+        public InjectionGroup InjectionGroup { get; }
 
         private void ScoreWriteChromDataSets(PeptideChromDataSets chromDataSets, int threadIndex)
         {
             // Score peaks.
             GetPeptideRetentionTimes(chromDataSets);
             var explicitPeakBounds = _peakBoundaryImputer.GetExplicitPeakBounds(
-                chromDataSets.NodePep, _chromatogramSet, chromDataSets.FileInfo.FilePath);
+                chromDataSets.NodePep, InjectionGroup.ChromatogramSet, chromDataSets.FileInfo.FilePath);
             chromDataSets.PickChromatogramPeaks(explicitPeakBounds);
             StorePeptideRetentionTime(chromDataSets);
 
@@ -378,6 +370,13 @@ namespace pwiz.Skyline.Model.Results
             Complete(x);
         }
 
+        private void DoFirstPass(ChromDataProvider provider, IList<PeptideChromDataSets> listChromData)
+        {
+            var listProviderIds = new List<IList<int>>(listChromData.Where(IsFirstPassPeptide).Select(c => c.ProviderIds.ToArray()));
+            listProviderIds.AddRange(listChromData.Where(c => !IsFirstPassPeptide(c)).Select(c => c.ProviderIds.ToArray()));
+            provider.SetRequestOrder(listProviderIds);
+        }
+
         private void Read(ChromDataProvider provider)
         {
             var listMzPrecursors = new List<PeptidePrecursorMz>(Precursors);
@@ -523,13 +522,13 @@ namespace pwiz.Skyline.Model.Results
 
             // All threads must complete scoring before calculating the regression
             _chromDataSets.Wait();
-
-            return _retentionTimePredictor.CreateConversion();
+            InjectionGroup.CompletedFirstPass(MSDataFilePath);
+            return InjectionGroup.CreateConversion(MSDataFilePath);
         }
 
         private bool IsFirstPassPeptide(PeptideChromDataSets pepChromData)
         {
-            return pepChromData.NodePep != null && _retentionTimePredictor.IsFirstPassPeptide(pepChromData.NodePep);
+            return InjectionGroup.IsFirstPassPeptide(pepChromData.NodePep);
         }
 
         private List<PeptideChromDataSets> CalcPeptideChromDataSets(ChromDataProvider provider,
@@ -707,19 +706,13 @@ namespace pwiz.Skyline.Model.Results
             bool isAlignedTimes = retentionTimes.Length == 0;
             if (isAlignedTimes)
             {
-                retentionTimes = _document.Settings.GetAlignedRetentionTimes(_chromatogramSet, MSDataFilePath, targets);
+                retentionTimes = _document.Settings.GetAlignedRetentionTimes(InjectionGroup.ChromatogramSet, MSDataFilePath, targets);
             }
             peptideChromDataSets.RetentionTimes = retentionTimes;
             peptideChromDataSets.IsAlignedTimes = isAlignedTimes;
 
-            RetentionTimePrediction prediction = null;
-            if (_retentionTimePredictor.HasCalculator)
-            {
-                var predictedRetentionTime = _retentionTimePredictor.GetPredictedRetentionTime(nodePep);
-                TruncateChromatograms(peptideChromDataSets, predictedRetentionTime);
-                prediction = new RetentionTimePrediction(predictedRetentionTime,
-                    _retentionTimePredictor.TimeWindow);
-            }
+            RetentionTimePrediction prediction = InjectionGroup.GetRetentionTimePrediction(nodePep);
+            TruncateChromatograms(peptideChromDataSets, prediction?.Time);
 
             var fullScan = _document.Settings.TransitionSettings.FullScan;
             bool isFullScan = fullScan.IsEnabled && !_currentFileInfo.IsSrm;
@@ -773,20 +766,11 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         private void StorePeptideRetentionTime(PeptideChromDataSets peptideChromDataSets)
         {
-            var nodePep = peptideChromDataSets.NodePep;
-            if (nodePep == null || !Equals(nodePep.GlobalStandardType, PeptideDocNode.STANDARD_TYPE_IRT))
-                return;
-
-            var dataSet = peptideChromDataSets.DataSets.FirstOrDefault();
-            if (dataSet != null && dataSet.MaxPeakIndex >= 0)
-            {
-                var bestPeak = dataSet.BestChromatogram.Peaks[dataSet.MaxPeakIndex];
-                _retentionTimePredictor.AddPeptideTime(nodePep, bestPeak.RetentionTime);
-            }
+            InjectionGroup.StorePeptideRetentionTime(peptideChromDataSets);
         }
 
         /// <summary>
-        /// Used for retentiont time prediction during import
+        /// Used for retention time prediction during import
         /// </summary>
         public class RetentionTimePredictor : IRetentionTimePredictor
         {
@@ -1286,7 +1270,7 @@ namespace pwiz.Skyline.Model.Results
             IRetentionTimePredictor retentionTimePredictor = null;
             var predict = _document.Settings.PeptideSettings.Prediction;
             if (predict.RetentionTime != null && predict.RetentionTime.IsAutoCalculated)
-                retentionTimePredictor = _retentionTimePredictor;
+                retentionTimePredictor = InjectionGroup.GetRetentionTimePredictor();
 
             return new SpectraChromDataProvider(dataFile, fileInfo, _document, retentionTimePredictor,
                 CachePath, _status, 0, 100, _loader);
@@ -1304,7 +1288,10 @@ namespace pwiz.Skyline.Model.Results
             if (chromDataSet != null)
             {
                 if (chromDataSet.FilterByRetentionTime())
+                {
                     _chromDataSets.Add(chromDataSet);
+                    InjectionGroup.StorePeptideRetentionTime(chromDataSet);
+                }
             }
         }
 
