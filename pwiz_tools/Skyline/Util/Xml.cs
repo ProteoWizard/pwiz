@@ -717,19 +717,22 @@ namespace pwiz.Skyline.Util
 
         public static TAttr GetEnumAttribute<TAttr>(this XmlReader reader, Enum name, TAttr defaultValue, EnumCase enumCase)
         {
-            try
+            string value = reader.GetAttribute(name);
+            if (!string.IsNullOrEmpty(value))
             {
-                return reader.GetEnumAttribute<TAttr>(name, enumCase);
+                try
+                {
+                    return (TAttr)Enum.Parse(typeof(TAttr), GetEnumString(value, enumCase));
+                }
+                catch (ArgumentException x)
+                {
+                    throw new InvalidDataException(string.Format(Resources.XmlUtil_GetAttribute_The_value__0__is_not_valid_for_the_attribute__1__, value, name), x);
+                }
             }
-            catch(InvalidDataException x)
-            {
-                if (x.InnerException == null)
-                    return defaultValue;
-                throw;
-            }
+            return defaultValue;
         }
 
-        public static TAttr GetEnumAttribute<TAttr>(this XmlReader reader, Enum name, EnumCase enumCase)
+        public static TAttr GetRequiredEnumAttribute<TAttr>(this XmlReader reader, Enum name, EnumCase enumCase)
         {
             string value = reader.GetAttribute(name);
             if (!string.IsNullOrEmpty(value))
