@@ -1014,13 +1014,21 @@ namespace pwiz.Skyline.Controls.Databinding
 
             return true;
         }
-
-        protected override ViewEditor CreateViewEditor(ViewGroup viewGroup, ViewSpec viewSpec)
+        public Control ParentControl { get; private set; }
+        protected override ViewEditor CreateViewEditor(ViewGroup viewGroup, ViewSpec viewSpec, Control owner = null, bool showApply = false )
         {
-            var viewEditor = base.CreateViewEditor(viewGroup, viewSpec);
+            var viewEditor = base.CreateViewEditor(viewGroup, viewSpec, owner, showApply);
             viewEditor.Alphabetical = Settings.Default.AlphabeticalReportEditor;
             viewEditor.Closed += ViewEditorClosed;
+            viewEditor.VisibleChanged += ViewEditorClosed;
+
+            if (owner != null)
+            {
+                ParentControl = owner;
+            }
+
             return viewEditor;
+
         }
 
         private void ViewEditorClosed(object sender, EventArgs eventArgs)
