@@ -533,6 +533,12 @@
     <Compile Include="FileUI\PeptideSearch\HardklorSearchControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Include="FileUI\PublishDocumentDlgArdia.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\PublishDocumentDlgPanorama.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Model\DecoyGenerator.cs" />
     <Compile Include="Model\Lib\AlphaPeptDeep\AlphapeptdeepLibraryBuilder.cs" />
     <Compile Include="Model\AuditLog\EnumNames.Designer.cs">
@@ -1759,11 +1765,11 @@
     <Compile Include="FileUI\PeptideSearch\TransitionSettingsControl.Designer.cs">
       <DependentUpon>TransitionSettingsControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="FileUI\PublishDocumentDlg.cs">
+    <Compile Include="FileUI\PublishDocumentDlgBase.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FileUI\PublishDocumentDlg.Designer.cs">
-      <DependentUpon>PublishDocumentDlg.cs</DependentUpon>
+    <Compile Include="FileUI\PublishDocumentDlgBase.Designer.cs">
+      <DependentUpon>PublishDocumentDlgBase.cs</DependentUpon>
     </Compile>
     <Compile Include="FileUI\RenameResultDlg.cs">
       <SubType>Form</SubType>
@@ -3709,11 +3715,11 @@
       <DependentUpon>MatchModificationsControl.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\PublishDocumentDlg.ja.resx">
-      <DependentUpon>PublishDocumentDlg.cs</DependentUpon>
+    <EmbeddedResource Include="FileUI\PublishDocumentDlgBase.ja.resx">
+      <DependentUpon>PublishDocumentDlgBase.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\PublishDocumentDlg.zh-CHS.resx">
-      <DependentUpon>PublishDocumentDlg.cs</DependentUpon>
+    <EmbeddedResource Include="FileUI\PublishDocumentDlgBase.zh-CHS.resx">
+      <DependentUpon>PublishDocumentDlgBase.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\RenameResultDlg.ja.resx">
       <DependentUpon>RenameResultDlg.cs</DependentUpon>
@@ -4823,8 +4829,9 @@
       <DependentUpon>ImportResultsControl.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\PublishDocumentDlg.resx">
-      <DependentUpon>PublishDocumentDlg.cs</DependentUpon>
+    <EmbeddedResource Include="FileUI\PublishDocumentDlgBase.resx">
+      <DependentUpon>PublishDocumentDlgBase.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\RescoreResultsDlg.resx">
       <DependentUpon>RescoreResultsDlg.cs</DependentUpon>
