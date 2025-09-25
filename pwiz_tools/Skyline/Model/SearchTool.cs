@@ -116,7 +116,7 @@ namespace pwiz.Skyline.Model
         public void ReadXml(XmlReader reader)
         {
             // Read tag attributes
-            Name = reader.GetEnumAttribute<SearchToolType>(ATTR.name, XmlUtil.EnumCase.unkown);
+            Name = reader.GetRequiredEnumAttribute<SearchToolType>(ATTR.name, XmlUtil.EnumCase.unkown);
             Path = reader.GetAttribute(ATTR.path);
             ExtraCommandlineArgs = reader.GetAttribute(ATTR.args);
             InstallPath = reader.GetAttribute(ATTR.install_path);

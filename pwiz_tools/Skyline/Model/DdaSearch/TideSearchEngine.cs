@@ -619,15 +619,6 @@ namespace pwiz.Skyline.Model.DdaSearch
                     if (mod.IsVariable  )
                     {
                         ++modCounter;
-                        const int force = 0;
-                        int distance = mod.Terminus == null ? -1 : 0;
-                        int terminus = mod.Terminus switch
-                        {
-                            null => 0,
-                            ModTerminus.N => 2,
-                            ModTerminus.C => 3,
-                            _ => throw new ArgumentException(nameof(mod.Terminus))
-                        };
                         string massSign = mass > 0 ? @"+" : @"";
                         string res = residues;
                         if (residues == @"n^" || residues == @"c^")
