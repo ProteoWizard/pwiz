@@ -95,7 +95,12 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         public override string SearchEngineBlurb => DdaSearchResources.HardklorSearchEngine_SearchEngineBlurb;
 
-        public override event NotificationEventHandler SearchProgressChanged;
+        //public override event NotificationEventHandler SearchProgressChanged;
+        public override event NotificationEventHandler SearchProgressChanged
+        {
+            add { }
+            remove { }
+        }
 
         public override bool Run(CancellationTokenSource cancelToken, IProgressStatus status) // Single threaded version
         {

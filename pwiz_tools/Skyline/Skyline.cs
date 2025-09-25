@@ -2777,6 +2777,19 @@ namespace pwiz.Skyline
             }
         }
 
+        private void searchToolsMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowSearchToolsDlg();
+        }
+
+        public void ShowSearchToolsDlg()
+        {
+            using var listbox = new ListBox();
+            var driverTools = new SettingsListBoxDriver<SearchTool>(listbox, Settings.Default.SearchToolList);
+            driverTools.LoadList();
+            driverTools.EditList();
+        }
+
         private void toolsMenu_DropDownOpening(object sender, EventArgs e)
         {
             PopulateToolsMenu();
