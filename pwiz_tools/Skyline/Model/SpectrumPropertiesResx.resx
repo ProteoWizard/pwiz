@@ -109,6 +109,9 @@
   <data name="Category_PrecursorInfo" xml:space="preserve">
     <value>Precursor</value>
   </data>
+  <data name="Category_SpectrumInfo" xml:space="preserve">
+    <value>Spectrum Statistics</value>
+  </data>
   <data name="CCS" xml:space="preserve">
     <value>CCS</value>
   </data>
@@ -157,6 +160,18 @@
   <data name="Description_SpectrumCount" xml:space="preserve">
     <value>Number of measured spectra for this peptide in the library</value>
   </data>
+  <data name="Description_PeakCount">
+    <value>Count of peaks in the library spectrum</value>
+  </data>
+  <data name="Description_TotalIC">
+    <value>Sum of all peak intensities in the library spectrum</value>
+  </data>
+  <data name="Description_MirrorPeakCount">
+    <value>Number of non-zero peaks in the mirror spectrum</value>
+  </data>
+  <data name="Description_MirrorTotalIC">
+    <value>Sum of all peak intensities in the mirror spectrum</value>
+  </data>
   <data name="Description_KoinaDotpMatch" xml:space="preserve">
     <value>Dot product (actually it is a normalized square root contrast angle, see here for an example: https://doi.org/10.1007/s13361-016-1408-y) between the annotated peaks in the library and Koina spectra. User controls which ion types are annotated, and hence included into the calculation. </value>
   </data>
@@ -204,6 +219,18 @@
   </data>
   <data name="SpectrumCount" xml:space="preserve">
     <value>Spectrum Count</value>
+  </data>
+  <data name="PeakCount">
+    <value>Peak Count</value>
+  </data>
+  <data name="TotalIC">
+    <value>Total Ion Current</value>
+  </data>
+  <data name="MirrorPeakCount">
+    <value>Mirror Peak Count</value>
+  </data>
+  <data name="MirrorTotalIC">
+    <value>Mirror Total Ion Current</value>
   </data>
   <data name="KoinaDotpMatch" xml:space="preserve">
     <value>Koina dot product</value>
