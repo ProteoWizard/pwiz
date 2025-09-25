@@ -4663,7 +4663,7 @@ namespace pwiz.Skyline.Model
             writer.Write(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo));
             writer.Write(FieldSeparator);
 
-            if (MethodType == ExportMethodType.Standard)
+            if (MethodType == ExportMethodType.Standard && !(this is WatersConnectMethodExporter))
             {
                 RTWindow = RunLength;   // Store for later use
                 writer.Write((RunLength / 2).ToString(CultureInfo));
@@ -4711,7 +4711,12 @@ namespace pwiz.Skyline.Model
             writer.Write(FieldSeparator);
             writer.Write(RTWindow);
             writer.Write(FieldSeparator);
-            writer.Write((nodeTran.ResultsRank == 1).ToString());
+            if (nodeTran.ResultsRank.HasValue)
+                writer.Write((nodeTran.ResultsRank == 1).ToString());
+            else if (nodeTran.HasLibInfo)
+                writer.Write((nodeTran.LibInfo.Rank == 1).ToString());
+            else
+                writer.Write(false);
             writer.Write(FieldSeparator);
             writer.Write(nodePepGroup.Name + @"/" + nodePep.ModifiedSequenceDisplay);
             writer.Write(FieldSeparator);
@@ -5157,6 +5162,10 @@ namespace pwiz.Skyline.Model
                 currentAdduct?.Transitions.Add(currentTransition);
                 currentTransition.ParseObject(linesReader);
             }
+            Assume.IsNotNull(currentTarget);
+            Assume.IsNotNull(currentAdduct);
+            if (currentAdduct!= null && !currentAdduct.Transitions.Any(t => t.IsQuanIon))
+                currentAdduct.Transitions.First().IsQuanIon = true; // make sure that the last adduct has a quant ion
 
             var res = new MethodModel();
             res.Compounds = targets.ToArray();

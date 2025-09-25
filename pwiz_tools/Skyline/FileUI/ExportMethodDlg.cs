@@ -489,6 +489,7 @@ namespace pwiz.Skyline.FileUI
                        Equals(type, ExportInstrumentType.WATERS_QUATTRO_PREMIER) ||
                        Equals(type, ExportInstrumentType.BRUKER_TOF) ||
                        Equals(type, ExportInstrumentType.BRUKER_TIMSTOF) ||
+                       Equals(type, ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT) ||
                        // LTQ can only schedule for inclusion lists, but then it always
                        // requires start and stop times.
                        Equals(type, ExportInstrumentType.THERMO_LTQ);
@@ -1431,6 +1432,8 @@ namespace pwiz.Skyline.FileUI
                 _exportProperties.ExportStrategy = ExportStrategy.Single;
             else if (radioProtein.Checked)
                 _exportProperties.ExportStrategy = ExportStrategy.Protein;
+            else if (radioBuckets.Checked)
+                _exportProperties.ExportStrategy = ExportStrategy.Buckets;
             else if (wcDecideBuckets.Checked)
                 _exportProperties.ExportStrategy = ExportStrategy.WcDecide;
             // ReSharper restore ConvertIfStatementToConditionalTernaryExpression
