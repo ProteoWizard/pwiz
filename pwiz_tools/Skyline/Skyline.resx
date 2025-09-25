@@ -1773,6 +1773,12 @@
   <data name="configureToolsMenuItem.Text" xml:space="preserve">
     <value>&amp;External Tools...</value>
   </data>
+  <data name="searchToolsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="searchToolsMenuItem.Text" xml:space="preserve">
+    <value>&amp;Search Tools...</value>
+  </data>
   <data name="toolStripSeparator46.Size" type="System.Drawing.Size, System.Drawing">
     <value>175, 6</value>
   </data>
@@ -4121,6 +4127,12 @@
   </data>
   <data name="&gt;&gt;detectionsToolStripSeparator3.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;searchToolsMenuItem.Name" xml:space="preserve">
+    <value>searchToolsMenuItem</value>
+  </data>
+  <data name="&gt;&gt;searchToolsMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>SkylineWindow</value>
