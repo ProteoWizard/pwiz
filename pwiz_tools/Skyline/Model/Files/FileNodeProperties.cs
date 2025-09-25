@@ -55,7 +55,7 @@ namespace pwiz.Skyline.Model.Files
         [Category("FileInfo")] public virtual string Name { get; set; }
 
         // Test Support - enforced by code check
-        // Invoked via reflection in InspectPropertySheetResources in CodeInspectionTest
+        // Invoked via reflection in InspectPropertySheetResources in CodeInspectionTests
         [UsedImplicitly]
         private static ResourceManager ResourceManager() => PropertyGridFileNodeResources.ResourceManager;
     }

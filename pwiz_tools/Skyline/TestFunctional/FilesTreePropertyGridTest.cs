@@ -102,10 +102,17 @@ namespace pwiz.SkylineTestFunctional
             // only non-null properties end up in the property sheet
             Assert.AreEqual(REP_FILE_PROP_NUM, props.Count);
 
+            // test globalizedPropertyDescriptor property for localization
+            const string namePropName = "Name";
+            var nameProp = props[namePropName];
+            Assert.IsNotNull(nameProp);
+            Assert.AreEqual(nameProp.Name, namePropName);
+            Assert.AreEqual(selectedObject.GetResourceManagerForTest().GetString(nameProp.Name), nameProp.DisplayName);
+
             // test selecting a replicate sample file node
             var sampleFileNode = SkylineWindow.FilesTree.File<ReplicateSampleFile>(replicateNode);
             Assert.IsNotNull(sampleFileNode);
-
+            
             RunUI(() =>
             {
                 SkylineWindow.FilesTreeForm.FilesTree.SelectNodeWithoutResettingSelection(sampleFileNode);
@@ -119,6 +126,14 @@ namespace pwiz.SkylineTestFunctional
             props = TypeDescriptor.GetProperties(selectedObject, false);
             // only non-null properties end up in the property sheet
             Assert.AreEqual(REP_SAMPLE_FILE_PROP_NUM, props.Count);
+
+            // test globalizedPropertyDescriptor property for localization
+            // must give string name, not nameof() because it's added dynamically
+            const string instrumentModelPropName = "Model";
+            var modelProp = props[instrumentModelPropName];
+            Assert.IsNotNull(modelProp);
+            Assert.AreEqual(modelProp.Name, instrumentModelPropName);
+            Assert.AreEqual(selectedObject.GetResourceManagerForTest().GetString(modelProp.Name), modelProp.DisplayName);
         }
 
         private static void TestAnnotationProperties()

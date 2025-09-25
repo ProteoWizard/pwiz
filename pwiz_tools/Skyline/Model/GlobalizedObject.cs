@@ -283,6 +283,10 @@ namespace pwiz.Skyline.Model
                 }
             }
         }
+
+        // For localization testing
+        public ResourceManager GetResourceManagerForTest() => GetResourceManager();
+
         #endregion
     }
 
