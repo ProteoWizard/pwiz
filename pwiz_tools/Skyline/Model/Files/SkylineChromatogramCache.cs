@@ -14,21 +14,22 @@
  * limitations under the License.
  */
 
-using pwiz.Skyline.Model.Results;
-
 namespace pwiz.Skyline.Model.Files
 {
     public class SkylineChromatogramCache : FileNode
     {
         private class ChromatogramCacheId : Identity { }
 
-        private static readonly IdentityPath IDENTITY_PATH = new IdentityPath(new ChromatogramCacheId());
-
-        public SkylineChromatogramCache(string documentFilePath) : 
-            base(documentFilePath, IDENTITY_PATH)
+        public static SkylineChromatogramCache Create(string documentFilePath, string name, string filePath)
         {
-            Name = FileResources.FileModel_ChromatogramCache;
-            FilePath = ChromatogramCache.FinalPathForName(DocumentPath, null);
+            return new SkylineChromatogramCache(documentFilePath, name, filePath);
+        }
+
+        public SkylineChromatogramCache(string documentFilePath, string name, string filePath) : 
+            base(documentFilePath, new IdentityPath(new ChromatogramCacheId()))
+        {
+            Name = name;
+            FilePath = filePath;
         }
 
         public override bool IsBackedByFile => true;

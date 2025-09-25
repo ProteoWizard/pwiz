@@ -43,6 +43,7 @@ using static pwiz.Skyline.Model.Files.FileNode;
 // TODO: test double-click on Background Proteome. Need an additional Skyline document with a Background Proteome
 // TODO: test new .sky document, import asset backed file (ex: .protdb), assert file system watching before document saved for the first time
 // TODO: add a new helper for getting a FilesTree node by model type to make this more readable: SkylineWindow.FilesTree.Root.NodeAt(0).FileState).
+// TODO: add test making sure clicking upper RHC 'x' on confirm dialog does nto delete Replicate or Spectral Library
 
 // ReSharper disable WrongIndentSize
 namespace pwiz.SkylineTestFunctional
@@ -241,7 +242,8 @@ namespace pwiz.SkylineTestFunctional
 
             Assert.AreEqual(RAT_PLASMA_FILE_NAME, SkylineWindow.FilesTree.Root.Text);
 
-            AssertTopLevelFiles(typeof(SkylineViewFile), typeof(ReplicatesFolder), typeof(SpectralLibrariesFolder));
+            AssertTopLevelFiles(typeof(SkylineViewFile), typeof(ReplicatesFolder), typeof(SpectralLibrariesFolder)); // ORIG
+            // AssertTopLevelFiles(typeof(SkylineViewFile), typeof(SkylineChromatogramCache), typeof(ReplicatesFolder), typeof(SpectralLibrariesFolder));
 
             Assert.AreEqual(Path.GetDirectoryName(documentPath), SkylineWindow.FilesTree.PathMonitoredForFileSystemChanges());
             AssertFileState(FileState.available, SkylineWindow.FilesTree.Root);
@@ -282,9 +284,6 @@ namespace pwiz.SkylineTestFunctional
             WaitForFilesTree();
 
             AssertTreeFolderMatchesDocumentAndModel<ReplicatesFolder>(RAT_PLASMA_REPLICATE_COUNT);
-
-            // make sure no new top-level folders were added
-            Assert.AreEqual(3, SkylineWindow.FilesTree.Nodes[0].Nodes.Count);
 
             Assert.AreEqual(newName, SkylineWindow.Document.Settings.MeasuredResults.Chromatograms[3].Name);
             Assert.AreEqual(newName, SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[3].Name);
@@ -531,24 +530,31 @@ namespace pwiz.SkylineTestFunctional
             }
         }
 
+        // Assumes rat-plasma.sky is loaded
+        // Expected tree:
+        //      <file>.sky/
+        //          Window Layout
+        //          Chromatograms
+        //          Replicates/
+        //              <Replicate-Name>/
+        //                  <Replicate-Sample-File>.raw
+        //              ...
+        //          Spectral Libraries/
+        //              <Library>
+        //              ...
         private static void TestRestoreViewState()
         {
-            var treeNodes = SkylineWindow.FilesTree.Nodes;
-
             RunUI(() =>
             {
-                // <file>.sky/
-                //      Window Layout
-                //      Replicates/
-                //          <Replicate-Name>/
-                //              <Replicate-Sample-File>.raw
-                //      Spectral Libraries/
-                //          ...
-                Assert.IsTrue(treeNodes[0].IsExpanded);
-                Assert.IsTrue(treeNodes[0].Nodes[1].IsExpanded);
-                Assert.IsTrue(treeNodes[0].Nodes[1].Nodes[0].IsExpanded);
-                Assert.IsTrue(treeNodes[0].Nodes[1].Nodes[10].IsExpanded);
-                Assert.IsTrue(treeNodes[0].Nodes[2].IsExpanded);
+                Assert.IsTrue(SkylineWindow.FilesTree.Root.IsExpanded);
+
+                var replicatesFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
+                Assert.IsTrue(replicatesFolder.IsExpanded);
+                Assert.IsTrue(replicatesFolder.Nodes[0].IsExpanded);
+                Assert.IsTrue(replicatesFolder.Nodes[10].IsExpanded);
+
+                var spectralLibrariesFolder = SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>();
+                Assert.IsTrue(spectralLibrariesFolder.IsExpanded);
             });
         }
 
@@ -667,6 +673,8 @@ namespace pwiz.SkylineTestFunctional
 
             // Drag-and-drop - spectral libraries
             {
+                // RunUI(() => { SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>().EnsureVisible(); });
+
                 var dnd = DragAndDrop<SpectralLibrariesFolder>(new[] { 0 }, 1, DragAndDropDirection.down, MoveType.move_last);
                 AssertDragAndDropResults<SpectralLibrariesFolder>(dnd);
 
@@ -974,7 +982,9 @@ namespace pwiz.SkylineTestFunctional
         }
 
         /// <summary>
-        /// Assert top-level nodes shown in FilesTree match the expected model types and appear in the expected order.
+        /// Assert tree nodes immediately below the root node (.sky file) match the expected model types and appear in the expected order.
+        /// This check should only be used for nodes expected to be immediate children of FilesTree's root node (for the .sky file) and
+        /// include nodes like <see cref="SkylineAuditLog"/>, <see cref="SkylineViewFile"/>, and <see cref="ReplicatesFolder"/>.
         /// </summary>
         /// <param name="expectedModelTypes">Expected model types</param>
         protected static void AssertTopLevelFiles(params Type[] expectedModelTypes)

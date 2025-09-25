@@ -40,6 +40,8 @@ namespace pwiz.Skyline.Controls.FilesTree
         private TextBox _editTextBox;
         private string _editedLabel;
 
+        private bool _topNodeAlreadySet;
+
         /// <summary>
         /// Used to cancel any pending async work when the document changes including any
         /// lingering async tasks waiting in _fsWorkQueue or the UI event loop. This
@@ -97,6 +99,8 @@ namespace pwiz.Skyline.Controls.FilesTree
         public bool IsComplete() => _backgroundActionService.IsComplete;
 
         #endregion
+
+        public TreeNode NextTopNode => TreeStateRestorer.NextTopNode;
 
         public void ScrollToTop() => Nodes[0]?.EnsureVisible();
 
@@ -183,6 +187,15 @@ namespace pwiz.Skyline.Controls.FilesTree
             try
             {
                 BeginUpdateMS();
+
+                // Trick to set TopNode. For unknown reasons, the way SequenceTree sets TopNode doesn't work for
+                // FilesTree. So, try exactly once to set TopNode on this FilesTree.
+                // TODO: revisit. This is a trick to fix a visual bug but should be properly fixed
+                if (!_topNodeAlreadySet && NextTopNode != null)
+                {
+                    TopNode = NextTopNode;
+                    _topNodeAlreadySet = true;
+                }
 
                 // Remove existing nodes from FilesTree if the document has changed completely
                 if (changeAll)
@@ -366,6 +379,8 @@ namespace pwiz.Skyline.Controls.FilesTree
                 });
             }
         }
+
+        #region Edit tree node labels
 
         protected override void OnAfterSelect(TreeViewEventArgs e)
         {
@@ -551,7 +566,9 @@ namespace pwiz.Skyline.Controls.FilesTree
             }
         }
 
-        #region Event handlers used by FileSystemService to monitor the local file system
+        #endregion
+
+        #region Handlers for events raised while monitoring the local file system
 
         public void FileDeleted(string fileName, CancellationToken cancellationToken)
         {
@@ -616,6 +633,46 @@ namespace pwiz.Skyline.Controls.FilesTree
         }
 
         #endregion
+
+        #region Enable and disable cut, copy, paste, delete when gaining or losing focus
+        protected override void OnEnter(EventArgs e)
+        {
+            // Console.WriteLine($@"FilesTree.OnEnter");
+            base.OnEnter(e);
+            ClipboardControlGotLostFocus(true);
+        }
+
+        protected override void OnLeave(EventArgs e)
+        {
+            // Console.WriteLine($@"FilesTree.OnLeave");
+            base.OnLeave(e);
+            ClipboardControlGotLostFocus(false);
+        }
+
+        protected override void OnHandleDestroyed(EventArgs e)
+        {
+            base.OnHandleDestroyed(e);
+            ClipboardControlGotLostFocus(false);
+        }
+
+        protected void ClipboardControlGotLostFocus(bool gettingFocus)
+        {
+            var skylineWindow = FindParentSkylineWindow(this);
+            if (skylineWindow != null)
+            {
+                if (gettingFocus)
+                {
+                    skylineWindow.ClipboardControlGotFocus(this);
+                }
+                else
+                {
+                    skylineWindow.ClipboardControlLostFocus(this);
+                }
+            }
+        }
+
+        #endregion   
+
 
         protected override bool IsParentNode(TreeNode node)
         {
@@ -684,6 +741,18 @@ namespace pwiz.Skyline.Controls.FilesTree
             }
 
             return false;
+        }
+
+        private static SkylineWindow FindParentSkylineWindow(Control me)
+        {
+            for (var control = me; control != null; control = control.Parent)
+            {
+                if (control is SkylineWindow skylineWindow)
+                {
+                    return skylineWindow;
+                }
+            }
+            return null;
         }
     }
 }

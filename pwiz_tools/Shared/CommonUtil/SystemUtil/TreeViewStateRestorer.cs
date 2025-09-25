@@ -227,7 +227,7 @@ namespace pwiz.Common.SystemUtil
             return nodes[index];
         }
 
-        protected TreeNode NextTopNode { get; set; }
+        public TreeNode NextTopNode { get; protected set; }
 
         /// <summary>
         /// Updates the top node in order to establish the correct scrolling of the tree. This should

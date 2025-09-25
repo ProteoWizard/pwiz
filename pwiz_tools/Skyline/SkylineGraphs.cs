@@ -533,6 +533,12 @@ namespace pwiz.Skyline
                 SequenceTree.SetScrollPos(Orientation.Horizontal, 0);
             }
 
+            if (FilesTree != null)
+            {
+                FilesTree.UpdateTopNode();
+                FilesTree.SetScrollPos(Orientation.Horizontal, 0);
+            }
+
             EnsureFloatingWindowsVisible();
         }
 

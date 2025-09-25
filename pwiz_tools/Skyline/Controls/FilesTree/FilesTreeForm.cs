@@ -212,7 +212,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 ValueTuple.Create(FilesTreeResources.FilesTreeForm_Confirm_Remove_Replicates, FilesTreeResources.Remove_All_Replicates) : 
                 ValueTuple.Create(FilesTreeResources.FilesTreeForm_Confirm_Remove_Spectral_Libraries, FilesTreeResources.Remove_All_Spectral_Libraries);
 
-            if (ConfirmDelete(messages.Item1) == DialogResult.No)
+            if (ConfirmDelete(messages.Item1) != DialogResult.Yes)
                 return;
 
             lock (SkylineWindow.GetDocumentChangeLock())
@@ -250,27 +250,11 @@ namespace pwiz.Skyline.Controls.FilesTree
             var model = nodes.First().Model;
             Assume.IsTrue(model is Replicate || model is SpectralLibrary);
 
-            ValueTuple<string, string, string> messages;
-            switch (model)
-            {
-                case Replicate _:
-                    messages = ValueTuple.Create(
-                        FilesTreeResources.FilesTreeForm_Confirm_Remove_Replicate,
-                        FilesTreeResources.FilesTreeForm_Confirm_Remove_Spectral_Library,
-                        FilesTreeResources.Remove_Replicate);
-                    break;
-                case SpectralLibrary _:
-                    messages = ValueTuple.Create(
-                        FilesTreeResources.FilesTreeForm_Confirm_Remove_Replicates,
-                        FilesTreeResources.FilesTreeForm_Confirm_Remove_Spectral_Libraries,
-                        FilesTreeResources.Remove_Spectral_Library);
-                    break;
-                default:
-                    throw new NotImplementedException();
-            }
+            var messages = model is Replicate ? 
+                ValueTuple.Create(FilesTreeResources.FilesTreeForm_Confirm_Remove_Replicate, FilesTreeResources.FilesTreeForm_Confirm_Remove_Replicates, FilesTreeResources.Remove_Replicate) :
+                ValueTuple.Create(FilesTreeResources.FilesTreeForm_Confirm_Remove_Spectral_Library, FilesTreeResources.FilesTreeForm_Confirm_Remove_Spectral_Libraries, FilesTreeResources.Remove_Spectral_Library);
 
-            // Confirm delete
-            if(ConfirmDelete(nodes.Count, messages.Item1, messages.Item2) == DialogResult.No)
+            if(ConfirmDelete(nodes.Count, messages.Item1, messages.Item2) != DialogResult.Yes)
                 return;
 
             lock (SkylineWindow.GetDocumentChangeLock())
