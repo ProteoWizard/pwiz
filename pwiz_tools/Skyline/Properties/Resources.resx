@@ -4010,5 +4010,7 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   </data>
   <data name="ReplicateMissing" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\ReplicateMissing.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="ArdiaIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ArdiaIcon.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>
