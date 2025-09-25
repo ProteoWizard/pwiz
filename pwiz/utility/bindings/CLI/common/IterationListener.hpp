@@ -65,9 +65,9 @@ public delegate IterationListener::Status IterationListenerUpdate(IterationListe
 public ref class IterationListenerRegistry
 {
     public:   System::IntPtr void_base() {return (System::IntPtr) base_;} \
-    INTERNAL: IterationListenerRegistry(pwiz::util::IterationListenerRegistry* base) : base_(base) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(CLIType))} \
+    INTERNAL: IterationListenerRegistry(pwiz::util::IterationListenerRegistry* base) : base_(base) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(CLIType), base_)} \
               virtual ~IterationListenerRegistry(); \
-              !IterationListenerRegistry() {LOG_FINALIZE(BOOST_PP_STRINGIZE(CLIType)) delete this;} \
+              !IterationListenerRegistry() {LOG_FINALIZE(BOOST_PP_STRINGIZE(CLIType), base_) delete this;} \
               pwiz::util::IterationListenerRegistry* base_; \
               pwiz::util::IterationListenerRegistry& base() {return *base_;}
 

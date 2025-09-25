@@ -392,6 +392,9 @@
   <data name="EditRemoteAccountDlg_TestArdiaAccount_Login_was_canceled" xml:space="preserve">
     <value>Login was canceled</value>
   </data>
+  <data name="EditRemoteAccountDlg_Ardia_OneAccountSupported" xml:space="preserve">
+    <value>Skyline does not support adding a second Ardia account. To use a new account, remove the current one and add a new one.</value>
+  </data>
   <data name="EditRemoteAccountDlg_TestAccount_Testing_remote_account_connection" xml:space="preserve">
       <value>Testing remote account connection</value>
   </data>

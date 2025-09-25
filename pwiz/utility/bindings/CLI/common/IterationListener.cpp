@@ -131,7 +131,7 @@ IterationListenerRegistry::IterationListenerRegistry()
 
 IterationListenerRegistry::~IterationListenerRegistry()
 {
-    LOG_DESTRUCT(BOOST_PP_STRINGIZE(CLIType), true);
+    LOG_DESTRUCT(BOOST_PP_STRINGIZE(CLIType), base_, true);
     SAFEDELETE(base_);
 
     for each (KeyValuePair<IterationListener^, KeyValuePair<IterationListenerUpdate^, System::IntPtr> > kvp in _listeners)
