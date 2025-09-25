@@ -44,6 +44,11 @@ namespace pwiz.Skyline
             this.pasteContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.deleteContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.expandSelectionContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.expandSelectionNoneContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.expandSelectionProteinsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.expandSelectionPeptidesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.expandSelectionPrecursorsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.pickChildrenContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addMoleculeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addSmallMoleculePrecursorContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -57,13 +62,6 @@ namespace pwiz.Skyline
             this.irtStandardContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.modifyPeptideContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editSpectrumFilterContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-
-            this.expandSelectionContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.expandSelectionNoneContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.expandSelectionProteinsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.expandSelectionPeptidesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.expandSelectionPrecursorsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-
             this.toggleQuantitativeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.markTransitionsQuantitativeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator7 = new System.Windows.Forms.ToolStripSeparator();
@@ -156,6 +154,7 @@ namespace pwiz.Skyline
             this.contextMenuPeakAreas = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.areaGraphContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaReplicateComparisonContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.proteinAbundanceReplicateComparisonContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaPeptideComparisonContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaRelativeAbundanceContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaCVHistogramContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -440,6 +439,44 @@ namespace pwiz.Skyline
             this.toolStripSeparator1.Name = "toolStripSeparator1";
             resources.ApplyResources(this.toolStripSeparator1, "toolStripSeparator1");
             // 
+            // expandSelectionContextMenuItem
+            // 
+            this.expandSelectionContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.expandSelectionNoneContextMenuItem,
+            this.expandSelectionProteinsContextMenuItem,
+            this.expandSelectionPeptidesContextMenuItem,
+            this.expandSelectionPrecursorsContextMenuItem});
+            this.expandSelectionContextMenuItem.Name = "expandSelectionContextMenuItem";
+            resources.ApplyResources(this.expandSelectionContextMenuItem, "expandSelectionContextMenuItem");
+            // 
+            // expandSelectionNoneContextMenuItem
+            // 
+            this.expandSelectionNoneContextMenuItem.Name = "expandSelectionNoneContextMenuItem";
+            resources.ApplyResources(this.expandSelectionNoneContextMenuItem, "expandSelectionNoneContextMenuItem");
+            this.expandSelectionNoneContextMenuItem.Tag = typeof(pwiz.Skyline.Controls.SeqNode.SrmTreeNodeParent);
+            this.expandSelectionNoneContextMenuItem.Click += new System.EventHandler(this.expandSelectionNoneContextMenuItem_Click);
+            // 
+            // expandSelectionProteinsContextMenuItem
+            // 
+            this.expandSelectionProteinsContextMenuItem.Name = "expandSelectionProteinsContextMenuItem";
+            resources.ApplyResources(this.expandSelectionProteinsContextMenuItem, "expandSelectionProteinsContextMenuItem");
+            this.expandSelectionProteinsContextMenuItem.Tag = typeof(pwiz.Skyline.Controls.SeqNode.PeptideGroupTreeNode);
+            this.expandSelectionProteinsContextMenuItem.Click += new System.EventHandler(this.expandSelectionProteinsContextMenuItem_Click);
+            // 
+            // expandSelectionPeptidesContextMenuItem
+            // 
+            this.expandSelectionPeptidesContextMenuItem.Name = "expandSelectionPeptidesContextMenuItem";
+            resources.ApplyResources(this.expandSelectionPeptidesContextMenuItem, "expandSelectionPeptidesContextMenuItem");
+            this.expandSelectionPeptidesContextMenuItem.Tag = typeof(pwiz.Skyline.Controls.SeqNode.PeptideTreeNode);
+            this.expandSelectionPeptidesContextMenuItem.Click += new System.EventHandler(this.expandSelectionPeptidesContextMenuItem_Click);
+            // 
+            // expandSelectionPrecursorsContextMenuItem
+            // 
+            this.expandSelectionPrecursorsContextMenuItem.Name = "expandSelectionPrecursorsContextMenuItem";
+            resources.ApplyResources(this.expandSelectionPrecursorsContextMenuItem, "expandSelectionPrecursorsContextMenuItem");
+            this.expandSelectionPrecursorsContextMenuItem.Tag = typeof(pwiz.Skyline.Controls.SeqNode.TransitionGroupTreeNode);
+            this.expandSelectionPrecursorsContextMenuItem.Click += new System.EventHandler(this.expandSelectionPrecursorsContextMenuItem_Click);
+            // 
             // pickChildrenContextMenuItem
             // 
             this.pickChildrenContextMenuItem.Name = "pickChildrenContextMenuItem";
@@ -523,49 +560,6 @@ namespace pwiz.Skyline
             this.editSpectrumFilterContextMenuItem.Name = "editSpectrumFilterContextMenuItem";
             resources.ApplyResources(this.editSpectrumFilterContextMenuItem, "editSpectrumFilterContextMenuItem");
             this.editSpectrumFilterContextMenuItem.Click += new System.EventHandler(this.editSpectrumFilterContextMenuItem_Click);
-
-            // 
-            // expandSelectionContextMenuItem
-            // 
-            this.expandSelectionContextMenuItem.Name = "expandSelectionContextMenuItem";
-            resources.ApplyResources(this.expandSelectionContextMenuItem, "expandSelectionContextMenuItem");
-            this.expandSelectionContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[]
-            {
-                this.expandSelectionNoneContextMenuItem,
-                this.expandSelectionProteinsContextMenuItem,
-                this.expandSelectionPeptidesContextMenuItem,
-                this.expandSelectionPrecursorsContextMenuItem
-            });
-            // 
-            // expandSelectionNoneContextMenuItem
-            // 
-            this.expandSelectionNoneContextMenuItem.Name = "expandSelectionNoneContextMenuItem";
-            resources.ApplyResources(this.expandSelectionNoneContextMenuItem, "expandSelectionNoneContextMenuItem");
-            this.expandSelectionNoneContextMenuItem.Click += new System.EventHandler(this.expandSelectionNoneContextMenuItem_Click);
-            this.expandSelectionNoneContextMenuItem.Tag = typeof(SrmTreeNodeParent);
-
-            // 
-            // expandSelectionProteinsContextMenuItem
-            // 
-            this.expandSelectionProteinsContextMenuItem.Name = "expandSelectionProteinsContextMenuItem";
-            resources.ApplyResources(this.expandSelectionProteinsContextMenuItem, "expandSelectionProteinsContextMenuItem");
-            this.expandSelectionProteinsContextMenuItem.Click += new System.EventHandler(this.expandSelectionProteinsContextMenuItem_Click);
-            this.expandSelectionProteinsContextMenuItem.Tag = typeof(PeptideGroupTreeNode);
-            // 
-            // expandSelectionPeptidesContextMenuItem
-            // 
-            this.expandSelectionPeptidesContextMenuItem.Name = "expandSelectionPeptidesContextMenuItem";
-            resources.ApplyResources(this.expandSelectionPeptidesContextMenuItem, "expandSelectionPeptidesContextMenuItem");
-            this.expandSelectionPeptidesContextMenuItem.Click += new System.EventHandler(this.expandSelectionPeptidesContextMenuItem_Click);
-            this.expandSelectionPeptidesContextMenuItem.Tag = typeof(PeptideTreeNode);
-            // 
-            // expandSelectionPrecursorsContextMenuItem
-            // 
-            this.expandSelectionPrecursorsContextMenuItem.Name = "expandSelectionPrecursorsContextMenuItem";
-            resources.ApplyResources(this.expandSelectionPrecursorsContextMenuItem, "expandSelectionPrecursorsContextMenuItem");
-            this.expandSelectionPrecursorsContextMenuItem.Click += new System.EventHandler(this.expandSelectionPrecursorsContextMenuItem_Click);
-            this.expandSelectionPrecursorsContextMenuItem.Tag = typeof(TransitionGroupTreeNode);
-
             // 
             // toggleQuantitativeContextMenuItem
             // 
@@ -1223,7 +1217,8 @@ namespace pwiz.Skyline
             this.areaPeptideComparisonContextMenuItem,
             this.areaRelativeAbundanceContextMenuItem,
             this.areaCVHistogramContextMenuItem,
-            this.areaCVHistogram2DContextMenuItem});
+            this.areaCVHistogram2DContextMenuItem,
+            this.proteinAbundanceReplicateComparisonContextMenuItem });
             this.areaGraphContextMenuItem.Name = "areaGraphContextMenuItem";
             resources.ApplyResources(this.areaGraphContextMenuItem, "areaGraphContextMenuItem");
             this.areaGraphContextMenuItem.DropDownOpening += new System.EventHandler(this.areaGraphMenuItem_DropDownOpening);
@@ -1233,6 +1228,12 @@ namespace pwiz.Skyline
             this.areaReplicateComparisonContextMenuItem.Name = "areaReplicateComparisonContextMenuItem";
             resources.ApplyResources(this.areaReplicateComparisonContextMenuItem, "areaReplicateComparisonContextMenuItem");
             this.areaReplicateComparisonContextMenuItem.Click += new System.EventHandler(this.areaReplicateComparisonMenuItem_Click);
+            // 
+            // proteinAbundanceReplicateComparisonContextMenuItem
+            // 
+            this.proteinAbundanceReplicateComparisonContextMenuItem.Name = "proteinAbundanceReplicateComparisonContextMenuItem";
+            resources.ApplyResources(this.proteinAbundanceReplicateComparisonContextMenuItem, "proteinAbundanceReplicateComparisonContextMenuItem");
+            this.proteinAbundanceReplicateComparisonContextMenuItem.Click += new System.EventHandler(this.proteinAbundanceReplicateComparisonContextMenuItem_Click);
             // 
             // areaPeptideComparisonContextMenuItem
             // 
@@ -2831,6 +2832,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ContextMenuStrip contextMenuPeakAreas;
         private System.Windows.Forms.ToolStripMenuItem areaGraphContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaReplicateComparisonContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem proteinAbundanceReplicateComparisonContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaPeptideComparisonContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaRelativeAbundanceContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaNormalizeContextMenuItem;
