@@ -227,6 +227,7 @@
     <Compile Include="PeakImputationWithBatchesTest.cs" />
     <Compile Include="PeakImputationTest.cs" />
     <Compile Include="PeakMetricsTest.cs" />
+    <Compile Include="PickChromatogramPeaksTest.cs" />
     <Compile Include="PrmCeOptimizationTest.cs" />
     <Compile Include="QcTraceChromatogramTest.cs" />
     <Compile Include="QcTraceNameTest.cs" />

@@ -162,8 +162,8 @@ Undo Redo : NP_036870>K.DFATVYVDAVK.D [36, 46]>614.3164++のピーク境界が�
 Summary   : NP_036870>K.DFATVYVDAVK.D [36, 46]>614.3164++のピーク境界が変更されました
 All Info  :
 NP_036870>K.DFATVYVDAVK.D [36, 46]>614.3164++のピーク境界が変更されました
-「D_108_REP2」にあるNP_036870>K.DFATVYVDAVK.D [36, 46]>614.3164++の全ピークの開始時間が27.79から26.86に変更されました
-「D_108_REP2」にあるNP_036870>K.DFATVYVDAVK.D [36, 46]>614.3164++の全ピークの終了時間が28.72から27.40に変更されました
+「D_108_REP2」にあるNP_036870>K.DFATVYVDAVK.D [36, 46]>614.3164++の全ピークの開始時間が27.13から26.86に変更されました
+「D_108_REP2」にあるNP_036870>K.DFATVYVDAVK.D [36, 46]>614.3164++の全ピークの終了時間が27.86から27.40に変更されました
 
 Undo Redo : ターゲットNP_036870>K.FGLYSDQMR.E [182, 190]が削除されました
 Summary   : ターゲットNP_036870>K.FGLYSDQMR.E [182, 190]が削除されました
@@ -338,10 +338,10 @@ Summary   : DFATVYVDAVKのMissingDataが真に設定されました
 All Info  :
 DFATVYVDAVKのMissingDataが真に設定されました
 
-Undo Redo : ドキュメントグリッドに89個の値が貼り付けられました
-Summary   : ドキュメントグリッドに89個の値が貼り付けられました
+Undo Redo : ドキュメントグリッドに91個の値が貼り付けられました
+Summary   : ドキュメントグリッドに91個の値が貼り付けられました
 All Info  :
-ドキュメントグリッドに89個の値が貼り付けられました
+ドキュメントグリッドに91個の値が貼り付けられました
 ドキュメントグリッド>レポート名は"Truncated Precursors"です
 ドキュメントグリッド>列の設定>列のソート：{ 列 = "切断数", 方向 = "降順" }が含まれています
 DFATVYVDAVKのMissingDataが真に設定されました
@@ -349,12 +349,14 @@ DFATVYVDAVKのMissingDataが真に設定されました
 DFATVYVDAVKのMissingDataが真に設定されました
 DFATVYVDAVKのMissingDataが真に設定されました
 DFATVYVDAVKのMissingDataが真に設定されました
+DFATVYVDAVKのMissingDataが真に設定されました
 DYVSQFESSTLGKのMissingDataが真に設定されました
 DYVSQFESSTLGKのMissingDataが真に設定されました
 DYVSQFESSTLGKのMissingDataが真に設定されました
 C[+57.021464]SLPRPWALTFSYGRのMissingDataが真に設定されました
 C[+57.021464]SLPRPWALTFSYGRのMissingDataが真に設定されました
 C[+57.021464]SLPRPWALTFSYGRのMissingDataが真に設定されました
+TGTNLMDFLSRのMissingDataが真に設定されました
 TGTNLMDFLSRのMissingDataが真に設定されました
 TGTNLMDFLSRのMissingDataが真に設定されました
 TGTNLMDFLSRのMissingDataが真に設定されました
@@ -434,6 +436,8 @@ HGLLESAVLARのMissingDataが真に設定されました
 WTNPDGTTSKのMissingDataが真に設定されました
 TYIWQIPERのMissingDataが真に設定されました
 Extra Info: TRUE
+TRUE
+TRUE
 TRUE
 TRUE
 TRUE

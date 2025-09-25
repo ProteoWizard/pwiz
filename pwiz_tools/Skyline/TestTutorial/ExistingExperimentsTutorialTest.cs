@@ -733,7 +733,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 PeakMatcherTestUtil.SelectAndApplyPeak("ESDTSYVSLK", 564.7746, "A_02", false, false, 18.34195);
-                PeakMatcherTestUtil.VerifyPeaks(MakeVerificationDictionary(18.34, 18.34, 18.28, 18.28));
+                PeakMatcherTestUtil.VerifyPeaks(MakeVerificationDictionary(18.3419, 18.34195, 18.27585, 23.481));
             });
             RunUI(() =>
             {
