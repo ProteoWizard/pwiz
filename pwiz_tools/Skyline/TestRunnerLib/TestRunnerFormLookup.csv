@@ -249,3 +249,4 @@ VolcanoPlotFormattingDlg,TestVolcanoPlotFormatting
 WebDavBrowser,TestPanoramaClient
 DetectionToolbarProperties, TestDetectionsPlot
 ImportTransitionListColumnSelectDlg,TestExistingExperimentsTutorial
+PropertyGridForm, TestFilesTreePropertyGrid
