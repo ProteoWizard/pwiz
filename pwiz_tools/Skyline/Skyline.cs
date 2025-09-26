@@ -3100,6 +3100,18 @@ namespace pwiz.Skyline
             documentationViewer.Show(this);
         }
 
+        private void keyboardShortcutsHelpMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowKeyboardShortcutsDocumentation();
+        }
+
+        public void ShowKeyboardShortcutsDocumentation()
+        {
+            DocumentationViewer documentationViewer = new DocumentationViewer(true);
+            documentationViewer.DocumentationHtml = Menus.KeyboardShortcutDocumentation.GenerateKeyboardShortcutHtml(menuMain);
+            documentationViewer.Show(this);
+        }
+
         private void otherDocsHelpMenuItem_Click(object sender, EventArgs e)
         {
             WebHelpers.OpenLink(this, @"https://skyline.ms/docs.url");

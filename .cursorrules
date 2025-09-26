@@ -1,0 +1,117 @@
+# Cursor project orientation for ProteoWizard (pwiz)
+
+[project]
+name = "ProteoWizard (pwiz)"
+description = "C++ libraries and tools for proteomics; native builds via MSVC/GCC and Boost.Build"
+primary_languages = ["C++", "C#", "Jam", "Batch", "Shell"]
+
+[on_open]
+message = "Use quickbuild.bat on Windows to build. Do not introduce new build systems. Respect existing indentation and avoid unrelated reformatting."
+
+[paths]
+code_roots = [
+  "pwiz/",
+  "pwiz_tools/",
+  "pwiz_aux/",
+]
+third_party = ["libraries/"]
+outputs = [
+  "build-nt-x86/msvc-release-x86_64/",
+]
+
+entry_points = [
+  "quickbuild.bat",
+  "quickbuild.sh",
+  "pwiz.sln",
+  "pwiz_tools/Skyline/Skyline.sln",
+  "bs.bat",
+  "doc/index.html",
+]
+
+[rules]
+- Prefer `quickbuild.bat` on Windows; pass non-interactive flags where applicable.
+- Keep code style intact: do not reformat unrelated files; preserve tabs/spaces.
+- When adding sources, update the appropriate Jamfile or Visual Studio project.
+- Use existing vendor libraries from `libraries/`; do not fetch replacements.
+- For documentation, add concise notes to `README.md` and `doc/`.
+
+[skyline]
+primary_solution = "pwiz_tools/Skyline/Skyline.sln"
+requires_full_repo_checkout = true
+full_build_command = "bs.bat"  # Calls pwiz_tools\\build-skyline.bat with vendor license acceptance
+shared_dependencies = [
+  "pwiz_tools/Shared",
+]
+docs = [
+  "https://skyline.ms/wiki/home/software/Skyline/page.view?name=HowToBuildSkylineTip",
+]
+
+[assistant_behaviors]
+- Provide minimal, actionable explanations.
+- Use fenced code blocks only for relevant snippets or commands.
+- Default to read-only discovery before edits; then apply focused edits.
+
+[style_skyline_csharp]
+control_flow = {
+  single_line_if = false
+  allow_no_braces_single_statement = true
+}
+member_order = [
+  "static_fields",
+  "static_public_methods",
+  "private_instance_fields",
+  "constructors",
+  "public_instance_api",
+  "private_helpers_after_usage"
+]
+naming = {
+  descriptive_names = true
+  avoid_abbreviations = true
+  private_instance_field_prefix = "_"
+  private_static_field_prefix = "_"
+  interface_prefix = "I"
+  type_parameter_prefix = "T"
+  enum_member_style = "snake_case"
+}
+formatting = {
+  preserve_existing_indentation = true
+  avoid_unrelated_reformatting = true
+  tabs_disallowed = true
+}
+docs = [
+  "STYLEGUIDE.md"
+]
+
+[localization]
+resource_system = {
+  primary_location = "pwiz_tools/Skyline/Properties/Resources.resx"
+  auxiliary_locations = [
+    "pwiz_tools/Skyline/Menus/MenusResources.resx",
+    "pwiz_tools/Skyline/FileUI/FileUIResources.resx",
+    "pwiz_tools/Skyline/Controls/Graphs/GraphResources.resx"
+  ]
+  organization_tool = "pwiz_tools/Skyline/Executables/AssortResources/ResourceAssorter.cs"
+  static_analysis_test = "pwiz_tools/Skyline/Test/CodeInspectionTest.cs"
+}
+guidelines = [
+  "For folder-specific strings (e.g., menu items), add directly to <folder-name>Resources.resx (e.g., MenusResources.resx)",
+  "For general UI strings, add to Properties/Resources.resx and let ResourceAssorter organize them",
+  "ResourceAssorter moves strings from Properties/Resources.resx to appropriate <folder-name>Resources.resx files based on usage context",
+  "Generate resource keys by replacing non-alphanumerics with '_' and trimming",
+  "Prefer context prefixes like SkylineWindow_ or EditMenu_ where appropriate",
+  "CRITICAL: When adding .resx entries, also add corresponding public static string properties to .Designer.cs in ALPHABETICAL ORDER",
+  "Compiler will fail with CS0117 errors if Designer.cs is not updated",
+  "ReSharper static analysis and CodeInspectionTest.cs verify proper resource placement",
+  "AssortResources.exe can clean up misplaced resources if needed"
+]
+
+[ui_guidelines]
+menu_items = [
+  "All menuMain items and submenus must have mnemonics (e.g., '&Keyboard Shortcuts')",
+  "Use title-case for menu text and action buttons (e.g., 'Keyboard Shortcuts')",
+  "Only menuMain items can have mnemonics and keyboard shortcuts",
+  "Context menus should not have mnemonics or keyboard shortcuts"
+]
+
+[executables]
+note = "Projects under pwiz_tools/Skyline/Executables are separate solutions (stand-alone tools and utilities). Not built by Skyline.sln; prefer Skyline conventions unless local overrides are required."

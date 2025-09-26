@@ -309,6 +309,7 @@ namespace pwiz.Skyline
             this.documentationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.reportsHelpMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.commandLineHelpMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.keyboardShortcutsHelpMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.otherDocsHelpMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.supportMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.issuesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -2291,6 +2292,7 @@ namespace pwiz.Skyline
             this.documentationToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.reportsHelpMenuItem,
             this.commandLineHelpMenuItem,
+            this.keyboardShortcutsHelpMenuItem,
             this.otherDocsHelpMenuItem});
             this.documentationToolStripMenuItem.Name = "documentationToolStripMenuItem";
             resources.ApplyResources(this.documentationToolStripMenuItem, "documentationToolStripMenuItem");
@@ -2306,6 +2308,12 @@ namespace pwiz.Skyline
             this.commandLineHelpMenuItem.Name = "commandLineHelpMenuItem";
             resources.ApplyResources(this.commandLineHelpMenuItem, "commandLineHelpMenuItem");
             this.commandLineHelpMenuItem.Click += new System.EventHandler(this.commandLineHelpMenuItem_Click);
+            // 
+            // keyboardShortcutsHelpMenuItem
+            // 
+            this.keyboardShortcutsHelpMenuItem.Name = "keyboardShortcutsHelpMenuItem";
+            resources.ApplyResources(this.keyboardShortcutsHelpMenuItem, "keyboardShortcutsHelpMenuItem");
+            this.keyboardShortcutsHelpMenuItem.Click += new System.EventHandler(this.keyboardShortcutsHelpMenuItem_Click);
             // 
             // otherDocsHelpMenuItem
             // 
@@ -3015,6 +3023,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem documentationToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem reportsHelpMenuItem;
         private System.Windows.Forms.ToolStripMenuItem commandLineHelpMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem keyboardShortcutsHelpMenuItem;
         private System.Windows.Forms.ToolStripMenuItem otherDocsHelpMenuItem;
         private System.Windows.Forms.ToolStripMenuItem toggleQuantitativeContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem markTransitionsQuantitativeContextMenuItem;

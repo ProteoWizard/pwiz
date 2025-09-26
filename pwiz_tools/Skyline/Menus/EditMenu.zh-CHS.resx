@@ -286,7 +286,7 @@
     <value>207, 22</value>
   </data>
   <data name="editNoteToolStripMenuItem.Text" xml:space="preserve">
-    <value>编辑注释(&amp;N)</value>
+    <value>编辑注释(&amp;E)</value>
   </data>
   <data name="toolStripSeparator42.Size" type="System.Drawing.Size, System.Drawing">
     <value>204, 6</value>
