@@ -306,6 +306,14 @@ namespace pwiz.Skyline.Model.RetentionTimes
             {
                 get { return true; }
             }
+
+            public override string AxisTitle
+            {
+                get
+                {
+                    return _alignmentTarget.GetAxisTitle(RTPeptideValue.Retention);
+                }
+            }
         }
 
         public class Irt : AlignmentTarget

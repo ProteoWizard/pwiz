@@ -79,15 +79,6 @@ namespace pwiz.Skyline.Model.RetentionTimes {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Default ({0}).
-        /// </summary>
-        internal static string AlignmentTargetSpec_GetLabel_Default___0__ {
-            get {
-                return ResourceManager.GetString("AlignmentTargetSpec_GetLabel_Default___0__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Default (None).
         /// </summary>
         internal static string AlignmentTargetSpec_GetLabel_Default__None_ {
