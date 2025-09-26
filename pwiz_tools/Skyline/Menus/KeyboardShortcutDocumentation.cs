@@ -1,6 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Cursor (Claude Sonnet 4) <cursor .at. anysphere.co>
  *
  * Copyright 2025 University of Washington - Seattle, WA
  *
@@ -48,13 +49,13 @@ namespace pwiz.Skyline.Menus
 
             // Keyboard shortcuts table
             AddShortcutsTable(sb, 
-                () => GetShortcutRows(menuMain), 
+                GetShortcutRows(menuMain), 
                 MenusResources.Keyboard_Shortcuts_Table_Title, 
                 MenusResources.Keyboard_Shortcuts_Header_Shortcut);
 
             // Mnemonics table
             AddShortcutsTable(sb, 
-                () => GetMnemonicRows(menuMain), 
+                GetMnemonicRows(menuMain), 
                 MenusResources.Keyboard_Mnemonics_Table_Title, 
                 MenusResources.Keyboard_Mnemonics_Header_Mnemonic);
             
@@ -63,7 +64,7 @@ namespace pwiz.Skyline.Menus
         }
 
         private static void AddShortcutsTable(StringBuilder sb, 
-            Func<List<(string MenuPath, string Shortcut)>> getRows, 
+            List<(string MenuPath, string Shortcut)> rows, 
             string tableTitle, 
             string shortcutColumnHeader)
         {
@@ -74,7 +75,6 @@ namespace pwiz.Skyline.Menus
             AddHeader(sb, shortcutColumnHeader);
             sb.Append(@"</tr></thead><tbody>");
 
-            var rows = getRows();
             foreach (var row in rows)
             {
                 sb.Append(@"<tr>");
@@ -168,10 +168,7 @@ namespace pwiz.Skyline.Menus
                 return string.Empty;
 
             // Remove accelerator ampersands and trailing ellipses
-            var noAmp = text.Replace(@"&", string.Empty);
-            return noAmp.EndsWith(@"…")
-                ? noAmp.Substring(0, noAmp.Length - 1)
-                : (noAmp.EndsWith(@"...") ? noAmp.Substring(0, noAmp.Length - 3) : noAmp);
+            return text.Replace(@"&", string.Empty).TrimEnd('…', '.');
         }
 
         private static void AppendMenuItemsForMnemonics(List<(string MenuPath, string Shortcut)> rows, string parentPath, ToolStripItemCollection items)

@@ -1,6 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Cursor (Claude Sonnet 4) <cursor .at. anysphere.co>
  *
  * Copyright 2025 University of Washington - Seattle, WA
  *
@@ -42,6 +43,9 @@ namespace pwiz.SkylineTestFunctional
             // Test that the keyboard shortcuts documentation can be generated
             RunDlg<DocumentationViewer>(SkylineWindow.ShowKeyboardShortcutsDocumentation, docViewer =>
             {
+                // Wait for the document to load completely
+                WaitForCondition(() => docViewer.DocumentationHtml.Length > 100);
+                
                 var html = docViewer.DocumentationHtml;
                 AssertEx.Contains(html, MenusResources.Keyboard_Shortcuts_Title);
                 AssertEx.Contains(html, MenusResources.Keyboard_Shortcuts_Table_Title);
@@ -60,19 +64,42 @@ namespace pwiz.SkylineTestFunctional
                 
                 docViewer.Close();
             });
-        }
-    }
 
-    [TestClass]
-    public class KeyboardMnemonicDuplicateTest : AbstractFunctionalTest
-    {
-        [TestMethod]
-        public void TestNoDuplicateMnemonics()
+            // Run all keyboard validation tests
+            ValidateNoDuplicateKeyboardShortcuts();
+            ValidateNoDuplicateMnemonics();
+        }
+
+        private void ValidateNoDuplicateKeyboardShortcuts()
         {
-            RunFunctionalTest();
+            RunUI(() =>
+            {
+                // Extract all keyboard shortcuts from the menu structure using the public method
+                var shortcuts = KeyboardShortcutDocumentation.GetShortcutRows(SkylineWindow.MainMenuStrip);
+
+                // Group by shortcut to find duplicates
+                var duplicateGroups = shortcuts
+                    .GroupBy(s => s.Shortcut, StringComparer.OrdinalIgnoreCase)
+                    .Where(g => g.Count() > 1)
+                    .ToList();
+
+                if (duplicateGroups.Any())
+                {
+                    var errorLines = new List<string> { "Duplicate keyboard shortcuts found:" };
+
+                    foreach (var group in duplicateGroups)
+                    {
+                        errorLines.Add(string.Empty);
+                        errorLines.Add($"Shortcut '{group.Key}' is used by:");
+                        errorLines.AddRange(group.Select(item => $"  - {item.MenuPath}"));
+                    }
+
+                    Assert.Fail(TextUtil.LineSeparate(errorLines));
+                }
+            });
         }
 
-        protected override void DoTest()
+        private void ValidateNoDuplicateMnemonics()
         {
             RunUI(() =>
             {
