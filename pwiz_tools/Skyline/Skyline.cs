@@ -3108,7 +3108,7 @@ namespace pwiz.Skyline
         public void ShowKeyboardShortcutsDocumentation()
         {
             DocumentationViewer documentationViewer = new DocumentationViewer(true);
-            documentationViewer.DocumentationHtml = Menus.KeyboardShortcutDocumentation.GenerateKeyboardShortcutHtml(menuMain);
+            documentationViewer.DocumentationHtml = KeyboardShortcutDocumentation.GenerateKeyboardShortcutHtml(menuMain);
             documentationViewer.Show(this);
         }
 
