@@ -671,6 +671,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         var nodeTran = (TransitionDocNode) nodeGroup.Children[j];
                         var nodeTranCurrent = (TransitionDocNode) nodeGroupCurrent.Children[j];
+                        if (nodeTran.Results == null || nodeTranCurrent.Results == null)
+                            return false;
                         if (nodeTran.Results.Count <= _chromIndex ||
                             nodeTranCurrent.Results.Count <= _chromIndex ||
                             !Equals(nodeTran.Results[_chromIndex], nodeTranCurrent.Results[_chromIndex]))
@@ -682,7 +684,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         /// <summary>
-        /// Gets the set of chomatogram info for the selected file of the groups.
+        /// Gets the set of chromatogram info for the selected file of the groups.
         /// </summary>
         public ChromatogramGroupInfo[] ChromGroupInfos
         {
