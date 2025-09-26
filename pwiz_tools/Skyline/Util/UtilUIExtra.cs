@@ -318,6 +318,11 @@ EndSelection:<<<<<<<3
             return GetOpenClipboardMessage(UtilResources.ClipboardHelper_GetCopyErrorMessage_Failed_setting_data_to_clipboard_);
         }
 
+        public static string GetGenericClipboardErrorMessage()
+        {
+            return GetOpenClipboardMessage(UtilResources.ClipboardHelper_GetGenericClipboardErrorMessage_Failed_accessing_the_clipboard_);
+        }
+
         public static string GetOpenClipboardMessage(string prefix)
         {
             try
@@ -395,6 +400,34 @@ EndSelection:<<<<<<<3
                 MessageDlg.Show(FormUtil.FindTopLevelOwner(owner), GetPasteErrorMessage());
                 return null;
             }
+        }
+
+        public static bool IsCut(Keys keys)
+        {
+            return keys == (Keys.Control | Keys.X) || keys == (Keys.Shift | Keys.Delete);
+        }
+        
+        public static bool IsCopy(Keys keys)
+        {
+            return keys == (Keys.Control | Keys.C) || keys == (Keys.Control | Keys.Insert);
+        }
+
+        public static bool IsPaste(Keys keys)
+        {
+            return keys == (Keys.Control | Keys.V) || keys == (Keys.Shift | Keys.Insert);
+        }
+
+        public static string GetClipboardErrorMessageForKeystroke(Keys keys)
+        {
+            if (IsPaste(keys))
+            {
+                return GetPasteErrorMessage();
+            }
+            if (IsCopy(keys) || IsCut(keys))
+            {
+                return GetCopyErrorMessage();
+            }
+            return GetGenericClipboardErrorMessage();
         }
     }
 }

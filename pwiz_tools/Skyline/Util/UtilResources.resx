@@ -311,4 +311,7 @@ Charge states are inferred from the presence of these adduct components:{1}</val
   <data name="AbstractPanoramaPublishClient_UploadSharedZipFile_An_import_error_occurred_on_the_Panorama_server__0__" xml:space="preserve">
     <value>An import error occurred on the Panorama server {0}.</value>
   </data>
+  <data name="ClipboardHelper_GetGenericClipboardErrorMessage_Failed_accessing_the_clipboard_" xml:space="preserve">
+    <value>Failed accessing the clipboard.</value>
+  </data>
 </root>

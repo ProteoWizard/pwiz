@@ -36,7 +36,7 @@ namespace pwiz.Skyline.FileUI
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             this.bindingSource1 = new System.Windows.Forms.BindingSource(this.components);
-            this.dataGridViewSizes = new pwiz.Common.Controls.CommonDataGridView();
+            this.dataGridViewSizes = new pwiz.Skyline.Controls.DataGridViewEx();
             this.colReplicateName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colCacheFileSize = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colMinimizedRatio = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -223,7 +223,7 @@ namespace pwiz.Skyline.FileUI
         #endregion
 
         private System.Windows.Forms.BindingSource bindingSource1;
-        private pwiz.Common.Controls.CommonDataGridView dataGridViewSizes;
+        private pwiz.Skyline.Controls.DataGridViewEx dataGridViewSizes;
         private System.Windows.Forms.CheckBox cbxDiscardUnmatchedChromatograms;
         private System.Windows.Forms.TextBox tbxNoiseTimeRange;
         private System.Windows.Forms.CheckBox cbxLimitNoiseTime;

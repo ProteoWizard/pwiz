@@ -20,6 +20,7 @@ using System;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls
@@ -38,15 +39,24 @@ namespace pwiz.Skyline.Controls
 
         protected override bool ProcessDataGridViewKey(KeyEventArgs e)
         {
-            if (DataGridViewKey != null)
+            try
             {
-                DataGridViewKey.Invoke(this, e);
-                if (e.Handled)
+                if (DataGridViewKey != null)
                 {
-                    return true;
+                    DataGridViewKey.Invoke(this, e);
+                    if (e.Handled)
+                    {
+                        return true;
+                    }
                 }
+
+                return base.ProcessDataGridViewKey(e);
             }
-            return base.ProcessDataGridViewKey(e);
+            catch (Exception exception)
+            {
+                ExceptionUtil.HandleProcessKeyException(this, exception, e.KeyData);
+                return true;
+            }
         }
 
         protected override bool ProcessDialogKey(Keys keyData)
