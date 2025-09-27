@@ -727,7 +727,7 @@
     <value>180, 22</value>
   </data>
   <data name="retentionTimesMenuItem.Text" xml:space="preserve">
-    <value>Retention &amp;Times</value>
+    <value>Retention T&amp;imes</value>
   </data>
   <data name="replicateComparisonMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>F8</value>
@@ -751,7 +751,7 @@
     <value>228, 22</value>
   </data>
   <data name="regressionMenuItem.Text" xml:space="preserve">
-    <value>&amp;Regression</value>
+    <value>R&amp;egression</value>
   </data>
   <data name="scoreToRunMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>142, 22</value>

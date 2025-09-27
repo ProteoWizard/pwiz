@@ -60,6 +60,7 @@
             this.textCutoff = new System.Windows.Forms.TextBox();
             this.labelCutoff = new System.Windows.Forms.Label();
             this.lblSearchEngineBlurb = new System.Windows.Forms.Label();
+            this.btnEditSearchTools = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pBLogo)).BeginInit();
             this.groupBoxHardklor.SuspendLayout();
             this.SuspendLayout();
@@ -252,10 +253,18 @@
             resources.ApplyResources(this.lblSearchEngineBlurb, "lblSearchEngineBlurb");
             this.lblSearchEngineBlurb.Name = "lblSearchEngineBlurb";
             // 
+            // btnEditSearchTools
+            // 
+            resources.ApplyResources(this.btnEditSearchTools, "btnEditSearchTools");
+            this.btnEditSearchTools.Name = "btnEditSearchTools";
+            this.btnEditSearchTools.UseVisualStyleBackColor = true;
+            this.btnEditSearchTools.Click += new System.EventHandler(this.btnEditSearchTools_Click);
+            // 
             // SearchSettingsControl
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.btnEditSearchTools);
             this.Controls.Add(this.labelCutoff);
             this.Controls.Add(this.textCutoff);
             this.Controls.Add(this.lblSearchEngineBlurb);
@@ -318,5 +327,6 @@
         private System.Windows.Forms.Label labelCutoff;
         private System.Windows.Forms.TextBox textCutoff;
         private System.Windows.Forms.Label lblSearchEngineBlurb;
+        private System.Windows.Forms.Button btnEditSearchTools;
     }
 }

@@ -476,6 +476,33 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Internal &amp;Tools.
+        /// </summary>
+        public static string SearchToolList_Label_Internal__Tools {
+            get {
+                return ResourceManager.GetString("SearchToolList_Label_Internal__Tools", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search &amp;Tools.
+        /// </summary>
+        public static string SearchToolList_Label_Search__Tools {
+            get {
+                return ResourceManager.GetString("SearchToolList_Label_Search__Tools", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Edit Search Tools.
+        /// </summary>
+        public static string SearchToolList_Title_Edit_Search_Tools {
+            get {
+                return ResourceManager.GetString("SearchToolList_Title_Edit_Search_Tools", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &amp;Servers.
         /// </summary>
         public static string ServerList_Label__Servers {
