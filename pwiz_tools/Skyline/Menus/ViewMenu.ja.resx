@@ -733,7 +733,7 @@ Old Localized:スペクトルグリッド</comment>
     <value>180, 22</value>
   </data>
   <data name="retentionTimesMenuItem.Text" xml:space="preserve">
-    <value>保持時間(&amp;T)</value>
+    <value>保持時間(&amp;I)</value>
   </data>
   <data name="replicateComparisonMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>F8</value>
@@ -757,7 +757,7 @@ Old Localized:スペクトルグリッド</comment>
     <value>228, 22</value>
   </data>
   <data name="regressionMenuItem.Text" xml:space="preserve">
-    <value>回帰(&amp;R)</value>
+    <value>回帰(&amp;E)</value>
   </data>
   <data name="scoreToRunMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>142, 22</value>

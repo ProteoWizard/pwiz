@@ -2777,6 +2777,19 @@ namespace pwiz.Skyline
             }
         }
 
+        private void searchToolsMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowSearchToolsDlg();
+        }
+
+        public void ShowSearchToolsDlg()
+        {
+            using var listbox = new ListBox();
+            var driverTools = new SettingsListBoxDriver<SearchTool>(listbox, Settings.Default.SearchToolList);
+            driverTools.LoadList();
+            driverTools.EditList();
+        }
+
         private void toolsMenu_DropDownOpening(object sender, EventArgs e)
         {
             PopulateToolsMenu();
@@ -3084,6 +3097,18 @@ namespace pwiz.Skyline
             };
             DocumentationViewer documentationViewer = new DocumentationViewer(true);
             documentationViewer.DocumentationHtml = documentationGenerator.GetDocumentationHtmlPage();
+            documentationViewer.Show(this);
+        }
+
+        private void keyboardShortcutsHelpMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowKeyboardShortcutsDocumentation();
+        }
+
+        public void ShowKeyboardShortcutsDocumentation()
+        {
+            DocumentationViewer documentationViewer = new DocumentationViewer(true);
+            documentationViewer.DocumentationHtml = KeyboardShortcutDocumentation.GenerateKeyboardShortcutHtml(menuMain);
             documentationViewer.Show(this);
         }
 
