@@ -45,6 +45,10 @@ using static pwiz.Skyline.Model.Files.FileNode;
 // TODO: add a new helper for getting a FilesTree node by model type to make this more readable: SkylineWindow.FilesTree.Root.NodeAt(0).FileState).
 // TODO: add test making sure clicking upper RHC 'x' on confirm dialog does nto delete Replicate or Spectral Library
 
+// TODO: local file system - change directory name containing raw files
+// TODO: local file system - use raw files in directory that's a sibling of directory containing .sky file
+// TODO: assert TopNode correctly restored from view state
+
 // ReSharper disable WrongIndentSize
 namespace pwiz.SkylineTestFunctional
 {
@@ -67,6 +71,7 @@ namespace pwiz.SkylineTestFunctional
         {
             // Non-UI tests
             TestFileSystemWatcherIgnoreList();
+            TestSubdirectoryHelper();
 
             // UI tests
             TestEmptyDocument();
@@ -94,6 +99,16 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(LocalFileSystem.IgnoreFileName(@"c:\Users\foobar\file.sky"));
             Assert.IsFalse(LocalFileSystem.IgnoreFileName(@"c:\Users\foobar\file.xls"));
             Assert.IsFalse(LocalFileSystem.IgnoreFileName(@"c:\Users\foobar\file.txt"));
+        }
+
+        protected void TestSubdirectoryHelper()
+        {
+            Assert.IsTrue(LocalFileSystem.IsInDirectory(@"c:\Users\foobar\directory", @"c:\users\foobar\directory\child"));
+            Assert.IsTrue(LocalFileSystem.IsInDirectory(@"c:\Users\foobar\directory\", @"c:\users\foobar\directory\child"));
+            Assert.IsTrue(LocalFileSystem.IsInDirectory(@"c:\", @"c:\users\foobar\directory\child"));
+
+            Assert.IsFalse(LocalFileSystem.IsInDirectory(@"c:\tmp\rat-plasma\", @"c:\users\foobar\tmp"));
+            Assert.IsFalse(LocalFileSystem.IsInDirectory(@"d:\", @"c:\users\foobar\tmp"));
         }
 
         protected void TestEmptyDocument()
@@ -561,6 +576,19 @@ namespace pwiz.SkylineTestFunctional
         // Assumes rat-plasma.sky is loaded
         protected void TestMonitoringFileSystem()
         {
+            WaitForFilesTree();
+
+            { // Smoke test finding nodes matching a directory name
+                var documentFilePath = SkylineWindow.DocumentFilePath;
+                var directoryName = Path.GetDirectoryName(documentFilePath);
+                var matchingNodes = SkylineWindow.FilesTree.FindNodesByPath(directoryName);
+                Assert.AreEqual(46, matchingNodes.Count);
+
+                directoryName = Path.GetDirectoryName(directoryName);
+                matchingNodes = SkylineWindow.FilesTree.FindNodesByPath(directoryName);
+                Assert.AreEqual(46, matchingNodes.Count);
+            }
+
             var replicateFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
             var replicate = replicateFolder.NodeAt(0);
             var replicateSample = replicate.NodeAt(0);

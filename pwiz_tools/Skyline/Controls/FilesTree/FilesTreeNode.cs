@@ -22,6 +22,7 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Files;
 
 // ReSharper disable WrongIndentSize
@@ -293,6 +294,19 @@ namespace pwiz.Skyline.Controls.FilesTree
                 {
                     RenderTipAddRowWithRedValue(@"FileState", FileState.ToString(), customTable, rt);
                     RenderTipAddRowWithRedValue(@"LocalFilePath", LocalFilePath, customTable, rt);
+                }
+
+                // Show extra debug info on the .sky file
+                if (Model is SkylineFile)
+                {
+                    customTable.AddDetailRow(@" ", @" ", rt);
+                    customTable.AddDetailRow(@"Monitored directory", FilesTree.PathMonitoredForFileSystemChanges(), rt);
+                }
+
+                if (Model is SkylineAuditLog || Model is SkylineFile)
+                {
+                    var isForceEnabled = Program.FunctionalTest && !AuditLogList.IgnoreTestChecks;
+                    customTable.AddDetailRow(@"Audit Log enabled by tests?", $@"{(isForceEnabled ? @"yes" : @"no")}", rt);
                 }
 
                 // CONSIDER: add SrmDocument.RevisionIndex to FileNode

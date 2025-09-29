@@ -570,9 +570,9 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         #region Handlers for events raised while monitoring the local file system
 
-        public void FileDeleted(string fileName, CancellationToken cancellationToken)
+        public void FileDeleted(string filePath, CancellationToken cancellationToken)
         {
-            if (FindTreeNodeForFileName(Root, fileName, out var missingFileTreeNode))
+            if (FindTreeNodeForFilePath(Root, filePath, out var missingFileTreeNode))
             {
                 missingFileTreeNode.FileState = FileState.missing;
 
@@ -586,11 +586,11 @@ namespace pwiz.Skyline.Controls.FilesTree
             }
         }
 
-        public void FileCreated(string fileName, CancellationToken cancellationToken)
+        public void FileCreated(string filePath, CancellationToken cancellationToken)
         {
             // Look for a tree node associated with the new file name. If Files Tree isn't aware
             // of a file with that name, ignore the event.
-            if (FindTreeNodeForFileName(Root, fileName, out var availableFileTreeNode))
+            if (FindTreeNodeForFilePath(Root, filePath, out var availableFileTreeNode))
             {
                 availableFileTreeNode.FileState = FileState.available;
 
@@ -604,32 +604,45 @@ namespace pwiz.Skyline.Controls.FilesTree
             }
         }
 
-        public void FileRenamed(string oldName, string newName, CancellationToken cancellationToken)
+        public void FileRenamed(string oldFilePath, string newFilePath, CancellationToken cancellationToken)
         {
             // Look for a tree node with the file's previous name. If a node with that name is found
             // treat the file as missing.
-            if (FindTreeNodeForFileName(Root, oldName, out var treeNodeToUpdate))
+            var matchingNodes = FindNodesByPath(oldFilePath);
+            if (matchingNodes.Count > 0)
             {
-                treeNodeToUpdate.FileState = FileState.missing;
+                foreach (var node in matchingNodes)
+                {
+                    node.FileState = FileState.missing;
+
+                    _backgroundActionService.RunUI(() =>
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            FilesTreeNode.UpdateImagesForTreeNode(node);
+                        }
+                    });
+                }
             }
+
             // Now, look for a tree node with the new file name. If found, a file was restored with
             // a name Files Tree is aware of, so mark the file as available.
-            else if (FindTreeNodeForFileName(Root, newName, out treeNodeToUpdate))
+            matchingNodes = FindNodesByPath(newFilePath);
+            if (matchingNodes.Count > 0)
             {
-                treeNodeToUpdate.FileState = FileState.available;
-            }
-
-            // If neither the old nor new file names are known to Files Tree, ignore the event.
-            if (treeNodeToUpdate == null)
-                return;
-
-            _backgroundActionService.RunUI(() =>
-            {
-                if (!cancellationToken.IsCancellationRequested)
+                foreach (var node in matchingNodes)
                 {
-                    FilesTreeNode.UpdateImagesForTreeNode(treeNodeToUpdate);
+                    node.FileState = FileState.available;
+
+                    _backgroundActionService.RunUI(() =>
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            FilesTreeNode.UpdateImagesForTreeNode(node);
+                        }
+                    });
                 }
-            });
+            }
         }
 
         #endregion
@@ -722,7 +735,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         /// <returns></returns>
         // TODO: unit tests
         // CONSIDER: a dictionary mapping paths to FilesTreeNode would improve performance
-        private static bool FindTreeNodeForFileName(FilesTreeNode filesTreeNode, string filePath, out FilesTreeNode value)
+        private static bool FindTreeNodeForFilePath(FilesTreeNode filesTreeNode, string filePath, out FilesTreeNode value)
         {
             value = null;
 
@@ -736,11 +749,48 @@ namespace pwiz.Skyline.Controls.FilesTree
 
             foreach (FilesTreeNode n in filesTreeNode.Nodes)
             {
-                if (FindTreeNodeForFileName(n, filePath, out value))
+                if (FindTreeNodeForFilePath(n, filePath, out value))
                     return true;
             }
 
             return false;
+        }
+
+        public IList<FilesTreeNode> FindNodesByPath(string targetPath)
+        {
+            var matchingNodes = new List<FilesTreeNode>();
+
+            var normalizedTargetPath = Path.GetFullPath(targetPath);
+            CollectMatchingNodes(Root, normalizedTargetPath, matchingNodes);
+
+            return matchingNodes;
+        }
+
+        private static void CollectMatchingNodes(FilesTreeNode currentNode, string normalizedTargetPath, IList<FilesTreeNode> matchingNodes)
+        {
+            if (currentNode == null)
+                return;
+
+            if (currentNode.Model.IsBackedByFile && currentNode.LocalFilePath != null)
+            {
+                var normalizedCurrentPath = Path.GetFullPath(currentNode.LocalFilePath).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+                // Check for exact match - if found, this is the target node
+                if (string.Equals(normalizedCurrentPath, normalizedTargetPath))
+                {
+                    matchingNodes.Add(currentNode);
+                }
+                // Check for partial match - if found, this node was in a directory whose name changed
+                else if (normalizedCurrentPath.StartsWith(normalizedTargetPath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+                {
+                    matchingNodes.Add(currentNode);
+                }
+            }
+
+            foreach (FilesTreeNode child in currentNode.Nodes)
+            {
+                CollectMatchingNodes(child, normalizedTargetPath, matchingNodes);
+            }
         }
 
         private static SkylineWindow FindParentSkylineWindow(Control me)
