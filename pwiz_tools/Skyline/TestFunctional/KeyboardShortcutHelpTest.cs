@@ -32,7 +32,7 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class KeyboardShortcutHelpTest : AbstractFunctionalTest
     {
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.WEB_BROWSER_USE)]
         public void TestKeyboardShortcutHelp()
         {
             RunFunctionalTest();
