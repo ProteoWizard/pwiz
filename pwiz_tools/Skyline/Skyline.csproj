@@ -7294,7 +7294,6 @@
   <ItemGroup>
     <Folder Include="Model\AlphaPeptDeep\" />
     <Folder Include="Model\Carafe\" />
-    <Folder Include="Model\PropertySheets\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterPublish">

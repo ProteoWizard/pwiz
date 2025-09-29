@@ -61,20 +61,92 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Category.
+        ///   Looks up a localized string similar to Average Measured Retention Time.
         /// </summary>
-        internal static string Category_Category {
+        internal static string AvgMeasuredRetentionTime {
             get {
-                return ResourceManager.GetString("Category_Category", resourceCulture);
+                return ResourceManager.GetString("AvgMeasuredRetentionTime", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Property.
+        ///   Looks up a localized string similar to Annotations.
         /// </summary>
-        internal static string Property {
+        internal static string Category_Annotations {
             get {
-                return ResourceManager.GetString("Property", resourceCulture);
+                return ResourceManager.GetString("Category_Annotations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peptide.
+        /// </summary>
+        internal static string Category_Peptide {
+            get {
+                return ResourceManager.GetString("Category_Peptide", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to First Position.
+        /// </summary>
+        internal static string FirstPosition {
+            get {
+                return ResourceManager.GetString("FirstPosition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Last Position.
+        /// </summary>
+        internal static string LastPosition {
+            get {
+                return ResourceManager.GetString("LastPosition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Missed Cleavages.
+        /// </summary>
+        internal static string MissedCleavages {
+            get {
+                return ResourceManager.GetString("MissedCleavages", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Modified Sequence.
+        /// </summary>
+        internal static string ModifiedSequence {
+            get {
+                return ResourceManager.GetString("ModifiedSequence", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Predicted Retention Time.
+        /// </summary>
+        internal static string PredictedRetentionTime {
+            get {
+                return ResourceManager.GetString("PredictedRetentionTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Protein Sequence.
+        /// </summary>
+        internal static string ProteinSequence {
+            get {
+                return ResourceManager.GetString("ProteinSequence", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sequence.
+        /// </summary>
+        internal static string Sequence {
+            get {
+                return ResourceManager.GetString("Sequence", resourceCulture);
             }
         }
     }

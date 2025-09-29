@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
@@ -83,7 +84,7 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public string Note { get { return Annotations.Note;} }
 
-        public virtual GlobalizedObject GetProperties() => null;
+        public virtual GlobalizedObject GetProperties(SrmDocument document, SkylineDataSchema dataSchema, IdentityPath identityPath) => null;
 
         /// <summary>
         /// Creates a new copy of this node with a new copy of its ID.

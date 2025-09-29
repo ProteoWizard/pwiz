@@ -1,5 +1,5 @@
 ﻿/*
- * Original author: Aaron Banse <acbanse .at. acbanse dot com>,
+ * Original author: Aaron Banse <acbanse .at. icloud dot com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
  * Copyright 2025 University of Washington - Seattle, WA

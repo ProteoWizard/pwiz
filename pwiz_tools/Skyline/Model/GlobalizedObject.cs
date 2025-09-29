@@ -134,9 +134,51 @@ namespace pwiz.Skyline.Model
                 }
 
                 AddCustomizedProperties();
+
+                if (this is IAnnotatable { Annotations: { } } annotatable) AddAnnotationProperties(this, annotatable);
             }
 
             return _globalizedProps;
+        }
+
+        // Prefix to use for annotation property names, to avoid conflicts with other property names since annotation names are user-defined
+        private const string ANNOTATION_PROPNAME_PREFIX = "Annotation_";
+
+        /// <summary>
+        /// Adds annotation properties to the specified <see cref="GlobalizedObject"/> based on the annotations defined
+        /// in the provided <see cref="IAnnotatable"/> instance.
+        /// </summary>
+        /// <remarks>This method iterates through the annotations of the <paramref name="annotatable"/>
+        /// object and creates corresponding properties in the <paramref name="obj"/>. If an annotation defines a value
+        /// list of strings, a dropdown list of options is created, including a blank entry to allow for empty
+        /// values.</remarks>
+        /// <param name="obj">The <see cref="GlobalizedObject"/> to which the annotation properties will be added.</param>
+        /// <param name="annotatable">The <see cref="GlobalizedObject"/>, cast as a <see cref="IAnnotatable"/> to access the annotations to process.</param>
+        private static void AddAnnotationProperties(GlobalizedObject obj, IAnnotatable annotatable)
+        {
+            foreach (var annotation in annotatable.Annotations)
+            {
+                List<string> dropDownOptions = null;
+                if (annotation.AnnotationDef.Type == AnnotationDef.AnnotationType.value_list &&
+                    annotation.AnnotationDef.ValueType == typeof(string))
+                {
+                    dropDownOptions = annotation.AnnotationDef.Items.ToList();
+                    dropDownOptions.Insert(0, null); // Allow blank entry
+                }
+
+                var prop = new CustomHandledGlobalizedPropertyDescriptor(
+                    annotation.AnnotationDef.ValueType,
+                    ANNOTATION_PROPNAME_PREFIX + annotation.Name,
+                    annotation.GetAnnotation(),
+                    obj.GetBaseDescriptorByName(nameof(Annotations)).Category,
+                    obj.GetResourceManager());
+
+                prop.SetNonLocalizedDisplayName(annotation.Name);
+                prop.SetDocumentModifierFunc(annotatable.EditAnnotationFuncDictionary[annotation]);
+                prop.SetDropDownOptions(dropDownOptions);
+
+                obj.AddProperty(prop);
+            }
         }
 
         public PropertyDescriptorCollection GetProperties()
@@ -497,11 +539,30 @@ namespace pwiz.Skyline.Model
             ? new DropDownConverter(_dropDownOptions) : base.Converter;
     }
 
+    /// <summary>
+    /// Interfacce for property descriptors that are potentially editable.
+    /// GetModifiedDocument should not be called if IsReadOnly is true.
+    /// </summary>
     public interface IModifiablePropertyDescriptor
     {
         public bool IsReadOnly { get; }
 
         public ModifiedDocument GetModifiedDocument(SrmDocument document, SrmSettingsChangeMonitor monitor, object newValue);
+    }
+
+    /// <summary>
+    /// Interface for GlobalizedObjects which can have annotations, defined in Settings.Default.AnnotationDefList.
+    /// Allows GlobalizedObject to add annotations as editable properties.
+    /// Implementer must populate both properties in its constructor.
+    /// </summary>
+    public interface IAnnotatable
+    {
+        // Annotations need to be added as individual properties under the Annotations category
+        // Annotation properties are added in GlobalizedObject, but EditAnnotationFuncDictionary must be populated on construction
+        [UseCustomHandling] 
+        [Category("Annotations")] List<Annotations.Annotation> Annotations { get; }
+        [UseCustomHandling]
+        Dictionary<Annotations.Annotation, Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument>> EditAnnotationFuncDictionary { get; }
     }
 
     public class TwoDecimalDoubleConverter : DoubleConverter

@@ -117,10 +117,34 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="Category_Category" xml:space="preserve">
-    <value>Category</value>
+  <data name="Category_Peptide" xml:space="preserve">
+    <value>Peptide</value>
   </data>
-  <data name="Property" xml:space="preserve">
-    <value>Property</value>
+  <data name="Category_Annotations" xml:space="preserve">
+    <value>Annotations</value>
+  </data>
+  <data name="Sequence" xml:space="preserve">
+    <value>Sequence</value>
+  </data>
+  <data name="ProteinSequence" xml:space="preserve">
+    <value>Protein Sequence</value>
+  </data>
+  <data name="ModifiedSequence" xml:space="preserve">
+    <value>Modified Sequence</value>
+  </data>
+  <data name="FirstPosition" xml:space="preserve">
+    <value>First Position</value>
+  </data>
+  <data name="LastPosition" xml:space="preserve">
+    <value>Last Position</value>
+  </data>
+  <data name="MissedCleavages" xml:space="preserve">
+    <value>Missed Cleavages</value>
+  </data>
+  <data name="PredictedRetentionTime" xml:space="preserve">
+    <value>Predicted Retention Time</value>
+  </data>
+  <data name="AvgMeasuredRetentionTime" xml:space="preserve">
+    <value>Average Measured Retention Time</value>
   </data>
 </root>

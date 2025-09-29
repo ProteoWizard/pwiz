@@ -17,14 +17,16 @@
  * limitations under the License.
  */
 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Windows.Forms;
+using EnvDTE;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Util;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Windows.Forms;
 
 namespace pwiz.Skyline.Controls
 {
@@ -51,7 +53,9 @@ namespace pwiz.Skyline.Controls
 
         public GlobalizedObject GetSelectedObjectProperties()
         {
-            return SequenceTree.SelectedNodeSrmTreeNode?.Model.GetProperties();
+            var dataSchema = SkylineWindowDataSchema.FromDocumentContainer(SkylineWindow);
+            var identityPath = SequenceTree.SelectedPath;
+            return SequenceTree.SelectedNodeSrmTreeNode?.Model.GetProperties(SkylineWindow.Document, dataSchema, identityPath);
         }
 
         #endregion

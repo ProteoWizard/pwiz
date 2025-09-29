@@ -1,5 +1,5 @@
 ﻿/*
- * Original author: Aaron Banse <acbanse .at. acbanse dot com>,
+ * Original author: Aaron Banse <acbanse .at. icloud dot com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
  * Copyright 2025 University of Washington - Seattle, WA
@@ -29,7 +29,7 @@ using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Files
 {
-    public class ReplicateProperties : FileNodeProperties
+    public class ReplicateProperties : FileNodeProperties, IAnnotatable
     {
         public ReplicateProperties(SrmDocument document, Replicate model, string localFilePath)
             : base(model, localFilePath)
@@ -46,7 +46,7 @@ namespace pwiz.Skyline.Model.Files
             SampleType = chromSet.SampleType.ToString();
 
             Annotations = new List<Annotations.Annotation>();
-            _editAnnotationFuncDictionary = new Dictionary<Annotations.Annotation, Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument>>();
+            EditAnnotationFuncDictionary = new Dictionary<Annotations.Annotation, Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument>>();
             foreach (var annotationDef in Settings.Default.AnnotationDefList)
             {
                 if (annotationDef.AnnotationTargets.Contains(AnnotationDef.AnnotationTarget.replicate))
@@ -54,7 +54,7 @@ namespace pwiz.Skyline.Model.Files
                     var annotation = new Annotations.Annotation(new KeyValuePair<string, string>(
                         annotationDef.Name, chromSet.Annotations.GetAnnotation(annotationDef.Name)));
                     Annotations.Add(annotation);
-                    _editAnnotationFuncDictionary.Add(annotation,
+                    EditAnnotationFuncDictionary.Add(annotation,
                         (doc, monitor, newValue) => Replicate.EditAnnotation(doc, monitor, model, annotationDef, newValue));
                 }
             }
@@ -97,13 +97,6 @@ namespace pwiz.Skyline.Model.Files
         // Instrument properties need to be added as nested properties, as lists don't render well in PropertyGrid
         [UseCustomHandling]
         [Category("Instruments")] public List<InstrumentProperties> Instruments { get; }
-
-        // Annotations need to be added as individual properties under the Annotations category, for the above reason
-        [UseCustomHandling]
-        [Category("Annotations")] public List<Annotations.Annotation> Annotations { get; }
-        private readonly Dictionary<Annotations.Annotation, Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument>> _editAnnotationFuncDictionary;
-        // Prefix to use for annotation property names, to avoid conflicts with other property names since annotation names are user-defined
-        private const string ANNOTATION_NAME_PREFIX = "Annotation_";
 
         /// <summary>
         /// Transforms the list of InstrumentProperties into a form that will display better in the property sheet.
@@ -151,32 +144,19 @@ namespace pwiz.Skyline.Model.Files
                     AddProperty(prop);
                 }
             }
-
-            foreach (var annotation in Annotations)
-            {
-                List<string> dropDownOptions = null;
-                if (annotation.AnnotationDef.Type == AnnotationDef.AnnotationType.value_list &&
-                    annotation.AnnotationDef.ValueType == typeof(string))
-                {
-                    dropDownOptions = annotation.AnnotationDef.Items.ToList();
-                    dropDownOptions.Insert(0, null); // Allow blank entry
-                }
-
-                var prop = new CustomHandledGlobalizedPropertyDescriptor(
-                    annotation.AnnotationDef.ValueType,
-                    ANNOTATION_NAME_PREFIX + annotation.Name,
-                    annotation.GetAnnotation(),
-                    GetBaseDescriptorByName(nameof(Annotations)).Category,
-                    GetResourceManager());
-
-                prop.SetNonLocalizedDisplayName(annotation.Name);
-                prop.SetDocumentModifierFunc(_editAnnotationFuncDictionary[annotation]);
-                prop.SetDropDownOptions(dropDownOptions);
-
-                AddProperty(prop);
-            }
         }
 
+        #region IAnnotatable Implementation
+
+        // Annotations need to be added as individual properties under the Annotations category
+        // Annotation properties are added in GlobalizedObject, but EditAnnotationFuncDictionary must be populated on construction
+        [UseCustomHandling]
+        [Category("Annotations")] public List<Annotations.Annotation> Annotations { get; }
+        [UseCustomHandling]
+        public Dictionary<Annotations.Annotation, Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument>> EditAnnotationFuncDictionary { get; }
+
+        #endregion
+        
         // Test Support - enforced by code check
         // Invoked via reflection in InspectPropertySheetResources in CodeInspectionTest
         [UsedImplicitly]
