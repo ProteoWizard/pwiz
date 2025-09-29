@@ -23,6 +23,7 @@ using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Files;
 
 // ReSharper disable WrongIndentSize
@@ -231,56 +232,88 @@ namespace pwiz.Skyline.Controls.FilesTree
         public Size RenderTip(Graphics g, Size sizeMax, bool draw)
         {
             using var rt = new RenderTools();
-
-            // draw into table and return calculated dimensions
             var customTable = new TableDesc();
+
             customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_Tooltip_Name, Name, rt);
 
-            if (Model is ReplicatesFolder)
+            if (Model is ReplicatesFolder replicatesFolder)
             {
                 customTable.AddDetailRow(FilesTreeResources.FilesTreeNode_TreeNode_Tooltip_ReplicateCount, Nodes.Count.ToString(), rt);
-
-                var sampleFileCount = 0;
-                for (var i = 0; i < Nodes.Count; i++)
-                {
-                    sampleFileCount += Nodes[i].Nodes.Count;
-                }
-
-                customTable.AddDetailRow(FilesTreeResources.FilesTreeNode_TreeNode_Tooltip_ReplicateSampleFileCount, sampleFileCount.ToString(), rt);
+                customTable.AddDetailRow(FilesTreeResources.FilesTreeNode_TreeNode_Tooltip_ReplicateSampleFileCount, replicatesFolder.SampleFileCount().ToString(), rt);
             }
 
             // Only show this section if the file exists (or should exist) on disk
             if (Model.IsBackedByFile && FileState != FileState.not_initialized && FileState != FileState.in_memory)
             {
+                customTable.AddDetailRow(@" ", @" ", rt);
                 customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_Tooltip_FileName, FileName, rt);
+                customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_Tooltip_FilePath, FilePath, rt);
 
-                // if saved file path and local file path are the same: show only "File Path: c:\foo\bar"
-                // otherwise, show both "Saved File Path: c:\abc\def" and "Local File Path: c:\foo\bar"
-                if (string.Compare(FilePath, LocalFilePath, StringComparison.Ordinal) == 0)
+                customTable.AddDetailRow(@" ", @" ", rt);
+                if (FileState == FileState.available || FileState == FileState.in_memory)
                 {
-                    customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_Tooltip_FilePath, FilePath, rt);
+                    customTable.AddDetailRow(@"LocalFilePath", LocalFilePath, rt);
                 }
                 else
                 {
-                    customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_Tooltip_SavedFilePath, FilePath, rt);
+                    var label = @"LocalFilePath";
+                    var value = LocalFilePath;
 
-                    // CONSIDER: use red font for missing files?
-                    var localFilePath = FileState == FileState.missing ? FilesTreeResources.FilesTree_TreeNode_Tooltip_FileMissing : LocalFilePath;
-                    customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_Tooltip_LocalFilePath, localFilePath, rt);
+                    RenderTipAddRowWithRedValue(label, value, customTable, rt);
                 }
+
+                // TODO: Brendan wants tooltips to look like this. Restore.
+                // // if saved file path and local file path are the same: show only "File Path: c:\foo\bar"
+                // // otherwise, show both "Saved File Path: c:\abc\def" and "Local File Path: c:\foo\bar"
+                // if (string.Compare(FilePath, LocalFilePath, StringComparison.Ordinal) == 0)
+                // {
+                //     customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_Tooltip_FilePath, FilePath, rt);
+                // }
+                // else
+                // {
+                //     customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_Tooltip_SavedFilePath, FilePath, rt);
+                //
+                //     // CONSIDER: use red font for missing files?
+                //     var localFilePath = FileState == FileState.missing ? FilesTreeResources.FilesTree_TreeNode_Tooltip_FileMissing : LocalFilePath;
+                //     customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_Tooltip_LocalFilePath, localFilePath, rt);
+                // }
             }
 
             if (Debugger.IsAttached)
             {
                 customTable.AddDetailRow(@" ", @" ", rt);
                 customTable.AddDetailRow(@"Debug Info", @"(only visible when debugger attached) ", rt);
-
+                customTable.AddDetailRow(@" ", @" ", rt);
                 customTable.AddDetailRow(@"FileName", FileName, rt);
-                var msg = Model.IsBackedByFile ? $@"{FileState}" : @"Not backed by local file";
-                customTable.AddDetailRow(@"FileState", msg, rt);
-
                 customTable.AddDetailRow(@"FilePath", FilePath, rt);
-                customTable.AddDetailRow(@"LocalFilePath", LocalFilePath, rt);
+
+                if (!Model.IsBackedByFile)
+                {
+                    customTable.AddDetailRow(@"FileState", @"Not backed by local file", rt);
+                }
+                else if (FileState == FileState.available || FileState == FileState.in_memory)
+                {
+                    customTable.AddDetailRow(@"FileState", FileState.ToString(), rt);
+                    customTable.AddDetailRow(@"LocalFilePath", LocalFilePath, rt);
+                }
+                else
+                {
+                    RenderTipAddRowWithRedValue(@"FileState", FileState.ToString(), customTable, rt);
+                    RenderTipAddRowWithRedValue(@"LocalFilePath", LocalFilePath, customTable, rt);
+                }
+
+                // Show extra debug info on the .sky file
+                if (Model is SkylineFile)
+                {
+                    customTable.AddDetailRow(@" ", @" ", rt);
+                    customTable.AddDetailRow(@"Monitored directory", FilesTree.PathMonitoredForFileSystemChanges(), rt);
+                }
+
+                if (Model is SkylineAuditLog || Model is SkylineFile)
+                {
+                    var isForceEnabled = Program.FunctionalTest && !AuditLogList.IgnoreTestChecks;
+                    customTable.AddDetailRow(@"Audit Log enabled by tests?", $@"{(isForceEnabled ? @"yes" : @"no")}", rt);
+                }
 
                 // CONSIDER: add SrmDocument.RevisionIndex to FileNode
                 // customTable.AddDetailRow(@"Document revision", $@"{Model.DocumentRevisionIndex}", rt);
@@ -288,7 +321,25 @@ namespace pwiz.Skyline.Controls.FilesTree
 
             var size = customTable.CalcDimensions(g);
             customTable.Draw(g);
+
             return new Size((int)size.Width + 4, (int)size.Height + 4);
+        }
+
+        private static void RenderTipAddRowWithRedValue(string label, string value, TableDesc table, RenderTools rt)
+        {
+            var cellLabel = new CellDesc(label, rt)
+            {
+                Font = rt.FontBold
+            };
+
+            var cellValue = new CellDesc(value, rt)
+            {
+                Brush = rt.BrushSelected
+            };
+
+            var row = new RowDesc { cellLabel, cellValue };
+
+            table.Add(row);
         }
 
         public bool SupportsRename()

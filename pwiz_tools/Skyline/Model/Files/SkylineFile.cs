@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using pwiz.Common.Collections;
+using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.Files
 {
@@ -85,14 +86,21 @@ namespace pwiz.Skyline.Model.Files
                 list.Add(view);
             }
 
-            // TODO: put Chromatogram Cache (.skyd) back in the tree - maybe in the Replicates\ folder?
+            // TODO: adding Chromatograms to FilesTree causes drag-and-drop tests to fail. Cause unknown - maybe moving
+            //       nodes further puts them outside the visible frame and causes DnD issues?
             // CONSIDER: is this correct? See more where Cache files are created in MeasuredResults @ line 1640
-            // CONSIDER: does this also need to check if the file exists?
-            // Chromatogram Caches (.skyd)
-            // var cachePaths = Document.Settings.MeasuredResults?.CachePaths;
-            // if (cachePaths != null)
-            // {
-            //     list.AddRange(cachePaths.Select(_ => new SkylineChromatogramCache(DocumentContainer)));
+            // { // Chromatogram Cache (.skyd)
+            //     var cachePaths = document.Settings.MeasuredResults?.CachePaths;
+            //     if (cachePaths != null)
+            //     {
+            //         foreach (var _ in cachePaths)
+            //         {
+            //             var name = FileResources.FileModel_ChromatogramCache;
+            //             var filePath = ChromatogramCache.FinalPathForName(documentFilePath, null);
+            //
+            //             list.Add(SkylineChromatogramCache.Create(documentFilePath, name, filePath));
+            //         }
+            //     }
             // }
 
             { // Replicates

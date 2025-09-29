@@ -120,7 +120,7 @@
         <value>Window Layout</value>
     </data>
     <data name="FileModel_ChromatogramCache" xml:space="preserve">
-        <value>Chromatogram Cache</value>
+        <value>Chromatograms</value>
     </data>
     <data name="FilesTree_AuditLog" xml:space="preserve">
         <value>Audit Log</value>

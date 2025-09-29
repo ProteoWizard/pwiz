@@ -70,7 +70,7 @@ namespace pwiz.Skyline.Model.Files {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Chromatogram Cache.
+        ///   Looks up a localized string similar to Chromatograms.
         /// </summary>
         public static string FileModel_ChromatogramCache {
             get {

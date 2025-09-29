@@ -42,6 +42,11 @@ namespace pwiz.Skyline.Model.Files
         {
             return new ReplicatesFolderProperties(this, localFilePath);
         }
+        
+        public int SampleFileCount()
+        {
+            return Files.Sum(replicate => replicate.Files.Count);
+        }
 
         public ModifiedDocument DeleteAll(SrmDocument document, SrmSettingsChangeMonitor monitor)
         {
