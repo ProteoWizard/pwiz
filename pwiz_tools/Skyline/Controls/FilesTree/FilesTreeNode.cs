@@ -275,9 +275,11 @@ namespace pwiz.Skyline.Controls.FilesTree
 
             if (Debugger.IsAttached)
             {
-                customTable.AddDetailRow(@" ", @" ", rt);
-                customTable.AddDetailRow(@"Debug Info", @"(only visible when debugger attached) ", rt);
-                customTable.AddDetailRow(@" ", @" ", rt);
+                customTable.Add(NewRowWithText(@"     ", rt));
+                customTable.Add(NewRowWithText(@"===================================================", rt));
+                customTable.Add(NewRowWithText(@"Debug Info (only visible when debugger attached)", rt));
+                customTable.Add(NewRowWithText(@"     ", rt));
+
                 customTable.AddDetailRow(@"FileName", FileName, rt);
                 customTable.AddDetailRow(@"FilePath", FilePath, rt);
 
@@ -299,14 +301,18 @@ namespace pwiz.Skyline.Controls.FilesTree
                 // Show extra debug info on the .sky file
                 if (Model is SkylineFile)
                 {
-                    customTable.AddDetailRow(@" ", @" ", rt);
-                    customTable.AddDetailRow(@"Monitored directory", FilesTree.PathMonitoredForFileSystemChanges(), rt);
+                    customTable.Add(NewRowWithText(@"     ", rt));
+                    var monitoredDirectoryPaths = FilesTree.MonitoredDirectories();
+                    for (var i = 0; i < monitoredDirectoryPaths.Count; i++) {
+                        customTable.AddDetailRow($@"Monitored directory[{i}]", monitoredDirectoryPaths[i], rt);
+                    }
                 }
 
                 if (Model is SkylineAuditLog || Model is SkylineFile)
                 {
                     var isForceEnabled = Program.FunctionalTest && !AuditLogList.IgnoreTestChecks;
-                    customTable.AddDetailRow(@"Audit Log enabled by tests?", $@"{(isForceEnabled ? @"yes" : @"no")}", rt);
+
+                    customTable.Add(NewRowWithText($@"Did the test framework force audit logging to be enabled? {(isForceEnabled ? @"Yes" : @"No")}", rt));
                 }
 
                 // CONSIDER: add SrmDocument.RevisionIndex to FileNode
@@ -317,6 +323,15 @@ namespace pwiz.Skyline.Controls.FilesTree
             customTable.Draw(g);
 
             return new Size((int)size.Width + 4, (int)size.Height + 4);
+        }
+
+        private static RowDesc NewRowWithText(string text, RenderTools rt)
+        {
+            var cell = new CellDesc(text, rt)
+            {
+                Font = rt.FontBold
+            };
+            return new RowDesc {cell};
         }
 
         private static void RenderTipAddRowWithRedValue(string label, string value, TableDesc table, RenderTools rt)

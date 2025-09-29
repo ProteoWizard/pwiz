@@ -95,7 +95,9 @@ namespace pwiz.Skyline.Controls.FilesTree
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public FileSystemType FileSystemType => _fileSystemService.FileSystemType;
-        public string PathMonitoredForFileSystemChanges() => _fileSystemService.MonitoredDirectory;
+        public bool IsMonitoringDirectory(string directoryPath) => _fileSystemService.IsMonitoringDirectory(directoryPath);
+        public IList<string> MonitoredDirectories() => _fileSystemService.MonitoredDirectories();
+
         public bool IsComplete() => _backgroundActionService.IsComplete;
 
         #endregion
