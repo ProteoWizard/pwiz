@@ -101,6 +101,11 @@ namespace pwiz.Skyline.Model
             ExplicitMods?.VerifyNoLegacyData();
         }
 
+        public override GlobalizedObject GetProperties()
+        {
+            return new PeptideDocNodeProperties();
+        }
+
         public override string AuditLogText
         {
             get

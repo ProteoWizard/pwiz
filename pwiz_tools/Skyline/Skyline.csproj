@@ -651,6 +651,12 @@
     </Compile>
     <Compile Include="Model\Files\FileNodeProperties.cs" />
     <Compile Include="Model\Files\ReplicateProperties.cs" />
+    <Compile Include="Model\PeptideDocNodeProperties.cs" />
+    <Compile Include="Model\PropertyGridDocNodeResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>PropertyGridDocNodeResources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Model\Proteome\AssociateProteinsResults.cs" />
     <Compile Include="Model\ReintegrateResultsHandler.cs" />
     <Compile Include="Model\Lib\LibraryFiles.cs" />
@@ -3811,6 +3817,10 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
       <LastGenOutput>PropertyGridFileNodeResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\PropertyGridDocNodeResources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>PropertyGridDocNodeResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\RetentionTimes\RetentionTimesResources.ja.resx">
       <DependentUpon>RetentionTimesResources.resx</DependentUpon>

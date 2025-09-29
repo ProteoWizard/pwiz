@@ -102,6 +102,8 @@ namespace pwiz.Skyline.Model.Files
         [UseCustomHandling]
         [Category("Annotations")] public List<Annotations.Annotation> Annotations { get; }
         private readonly Dictionary<Annotations.Annotation, Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument>> _editAnnotationFuncDictionary;
+        // Prefix to use for annotation property names, to avoid conflicts with other property names since annotation names are user-defined
+        private const string ANNOTATION_NAME_PREFIX = "Annotation_";
 
         /// <summary>
         /// Transforms the list of InstrumentProperties into a form that will display better in the property sheet.
@@ -162,7 +164,7 @@ namespace pwiz.Skyline.Model.Files
 
                 var prop = new CustomHandledGlobalizedPropertyDescriptor(
                     annotation.AnnotationDef.ValueType,
-                    annotation.Name,
+                    ANNOTATION_NAME_PREFIX + annotation.Name,
                     annotation.GetAnnotation(),
                     GetBaseDescriptorByName(nameof(Annotations)).Category,
                     GetResourceManager());

@@ -28,10 +28,11 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls
 {
-    public partial class SequenceTreeForm : DockableFormEx
+    public partial class SequenceTreeForm : DockableFormEx, IPropertyProvider
     {
         public SequenceTreeForm(IDocumentUIContainer documentContainer, bool restoringState)
         {
+            SkylineWindow = (SkylineWindow)documentContainer;
             InitializeComponent();
             _defaultTabText = TabText;
             sequenceTree.LockDefaultExpansion = restoringState;
@@ -39,7 +40,21 @@ namespace pwiz.Skyline.Controls
             sequenceTree.LockDefaultExpansion = false;
             if (documentContainer.DocumentUI != null)
                 UpdateResultsUI(documentContainer.DocumentUI.Settings, null);
+            sequenceTree.AfterSelect += SequenceTree_AfterSelect;
         }
+
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public SkylineWindow SkylineWindow { get; }
+
+        #region IPropertyProvider Implementation
+
+        public GlobalizedObject GetSelectedObjectProperties()
+        {
+            return SequenceTree.SelectedNodeSrmTreeNode?.Model.GetProperties();
+        }
+
+        #endregion
 
         protected override void OnClosing(CancelEventArgs e)
         {
@@ -120,6 +135,11 @@ namespace pwiz.Skyline.Controls
                 UpdateResultsUI(SequenceTree.DocumentContainer.Document.Settings, settingsPrevious);
                 _updateDocPrevious = null;
             }
+        }
+
+        private void SequenceTree_AfterSelect(object sender, TreeViewEventArgs e)
+        {
+            SkylineWindow.ShowProperties(GetSelectedObjectProperties());
         }
 
         private void toolBarResults_Resize(object sender, EventArgs e)

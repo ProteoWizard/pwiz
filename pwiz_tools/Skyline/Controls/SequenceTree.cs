@@ -231,6 +231,10 @@ namespace pwiz.Skyline.Controls
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ModFontHolder ModFonts { get; private set; }
 
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public SrmTreeNode SelectedNodeSrmTreeNode => SelectedNode as SrmTreeNode;
+
         /// <summary>
         /// For <see cref="SrmTreeNodeParent"/> to use when child picking completes
         /// successfully, and the child set was changed.

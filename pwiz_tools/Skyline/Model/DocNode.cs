@@ -83,6 +83,8 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public string Note { get { return Annotations.Note;} }
 
+        public virtual GlobalizedObject GetProperties() => null;
+
         /// <summary>
         /// Creates a new copy of this node with a new copy of its ID.
         /// </summary>
