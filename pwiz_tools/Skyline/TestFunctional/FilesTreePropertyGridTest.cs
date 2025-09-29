@@ -38,6 +38,7 @@ namespace pwiz.SkylineTestFunctional
         private const string NUMBER_ANNOTATION_NAME = "NumberAnnotation";
         private const string BOOL_ANNOTATION_NAME = "BoolAnnotation";
         private const string LIST_ANNOTATION_NAME = "ListAnnotation";
+        private const string ANNOTATION_NAME_PREFIX = "Annotation_";
 
         [TestMethod]
         public void TestFilesTreePropertyGrid()
@@ -290,19 +291,19 @@ namespace pwiz.SkylineTestFunctional
                 var props = TypeDescriptor.GetProperties(selectedObject, false);
 
                 // Set each annotation property using the property grid and manually trigger the event for each
-                var replicateStringProp = props[STRING_ANNOTATION_NAME];
+                var replicateStringProp = props[ANNOTATION_NAME_PREFIX + STRING_ANNOTATION_NAME];
                 replicateStringProp?.SetValue(selectedObject, stringEditedValue);
                 SkylineWindow.PropertyForm.PropertyObjectValuesModifiedManually(replicateStringProp);
 
-                var replicateNumberProp = props[NUMBER_ANNOTATION_NAME];
+                var replicateNumberProp = props[ANNOTATION_NAME_PREFIX + NUMBER_ANNOTATION_NAME];
                 replicateNumberProp?.SetValue(selectedObject, numberEditedValue);
                 SkylineWindow.PropertyForm.PropertyObjectValuesModifiedManually(replicateNumberProp);
 
-                var replicateBoolProp = props[BOOL_ANNOTATION_NAME];
+                var replicateBoolProp = props[ANNOTATION_NAME_PREFIX + BOOL_ANNOTATION_NAME];
                 replicateBoolProp?.SetValue(selectedObject, boolEditedValue); // For bool, use actual bool type
                 SkylineWindow.PropertyForm.PropertyObjectValuesModifiedManually(replicateBoolProp);
 
-                var replicateListProp = props[LIST_ANNOTATION_NAME];
+                var replicateListProp = props[ANNOTATION_NAME_PREFIX + LIST_ANNOTATION_NAME];
                 replicateListProp?.SetValue(selectedObject, listEditedValue);
                 SkylineWindow.PropertyForm.PropertyObjectValuesModifiedManually(replicateListProp);
 
