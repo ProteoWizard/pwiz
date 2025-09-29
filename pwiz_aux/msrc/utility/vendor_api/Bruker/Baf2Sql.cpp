@@ -245,6 +245,7 @@ std::string Baf2SqlImpl::getInstrumentSerialNumber() const { return serialNumber
 InstrumentSource Baf2SqlImpl::getInstrumentSource() const { return instrumentSource_; }
 std::string Baf2SqlImpl::getAcquisitionSoftware() const { return acquisitionSoftware_; }
 std::string Baf2SqlImpl::getAcquisitionSoftwareVersion() const { return acquisitionSoftwareVersion_; }
+std::string Baf2SqlImpl::getDiaFrameMsMsWindowsTable() const { return ""; }
 
 
 Baf2SqlSpectrum::Baf2SqlSpectrum(BinaryStoragePtr storage, int index,
