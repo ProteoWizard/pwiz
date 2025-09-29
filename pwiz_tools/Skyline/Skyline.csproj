@@ -53,8 +53,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>258</ApplicationRevision>
-    <ApplicationVersion>25.1.1.258</ApplicationVersion>
+    <ApplicationRevision>271</ApplicationRevision>
+    <ApplicationVersion>25.1.1.271</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -202,6 +202,9 @@
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Menus\KeyboardShortcutDocumentation.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Alerts\AboutDlg.cs">
@@ -681,6 +684,7 @@
     <Compile Include="Model\RetentionTimes\PeakImputation\PeakBoundaryImputer.cs" />
     <Compile Include="Model\RetentionTimes\RtCalculatorOption.cs" />
     <Compile Include="Model\RetentionTimes\RTPeptideValue.cs" />
+    <Compile Include="Model\SearchTool.cs" />
     <Compile Include="Model\SpectrumPropertiesResx.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -970,6 +974,12 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>FileUIResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="ToolsUI\EditSearchToolDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ToolsUI\EditSearchToolDlg.Designer.cs">
+      <DependentUpon>EditSearchToolDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="ToolsUI\PythonInstallerUI.cs" />
     <Compile Include="ToolsUI\ToolsUIResources.Designer.cs">
@@ -4993,6 +5003,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\EditCustomThemeDlg.zh-CHS.resx">
       <DependentUpon>EditCustomThemeDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ToolsUI\EditSearchToolDlg.resx">
+      <DependentUpon>EditSearchToolDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\EditServerDlg.ja.resx">
       <DependentUpon>EditServerDlg.cs</DependentUpon>

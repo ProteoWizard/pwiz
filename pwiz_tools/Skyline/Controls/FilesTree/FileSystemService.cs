@@ -18,8 +18,10 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Controls.FilesTree
@@ -237,12 +239,12 @@ namespace pwiz.Skyline.Controls.FilesTree
                     if (localFilePath != null)
                     {
                         Cache[localFilePath] = true;
-
-                        BackgroundActionService.RunUI(() =>
-                        {
-                            callback(localFilePath, cancellationToken);
-                        });
                     }
+
+                    BackgroundActionService.RunUI(() =>
+                    {
+                        callback(localFilePath, cancellationToken);
+                    });
                 });
             }
         }
@@ -282,7 +284,22 @@ namespace pwiz.Skyline.Controls.FilesTree
             if (IgnoreFileName(e.FullPath) || cancellationToken.IsCancellationRequested)
                 return;
 
-            Cache[e.FullPath] = false;
+            var isDirectory = Directory.Exists(e.FullPath);
+
+            if (isDirectory)
+            {
+                foreach (var cacheKey in Cache.Keys)
+                {
+                    if (IsInDirectory(e.FullPath, cacheKey) && !File.Exists(cacheKey))
+                    {
+                        Cache[cacheKey] = false;
+                    }
+                }
+            }
+            else
+            {
+                Cache[e.FullPath] = false;
+            }
 
             BackgroundActionService.AddTask(() =>
             {
@@ -300,7 +317,22 @@ namespace pwiz.Skyline.Controls.FilesTree
             if (IgnoreFileName(e.FullPath) || cancellationToken.IsCancellationRequested)
                 return;
 
-            Cache[e.FullPath] = true;
+            var isDirectory = Directory.Exists(e.FullPath);
+
+            if (isDirectory)
+            {
+                foreach (var cacheKey in Cache.Keys)
+                {
+                    if (IsInDirectory(e.FullPath, cacheKey) && File.Exists(cacheKey))
+                    {
+                        Cache[cacheKey] = true;
+                    }
+                }
+            }
+            else
+            {
+                Cache[e.FullPath] = true;
+            }
 
             BackgroundActionService.AddTask(() =>
             {
@@ -323,13 +355,44 @@ namespace pwiz.Skyline.Controls.FilesTree
             if (IgnoreFileName(e.FullPath) || cancellationToken.IsCancellationRequested)
                 return;
 
-            if (Cache.ContainsKey(e.OldFullPath))
+            var isDirectory = Directory.Exists(e.FullPath);
+
+            /*
+            c:\tmp\foo1.raw
+            c:\tmp\foo2.raw
+
+            rename c:\tmp to c:\tmp2
+                old: c:\tmp
+                new: c:\tmp2
+
+            find all files with old name, mark as missing
+            find all files with new name, mark as available
+             */
+            if (isDirectory)
             {
-                Cache[e.OldFullPath] = false;
+                // files in the directory's old name no longer exist at the expected path
+                Cache.Keys.Where(item => IsInDirectory(e.OldFullPath, item)).ForEach(item => Cache[item] = false);
+
+                // files in the directory's new name _might_ exist but could have already been marked missing so 
+                // do a real check whether the file exists
+                foreach (var cacheKey in Cache.Keys)
+                {
+                    if (IsInDirectory(e.FullPath, cacheKey) && File.Exists(cacheKey))
+                    {
+                        Cache[cacheKey] = true;
+                    }
+                }
             }
-            else if (Cache.ContainsKey(e.FullPath))
+            else
             {
-                Cache[e.FullPath] = true;
+                if (Cache.ContainsKey(e.OldFullPath))
+                {
+                    Cache[e.OldFullPath] = false;
+                }
+                else if (Cache.ContainsKey(e.FullPath))
+                {
+                    Cache[e.FullPath] = true;
+                }
             }
 
             BackgroundActionService.AddTask(() =>
@@ -352,13 +415,30 @@ namespace pwiz.Skyline.Controls.FilesTree
         // TODO: what other ways does Skyline use to find files of various types? For example, Chromatogram.GetExistingDataFilePath or other possible locations for spectral libraries
         internal static string LocateFile(string filePath, string fileName, string documentPath)
         {
-            string localPath;
+            // Given a file path c:\tmp\foo.txt and document path c:\abc\def\ghi\doc.sky
+            //
+            // (1) Does a given file exist at its fully qualified path?
+            //      If yes, localPath = filePath
+            //
+            // (2) Look elsewhere starting with the documentFilePath
+            //      (2.1) Does foo.text exist c:\abc\def\ghi
+            //          If yes, localPath = c:\abc\def\ghi\foo.txt
+            //      (2.2) Does foo.txt exist in c:\abc\def
+            //          If yes, localPath = c:\abc\def\foo.txt
+            //      (2.3) Does foo.txt exist in c:\abc
+            //          If yes, localPath = c:\abc\foo.txt
+            //
+            // (3) Otherwise, foo.txt does not exist
 
-            if (File.Exists(filePath) || Directory.Exists(filePath))
-                localPath = filePath;
-            else localPath = PathEx.FindExistingRelativeFile(documentPath, fileName);
-
-            return localPath;
+            // ReSharper disable once ConvertIfStatementToReturnStatement
+            if (File.Exists(filePath))
+            {
+                return filePath;
+            }
+            else
+            {
+                return PathEx.FindExistingRelativeFile(documentPath, fileName);
+            }
         }
 
         // FileSystemWatcher events may reference files we should ignore. For example, .tmp or .bak files
@@ -371,6 +451,19 @@ namespace pwiz.Skyline.Controls.FilesTree
             var extension = Path.GetExtension(filePath);
 
             return FILE_EXTENSION_IGNORE_LIST.Contains(extension);
+        }
+
+        public static bool IsInDirectory(string directoryPath, string childPath)
+        {
+            var fullParentPath = Path.GetFullPath(directoryPath);
+            
+            if(!fullParentPath.EndsWith(Path.DirectorySeparatorChar.ToString()) && 
+               !fullParentPath.EndsWith(Path.AltDirectorySeparatorChar.ToString()))
+            {
+                fullParentPath += Path.DirectorySeparatorChar;
+            }
+
+            return childPath.StartsWith(fullParentPath, StringComparison.OrdinalIgnoreCase);
         }
     }
 }

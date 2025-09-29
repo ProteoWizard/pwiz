@@ -258,7 +258,7 @@
     <value>180, 22</value>
   </data>
   <data name="viewFilesMenuItem.Text" xml:space="preserve">
-    <value>Files</value>
+    <value>F&amp;iles</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="documentGridMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
@@ -727,7 +727,7 @@
     <value>180, 22</value>
   </data>
   <data name="retentionTimesMenuItem.Text" xml:space="preserve">
-    <value>Retention &amp;Times</value>
+    <value>Retention T&amp;imes</value>
   </data>
   <data name="replicateComparisonMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>F8</value>
@@ -751,7 +751,7 @@
     <value>228, 22</value>
   </data>
   <data name="regressionMenuItem.Text" xml:space="preserve">
-    <value>&amp;Regression</value>
+    <value>R&amp;egression</value>
   </data>
   <data name="scoreToRunMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>142, 22</value>

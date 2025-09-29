@@ -159,6 +159,7 @@ namespace pwiz.SkylineTestUtil
         public const string HARDKLOR_UNICODE_ISSUES = "Hardklor doesn't handle unicode paths";
         public const string ZIP_INSIDE_ZIP = "ZIP inside ZIP does not seem to work on MACS2";
         public const string DOCKER_ROOT_CERTS = "Docker runners do not yet have access to the root certificates needed for Koina";
+        public const string WEB_BROWSER_USE = "WebBrowser class throws UnauthorizedAccessException on Wine";
     }
 
     /// <summary>
@@ -1984,12 +1985,24 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public static void CancelDialog(Form form)
+        {
+            RunUI(() => form.CancelButton.PerformClick());
+            WaitForClosedForm(form);
+        }
+        
         public static void CancelDialog(Form form, Action cancelAction)
         {
             RunUI(cancelAction);
             WaitForClosedForm(form);
         }
 
+        public static void OkDialog(Form form)
+        {
+            RunUI(() => form.AcceptButton.PerformClick());
+            WaitForClosedForm(form);
+        }
+        
         public static void OkDialog(Form form, Action okAction)
         {
             RunUI(okAction);

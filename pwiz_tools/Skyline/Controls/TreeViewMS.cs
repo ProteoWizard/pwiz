@@ -193,7 +193,7 @@ namespace pwiz.Skyline.Controls
         protected abstract int EnsureChildren(TreeNode node);
 
         public bool RestoredFromPersistentString { get; set; }
-        private TreeViewMSStateRestorer TreeStateRestorer { get; set; }
+        internal TreeViewMSStateRestorer TreeStateRestorer { get; private set; }
 
         public string GetPersistentString()
         {
