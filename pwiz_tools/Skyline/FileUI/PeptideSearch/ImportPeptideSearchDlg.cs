@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.Eventing.Reader;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -1415,9 +1416,21 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             Settings.Default.ImportResultsDoAutoRetry = ImportResultsControl.DoAutoRetry;
 
             // Import results only on "finish"
-            var namedResults = ImportPeptideSearch.EnsureUniqueNames(ImportResultsControl.FoundResultsFiles)
-                .Select(kvp => new KeyValuePair<string, MsDataFileUri[]>(kvp.Name, new[] { new MsDataFilePath(kvp.Path) }))
-                .ToList();
+            var namedResults = new List<KeyValuePair<string, MsDataFileUri[]>>();
+            if (ImportPeptideSearch.IsGpfData)
+            {
+                namedResults.Add(new KeyValuePair<string, MsDataFileUri[]>(
+                    Document.Settings.GetNewChromatogramSetDefaultName(),
+                    ImportResultsControl.FoundResultsFiles
+                        .Select(foundResultFile => (MsDataFileUri)new MsDataFilePath(foundResultFile.Path)).ToArray()
+                ));
+            }
+            else
+            {
+                namedResults.AddRange(ImportPeptideSearch.EnsureUniqueNames(ImportResultsControl.FoundResultsFiles)
+                    .Select(kvp => new KeyValuePair<string, MsDataFileUri[]>(
+                        kvp.Name, new MsDataFileUri[] { new MsDataFilePath(kvp.Path) })));
+            }
 
             // Ask about lockmass correction, if needed - lockmass settings in namedResults will be updated by this call as needed
             if (!ImportResultsLockMassDlg.UpdateNamedResultsParameters(this, Document, ref namedResults))

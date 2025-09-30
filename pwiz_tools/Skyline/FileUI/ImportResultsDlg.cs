@@ -45,11 +45,13 @@ namespace pwiz.Skyline.FileUI
 
         private readonly string _documentSavedPath;
         private readonly bool _warnOnMultiInjection;
+        private string _defaultNewName;
 
         public ImportResultsDlg(SrmDocument document, string savedPath)
         {
             _documentSavedPath = savedPath;
             _warnOnMultiInjection = (document.MoleculeTransitionCount < MIN_MULTIPLE_TRANSITIONS);
+            _defaultNewName = document.Settings.GetNewChromatogramSetDefaultName();
 
             InitializeComponent();
 
@@ -93,24 +95,6 @@ namespace pwiz.Skyline.FileUI
             comboSimultaneousFiles.SelectedIndex = Settings.Default.ImportResultsSimultaneousFiles;
             cbShowAllChromatograms.Checked = Settings.Default.AutoShowAllChromatogramsGraph;
             cbAutoRetry.Checked = Settings.Default.ImportResultsDoAutoRetry;
-        }
-
-        private string DefaultNewName
-        {
-            get
-            {
-                string name = Resources.ImportResultsDlg_DefaultNewName_Default_Name;
-                if (ResultsExist(name))
-                {
-                    int i = 2;
-                    do
-                    {
-                        name = Resources.ImportResultsDlg_DefaultNewName_Default_Name +i++;
-                    }
-                    while (ResultsExist(name));
-                }
-                return name;
-            }
         }
 
         private bool IsMultiple { get { return radioCreateMultiple.Checked || radioCreateMultipleMulti.Checked; } }
@@ -545,7 +529,7 @@ namespace pwiz.Skyline.FileUI
                 comboName.Enabled = labelNameAdd.Enabled = false;
                 bool multiple = IsMultiple;
                 textName.Enabled = labelNameNew.Enabled = !multiple;
-                textName.Text = multiple ? string.Empty : DefaultNewName;
+                textName.Text = multiple ? string.Empty : _defaultNewName;
             }
 
             // If comboOptimizing is not supposed to be below radioCreateMulti and it is

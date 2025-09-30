@@ -2159,6 +2159,26 @@ namespace pwiz.Skyline.Model.DocSettings
 
             return spec.TryGetAlignmentTarget(this, out alignmentTarget);
         }
+        /// <summary>
+        /// Returns the default name to be assigned to a new ChromatogramSet when importing multiple Result
+        /// Files as a single Replicate.
+        /// </summary>
+        public string GetNewChromatogramSetDefaultName()
+        {
+            var defaultName = Resources.ImportResultsDlg_DefaultNewName_Default_Name;
+            if (MeasuredResults == null)
+            {
+                return defaultName;
+            }
+            var existing = MeasuredResults.Chromatograms.Select(c => c.Name).ToHashSet();
+            var candidate = defaultName;
+            int counter = 2;
+            while (existing.Contains(candidate))
+            {
+                candidate = defaultName + counter++;
+            }
+            return candidate;
+        }
 
         #region Implementation of IXmlSerializable
 
