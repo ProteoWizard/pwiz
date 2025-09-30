@@ -270,9 +270,18 @@ namespace pwiz.Skyline.Controls.FilesTree
                         lock (_fswLock)
                         {
                             var directoryPath = Path.GetDirectoryName(localFilePath);
-                            // var isMonitored = IsDirectoryMonitored(directoryPath);
                             var isMonitored = IsMonitoringDirectory(directoryPath);
                             if (!isMonitored) 
+                            {
+                                var fileSystemWatcher = CreateWatcherForDirectory(directoryPath);
+                                FileSystemWatchers.Add(fileSystemWatcher);
+                            }
+
+                            // Check whether directoryPath's parent directory is monitored. If not, start another FileSystemWatcher
+                            // to see if directoryPath is renamed
+                            directoryPath = Path.GetDirectoryName(directoryPath);
+                            isMonitored = IsMonitoringDirectory(directoryPath);
+                            if (!isMonitored)
                             {
                                 var fileSystemWatcher = CreateWatcherForDirectory(directoryPath);
                                 FileSystemWatchers.Add(fileSystemWatcher);
@@ -330,8 +339,11 @@ namespace pwiz.Skyline.Controls.FilesTree
             fileSystemWatcher.SynchronizingObject = SynchronizingObject;
             fileSystemWatcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName;
 
-            // CONSIDER: monitoring exactly one directory per FileSystemWatcher may be simpler than monitoring a recursive directory structure
-            fileSystemWatcher.IncludeSubdirectories = true;
+            // FileSystemService does not recursively monitor subdirectories. Instead, FileSystemWatcher instances are
+            // started for each directory containing files Skyline wants to monitor. This approach is easier to 
+            // reason about and avoids the downsides of inadvertently monitoring a large tree of files - for example,
+            // if a replicate sample file happens to be imported from C:\ or from the root of a slow network drive.
+            fileSystemWatcher.IncludeSubdirectories = false;
 
             fileSystemWatcher.Renamed += FileSystemWatcher_OnRenamed;
             fileSystemWatcher.Deleted += FileSystemWatcher_OnDeleted;
@@ -348,9 +360,14 @@ namespace pwiz.Skyline.Controls.FilesTree
             if (IgnoreFileName(e.FullPath) || cancellationToken.IsCancellationRequested)
                 return;
 
-            var isDirectory = Directory.Exists(e.FullPath);
-
-            if (isDirectory)
+            // Cannot check whether the changed path was a directory (since it was deleted) so 
+            // start by looking for FullPath in the cache. If not found, check whether FullPath
+            // may have contained items in the cache.
+            if (Cache.ContainsKey(e.FullPath))
+            {
+                Cache[e.FullPath] = false;
+            }
+            else
             {
                 foreach (var cacheKey in Cache.Keys)
                 {
@@ -359,10 +376,6 @@ namespace pwiz.Skyline.Controls.FilesTree
                         Cache[cacheKey] = false;
                     }
                 }
-            }
-            else
-            {
-                Cache[e.FullPath] = false;
             }
 
             BackgroundActionService.AddTask(() =>
@@ -539,7 +552,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 fullParentPath += Path.DirectorySeparatorChar;
             }
 
-            // Perform a case-insensitive comparison
+            // Perform a case-insensitive comparison. Returns true if filePath is somewhere below directoryPath.
             return filePath.StartsWith(fullParentPath, StringComparison.OrdinalIgnoreCase);
         }
 
@@ -553,9 +566,8 @@ namespace pwiz.Skyline.Controls.FilesTree
             // This prevents false positives where a directory name is a prefix of another (e.g., C:\Dir and C:\Directory)
             normalizedBaseDirectory += Path.DirectorySeparatorChar;
 
-            // Perform a case-insensitive comparison
-            return normalizedPotentialSubdirectory.StartsWith(normalizedBaseDirectory, StringComparison.OrdinalIgnoreCase) ||
-                   string.Equals(normalizedPotentialSubdirectory, normalizedBaseDirectory.TrimEnd(Path.DirectorySeparatorChar), StringComparison.OrdinalIgnoreCase);
+            // Perform a case-insensitive comparison. Returns true if potentialSubdirectory is somewhere below baseDirectory.
+            return string.Equals(normalizedPotentialSubdirectory, normalizedBaseDirectory.TrimEnd(Path.DirectorySeparatorChar), StringComparison.OrdinalIgnoreCase);
         }
     }
 }

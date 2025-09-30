@@ -99,15 +99,21 @@ namespace pwiz.SkylineTestFunctional
         protected void TestFileSystemHelpers()
         {
             // Is file contained in directory, recursive?
-            Assert.IsTrue(LocalFileSystem.IsFileInDirectory(@"c:\Users\foobar\directory", @"c:\users\foobar\directory\child"));
-            Assert.IsTrue(LocalFileSystem.IsFileInDirectory(@"c:\Users\foobar\directory\", @"c:\users\foobar\directory\child"));
-            Assert.IsTrue(LocalFileSystem.IsFileInDirectory(@"c:\", @"c:\users\foobar\directory\child"));
+            Assert.IsTrue(LocalFileSystem.IsFileInDirectory(@"c:\Users\foobar\directory", @"c:\users\foobar\directory\child.txt"));
+            Assert.IsTrue(LocalFileSystem.IsFileInDirectory(@"c:\Users\foobar\directory\", @"c:\users\foobar\directory\child.txt"));
+            Assert.IsTrue(LocalFileSystem.IsFileInDirectory(@"c:\", @"c:\users\foobar\directory\child.txt"));
+
             Assert.IsFalse(LocalFileSystem.IsFileInDirectory(@"c:\tmp\rat-plasma\", @"c:\users\foobar\tmp"));
             Assert.IsFalse(LocalFileSystem.IsFileInDirectory(@"d:\", @"c:\users\foobar\tmp"));
 
-            // Is directory contained in directory, recursive?
+            // Do two strings refer to the same directory?
             Assert.IsTrue(LocalFileSystem.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory", @"c:\users\foobar\directory"));
-            Assert.IsTrue(LocalFileSystem.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory", @"c:\users\foobar\directory\subdirectory"));
+            Assert.IsTrue(LocalFileSystem.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory", @"c:\users\foobar\directory\"));
+            Assert.IsTrue(LocalFileSystem.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory", @"c:\users\foobar\directory\\"));
+            Assert.IsTrue(LocalFileSystem.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory\", @"c:\users\foobar\directory"));
+            Assert.IsTrue(LocalFileSystem.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory\\", @"c:\users\foobar\directory"));
+
+            Assert.IsFalse(LocalFileSystem.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory", @"c:\users\foobar\directory\subdirectory"));
             Assert.IsFalse(LocalFileSystem.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory", @"c:\users\foobar\dir"));
         }
 
@@ -163,7 +169,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForFilesTree();
 
             Assert.AreEqual(FileSystemType.local_file_system, SkylineWindow.FilesTree.FileSystemType);
-            Assert.AreEqual(1, SkylineWindow.FilesTree.MonitoredDirectories().Count);
+            Assert.AreEqual(2, SkylineWindow.FilesTree.MonitoredDirectories().Count);
             Assert.IsTrue(SkylineWindow.FilesTree.IsMonitoringDirectory(monitoredPath));
 
             // After saving, Window Layout (.sky.view) is present
@@ -210,7 +216,7 @@ namespace pwiz.SkylineTestFunctional
             }
 
             Assert.AreEqual(FileSystemType.local_file_system, SkylineWindow.FilesTree.FileSystemType);
-            Assert.AreEqual(1, SkylineWindow.FilesTree.MonitoredDirectories().Count);
+            Assert.AreEqual(2, SkylineWindow.FilesTree.MonitoredDirectories().Count);
             Assert.IsTrue(SkylineWindow.FilesTree.IsMonitoringDirectory(monitoredPath));
 
             // Audit Log
@@ -227,7 +233,7 @@ namespace pwiz.SkylineTestFunctional
             // Check state of files and paths after saving
             var tree = SkylineWindow.FilesTree;
             Assert.AreEqual(FileSystemType.local_file_system, tree.FileSystemType);
-            Assert.AreEqual(1, SkylineWindow.FilesTree.MonitoredDirectories().Count);
+            Assert.AreEqual(2, SkylineWindow.FilesTree.MonitoredDirectories().Count);
             Assert.IsTrue(SkylineWindow.FilesTree.IsMonitoringDirectory(monitoredPath));
 
             AssertTopLevelFiles(typeof(SkylineAuditLog), typeof(SkylineViewFile));
@@ -262,7 +268,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible && SkylineWindow.FilesTree.IsComplete());
 
             Assert.AreEqual(FileSystemType.local_file_system, SkylineWindow.FilesTree.FileSystemType);
-            Assert.AreEqual(1, SkylineWindow.FilesTree.MonitoredDirectories().Count);
+            Assert.AreEqual(2, SkylineWindow.FilesTree.MonitoredDirectories().Count);
             Assert.IsTrue(SkylineWindow.FilesTree.IsMonitoringDirectory(documentPath));
 
             AssertTreeOnlyHasFilesTreeNodes(SkylineWindow.FilesTree);
@@ -659,7 +665,7 @@ namespace pwiz.SkylineTestFunctional
 
             AssertTreeFolderMatchesDocumentAndModel<ReplicatesFolder>(RAT_PLASMA_REPLICATE_COUNT);
 
-            Assert.AreEqual(1, SkylineWindow.FilesTree.MonitoredDirectories().Count);
+            Assert.AreEqual(2, SkylineWindow.FilesTree.MonitoredDirectories().Count);
             Assert.IsTrue(SkylineWindow.FilesTree.IsMonitoringDirectory(SkylineWindow.DocumentFilePath));
         }
 

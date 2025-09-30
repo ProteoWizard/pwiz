@@ -574,17 +574,21 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         public void FileDeleted(string filePath, CancellationToken cancellationToken)
         {
-            if (FindTreeNodeForFilePath(Root, filePath, out var missingFileTreeNode))
+            var matchingNodes = FindNodesByPath(filePath);
+            if (matchingNodes.Count > 0)
             {
-                missingFileTreeNode.FileState = FileState.missing;
-
-                _backgroundActionService.RunUI(() =>
+                foreach (var node in matchingNodes)
                 {
-                    if (!cancellationToken.IsCancellationRequested)
+                    node.FileState = FileState.missing;
+
+                    _backgroundActionService.RunUI(() =>
                     {
-                        FilesTreeNode.UpdateImagesForTreeNode(missingFileTreeNode);
-                    }
-                });
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            FilesTreeNode.UpdateImagesForTreeNode(node);
+                        }
+                    });
+                }
             }
         }
 
@@ -592,17 +596,21 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             // Look for a tree node associated with the new file name. If Files Tree isn't aware
             // of a file with that name, ignore the event.
-            if (FindTreeNodeForFilePath(Root, filePath, out var availableFileTreeNode))
+            var matchingNodes = FindNodesByPath(filePath);
+            if (matchingNodes.Count > 0)
             {
-                availableFileTreeNode.FileState = FileState.available;
-
-                _backgroundActionService.RunUI(() =>
+                foreach (var node in matchingNodes)
                 {
-                    if (!cancellationToken.IsCancellationRequested)
+                    node.FileState = FileState.available;
+
+                    _backgroundActionService.RunUI(() =>
                     {
-                        FilesTreeNode.UpdateImagesForTreeNode(availableFileTreeNode);
-                    }
-                });
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            FilesTreeNode.UpdateImagesForTreeNode(node);
+                        }
+                    });
+                }
             }
         }
 
@@ -782,7 +790,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                     matchingNodes.Add(currentNode);
                 }
                 // Check for partial match - if found, this node was in a directory whose name changed
-                else if (normalizedCurrentPath.StartsWith(normalizedTargetPath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+                else if (LocalFileSystem.IsFileInDirectory(normalizedTargetPath, normalizedCurrentPath))
                 {
                     matchingNodes.Add(currentNode);
                 }
