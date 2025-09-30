@@ -36,7 +36,6 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
     public abstract class AbstractDeepLibraryBuilder : ILibraryBuildWarning
     {
         private DateTime _nowTime = DateTime.Now;
-        private Dictionary<string, PredictionSupport> _warningModSupports;
         
         protected AbstractDeepLibraryBuilder(SrmDocument document, IrtStandard irtStandard)
         {
@@ -292,10 +291,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         /// </summary>
         public Dictionary<string, PredictionSupport> GetWarningMods()
         {
-            if (_warningModSupports != null)
-                return _warningModSupports;
-
-            _warningModSupports = new Dictionary<string, PredictionSupport>();
+            var warningModSupports = new Dictionary<string, PredictionSupport>();
 
             // Build precursor table row by row
             foreach (var peptide in Document.Peptides)
@@ -304,18 +300,18 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
                 foreach (var mod in modifiedSequence.ExplicitMods)
                 {
-                    if (_warningModSupports.ContainsKey(mod.Name))
+                    if (warningModSupports.ContainsKey(mod.Name))
                         continue;
                     
                     var modType = LibraryBuilderModificationSupport.GetModificationType(mod.UnimodId);
                     if (modType == null)
-                        _warningModSupports[mod.Name] = PredictionSupport.none;
+                        warningModSupports[mod.Name] = PredictionSupport.none;
                     else if (!modType.IsSupported(PredictionSupport.all))
-                        _warningModSupports[mod.Name] = modType.SupportedModels;
+                        warningModSupports[mod.Name] = modType.SupportedModels;
                 }
             }
 
-            return _warningModSupports;
+            return warningModSupports;
         }
     }
     
