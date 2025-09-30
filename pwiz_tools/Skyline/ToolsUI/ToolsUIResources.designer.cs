@@ -134,6 +134,15 @@ namespace pwiz.Skyline.ToolsUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Exe Files.
+        /// </summary>
+        public static string ConfigureToolsDlg_btnFindCommand_Click_Exe_Files {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_btnFindCommand_Click_Exe_Files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Information Files.
         /// </summary>
         public static string ConfigureToolsDlg_btnFindCommand_Click_Information_Files {
@@ -388,6 +397,15 @@ namespace pwiz.Skyline.ToolsUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Skyline does not support adding a second Ardia account. To use a new account, remove the current one and add a new one..
+        /// </summary>
+        public static string EditRemoteAccountDlg_Ardia_OneAccountSupported {
+            get {
+                return ResourceManager.GetString("EditRemoteAccountDlg_Ardia_OneAccountSupported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error: no Ardia registration code for URL.
         /// </summary>
         public static string EditRemoteAccountDlg_GetBrowserLogoutUrl_Error__no_Ardia_registration_code_for_URL {
@@ -506,6 +524,24 @@ namespace pwiz.Skyline.ToolsUI {
         public static string EditRemoteAccountDlg_ValidateValues_Username_cannot_be_blank {
             get {
                 return ResourceManager.GetString("EditRemoteAccountDlg_ValidateValues_Username_cannot_be_blank", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The file {0} does not exist..
+        /// </summary>
+        public static string EditSearchToolDlg_OkDialog_The_file__0__does_not_exist_ {
+            get {
+                return ResourceManager.GetString("EditSearchToolDlg_OkDialog_The_file__0__does_not_exist_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The tool {0} is already configured..
+        /// </summary>
+        public static string EditSearchToolDlg_OkDialog_The_tool__0__is_already_configured_ {
+            get {
+                return ResourceManager.GetString("EditSearchToolDlg_OkDialog_The_tool__0__is_already_configured_", resourceCulture);
             }
         }
         

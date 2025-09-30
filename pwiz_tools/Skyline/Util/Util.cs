@@ -26,6 +26,7 @@ using System.Linq;
 using System.Text;
 using System.Net;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
@@ -1738,6 +1739,24 @@ namespace pwiz.Skyline.Util
                 }
                 MessageDlg.ShowWithException(parent, fullMessage, exception);
             }
+        }
+        private const int CLIPBRD_E_CANT_OPEN = unchecked((int)0x800401D0);
+        /// <summary>
+        /// Displays either a friendly error message or an unhandled exception dialog
+        /// depending on whether the error is expected. This is meant to be called from an exception handler
+        /// inside ProcessKeyEvent.
+        /// </summary>
+        public static void HandleProcessKeyException(IWin32Window parent, Exception exception, Keys keys)
+        {
+            if ((exception as ExternalException)?.ErrorCode == CLIPBRD_E_CANT_OPEN)
+            {
+                MessageDlg.ShowWithException(parent, ClipboardHelper.GetClipboardErrorMessageForKeystroke(keys), exception, true);
+                return;
+            }
+
+            string message = TextUtil.LineSeparate(string.Format(@"Error processing keystroke '{0}'.", keys),
+                exception.Message);
+            Program.ReportException(new ApplicationException(message, exception));
         }
     }
 

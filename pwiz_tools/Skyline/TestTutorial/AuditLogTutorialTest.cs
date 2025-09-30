@@ -491,13 +491,13 @@ namespace pwiz.SkylineTestTutorial
 
                 PauseForManualTutorialStep("MANUAL STEP (no screenshot). Enter password in the Edit Server dialog but DO NOT click OK. Close this window instead to proceed.");
 
-                var publishDialog = ShowDialog<PublishDocumentDlg>(loginDialog.OkDialog);
+                var publishDialog = ShowDialog<PublishDocumentDlgPanorama>(loginDialog.OkDialog);
                 WaitForCondition(() => publishDialog.IsLoaded);
                 RunUI(() =>
                 {
                     publishDialog.SelectItem(testFolderName);
                 });
-                PauseForScreenShot<PublishDocumentDlg>("Folder selection dialog.");
+                PauseForScreenShot<PublishDocumentDlgPanorama>("Folder selection dialog.");
                 var shareTypeDlg = ShowDialog<ShareTypeDlg>(publishDialog.OkDialog);
                 var browserConfirmationDialog = ShowDialog<MultiButtonMsgDlg>(shareTypeDlg.OkDialog);
                 OkDialog(browserConfirmationDialog, browserConfirmationDialog.ClickYes);
