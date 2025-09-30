@@ -253,7 +253,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                     var label = @"LocalFilePath";
                     var value = LocalFilePath;
 
-                    RenderTipAddRowWithRedValue(label, value, customTable, rt);
+                    TooltipNewRowWithRedValue(label, value, customTable, rt);
                 }
 
                 // TODO: Brendan wants tooltips to look like this. Restore.
@@ -275,10 +275,10 @@ namespace pwiz.Skyline.Controls.FilesTree
 
             if (Debugger.IsAttached)
             {
-                customTable.Add(NewRowWithText(@"     ", rt));
-                customTable.Add(NewRowWithText(@"===================================================", rt));
-                customTable.Add(NewRowWithText(@"Debug Info (only visible when debugger attached)", rt));
-                customTable.Add(NewRowWithText(@"     ", rt));
+                TooltipNewRowWithText(@"     ", customTable, rt);
+                TooltipNewRowWithText(@"===================================================", customTable, rt);
+                TooltipNewRowWithText(@"Debug Info (only visible when debugger attached)", customTable, rt);
+                TooltipNewRowWithText(@"     ", customTable, rt);   
 
                 customTable.AddDetailRow(@"FileName", FileName, rt);
                 customTable.AddDetailRow(@"FilePath", FilePath, rt);
@@ -294,14 +294,14 @@ namespace pwiz.Skyline.Controls.FilesTree
                 }
                 else
                 {
-                    RenderTipAddRowWithRedValue(@"FileState", FileState.ToString(), customTable, rt);
-                    RenderTipAddRowWithRedValue(@"LocalFilePath", LocalFilePath, customTable, rt);
+                    TooltipNewRowWithRedValue(@"FileState", FileState.ToString(), customTable, rt);
+                    TooltipNewRowWithRedValue(@"LocalFilePath", LocalFilePath, customTable, rt);
                 }
 
                 // Show extra debug info on the .sky file
                 if (Model is SkylineFile)
                 {
-                    customTable.Add(NewRowWithText(@"     ", rt));
+                    TooltipNewRowWithText(@"     ", customTable, rt);
                     var monitoredDirectoryPaths = FilesTree.MonitoredDirectories();
                     for (var i = 0; i < monitoredDirectoryPaths.Count; i++) {
                         customTable.AddDetailRow($@"Monitored directory[{i}]", monitoredDirectoryPaths[i], rt);
@@ -312,7 +312,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 {
                     var isForceEnabled = Program.FunctionalTest && !AuditLogList.IgnoreTestChecks;
 
-                    customTable.Add(NewRowWithText($@"Did the test framework force audit logging to be enabled? {(isForceEnabled ? @"Yes" : @"No")}", rt));
+                    TooltipNewRowWithText($@"Did the test framework force audit logging to be enabled? {(isForceEnabled ? @"Yes" : @"No")}", customTable, rt);
                 }
 
                 // CONSIDER: add SrmDocument.RevisionIndex to FileNode
@@ -323,32 +323,6 @@ namespace pwiz.Skyline.Controls.FilesTree
             customTable.Draw(g);
 
             return new Size((int)size.Width + 4, (int)size.Height + 4);
-        }
-
-        private static RowDesc NewRowWithText(string text, RenderTools rt)
-        {
-            var cell = new CellDesc(text, rt)
-            {
-                Font = rt.FontBold
-            };
-            return new RowDesc {cell};
-        }
-
-        private static void RenderTipAddRowWithRedValue(string label, string value, TableDesc table, RenderTools rt)
-        {
-            var cellLabel = new CellDesc(label, rt)
-            {
-                Font = rt.FontBold
-            };
-
-            var cellValue = new CellDesc(value, rt)
-            {
-                Brush = rt.BrushSelected
-            };
-
-            var row = new RowDesc { cellLabel, cellValue };
-
-            table.Add(row);
         }
 
         public bool SupportsRename()
@@ -425,6 +399,32 @@ namespace pwiz.Skyline.Controls.FilesTree
                 filesTreeNode.OnModelChanged();
                 filesTreeNode = filesTreeNode.ParentFTN;
             } while (filesTreeNode != null && filesTreeNode.ParentFTN != null);
+        }
+
+        private static void TooltipNewRowWithText(string text, TableDesc table, RenderTools rt)
+        {
+            var cell = new CellDesc(text, rt)
+            {
+                Font = rt.FontBold
+            };
+            table.Add(new RowDesc { cell });
+        }
+
+        private static void TooltipNewRowWithRedValue(string label, string value, TableDesc table, RenderTools rt)
+        {
+            var cellLabel = new CellDesc(label, rt)
+            {
+                Font = rt.FontBold
+            };
+
+            var cellValue = new CellDesc(value, rt)
+            {
+                Brush = rt.BrushSelected
+            };
+
+            var row = new RowDesc { cellLabel, cellValue };
+
+            table.Add(row);
         }
     }
 }

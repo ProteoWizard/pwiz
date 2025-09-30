@@ -47,7 +47,6 @@ using static pwiz.Skyline.Model.Files.FileNode;
 
 // TODO: local file system - change directory name containing raw files
 // TODO: local file system - use raw files in directory that's a sibling of directory containing .sky file
-// TODO: assert TopNode correctly restored from view state
 
 // ReSharper disable WrongIndentSize
 namespace pwiz.SkylineTestFunctional
@@ -55,7 +54,7 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class FilesTreeFormTest : AbstractFunctionalTest
     {
-        internal const string RAT_PLASMA_FILE_NAME = "Rat_plasma.sky";
+        internal const string RAT_PLASMA_FILE_NAME = @"Rat_plasma.sky";
         internal const int RAT_PLASMA_REPLICATE_COUNT = 42;
 
         // No parallel testing because SkylineException.txt is written to Skyline.exe
@@ -63,7 +62,10 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod, NoParallelTesting(TestExclusionReason.SHARED_DIRECTORY_WRITE)]
         public void TestFilesTreeForm()
         {
-            TestFilesZip = @"TestFunctional\FilesTreeFormTest.zip";
+            TestFilesZipPaths = new[] {
+                @"TestFunctional\FilesTreeFormTest.zip"
+                // @"TestFunctional\FilesTreeFileSystemTest.zip",
+            };
             RunFunctionalTest();
         }
 
@@ -75,16 +77,9 @@ namespace pwiz.SkylineTestFunctional
 
             // UI tests
             TestEmptyDocument();
-            ResetFilesTree();
-            
             TestSave();
-            ResetFilesTree();
-            
             TestSaveAs();
-            ResetFilesTree();
-
             TestRatPlasmaDocument();
-            ResetFilesTree();
         }
 
         protected void TestFileSystemWatcherIgnoreList()
@@ -162,7 +157,8 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(0, SkylineWindow.FilesTree.MonitoredDirectories().Count);
             }
 
-            var monitoredPath = Path.Combine(TestFilesDir.FullPath, fileName);
+            var baseDirectoryPath = TestFilesDirs[0].FullPath;
+            var monitoredPath = Path.Combine(baseDirectoryPath, fileName);
             RunUI(() => SkylineWindow.SaveDocument(monitoredPath));
             WaitForFilesTree();
 
@@ -206,7 +202,8 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNull(SkylineWindow.FilesTree.Root.NodeAt(0).LocalFilePath);
 
             // Save document for the first time
-            var monitoredPath = Path.Combine(TestFilesDir.FullPath, origFileName);
+            var baseDirectoryPath = TestFilesDirs[0].FullPath;
+            var monitoredPath = Path.Combine(baseDirectoryPath, origFileName);
             {
                 RunUI(() => SkylineWindow.SaveDocument(monitoredPath));
                 WaitForFilesTree();
@@ -222,7 +219,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Save the document to a new location - to test "Save As"
             {
-                monitoredPath = Path.Combine(TestFilesDir.FullPath, saveAsFileName);
+                monitoredPath = Path.Combine(baseDirectoryPath, saveAsFileName);
                 RunUI(() => SkylineWindow.SaveDocument(monitoredPath));
                 WaitForFilesTree();
             }
@@ -250,7 +247,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected void TestRatPlasmaDocument()
         {
-            var documentPath = TestFilesDir.GetTestPath(RAT_PLASMA_FILE_NAME);
+            var documentPath = TestFilesDirs[0].GetTestPath(RAT_PLASMA_FILE_NAME);
             RunUI(() => SkylineWindow.OpenFile(documentPath));
 
             // Wait until SequenceTree is visible - does not wait on FilesTree because it's not visible yet
@@ -262,8 +259,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Show FilesTree
             RunUI(() => SkylineWindow.ShowFilesTreeForm(true));
-            Assert.IsNotNull(SkylineWindow.FilesTree);
-            WaitForFilesTree();
+            WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible && SkylineWindow.FilesTree.IsComplete());
 
             Assert.AreEqual(FileSystemType.local_file_system, SkylineWindow.FilesTree.FileSystemType);
             Assert.AreEqual(1, SkylineWindow.FilesTree.MonitoredDirectories().Count);
@@ -558,21 +554,11 @@ namespace pwiz.SkylineTestFunctional
         }
 
         // Assumes rat-plasma.sky is loaded
-        // Expected tree:
-        //      <file>.sky/
-        //          Window Layout
-        //          Chromatograms
-        //          Replicates/
-        //              <Replicate-Name>/
-        //                  <Replicate-Sample-File>.raw
-        //              ...
-        //          Spectral Libraries/
-        //              <Library>
-        //              ...
         private static void TestRestoreViewState()
         {
             RunUI(() =>
             {
+                // Check expansion
                 Assert.IsTrue(SkylineWindow.FilesTree.Root.IsExpanded);
 
                 var replicatesFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
@@ -582,6 +568,18 @@ namespace pwiz.SkylineTestFunctional
 
                 var spectralLibrariesFolder = SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>();
                 Assert.IsTrue(spectralLibrariesFolder.IsExpanded);
+
+                // Check selection
+                const int expectedTopNodeIndex = 2;
+                var node = GetNthNode(SkylineWindow.FilesTree, expectedTopNodeIndex);
+                Assert.AreEqual(SkylineWindow.FilesTree.TopNode, node);
+                Assert.AreEqual(SkylineWindow.FilesTree.TopNode, SkylineWindow.FilesTree.Folder<ReplicatesFolder>());
+
+                // Check top node
+                const int expectedSelectedNodeIndex = 11;
+                node = GetNthNode(SkylineWindow.FilesTree, expectedSelectedNodeIndex);
+                Assert.AreEqual(SkylineWindow.FilesTree.SelectedNode, node);
+                Assert.AreEqual(@"D_108_REP2", node.Name);
             });
         }
 
@@ -669,7 +667,7 @@ namespace pwiz.SkylineTestFunctional
         {
             {
                 // Start with a clean document
-                var documentPath = TestFilesDir.GetTestPath(RAT_PLASMA_FILE_NAME);
+                var documentPath = TestFilesDirs[0].GetTestPath(RAT_PLASMA_FILE_NAME);
                 RunUI(() =>
                 {
                     SkylineWindow.OpenFile(documentPath);
@@ -750,7 +748,7 @@ namespace pwiz.SkylineTestFunctional
         protected void TestDragAndDropOnParentNode()
         {
             // Start with a clean document
-            var documentPath = TestFilesDir.GetTestPath(RAT_PLASMA_FILE_NAME);
+            var documentPath = TestFilesDirs[0].GetTestPath(RAT_PLASMA_FILE_NAME);
             RunUI(() =>
             {
                 SkylineWindow.OpenFile(documentPath);
@@ -769,13 +767,13 @@ namespace pwiz.SkylineTestFunctional
         protected void TestReplicateLabelEdit()
         {
             // Start with a clean document
-            var documentPath = TestFilesDir.GetTestPath(RAT_PLASMA_FILE_NAME);
+            var documentPath = TestFilesDirs[0].GetTestPath(RAT_PLASMA_FILE_NAME);
             RunUI(() =>
             {
                 SkylineWindow.OpenFile(documentPath);
                 SkylineWindow.ShowFilesTreeForm(true);
             });
-            WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible);
+            WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible && SkylineWindow.FilesTree.IsComplete());
 
             var replicatesFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
             Assert.AreEqual(@"D_102_REP1", replicatesFolder.Nodes[0].Name);
@@ -1061,6 +1059,36 @@ namespace pwiz.SkylineTestFunctional
         private static void WaitForFilesTree()
         {
             WaitForConditionUI(() => SkylineWindow.FilesTree.IsComplete());
+        }
+
+        /// <summary>
+        /// Get the Nth node from a tree. <see cref="absoluteNodeIndex"/> is a zero-based index
+        /// that only counts visible nodes starting from the tree's root.
+        /// </summary>
+        /// <param name="filesTree">Tree to traverse</param>
+        /// <param name="absoluteNodeIndex">TreeNode to find. Returns null if the Nth node could not be found.</param>
+        /// <returns></returns>
+        private static TreeNode GetNthNode(FilesTree filesTree, int absoluteNodeIndex)
+        {
+            if (filesTree == null || absoluteNodeIndex < 0)
+            {
+                return null;
+            }
+
+            var currentNode = filesTree.Nodes[0];
+            var count = 0;
+
+            while (currentNode != null)
+            {
+                if (count == absoluteNodeIndex)
+                {
+                    return currentNode;
+                }
+                currentNode = currentNode.NextVisibleNode;
+                count++;
+            }
+
+            return null; // Nth visible node not found
         }
     }
 

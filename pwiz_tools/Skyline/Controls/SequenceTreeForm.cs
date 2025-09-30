@@ -49,8 +49,11 @@ namespace pwiz.Skyline.Controls
 
         protected override string GetPersistentString()
         {
-            return base.GetPersistentString() + @"|" + SequenceTree.GetPersistentString();
-        } 
+            // Write a token to the .view file indicating Skyline showed the new Files tab. Absence of this token tells Skyline to show Files as 
+            // part of upgrading all existing .sky documents. Presence of the token indicates that happened for the Skyline document and should 
+            // not happen again.
+            return base.GetPersistentString() + @"|" + SequenceTree.GetPersistentString() + @"|" + FilesTree.FilesTree.FILES_TREE_SHOWN_ONCE_TOKEN;
+        }
 
         public SequenceTree SequenceTree { get { return sequenceTree; } }
         public ToolStripComboBox ComboResults { get { return comboResults; } }

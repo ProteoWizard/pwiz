@@ -3179,13 +3179,13 @@ namespace pwiz.Skyline
         {
             if (show)
             {
+                // CONSIDER: should FilesTree always be added behind SequenceTree?
                 if (_filesTreeForm != null)
                 {
                     if (_filesTreeForm.DockPanel == null)
                         _filesTreeForm.Show(dockPanel, DockState.DockLeft);
 
                     _filesTreeForm.Activate();
-                    _filesTreeForm.FilesTree.ScrollToTop();
                 }
                 else
                 {
@@ -3279,6 +3279,14 @@ namespace pwiz.Skyline
                 int sepIndex = persistentString.IndexOf('|');
                 if (sepIndex != -1)
                     expansionAndSelection = persistentString.Substring(sepIndex + 1);
+
+                // If this string is not present, SequenceTree's view state was written with a Skyline version 
+                // pre-dating the FilesTree. So, show FilesTree as a tab behind SequenceTree. This check
+                // should run exactly once for any view file.
+                if (!persistentString.EndsWith(@"|" + FilesTree.FILES_TREE_SHOWN_ONCE_TOKEN))
+                {
+                    _shouldShowFilesTree = true;
+                }
             }             
             _sequenceTreeForm = new SequenceTreeForm(this, expansionAndSelection != null);
             _sequenceTreeForm.FormClosed += sequenceTreeForm_FormClosed;
@@ -3320,6 +3328,7 @@ namespace pwiz.Skyline
                 _sequenceTreeForm.ComboResults.SelectedIndexChanged -= comboResults_SelectedIndexChanged;
                 _sequenceTreeForm.Close();
                 _sequenceTreeForm = null;
+                _shouldShowFilesTree = false;
             }
         }
 

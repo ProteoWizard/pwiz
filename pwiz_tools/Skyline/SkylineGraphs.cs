@@ -85,6 +85,7 @@ namespace pwiz.Skyline
         private readonly List<GraphChromatogram> _listGraphChrom = new List<GraphChromatogram>(); // List order is MRU, with oldest in position 0
         private bool _inGraphUpdate;
         private bool _alignToPrediction;
+        private bool _shouldShowFilesTree;
 
         public RTGraphController RTGraphController
         {
@@ -525,6 +526,33 @@ namespace pwiz.Skyline
                 DestroyGraphChrom(graphChrom);
             DestroyGraphFullScan();
             dockPanel.LoadFromXml(layoutStream, DeserializeForm);
+
+            if (_filesTreeForm == null && _shouldShowFilesTree)
+            {
+                // First time displaying FilesTree so no view state to restore
+                _filesTreeForm = CreateFilesTreeForm(null);
+            
+                // If SequenceTree exists, put FilesTree in a tab behind SequenceTree
+                if (_sequenceTreeForm != null) 
+                {
+                    var sequenceTreeDockState = _sequenceTreeForm.DockState;
+                    if (sequenceTreeDockState != DockState.Hidden)
+                    {
+                        _filesTreeForm.Show(dockPanel, sequenceTreeDockState);
+                        _sequenceTreeForm.Activate();
+                    }
+                    // If SequenceTree is hidden, skip.
+                    // CONSIDER: if SequenceTree exists but is hidden, FilesTree cannot be added. Ignoring that case for now.
+                }
+                else
+                {
+                    // Could not find SequenceTree so put Files in its default location
+                    _filesTreeForm.Show(dockPanel, DockState.DockLeft);
+                }
+            
+                _shouldShowFilesTree = false;
+            }
+
             // SequenceTree resizes often prior to display, so we must restore its scrolling after
             // all resizing has occurred
             if (SequenceTree != null)

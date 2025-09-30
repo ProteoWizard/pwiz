@@ -34,6 +34,8 @@ namespace pwiz.Skyline.Controls.FilesTree
 {
     public class FilesTree : TreeViewMS
     {
+        public static string FILES_TREE_SHOWN_ONCE_TOKEN = @"FilesTreeShownOnce";
+
         // Fields for editing the label of a FilesTreeNode
         private bool _inhibitOnAfterSelect;
         private FilesTreeNode _triggerLabelEditForNode;
@@ -103,8 +105,6 @@ namespace pwiz.Skyline.Controls.FilesTree
         #endregion
 
         public TreeNode NextTopNode => TreeStateRestorer.NextTopNode;
-
-        public void ScrollToTop() => Nodes[0]?.EnsureVisible();
 
         /// <summary>
         /// Get the first folder associated with type <see cref="T"/>.
@@ -190,9 +190,9 @@ namespace pwiz.Skyline.Controls.FilesTree
             {
                 BeginUpdateMS();
 
-                // Trick to set TopNode. For unknown reasons, the way SequenceTree sets TopNode doesn't work for
-                // FilesTree. So, try exactly once to set TopNode on this FilesTree.
-                // TODO: revisit. This is a trick to fix a visual bug but should be properly fixed
+                // Manually set TopNode. For unknown reasons, the default behavior of TreeStateRestorer does not work
+                // correctly on FilesTree. So use this trick to set TopNode exactly once per FilesTree instance.
+                // TODO: revisit - needs a proper fix
                 if (!_topNodeAlreadySet && NextTopNode != null)
                 {
                     TopNode = NextTopNode;
@@ -687,7 +687,6 @@ namespace pwiz.Skyline.Controls.FilesTree
         }
 
         #endregion   
-
 
         protected override bool IsParentNode(TreeNode node)
         {
