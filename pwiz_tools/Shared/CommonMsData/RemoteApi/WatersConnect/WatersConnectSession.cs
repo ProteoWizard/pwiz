@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using Newtonsoft.Json.Linq;
@@ -107,14 +108,15 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             folder = null;
             if (string.IsNullOrEmpty(url.EncodedPath))
                 return false;
-            var path = url.EncodedPath;     // remove leading '/' if present since the path returned by the server does not have it
-            if (path.StartsWith(RemoteUrl.PATH_SEPARATOR))
+            var path = WebUtility.UrlDecode(url.EncodedPath);    // the server returns paths unencoded
+            if (path.StartsWith(RemoteUrl.PATH_SEPARATOR))       // remove leading '/' if present since the path returned by the server does not have it
                 path = path.Substring(RemoteUrl.PATH_SEPARATOR.Length);
             ImmutableList<WatersConnectFolderObject> folders;
             if (TryGetData(GetRootContentsUrl(), out folders))
-            {
+            {   
                 folder = folders.FirstOrDefault(f => f.Path.Equals(path));
-                return true;
+                if (folder != null)
+                    return true;
             }
 
             return false;
