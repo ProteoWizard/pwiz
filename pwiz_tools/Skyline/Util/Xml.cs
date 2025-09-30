@@ -27,6 +27,7 @@ using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.Common.Collections;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Properties;
@@ -729,6 +730,24 @@ namespace pwiz.Skyline.Util
                 }
             }
             return defaultValue;
+        }
+
+        public static TAttr GetRequiredEnumAttribute<TAttr>(this XmlReader reader, Enum name, EnumCase enumCase)
+        {
+            string value = reader.GetAttribute(name);
+            if (!string.IsNullOrEmpty(value))
+            {
+                try
+                {
+                    return (TAttr)Enum.Parse(typeof(TAttr), GetEnumString(value, enumCase));
+                }
+                catch (ArgumentException x)
+                {
+                    throw new InvalidDataException(string.Format(Resources.XmlUtil_GetAttribute_The_value__0__is_not_valid_for_the_attribute__1__, value, name), x);
+                }
+            }
+
+            throw new InvalidDataException(string.Format(Resources.XmlUtil_GetAttribute_The_value__0__is_not_valid_for_the_attribute__1__, value ?? @"<null>", name));
         }
 
         public static TAttr GetEnumAttribute<TAttr>(this XmlReader reader, string name, TAttr defaultValue)

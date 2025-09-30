@@ -29,9 +29,10 @@ using Newtonsoft.Json;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
-using pwiz.Skyline.Model.Results.RemoteApi;
-using pwiz.Skyline.Model.Results.RemoteApi.Ardia;
-using pwiz.Skyline.Model.Results.RemoteApi.Unifi;
+using pwiz.CommonMsData.RemoteApi;
+using pwiz.CommonMsData.RemoteApi.Ardia;
+using pwiz.CommonMsData.RemoteApi.Unifi;
+using pwiz.CommonMsData.RemoteApi.WatersConnect;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -116,6 +117,22 @@ namespace pwiz.Skyline.ToolsUI
                 tbxIdentityServer.Text = unifiAccount.IdentityServer;
                 tbxClientScope.Text = unifiAccount.ClientScope;
                 tbxClientSecret.Text = unifiAccount.ClientSecret;
+                tbxClientId.Text = unifiAccount.ClientId;
+            }
+            else if (remoteAccount is WatersConnectAccount wcAccount)
+            {
+                wizardPagesByAccountType.SelectedIndex = UNIFI_WIZARD_PAGE_INDEX;
+                
+                btnTest.Text = _btnTest_OriginalLabel_Test;
+
+                textUsername.Text = remoteAccount.Username;
+                textPassword.Text = remoteAccount.Password;
+                textServerURL.Text = remoteAccount.ServerUrl;
+
+                tbxIdentityServer.Text = wcAccount.IdentityServer;
+                tbxClientScope.Text = wcAccount.ClientScope;
+                tbxClientSecret.Text = wcAccount.ClientSecret;
+                tbxClientId.Text = wcAccount.ClientId;
             }
             else if (remoteAccount is ArdiaAccount ardiaAccount)
             {
@@ -153,13 +170,29 @@ namespace pwiz.Skyline.ToolsUI
                 var unifiAccount = (UnifiAccount) remoteAccount;
                 unifiAccount = unifiAccount.ChangeIdentityServer(tbxIdentityServer.Text)
                     .ChangeClientScope(tbxClientScope.Text)
-                    .ChangeClientSecret(tbxClientSecret.Text);
+                    .ChangeClientSecret(tbxClientSecret.Text)
+                    .ChangeClientId(tbxClientId.Text);
                 remoteAccount = unifiAccount;
+            }
+            else if (accountType == RemoteAccountType.WATERS_CONNECT)
+            {
+                remoteAccount = remoteAccount.ChangeServerUrl(textServerURL.Text.Trim().TrimEnd('/'))
+                    .ChangeUsername(textUsername.Text.Trim()).ChangePassword(textPassword.Text);
+
+                var wcAccount = (WatersConnectAccount) remoteAccount;
+                wcAccount = wcAccount.ChangeIdentityServer(tbxIdentityServer.Text)
+                    .ChangeClientScope(tbxClientScope.Text)
+                    .ChangeClientSecret(tbxClientSecret.Text)
+                    .ChangeClientId(tbxClientId.Text);
+                remoteAccount = wcAccount;
             }
             else if (accountType == RemoteAccountType.ARDIA)
             {
-                remoteAccount = remoteAccount.ChangeServerUrl(textArdiaServerURL.Text.Trim().TrimEnd('/'))
-                    .ChangeUsername(textArdiaAlias_Username.Text.Trim());
+                // CONSIDER: does serverUrl need more input validation? For example:
+                //              (1) removing the scheme (ex: https://), if provided
+                //              (2) checking for a valid URL?
+                remoteAccount = remoteAccount.ChangeServerUrl(textArdiaServerURL.Text.Trim().TrimEnd('/'));
+                remoteAccount = remoteAccount.ChangeUsername(textArdiaAlias_Username.Text.Trim());
 
                 var ardiaAccount = (ArdiaAccount) remoteAccount;
                 ardiaAccount = ardiaAccount.ChangeDeleteRawAfterImport(cbArdiaDeleteRawAfterImport.Checked);
@@ -168,6 +201,7 @@ namespace pwiz.Skyline.ToolsUI
                     && _ardiaAccount_CurrentlyLoggedIn.ServerUrl.Equals(ardiaAccount.ServerUrl))
                 {
                     ardiaAccount.SetAuthenticatedHttpClientFactory(_ardiaAccount_CurrentlyLoggedIn);
+                    ardiaAccount = ardiaAccount.ChangeToken(_ardiaAccount_CurrentlyLoggedIn.Token);
                 }
 
                 //  Ardia Test Only Pass Through
@@ -245,7 +279,7 @@ namespace pwiz.Skyline.ToolsUI
             using var httpClient = new HttpClient(handler);
             httpClient.BaseAddress = baseUri;
             // Add the Bff-Host cookie to the cookie container
-            cookieContainer.Add(apiBaseUri, new Cookie(@"Bff-Host", ArdiaAccount.GetSessionCookieString(_ardiaAccount_CurrentlyLoggedIn)));
+            cookieContainer.Add(apiBaseUri, new Cookie(@"Bff-Host", ArdiaCredentialHelper.GetToken(_ardiaAccount_CurrentlyLoggedIn).Decrypted));
             // Add the required headers to the request
             httpClient.DefaultRequestHeaders.Add(@"Accept", @"application/json");
             httpClient.DefaultRequestHeaders.Add(@"applicationCode", applicationCode);
@@ -317,6 +351,11 @@ namespace pwiz.Skyline.ToolsUI
             DialogResult = DialogResult.OK;
         }
 
+        /// <summary>
+        /// Button event handler. For Ardia accounts, the label might be [Test] or [Connect].
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void btnTest_Click(object sender, EventArgs e)
         {
             TestSettings();
@@ -333,8 +372,50 @@ namespace pwiz.Skyline.ToolsUI
             {
                 UnifiAccount unifiAccount => TestUnifiAccount(unifiAccount),
                 ArdiaAccount ardiaAccount => TestArdiaAccount(ardiaAccount),
-                _ => true
+                WatersConnectAccount wcAccount => TestWatersConnectAccount(wcAccount),
+                _ => throw new InvalidOperationException(@"remote account type not handled in TestSettings")
             };
+        }
+
+        private bool TestWatersConnectAccount(WatersConnectAccount wcAccount)
+        {
+            using (var wcSession = new WatersConnectSession(wcAccount))
+            {
+                try
+                {
+                    var tokenResponse = wcAccount.Authenticate();
+                    if (tokenResponse.IsError)
+                    {
+                        string error = tokenResponse.ErrorDescription ?? tokenResponse.Error;
+                        MessageDlg.Show(this, TextUtil.LineSeparate(ToolsUIResources.EditRemoteAccountDlg_TestUnifiAccount_An_error_occurred_while_trying_to_authenticate_, error));
+                        if (tokenResponse.Error == @"invalid_scope")
+                        {
+                            tbxClientScope.Focus();
+                        }
+                        else if (tokenResponse.Error == @"invalid_client")
+                        {
+                            tbxClientSecret.Focus();
+                        }
+                        else if (tokenResponse.HttpStatusCode == HttpStatusCode.NotFound)
+                        {
+                            tbxIdentityServer.Focus();
+                        }
+                        else
+                        {
+                            textPassword.Focus();
+                        }
+                        return false;
+                    }
+                }
+                catch (Exception e)
+                {
+                    MessageDlg.ShowWithException(this, ToolsUIResources.EditRemoteAccountDlg_TestUnifiAccount_An_error_occurred_while_trying_to_authenticate_, e);
+                    tbxIdentityServer.Focus();
+                    return false;
+                }
+
+                return TestAccount(wcSession);
+            }
         }
 
         private bool TestUnifiAccount(UnifiAccount unifiAccount)
@@ -430,6 +511,7 @@ namespace pwiz.Skyline.ToolsUI
             };
             using (var longWaitDlg = new LongWaitDlg())
             {
+                longWaitDlg.Text = ToolsUIResources.EditRemoteAccountDlg_TestAccount_Testing_remote_account_connection;
                 try
                 {
                     longWaitDlg.PerformWork(this, 1000, (ILongWaitBroker broker) =>
@@ -556,7 +638,7 @@ namespace pwiz.Skyline.ToolsUI
 
         private void comboAccountType_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (RemoteAccountType.UNIFI.Equals(AccountType))
+            if (RemoteAccountType.UNIFI.Equals(AccountType) || RemoteAccountType.WATERS_CONNECT.Equals(AccountType))
             {
                 wizardPagesByAccountType.SelectedIndex = UNIFI_WIZARD_PAGE_INDEX;
 
@@ -568,12 +650,35 @@ namespace pwiz.Skyline.ToolsUI
                 wizardPagesByAccountType.SelectedIndex = ARDIA_WIZARD_PAGE_INDEX;
 
                 process_ardiaAccount_CurrentlyLoggedIn_EnableDisableControls();
+
+                // Skyline only supports one Ardia account so these checks prevent adding second account in two scenarios:
+                // 
+                //   1) Users click the [Edit] button on an existing Ardia account. This allows editing an existing Ardia account.
+                //   2) Users click the [Add] button and choose "Ardia" as the account type in the new account dialog
+                //
+                // Both scenarios are handled here because this combobox event handler runs in both cases.
+
+                // Scenario #1: Allow editing an existing Ardia account by checking the account passed to the edit dialog.
+                if (_originalAccount != null && _originalAccount.AccountType == RemoteAccountType.ARDIA)
+                {
+                    return;
+                }
+
+                // Scenario #2: if Skyline gets here, it's not editing an existing Ardia account so must be adding a new one. So see if
+                // an Ardia account is already defined, show an error message if so, and switch the dialog's AccountType back to the default (Unifi).
+                if (_existing.ToList().Any(account => account.AccountType == RemoteAccountType.ARDIA))
+                {
+                    MessageDlg.Show(this, ToolsUIResources.EditRemoteAccountDlg_Ardia_OneAccountSupported, false, MessageBoxButtons.OK);
+
+                    // Reset back to the default account type
+                    AccountType = RemoteAccountType.UNIFI;
+                }
             }
         }
 
         private void process_ardiaAccount_CurrentlyLoggedIn_EnableDisableControls()
         {
-            if (RemoteAccountType.UNIFI.Equals(AccountType))
+            if (RemoteAccountType.UNIFI.Equals(AccountType) || RemoteAccountType.WATERS_CONNECT.Equals(AccountType))
             {
                 if (!btnTest.Text.Equals(_btnTest_OriginalLabel_Test))
                 {
@@ -603,6 +708,12 @@ namespace pwiz.Skyline.ToolsUI
                     btnTest.Text = btnText_Connect;
                 }
             }
+        }
+
+        // Test helper
+        public bool IsVisibleAccountType(RemoteAccountType accountType)
+        {
+            return comboAccountType.SelectedIndex == RemoteAccountType.ALL.IndexOf(accountType);
         }
     }
 }

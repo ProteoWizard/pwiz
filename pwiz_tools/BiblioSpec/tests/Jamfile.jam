@@ -276,6 +276,7 @@ blib-test-build md_special_filtered-pdResult : --unicode -o : output/md_special_
 blib-test-build example-pdResult-confidence3 : -o -c@0.99 : output/example-pdResult-confidence3.blib : example-pdResult-confidence3.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/example.pdResult ;
 blib-test-build example-pdResult-numeric : -o -c@0.96 : output/example-pdResult-numeric.blib : example-pdResult-numeric.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/example.pdResult ;
 blib-test-build-basic pd-3_1 : -o -c@0.5 : $(TEST_INPUTS_PATH)/230807_P1_Neo_ES904_TMTProPrecision_1ug_DIA1Th_HCD30_Survey.pdResult ;
+blib-test-build-basic pdResult-no-spectra : -o -e@~exported_without_the_appropriate~ : $(TEST_INPUTS_PATH)/pdResult-no-spectra.pdResult ;
 
 blib-test-build pilot : --unicode -o : output/pilot.blib : pilot.check : $(TEST_INPUTS_PATH)/MB1_98_03.group.xml ;
 blib-test-build pilot-mzid : --unicode -o : output/pilot-mzid.blib : pilot-mzid.check : $(TEST_INPUTS_PATH)/ProtPilotTest.mzid ;

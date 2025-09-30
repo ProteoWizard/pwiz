@@ -31,6 +31,7 @@ using pwiz.BiblioSpec;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
@@ -616,6 +617,12 @@ namespace pwiz.Skyline.Model.Lib
 
     public enum LibraryRedundancy { best, all, all_redundant }
 
+    public enum WorkflowType
+    {
+        DDA = 0,
+        DIA
+    }
+
     public abstract class Library : XmlNamedElement
     {
         protected Library(LibrarySpec spec) : base(spec.Name)
@@ -814,7 +821,6 @@ namespace pwiz.Skyline.Model.Lib
             return new double[0];
         }
 
-
         /// <summary>
         /// Attempts to get ion mobility information for a specific
         /// (sequence, charge) pair and file.
@@ -989,6 +995,53 @@ namespace pwiz.Skyline.Model.Lib
         public virtual bool HasExplicitBounds
         {
             get { return false; }
+        }
+
+        public Dictionary<Target, double> GetMedianRetentionTimes()
+        {
+            var allRetentionTimes = GetAllRetentionTimes(null);
+            if (allRetentionTimes == null)
+            {
+                return null;
+            }
+
+            if (!allRetentionTimes.SelectMany(dict => dict.Values).Distinct().Skip(1).Any())
+            {
+                // If all the retention times are the same, then return null
+                return null;
+            }
+
+            return allRetentionTimes.SelectMany(dict => dict).GroupBy(kvp => kvp.Key, kvp => kvp.Value)
+                .ToDictionary(group => group.Key, MathNet.Numerics.Statistics.Statistics.Median);
+        }
+
+        public virtual Dictionary<Target, double>[] GetAllRetentionTimes(IEnumerable<string> spectrumSourceFiles)
+        {
+            return null;
+        }
+
+        public virtual IList<double>[] GetRetentionTimesWithSequences(IEnumerable<string> spectrumSourceFiles,
+            ICollection<Target> targets)
+        {
+            var result = new List<IList<double>>();
+            foreach (var file in spectrumSourceFiles ?? LibraryFiles)
+            {
+                int? fileIndex = null;
+                result.Add(GetRetentionTimesWithSequences(file, targets, ref fileIndex).ToList());
+            }
+
+            return result.ToArray();
+        }
+
+        public IList<double> GetRetentionTimes(MsDataFileUri fileUri, ICollection<Target> targets)
+        {
+            int index = LibraryFiles.FindIndexOf(fileUri);
+            if (index < 0)
+            {
+                return null;
+            }
+
+            return GetRetentionTimesWithSequences(new[] { LibraryFiles[index] }, targets)?[0];
         }
 
         #region Implementation of IXmlSerializable
@@ -1410,6 +1463,17 @@ namespace pwiz.Skyline.Model.Lib
                 dict.Add(entry.Key, entry.Value.Item2.Min());
             }
             return dict;
+        }
+
+        public static LibraryRetentionTimes FromRetentionTimes(string path, TimeSource timeSource,
+            IDictionary<Target, double> retentionTimes)
+        {
+            if (retentionTimes == null)
+            {
+                return null;
+            }
+            return new LibraryRetentionTimes(path,
+                retentionTimes.ToDictionary(kvp => kvp.Key, kvp => Tuple.Create(timeSource, new[] { kvp.Value })));
         }
     }
 
@@ -1966,7 +2030,7 @@ namespace pwiz.Skyline.Model.Lib
             return (Peaks != null ? Peaks.GetHashCode() : 0);
         }
 
-        public struct MI
+        public struct MI : IEquatable<MI>
         {
             private bool _notQuantitative;
             private List<SpectrumPeakAnnotation> _annotations; // A peak may have multiple annotations
@@ -2906,7 +2970,7 @@ namespace pwiz.Skyline.Model.Lib
     /// Key for use in dictionaries that store library header information in
     /// memory.
     /// </summary>
-    public struct LibKey
+    public struct LibKey : IEquatable<LibKey>
     {
         public static LibKey EMPTY = new LibKey(SmallMoleculeLibraryAttributes.EMPTY, Adduct.EMPTY);
 
@@ -3094,10 +3158,11 @@ namespace pwiz.Skyline.Model.Lib
 
     public class SpectrumSourceFileDetails
     {
-        public SpectrumSourceFileDetails(string filePath, string idFilePath = null)
+        public SpectrumSourceFileDetails(string filePath, string idFilePath = null, WorkflowType workflowType = WorkflowType.DDA)
         {
             FilePath = filePath;
             IdFilePath = idFilePath;
+            WorkflowType = workflowType;
             ScoreThresholds = new Dictionary<ScoreType, double?>();
             BestSpectrum = 0;
             MatchedSpectrum = 0;
@@ -3105,6 +3170,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public string FilePath { get; private set; }
         public string IdFilePath { get; set; }
+        public WorkflowType WorkflowType { get; }
         public Dictionary<ScoreType, double?> ScoreThresholds { get; private set; }
         public int BestSpectrum { get; set; }
         public int MatchedSpectrum { get; set; }

@@ -133,6 +133,10 @@
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data.SQLite, Version=1.0.98.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\libraries\SQLite\x64\System.Data.SQLite.dll</HintPath>
+    </Reference>
     <Reference Include="System.Design" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
@@ -157,6 +161,7 @@
     <Compile Include="..\Executables\AssortResources\ResourceReference.cs">
       <Link>ResourceReference.cs</Link>
     </Compile>
+    <Compile Include="AbstractLibraryBuilderModificationSupportTest.cs" />
     <Compile Include="AddTransitionsTest.cs" />
     <Compile Include="AdductTest.cs" />
     <Compile Include="AlphapeptdeepLibraryBuilderTest.cs" />
@@ -174,8 +179,10 @@
     <Compile Include="CmdLineAssociateProteinsTest.cs" />
     <Compile Include="CommandLineThermoMethodTest.cs" />
     <Compile Include="ElibQuantifiableTransitionTest.cs" />
+    <Compile Include="EncryptedTokenTest.cs" />
     <Compile Include="ErrorIfPersistentFilesDirModifiedTest.cs" />
     <Compile Include="FastaSequenceTest.cs" />
+    <Compile Include="CopyFileWithProgressTest.cs" />
     <Compile Include="FilteredMessageWriterTest.cs" />
     <Compile Include="ImmutableListTest.cs" />
     <Compile Include="LocalizedHtmlTutorialsTest.cs" />
@@ -187,11 +194,13 @@
     <Compile Include="FeatureTooltipTest.cs" />
     <Compile Include="CommandLinePeakBoundaryTest.cs" />
     <Compile Include="PeptideTest.cs" />
+    <Compile Include="PiecewiseLinearMapTest.cs" />
     <Compile Include="ProgressStatusChangeSegmentsEndPercentageTest.cs" />
     <Compile Include="ProteinAssociationTest.cs" />
     <Compile Include="ProtocolBuffers\GeneratedCode\LegacySkylineDocumentProto.cs" />
     <Compile Include="ProtocolBuffers\LegacyProtocolBufferFormatsTest.cs" />
     <Compile Include="ReferenceValueTest.cs" />
+    <Compile Include="ArdiaMarshalingTest.cs" />
     <Compile Include="ScoreQValueMapTest.cs" />
     <Compile Include="MeasuredIonTest.cs" />
     <Compile Include="SchemaDocumentsTest.cs" />
@@ -278,6 +287,7 @@
     <Compile Include="SSRCalc3Test.cs" />
     <Compile Include="StatisticsTest.cs" />
     <Compile Include="StringHelpersTest.cs" />
+    <Compile Include="DiskSpaceTest.cs" />
     <Compile Include="TestSerializeIsolationScheme.cs" />
     <Compile Include="TextUtilTest.cs" />
     <Compile Include="TimeIntervalsTest.cs" />
@@ -300,6 +310,10 @@
     <Compile Include="ZedGraphTest.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Shared\CommonMsData\CommonMsData.csproj">
+      <Project>{86F8E7F5-A3ED-4519-9AD9-BF9ABD6DD69F}</Project>
+      <Name>CommonMsData</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Shared\Common\Common.csproj">
       <Project>{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}</Project>
       <Name>Common</Name>
@@ -403,7 +417,8 @@
     <EmbeddedResource Include="SmallMoleculesMzOnly_3-7.sky" />
     <None Include="ProtocolBuffers\generatecode.bat" />
     <None Include="ProtocolBuffers\LegacySkylineDocumentProto.proto" />
-    <EmbeddedResource Include="Test-imported_24-11-short.sky" />
+    <EmbeddedResource Include="Test-imported_24-11-short_onlyUnimodMods.sky" />
+    <EmbeddedResource Include="Test-imported_24-11-short_nonUnimodMods.sky" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">

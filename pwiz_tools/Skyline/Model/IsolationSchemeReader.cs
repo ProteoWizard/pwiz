@@ -22,11 +22,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
 {
@@ -152,7 +151,8 @@ namespace pwiz.Skyline.Model
             string path = dataSource.GetFilePath();
             bool isPasef = Directory.Exists(path) &&    // Below can be slow if it is not a directory
                            Equals(DataSourceUtil.GetSourceType(new DirectoryInfo(path)), DataSourceUtil.TYPE_BRUKER);
-            using (var dataFile = new MsDataFileImpl(path, simAsSpectra: true))
+            // CONSIDER: update isolation scheme reader to use WindowGroup?
+            using (var dataFile = new MsDataFileImpl(path, simAsSpectra: true, passEntireDiaPasefFrame:false))
             {
                 int lookAheadCount = Math.Min(MAX_MULTI_CYCLE, dataFile.SpectrumCount);
                 for (int i = 0; i < lookAheadCount; i++)

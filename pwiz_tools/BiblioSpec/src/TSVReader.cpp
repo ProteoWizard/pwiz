@@ -116,7 +116,7 @@ namespace {
             for (map< string, vector<TSVPSM*> >::iterator i = fileMap_.begin(); i != fileMap_.end(); ++i) {
                 psms_.assign(i->second.begin(), i->second.end());
                 setSpecFileName(i->first.c_str(), false);
-                buildTables(GENERIC_QVALUE, i->first, false);
+                buildTables(GENERIC_QVALUE, i->first, false, DIA);
             }
 
             return true;
@@ -527,7 +527,7 @@ namespace {
             for (map< string, vector<TSVPSM*> >::iterator i = fileMap_.begin(); i != fileMap_.end(); ++i) {
                 psms_.assign(i->second.begin(), i->second.end());
                 setSpecFileName(i->first.c_str(), false);
-                buildTables(UNKNOWN_SCORE_TYPE, i->first, false);
+                buildTables(UNKNOWN_SCORE_TYPE, i->first, false, DIA);
             }
 
             return true;

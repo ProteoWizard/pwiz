@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-using pwiz.Skyline.Model.Results.RemoteApi.Ardia;
+using pwiz.CommonMsData.RemoteApi.Ardia;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,15 +34,22 @@ using System.Threading;
 using IdentityModel;
 using IdentityModel.Client;
 using Newtonsoft.Json;
-using pwiz.Common.Collections;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Alerts
 {
+    /// <summary>
+    /// Form for authenticating a connection to the Ardia API. Operates in two modes:
+    ///
+    ///     (1) In tests: using a browser embedded in Skyline
+    ///     (2) Otherwise: using the System Browser running in a remote process
+    ///
+    /// Both experiences authenticate users with the Ardia API and ultimately set a value for 
+    /// the Bff-Host cookie used in subsequent API calls. For example: to import results files.
+    /// </summary>
     public partial class ArdiaLoginDlg : FormEx
     {
         private static readonly bool FORCE_DO_REGISTRATION_WITH_ARDIA_STEP  = false;
-
 
         private static readonly int TESTING_WEBVIEW_WIZARD_PAGE_INDEX = 0;
         private static readonly int MAIN_LOADING_MESSAGE_WIZARD_PAGE_INDEX = 1;
@@ -50,27 +57,24 @@ namespace pwiz.Skyline.Alerts
         private static readonly int MAIN_REGISTER_SKYLINE_COMPLETE_WIZARD_PAGE_INDEX = 3;
         private static readonly int MAIN_LOGIN_WIZARD_PAGE_INDEX = 4;
 
-        //  For wizardPagesRegisterPhases index
+        // For wizardPagesRegisterPhases index
         //private static readonly int REGISTER_BUTTON_wizardPagesRegisterPhases_INDEX = 0;
         private static readonly int REGISTER_IN_PROGRESS_wizardPagesRegisterPhases_INDEX = 1;
 
-        //  For wizardPagesLoginPhases index
+        // For wizardPagesLoginPhases index
         //private static readonly int LOGIN_BUTTON_wizardPagesLoginPhases_INDEX = 0;
         private static readonly int LOGIN_IN_PROGRESS_wizardPagesLoginPhases_INDEX = 1;
 
         private enum RegisterDevice_UsingSystemDefaultBrowser_ResultEnum
         {
-            SUCCESS, FAIL_GENERAL, FAIL_NOT_AUTHORIZED
+            SUCCESS,
+            FAIL_GENERAL,
+            FAIL_NOT_AUTHORIZED
         }
 
-        public ArdiaAccount Account { get; private set; }
-        public Func<HttpClient> AuthenticatedHttpClientFactory { get; private set; }
-
-        private Uri _ardiaServer_URI;
-        private string _ardiaServerURL_BaseURL;
-        private string _ardiaServerURL_Transport;
-
-
+        private readonly Uri _ardiaServer_URI;
+        private readonly string _ardiaServerURL_BaseURL;
+        private readonly string _ardiaServerURL_Transport;
 
         //  Used for log in to Ardia in Default System Browser
         private Process _browserProcess;
@@ -78,10 +82,8 @@ namespace pwiz.Skyline.Alerts
         private HttpListener _httpListener;
         private int _httpListener_Port;
 
-
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private CancellationToken _cancellationToken;
-
 
         public ArdiaLoginDlg(ArdiaAccount account/*, bool headless = false*/)
         {
@@ -92,84 +94,41 @@ namespace pwiz.Skyline.Alerts
             Account = account;
             _tempUserDataFolder = new TemporaryDirectory(null, @"~SK_WebView2");
 
-
-            if (string.IsNullOrEmpty(Account.TestingOnly_NotSerialized_Username) ||
-                string.IsNullOrEmpty(Account.TestingOnly_NotSerialized_Password))
+            // Login via System Default Browser. Standard way to Login
+            if (UseSystemBrowserForLogin())
             {
-                //  Login via System Default Browser.   Standard way to Login
-
                 wizardPagesMain.SelectedIndex = MAIN_LOADING_MESSAGE_WIZARD_PAGE_INDEX;
             }
+            //  Login via Embedded WebView. Used for Programmatic Login for Testing Only
             else
-            {   //   Login via Embedded WebView.    Used for Programmatic Login for Testing Only
-
+            {   
                 wizardPagesMain.SelectedIndex = TESTING_WEBVIEW_WIZARD_PAGE_INDEX;
             }
 
-            {
-                var serverUrl = Account.ServerUrl;
+            // CONSIDER: validate server_url attribute of a user.config <ardia_account> entry is ALWAYS absolute
+            _ardiaServer_URI = new Uri(Account.ServerUrl, UriKind.Absolute);
 
-                _ardiaServer_URI = new Uri(serverUrl, UriKind.Absolute);
+            _ardiaServerURL_BaseURL = _ardiaServer_URI.Host;
 
-                var transport_HTTPS = @"https://";
-                var transport_HTTP = @"http://";
+            // CONSIDER: require https. Is there any scenario for http:// use with Ardia API?
+            _ardiaServerURL_Transport = _ardiaServer_URI.Scheme + Uri.SchemeDelimiter;
 
-                if (serverUrl.StartsWith(transport_HTTPS))
-                {
-                    _ardiaServerURL_BaseURL = serverUrl.Substring(transport_HTTPS.Length);
-                    _ardiaServerURL_Transport = transport_HTTPS;
-                }
-                else if (serverUrl.StartsWith(transport_HTTP))
-                {
-                    _ardiaServerURL_BaseURL = serverUrl.Substring(transport_HTTP.Length);
-                    _ardiaServerURL_Transport = transport_HTTP;
-                }
-                else
-                {
-                    //  Should not get here
-                    _ardiaServerURL_BaseURL = serverUrl;
-                    _ardiaServerURL_Transport = "";
-                }
-                
-            }
-
-
-            this.FormClosing += (sender, e) =>
+            FormClosing += (sender, e) =>
             {
                 _cancellationTokenSource.Cancel();
-
                 _cancellationTokenSource.Dispose();
 
                 Stop_HTTPListener();
             };
+        }
 
-            // To support command line, need to do something completely different since Ardia objects to Skyline code having username/password and also programmatic sign in to Ardia not possible for MFA and other possible issues.
-            //
-            //      The code to Programmatic sign in has been changed to use account.TestingOnly_NotSerialized_Username AND account.TestingOnly_NotSerialized_Password
-            //
-            // if (headless)
-            // {
-            //     if (account.TestingOnly_NotSerialized_Username.IsNullOrEmpty() || account.TestingOnly_NotSerialized_Password.IsNullOrEmpty())
-            //     {
-            //         throw new ArgumentException("importing an Ardia file from command-line requires the account to have username and password set up in Skyline (Tools > Options > Remote Accounts)");
-            //     }
-            //     var uiThread = new Thread(() =>
-            //     {
-            //         System.Windows.Threading.Dispatcher.CurrentDispatcher.Invoke(async () =>
-            //         {
-            //             var environment = await CoreWebView2Environment.CreateAsync(null, null, null);
-            //             var controller = await environment.CreateCoreWebView2ControllerAsync(HWND_MESSAGE);
-            //             controller.CoreWebView2.Navigate("https://microsoft.com");
-            //         });
-            //
-            //         Dispatcher.Run();
-            //     });
-            //
-            //     uiThread.SetApartmentState(ApartmentState.STA);
-            //     uiThread.Start();
-            //     uiThread.Join();
-            //     Visible = false;
-            // }
+        public ArdiaAccount Account { get; }
+        public Func<HttpClient> AuthenticatedHttpClientFactory { get; private set; }
+
+        private bool UseSystemBrowserForLogin()
+        {
+            return string.IsNullOrEmpty(Account.TestingOnly_NotSerialized_Username) ||
+                   string.IsNullOrEmpty(Account.TestingOnly_NotSerialized_Password);
         }
 
         ///////////////////
@@ -212,9 +171,7 @@ namespace pwiz.Skyline.Alerts
         /// 
 
         private TemporaryDirectory _tempUserDataFolder;
-
         private Cookie _bffCookie;
-
         private bool _firstTime_ExecuteClientRegistration = true;
 
         private void Stop_HTTPListener()
@@ -251,40 +208,28 @@ namespace pwiz.Skyline.Alerts
             }
         }
 
-        // private ArdiaRegistrationCodeEntry _ardia_ArdiaRegistrationCodeEntry__TEMP; //  TODO  Only used to hold ArdiaRegistrationCodeEntry until store in Settings
-
         private ArdiaRegistrationCodeEntry GetSavedArdiaRegistrationEntry()
         {
-            //  Temp to NOT store in Settings
-
-            // return _ardia_ArdiaRegistrationCodeEntry__TEMP;
-
-            //  END Temp NOT store in Settings
-
-            ArdiaRegistrationCodeEntry entry = null;
-
-            {
-                if (!Settings.Default.ArdiaRegistrationCodeEntries.TryGetValue(_ardiaServerURL_BaseURL,
-                        out entry))
-                {
-                    entry = null;
-                }
-            }
-            
+            Settings.Default.ArdiaRegistrationCodeEntries.TryGetValue(_ardiaServerURL_BaseURL, out var entry);
             return entry;
         }
 
         private void SetSavedArdiaRegistrationData(ArdiaRegistrationCodeEntry entry)
         {
-            //  Temp to NOT store in Settings
-
-            // _ardia_ArdiaRegistrationCodeEntry__TEMP = entry;
-
-            //  END Temp NOT store in Settings
-
             Settings.Default.ArdiaRegistrationCodeEntries[_ardiaServerURL_BaseURL] = entry;
+            ArdiaCredentialHelper.SetApplicationCode(_ardiaServerURL_BaseURL, entry.ClientApplicationCode);
         }
 
+        /// <summary>
+        /// Gets a function that provides an <see cref="HttpClient"/> for calling the Ardia API.
+        /// The client is pre-configured with auth headers / cookies and Accept header as
+        /// "application/json".
+        ///
+        /// Skyline uses this factory to create any <see cref="HttpClient"/> communicating with
+        /// the Ardia API.
+        /// </summary>
+        /// <returns>An <see cref="HttpClient"/> configured for calling the Ardia API.</returns>
+        // TODO: change to a stateless factory
         private Func<HttpClient> GetFactory()
         {
             return () =>
@@ -304,8 +249,8 @@ namespace pwiz.Skyline.Alerts
                 var client = new HttpClient(handler);
                 client.BaseAddress = new Uri(Account.ServerUrl);
                 cookieContainer.Add(new Uri(cookieURI_String), new Cookie(_bffCookie.Name, _bffCookie.Value));
-                client.DefaultRequestHeaders.Add(@"Accept", @"application/json");
 
+                client.DefaultRequestHeaders.Add(@"Accept", @"application/json");
                 client.DefaultRequestHeaders.Add(@"applicationCode", ardiaRegistrationEntry.ClientApplicationCode);
 
                 return client;
@@ -316,14 +261,14 @@ namespace pwiz.Skyline.Alerts
         {
             try
             {
-                var sessionCookieString = ArdiaAccount.GetSessionCookieString(Account);
+                var sessionCookie = ArdiaCredentialHelper.GetToken(Account);
 
-                if (sessionCookieString != null && (!sessionCookieString.IsNullOrEmpty()))
+                if (!sessionCookie.IsNullOrEmpty())
                 {
-                    _bffCookie = new Cookie(@"Bff-Host", sessionCookieString);
+                    _bffCookie = new Cookie(@"Bff-Host", sessionCookie.Decrypted);
                     AuthenticatedHttpClientFactory = GetFactory();
 
-                    // check that cookie is still valid
+                    // Check that cookie is still valid by calling the remote API and checking for a successful response
                     using var client = AuthenticatedHttpClientFactory();
                     var response = client.GetAsync(Account.GetFolderContentsUrl()).Result;
                     try
@@ -338,19 +283,16 @@ namespace pwiz.Skyline.Alerts
                     }
                 }
 
-                if (string.IsNullOrEmpty(Account.TestingOnly_NotSerialized_Username) ||
-                    string.IsNullOrEmpty(Account.TestingOnly_NotSerialized_Password))
+                // Login via System Default Browser. Skyline's standard way to log in.
+                if (UseSystemBrowserForLogin())
                 {
-                    //  Login via System Default Browser.   Standard way to Login
-
                     Initialize_LoginIn_SystemDefaultBrowser();
                 }
+                // Login via Embedded WebView. Used for Programmatic Login for Testing Only.
                 else
-                {   //   Login via Embedded WebView.    Used for Programmatic Login for Testing Only
-
+                {   
                     Initialize_LoginIn_WebView();
                 }
-
             }
             catch (Exception exception)
             {
@@ -361,7 +303,7 @@ namespace pwiz.Skyline.Alerts
 
         //////////////////////////////////////////////////////////////////
         ///
-        ///   Login via System Default Browser.   Standard way to Login
+        /// Login via System Default Browser. Standard way to log in.
         ///
         ///
         #region Handlers for login via system default browser
@@ -381,7 +323,6 @@ namespace pwiz.Skyline.Alerts
                         ardiaRegistrationEntry_BeforeRegister = null; //  TODO  FAKE
                     }
 
-
                     if (ardiaRegistrationEntry_BeforeRegister != null)
                     {
                         var activationStatus = await ValidateActivationStatus(ardiaRegistrationEntry_BeforeRegister);
@@ -397,9 +338,7 @@ namespace pwiz.Skyline.Alerts
                 {
                     wizardPagesMain.SelectedIndex = MAIN_REGISTER_SKYLINE_WIZARD_PAGE_INDEX;
 
-
                     _firstTime_ExecuteClientRegistration = false;
-
                 }
                 else
                 {
@@ -436,18 +375,18 @@ namespace pwiz.Skyline.Alerts
             }
             catch (Exception e)
             {
-                MessageDlg.ShowWithException(this,
-                    AlertsResources.ArdiaLoginDlg_StartRegistrationSkylineWithArdia_ButtonClicked_Error_registering_this_Skyline_instance_to_Ardia,
-                    e); //  TODO   Maybe need something different
+                var message = 
+                    AlertsResources.ArdiaLoginDlg_StartRegistrationSkylineWithArdia_ButtonClicked_Error_registering_this_Skyline_instance_to_Ardia;
+                MessageDlg.ShowWithException(this, message, e); // TODO: Maybe need something different
+
                 DialogResult = DialogResult.OK;
             }
         }
 
         private void OpenBrowserWithServerUrl_ToShowAccount()
         {
-
             // Create a new browser process to open the verification URL in the default system web browser
-            var browserProcess = new Process()
+            var browserProcess = new Process
             {
                 StartInfo = new ProcessStartInfo
                 {
@@ -456,20 +395,24 @@ namespace pwiz.Skyline.Alerts
                     Verb = string.Empty
                 }
             };
+
             // Start the browser process to open the verification URL in the default system web browser
             browserProcess.Start();
         }
 
+        // Login to Ardia using the system browser. If not already set, this makes a sequence of HTTP calls
+        // to obtain a session token (Bff-Host cookie).
         private async void StartLogin_WithArdia_ButtonClicked()
         {
             wizardPagesLoginPhases.SelectedIndex = LOGIN_IN_PROGRESS_wizardPagesLoginPhases_INDEX;
 
             try
             {
+                // Obtain the Bff-Host token value
                 var bffCookie = await LoginIn_UsingSystemDefaultBrowser();
                 if (bffCookie != null)
                 {
-                    ArdiaAccount.SetSessionCookieString(Account, bffCookie.Value );
+                    ArdiaCredentialHelper.SetToken(Account, bffCookie.Value);
 
                     AuthenticatedHttpClientFactory = GetFactory();
                 }
@@ -478,7 +421,8 @@ namespace pwiz.Skyline.Alerts
             }
             catch (Exception e)
             {
-                MessageDlg.ShowWithException(this, AlertsResources.ArdiaLoginDlg_StartLogin_WithArdia_ButtonClicked_Error_logging_in_to_Ardia, e); //  TODO    Maybe need something different
+                var message = AlertsResources.ArdiaLoginDlg_StartLogin_WithArdia_ButtonClicked_Error_logging_in_to_Ardia;
+                MessageDlg.ShowWithException(this, message, e); // TODO: Maybe need something different
 
                 DialogResult = DialogResult.OK;
             }
@@ -497,157 +441,124 @@ namespace pwiz.Skyline.Alerts
                 return false;
             }
 
-            string errorPrefix = AlertsResources.ArdiaLoginDlg_ValidateActivationStatus_Error_validating_Skyline_registration_in_Ardia_;
+            var errorPrefix = AlertsResources.ArdiaLoginDlg_ValidateActivationStatus_Error_validating_Skyline_registration_in_Ardia_;
 
-            var identityBaseUri = new UriBuilder { Scheme = _ardiaServer_URI.Scheme, Host = $"identity.{_ardiaServerURL_BaseURL}" }.Uri;
-            var clientStatusEndpointPath = @"api/v2/Clients/clientStatus";
-            var credentialsValidationUri = new UriBuilder(identityBaseUri)
+            var credentialsValidationUri = new UriBuilder
             {
-                Path = clientStatusEndpointPath,
+                Scheme = _ardiaServer_URI.Scheme,
+                Host = $"identity.{_ardiaServerURL_BaseURL}",
+                Path = @"api/v2/Clients/clientStatus",
                 Query = $"code={clientCode}&clientId={clientId}&clientName={clientName}"
-            }.Uri.ToString();
-            using (var httpClient = new HttpClient())
-            using (var clientCredentialsRequest = new HttpRequestMessage(HttpMethod.Get, credentialsValidationUri))
+            }.Uri;
+
+            using var httpClient = new HttpClient();
+            using var clientCredentialsRequest = new HttpRequestMessage(HttpMethod.Get, credentialsValidationUri);
+
+            // TODO: start here when removing async / await 
+            using var clientCredentialsResponse = httpClient.SendAsync(clientCredentialsRequest).Result;
+
+            // TODO: how does this error handling relate to two error handling blocks below?
+            if (!(clientCredentialsResponse.StatusCode == HttpStatusCode.OK || clientCredentialsResponse.StatusCode == HttpStatusCode.NotFound))
             {
-                using (var clientCredentialsResponse = await httpClient.SendAsync(clientCredentialsRequest))
+                //  "NotFound (404)" returned when ApplicationCode is not found so process that status code in the next step
+                //  For Check Device Registration, this is the first server access done so if the URL is invalid (404) or network problems this will be the error.
+
+                var errorMessage =
+                    string.Format(
+                        AlertsResources.ArdiaLoginDlg_ValidateActivationStatus__3__Failed_to_connect_to_URL__0___Server_URL___1___Error_message___2_,
+                        credentialsValidationUri, Account.ServerUrl, clientCredentialsResponse, errorPrefix);
+
+                MessageDlg.Show(this, errorMessage);
+
+                clientCredentialsResponse.EnsureSuccessStatusCode();
+            }
+
+            try
+            {
+                var content = await clientCredentialsResponse.Content.ReadAsStringAsync();
+
+                Exception exception = null;
+                try
                 {
-                    if (!(clientCredentialsResponse.StatusCode == HttpStatusCode.OK ||
-                          clientCredentialsResponse.StatusCode == HttpStatusCode.NotFound))
+                    var clientStatusResultObject = JsonConvert.DeserializeObject<ClientStatusWebserviceResultDto>(content);
+
+                    // Application code is valid
+                    if (clientStatusResultObject != null &&
+                        IsClientRegistrationActivated_SingleField(clientStatusResultObject.clientCodeStatus) &&
+                        IsClientRegistrationActivated_SingleField(clientStatusResultObject.clientIdStatus) &&
+                        IsClientRegistrationActivated_SingleField(clientStatusResultObject.clientNameStatus))
                     {
-                        //  "NotFound (404)" returned when ApplicationCode is not found so process that status code in the next step
-
-                        //  For Check Device Registration, this is the first server access done so if the URL is invalid (404) or network problems this will be the error.
-
-                        var errorMessage =
-                            string.Format(
-                                AlertsResources.ArdiaLoginDlg_ValidateActivationStatus__3__Failed_to_connect_to_URL__0___Server_URL___1___Error_message___2_,
-                                credentialsValidationUri, Account.ServerUrl, clientCredentialsResponse, errorPrefix);
-                        MessageDlg.Show(this, errorMessage);
-
-                        clientCredentialsResponse.EnsureSuccessStatusCode();
-                    }
-
-                    try
-                    {
-                        var content = await clientCredentialsResponse.Content.ReadAsStringAsync();
-
-                        //  Parse the content as JSON and validate content
-
-                        try
-                        {
-                            var clientStatusResultObject = JsonConvert.DeserializeObject<ClientStatusWebserviceResultDto>(content);
-
-                            if (clientStatusResultObject == null)
-                            {
-                                if (clientCredentialsResponse.StatusCode == HttpStatusCode.OK)
-                                {
-                                    //  200 HTTP Status code for OK and NOT able to parse or process the webservice response so present this error
-                                    var errorMessage =
-                                        string.Format(
-                                            AlertsResources.ArdiaLoginDlg_ValidateActivationStatus__2__Failed_to_process_result_from_webservice_call_to_URL__0___Server_URL___1_,
-                                            credentialsValidationUri, Account.ServerUrl, errorPrefix);
-                                    MessageDlg.Show(this, errorMessage);
-                                }
-                                else if (clientCredentialsResponse.StatusCode == HttpStatusCode.NotFound)
-                                {
-                                    //  404 HTTP Status code for NotFound and NOT able to parse or process the webservice response so present this error
-                                    var errorMessage =
-                                        string.Format(
-                                            AlertsResources.ArdiaLoginDlg_ValidateActivationStatus__3__Failed_to_process_webservice_response___Probably_failed_to_connect_to_URL__0___Server_URL___1___Error_message___2_,
-                                            credentialsValidationUri, Account.ServerUrl, clientCredentialsResponse, errorPrefix);
-                                    MessageDlg.Show(this, errorMessage);
-                                }
-                                else
-                                {
-                                    var errorMessage =
-                                        string.Format(
-                                            AlertsResources.ArdiaLoginDlg_ValidateActivationStatus__2__Failed_to_process_webservice_response__URL__0___Server_URL___1_,
-                                            credentialsValidationUri, Account.ServerUrl, errorPrefix);
-                                    MessageDlg.Show(this, errorMessage);
-                                }
-                                return false;
-                            }
-
-                            if (IsClientRegistrationActivated_SingleField(clientStatusResultObject.clientCodeStatus) &&
-                                IsClientRegistrationActivated_SingleField(clientStatusResultObject.clientIdStatus) &&
-                                IsClientRegistrationActivated_SingleField(clientStatusResultObject.clientNameStatus))
-                            {
-                                return true; // ApplicationCode is valid
-                            }
-
-                            return false;
-
-                        }
-                        catch (Exception e)
-                        {
-                            if (clientCredentialsResponse.StatusCode == HttpStatusCode.OK)
-                            {
-                                //  200 HTTP Status code for OK and NOT able to parse or process the webservice response so present this error
-                                var errorMessage =
-                                    string.Format(
-                                        AlertsResources.ArdiaLoginDlg_ValidateActivationStatus__2__Failed_to_process_result_from_webservice_call_to_URL__0___Server_URL___1_,
-                                        credentialsValidationUri, Account.ServerUrl, errorPrefix);
-                                MessageDlg.ShowWithException(this, errorMessage, e);
-                            }
-                            else if (clientCredentialsResponse.StatusCode == HttpStatusCode.NotFound)
-                            {
-                                //  404 HTTP Status code for NotFound and NOT able to parse or process the webservice response so present this error
-                                var errorMessage =
-                                    string.Format(
-                                        AlertsResources.ArdiaLoginDlg_ValidateActivationStatus__3__Failed_to_process_webservice_response___Probably_failed_to_connect_to_URL__0___Server_URL___1___Error_message___2_,
-                                        credentialsValidationUri, Account.ServerUrl, clientCredentialsResponse, errorPrefix);
-                                MessageDlg.ShowWithException(this, errorMessage, e);
-                            }
-                            else
-                            {
-                                var errorMessage =
-                                    string.Format(
-                                        AlertsResources.ArdiaLoginDlg_ValidateActivationStatus__2__Failed_to_process_webservice_response__URL__0___Server_URL___1_,
-                                        credentialsValidationUri, Account.ServerUrl, errorPrefix);
-                                MessageDlg.ShowWithException(this, errorMessage, e);
-                            }
-                            return false;
-                        }
-
-                    }
-                    catch (Exception)
-                    {
-                        if (!clientCredentialsResponse.IsSuccessStatusCode)
-                        {
-                            //  For Check Device Registration, this is the first server access done so if the URL is invalid (404) or network problems this will be the error.
-
-                            var errorMessage =
-                                string.Format(
-                                    AlertsResources.ArdiaLoginDlg_ValidateActivationStatus__3__Failed_to_connect_to_URL__0___Server_URL___1___Error_message___2_,
-                                    credentialsValidationUri, Account.ServerUrl, clientCredentialsResponse, errorPrefix);
-                            MessageDlg.Show(this, errorMessage);
-
-                            clientCredentialsResponse.EnsureSuccessStatusCode();
-                        }
-
-                        throw;
+                        return true;
                     }
                 }
+                catch (Exception e)
+                {
+                    exception = e;
+                }
+
+                // Covers three error cases:
+                //      (1) clientStatusResultObject == null
+                //      (2) clientStatusResult == null AND exception thrown
+                //      (3) clientStatusResultObject != null but validating ApplicationCode failed
+                string errorMessage;
+                if (clientCredentialsResponse.StatusCode == HttpStatusCode.OK)
+                {
+                    //  200 HTTP Status code for OK and NOT able to parse or process the webservice response so present this error
+                    errorMessage = string.Format(
+                        AlertsResources.ArdiaLoginDlg_ValidateActivationStatus__2__Failed_to_process_result_from_webservice_call_to_URL__0___Server_URL___1_,
+                        credentialsValidationUri, Account.ServerUrl, errorPrefix);
+                }
+                else if (clientCredentialsResponse.StatusCode == HttpStatusCode.NotFound)
+                {
+                    //  404 HTTP Status code for NotFound and NOT able to parse or process the webservice response so present this error
+                    errorMessage = string.Format(
+                        AlertsResources.ArdiaLoginDlg_ValidateActivationStatus__3__Failed_to_process_webservice_response___Probably_failed_to_connect_to_URL__0___Server_URL___1___Error_message___2_,
+                        credentialsValidationUri, Account.ServerUrl, clientCredentialsResponse, errorPrefix);
+                }
+                else
+                {
+                    errorMessage = string.Format(
+                        AlertsResources.ArdiaLoginDlg_ValidateActivationStatus__2__Failed_to_process_webservice_response__URL__0___Server_URL___1_,
+                        credentialsValidationUri, Account.ServerUrl, errorPrefix);
+                }
+
+                if (exception != null)
+                    MessageDlg.ShowWithException(this, errorMessage, exception);
+                else
+                    MessageDlg.Show(this, errorMessage);
+                    
+                return false;
+            }
+            catch (Exception)
+            {
+                if (!clientCredentialsResponse.IsSuccessStatusCode)
+                {
+                    //  For Check Device Registration, this is the first server access done so if the URL is invalid (404) or network problems this will be the error.
+                    var errorMessage =
+                        string.Format(
+                            AlertsResources.ArdiaLoginDlg_ValidateActivationStatus__3__Failed_to_connect_to_URL__0___Server_URL___1___Error_message___2_,
+                            credentialsValidationUri, Account.ServerUrl, clientCredentialsResponse, errorPrefix);
+                    MessageDlg.Show(this, errorMessage);
+
+                    clientCredentialsResponse.EnsureSuccessStatusCode();
+                }
+
+                throw;
             }
         }
 
         // Check if the given status string contains the "has been activated" message
-        private bool IsClientRegistrationActivated_SingleField(string status)
+        private static bool IsClientRegistrationActivated_SingleField(string status)
         {
-            if (status == null)
-            {
-                return false;
-            }
-            return status.Contains(@"has been activated");
+            return status != null && status.Contains(@"has been activated");
         }
-
 
         // Register the device with the Ardia platform using the default system browser to display the registration page
         private async Task<RegisterDevice_UsingSystemDefaultBrowser_ResultEnum> RegisterDevice_UsingSystemDefaultBrowser()
         {
             var authority = @$"https://identity.{_ardiaServerURL_BaseURL}";
 
-            string errorPrefix = AlertsResources.ArdiaLoginDlg_RegisterDevice_UsingSystemDefaultBrowser_Error_registering_Skyline_in_Ardia;
+            var errorPrefix = AlertsResources.ArdiaLoginDlg_RegisterDevice_UsingSystemDefaultBrowser_Error_registering_Skyline_in_Ardia;
 
             try
             {
@@ -656,7 +567,6 @@ namespace pwiz.Skyline.Alerts
                 if (discoveryDocument.IsError)
                 {
                     //  For Register Device, this is the first server access done so if the URL is invalid (404) or network problems this will be the error.
-
                     var errorMessage =
                         string.Format(
                             AlertsResources.ArdiaLoginDlg_RegisterDevice_UsingSystemDefaultBrowser__3__Failed_to_connect_to_URL__0___Server_URL___1___Error_message___2_,
@@ -664,17 +574,13 @@ namespace pwiz.Skyline.Alerts
                     MessageDlg.Show(this, errorMessage);
                     
                     return RegisterDevice_UsingSystemDefaultBrowser_ResultEnum.FAIL_GENERAL;
-
-                    //  TODO  How to close dialog here with failure instead.
-
-                    // throw new Exception(discoveryDocument.Error);
                 }
 
                 var deviceAuthorizationResponse = await RequestDeviceAuthorizationAsync();
                 var verificationUri = @$"{deviceAuthorizationResponse.VerificationUriComplete}&showContent=false";
 
                 // Create a new browser process to open the verification URL in the default system web browser
-                _browserProcess = new Process()
+                _browserProcess = new Process
                 {
                     StartInfo = new ProcessStartInfo
                     {
@@ -683,6 +589,7 @@ namespace pwiz.Skyline.Alerts
                         Verb = string.Empty
                     }
                 };
+
                 // Start the browser process to open the verification URL in the default system web browser
                 _browserProcess.Start();
 
@@ -691,7 +598,6 @@ namespace pwiz.Skyline.Alerts
                 if (userTokenResponse == null)
                 {
                     //  Returns null if form has been closed
-
                     return RegisterDevice_UsingSystemDefaultBrowser_ResultEnum.FAIL_GENERAL;
                 }
 
@@ -774,15 +680,25 @@ namespace pwiz.Skyline.Alerts
             }
         }
 
-        // Method used to initiate the browser login process
+        /// <summary>
+        /// Step #1 of 3 using the System Browser to authenticate with the Ardia API. This is used by Skyline.exe -
+        /// but IS NOT USED during tests.
+        ///
+        /// This initiates the authentication process, assuming Skyline is already registered as an Ardia client. 
+        /// Opens the System Browser in a new process and starts a System.Net.HttpListener on a port (ex: 5001) to
+        /// receive responses from the System Browser, which redirects to https://localhost:5001/signin-oidc/.
+        /// 
+        /// Sends the first of a series of requests to the Ardia API and registers a callback to handle the response
+        /// in <see>RequestCallback</see>
+        /// </summary>
         private void InitiateBrowserLoginProcess()
         {
-            int portNumber_StartNumber = 5001;
-            int portAddition_Max = 2500;
+            const int portNumber_StartNumber = 5001;
+            const int portAddition_Max = 2500;
 
             int portAddition = 0;
 
-            string returnUrl = null;
+            string returnUrl;
 
             while (true)
             {
@@ -799,6 +715,7 @@ namespace pwiz.Skyline.Alerts
                     _httpListener = new HttpListener();
                     _httpListener.Prefixes.Add(returnUrl);
                     _httpListener.Start();
+
                     // Set the timeout values for the HttpListener
                     _httpListener.TimeoutManager.IdleConnection = TimeSpan.FromMinutes(2.5);
                     _httpListener.TimeoutManager.HeaderWait = TimeSpan.FromMinutes(2.5);
@@ -807,6 +724,7 @@ namespace pwiz.Skyline.Alerts
                 }
                 catch (Exception)
                 {
+                    // TODO: when is the HttpListener stopped? Does this need to call Stop_HTTPListener()?
                     if (portAddition >= portAddition_Max)
                     {
                         throw;
@@ -833,10 +751,14 @@ namespace pwiz.Skyline.Alerts
             _browserProcess.Start();
 
             // Begin the HttpListener request callback
-            var result = _httpListener.BeginGetContext(RequestCallback, _httpListener);
+            _httpListener.BeginGetContext(RequestCallback, _httpListener);
         }
 
-        // Method used to handle the request callback from the HttpListener when the user logs in and retrieve the PAT token
+        /// <summary>
+        /// Step #2 of 3 using the System Browser to authenticate with the Ardia API. Handles the response to the
+        /// initial HTTP call and sends a follow-up request to get a personal access token (PAT).
+        /// <param name="asyncResult">Response for the request to login.</param>
+        /// </summary>
         private async void RequestCallback(IAsyncResult asyncResult)
         {
             try
@@ -849,15 +771,15 @@ namespace pwiz.Skyline.Alerts
                 // Get the HttpListener instance and the context from the async result
                 var httpListener = (HttpListener)asyncResult.AsyncState;
                 var context = httpListener.EndGetContext(asyncResult);
-                var request = context.Request;
                 var response = context.Response;
 
                 var responseString = GetBrowserLoginResponseString();
                 var buffer = Encoding.UTF8.GetBytes(responseString);
                 response.ContentLength64 = buffer.Length;
                 var responseOutput = response.OutputStream;
+
                 // Write the response to the output stream
-                await responseOutput.WriteAsync(buffer, 0, buffer.Length).ContinueWith((task) => {
+                await responseOutput.WriteAsync(buffer, 0, buffer.Length).ContinueWith(task => {
                     responseOutput.Close();
                 });
 
@@ -868,7 +790,7 @@ namespace pwiz.Skyline.Alerts
 
                 var patTokenUrl = GetBrowserPatTokenUrl();
                 // Create a new browser process to open the PAT token URL in the default system web browser
-                _browserProcess = new Process()
+                _browserProcess = new Process
                 {
                     StartInfo = new ProcessStartInfo
                     {
@@ -889,7 +811,13 @@ namespace pwiz.Skyline.Alerts
             }
         }
 
-        // Method used to handle the PAT request callback from the HttpListener when the user logs in and retrieve the session cookie
+        /// <summary>
+        /// Step #3 of 3 using the System Browser to authenticate with the Ardia API.
+        /// 
+        /// Handles the response to the request to get a PAT and sends the next HTTP request to exchange the
+        /// PAT for a session cookie. If successful, this completes the authentication process.
+        /// <param name="asyncResult">Response for the request to obtain a PAT.</param>
+        /// </summary>
         private async void PatRequestCallback(IAsyncResult asyncResult)
         {
             try
@@ -905,7 +833,8 @@ namespace pwiz.Skyline.Alerts
                 // Get the PAT token from the context request
                 var patToken = context.Request.QueryString[@"pat"];
                 var sessionCookieUrl = GetBrowserSessionCookieUrl();
-                var httpClient = new HttpClient();
+
+                using var httpClient = new HttpClient();
                 httpClient.DefaultRequestHeaders.Add(@"Authorization", @$"Bearer {patToken}");
                 // Get the session cookie from the Session Management API
                 var httpClientResponse = await httpClient.GetAsync(sessionCookieUrl);
@@ -936,7 +865,7 @@ namespace pwiz.Skyline.Alerts
                 listenerResponse.ContentLength64 = buffer.Length;
                 var responseOutput = listenerResponse.OutputStream;
                 // Write the response to the output stream
-                await responseOutput.WriteAsync(buffer, 0, buffer.Length).ContinueWith((task) =>
+                await responseOutput.WriteAsync(buffer, 0, buffer.Length).ContinueWith(task =>
                 {
                     responseOutput.Close();
                 });
@@ -973,16 +902,14 @@ namespace pwiz.Skyline.Alerts
         // Method used to get the return and redirect URLs for the browser login process
         private string GetBrowserReturnUrl()
         {
-            var uriBuilder = new UriBuilder()
+            var uriBuilder = new UriBuilder
             {
                 Scheme = Uri.UriSchemeHttp,
                 Host = "localhost",
                 Port = _httpListener_Port,
                 Path = "/signin-oidc/"
             };
-            var uri = uriBuilder.Uri.ToString();
-
-            return uri;
+            return uriBuilder.Uri.ToString();
         }
 
         // Method used to get the PAT token URL for the browser login process
@@ -1009,16 +936,14 @@ namespace pwiz.Skyline.Alerts
         // Method used to get the session cookie URL for the browser login process
         private string GetBrowserSessionCookieUrl()
         {
-            var apiBaseUri = new UriBuilder { Scheme = _ardiaServer_URI.Scheme, Host = $"api.{_ardiaServerURL_BaseURL}" }.Uri;
-            var sessionCookieEndpoint = @"session-management/api/v1/SessionManagement/sessioncookie";
-
-            // Construct the session cookie URL
-            var sessionCookieUrl = new UriBuilder(apiBaseUri)
+            var apiBaseUri = new UriBuilder
             {
-                Path = sessionCookieEndpoint
-            }.Uri.ToString();
+                Scheme = _ardiaServer_URI.Scheme,
+                Host = $"api.{_ardiaServerURL_BaseURL}",
+                Path = @"session-management/api/v1/SessionManagement/sessioncookie"
+            };
 
-            return sessionCookieUrl;
+            return apiBaseUri.Uri.ToString();
         }
 
         // Method used to get the response string for the browser login process
@@ -1029,11 +954,10 @@ namespace pwiz.Skyline.Alerts
 
         #endregion
 
-
         /////////////////////////////////////////////////////////////////
         /// 
         ///
-        ///   Login via Embedded WebView.    Used for Programmatic Login for Testing Only
+        /// Login via Embedded WebView. Used for Programmatic Login for Testing Only
         ///
         /// 
         #region Handlers for login via embedded WebView for automated testing
@@ -1057,21 +981,17 @@ namespace pwiz.Skyline.Alerts
             //webView.CoreWebView2.NavigationStarting += CoreWebView2_NavigationStarting;
             webView.CoreWebView2.NavigationCompleted += CoreWebView2OnNavigationCompleted_AfterEveryNavigate;
 
+            var hasUsername = Account.TestingOnly_NotSerialized_Username?.Any() ?? false;
+            var hasPassword = Account.TestingOnly_NotSerialized_Password?.Any() ?? false;
+
+            if (hasUsername && hasPassword)
             {
-                bool hasUsername = Account.TestingOnly_NotSerialized_Username?.Any() ?? false;
-                bool hasPassword = Account.TestingOnly_NotSerialized_Password?.Any() ?? false;
-
-                if (hasUsername && hasPassword)
-                {
-                    //  Yes TestingOnly Username and Password for Programmatic Login for Testing so add event listener for Programmatic Login
-
-                    webView.CoreWebView2.DOMContentLoaded += DOMContentLoaded_CheckForSessionCookie_ProgrammaticLoginForTesting;
-                }
+                //  Yes TestingOnly Username and Password for Programmatic Login for Testing so add event listener for Programmatic Login
+                webView.CoreWebView2.DOMContentLoaded += DOMContentLoaded_CheckForSessionCookie_ProgrammaticLoginForTesting;
             }
 
             StartAtClientRegistrationIfNeeded_LoginIn_WebView();
         }
-
 
         private async void StartAtClientRegistrationIfNeeded_LoginIn_WebView()
         {
@@ -1110,9 +1030,7 @@ namespace pwiz.Skyline.Alerts
 
                     //  TODO  May be better to close/exit this dialog here
 
-                    // this does not not work here.  Get problems further down the line from "webView = null"
-
-
+                    // This does not work here.  Get problems further down the line from "webView = null"
                     webView.CoreWebView2.Environment.BrowserProcessExited += (s, ea) => DialogResult = DialogResult.OK;
                     webView.Dispose();
                     webView = null;
@@ -1127,14 +1045,12 @@ namespace pwiz.Skyline.Alerts
             // !!!!!!!!!!!!!!!!
 
             var ardiaRegistrationEntry_AfterRegister = GetSavedArdiaRegistrationEntry();
-
             if (ardiaRegistrationEntry_AfterRegister == null)
             {
                 throw new Exception(@"ardiaRegistrationEntry_AfterRegister == null");
             }
 
             //  Start of User Login
-
             Reset_ProgrammaticLoginFlags();
 
             var ardiaServer_BaseUrl = _ardiaServerURL_BaseURL;
@@ -1164,16 +1080,7 @@ namespace pwiz.Skyline.Alerts
                         .ArdiaLoginDlg_CoreWebView2OnNavigationCompleted_AfterNavigateTo_ClientRegistrationPage_Load_Client_Registration_page_failed_with_HTTP_status_code__0___Page_URL___1_,
                     eventArgs.HttpStatusCode, currentURLofWebview);
 
-                if (eventArgs.HttpStatusCode == 404 || eventArgs.HttpStatusCode == 0)
-                {
-                    MessageDlg.Show(this, errorMessage);
-
-                    //  404 may result in something different being triggered
-                }
-                else
-                {
-                    MessageDlg.Show(this, errorMessage);
-                }
+                MessageDlg.Show(this, errorMessage);
 
                 // TODO  Not sure what to do here
 
@@ -1185,7 +1092,7 @@ namespace pwiz.Skyline.Alerts
         {
             if (!eventArgs.IsSuccess)
             {
-                var currentURLofWebview = webView.Source.AbsolutePath;
+                var currentWebViewUrl = webView.Source.AbsolutePath;
 
                 if (eventArgs.HttpStatusCode == 401)
                 {
@@ -1198,9 +1105,7 @@ namespace pwiz.Skyline.Alerts
                         _firstTime_ExecuteClientRegistration = false;
 
                         //  Assume the Registration Code (ApplicationCode) is invalid and remove it and go through client registration to get a new one
-
                         SetSavedArdiaRegistrationData(null);
-
 
                         //  Start over at Client Registration if needed
                         StartAtClientRegistrationIfNeeded_LoginIn_WebView();
@@ -1209,21 +1114,20 @@ namespace pwiz.Skyline.Alerts
                     }
                     else
                     {
-                        //  NOT First Time executing Registration.  Show Error message
-
+                        // NOT First Time executing Registration. Show Error message.
                         var errorMessage = string.Format(AlertsResources.ArdiaLoginDlg_CoreWebView2OnNavigationCompleted_AfterNavigateToLoginURL_Load_Login_page_failed_with_HTTP_status_code__0__Login_Page_URL___1_,
-                            eventArgs.HttpStatusCode, currentURLofWebview);
+                            eventArgs.HttpStatusCode, currentWebViewUrl);
                         MessageDlg.Show(webView, errorMessage);
                     }
                 }
                 else if (eventArgs.HttpStatusCode == 404 || eventArgs.HttpStatusCode == 0)
                 {
-                    var errorMessage = string.Format(AlertsResources.ArdiaLoginDlg_CoreWebView2OnNavigationCompleted_AfterNavigateToLoginURL_Load_Login_page_failed_with_HTTP_status_code__0___Login_Page_URL___1_, eventArgs.HttpStatusCode, currentURLofWebview);
+                    var errorMessage = string.Format(AlertsResources.ArdiaLoginDlg_CoreWebView2OnNavigationCompleted_AfterNavigateToLoginURL_Load_Login_page_failed_with_HTTP_status_code__0___Login_Page_URL___1_, eventArgs.HttpStatusCode, currentWebViewUrl);
                     MessageDlg.Show(this, errorMessage);
                 }
                 else
                 {
-                    var errorMessage = string.Format(AlertsResources.ArdiaLoginDlg_CoreWebView2OnNavigationCompleted_AfterNavigateToLoginURL_Load_Login_page_failed_with_HTTP_status_code__0___Login_Page_URL___1_, eventArgs.HttpStatusCode, currentURLofWebview);
+                    var errorMessage = string.Format(AlertsResources.ArdiaLoginDlg_CoreWebView2OnNavigationCompleted_AfterNavigateToLoginURL_Load_Login_page_failed_with_HTTP_status_code__0___Login_Page_URL___1_, eventArgs.HttpStatusCode, currentWebViewUrl);
                     MessageDlg.Show(this, errorMessage);
                 }
 
@@ -1233,7 +1137,7 @@ namespace pwiz.Skyline.Alerts
 
         private async Task<bool> RegisterDevice_UsingWebView()
         {
-            if (webView == null || webView.CoreWebView2 == null)
+            if (webView?.CoreWebView2 == null)
                 return false;
 
             var authority = @$"{_ardiaServerURL_Transport}identity.{_ardiaServerURL_BaseURL}";
@@ -1246,7 +1150,6 @@ namespace pwiz.Skyline.Alerts
                 if (discoveryDocument.IsError)
                 {
                     //  For Register Device, this is the first server access done so if the URL is invalid (404) or network problems this will be the error.
-            
                     var errorMessage =
                         string.Format(
                             AlertsResources.ArdiaLoginDlg_RegisterDevice_UsingSystemDefaultBrowser__3__Failed_to_connect_to_URL__0___Server_URL___1___Error_message___2_,
@@ -1309,61 +1212,58 @@ namespace pwiz.Skyline.Alerts
 
         ///////////////////////////////////////////////////////
         ///
-        /// Common Code both 
-
+        /// Common Code both System Browser and Embedded WebView
 
         // This method calls itself when response.Error is AuthorizationPending or SlowDown
         // Request a user token from the Ardia platform using the device code obtained from the device authorization response
         private async Task<TokenResponse> RequestUserTokenAsync(DeviceAuthorizationResponse deviceAuthorizationResponse)
         {
-            using (var httpClient = new HttpClient())
-            {
-                //  Hard coded for initial connection to get device registration
-                var _ardiaDeviceClientId = @"ardia.device.client.registration";
+            var tokenEndpoint = @$"{_ardiaServerURL_Transport}identity.{_ardiaServerURL_BaseURL}/connect/token";
 
-                var tokenEndpoint = @$"{_ardiaServerURL_Transport}identity.{_ardiaServerURL_BaseURL}/connect/token";
-                var response = await httpClient.RequestDeviceTokenAsync(new DeviceTokenRequest
+            using var httpClient = new HttpClient();
+            var response = await httpClient.RequestDeviceTokenAsync(
+                new DeviceTokenRequest
                 {
                     Address = tokenEndpoint,
-                    ClientId = _ardiaDeviceClientId,
+                    ClientId = @"ardia.device.client.registration", // Hard coded for initial connection to get device registration
                     DeviceCode = deviceAuthorizationResponse.DeviceCode
                 });
 
-                if (!response.IsError)
-                {
-                    return response;
-                }
-                // Handle slow down and authorization pending errors
-                if (response.Error == OidcConstants.TokenErrors.AuthorizationPending ||
-                    response.Error == OidcConstants.TokenErrors.SlowDown)
-                {
-                    if (_cancellationToken.IsCancellationRequested) // this.FormClosing called so exit.  Caller updated to handle null
-                    {
-                        return null;
-                    }
-                    // Wait for the interval and try again
-                    
-                    try
-                    {
-                        await Task.Delay(deviceAuthorizationResponse.Interval * 1000, _cancellationToken);
-                    }
-                    catch (Exception)
-                    {
-                        // ignored
-                    }
+            if (!response.IsError)
+            {
+                return response;
+            }
 
-                    if (_cancellationToken.IsCancellationRequested) // this.FormClosing called so exit.  Caller updated to handle null
-                    {
-                        return null;
-                    }
-
-                    return await RequestUserTokenAsync(deviceAuthorizationResponse);
-                }
-                else
+            // Handle slow down and authorization pending errors
+            if (response.Error == OidcConstants.TokenErrors.AuthorizationPending || response.Error == OidcConstants.TokenErrors.SlowDown)
+            {
+                if (_cancellationToken.IsCancellationRequested) // this.FormClosing called so exit.  Caller updated to handle null
                 {
-                    MessageDlg.Show(this, AlertsResources.ArdiaLoginDlg_RegisterDevice_UsingSystemDefaultBrowser_Error_registering_Skyline_in_Ardia);
-                    throw new Exception(response.Error);  //  TODO    Need something different here
+                    return null;
                 }
+
+                // Wait for the interval and try again
+                try
+                {
+                    await Task.Delay(deviceAuthorizationResponse.Interval * 1000, _cancellationToken);
+                }
+                catch (Exception)
+                {
+                    // ignored
+                }
+
+                if (_cancellationToken.IsCancellationRequested) // this.FormClosing called so exit.  Caller updated to handle null
+                {
+                    return null;
+                }
+
+                return await RequestUserTokenAsync(deviceAuthorizationResponse);
+            }
+            else
+            {
+                MessageDlg.Show(this, AlertsResources.ArdiaLoginDlg_RegisterDevice_UsingSystemDefaultBrowser_Error_registering_Skyline_in_Ardia);
+
+                throw new Exception(response.Error);  //  TODO    Need something different here
             }
         }
 
@@ -1376,17 +1276,15 @@ namespace pwiz.Skyline.Alerts
 
             try
             {
-                using (var httpClient = new HttpClient())
+                using var httpClient = new HttpClient();
+                var response = await httpClient.RequestDeviceAuthorizationAsync(new DeviceAuthorizationRequest
                 {
-                    var response = await httpClient.RequestDeviceAuthorizationAsync(new DeviceAuthorizationRequest
-                    {
-                        Address = deviceAuthorizationEndpoint,
-                        ClientId = _ardiaDeviceClientId,
-                        Scope = @"openid profile Ardia_Client_Registration"
-                    });
-                    return response;
-                }
-            // StoreClientCredentials(identityClient);
+                    Address = deviceAuthorizationEndpoint,
+                    ClientId = _ardiaDeviceClientId,
+                    Scope = @"openid profile Ardia_Client_Registration"
+                });
+                return response;
+                // StoreClientCredentials(identityClient);
             }
             catch (HttpRequestException e)
             {
@@ -1417,47 +1315,51 @@ namespace pwiz.Skyline.Alerts
         private async Task<string> CreateNewClient(TokenResponse userTokenResponse)
         {
             var newClientUri = @$"{_ardiaServerURL_Transport}api.{_ardiaServerURL_BaseURL}/identity-registration/api/v2/Clients";
+
             var accessToken = userTokenResponse.AccessToken;
+
+            // TODO: use a more official Client Name?
             var clientName = @$"SkylineSampleApp{Guid.NewGuid().ToString()}";
-            var newClient = new NewClient() { ClientName = clientName };
+
+            var newClient = new NewClient
+            {
+                ClientName = clientName
+            };
             var newClientData = JsonConvert.SerializeObject(newClient);
 
-            using (var httpClient = new HttpClient())
-            using (var request = new HttpRequestMessage(HttpMethod.Post, newClientUri))
-            using (var content = new StringContent(newClientData, Encoding.UTF8, @"application/json"))
-            {
-                request.Headers.Authorization = new AuthenticationHeaderValue(@"Bearer", accessToken);
-                request.Content = content;
-                using (var response = await httpClient.SendAsync(request))
-                {
-                    response.EnsureSuccessStatusCode();
-                    var responseData = await response.Content.ReadAsStringAsync();
-                    var clientCode = JsonConvert.DeserializeObject<ClientCodeDto>(responseData);
-                    return clientCode.Code;
-                }
-            }
+            using var httpClient = new HttpClient();
+            using var request = new HttpRequestMessage(HttpMethod.Post, newClientUri);
+            using var content = new StringContent(newClientData, Encoding.UTF8, @"application/json");
+            request.Headers.Authorization = new AuthenticationHeaderValue(@"Bearer", accessToken);
+            request.Content = content;
+
+            using var response = await httpClient.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+            var responseData = await response.Content.ReadAsStringAsync();
+            var clientCode = JsonConvert.DeserializeObject<ClientCodeDto>(responseData);
+            return clientCode.Code;
         }
 
         // Activate the client in the Ardia platform using the client code obtained from the client creation response
         private async Task<ArdiaRegistrationCodeEntry> ActivateClient(string clientCode, TokenResponse userTokenResponse)
         {
-            var skylineVersion = Install.Version;
-
-            var activateClientUri = @$"{_ardiaServerURL_Transport}api.{_ardiaServerURL_BaseURL}/identity-registration/api/v2/Clients/activate";
             var accessToken = userTokenResponse.AccessToken;
             // Define the client activation input
-            var clientActivationInput = new ClientActivationInput()
+            var clientActivationInput = new ClientActivationInput
             {
                 ApplicationCode = clientCode,
                 AppName = @"SkylineApp",
-                Version = skylineVersion,
+                Version = Install.Version,
                 PCName = Environment.MachineName,
-                RedirectUris = new List<string>() { @"http://localhost:5001/signin-oidc" },
-                PostLogoutRedirectUris = new List<string>() { @"http://localhost:5001/signout-oidc" },
+                RedirectUris = new List<string> { @"http://localhost:5001/signin-oidc" },
+                PostLogoutRedirectUris = new List<string> { @"http://localhost:5001/signout-oidc" },
                 ClientUri = @"http://localhost:5001",
-                Scopes = new List<string>() { @"openid", @"profile", @"offline_access", @"DataServerApi", @"IdentityServerApi" },
-                GrantTypes = new List<string>() { @"authorization_code", @"urn:ietf:params:oauth:grant-type:token-exchange" },
+                Scopes = new List<string> { @"openid", @"profile", @"offline_access", @"DataServerApi", @"IdentityServerApi" },
+                GrantTypes = new List<string> { @"authorization_code", @"urn:ietf:params:oauth:grant-type:token-exchange" },
             };
+
+            var activateClientUri = @$"{_ardiaServerURL_Transport}api.{_ardiaServerURL_BaseURL}/identity-registration/api/v2/Clients/activate";
+
             var clientActivationInputData = JsonConvert.SerializeObject(clientActivationInput);
 
             using var httpClient = new HttpClient();
@@ -1465,16 +1367,20 @@ namespace pwiz.Skyline.Alerts
             using var clientActivationContent = new StringContent(clientActivationInputData, Encoding.UTF8, @"application/json");
             clientActivationRequest.Headers.Authorization = new AuthenticationHeaderValue(@"Bearer", accessToken);
             clientActivationRequest.Content = clientActivationContent;
+
             using var clientActivationResponse = await httpClient.SendAsync(clientActivationRequest);
             clientActivationResponse.EnsureSuccessStatusCode();
+
             var clientActivationData = await clientActivationResponse.Content.ReadAsStringAsync();
             var clientActivation = JsonConvert.DeserializeObject<ClientApplicationResponse>(clientActivationData);
-            var clientCredentialsUri =
-                @$"{_ardiaServerURL_Transport}api.{_ardiaServerURL_BaseURL}/identity-registration/api/v2/Clients/credentials?code={clientActivation.RegistrationCode}";
+            var clientCredentialsUri = @$"{_ardiaServerURL_Transport}api.{_ardiaServerURL_BaseURL}/identity-registration/api/v2/Clients/credentials?code={clientActivation.RegistrationCode}";
+
             using var clientCredentialsRequest = new HttpRequestMessage(HttpMethod.Get, clientCredentialsUri);
             clientCredentialsRequest.Headers.Authorization = new AuthenticationHeaderValue(@"Bearer", accessToken);
+
             using var clientCredentialsResponse = await httpClient.SendAsync(clientCredentialsRequest);
             clientCredentialsResponse.EnsureSuccessStatusCode();
+
             var clientCredentialsResponseData = await clientCredentialsResponse.Content.ReadAsStringAsync();
             var clientCredentials = JsonConvert.DeserializeObject<ClientCredentialsResponse>(clientCredentialsResponseData);
 
@@ -1486,7 +1392,6 @@ namespace pwiz.Skyline.Alerts
                 ClientName = clientCredentials.Name,
             };
         }
-
 
         public class CoreWebView2ExceptionWrapper : Exception
         {
@@ -1505,7 +1410,11 @@ namespace pwiz.Skyline.Alerts
 
         private async Task<string> ExecuteScriptAsync(string script, bool showExceptions = true)
         {
-            var result = await webView.CoreWebView2.ExecuteScriptWithResultAsync(@"(function() { return " + script + @"; })()");
+            var result = await webView.CoreWebView2.ExecuteScriptWithResultAsync(
+                @"(function() {" + 
+                @$"     return {script};" + 
+                @"})()");
+
             if (!result.Succeeded)
             {
                 if (showExceptions)
@@ -1517,15 +1426,17 @@ namespace pwiz.Skyline.Alerts
                 return null;
             }
 
-            result.TryGetResultAsString(out var resultStr, out int isString);
+            result.TryGetResultAsString(out var resultStr, out var isString);
+
             if (isString == 0)
                 resultStr = result.ResultAsJson;
+
             return resultStr;
         }
 
-        private async Task<string> ExecuteScriptAsyncUntil(string script, Func<string, Task<bool>> predicate, int numTries = 10, int delayBetweenTries = 500)
+        private async Task<string> ExecuteScriptAsyncUntil(string script, Func<string, Task<bool>> predicate, int numTries = 10, int delayBetweenTriesMillis = 500)
         {
-            for (int i = 0; i < numTries; ++i)
+            for (var i = 0; i < numTries; ++i)
             {
                 var result = await ExecuteScriptAsync(script, false);
                 if (await predicate(result))
@@ -1538,7 +1449,7 @@ namespace pwiz.Skyline.Alerts
 
                 try
                 {
-                    await Task.Delay(delayBetweenTries, _cancellationToken);
+                    await Task.Delay(delayBetweenTriesMillis, _cancellationToken);
                 }
                 catch (Exception)
                 {
@@ -1557,9 +1468,7 @@ namespace pwiz.Skyline.Alerts
         private async void CoreWebView2OnNavigationCompleted_AfterEveryNavigate(object sender, CoreWebView2NavigationCompletedEventArgs eventArgs)
         {
             //  Called after every navigation
-
             //   Available for debugging for now
-
             // var location = webView.Source.AbsolutePath;
 
             if (!eventArgs.IsSuccess)
@@ -1584,7 +1493,7 @@ namespace pwiz.Skyline.Alerts
 
                 if (Program.FunctionalTest)
                 {
-                    throw new Exception(@"ArdiaLoginDlg: Webview Navigation failed with HTTP status code " + eventArgs.HttpStatusCode + @", AbsolutePath: " + webView.Source.AbsolutePath );
+                    throw new Exception(@$"ArdiaLoginDlg: WebView Navigation failed with HTTP status code {eventArgs.HttpStatusCode}, AbsolutePath: {webView.Source.AbsolutePath}");
                 }
                 else
                 {
@@ -1593,16 +1502,15 @@ namespace pwiz.Skyline.Alerts
 
                 //  Exception throws does NOT appear to do anything.
 
-                // throw new Exception("Load Client Registraton page failed. if (!eventArgs.IsSuccess) ");
+                // throw new Exception("Load Client Registration page failed. if (!eventArgs.IsSuccess) ");
             }
 
             await CheckForBffHostCookie();
         }
 
-
         private async Task CheckForBffHostCookie()
         {
-            // Get the list of cookies from the webview
+            // Get the list of cookies from the WebView
             var cookies = await webView.CoreWebView2.CookieManager.GetCookiesAsync(Account.ServerUrl);
 
             // Find the Bff-Host cookie
@@ -1611,7 +1519,7 @@ namespace pwiz.Skyline.Alerts
             {
                 _bffCookie = bffCookie.ToSystemNetCookie();
 
-                ArdiaAccount.SetSessionCookieString(Account, _bffCookie.Value);
+                ArdiaCredentialHelper.SetToken(Account, _bffCookie.Value);
 
                 AuthenticatedHttpClientFactory = GetFactory();
 
@@ -1644,14 +1552,13 @@ namespace pwiz.Skyline.Alerts
 
         private async void DOMContentLoaded_CheckForSessionCookie_ProgrammaticLoginForTesting(object sender, CoreWebView2DOMContentLoadedEventArgs e)
         {
-            bool hasUsername = Account.TestingOnly_NotSerialized_Username?.Any() ?? false;
-            bool hasPassword = Account.TestingOnly_NotSerialized_Password?.Any() ?? false;
-            bool hasRole = Account.TestingOnly_NotSerialized_Role?.Any() ?? false;
+            var hasUsername = Account.TestingOnly_NotSerialized_Username?.Any() ?? false;
+            var hasPassword = Account.TestingOnly_NotSerialized_Password?.Any() ?? false;
+            var hasRole = Account.TestingOnly_NotSerialized_Role?.Any() ?? false;
 
-
+            //  No TestingOnly Username or no TestingOnly Password for Programmatic Login for Testing so exit
             if (!hasUsername || !hasPassword)
             {
-                //  No TestingOnly Username or no TestingOnly Password for Programmatic Login for Testing so exit
                 return;
             }
 
@@ -1660,72 +1567,76 @@ namespace pwiz.Skyline.Alerts
             if (!_doAutomatedLogin)
                 return;
 
-            const string usernameSelector = "document.querySelector(\"#applogin\").shadowRoot.querySelector(\"#username\")";
-            const string passwordSelector = "document.querySelector(\"#applogin\").shadowRoot.querySelector(\"#password\")";
-            const string signinSelector = "document.querySelector(\"#applogin\").shadowRoot.querySelector(\"#signin\")";
-            const string nextSelector = "document.querySelector(\"#selectRole\").shadowRoot.querySelector(\"#signin\")";
+            // TODO: improve JS readability - add control type to label (Button, TextBox). Move to constants?
+            const string usernameSelector  = "document.querySelector(\"#applogin\").shadowRoot.querySelector(\"#username\")";
+            const string passwordSelector  = "document.querySelector(\"#applogin\").shadowRoot.querySelector(\"#password\")";
+            const string signinSelector    = "document.querySelector(\"#applogin\").shadowRoot.querySelector(\"#signin\")";
+            const string nextSelector      = "document.querySelector(\"#selectRole\").shadowRoot.querySelector(\"#signin\")";
+
+            // TODO: improve JS readability - rename field "triggerEventOnInputControl"
             const string triggerInputEvent = ".dispatchEvent(new Event('input', { bubbles: true }));";
 
+            // TODO: declare const for .value (read control's value)
+            // TODO: declare const for .click() (trigger click event)
+
+            // TODO: move to top of method
             if (webView == null)
                 return;
 
             try
             {
-                string location = webView.Source.AbsolutePath.ToLower();
+                var location = webView.Source.AbsolutePath.ToLower();
                 if (!location.EndsWith(@"/login") && !location.EndsWith(@"/roleselection"))
                     return;
 
                 // stop listening (we may start again later depending on results below)
                 _doAutomatedLogin = false;
 
-                string buttonSelector = location.EndsWith(@"/login") ? signinSelector : nextSelector;
-                string buttonText = await ExecuteScriptAsyncUntil(buttonSelector + @".textContent", s => Task.FromResult(s != null && s != @"null"));
-                if (buttonText == null)
-                    return;
+                var buttonSelector = location.EndsWith(@"/login") ? signinSelector : nextSelector;
+                var buttonText = await ExecuteScriptAsyncUntil(buttonSelector + @".textContent", s => Task.FromResult(s != null && s != @"null"));
 
+                if (buttonText == null)
+                {
+                    return;
+                }
+
+                // Step 1: Username page. Enter the username. Press [Continue].
                 if (buttonText == @"Continue")
                 {
                     if (_programmaticLogin_HaveEnteredUsername)
                     {
                         // Have already entered username.  Is an error that arrived here again for same instance of this Dialog so log error and exit.
-
                         //  Failed login for invalid password results in username input being displayed again.
-
                         throw new Exception(@"Already entered Username so appears to be stuck in login loop");
                     }
 
                     _programmaticLogin_HaveEnteredUsername = true;
 
-                    //if (hasUsername)
-                    {
-                        await ExecuteScriptAsync(usernameSelector + @".value=" + Account.TestingOnly_NotSerialized_Username.Quote());
-                        await ExecuteScriptAsync(usernameSelector + triggerInputEvent);
-                    }
+                    // (1) fill-in the username
+                    await ExecuteScriptAsync(usernameSelector + @".value=" + Account.TestingOnly_NotSerialized_Username.Quote());
+                    await ExecuteScriptAsync(usernameSelector + triggerInputEvent);
 
                     // start listening again
                     _doAutomatedLogin = true;
 
-                    //if (hasUsername)
-                        await ExecuteScriptAsync(signinSelector + @".click()");
+                    // (2) Press the [Continue] button to submit the username field
+                    await ExecuteScriptAsync(signinSelector + @".click()");
                 }
+                // Step 2: Password page. Enter the password. Press [Sign In].
                 else if (buttonText == @"Sign In")
                 {
                     if (_programmaticLogin_HaveEnteredPassword)
                     {
                         // Have already entered password.  Is an error that arrived here again for same instance of this Dialog so log error and exit.
-
                         //  Possibly Failed login for invalid password.
-
                         throw new Exception(@"Already entered Password so appears to be stuck in login loop");
                     }
 
                     _programmaticLogin_HaveEnteredPassword= true;
 
-                    //if (hasPassword)
-                    {
-                        await ExecuteScriptAsync(passwordSelector + @".value=" + Account.TestingOnly_NotSerialized_Password.Quote());
-                        await ExecuteScriptAsync(passwordSelector + triggerInputEvent);
-                    }
+                    // (1) Fill-in the password
+                    await ExecuteScriptAsync(passwordSelector + @".value=" + Account.TestingOnly_NotSerialized_Password.Quote());
+                    await ExecuteScriptAsync(passwordSelector + triggerInputEvent);
 
                     // start listening again
                     _doAutomatedLogin = true;
@@ -1733,10 +1644,11 @@ namespace pwiz.Skyline.Alerts
                     // listening for navigation to start
                     webView.CoreWebView2.NavigationStarting += CoreWebView2_NavigationStarting;
 
-                    //if (hasPassword)
-                        await ExecuteScriptAsync(signinSelector + @".click()");
+                    // (2) Press the [Sign In] button to submit the password field
+                    await ExecuteScriptAsync(signinSelector + @".click()");
                 }
-                else if (buttonText == @"Enter") // select role
+                // Step 3 (optional): Choose the role. Click [Next].
+                else if (buttonText == @"Enter")
                 {
 
                     if (_programmaticLogin_HaveEnteredRole)
@@ -1752,17 +1664,19 @@ namespace pwiz.Skyline.Alerts
 
                     if (hasRole)
                     {
+                        //const string selectFirstRole = "document.querySelector(\"body > tf-popper > div\").shadowRoot.querySelector(\"div > tf-dropdown-item:nth-child(1)\").click()";
                         const string clickDropDownBox = "document.querySelector(\"#selectRole\").shadowRoot.querySelector(\"#roleSelection\").shadowRoot.firstChild.click()";
                         const string selectPopper = "document.querySelector(\"body > tf-popper\")";
-                        //const string selectFirstRole = "document.querySelector(\"body > tf-popper > div\").shadowRoot.querySelector(\"div > tf-dropdown-item:nth-child(1)\").click()";
-                        string roleNotFoundMsg = string.Format(AlertsResources.ArdiaLoginDlg_Role___0___is_not_an_available_option__Pick_your_role_manually_, Account.TestingOnly_NotSerialized_Role);
 
+                        var roleNotFoundMsg = string.Format(AlertsResources.ArdiaLoginDlg_Role___0___is_not_an_available_option__Pick_your_role_manually_, Account.TestingOnly_NotSerialized_Role);
+
+                        // TODO: improve JS readability
                         // loop through popper items to find one that matches the user's role name
-                        string selectNamedRole = @"(function() {" +
-                                                 @"for (role of document.querySelector(""body > tf-popper > div"").shadowRoot.querySelectorAll(""tf-dropdown-item"")) {" +
-                                                 @$"if (role.shadowRoot.textContent == ""{Account.TestingOnly_NotSerialized_Role}"") {{" +
-                                                 @"role.click(); return; }" +
-                                                 @$"}} alert(""{roleNotFoundMsg}""); }})()";
+                        var selectNamedRole = @"(function() {" +
+                                              @"for (role of document.querySelector(""body > tf-popper > div"").shadowRoot.querySelectorAll(""tf-dropdown-item"")) {" +
+                                              @$"if (role.shadowRoot.textContent == ""{Account.TestingOnly_NotSerialized_Role}"") {{" +
+                                              @"role.click(); return; }" +
+                                              @$"}} alert(""{roleNotFoundMsg}""); }})()";
                         await ExecuteScriptAsyncUntil(clickDropDownBox, async s => await ExecuteScriptAsync(selectPopper) != @"null");
                         await ExecuteScriptAsync(selectNamedRole);
                     }
@@ -1779,7 +1693,7 @@ namespace pwiz.Skyline.Alerts
             }
             catch (Exception ex)
             {
-                // only throw automated login exceptions when testing: users can just login manually
+                // only throw automated login exceptions when testing: users can just log in manually
                 if (Program.FunctionalTest)
                     throw;
                 else
@@ -1787,8 +1701,8 @@ namespace pwiz.Skyline.Alerts
             }
         }
 
-
         #region Helper classes from Ardia
+
         // Class to hold the client code
         private class ClientCodeDto
         {
@@ -1802,7 +1716,6 @@ namespace pwiz.Skyline.Alerts
             public string clientIdStatus { get; set; }
             public string clientNameStatus { get; set; }
         }
-
 
         /// <summary>
         /// The New Client model.
@@ -1820,104 +1733,10 @@ namespace pwiz.Skyline.Alerts
             public List<string> GrantTypes { get; set; }
 
             /// <summary>
-            /// Gets or sets the redirect uris.
-            /// </summary>
-            public List<string> RedirectUris { get; set; }
-
-            /// <summary>
-            /// Gets or sets the post logout redirect uris.
-            /// </summary>
-            public List<string> PostLogoutRedirectUris { get; set; }
-
-            /// <summary>
-            /// Gets or sets the client uri.
-            /// </summary>
-            public string ClientUri { get; set; }
-
-            /// <summary>
             /// Gets or sets the scopes.
             /// </summary>
             public List<string> Scopes { get; set; }
-
-            /// <summary>
-            /// Gets or sets a value indicating whether require consent.
-            /// </summary>
-            public bool RequireConsent { get; set; }
-
-            /// <summary>
-            /// Gets or sets a value indicating whether always include user claims in id token.
-            /// </summary>
-            public bool AlwaysIncludeUserClaimsInIdToken { get; set; } = true;
-
-            /// <summary>
-            /// Gets or sets a value indicating whether require pkce.
-            /// </summary>
-            public bool RequirePkce { get; set; } = true;
-
-            /// <summary>
-            /// Gets or sets a value indicating whether client secret is required.
-            /// </summary>
-            public bool RequireClientSecret { get; set; } = true;
-
-            /// <summary>
-            /// Gets or sets the metadata.
-            /// </summary>
-            public Dictionary<string, string> MetaData { get; set; }
-
-            /// <summary>
-            /// Gets or sets the client id.
-            /// </summary>
-            public string ClientId { get; set; }
-
-            /// <summary>
-            /// Gets or sets the client secret.
-            /// </summary>
-            public string ClientSecret { get; set; }
-
-            /// <summary>
-            /// Gets or sets the identity token lifetime, defaulted to 300 seconds.
-            /// </summary>
-            public ushort IdentityTokenLifetime { get; set; } = 300;
-
-            /// <summary>
-            /// Gets or sets the access token lifetime, defaulted to 1200 seconds.
-            /// </summary>
-            public ushort AccessTokenLifetime { get; set; } = 1200;
-
-            /// <summary>
-            /// Gets or sets the absolute refresh token lifetime, defaulted to 2592000 seconds.
-            /// </summary>
-            public uint AbsoluteRefreshTokenLifetime { get; set; } = 2592000u;
-
-            /// <summary>
-            /// Gets or sets the sliding refresh token lifetime, defaulted to 1296000 seconds.
-            /// </summary>
-            public uint SlidingRefreshTokenLifetime { get; set; } = 1296000u;
-
-            /// <summary>
-            /// Gets or sets the refresh token usage.
-            /// Defaulted to 0 reuse.
-            /// </summary>
-            public int RefreshTokenUsage { get; set; }
-
-            /// <summary>
-            /// Gets or sets the refresh token expiration.
-            /// The refresh token will expire on a fixed point in time (specified by the AbsoluteRefreshTokenLifetime).
-            /// This is the default.
-            /// </summary>
-            public int RefreshTokenExpiration { get; set; } = 1;
-
-            /// <summary>
-            /// Gets or sets a value indicating whether allow offline access.
-            /// </summary>
-            public bool AllowOfflineAccess { get; set; }
-
-            /// <summary>
-            /// Gets or sets the device code lifetime defaulted to 300 seconds.
-            /// </summary>
-            public ushort DeviceCodeLifetime { get; set; } = 300;
         }
-
 
         /// <summary>
         /// The model used to activate a client.
@@ -1933,11 +1752,6 @@ namespace pwiz.Skyline.Alerts
             /// Application Name.
             /// </summary>
             public string AppName { get; set; }
-
-            /// <summary>
-            /// IP Address that is activating the code.
-            /// </summary>
-            public string IPAddress { get; set; }
 
             /// <summary>
             /// Version.
@@ -1973,13 +1787,7 @@ namespace pwiz.Skyline.Alerts
             /// Gets or sets the grant types.
             /// </summary>
             public List<string> GrantTypes { get; set; }
-
-            /// <summary>
-            /// The access token lifetime in seconds.
-            /// </summary>
-            public int AccessTokenLifetime { get; set; }
         }
-
 
         /// <summary>
         /// Represents the response from the client application.
@@ -1990,74 +1798,7 @@ namespace pwiz.Skyline.Alerts
             /// Gets or sets the registration code.
             /// </summary>
             public string RegistrationCode { get; set; }
-
-            /// <summary>
-            /// Gets or sets the application name.
-            /// </summary>
-            public string AppName { get; set; }
-
-            /// <summary>
-            /// Gets or sets the IP address.
-            /// </summary>
-            public string IPAddress { get; set; }
-
-            /// <summary>
-            /// Gets or sets the version of the application.
-            /// </summary>
-            public string Version { get; set; }
-
-            /// <summary>
-            /// Gets or sets the PC name.
-            /// </summary>
-            public string PCName { get; set; }
-
-            /// <summary>
-            /// Gets or sets the registration status of the client application.
-            /// </summary>
-            public ClientRegistrationStatus Status { get; set; }
-
-            /// <summary>
-            /// Gets or sets the date when the registration code was generated.
-            /// </summary>
-            public DateTime? CodeDate { get; set; }
-
-            /// <summary>
-            /// Gets or sets the age of the registration code.
-            /// </summary>
-            public TimeSpan? CodeAge { get; set; }
-
-            /// <summary>
-            /// Gets or sets the date when the client application was activated.
-            /// </summary>
-            public DateTime? ActivationDate { get; set; }
         }
-
-        /// <summary>
-        /// Represents the status of a client registration.
-        /// </summary>
-        public enum ClientRegistrationStatus
-        {
-            /// <summary>
-            /// Indicates a new client registration.
-            /// </summary>
-            New,
-
-            /// <summary>
-            /// Indicates an active client registration.
-            /// </summary>
-            Active,
-
-            /// <summary>
-            /// Indicates an unused client registration.
-            /// </summary>
-            Unused,
-
-            /// <summary>
-            /// Indicates a disabled client registration.
-            /// </summary>
-            Disabled
-        }
-
 
         /// <summary>
         /// Client credentials.
@@ -2080,32 +1821,15 @@ namespace pwiz.Skyline.Alerts
             public string ClientSecret { get; set; }
 
             /// <summary>
-            /// Gets or sets list of supported Client scopes.
-            /// </summary>
-            public string[] ClientScopes { get; set; }
-
-            /// <summary>
-            /// Gets or sets a value indicating whether the client is activate or not.
-            /// </summary>
-            public bool Activated { get; set; }
-
-            /// <summary>
             /// Gets or sets a value for the Application Code.
             /// </summary>
             public string ApplicationCode { get; set; }
 
             /// <summary>
-            /// Gets or sets the name of the application.
+            /// Gets or sets list of supported Client scopes.
             /// </summary>
-            public string ApplicationName { get; set; }
-
-            /// <summary>
-            /// Gets or sets the name of the application version.
-            /// </summary>
-            public string ApplicationVersion { get; set; }
+            public string[] ClientScopes { get; set; }
         }
         #endregion
-
     }
-
 }

@@ -1,5 +1,5 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:diann-mod-test.blib	149	1	10
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:diann-mod-test.blib	149	1	11
 id	RefSpectraID	position	mass
 1	1	11	57.021464
 2	2	11	57.021464
@@ -192,9 +192,9 @@ id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	num
 147	CARAWLSSQVAELER	592.63342285	3	C[+57.0]ARAWLSSQVAELER	-	-	1	12	0.87645798	0.0	0.0	2	8.88120079	8.78959941	8.97265911	3.35743381	N/A	N/A	N/A	N/A	N/A	1	165	1.0	19
 148	CDKEFMWALK	685.31756591	2	C[+99.0]DKEFMWALK	-	-	2	12	1.00499999	0.0	0.0	2	11.23299980	11.14100074	11.32410049	6.82805943	N/A	N/A	N/A	N/A	N/A	1	6	1.0	19
 149	CEASGKPEVQFR	704.33789062	2	C[+57.0]EASGKPEVQFR	-	-	1	12	0.98147696	0.0	0.0	2	3.25810980	3.16837978	3.34768009	2.52491119	N/A	N/A	N/A	N/A	N/A	1	166	0.00246102	19
-id	fileName	idFileName	cutoffScore
-1	190314_TEN_175mingr_7-35_500nL_HeLa_diaPASEFdouble_py3_MSMS_Slot1-10_1_3426.d	/BiblioSpec/tests/inputs/diann-mod-test.tsv.speclib	0.0
-2	190314_TEN_175mingr_7-35_500nL_HeLa_SWATHlike_MSMS_Slot1-10_1_3421.d	/BiblioSpec/tests/inputs/diann-mod-test.tsv.speclib	0.0
+id	fileName	idFileName	cutoffScore	workflowType
+1	190314_TEN_175mingr_7-35_500nL_HeLa_diaPASEFdouble_py3_MSMS_Slot1-10_1_3426.d	/BiblioSpec/tests/inputs/diann-mod-test.tsv.speclib	0.0	1
+2	190314_TEN_175mingr_7-35_500nL_HeLa_SWATHlike_MSMS_Slot1-10_1_3421.d	/BiblioSpec/tests/inputs/diann-mod-test.tsv.speclib	0.0	1
 id	scoreType	probabilityType
 0	UNKNOWN	NOT_A_PROBABILITY_VALUE
 1	PERCOLATOR QVALUE	PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT

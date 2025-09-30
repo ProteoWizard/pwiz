@@ -16,12 +16,10 @@
  * limitations under the License.
  */
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
+using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.EditUI;
@@ -31,13 +29,18 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.Irt;
+using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -92,6 +95,7 @@ namespace pwiz.SkylineTestFunctional
             public Action BeforeSettingsAction { get; set; }
             public Action ExpectedErrorAction { get; set; }
             public bool HasMissingDependencies { get; private set; }
+            public bool TestDependencyErrors { get; set; }
         }
 
         DdaTestSettings TestSettings;
@@ -114,7 +118,7 @@ namespace pwiz.SkylineTestFunctional
                 PrecursorTolerance = new MzTolerance(15, MzTolerance.Units.ppm),
                 FragmentTolerance = new MzTolerance(25, MzTolerance.Units.ppm),
                 AdditionalSettings = new Dictionary<string, string>(),
-                ExpectedResultsFinal = new ExpectedResults(133, 332, 394, 1182, 163)
+                ExpectedResultsFinal = new ExpectedResults(133, 334, 396, 1188, 164)
             };
 
             RunFunctionalTest();
@@ -142,7 +146,7 @@ namespace pwiz.SkylineTestFunctional
                 PrecursorTolerance = new MzTolerance(15, MzTolerance.Units.ppm),
                 FragmentTolerance = new MzTolerance(25, MzTolerance.Units.ppm),
                 AdditionalSettings = new Dictionary<string, string>(),
-                ExpectedResultsFinal = new ExpectedResults(104, 256, 317, 951, 124)
+                ExpectedResultsFinal = new ExpectedResults(100, 238, 288, 864, 116)
             };
 
             RunFunctionalTest();
@@ -169,7 +173,7 @@ namespace pwiz.SkylineTestFunctional
                 PrecursorTolerance = new MzTolerance(15, MzTolerance.Units.ppm),
                 FragmentTolerance = new MzTolerance(1.0005),
                 AdditionalSettings = new Dictionary<string, string>(),
-                ExpectedResultsFinal = new ExpectedResults(130, 309, 372, 1116, 150)
+                ExpectedResultsFinal = new ExpectedResults(145, 338, 392, 1176, 165)
             };
 
             RunFunctionalTest();
@@ -210,6 +214,32 @@ namespace pwiz.SkylineTestFunctional
                     StringAssert.Contains(errorCalculationFailedDlg.Message, "Fragment error calculation failed");
                     OkDialog(errorCalculationFailedDlg, errorCalculationFailedDlg.ClickOk);
                 }
+            };
+
+            RunFunctionalTest();
+            Assert.IsFalse(IsRecordMode);
+        }
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.TIDE_UNICODE_ISSUES)]
+        public void TestDdaSearchTide()
+        {
+            TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
+
+            if (RedownloadTools)
+                foreach (var requiredFile in CometSearchEngine.FilesToDownload)
+                    if (requiredFile.Unzip)
+                        DirectoryEx.SafeDelete(requiredFile.InstallPath);
+                    else
+                        FileEx.SafeDelete(Path.Combine(requiredFile.InstallPath, requiredFile.Filename));
+
+            TestSettings = new DdaTestSettings
+            {
+                SearchEngine = SearchSettingsControl.SearchEngine.Tide,
+                FragmentIons = "b,y",
+                Ms2Analyzer = "Default",
+                PrecursorTolerance = new MzTolerance(15, MzTolerance.Units.ppm),
+                FragmentTolerance = new MzTolerance(1.0005),
+                AdditionalSettings = new Dictionary<string, string>(),
+                ExpectedResultsFinal = new ExpectedResults(107, 245, 297, 891, 118)
             };
 
             RunFunctionalTest();
@@ -286,6 +316,27 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(IsRecordMode);
         }
 
+        [TestMethod, NoUnicodeTesting(TestExclusionReason.COMET_UNICODE_ISSUES)]
+        public void TestDdaSearchDependencyErrors()
+        {
+            TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
+
+            TestSettings = new DdaTestSettings
+            {
+                SearchEngine = SearchSettingsControl.SearchEngine.Comet,
+                FragmentIons = "b,y",
+                Ms2Analyzer = "Default",
+                PrecursorTolerance = new MzTolerance(15, MzTolerance.Units.ppm),
+                FragmentTolerance = new MzTolerance(1.0005),
+                AdditionalSettings = new Dictionary<string, string>(),
+                ExpectedResultsFinal = new ExpectedResults(145, 338, 392, 1176, 165),
+                TestDependencyErrors = true
+            };
+
+            RunFunctionalTest();
+            Assert.IsFalse(IsRecordMode);
+        }
+
         protected override bool IsRecordMode => false;
         private bool RedownloadTools => !IsRecordMode && IsPass0;
 
@@ -353,7 +404,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
             });
 
-            bool errorExpected = TestSettings.ExpectedResultsFinal.expectedException != null;
+            bool errorExpected = TestSettings.ExpectedResultsFinal.expectedException != null || TestSettings.TestDependencyErrors;
 
             if (!errorExpected)
             {
@@ -381,18 +432,30 @@ namespace pwiz.SkylineTestFunctional
                     editModDlg.OkDialog();
                 });
 
-                // Test a C terminal mod with no AA and one with AA - commented out because it changes results a bit to include it
+                // Test a C terminal mod with no AA: commented out because it's buggy with MSAmanda
                 /*RunDlg<EditStaticModDlg>(editListUI.AddItem, editModDlg =>
                 {
-                    editModDlg.Modification = new StaticMod("NotUniModMod (C-term)", null, ModTerminus.C, null, LabelAtoms.None, 0.01, 0.01);
+                    editModDlg.Modification = new StaticMod("NotUniModMod (C-term)", null, ModTerminus.C, null, LabelAtoms.None, 1100.01, 1100.01);
                     editModDlg.Modification = editModDlg.Modification.ChangeVariable(true);
                     editModDlg.OkDialog();
-                }); 
+                }); */
+
+                // Test a mod with multiple AA specificities
                 RunDlg<EditStaticModDlg>(editListUI.AddItem, editModDlg =>
                 {
-                    editModDlg.Modification = new StaticMod("NotUniModMod4 (C-term)", "K,R", null, null, LabelAtoms.None, -1.01, -1.01);
+                    editModDlg.Modification = new StaticMod("MoreNotUniModMod (C-term)", "K,R", null, null, LabelAtoms.None, 1200.000001, 1200.000001);
+                    editModDlg.Modification = editModDlg.Modification.ChangeVariable(true);
                     editModDlg.OkDialog();
-                });*/
+                });
+
+                // Add the combined mod to allow interpreting results; put it at the end to uncheck it so it's not used for searches
+                RunDlg<EditStaticModDlg>(editListUI.AddItem, editModDlg =>
+                {
+                    string combinedFormula = Molecule.Parse(UniMod.GetModification("Oxidation (M)", true).Formula).AdjustElementCount("C", 42).ToString();
+                    editModDlg.Modification = new StaticMod("ZCombinedNotUniModMod", null, ModTerminus.N, combinedFormula, LabelAtoms.None, null, null);
+                    editModDlg.Modification = editModDlg.Modification.ChangeVariable(true);
+                    editModDlg.OkDialog();
+                });
                 OkDialog(editListUI, editListUI.OkDialog);
 
                 // Test back/next buttons
@@ -449,6 +512,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             SkylineWindow.BeginInvoke(new Action(() => importPeptideSearchDlg.ClickNextButton()));
+
             if (RedownloadTools || TestSettings.HasMissingDependencies)
             {
                 if (TestSettings.SearchEngine == SearchSettingsControl.SearchEngine.MSFragger)
@@ -456,6 +520,8 @@ namespace pwiz.SkylineTestFunctional
                     var msfraggerDownloaderDlg = TryWaitForOpenForm<MsFraggerDownloadDlg>(2000);
                     if (msfraggerDownloaderDlg != null)
                     {
+                        RunUI(() => msfraggerDownloaderDlg.SetValues("Matt (testing download from Skyline)", "Chambers", "chambem2@gmail.com", "UW"));
+                        //PauseTest(); // uncomment to test bad email handling (e.g. non-institutional email)
                         RunUI(() => msfraggerDownloaderDlg.SetValues("Matt (testing download from Skyline)", "Chambers", "chambem2@uw.edu", "UW"));
                         OkDialog(msfraggerDownloaderDlg, msfraggerDownloaderDlg.ClickAccept);
                     }
@@ -479,6 +545,12 @@ namespace pwiz.SkylineTestFunctional
                 importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success;
                 importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = true;
             });
+
+            if (TestSettings.TestDependencyErrors)
+            {
+                TestDependencyErrors(importPeptideSearchDlg);
+                return;
+            }
 
             if (!errorExpected)
             {
@@ -546,6 +618,7 @@ namespace pwiz.SkylineTestFunctional
                 importPeptideSearchDlg.MatchModificationsControl.ChangeItem(0, false); // uncheck C+57
                 for (int i = 1; i < importPeptideSearchDlg.MatchModificationsControl.MatchedModifications.Count(); ++i)
                     importPeptideSearchDlg.MatchModificationsControl.ChangeItem(i, true); // check everything else
+                importPeptideSearchDlg.MatchModificationsControl.ChangeItem(importPeptideSearchDlg.MatchModificationsControl.MatchedModifications.Count() - 1, false); // uncheck combined mod
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
                 importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new[] { 2, 3, 4 };
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
@@ -587,6 +660,19 @@ namespace pwiz.SkylineTestFunctional
             var emptyProteinsDlg = ShowDialog<AssociateProteinsDlg>(recalibrateMessage.OkDialog);
             WaitForConditionUI(() => emptyProteinsDlg.DocumentFinalCalculated);
 
+            var requiredFiles = SearchSettingsControl.GetSearchEngineRequiredFiles(TestSettings.SearchEngine);
+            foreach(var requiredFile in requiredFiles)
+                Assert.IsTrue(Settings.Default.SearchToolList.ContainsKey(requiredFile.ToolType));
+            
+            if (TestSettings.SearchEngine == SearchSettingsControl.SearchEngine.MSFragger)
+                StringAssert.Matches(Settings.Default.SearchToolList[SearchToolType.Java].ExtraCommandlineArgs, new Regex(@"-Xmx\d+M"));
+            
+            if (TestSettings.SearchEngine == SearchSettingsControl.SearchEngine.Comet)
+            {
+                Assert.IsTrue(Settings.Default.SearchToolList.ContainsKey(SearchToolType.CruxComet));
+                Assert.IsTrue(Settings.Default.SearchToolList.ContainsKey(SearchToolType.CruxPercolator));
+            }
+
             RunUI(()=>
             {
                 int proteinCount, peptideCount, precursorCount, transitionCount, unmappedOrRemoved;
@@ -627,6 +713,70 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(emptyProteinsDlg, emptyProteinsDlg.OkDialog);
             WaitForDocumentLoaded();
             RunUI(() => SkylineWindow.SaveDocument());
+        }
+
+        private void TestDependencyErrors(ImportPeptideSearchDlg importPeptideSearchDlg)
+        {
+            bool? searchSucceeded = null;
+            RunUI(() => importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success);
+            
+            // Cancel search (but don't close wizard)
+            RunUI(importPeptideSearchDlg.SearchControl.Cancel);
+            WaitForConditionUI(60000, () => searchSucceeded.HasValue);
+
+            RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()));
+
+            // Delete one of the auto-installed dependencies; Skyline will automatically try to redownload it
+            var requiredFile = SearchSettingsControl.GetSearchEngineRequiredFiles(TestSettings.SearchEngine).First();
+            DirectoryEx.SafeDelete(requiredFile.InstallPath);
+
+            // Rerun search
+            searchSucceeded = null;
+            SkylineWindow.BeginInvoke(new Action(() => importPeptideSearchDlg.ClickNextButton()));
+
+            var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
+            if (downloaderDlg != null)
+            {
+                OkDialog(downloaderDlg, downloaderDlg.ClickYes);
+                var waitDlg = WaitForOpenForm<LongWaitDlg>();
+                WaitForClosedForm(waitDlg);
+            }
+            WaitForConditionUI(60000, () => searchSucceeded.HasValue);
+            Assert.IsTrue(searchSucceeded.Value);
+
+                
+            RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()));
+
+            // Set Path and AutoInstalled to make it look like a user picked the installed location;
+            // in this case Skyline will pop up the edit control for that tool to fix the location
+            Settings.Default.SearchToolList[requiredFile.ToolType].AutoInstalled = false;
+            Settings.Default.SearchToolList[requiredFile.ToolType].Path += ".42.exe";
+
+            // Test Edit Search Tools button and check the path
+            var editToolListDlg = ShowDialog<EditListDlg<SettingsListBase<SearchTool>, SearchTool>>(SkylineWindow.ShowSearchToolsDlg);
+            var editToolDlg = ShowDialog<EditSearchToolDlg>(() =>
+            {
+                editToolListDlg.SelectItem(requiredFile.ToolType.ToString());
+                editToolListDlg.EditItem();
+            });
+            RunUI(() =>
+            {
+                StringAssert.EndsWith(editToolDlg.ToolPath, ".42.exe");
+                Assert.IsFalse(editToolDlg.SearchTool.AutoInstalled);
+            });
+            CancelDialog(editToolDlg);
+            CancelDialog(editToolListDlg);
+            
+            // Rerun search
+            searchSucceeded = null;
+            editToolDlg = ShowDialog<EditSearchToolDlg>(() => importPeptideSearchDlg.ClickNextButton());
+            RunUI(() => editToolDlg.ToolPath = editToolDlg.ToolPath.Replace(".42.exe", ""));
+            editToolDlg.OkDialog();
+
+            WaitForConditionUI(60000, () => searchSucceeded.HasValue);
+            Assert.IsTrue(searchSucceeded.Value);
+
+            OkDialog(importPeptideSearchDlg, importPeptideSearchDlg.ClickCancelButton);
         }
 
         private void PrepareDocument(string documentFile)

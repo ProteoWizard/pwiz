@@ -23,6 +23,7 @@ using System.Linq;
 using System.Text;
 using Ionic.Zip;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Results;
@@ -49,6 +50,7 @@ namespace pwiz.Skyline.Model
         {
             SharedPath = sharedPath;
             ShareType = ShareType.DEFAULT;
+            UseFileSaver = true;
         }
 
         public SrmDocumentSharing(SrmDocument document, string documentPath, string sharedPath, ShareType shareType) : this(sharedPath)
@@ -58,6 +60,25 @@ namespace pwiz.Skyline.Model
             ShareType = shareType;
         }
 
+        /// <summary>
+        /// Constructor used for publishing documents to Ardia which (1) needs to split large Skyline documents into multiple parts and
+        /// (2) does not need to use FileSaver (which also isn't aware of a multipart .sky.zip files).
+        ///
+        /// Callers using this constructor must support multipart .zip archives.
+        /// </summary>
+        /// <param name="document"></param>
+        /// <param name="documentPath"></param>
+        /// <param name="sharedPath"></param>
+        /// <param name="shareType"></param>
+        /// <param name="useFileSaver">Disables use of FileSaver when renaming a temp file to a final name is unnecessary.</param>
+        /// <param name="zipFileMaxSegmentSize">Configure the max size of a .zip file.</param>
+        public SrmDocumentSharing(SrmDocument document, string documentPath, string sharedPath, ShareType shareType, bool useFileSaver, int zipFileMaxSegmentSize) : 
+            this(document, documentPath, sharedPath, shareType)
+        {
+            UseFileSaver = useFileSaver;
+            ZipFileMaxSegmentSize = zipFileMaxSegmentSize;
+        }
+
         public SrmDocument Document { get; private set; }
         public string DocumentPath { get; private set; }
         public string ViewFilePath { get; set; }
@@ -65,6 +86,9 @@ namespace pwiz.Skyline.Model
         public string SharedPath { get; private set; }
 
         public ShareType ShareType { get; set; }
+
+        public bool UseFileSaver { get; }
+
         private IProgressMonitor ProgressMonitor { get; set; }
         private IProgressStatus _progressStatus;
         private int CountEntries { get; set; }
@@ -72,6 +96,7 @@ namespace pwiz.Skyline.Model
         private string CurrentEntry { get; set; }
         private long ExpectedSize { get; set; }
         private long ExtractedSize { get; set; }
+        private int ZipFileMaxSegmentSize { get; }
 
         private string DefaultMessage
         {
@@ -233,7 +258,7 @@ namespace pwiz.Skyline.Model
             ProgressMonitor = progressMonitor;
             ProgressMonitor.UpdateProgress(_progressStatus = new ProgressStatus(DefaultMessage));
 
-            using (var zip = new ZipFileShare())
+            using (var zip = new ZipFileShare(ZipFileMaxSegmentSize))
             {
                 try
                 {
@@ -508,11 +533,19 @@ namespace pwiz.Skyline.Model
         {
             CountEntries = zip.CountEntries;
 
-            using (var saver = new FileSaver(SharedPath))
+            if (UseFileSaver)
             {
-                zip.Save(saver.SafeName, SrmDocumentSharing_SaveProgress);
+                using (var saver = new FileSaver(SharedPath))
+                {
+                    zip.Save(saver.SafeName, SrmDocumentSharing_SaveProgress);
+                    ProgressMonitor.UpdateProgress(_progressStatus.Complete());
+                    saver.Commit(null);
+                }
+            }
+            else 
+            {
+                zip.Save(SharedPath, SrmDocumentSharing_SaveProgress);
                 ProgressMonitor.UpdateProgress(_progressStatus.Complete());
-                saver.Commit();
             }
         }
 
@@ -582,13 +615,15 @@ namespace pwiz.Skyline.Model
 
         private class ZipFileShare : IDisposable
         {
+            private const int DISABLE_SEGMENTS = 0;
+
             private readonly ZipFile _zip;
             private readonly IDictionary<string, string> _dictNameToPath;
 
-            public ZipFileShare()
+            public ZipFileShare(int maxOutputSegmentSize = DISABLE_SEGMENTS)
             {
                 // Make sure large files don't cause this to fail.
-                _zip = new ZipFile (Encoding.UTF8) { UseZip64WhenSaving = Zip64Option.AsNecessary };
+                _zip = new ZipFile (Encoding.UTF8) { UseZip64WhenSaving = Zip64Option.AsNecessary, MaxOutputSegmentSize = maxOutputSegmentSize};
 
                 _dictNameToPath = new Dictionary<string, string>();
             }

@@ -1249,9 +1249,6 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="SpectrumLibraryInfoDlg_SetDetailsText_Matched_spectra" xml:space="preserve">
     <value>Matched spectra</value>
   </data>
-  <data name="PeptidesPerProteinDlg_UpdateRemaining_Calculating___" xml:space="preserve">
-    <value>Calculating...</value>
-  </data>
   <data name="BuildPeptideSearchLibraryControl_AddIrtLibraryTable_Processing_Retention_Times" xml:space="preserve">
     <value>Processing Retention Times</value>
   </data>
@@ -2628,9 +2625,6 @@ Most peptide transition lists can be imported with the "File|Import|Transition L
   <data name="AlignmentForm_UpdateGraph_Outliers" xml:space="preserve">
     <value>Outliers</value>
   </data>
-  <data name="RTLinearRegressionGraphPane_UpdateGraph_Calculating___" xml:space="preserve">
-    <value>Calculating...</value>
-  </data>
   <data name="SkylineWindow_ImportFasta_Unexpected_document_change_during_operation" xml:space="preserve">
     <value>Unexpected document change during operation.</value>
   </data>
@@ -2838,9 +2832,6 @@ Most peptide transition lists can be imported with the "File|Import|Transition L
   </data>
   <data name="CommandLine_SaveFile_File__0__saved_" xml:space="preserve">
     <value>File {0} saved.</value>
-  </data>
-  <data name="RemoteSession_FetchContents_There_was_an_error_communicating_with_the_server__" xml:space="preserve">
-    <value>There was an error communicating with the server: </value>
   </data>
   <data name="ImportFastaControl_ImportFasta_Change_digestion_settings" xml:space="preserve">
     <value>Change digestion settings</value>
@@ -4001,5 +3992,8 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   </data>
   <data name="Error" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Error.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ArdiaIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ArdiaIcon.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

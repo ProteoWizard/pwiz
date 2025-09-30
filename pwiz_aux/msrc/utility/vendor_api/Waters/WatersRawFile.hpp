@@ -558,6 +558,25 @@ struct PWIZ_API_DECL RawData
 
     private:
 
+    static string cp1252toUtf8(const std::string& input)
+    {
+        // Step 1: Convert from Windows-1252 to UTF-16
+        int wideLen = MultiByteToWideChar(1252, 0, input.c_str(), (int)input.length(), NULL, 0);
+        if (wideLen == 0) throw std::runtime_error("MultiByteToWideChar failed");
+
+        std::wstring wideStr(wideLen, 0);
+        MultiByteToWideChar(1252, 0, input.c_str(), (int)input.length(), &wideStr[0], wideLen);
+
+        // Step 2: Convert from UTF-16 to UTF-8
+        int utf8Len = WideCharToMultiByte(boost::winapi::CP_UTF8_, 0, wideStr.c_str(), wideLen, NULL, 0, NULL, NULL);
+        if (utf8Len == 0) throw std::runtime_error("WideCharToMultiByte failed");
+
+        std::string utf8Str(utf8Len, 0);
+        WideCharToMultiByte(boost::winapi::CP_UTF8_, 0, wideStr.c_str(), wideLen, &utf8Str[0], utf8Len, NULL, NULL);
+
+        return utf8Str;
+    }
+
     void readAnalogChromatograms()
     {
         const int channels = AnalogChromatogramReader.GetChannelCount();
@@ -577,7 +596,7 @@ struct PWIZ_API_DECL RawData
             {
                 // Likely just an empty channel - if there's a real problem the folllowing calls will probably throw too
             }
-            analogChannelNames[ch] = AnalogChromatogramReader.GetChannelDescription(ch);
+            analogChannelNames[ch] = cp1252toUtf8(AnalogChromatogramReader.GetChannelDescription(ch));
             analogChannelUnits[ch] = AnalogChromatogramReader.GetChannelUnits(ch);
         }
     }

@@ -18,10 +18,9 @@
 using System.Collections.Generic;
 using System.Windows.Forms;
 using System.IO;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Model.Results.RemoteApi;
-using pwiz.Skyline.Util;
+using pwiz.CommonMsData.RemoteApi;
 
 
 namespace pwiz.Skyline.FileUI
@@ -49,7 +48,7 @@ namespace pwiz.Skyline.FileUI
             List<MsDataFileUri> dataSourceList = new List<MsDataFileUri>();
             foreach (ListViewItem item in listView.SelectedItems)
             {
-                if (!DataSourceUtil.IsFolderType(item.SubItems[1].Text))
+                if (!TreatAsFolder(item.SubItems[1].Text))
                 {
                     dataSourceList.Add(((SourceInfo)item.Tag).MsDataFileUri);
                 }
@@ -66,7 +65,7 @@ namespace pwiz.Skyline.FileUI
             // should navigate to
             foreach (ListViewItem item in listView.SelectedItems)
             {
-                if (DataSourceUtil.IsFolderType(item.SubItems[1].Text))
+                if (TreatAsFolder(item.SubItems[1].Text))
                 {
                     OpenFolderItem(item);
                     return;

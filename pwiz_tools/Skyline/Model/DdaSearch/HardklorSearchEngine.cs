@@ -19,7 +19,6 @@
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using System;
@@ -40,6 +39,7 @@ using pwiz.Skyline.Model.RetentionTimes;
 using Enzyme = pwiz.Skyline.Model.DocSettings.Enzyme;
 using pwiz.Common.Collections;
 using System.Text.RegularExpressions;
+using pwiz.CommonMsData;
 
 namespace pwiz.Skyline.Model.DdaSearch
 {
@@ -95,7 +95,12 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         public override string SearchEngineBlurb => DdaSearchResources.HardklorSearchEngine_SearchEngineBlurb;
 
-        public override event NotificationEventHandler SearchProgressChanged;
+        //public override event NotificationEventHandler SearchProgressChanged;
+        public override event NotificationEventHandler SearchProgressChanged
+        {
+            add { }
+            remove { }
+        }
 
         public override bool Run(CancellationTokenSource cancelToken, IProgressStatus status) // Single threaded version
         {

@@ -69,7 +69,9 @@ namespace pwiz.Skyline.Alerts
 
             int row = 2;
             var gridLabels = new List<Label>();
-            foreach (var requiredFile in requiredFilesList)
+            // group by URL when presenting to user, although different FileDownloadInfos could have the same URL but different ToolType (e.g. Crux)
+            var distinctFiles = requiredFilesList.GroupBy(f => f.DownloadUrl).Select(g => g.First());
+            foreach (var requiredFile in distinctFiles)
             {
                 var name = new Label
                 {

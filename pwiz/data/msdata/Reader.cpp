@@ -52,6 +52,8 @@ Reader::Config::Config()
     , sortAndJitter(false)
     , globalChromatogramsAreMs1Only(false)
     , ddaProcessing(false)
+    , passEntireDiaPasefFrame(false)
+    , includeIsolationArrays(true)
 {
 }
 
@@ -74,12 +76,14 @@ Reader::Config::Config(const Config& rhs)
     isolationMzAndMobilityFilter = rhs.isolationMzAndMobilityFilter;
     sortAndJitter = rhs.sortAndJitter;
     globalChromatogramsAreMs1Only = rhs.globalChromatogramsAreMs1Only;
+    passEntireDiaPasefFrame = rhs.passEntireDiaPasefFrame;
+    includeIsolationArrays = rhs.includeIsolationArrays;
 }
 
 void Reader::Config::instrumentMetadataError(const std::string& msg) const
 {
     if (unknownInstrumentIsError)
-        throw runtime_error(msg + string("; if want to convert the file anyway, use the ignoreUnknownInstrumentError flag"));
+        throw runtime_error(msg + string("; if you want to convert the file anyway, use the ignoreUnknownInstrumentError flag"));
     cerr << msg << endl;
 }
 

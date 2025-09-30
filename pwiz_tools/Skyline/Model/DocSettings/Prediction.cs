@@ -301,6 +301,10 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public bool IsAutoCalcRequired(SrmDocument document, SrmDocument previous)
         {
+            if (true == Calculator?.IsAlignmentOnly)
+            {
+                return false;
+            }
             // Any time there is no regression information, an auto-calc is required
             // unless the document has no results
             if (Conversion == null)
@@ -582,12 +586,12 @@ namespace pwiz.Skyline.Model.DocSettings
             return result;
         }
 
-            /// <summary>
-            /// Calculates and returns the best regression, along with all the other regressions.
-            /// Although all regression are calculated on a separate thread, this function will wait for them to comeplete
-            /// and should therefore also be called on a non-UI thread.
-            /// </summary>
-            public static CalculateRegressionSummary CalcBestRegressionBackground(string name, IList<RetentionScoreCalculatorSpec> calculators, IList<MeasuredRetentionTime> measuredPeptides,
+        /// <summary>
+        /// Calculates and returns the best regression, along with all the other regressions.
+        /// Although all regression are calculated on a separate thread, this function will wait for them to complete
+        /// and should therefore also be called on a non-UI thread.
+        /// </summary>
+        public static CalculateRegressionSummary CalcBestRegressionBackground(string name, IList<RetentionScoreCalculatorSpec> calculators, IList<MeasuredRetentionTime> measuredPeptides,
             RetentionTimeScoreCache scoreCache,
             bool allPeptides,
             RegressionMethodRT regressionMethod,
@@ -920,16 +924,21 @@ namespace pwiz.Skyline.Model.DocSettings
             var listDeltas = new List<DeltaIndex>();
             int iNextStat = 0;
             double unknownScore = Calculator.UnknownScore;
+            int countMaxValue = 0;
             for (int i = 0; i < variableTargetPeptides.Count; i++)
             {
                 double delta;
-                if (variableTargetPeptides[i].RetentionTime == 0 || (variableOrigPeptides != null && variableOrigPeptides[i].RetentionTime == 0))
-                    delta = double.MaxValue;    // Make sure zero times are always outliers
-                else if (!outIndexes.Contains(i) && iNextStat < listPredictions.Count)
+                // Make sure zero times are always outliers
+                bool zeroRt = variableTargetPeptides[i].RetentionTime == 0 ||
+                              (variableOrigPeptides != null && variableOrigPeptides[i].RetentionTime == 0);
+                if (!outIndexes.Contains(i) && iNextStat < listPredictions.Count)
                 {
-                    delta = listHydroScores[iNextStat] != unknownScore
-                                ? Math.Abs(listPredictions[iNextStat] - listTimes[iNextStat])
-                                : double.MaxValue;
+                    // This assumes that the values for the current target peptide are already
+                    // cached in the statistics object.
+                    Assume.AreEqual(variableTargetPeptides[i].PeptideSequence.InvariantName, statistics.Peptides[iNextStat].InvariantName);
+                    delta = listHydroScores[iNextStat] != unknownScore && !zeroRt
+                        ? Math.Abs(listPredictions[iNextStat] - listTimes[iNextStat])
+                        : double.MaxValue;
                     iNextStat++;
                 }
                 else
@@ -937,24 +946,39 @@ namespace pwiz.Skyline.Model.DocSettings
                     // Recalculate values for the indexes that were not used to generate
                     // the current regression.
                     var peptideTime = variableTargetPeptides[i];
-                    double score = scoreCache.CalcScore(Calculator, peptideTime.PeptideSequence);
+                    double score = scoreCache?.CalcScore(Calculator, peptideTime.PeptideSequence) ?? Calculator.ScoreSequence(peptideTime.PeptideSequence) ?? unknownScore;
                     delta = double.MaxValue;
-                    if (score != unknownScore)
+                    if (score != unknownScore && !zeroRt)
                     {
                         double? predictedTime = GetRetentionTime(score);
                         if (predictedTime.HasValue)
                             delta = Math.Abs(predictedTime.Value - peptideTime.RetentionTime);
                     }
+
+                    // Sometimes outlier indices get added after statistics are calculated.
+                    // So, if the target peptide matches the current statistic advance the
+                    // statistics index.
+                    if (iNextStat < listPredictions.Count &&
+                        Equals(variableTargetPeptides[i].PeptideSequence.InvariantName,
+                            statistics.Peptides[iNextStat].InvariantName))
+                    {
+                        iNextStat++;
+                    }
                 }
+
+                if (delta == double.MaxValue)
+                    countMaxValue++;
+                
                 listDeltas.Add(new DeltaIndex(delta, i));
             }
 
-            // Sort descending
-            listDeltas.Sort();
+            // Split deltas with values greater than the midpoint below it and less than the midpoint above it.
+            int countOut = Math.Max(countMaxValue, variableTargetPeptides.Count - mid - 1);
+            if (0 <= countOut && countOut < listDeltas.Count)
+                listDeltas.QNthItem(countOut);
 
             // Remove points with the highest deltas above mid
             outIndexes = new HashSet<int>();
-            int countOut = variableTargetPeptides.Count - mid - 1;
             for (int i = 0; i < countOut; i++)
             {
                 outIndexes.Add(listDeltas[i].Index);
@@ -969,7 +993,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
             peptidesTimesTry.AddRange(requiredPeptides);
 
-            return CalcSingleRegression(Name, calculator, peptidesTimesTry, scoreCache, true,regressionMethod,
+            return CalcSingleRegression(Name, calculator, peptidesTimesTry, scoreCache, true, regressionMethod,
                                       out statisticsResult, out _, token);
         }
 
@@ -1037,6 +1061,12 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 return -Delta.CompareTo(other.Delta);
             }
+
+            public override string ToString()
+            {
+                // For debugging
+                return $@"{Delta} - {Index}";
+            }
         }
     }
 
@@ -1065,29 +1095,6 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
-        public void RecalculateCalcCache(RetentionScoreCalculatorSpec calculator, CancellationToken token)
-        {
-            var calcCache = _cache[calculator.Name];
-            if(calcCache != null)
-            {
-                try
-                {
-                    var newCalcCache = new Dictionary<Target, double>();
-                    foreach (var key in calcCache.Keys)
-                    {
-                        //force recalculation
-                        newCalcCache.Add(key, CalcScore(calculator, key, null));
-                        ProgressMonitor.CheckCanceled(token);
-                    }
-
-                    _cache[calculator.Name] = newCalcCache;
-                }
-                catch (OperationCanceledException)
-                {
-                }
-            }
-        }
-
         public double CalcScore(IRetentionScoreCalculator calculator, Target peptide)
         {
             Dictionary<Target, double> cacheCalc;
@@ -1106,7 +1113,7 @@ namespace pwiz.Skyline.Model.DocSettings
             foreach (var pep in peptides)
             {
                 result.Add(CalcScore(calculator, pep, cacheCalc));
-                ProgressMonitor.CheckCanceled(token);
+                token.ThrowIfCancellationRequested();
             }
             return result;
         }
@@ -1168,6 +1175,8 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         public virtual bool IsUsable { get { return true; } }
+
+        public virtual bool IsAlignmentOnly { get { return false; } }
 
         public virtual RetentionScoreCalculatorSpec Initialize(IProgressMonitor loadMonitor)
         {

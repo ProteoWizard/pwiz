@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using pwiz.Common.SystemUtil;
@@ -39,6 +38,7 @@ namespace pwiz.Skyline.Util.Extensions
         public const string SPACE = " ";
         public const string CARET = @"^";
         public const string AMPERSAND = @"&";
+        public const string AT = @"@";
         public const string EQUAL = @"=";
         public const string FORWARD_SLASH = @"/";
         public const string SEMICOLON = @";";
@@ -659,12 +659,12 @@ namespace pwiz.Skyline.Util.Extensions
         /// </summary>
         public static string EncryptString(string str)
         {
-            return Convert.ToBase64String(ProtectedData.Protect(Encoding.UTF8.GetBytes(str), null, DataProtectionScope.CurrentUser));
+            return CommonTextUtil.EncryptString(str);
         }
 
         public static string DecryptString(string str)
         {
-            return Encoding.UTF8.GetString(ProtectedData.Unprotect(Convert.FromBase64String(str), null, DataProtectionScope.CurrentUser));
+            return CommonTextUtil.DecryptString(str);
         }
 
         /// <summary>
