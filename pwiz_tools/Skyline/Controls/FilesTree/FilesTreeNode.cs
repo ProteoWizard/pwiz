@@ -259,7 +259,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                     var label = @"LocalFilePath";
                     var value = LocalFilePath;
 
-                    RenderTipAddRowWithRedValue(label, value, customTable, rt);
+                    TooltipNewRowWithRedValue(label, value, customTable, rt);
                 }
 
                 // TODO: Brendan wants tooltips to look like this. Restore.
@@ -281,9 +281,11 @@ namespace pwiz.Skyline.Controls.FilesTree
 
             if (Debugger.IsAttached)
             {
-                customTable.AddDetailRow(@" ", @" ", rt);
-                customTable.AddDetailRow(@"Debug Info", @"(only visible when debugger attached) ", rt);
-                customTable.AddDetailRow(@" ", @" ", rt);
+                TooltipNewRowWithText(@"     ", customTable, rt);
+                TooltipNewRowWithText(@"===================================================", customTable, rt);
+                TooltipNewRowWithText(@"Debug Info (only visible when debugger attached)", customTable, rt);
+                TooltipNewRowWithText(@"     ", customTable, rt);   
+
                 customTable.AddDetailRow(@"FileName", FileName, rt);
                 customTable.AddDetailRow(@"FilePath", FilePath, rt);
 
@@ -298,21 +300,25 @@ namespace pwiz.Skyline.Controls.FilesTree
                 }
                 else
                 {
-                    RenderTipAddRowWithRedValue(@"FileState", FileState.ToString(), customTable, rt);
-                    RenderTipAddRowWithRedValue(@"LocalFilePath", LocalFilePath, customTable, rt);
+                    TooltipNewRowWithRedValue(@"FileState", FileState.ToString(), customTable, rt);
+                    TooltipNewRowWithRedValue(@"LocalFilePath", LocalFilePath, customTable, rt);
                 }
 
                 // Show extra debug info on the .sky file
                 if (Model is SkylineFile)
                 {
-                    customTable.AddDetailRow(@" ", @" ", rt);
-                    customTable.AddDetailRow(@"Monitored directory", FilesTree.PathMonitoredForFileSystemChanges(), rt);
+                    TooltipNewRowWithText(@"     ", customTable, rt);
+                    var monitoredDirectoryPaths = FilesTree.MonitoredDirectories();
+                    for (var i = 0; i < monitoredDirectoryPaths.Count; i++) {
+                        customTable.AddDetailRow($@"Monitored directory[{i}]", monitoredDirectoryPaths[i], rt);
+                    }
                 }
 
                 if (Model is SkylineAuditLog || Model is SkylineFile)
                 {
                     var isForceEnabled = Program.FunctionalTest && !AuditLogList.IgnoreTestChecks;
-                    customTable.AddDetailRow(@"Audit Log enabled by tests?", $@"{(isForceEnabled ? @"yes" : @"no")}", rt);
+
+                    TooltipNewRowWithText($@"Did the test framework force audit logging to be enabled? {(isForceEnabled ? @"Yes" : @"No")}", customTable, rt);
                 }
 
                 // CONSIDER: add SrmDocument.RevisionIndex to FileNode
@@ -323,23 +329,6 @@ namespace pwiz.Skyline.Controls.FilesTree
             customTable.Draw(g);
 
             return new Size((int)size.Width + 4, (int)size.Height + 4);
-        }
-
-        private static void RenderTipAddRowWithRedValue(string label, string value, TableDesc table, RenderTools rt)
-        {
-            var cellLabel = new CellDesc(label, rt)
-            {
-                Font = rt.FontBold
-            };
-
-            var cellValue = new CellDesc(value, rt)
-            {
-                Brush = rt.BrushSelected
-            };
-
-            var row = new RowDesc { cellLabel, cellValue };
-
-            table.Add(row);
         }
 
         public bool SupportsRename()
@@ -416,6 +405,32 @@ namespace pwiz.Skyline.Controls.FilesTree
                 filesTreeNode.OnModelChanged();
                 filesTreeNode = filesTreeNode.ParentFTN;
             } while (filesTreeNode != null && filesTreeNode.ParentFTN != null);
+        }
+
+        private static void TooltipNewRowWithText(string text, TableDesc table, RenderTools rt)
+        {
+            var cell = new CellDesc(text, rt)
+            {
+                Font = rt.FontBold
+            };
+            table.Add(new RowDesc { cell });
+        }
+
+        private static void TooltipNewRowWithRedValue(string label, string value, TableDesc table, RenderTools rt)
+        {
+            var cellLabel = new CellDesc(label, rt)
+            {
+                Font = rt.FontBold
+            };
+
+            var cellValue = new CellDesc(value, rt)
+            {
+                Brush = rt.BrushSelected
+            };
+
+            var row = new RowDesc { cellLabel, cellValue };
+
+            table.Add(row);
         }
     }
 }

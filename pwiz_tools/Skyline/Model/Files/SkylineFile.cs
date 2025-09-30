@@ -18,7 +18,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using pwiz.Common.Collections;
-using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.Files
 {
