@@ -149,5 +149,14 @@ namespace pwiz.Skyline.Model {
                 return ResourceManager.GetString("Sequence", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Standard Type.
+        /// </summary>
+        internal static string StandardType {
+            get {
+                return ResourceManager.GetString("StandardType", resourceCulture);
+            }
+        }
     }
 }

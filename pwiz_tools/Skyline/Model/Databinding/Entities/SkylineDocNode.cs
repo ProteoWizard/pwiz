@@ -23,6 +23,7 @@ using System.ComponentModel;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.ElementLocators;
@@ -193,6 +194,17 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             ChangeDocNode(EditDescription.SetAnnotation(annotationDef, value),
                 docNode => (TDocNode) docNode.ChangeAnnotations(docNode.Annotations.ChangeAnnotation(annotationDef, value)));
         }
+
+        public static ModifiedDocument EditAnnotation(SrmDocument document, SrmSettingsChangeMonitor monitor,
+            SkylineDocNode<TDocNode> docNode, AnnotationDef annotationDef, object newValue)
+        {
+            var newAnnotations = docNode.DocNode.Annotations.ChangeAnnotation(annotationDef, newValue);
+            var newDocNode = docNode.DocNode.ChangeAnnotations(newAnnotations);
+            var newDocument = (SrmDocument) document.ReplaceChild(docNode.DocNode);
+            Assume.IsNotNull(newDocument);
+            return new ModifiedDocument(newDocument);
+        }
+
         public override string ToString()
         {
             return DocNode.ToString();

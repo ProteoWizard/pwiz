@@ -147,4 +147,7 @@
   <data name="AvgMeasuredRetentionTime" xml:space="preserve">
     <value>Average Measured Retention Time</value>
   </data>
+  <data name="StandardType" xml:space="preserve">
+    <value>Standard Type</value>
+  </data>
 </root>

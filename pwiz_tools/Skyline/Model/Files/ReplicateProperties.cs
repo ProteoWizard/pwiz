@@ -25,7 +25,6 @@ using System.Linq;
 using System.Resources;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Files
 {
@@ -45,19 +44,9 @@ namespace pwiz.Skyline.Model.Files
             SampleDilutionFactor = chromSet.SampleDilutionFactor;
             SampleType = chromSet.SampleType.ToString();
 
-            Annotations = new List<Annotations.Annotation>();
-            EditAnnotationFuncDictionary = new Dictionary<Annotations.Annotation, Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument>>();
-            foreach (var annotationDef in Settings.Default.AnnotationDefList)
-            {
-                if (annotationDef.AnnotationTargets.Contains(AnnotationDef.AnnotationTarget.replicate))
-                {
-                    var annotation = new Annotations.Annotation(new KeyValuePair<string, string>(
-                        annotationDef.Name, chromSet.Annotations.GetAnnotation(annotationDef.Name)));
-                    Annotations.Add(annotation);
-                    EditAnnotationFuncDictionary.Add(annotation,
-                        (doc, monitor, newValue) => Replicate.EditAnnotation(doc, monitor, model, annotationDef, newValue));
-                }
-            }
+            PopulateAnnotationValues(this, chromSet.Annotations, document, AnnotationDef.AnnotationTarget.replicate,
+                annotationDef => 
+                    (doc, monitor, newValue) => Replicate.EditAnnotation(doc, monitor, model, annotationDef, newValue));
 
             var dataFileInfo = chromSet.MSDataFileInfos;
             if (dataFileInfo.Count == 1)
@@ -151,9 +140,9 @@ namespace pwiz.Skyline.Model.Files
         // Annotations need to be added as individual properties under the Annotations category
         // Annotation properties are added in GlobalizedObject, but EditAnnotationFuncDictionary must be populated on construction
         [UseCustomHandling]
-        [Category("Annotations")] public List<Annotations.Annotation> Annotations { get; }
+        [Category("Annotations")] public List<Annotations.Annotation> Annotations { get; set; }
         [UseCustomHandling]
-        public Dictionary<Annotations.Annotation, Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument>> EditAnnotationFuncDictionary { get; }
+        public Dictionary<Annotations.Annotation, Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument>> EditAnnotationFuncDictionary { get; set; }
 
         #endregion
         

@@ -120,7 +120,7 @@ namespace pwiz.Skyline.Model
         /// <returns>New instance</returns>
         public DocNode ChangeAnnotations(Annotations annotations)
         {
-            return ChangeProp(ImClone(this), im => im.Annotations = annotations);            
+            return ChangeProp(ImClone(this), im => im.Annotations = annotations);         
         }
 
         /// <summary>

@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-using Newtonsoft.Json;
 using JetBrains.Annotations;
-using pwiz.Skyline.Model.DocSettings;
+using Newtonsoft.Json;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -26,6 +27,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Resources;
+using pwiz.Common.Collections;
 
 namespace pwiz.Skyline.Model
 {
@@ -116,14 +118,12 @@ namespace pwiz.Skyline.Model
 
                 _globalizedProps = new PropertyDescriptorCollection(null);
 
-
                 // For each property use a property descriptor of our own that is able to be globalized
                 foreach (PropertyDescriptor oProp in baseProps)
                 {
                     // don't copy over properties that require custom handling
                     if (oProp.Attributes[typeof(UseCustomHandlingAttribute)] != null ||
-                        oProp.Attributes[typeof(UsedImplicitlyAttribute)] != null ||
-                        oProp.Attributes[typeof(EditablePropertyAttribute)] != null)
+                        oProp.Attributes[typeof(UsedImplicitlyAttribute)] != null)
                         continue;
 
                     // Only display properties whose values have been set
@@ -139,6 +139,32 @@ namespace pwiz.Skyline.Model
             }
 
             return _globalizedProps;
+        }
+
+        /// <summary>
+        /// Helper function called by implementers of IAnnotatable in the constructor to populate their Annotation properties
+        /// </summary>
+        /// <param name="annotatable"></param> GlobalizedObject implementing IAnnotatable
+        /// <param name="annotations"></param> Annotations object holding the actual annotation values - passed as parameter as the method of access is context-dependent
+        /// <param name="document"></param> reference to the SrmDocument, needed to get the AnnotationDefs from settings
+        /// <param name="annotationTarget"></param> Target type for filtering applicable annotations
+        /// <param name="annotationEditFunctionMap"></param> Function that returns the appropriate ModifiedDocument function for editing a given annotation
+        protected static void PopulateAnnotationValues(IAnnotatable annotatable, Annotations annotations, 
+            SrmDocument document, AnnotationDef.AnnotationTarget annotationTarget,
+            Func<AnnotationDef, Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument>> annotationEditFunctionMap)
+        {
+            annotatable.Annotations = new List<Annotations.Annotation>();
+            annotatable.EditAnnotationFuncDictionary = new Dictionary<Annotations.Annotation, Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument>>();
+            foreach (var annotationDef in document.Settings.DataSettings.AnnotationDefs)
+            {
+                if (annotationDef.AnnotationTargets.Contains(annotationTarget))
+                {
+                    var annotation = new Annotations.Annotation(new KeyValuePair<string, string>(
+                        annotationDef.Name, annotations.GetAnnotation(annotationDef.Name)));
+                    annotatable.Annotations.Add(annotation);
+                    annotatable.EditAnnotationFuncDictionary.Add(annotation, annotationEditFunctionMap(annotationDef));
+                }
+            }
         }
 
         // Prefix to use for annotation property names, to avoid conflicts with other property names since annotation names are user-defined
@@ -450,6 +476,7 @@ namespace pwiz.Skyline.Model
         private Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument> _getModifiedDocument;
         private string _nonLocalizedDisplayName;
         private List<string> _dropDownOptions; // set only if we want a drop-down list of options, and _type is string
+        private Action<object> _setAction; // set only if we want custom handling of setting the value
 
         public CustomHandledGlobalizedPropertyDescriptor(
             Type type, string name, object value, string category, ResourceManager resourceManager,
@@ -478,6 +505,11 @@ namespace pwiz.Skyline.Model
         public void SetDropDownOptions(List<string> dropDownOptions)
         {
             _dropDownOptions = dropDownOptions;
+        }
+
+        public void SetCustomSetter(Action<object> setAction)
+        {
+            _setAction = setAction;
         }
 
         #endregion
@@ -533,6 +565,7 @@ namespace pwiz.Skyline.Model
         public override void SetValue(object component, object value)
         {
             _value = value;
+            _setAction?.Invoke(value);
         }
 
         public override TypeConverter Converter => _dropDownOptions != null && _type == typeof(string)
@@ -560,9 +593,9 @@ namespace pwiz.Skyline.Model
         // Annotations need to be added as individual properties under the Annotations category
         // Annotation properties are added in GlobalizedObject, but EditAnnotationFuncDictionary must be populated on construction
         [UseCustomHandling] 
-        [Category("Annotations")] List<Annotations.Annotation> Annotations { get; }
+        [Category("Annotations")] List<Annotations.Annotation> Annotations { get; set; }
         [UseCustomHandling]
-        Dictionary<Annotations.Annotation, Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument>> EditAnnotationFuncDictionary { get; }
+        Dictionary<Annotations.Annotation, Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument>> EditAnnotationFuncDictionary { get; set; }
     }
 
     public class TwoDecimalDoubleConverter : DoubleConverter
@@ -591,11 +624,8 @@ namespace pwiz.Skyline.Model
         public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext context) => new StandardValuesCollection(_options);
     }
 
-    // Used to flag properties that should not be copied directly to the globalized object, as they require custom handling.
+    // Used to flag properties that should not be carried over directly to the globalized object, as they require custom handling.
+    // Custom handling is implemented in the derived class, typically in AddCustomizedProperties() or programatically in AddAnnotationProperties().
     [AttributeUsage(AttributeTargets.Property)]
     public class UseCustomHandlingAttribute : Attribute { }
-
-    // Used to flag properties that are editable.
-    [AttributeUsage(AttributeTargets.Property)]
-    public class EditablePropertyAttribute : Attribute { }
 }

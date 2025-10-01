@@ -18,10 +18,13 @@
  */
 
 using JetBrains.Annotations;
+using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Resources;
 
 namespace pwiz.Skyline.Model
@@ -43,9 +46,20 @@ namespace pwiz.Skyline.Model
             MissedCleavages = peptide.MissedCleavages;
             PredictedRetentionTime = peptide.PredictedRetentionTime;
             AvgMeasuredRetentionTime = peptide.AverageMeasuredRetentionTime;
-            StandardType = peptide.StandardType.ToString();
 
-            
+            StandardType = peptide.StandardType?.ToString() ?? string.Empty;
+
+            _editStandardTypeFunc = (doc, monitor, newValue) =>
+            {
+                var newDoc = doc.ChangeStandardType(Model.StandardType.FromName((string)newValue), new [] {peptide.IdentityPath});
+                var auditLog = AuditLogEntry.CreateSimpleEntry(
+                    MessageType.set_standard_type,
+                    doc.DocumentType,
+                    newValue);
+                return new ModifiedDocument(newDoc).ChangeAuditLogEntry(auditLog);
+            };
+
+            PopulateAnnotationValues(this, peptide.DocNode.Annotations, document, peptide.DocNode.AnnotationTarget, (def) => (a,b,c) => null);
         }
 
         [Category("Peptide")] public string Sequence { get; }
@@ -59,20 +73,41 @@ namespace pwiz.Skyline.Model
         [UseCustomHandling]
         [Category("Peptide")] public string StandardType { get; set; }
         private readonly Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument> _editStandardTypeFunc;
+        
+        protected override void AddCustomizedProperties()
+        {
+            // add editable StandardType property with ModifiedDocument delegate
+            var standardTypePropertyDescriptor = GetBaseDescriptorByName(nameof(StandardType));
+            var standardTypeGlobalizedProp = new CustomHandledGlobalizedPropertyDescriptor(
+                standardTypePropertyDescriptor.PropertyType,
+                standardTypePropertyDescriptor.Name,
+                StandardType,
+                standardTypePropertyDescriptor.Category,
+                GetResourceManager());
+
+            standardTypeGlobalizedProp.SetDocumentModifierFunc(_editStandardTypeFunc);
+
+            var standardTypes = pwiz.Skyline.Model.StandardType.ListStandardTypes()
+                .Select(standardType => standardType.ToString()).ToList();
+            standardTypes.Insert(0, null);
+            standardTypeGlobalizedProp.SetDropDownOptions(standardTypes);
+
+            AddProperty(standardTypeGlobalizedProp);
+        }
+
+        #region IAnnotatable Implementation
+
+        [UseCustomHandling]
+        [Category("Annotations")] public List<Annotations.Annotation> Annotations { get; set; }
+
+        [UseCustomHandling]
+        public Dictionary<Annotations.Annotation, Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument>> EditAnnotationFuncDictionary { get; set; }
+
+        #endregion
 
         // Test Support - enforced by code check
         // Invoked via reflection in InspectPropertySheetResources in CodeInspectionTest
         [UsedImplicitly]
         private static ResourceManager ResourceManager() => PropertyGridDocNodeResources.ResourceManager;
-
-        #region IAnnotatable Implementation
-
-        [UseCustomHandling]
-        [Category("Annotations")] public List<Annotations.Annotation> Annotations { get; }
-
-        [UseCustomHandling]
-        public Dictionary<Annotations.Annotation, Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument>> EditAnnotationFuncDictionary { get; }
-
-        #endregion
     }
 }
