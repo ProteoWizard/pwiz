@@ -995,6 +995,11 @@ namespace pwiz.Skyline.Model.Results
 
         public MeasuredResults ChangeChromatograms(IList<ChromatogramSet> prop)
         {
+            if (!IsEmpty && prop?.Count == 0)
+            {
+                throw new ArgumentException(@"Cannot use a zero-length list to remove all chromatograms from MeasuredResults. Pass null instead.");
+            }
+
             var results = ChangeProp(ImClone(this), im => im.Chromatograms = prop);
             if (RequiresCacheUpdate(results))
             {
