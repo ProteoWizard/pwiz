@@ -156,8 +156,6 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             base.ParseObject(reader);
             Name = _adductRegEx.Replace(Name, "");
 
-            //Id = Guid.NewGuid().ToString();
-
             var infoHeader = GetColumnName(@"Information");
             if (reader.TryGetColumn(infoHeader, out var info))
             {
@@ -165,7 +163,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                 Information = string.Format(CultureInfo.CurrentCulture, "Compound from Skyline document {0} - {1}", documentName, info );
             }
 
-            if (RetentionTime.Value == 0)
+            if (RetentionTime.HasValue && RetentionTime.Value == 0)
                 RetentionTime = null;
             if (ParsingContext.ContainsKey(@"scheduledMethod") && EndTime.HasValue && RetentionTime.HasValue)
             {
