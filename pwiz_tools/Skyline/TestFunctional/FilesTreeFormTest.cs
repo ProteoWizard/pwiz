@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using DigitalRune.Windows.Docking;
 using pwiz.Skyline;
 using pwiz.Skyline.Controls.FilesTree;
 using pwiz.Skyline.SettingsUI;
@@ -63,8 +64,7 @@ namespace pwiz.SkylineTestFunctional
         public void TestFilesTreeForm()
         {
             TestFilesZipPaths = new[] {
-                @"TestFunctional\FilesTreeFormTest.zip"
-                // @"TestFunctional\FilesTreeFileSystemTest.zip",
+                @"TestFunctional\FilesTreeFormTest.zip",
             };
             RunFunctionalTest();
         }
@@ -80,7 +80,7 @@ namespace pwiz.SkylineTestFunctional
             TestSave();
             TestSaveAs();
             TestRatPlasmaDocument();
-            // TestShowFilesInOlderDocument();
+            TestUpgradeExistingDocumentWithFilesTree();
         }
 
         protected void TestFileSystemWatcherIgnoreList()
@@ -125,15 +125,6 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(LocalFileSystem.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory", @"c:\users\foobar\dir"));
         }
 
-        protected void TestShowFilesInOlderDocument()
-        {
-            var documentPath = TestFilesDirs[0].GetTestPath(@"");
-            RunUI(() => SkylineWindow.OpenFile(documentPath));
-            WaitForConditionUI(() => SkylineWindow.SequenceTreeFormIsVisible);
-
-            // Assert FilesTree is available, not visible, exists as tab behind SequenceTree
-        }
-
         protected void TestEmptyDocument()
         {
             // In a new, empty document, FilesTree should be non-null, be visible but not active, and docked as second tab next to SequenceTree
@@ -165,7 +156,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected void TestSave() {
 
-            const string fileName = "savedFileName.sky";
+            const string fileName = "SavedFile.sky";
 
             // Create new, empty document
             {
@@ -180,8 +171,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(0, SkylineWindow.FilesTree.MonitoredDirectories().Count);
             }
 
-            var baseDirectoryPath = TestFilesDirs[0].FullPath;
-            var monitoredPath = Path.Combine(baseDirectoryPath, fileName);
+            var monitoredPath = Path.Combine(TestFilesDirs[0].FullPath, @"TestSave", fileName);
             RunUI(() => SkylineWindow.SaveDocument(monitoredPath));
             WaitForFilesTree();
 
@@ -225,8 +215,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNull(SkylineWindow.FilesTree.Root.NodeAt(0).LocalFilePath);
 
             // Save document for the first time
-            var baseDirectoryPath = TestFilesDirs[0].FullPath;
-            var monitoredPath = Path.Combine(baseDirectoryPath, origFileName);
+            var monitoredPath = Path.Combine(TestFilesDirs[0].FullPath, @"TestSaveAs", origFileName);
             {
                 RunUI(() => SkylineWindow.SaveDocument(monitoredPath));
                 WaitForFilesTree();
@@ -242,7 +231,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Save the document to a new location - to test "Save As"
             {
-                monitoredPath = Path.Combine(baseDirectoryPath, saveAsFileName);
+                monitoredPath = Path.Combine(TestFilesDirs[0].FullPath, @"TestSaveAs", saveAsFileName);
                 RunUI(() => SkylineWindow.SaveDocument(monitoredPath));
                 WaitForFilesTree();
             }
@@ -266,6 +255,64 @@ namespace pwiz.SkylineTestFunctional
             // View Layout (.sky.view)
             Assert.AreEqual(SkylineWindow.GetViewFile(monitoredPath), tree.Root.NodeAt(1).LocalFilePath);
             AssertFileState(FileState.available, tree.Root.NodeAt(1));
+        }
+
+        protected void TestUpgradeExistingDocumentWithFilesTree()
+        {
+            var documentPath = Path.Combine(TestFilesDirs[0].FullPath, @"TestUpgradeExistingDocumentWithFilesTree", @"UpgradeWithFilesTree.sky");
+
+            RunUI(() => SkylineWindow.OpenFile(documentPath));
+            WaitForDocumentLoaded();
+
+            Assert.IsNotNull(SkylineWindow.FilesTreeForm);
+            Assert.IsNotNull(SkylineWindow.FilesTree);
+
+            Assert.IsTrue(SkylineWindow.SequenceTreeFormIsVisible);
+            Assert.IsFalse(SkylineWindow.FilesTreeFormIsVisible);
+
+            string persistentString = null;
+            RunUI(() =>
+            {
+                // Trivial change so the document can be saved
+                SkylineWindow.Paste(@"PEPTIDEK");
+
+                var dockPane = SkylineWindow.FilesTreeForm.ParentDockPane;
+                var contents = dockPane.Contents;
+
+                Assert.IsTrue(dockPane.Visible);
+                Assert.AreEqual(DockState.DockLeft, dockPane.DockState);
+                Assert.AreEqual(2, contents.Count);
+                Assert.IsTrue(contents[0] is SequenceTreeForm);
+                Assert.IsTrue(contents[1] is FilesTreeForm);
+
+                var sequenceTreeForm = SkylineWindow.SequenceTree.Parent.Parent as SequenceTreeForm;
+                persistentString = sequenceTreeForm?.GetPersistentStringForTests();
+            });
+
+            Assert.IsNotNull(persistentString);
+            Assert.IsTrue(persistentString.Contains(@"|" + FilesTree.FILES_TREE_SHOWN_ONCE_TOKEN));
+
+            RunUI(() =>
+            {
+                SkylineWindow.ShowFilesTreeForm(false);
+                SkylineWindow.SaveDocument();
+
+                SkylineWindow.NewDocument();
+                WaitForDocumentLoaded();
+
+                SkylineWindow.OpenFile(documentPath);
+            });
+
+            // CONSIDER: Assert the .view file contains the FilesTreeShownOnce token
+
+            // FilesTree should not be shown after it was shown and closed in the last session
+            Assert.IsNotNull(SkylineWindow.SequenceTree);
+            Assert.IsTrue(SkylineWindow.SequenceTreeFormIsVisible);
+            Assert.IsFalse(SkylineWindow.FilesTreeFormIsVisible);
+
+            // CONSIDER: count the number of tabs in the DigitalRune DockPane. Unclear how to 
+            //           do this without using reflection since tab count is in a private member
+            //           at dockPane.TabStripControl.Tabs.Count.
         }
 
         protected void TestRatPlasmaDocument()
@@ -825,12 +872,6 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(@"NEW NAME", replicatesFolder.Nodes[0].Name);
             Assert.AreEqual(@"NEW NAME", SkylineWindow.Document.MeasuredResults.Chromatograms[0].Name);
             Assert.AreEqual(@"NEW NAME", SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[0].Name);
-        }
-
-        private static void ResetFilesTree()
-        {
-            // Close FilesTreeForm so test framework doesn't fail the test due to an unexpected open dialog
-            RunUI(() => { SkylineWindow.DestroyFilesTreeForm(); });
         }
 
         /// <summary>

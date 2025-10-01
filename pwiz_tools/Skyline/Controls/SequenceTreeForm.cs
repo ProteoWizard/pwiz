@@ -55,6 +55,12 @@ namespace pwiz.Skyline.Controls
             return base.GetPersistentString() + @"|" + SequenceTree.GetPersistentString() + @"|" + FilesTree.FilesTree.FILES_TREE_SHOWN_ONCE_TOKEN;
         }
 
+        // Used to make the persistent string available to tests
+        public string GetPersistentStringForTests()
+        {
+            return GetPersistentString();
+        }
+
         public SequenceTree SequenceTree { get { return sequenceTree; } }
         public ToolStripComboBox ComboResults { get { return comboResults; } }
 
