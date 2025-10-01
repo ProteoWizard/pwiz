@@ -107,6 +107,7 @@ namespace pwiz.Skyline
     {
         private SequenceTreeForm _sequenceTreeForm;
         private FilesTreeForm _filesTreeForm;
+        private PropertyGridForm _propertyForm;
         private ImmediateWindow _immediateWindow;
 
         private SrmDocument _document;
@@ -204,6 +205,9 @@ namespace pwiz.Skyline
 
             checkForUpdatesMenuItem.Visible =
                 checkForUpdatesSeparator.Visible = ApplicationDeployment.IsNetworkDeployed;
+
+            // Track active content to update what PropertyGrid displays
+            DockPanel.ActiveContentChanged += DockPanel_ActiveContentChanged;
 
             // Begin ToolStore check for updates to currently installed tools, if any
             if (ToolStoreUtil.UpdatableTools(Settings.Default.ToolList).Any())
@@ -1092,6 +1096,9 @@ namespace pwiz.Skyline
                     SequenceTree.KeysOverride = Keys.None;
                     FindNext(true);
                     SequenceTree.UseKeysOverride = false;
+                    return true;
+                case Keys.F4:
+                    ShowPropertyForm(show: !(_propertyForm is { Visible: true }));
                     return true;
             }
             return base.ProcessCmdKey(ref msg, keyData);
@@ -3226,6 +3233,66 @@ namespace pwiz.Skyline
                 _filesTreeForm.Close();
                 _filesTreeForm = null;
             }
+        }
+
+        #endregion
+
+        #region Properties
+
+        public PropertyGridForm PropertyForm => _propertyForm;
+        public bool PropertyFormIsVisible => _propertyForm is { Visible: true };
+        public bool PropertyFormIsActivated => _propertyForm is { IsActivated: true };
+
+        public void ShowPropertyForm(bool show, string persistentState = null)
+        {
+            if (show)
+            {
+                _propertyForm ??= CreatePropertyForm();
+                PotentialPropertyProviderGotFocus(DockPanel.ActiveContent);
+
+                if (_propertyForm.DockPanel != null)
+                    _propertyForm.Activate();
+                else
+                    _propertyForm.Show(dockPanel, DockState.DockRight);
+            }
+            else
+            {
+                _propertyForm.Hide();
+            }
+        }
+
+        private PropertyGridForm CreatePropertyForm()
+        {
+            _propertyForm = new PropertyGridForm(this);
+            PotentialPropertyProviderGotFocus(DockPanel.ActiveContent);
+
+            return _propertyForm;
+        }
+
+        public void DestroyPropertyForm()
+        {
+            if (_propertyForm != null)
+            {
+                _propertyForm.Close();
+                _propertyForm = null;
+            }
+        }
+
+        private void PotentialPropertyProviderGotFocus(IDockableForm form)
+        {
+            if (form is IPropertyProvider propertyProvider)
+                ShowProperties(propertyProvider.GetSelectedObjectProperties());
+        }
+
+        public void ShowProperties(GlobalizedObject properties)
+        {
+            if (_propertyForm is { Visible:true })
+                _propertyForm.SetPropertyObject(properties);
+        }
+
+        private void DockPanel_ActiveContentChanged(object sender, EventArgs e)
+        {
+            PotentialPropertyProviderGotFocus(DockPanel.ActiveContent);
         }
 
         #endregion

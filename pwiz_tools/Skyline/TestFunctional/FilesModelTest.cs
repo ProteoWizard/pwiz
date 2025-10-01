@@ -31,7 +31,7 @@ namespace pwiz.SkylineTestFunctional
         public void TestFilesModel()
         {
             // These test files are large (90MB) so reuse rather than duplicate
-            TestFilesZip = @"TestFunctional\FilesTreeFormTest.zip";
+            TestFilesZip = FilesTreeFormTest.TEST_FILES_ZIP;
             RunFunctionalTest();
         }
 

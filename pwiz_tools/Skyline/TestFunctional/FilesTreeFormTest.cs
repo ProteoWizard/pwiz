@@ -54,6 +54,7 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class FilesTreeFormTest : AbstractFunctionalTest
     {
+        internal const string TEST_FILES_ZIP = @"TestFunctional\FilesTreeFormTest.zip";
         internal const string RAT_PLASMA_FILE_NAME = @"Rat_plasma.sky";
         internal const int RAT_PLASMA_REPLICATE_COUNT = 42;
 
@@ -63,7 +64,7 @@ namespace pwiz.SkylineTestFunctional
         public void TestFilesTreeForm()
         {
             TestFilesZipPaths = new[] {
-                @"TestFunctional\FilesTreeFormTest.zip"
+                TEST_FILES_ZIP
                 // @"TestFunctional\FilesTreeFileSystemTest.zip",
             };
             RunFunctionalTest();
@@ -414,7 +415,7 @@ namespace pwiz.SkylineTestFunctional
             TestSpectralLibraries();
 
             TestMonitoringFileSystem();
-            
+
             TestDragAndDrop();
 
             TestDragAndDropOnParentNode();
