@@ -1568,6 +1568,15 @@ namespace pwiz.Skyline.FileUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Panorama Folders:.
+        /// </summary>
+        public static string PublishDocumentDlg_Panorama_ServerFolders {
+            get {
+                return ResourceManager.GetString("PublishDocumentDlg_Panorama_ServerFolders", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Retrieving information from servers.
         /// </summary>
         public static string PublishDocumentDlg_PublishDocumentDlg_Load_Retrieving_information_on_servers {

@@ -29,7 +29,7 @@ namespace pwiz.CommonMsData.RemoteApi
     }
     public class RemoteItem
     {
-        public RemoteItem(MsDataFileUri msDataFileUri, string label, string type, DateTime? lastModified, long fileSizeBytes, AccessType access = AccessType.unknown)
+        public RemoteItem(MsDataFileUri msDataFileUri, string label, string type, DateTime? lastModified, long fileSizeBytes, bool hasChildren = false, AccessType access = AccessType.unknown)
         {
             MsDataFileUri = msDataFileUri;
             Label = label;
@@ -37,6 +37,7 @@ namespace pwiz.CommonMsData.RemoteApi
             LastModified = lastModified;
             FileSize = (ulong) fileSizeBytes;
             Access = access;
+            HasChildren = hasChildren;
         }
 
         public MsDataFileUri MsDataFileUri { get; private set; }
@@ -46,5 +47,6 @@ namespace pwiz.CommonMsData.RemoteApi
         public ulong FileSize { get; private set; }
         public object Data { get; private set; }
         public AccessType Access { get; private set; }
+        public bool HasChildren { get; }
     }
 }

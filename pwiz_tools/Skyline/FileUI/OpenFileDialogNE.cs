@@ -47,7 +47,7 @@ namespace pwiz.Skyline.FileUI
             var dataSourceList = new List<MsDataFileUri>();
             foreach (ListViewItem item in listView.SelectedItems)
             {
-                if (!DataSourceUtil.IsFolderType(item.SubItems[1].Text))
+                if (!TreatAsFolder(item.SubItems[1].Text))
                 {
                     dataSourceList.Add(((SourceInfo)item.Tag).MsDataFileUri);
                 }
@@ -64,7 +64,7 @@ namespace pwiz.Skyline.FileUI
             // should navigate to
             foreach (ListViewItem item in listView.SelectedItems)
             {
-                if (DataSourceUtil.IsFolderType(item.SubItems[1].Text))
+                if (TreatAsFolder(item.SubItems[1].Text))
                 {
                     OpenFolderItem(item);
                     return;

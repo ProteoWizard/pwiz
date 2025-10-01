@@ -36,6 +36,11 @@ namespace pwiz.Skyline.Properties
             yield break;
         }
 
+        public IEnumerable<RemoteAccount> GetAccountsOfType(RemoteAccountType type)
+        {
+            return Items.Where(item => item.AccountType == type);
+        }
+
         public override string Title { get { return PropertiesResources.RemoteAccountList_Title_Edit_Remote_Accounts; } }
 
         public override string Label { get { return PropertiesResources.RemoteAccountList_Label_Remote_Accounts; } }

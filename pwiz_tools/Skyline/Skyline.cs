@@ -32,6 +32,7 @@ using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using JetBrains.Annotations;
 using log4net;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.DataBinding.Documentation;
@@ -255,6 +256,16 @@ namespace pwiz.Skyline
             else
             {
                 Settings.Default.UIMode = defaultUIMode; // OnShown() will ask user for it
+            }
+
+            // Push settings to an in-memory cache that can be read by ArdiaAccount since it cannot read Skyline settings directly.
+            // CONSIDER: this approach is rudimentary. Revisit and consider:
+            //              (1) moving all RemoteAccount-related config elsewhere
+            //              (2) doing #1 in the background
+            //              (3) the relationship between user.config models (ex: ArdiaRegistrationCodeEntry) and ArdiaAccount/Session
+            foreach (var kvPair in Settings.Default.ArdiaRegistrationCodeEntries)
+            {
+                ArdiaCredentialHelper.SetApplicationCode(kvPair.Key, kvPair.Value.ClientApplicationCode);
             }
         }
 
@@ -2766,6 +2777,19 @@ namespace pwiz.Skyline
             }
         }
 
+        private void searchToolsMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowSearchToolsDlg();
+        }
+
+        public void ShowSearchToolsDlg()
+        {
+            using var listbox = new ListBox();
+            var driverTools = new SettingsListBoxDriver<SearchTool>(listbox, Settings.Default.SearchToolList);
+            driverTools.LoadList();
+            driverTools.EditList();
+        }
+
         private void toolsMenu_DropDownOpening(object sender, EventArgs e)
         {
             PopulateToolsMenu();
@@ -3073,6 +3097,18 @@ namespace pwiz.Skyline
             };
             DocumentationViewer documentationViewer = new DocumentationViewer(true);
             documentationViewer.DocumentationHtml = documentationGenerator.GetDocumentationHtmlPage();
+            documentationViewer.Show(this);
+        }
+
+        private void keyboardShortcutsHelpMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowKeyboardShortcutsDocumentation();
+        }
+
+        public void ShowKeyboardShortcutsDocumentation()
+        {
+            DocumentationViewer documentationViewer = new DocumentationViewer(true);
+            documentationViewer.DocumentationHtml = KeyboardShortcutDocumentation.GenerateKeyboardShortcutHtml(menuMain);
             documentationViewer.Show(this);
         }
 
@@ -4715,6 +4751,8 @@ namespace pwiz.Skyline
             {
                 case ArdiaAccount ardia:
                 {
+                    // ISSUE: if ArdiaLoginDlg fails, callers receive no error. When debugging tests, use breakpoints to look at ArdiaLoginDlg before it closes.
+                    //        For example, this happens if the remote server URL cannot be found.
                     using var loginDlg = new ArdiaLoginDlg(ardia);
                     if (DialogResult.Cancel == loginDlg.ShowDialog(this))
                         throw new OperationCanceledException();
@@ -4807,6 +4845,19 @@ namespace pwiz.Skyline
         public IEnumerable<RemoteAccount> GetRemoteAccounts()
         {
             return Settings.Default.RemoteAccountList;
+        }
+
+        /// <summary>
+        /// Reset the token for all Ardia-type accounts in <see cref="Settings.RemoteAccountList"/>.
+        /// Used only in tests.
+        /// </summary>
+        // CONSIDER: this should go elsewhere. Maybe when CommonMsData supports RemoteAccountList
+        public void ClearArdiaAccountTokens()
+        {
+            Settings.Default.RemoteAccountList.
+                Where(a => a.AccountType == RemoteAccountType.ARDIA).
+                Cast<ArdiaAccount>().
+                ForEach(ArdiaCredentialHelper.ClearToken);
         }
     }
 }

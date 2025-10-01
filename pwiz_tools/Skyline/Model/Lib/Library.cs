@@ -1024,7 +1024,7 @@ namespace pwiz.Skyline.Model.Lib
             ICollection<Target> targets)
         {
             var result = new List<IList<double>>();
-            foreach (var file in spectrumSourceFiles)
+            foreach (var file in spectrumSourceFiles ?? LibraryFiles)
             {
                 int? fileIndex = null;
                 result.Add(GetRetentionTimesWithSequences(file, targets, ref fileIndex).ToList());
