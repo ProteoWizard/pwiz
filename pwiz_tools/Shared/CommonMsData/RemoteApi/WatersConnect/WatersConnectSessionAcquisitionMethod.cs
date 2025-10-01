@@ -132,7 +132,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                         if (folderObject.CanWrite)
                             accessType = AccessType.read_write;
 
-                        yield return new RemoteItem(childUrl, folderObject.Name, itemType, null, 0, accessType);
+                        yield return new RemoteItem(childUrl, folderObject.Name, itemType, null, 0, false, accessType);
                     }
                 }
             }
