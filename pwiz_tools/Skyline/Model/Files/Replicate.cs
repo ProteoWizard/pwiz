@@ -65,7 +65,6 @@ namespace pwiz.Skyline.Model.Files
             var remainingChromatograms = 
                 document.MeasuredResults.Chromatograms.Where(chrom => !deleteIds.Contains(chrom.Id)).ToList();
 
-            // Note: newMeasuredResults must be null when removing all MeasuredResults from a document.
             MeasuredResults newMeasuredResults = null;
             if (remainingChromatograms.Count > 0)
             {
