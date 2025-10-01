@@ -244,75 +244,73 @@ namespace pwiz.Skyline.Controls.FilesTree
                 customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_Tooltip_FilePath, FilePath, rt);
 
                 customTable.AddDetailRow(@" ", @" ", rt);
-                if (FileState == FileState.available || FileState == FileState.in_memory)
+
+                // If saved file path and local file path are the same: only show "File Path: c:\foo\bar"
+                // Otherwise, show both "Saved File Path: c:\abc\def" and "Local File Path: c:\foo\bar"
+                // Show LocalFilePath as red if the local file is unavailable.
+                if (string.Compare(FilePath, LocalFilePath, StringComparison.Ordinal) == 0)
                 {
-                    customTable.AddDetailRow(@"LocalFilePath", LocalFilePath, rt);
+                    if (FileState == FileState.available || FileState == FileState.in_memory)
+                        customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_Tooltip_FilePath, FilePath, rt);
+                    else
+                        TooltipNewRowWithRedValue(FilesTreeResources.FilesTree_TreeNode_Tooltip_FilePath, FilePath, customTable, rt);
                 }
                 else
                 {
-                    var label = @"LocalFilePath";
-                    var value = LocalFilePath;
+                    customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_Tooltip_SavedFilePath, FilePath, rt);
 
-                    TooltipNewRowWithRedValue(label, value, customTable, rt);
+                    if (FileState == FileState.available || FileState == FileState.in_memory)
+                        customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_Tooltip_LocalFilePath, LocalFilePath, rt);
+                    else
+                        TooltipNewRowWithRedValue(FilesTreeResources.FilesTree_TreeNode_Tooltip_LocalFilePath, FilesTreeResources.FilesTree_TreeNode_Tooltip_FileMissing, customTable, rt);
                 }
-
-                // TODO: Brendan wants tooltips to look like this. Restore.
-                // // if saved file path and local file path are the same: show only "File Path: c:\foo\bar"
-                // // otherwise, show both "Saved File Path: c:\abc\def" and "Local File Path: c:\foo\bar"
-                // if (string.Compare(FilePath, LocalFilePath, StringComparison.Ordinal) == 0)
-                // {
-                //     customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_Tooltip_FilePath, FilePath, rt);
-                // }
-                // else
-                // {
-                //     customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_Tooltip_SavedFilePath, FilePath, rt);
-                //
-                //     // CONSIDER: use red font for missing files?
-                //     var localFilePath = FileState == FileState.missing ? FilesTreeResources.FilesTree_TreeNode_Tooltip_FileMissing : LocalFilePath;
-                //     customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_Tooltip_LocalFilePath, localFilePath, rt);
-                // }
             }
 
             if (Debugger.IsAttached)
             {
                 TooltipNewRowWithText(@"     ", customTable, rt);
-                TooltipNewRowWithText(@"===================================================", customTable, rt);
-                TooltipNewRowWithText(@"Debug Info (only visible when debugger attached)", customTable, rt);
+                TooltipNewRowWithText(@"==========================================", customTable, rt);
+                customTable.AddDetailRow(@"Debug Info", @"(only visible when debugger attached)", rt);
                 TooltipNewRowWithText(@"     ", customTable, rt);   
 
                 customTable.AddDetailRow(@"FileName", FileName, rt);
                 customTable.AddDetailRow(@"FilePath", FilePath, rt);
 
-                if (!Model.IsBackedByFile)
+                TooltipNewRowWithText(@"     ", customTable, rt);
+                customTable.AddDetailRow(@"Expect to find a local file?", $@"{(Model.IsBackedByFile ? @"Yes" : @"No")}", rt);
+                customTable.AddDetailRow(@"FileState", FileState.ToString(), rt);
+                TooltipNewRowWithText(@"     ", customTable, rt);
+
+                if (Model.IsBackedByFile) 
                 {
-                    customTable.AddDetailRow(@"FileState", @"Not backed by local file", rt);
-                }
-                else if (FileState == FileState.available || FileState == FileState.in_memory)
-                {
-                    customTable.AddDetailRow(@"FileState", FileState.ToString(), rt);
-                    customTable.AddDetailRow(@"LocalFilePath", LocalFilePath, rt);
-                }
-                else
-                {
-                    TooltipNewRowWithRedValue(@"FileState", FileState.ToString(), customTable, rt);
-                    TooltipNewRowWithRedValue(@"LocalFilePath", LocalFilePath, customTable, rt);
+                    if (FileState == FileState.available || FileState == FileState.in_memory)
+                    {
+                        customTable.AddDetailRow(@"LocalFilePath", LocalFilePath, rt);
+                    }
+                    else
+                    {
+                        TooltipNewRowWithRedValue(@"LocalFilePath", LocalFilePath, customTable, rt);
+                    }
                 }
 
-                // Show extra debug info on the .sky file
+                // Add more info to the .sky file
                 if (Model is SkylineFile)
                 {
                     TooltipNewRowWithText(@"     ", customTable, rt);
+
                     var monitoredDirectoryPaths = FilesTree.MonitoredDirectories();
+                    TooltipNewRowWithText($@"Monitoring {monitoredDirectoryPaths.Count} directories:", customTable, rt);
                     for (var i = 0; i < monitoredDirectoryPaths.Count; i++) {
-                        customTable.AddDetailRow($@"Monitored directory[{i}]", monitoredDirectoryPaths[i], rt);
+                        customTable.AddDetailRow($@"  ({i}) Directory: ", monitoredDirectoryPaths[i], rt);
                     }
                 }
 
                 if (Model is SkylineAuditLog || Model is SkylineFile)
                 {
-                    var isForceEnabled = Program.FunctionalTest && !AuditLogList.IgnoreTestChecks;
+                    TooltipNewRowWithText(@"     ", customTable, rt);
 
-                    TooltipNewRowWithText($@"Did the test framework force audit logging to be enabled? {(isForceEnabled ? @"Yes" : @"No")}", customTable, rt);
+                    var auditLogEnabledByTestFramework = Program.FunctionalTest && !AuditLogList.IgnoreTestChecks;
+                    customTable.AddDetailRow(@"Audit logging enabled by the test framework?", $@"{(auditLogEnabledByTestFramework ? @"Yes" : @"No")}", rt);
                 }
 
                 // CONSIDER: add SrmDocument.RevisionIndex to FileNode

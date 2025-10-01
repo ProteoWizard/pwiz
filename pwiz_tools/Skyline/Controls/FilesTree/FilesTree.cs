@@ -220,7 +220,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
                 var files = SkylineFile.Create(document, documentFilePath);
 
-                MergeNodes(new SingletonList<FileNode>(files), Nodes, FilesTreeNode.CreateNode, _cancellationTokenSource.Token);
+                MergeNodes(new SingletonList<FileNode>(files), Nodes, _cancellationTokenSource.Token);
 
                 Root.Expand(); // Root node should always be expanded
 
@@ -240,7 +240,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         }
 
         // CONSIDER: refactor for more code reuse with SrmTreeNode
-        internal void MergeNodes(IList<FileNode> docFilesList, TreeNodeCollection treeNodes, Func<FileNode, FilesTreeNode> createTreeNodeFunc, CancellationToken cancellationToken)
+        internal void MergeNodes(IList<FileNode> docFilesList, TreeNodeCollection treeNodes, CancellationToken cancellationToken)
         {
             FileNode nodeDoc = null;
 
@@ -329,7 +329,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 }
                 else
                 {
-                    nodeTree = createTreeNodeFunc(nodeDoc);
+                    nodeTree = FilesTreeNode.CreateNode(nodeDoc);
 
                     nodesToInsert.Add(nodeTree);
                     LoadFile(nodeTree);
@@ -356,7 +356,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
                 if (model?.Files.Count > 0)
                 {
-                    MergeNodes(model.Files, treeNode.Nodes, createTreeNodeFunc, cancellationToken);
+                    MergeNodes(model.Files, treeNode.Nodes, cancellationToken);
                 }
             }
 

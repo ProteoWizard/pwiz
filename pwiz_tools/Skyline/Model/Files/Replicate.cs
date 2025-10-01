@@ -63,9 +63,15 @@ namespace pwiz.Skyline.Model.Files
             var deleteNames = models.Select(item => item.Name).ToList();
 
             var remainingChromatograms = 
-                document.MeasuredResults.Chromatograms.Where(chrom => !deleteIds.Contains(chrom.Id));
+                document.MeasuredResults.Chromatograms.Where(chrom => !deleteIds.Contains(chrom.Id)).ToList();
 
-            var newMeasuredResults = document.MeasuredResults.ChangeChromatograms(remainingChromatograms.ToList());
+            // Note: newMeasuredResults must be null when removing all MeasuredResults from a document.
+            MeasuredResults newMeasuredResults = null;
+            if (remainingChromatograms.Count > 0)
+            {
+                newMeasuredResults = document.MeasuredResults.ChangeChromatograms(remainingChromatograms);
+            }
+
             var newDocument = document.ChangeMeasuredResults(newMeasuredResults, monitor);
             newDocument.ValidateResults();
             

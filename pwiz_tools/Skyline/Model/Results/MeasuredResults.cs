@@ -992,8 +992,20 @@ namespace pwiz.Skyline.Model.Results
             });
         }
 
+        /// <summary>
+        /// Change the list of ChromSets. Pass null to fully reset the list. Passing a zero-length list
+        /// causes undefined behavior so throws <see cref="ArgumentException"/>.
+        /// </summary>
+        /// <param name="prop"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException">Thrown if caller passes a zero-length list. Pass null instead.</exception>
         public MeasuredResults ChangeChromatograms(IList<ChromatogramSet> prop)
         {
+            if (prop != null && prop.Count == 0) 
+            {
+                throw new ArgumentException(@"Cannot change chromatograms to a zero-length list. Use null instead.");
+            }
+
             var results = ChangeProp(ImClone(this), im => im.Chromatograms = prop);
             if (RequiresCacheUpdate(results))
             {

@@ -80,6 +80,7 @@ namespace pwiz.SkylineTestFunctional
             TestSave();
             TestSaveAs();
             TestRatPlasmaDocument();
+            // TestShowFilesInOlderDocument();
         }
 
         protected void TestFileSystemWatcherIgnoreList()
@@ -94,27 +95,43 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(LocalFileSystem.IgnoreFileName(@"c:\Users\foobar\file.sky"));
             Assert.IsFalse(LocalFileSystem.IgnoreFileName(@"c:\Users\foobar\file.xls"));
             Assert.IsFalse(LocalFileSystem.IgnoreFileName(@"c:\Users\foobar\file.txt"));
+            Assert.IsFalse(LocalFileSystem.IgnoreFileName(@"c:\Users\foobar\file.raw"));
+            Assert.IsFalse(LocalFileSystem.IgnoreFileName(@"c:\Users\foobar\file.RAW"));
         }
 
         protected void TestFileSystemHelpers()
         {
-            // Is file contained in directory, recursive?
+            // Is file contained in directory?
             Assert.IsTrue(LocalFileSystem.IsFileInDirectory(@"c:\Users\foobar\directory", @"c:\users\foobar\directory\child.txt"));
             Assert.IsTrue(LocalFileSystem.IsFileInDirectory(@"c:\Users\foobar\directory\", @"c:\users\foobar\directory\child.txt"));
+            Assert.IsTrue(LocalFileSystem.IsFileInDirectory(@"c:\Users\foobar\directory\\", @"c:\users\foobar\directory\child.txt"));
+            Assert.IsTrue(LocalFileSystem.IsFileInDirectory(@"c:\Users\foobar\", @"c:\users\foobar\directory\child.txt"));
+            Assert.IsTrue(LocalFileSystem.IsFileInDirectory(@"c:\Users\", @"c:\users\foobar\directory\child.txt"));
             Assert.IsTrue(LocalFileSystem.IsFileInDirectory(@"c:\", @"c:\users\foobar\directory\child.txt"));
 
             Assert.IsFalse(LocalFileSystem.IsFileInDirectory(@"c:\tmp\rat-plasma\", @"c:\users\foobar\tmp"));
             Assert.IsFalse(LocalFileSystem.IsFileInDirectory(@"d:\", @"c:\users\foobar\tmp"));
 
-            // Do two strings refer to the same directory?
+            // Do two string paths refer to the same directory?
             Assert.IsTrue(LocalFileSystem.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory", @"c:\users\foobar\directory"));
             Assert.IsTrue(LocalFileSystem.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory", @"c:\users\foobar\directory\"));
             Assert.IsTrue(LocalFileSystem.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory", @"c:\users\foobar\directory\\"));
             Assert.IsTrue(LocalFileSystem.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory\", @"c:\users\foobar\directory"));
             Assert.IsTrue(LocalFileSystem.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory\\", @"c:\users\foobar\directory"));
+            Assert.IsTrue(LocalFileSystem.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory\", @"c:\users\foobar\directory\\"));
+            Assert.IsTrue(LocalFileSystem.IsInOrSubdirectoryOf(@"C:\USERS\FOOBAR\DIRECTORY\", @"c:\users\foobar\directory\\"));
 
             Assert.IsFalse(LocalFileSystem.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory", @"c:\users\foobar\directory\subdirectory"));
             Assert.IsFalse(LocalFileSystem.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory", @"c:\users\foobar\dir"));
+        }
+
+        protected void TestShowFilesInOlderDocument()
+        {
+            var documentPath = TestFilesDirs[0].GetTestPath(@"");
+            RunUI(() => SkylineWindow.OpenFile(documentPath));
+            WaitForConditionUI(() => SkylineWindow.SequenceTreeFormIsVisible);
+
+            // Assert FilesTree is available, not visible, exists as tab behind SequenceTree
         }
 
         protected void TestEmptyDocument()
@@ -125,7 +142,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(SkylineWindow.FilesTreeFormIsVisible);
             Assert.IsFalse(SkylineWindow.FilesTreeFormIsActivated);
 
-            var dockPane = (DigitalRune.Windows.Docking.DockPane)SkylineWindow.FilesTreeForm.Parent;
+            var dockPane = SkylineWindow.FilesTreeForm.ParentDockPane;
             Assert.AreEqual(2, dockPane.DisplayingContents.Count);
             Assert.IsInstanceOfType(dockPane.DisplayingContents[0], typeof(SequenceTreeForm));
             Assert.IsInstanceOfType(dockPane.DisplayingContents[1], typeof(FilesTreeForm));

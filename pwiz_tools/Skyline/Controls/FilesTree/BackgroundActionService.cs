@@ -39,7 +39,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
             SynchronizingObject = synchronizingObject;
 
-            var threadCount = ParallelEx.GetThreadCount(); // to process tasks synchronously, set to zero
+            var threadCount = ParallelEx.GetThreadCount(2); // to process tasks synchronously, set to zero
             _workQueue = new QueueWorker<Action>(null, ProcessTask);
             _workQueue.RunAsync(threadCount, @"BackgroundActionService: system for background processing of FilesTree related work");
         }
