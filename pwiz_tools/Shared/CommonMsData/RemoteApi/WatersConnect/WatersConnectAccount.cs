@@ -48,9 +48,9 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
         public static IHttpClientFactory _httpClientFactory;
 
         public static readonly WatersConnectAccount DEFAULT
-            = new WatersConnectAccount(@"https://devconnect.waters.com:48444", string.Empty, string.Empty)
+            = new WatersConnectAccount(@"https://localhost:48444", string.Empty, string.Empty)
             {
-                IdentityServer = @"https://devconnect.waters.com:48333"
+                IdentityServer = @"https://localhost:48333"
             };
 
         static WatersConnectAccount()
@@ -84,7 +84,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                 IdentityServer = ServerUrl.Substring(0, ichLastColon) + strPort;
             }
             ClientScope = @"webapi";
-            ClientSecret = @"secret";
+            ClientSecret = @"method-develop_secret";
             ClientId = @"resourceownerclient_jwt";
         }
 

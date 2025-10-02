@@ -82,6 +82,9 @@ namespace pwiz.Skyline.ToolsUI
                 SetRemoteAccount(remoteAccount);
                 comboAccountType.Enabled = false;
             }
+
+            if (remoteAccount != null)
+                comboAccountType.Enabled = false;   // cannot change type when editing existing account
         }
 
         private void textArdiaServerURL_TextChanged(object sender, EventArgs e)
@@ -657,6 +660,15 @@ namespace pwiz.Skyline.ToolsUI
                 wizardPagesByAccountType.SelectedIndex = UNIFI_WIZARD_PAGE_INDEX;
 
                 process_ardiaAccount_CurrentlyLoggedIn_EnableDisableControls();
+
+                if (RemoteAccountType.UNIFI.Equals(AccountType))
+                {
+                    SetRemoteAccount( UnifiAccount.DEFAULT );
+                }
+                else if (RemoteAccountType.WATERS_CONNECT.Equals(AccountType))
+                {
+                    SetRemoteAccount(WatersConnectAccount.DEFAULT);
+                }
             }
 
             if (RemoteAccountType.ARDIA.Equals(AccountType))
