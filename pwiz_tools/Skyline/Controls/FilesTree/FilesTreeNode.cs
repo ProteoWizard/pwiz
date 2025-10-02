@@ -269,7 +269,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             if (Debugger.IsAttached)
             {
                 TooltipNewRowWithText(@"     ", customTable, rt);
-                TooltipNewRowWithText(@"==========================================", customTable, rt);
+                TooltipNewRowWithText(@"====================", customTable, rt);
                 customTable.AddDetailRow(@"Debug Info", @"(only visible when debugger attached)", rt);
                 TooltipNewRowWithText(@"     ", customTable, rt);   
 
@@ -278,6 +278,15 @@ namespace pwiz.Skyline.Controls.FilesTree
 
                 TooltipNewRowWithText(@"     ", customTable, rt);
                 customTable.AddDetailRow(@"Expect to find a local file?", $@"{(Model.IsBackedByFile ? @"Yes" : @"No")}", rt);
+                if (FileState == FileState.available || FileState == FileState.in_memory)
+                {
+                    var value = FileState == FileState.available ? @"Yes (in local storage)" : @"Yes (in memory)";
+                    customTable.AddDetailRow(@"Found local file?", value, rt);
+                }
+                else
+                {
+                    customTable.AddDetailRow(@"Found local file?", @"No", rt);
+                }
                 customTable.AddDetailRow(@"FileState", FileState.ToString(), rt);
                 TooltipNewRowWithText(@"     ", customTable, rt);
 

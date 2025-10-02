@@ -81,9 +81,14 @@ namespace pwiz.Skyline.Controls.FilesTree
         }
 
         public FileSystemType FileSystemType => _delegate.FileSystemType;
-        public IList<string> MonitoredDirectories() => _delegate.MonitoredDirectories();
         public bool IsMonitoringDirectory(string fullPath) => _delegate.IsMonitoringDirectory(fullPath);
         public bool IsFileAvailable(string fullPath) => _delegate.IsFileAvailable(fullPath);
+
+        public IList<string> MonitoredDirectories()
+        {
+            Assume.IsNotNull(_delegate.MonitoredDirectories());
+            return _delegate.MonitoredDirectories();
+        }
 
         // CONSIDER: does this need to lock while updating _delegate?
         public void StartWatching(string directoryPath, CancellationToken cancellationToken)

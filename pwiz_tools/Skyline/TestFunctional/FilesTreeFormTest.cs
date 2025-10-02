@@ -15,39 +15,33 @@
  */
 
 using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline.Model;
-using pwiz.SkylineTestUtil;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
-using pwiz.Skyline.Controls.FilesTree;
-using pwiz.Skyline.SettingsUI;
-using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Model.Files;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.FilesTree;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Files;
+using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.SettingsUI;
+using pwiz.SkylineTestUtil;
 using static pwiz.Skyline.Model.Files.FileNode;
 
-// CONSIDER: Replicate => verify right-click menu includes Open Containing Folder
-// CONSIDER: Test Tooltips. See MethodEditTutorialTest.ShowNodeTip
-// CONSIDER: add .sky file with imsdb, irtdb, protdb
-// CONSIDER: add an Audit Log scenario
-// CONSIDER: drag-and-drop disjoint selection
-// CONSIDER: tree disallows dragging non-draggable nodes
-// CONSIDER: use non-local file paths in SrmSettings (example: replicate sample files where SrmSettings paths point to directories that don't exist locally)
+// CONSIDER: test additional file types - imsdb, irtdb, protdb
+// CONSIDER: double-click on a Background Proteome opens the correct dialog
+// CONSIDER: verify right-click menu includes open containing folder only for files found locally
+// CONSIDER: test tooltips, see example in MethodEditTutorialTest.ShowNodeTip
+// CONSIDER: expand drag-and-drop tests - scenarios: disjoint selection, tree disallows dragging un-draggable nodes
+// CONSIDER: handling of non-local paths from SrmSettings (ex: replicate sample file paths cannot be found locally)
+// CONSIDER: new test making sure clicking 'x' upper RHC of confirm dialog does not delete Replicate / Spectral Library
 
-// TODO: test double-click on Background Proteome. Need an additional Skyline document with a Background Proteome
-// TODO: test new .sky document, import asset backed file (ex: .protdb), assert file system watching before document saved for the first time
-// TODO: add a new helper for getting a FilesTree node by model type to make this more readable: SkylineWindow.FilesTree.Root.NodeAt(0).FileState).
-// TODO: add test making sure clicking upper RHC 'x' on confirm dialog does nto delete Replicate or Spectral Library
-
-// TODO: local file system - change directory name containing raw files
-// TODO: local file system - use raw files in directory that's a sibling of directory containing .sky file
+// TODO: add a helper to get nodes by model type to make tests more readable
 
 // ReSharper disable WrongIndentSize
 namespace pwiz.SkylineTestFunctional
@@ -150,7 +144,7 @@ namespace pwiz.SkylineTestFunctional
 
             AssertTopLevelFiles(typeof(SkylineAuditLog));
 
-            Assert.AreEqual(FileSystemType.in_memory, SkylineWindow.FilesTree.FileSystemType);
+            Assert.AreEqual(FileSystemType.in_memory, SkylineWindow.FilesTree.FileSystemType());
             Assert.AreEqual(0, SkylineWindow.FilesTree.MonitoredDirectories().Count);
         }
 
@@ -167,7 +161,7 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() => { SkylineWindow.ShowFilesTreeForm(true); });
                 WaitForFilesTree();
 
-                Assert.AreEqual(FileSystemType.in_memory, SkylineWindow.FilesTree.FileSystemType);
+                Assert.AreEqual(FileSystemType.in_memory, SkylineWindow.FilesTree.FileSystemType());
                 Assert.AreEqual(0, SkylineWindow.FilesTree.MonitoredDirectories().Count);
             }
 
@@ -175,7 +169,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.SaveDocument(monitoredPath));
             WaitForFilesTree();
 
-            Assert.AreEqual(FileSystemType.local_file_system, SkylineWindow.FilesTree.FileSystemType);
+            Assert.AreEqual(FileSystemType.local_file_system, SkylineWindow.FilesTree.FileSystemType());
             Assert.AreEqual(2, SkylineWindow.FilesTree.MonitoredDirectories().Count);
             Assert.IsTrue(SkylineWindow.FilesTree.IsMonitoringDirectory(monitoredPath));
 
@@ -208,7 +202,7 @@ namespace pwiz.SkylineTestFunctional
                 WaitForFilesTree();
             }
 
-            Assert.AreEqual(FileSystemType.in_memory, SkylineWindow.FilesTree.FileSystemType);
+            Assert.AreEqual(FileSystemType.in_memory, SkylineWindow.FilesTree.FileSystemType());
             Assert.AreEqual(0, SkylineWindow.FilesTree.MonitoredDirectories().Count);
 
             Assert.AreEqual(FileState.not_initialized, SkylineWindow.FilesTree.Root.NodeAt(0).FileState);
@@ -221,7 +215,7 @@ namespace pwiz.SkylineTestFunctional
                 WaitForFilesTree();
             }
 
-            Assert.AreEqual(FileSystemType.local_file_system, SkylineWindow.FilesTree.FileSystemType);
+            Assert.AreEqual(FileSystemType.local_file_system, SkylineWindow.FilesTree.FileSystemType());
             Assert.AreEqual(2, SkylineWindow.FilesTree.MonitoredDirectories().Count);
             Assert.IsTrue(SkylineWindow.FilesTree.IsMonitoringDirectory(monitoredPath));
 
@@ -238,7 +232,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Check state of files and paths after saving
             var tree = SkylineWindow.FilesTree;
-            Assert.AreEqual(FileSystemType.local_file_system, tree.FileSystemType);
+            Assert.AreEqual(FileSystemType.local_file_system, tree.FileSystemType());
             Assert.AreEqual(2, SkylineWindow.FilesTree.MonitoredDirectories().Count);
             Assert.IsTrue(SkylineWindow.FilesTree.IsMonitoringDirectory(monitoredPath));
 
@@ -331,7 +325,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.ShowFilesTreeForm(true));
             WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible && SkylineWindow.FilesTree.IsComplete());
 
-            Assert.AreEqual(FileSystemType.local_file_system, SkylineWindow.FilesTree.FileSystemType);
+            Assert.AreEqual(FileSystemType.local_file_system, SkylineWindow.FilesTree.FileSystemType());
             Assert.AreEqual(2, SkylineWindow.FilesTree.MonitoredDirectories().Count);
             Assert.IsTrue(SkylineWindow.FilesTree.IsMonitoringDirectory(documentPath));
 
