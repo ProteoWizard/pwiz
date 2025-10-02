@@ -63,10 +63,11 @@ namespace pwiz.Skyline.Controls.FilesTree
             _cancellationTokenSource = new CancellationTokenSource();
             _fileSystemService.StartWatching(null, _cancellationTokenSource.Token);
 
+            // Icons size is 16x16
             ImageList = new ImageList
             {
                 TransparentColor = Color.Magenta,
-                ColorDepth = ColorDepth.Depth32Bit
+                ColorDepth = ColorDepth.Depth32Bit 
             };
 
             ImageList.Images.Add(Resources.Blank);              // 1bpp
@@ -78,7 +79,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             ImageList.Images.Add(Resources.ReplicateMissing);   // 24bpp // TODO: improve icon
             ImageList.Images.Add(Resources.DataProcessing);     // 8bpp
             ImageList.Images.Add(Resources.PeptideLib);         // 4bpp
-            ImageList.Images.Add(Resources.Skyline_Release);    // 24bpp
+            ImageList.Images.Add(Resources.Skyline_Release1);   // 24bpp
             ImageList.Images.Add(Resources.AuditLog);           // 32bpp
             ImageList.Images.Add(Resources.CacheFile);          // 32bpp
             ImageList.Images.Add(Resources.ViewFile);           // 32bpp
