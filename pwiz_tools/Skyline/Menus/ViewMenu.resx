@@ -781,7 +781,7 @@
     <value>228, 22</value>
   </data>
   <data name="proteinAbundanceToolStripMenuItem.Text" xml:space="preserve">
-    <value>Protein Abundance</value>
+    <value>Replicate &amp;Abundance</value>
   </data>
   <data name="peakAreasMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>

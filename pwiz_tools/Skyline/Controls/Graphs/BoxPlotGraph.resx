@@ -573,10 +573,10 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.TabText" xml:space="preserve">
-    <value>BoxPlot Graph</value>
+    <value>Peak Areas - Replicate Abundance</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>BoxPlot Graph</value>
+    <value>Peak Areas - Replicate Abundance</value>
   </data>
   <data name="&gt;&gt;ModeUIExtender.Name" xml:space="preserve">
     <value>ModeUIExtender</value>

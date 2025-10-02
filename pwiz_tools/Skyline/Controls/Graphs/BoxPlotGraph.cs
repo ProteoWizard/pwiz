@@ -40,6 +40,7 @@ namespace pwiz.Skyline.Controls.Graphs
     public partial class BoxPlotGraph : DataboundGraph
     {
         private ReplicateValue _groupByValue;
+        private static Color DefaultBarColor = Color.Blue;
 
         public BoxPlotGraph()
         {
@@ -47,7 +48,6 @@ namespace pwiz.Skyline.Controls.Graphs
             var graphPane = zedGraphControl1.GraphPane;
             graphPane.YAxis.Title.IsVisible = false;
             graphPane.Legend.IsVisible = true;
-            graphPane.Margin.All = 0;
             graphPane.Border.IsVisible = false;
             graphPane.Chart.Border.IsVisible = false;
 
@@ -70,12 +70,16 @@ namespace pwiz.Skyline.Controls.Graphs
             graphPane.XAxis.Scale.FontSpec.Angle = 90;
             graphPane.YAxis.Scale.FontSpec = GraphSummary.CreateFontSpec(Color.Black);
             graphPane.YAxis.Scale.FontSpec.Angle = 90;
+            graphPane.IsFontsScaled = false;
 
             graphPane.BarSettings.MinClusterGap = 3f;
-            graphPane.BarSettings.Type = BarType.Cluster;
+            graphPane.BarSettings.Type = BarType.Overlay;
 
-            graphPane.XAxis.Title.Text = "Replicate"; // TODO How to populate this? Also localize
-            graphPane.YAxis.Title.Text = "Log2";
+            graphPane.Title.IsVisible = false;
+            graphPane.XAxis.Title.Text = "Replicate"; // TODO Localize
+            graphPane.XAxis.Title.IsVisible = true;
+            graphPane.YAxis.Title.Text = "Log2 Peak Area"; // TODO Localize
+            graphPane.YAxis.Title.IsVisible = true;
         }
 
         public static BoxPlotGraph CreateBoxPlotGraph(SkylineWindow skylineWindow)
@@ -105,125 +109,138 @@ namespace pwiz.Skyline.Controls.Graphs
         
         public void UpdateGraph()
         {
-            bool isClusteredMode = _groupByValue == null;
-            var dataSet = buildDataMap();
+            var dataSet = buildBoxPlotDataList();
+
             if (dataSet.IsNullOrEmpty())
                 return;
 
             var pane = zedGraphControl1.GraphPane;
             pane.CurveList.Clear();
 
-            // 1) Build global label index
-            var allLabels = dataSet
-                .SelectMany(kvp => kvp.Value)
-                .Select(d => d.Label)
-                .Distinct()
-                .ToArray();
-
+            bool isGrouped = _groupByValue != null;
             pane.XAxis.Type = AxisType.Text;
-            pane.XAxis.Scale.TextLabels = allLabels;
+            pane.Legend.IsVisible = isGrouped;
+            var boxPlotData = new List<BoxPlotData>(); // yeah idk theres probably a better way to do this
 
-            var labelToIndex = allLabels
-                .Select((label, i) => new { label, i })
-                .ToDictionary(x => x.label, x => x.i);
-
-            // 2) Bar drawing mode
-            pane.BarSettings.Type = isClusteredMode ? BarType.Cluster : BarType.Overlay;
-            //pane.BarSettings.MinBarGap = 0.0f;
-            //pane.BarSettings.MinClusterGap = isClusteredMode ? 0.15f : 0.0f;
-            //pane.BarSettings.ClusterScaleWidth = 1.0f;
-
-            // Optional: keep one label per tick
-            //pane.XAxis.Scale.MajorStep = 1;
-
-            // 3) Build one curve per group, aligned to the global label index
-            var usedColors = new List<Color>();
-            int slots = allLabels.Length;
-
-            foreach (var kvp in dataSet)
+            if (!isGrouped)
             {
-                // Start with all slots as Missing to preserve alignment
-                var pointsArray = new PointPair[slots];
-                for (int i = 0; i < slots; i++)
-                    pointsArray[i] = new PointPair(i, PointPairBase.Missing);
+                var points2 = new List<PointPair>();
 
-                // Fill only the labels this group actually has
-                foreach (var d in kvp.Value)
+                var allLabels = dataSet
+                    .Select(d => SkylineWindow.Document.Settings.MeasuredResults?.Chromatograms[d.Key].Name)
+                    .Distinct()
+                    .ToArray();
+
+                var labelToIndex = allLabels
+                    .Select((label, i) => new { label, i })
+                    .ToDictionary(x => x.label, x => x.i);
+
+                foreach (var kvp in dataSet)
                 {
-                    int x = labelToIndex[d.Label];
-                    pointsArray[x] = BoxPlotBarItem.MakePointPair(
-                        x, d.Q3, d.Q1, d.Median, d.Max, d.Min, d.Outliers);
+                    var replicateName = SkylineWindow.Document.Settings.MeasuredResults?.Chromatograms[kvp.Key].Name;
+                    var x = labelToIndex[replicateName];
+                    var d = BoxPlotDataUtil.buildBoxPlotData(kvp.Value.ToArray(), replicateName);
+                    boxPlotData.Add(d);
+                    var pointPair = BoxPlotBarItem.MakePointPair(x, d.Q3, d.Q1, d.Median, d.Max, d.Min, d.Outliers);
+                    points2.Add(pointPair);
                 }
+                var pointPairList = new PointPairList(points2);
+                var bar = new BoxPlotBarItem(string.Empty, pointPairList, DefaultBarColor, Color.Black);
 
-                var points = new PointPairList(pointsArray);
-                var color = ColorGenerator.GetColor(kvp.Key, usedColors);
-                usedColors.Add(color);
-
-                var bar = new BoxPlotBarItem(kvp.Key, points, color, Color.Black);
                 pane.CurveList.Add(bar);
+                pane.XAxis.Scale.TextLabels = allLabels;
+
             }
+            else
+            {
+                var groupedDataSet = dataSet
+                    .GroupBy(kvp =>
+                        _groupByValue
+                            .GetValue(new AnnotationCalculator(SkylineWindow.Document), SkylineWindow.Document.Settings.MeasuredResults?.Chromatograms[kvp.Key])
+                            .ToString())
+                    .ToDictionary(
+                        g => g.Key,
+                        g => g.ToDictionary(kvp => kvp.Key, kvp => kvp.Value)
+                    );
+
+                var allLabels = groupedDataSet
+                    .SelectMany(kvp => kvp.Value)
+                    .Select(kvp => SkylineWindow.Document.Settings.MeasuredResults?.Chromatograms[kvp.Key].Name)
+                    .Distinct()
+                    .ToArray();
+
+
+                var labelToIndex = allLabels
+                    .Select((label, i) => new { label, i })
+                    .ToDictionary(x => x.label, x => x.i);
+
+                var usedColors = new List<Color>();
+                int slots = allLabels.Length;
+                foreach (var group in groupedDataSet)
+                {
+                    var groupByValue = group.Key;
+                    var groupDataSet = group.Value;
+                    var pointsArray = new PointPair[slots];
+                    for (var i = 0; i < slots; i++)
+                        pointsArray[i] = new PointPair(i, PointPairBase.Missing);
+
+                    foreach (var kvp in groupDataSet)
+                    {
+                        var replicateIndex = kvp.Key;
+                        var chromatogramSet = SkylineWindow.Document.Settings.MeasuredResults?.Chromatograms[replicateIndex];
+                        var replicateName = chromatogramSet.Name;
+                        var x = labelToIndex[replicateName];
+                        var d = BoxPlotDataUtil.buildBoxPlotData(kvp.Value.ToArray(), replicateName);
+                        boxPlotData.Add(d);
+                        pointsArray[x] = BoxPlotBarItem.MakePointPair(x, d.Q3, d.Q1, d.Median, d.Max, d.Min, d.Outliers);
+                    }
+                    var points = new PointPairList(pointsArray);
+                    var color = ColorGenerator.GetColor(groupByValue, usedColors);
+                    usedColors.Add(color);
+
+                    var bar = new BoxPlotBarItem(groupByValue, points, color, Color.Black);
+                    pane.CurveList.Add(bar);
+                    pane.XAxis.Scale.TextLabels = allLabels;
+
+                }
+            }
+
+            double yMin = boxPlotData.Min(bpd => bpd.Outliers.Length > 0 ? Math.Min(bpd.Min, bpd.Outliers.Min()) : bpd.Min);
+            double yMax = boxPlotData.Max(bpd => bpd.Outliers.Length > 0 ? Math.Max(bpd.Max, bpd.Outliers.Max()) : bpd.Max);
+            zedGraphControl1.GraphPane.YAxis.Scale.Min = yMin - 0.5;
+            zedGraphControl1.GraphPane.YAxis.Scale.Max = yMax + 0.5;
 
             zedGraphControl1.AxisChange();
             zedGraphControl1.Invalidate();
         }
-        private Dictionary<string, List<BoxPlotData>> buildDataMap()
+
+        private Dictionary<int, List<double>> buildBoxPlotDataList()
         {
-            if (BindingListSource.ItemProperties.IsNullOrEmpty())
+            var document = SkylineWindow.Document;
+            var dataSchema = new SkylineWindowDataSchema(SkylineWindow);
+            var moleculeGroups = document.MoleculeGroups.ToList();
+            var replicateDataPoints = new Dictionary<int, List<double>>();
+            for (int iMoleculeGroup = 0; iMoleculeGroup < moleculeGroups.Count; iMoleculeGroup++)
             {
-                return new Dictionary<string, List<BoxPlotData>>();
-            }
-            var replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(BindingListSource.ItemProperties);
-            var rowItems = BindingListSource.Cast<RowItem>().ToArray();
-            var boxPlotDataMap = new Dictionary<string, List<BoxPlotData>> ();
+                var moleculeGroup = moleculeGroups[iMoleculeGroup];
+                var path = new IdentityPath(IdentityPath.ROOT, moleculeGroup.PeptideGroup);
+                var protein = new Protein(dataSchema, path);
+                var abundances = protein.GetProteinAbundances();
 
-            foreach (var group in replicatePivotColumns.GetReplicateColumnGroups())
-            {
-                foreach (var column in group)
+                foreach (var kvp in abundances)
                 {
-                    // Filter out replicate constant columns.
-                    if (replicatePivotColumns.IsConstantColumn(column))
+                    int replicateIndex = kvp.Key;
+                    double abundance = kvp.Value.Raw;
+                    if (!replicateDataPoints.TryGetValue(replicateIndex, out var values))
                     {
-                        continue;
+                        values = new List<double>();
+                        replicateDataPoints[replicateIndex] = values;
                     }
-                    // Filter our non replicate constant columns.
-                    if (replicatePivotColumns.GetResultKey(column) == null)
-                    {
-                        continue;
-                    }
-
-                    // Determine which key to group by. By default, use property name. 
-                    string groupByKey = null;
-                    var groupByReplicateValue = _groupByValue;
-                    if (groupByReplicateValue != null)
-                    {
-                        var chromatogramSet =
-                            SkylineWindow.Document.Settings.MeasuredResults?.Chromatograms[group.Key.ReplicateIndex];
-                        groupByKey = groupByReplicateValue.GetValue(new AnnotationCalculator(SkylineWindow.Document), chromatogramSet).ToString();
-                    }
-                    else
-                    {
-                        groupByKey = column.DisplayColumn.ColumnDescriptor?.GetColumnCaption(ColumnCaptionType.localized);
-                    }
-
-                    // Initialize List for column
-                    if (!boxPlotDataMap.TryGetValue(groupByKey, out var columnDataList))
-                    { 
-                        columnDataList = new List<BoxPlotData>();
-                        boxPlotDataMap.Add(groupByKey, columnDataList);
-                    }
-                    var replicate = GetReplicate(column.DisplayColumn.DataSchema as SkylineDataSchema, column.PivotKey, replicatePivotColumns);
-                    Console.WriteLine($"Replicate {replicate.Name}, Count: {replicate.Files.Count}");
-                    // Add data points for column and replicate
-                    var dataPoints = rowItems.Select(column.GetValue).Where(v => v != null).Cast<double>().ToArray();
-                    Console.WriteLine($"Replicate Name {group.Key.ReplicateName}, Group By Key {groupByKey}, Group By Type {groupByReplicateValue?.Title}");
-                    var boxPlotData = BoxPlotDataUtil.buildBoxPlotData(dataPoints, group.Key.ReplicateName);
-                    if (boxPlotData != null)
-                    {
-                        columnDataList.Add(boxPlotData);
-                    }
+                    values.Add(abundance);
                 }
             }
-            return boxPlotDataMap;
+
+            return replicateDataPoints;
         }
 
         private Replicate GetReplicate(SkylineDataSchema skylineDataSchema, PivotKey pivotKey, ReplicatePivotColumns replicatePivotColumns)
@@ -284,15 +301,10 @@ namespace pwiz.Skyline.Controls.Graphs
                         groupByItem.Checked = true;
                         _groupByValue = replicateValue;
                     }
-                    groupByReplicateValue(replicateValue);
+                    UpdateGraph();
                 };
             }
             ZedGraphHelper.BuildContextMenu(sender, menuStrip, true);
-        }
-        
-        private void groupByReplicateValue(ReplicateValue value)
-        {
-            UpdateGraph();
         }
 
         public override void RefreshData()
