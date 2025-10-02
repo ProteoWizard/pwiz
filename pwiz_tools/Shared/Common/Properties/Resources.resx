@@ -566,13 +566,4 @@
   <data name="CountDistinctImpl_CountDistinctImpl_Count_Distinct__0_" xml:space="preserve">
 	  <value>Count Distinct {0}</value>
   </data>
-  <data name="DsvStreamReader_this_Header__0__not_found_in_DSV_file_" xml:space="preserve">
-    <value>Header {0} not found in DSV file.</value>
-  </data>
-  <data name="DsvStreamReader_DsvStreamReader_Stream_is_null_or_empty_" xml:space="preserve">
-    <value>Stream is null or empty.</value>
-  </data>
-  <data name="DsvStreamReader_DsvStreamReader_Empty_stream_" xml:space="preserve">
-    <value>Empty stream.</value>
-  </data>
 </root>

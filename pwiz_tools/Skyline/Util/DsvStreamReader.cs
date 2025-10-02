@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using pwiz.Common.Properties;
+using pwiz.Skyline.Util.Extensions;
 
-namespace pwiz.Common.DataBinding
+namespace pwiz.Skyline.Util
 {
     public class DsvStreamReader
     {
@@ -15,12 +15,12 @@ namespace pwiz.Common.DataBinding
         {
             _reader = reader;
             if (reader == null || reader.Peek() < 0)
-                throw new IOException(Resources.DsvStreamReader_DsvStreamReader_Stream_is_null_or_empty_);
+                throw new IOException(UtilResources.DsvStreamReader_DsvStreamReader_Stream_is_null_or_empty_);
             _separator = separator;
             _headers = new List<string>();
             var headersLine = _reader.ReadLine();
             if (headersLine == null)
-                throw new IOException(Resources.DsvStreamReader_DsvStreamReader_Empty_stream_);
+                throw new IOException(UtilResources.DsvStreamReader_DsvStreamReader_Empty_stream_);
             _headers = new List<string>(headersLine.Split(_separator));
         }
 
@@ -29,7 +29,7 @@ namespace pwiz.Common.DataBinding
             var _currentLine = _reader.ReadLine();
             if (_currentLine == null)
                 return;
-            _currentLineFields = new List<string>(_currentLine.Split(_separator));
+            _currentLineFields = new List<string>(TextUtil.ParseDsvFields(_currentLine,_separator));
         }
 
         public bool EndOfStream
@@ -48,7 +48,7 @@ namespace pwiz.Common.DataBinding
             {
                 int index = _headers.IndexOf(header);
                 if (index == -1)
-                    throw new IOException(string.Format(Resources.DsvStreamReader_this_Header__0__not_found_in_DSV_file_, header));
+                    throw new IOException(string.Format(UtilResources.DsvStreamReader_this_Header__0__not_found_in_DSV_file_, header));
                 return _currentLineFields[index];
             }
         }

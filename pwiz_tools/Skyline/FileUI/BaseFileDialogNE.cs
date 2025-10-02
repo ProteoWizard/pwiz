@@ -378,16 +378,16 @@ namespace pwiz.Skyline.FileUI
         {
             string type = DataSourceUtil.GetSourceType(fileInfo);
             SourceInfo sourceInfo = new SourceInfo(new MsDataFilePath(fileInfo.FullName))
-                                        {
-                                            type = type,
-                                            imageIndex = (DataSourceUtil.IsUnknownType(type) ? ImageIndex.UnknownFile : ImageIndex.MassSpecFile),
-                                            name = fileInfo.Name
-                                        };
+            {
+                type = type,
+                imageIndex = (DataSourceUtil.IsUnknownType(type) ? ImageIndex.UnknownFile : ImageIndex.MassSpecFile),
+                name = fileInfo.Name
+            };
             if( !sourceInfo.isUnknown )
             {
                 if(listView.View != View.Details ||
-                        (sourceTypeComboBox.SelectedIndex > 0 &&
-                         sourceTypeComboBox.SelectedItem.ToString() != sourceInfo.type))
+                   (sourceTypeComboBox.SelectedIndex > 0 &&
+                    sourceTypeComboBox.SelectedItem.ToString() != sourceInfo.type))
                     return sourceInfo;
                 sourceInfo.size = (UInt64) fileInfo.Length;
                 sourceInfo.dateModified = GetSafeDateModified(fileInfo);
@@ -464,15 +464,12 @@ namespace pwiz.Skyline.FileUI
                 RemoteUrl remoteUrl = directory as RemoteUrl;
                 if (string.IsNullOrEmpty(remoteUrl.ServerUrl))
                 {
-                    foreach (var remoteAccount in _remoteAccounts)
-                    {
-                        listSourceInfo.Add(new SourceInfo(GetRootUrl(remoteAccount))
-                        {
-                            name = remoteAccount.AccountAlias,
-                            type = DataSourceUtil.FOLDER_TYPE,
-                            imageIndex = ImageIndex.MyNetworkPlaces,
-                        });
-                    }
+                    listSourceInfo.AddRange(
+                        _remoteAccounts.Select(
+                            remoteAccount => new SourceInfo(GetRootUrl(remoteAccount))
+                            {
+                                name = remoteAccount.AccountAlias, type = DataSourceUtil.FOLDER_TYPE, imageIndex = ImageIndex.MyNetworkPlaces,
+                            }));
                     listSourceInfo.Add(new SourceInfo(null)  // Add the item to edit accounts
                     {
                         name = FileUIResources.BaseFileDialogNE_populateListViewFromDirectory_Add_Edit_Account___,
@@ -488,7 +485,7 @@ namespace pwiz.Skyline.FileUI
                         CreateNewRemoteSession(remoteAccount);
                     }
                     RemoteServerException exception;
-                    bool isComplete = _remoteSession.AsyncFetchContents(remoteUrl, out exception);
+                    var isComplete = _remoteSession.AsyncFetchContents(remoteUrl, out exception);
                     foreach (var item in _remoteSession.ListContents(remoteUrl))
                     {
                         var imageIndex = GetRemoteItemImageIndex(item);

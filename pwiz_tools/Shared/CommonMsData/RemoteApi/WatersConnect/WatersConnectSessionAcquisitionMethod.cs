@@ -19,8 +19,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -50,7 +50,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                 bool canReadMethods = false;
                 if (TryGetData(GetRootContentsUrl(), out folders))
                 {
-                    var currentFolder = folders.FirstOrDefault(f => f.Path.Equals(wcUrl.EncodedPath));
+                    var currentFolder = folders.FirstOrDefault(f => f.Path.Equals(WebUtility.UrlDecode(wcUrl.EncodedPath)));
                     canReadMethods = currentFolder?.CanRead ?? false;
                 }
                 if (canReadMethods)
@@ -83,20 +83,16 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                 .Select(f => new WatersConnectAcquisitionMethodObject(f)));
         }
 
-        public string UploadMethod(MethodModel method, IProgressMonitor progressMonitor)
+        public string UploadMethod(string methodName, string methodJson, IProgressMonitor progressMonitor)
         {
-            JsonSerializer serializer = new JsonSerializer();
-            var json = JsonConvert.SerializeObject(method,
-                Formatting.Indented,
-                new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
             var requestUri = GetAquisitionMethodUploadUrl();
             var request = new HttpRequestMessage(HttpMethod.Post, requestUri);
             if (progressMonitor == null)
-                request.Content = new StringContent(json);
+                request.Content = new StringContent(methodJson);
             else
             {
-                var status = new ProgressStatus(string.Format("Uploading method {0} to {1}", method.Name, WatersConnectAccount.ServerUrl));
-                var progressStream = new ProgressStream(new StringStream(json));
+                var status = new ProgressStatus(string.Format("Uploading method {0} to {1}", methodName, WatersConnectAccount.ServerUrl));
+                var progressStream = new ProgressStream(new StringStream(methodJson));
                 progressMonitor.UpdateProgress(status);
                 progressStream.SetProgressMonitor(progressMonitor, status, true);
                 request.Content = new StreamContent(progressStream);

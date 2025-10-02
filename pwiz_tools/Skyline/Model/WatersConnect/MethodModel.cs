@@ -5,10 +5,9 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
-using pwiz.Common.DataBinding;
+using pwiz.Skyline.Util;
 
-
-namespace pwiz.CommonMsData.RemoteApi.WatersConnect
+namespace pwiz.Skyline.Model.WatersConnect
 {
     public class MethodModel
     {
@@ -159,8 +158,8 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             var infoHeader = GetColumnName(@"Information");
             if (reader.TryGetColumn(infoHeader, out var info))
             {
-                reader.TryGetColumn("document.name", out var documentName);
-                Information = string.Format(CultureInfo.CurrentCulture, "Compound from Skyline document {0} - {1}", documentName, info );
+                reader.TryGetColumn(@"document.name", out var documentName);
+                Information = string.Format(CultureInfo.CurrentCulture, ModelResources.Compound_ParseObject_Compound_from_Skyline_document__0_____1_, documentName, info );
             }
 
             if (RetentionTime.HasValue && RetentionTime.Value == 0)

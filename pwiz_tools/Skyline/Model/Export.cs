@@ -31,7 +31,6 @@ using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.CLI.Bruker.PrmScheduling;
-using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Model.DocSettings;
@@ -45,6 +44,8 @@ using ZedGraph;
 using pwiz.CommonMsData.RemoteApi.WatersConnect;
 using Process = System.Diagnostics.Process;
 using Thread = System.Threading.Thread;
+using Newtonsoft.Json;
+using pwiz.Skyline.Model.WatersConnect;
 
 namespace pwiz.Skyline.Model
 {
@@ -4718,7 +4719,7 @@ namespace pwiz.Skyline.Model
             else
                 writer.Write(false);
             writer.Write(FieldSeparator);
-            writer.Write(nodePepGroup.Name + @"/" + nodePep.ModifiedSequenceDisplay);
+            writer.Write(TextUtil.Quote(nodePepGroup.Name + @"/" + nodePep.ModifiedSequenceDisplay));   // Small molecule names can contain commas, so we have to quote them
             writer.Write(FieldSeparator);
             writer.Write(SkylineDocumentFileName);
             writer.Write(FieldSeparator);
@@ -5086,7 +5087,6 @@ namespace pwiz.Skyline.Model
         }
         public void ExportMethod(string fileName, WatersConnectUrl targetFolderUrl, WatersConnectAcquisitionMethodUrl templateUrl, IProgressMonitor progressMonitor)
         {
-            UploadSuccessful = false;
             _methodName = fileName;
             if (!InitExport(fileName, progressMonitor))
                 return;
@@ -5099,8 +5099,10 @@ namespace pwiz.Skyline.Model
                 throw new IOException(string.Format(ModelResources.WatersConnectMethodExporter_ExportMethod_Folder_ID_is_missing, targetFolderUrl.ToString()));
             }
 
+            var sbUploadResult = new StringBuilder();
             foreach (var methodData in MemoryOutput)
             {
+                UploadSuccessful = false;
                 ParseableObject.ParsingContext.Clear();
                 if (MethodType == ExportMethodType.Scheduled)
                     ParseableObject.ParsingContext[@"scheduledMethod"] = @"true";
@@ -5125,9 +5127,15 @@ namespace pwiz.Skyline.Model
                     method.Name = _methodName;
                 else
                     method.Name = methodData.Key.Replace(MEMORY_KEY_ROOT, _methodName);
-                UploadResult = wcSession.UploadMethod(method, progressMonitor);
+                JsonSerializer serializer = new JsonSerializer();
+                var json = JsonConvert.SerializeObject(method,
+                    Newtonsoft.Json.Formatting.Indented,
+                    new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
+
+                sbUploadResult.AppendLine(wcSession.UploadMethod(method.Name, json, progressMonitor));
                 UploadSuccessful = true;
             }
+            UploadResult = sbUploadResult.ToString();
         }
 
         [SuppressMessage("ReSharper", "RedundantNameQualifier")]
@@ -5135,30 +5143,30 @@ namespace pwiz.Skyline.Model
         public MethodModel ParseMethod(string outputLines)
         {
             var linesReader = new DsvStreamReader(new StringReader(outputLines), ',');
-            var targets = new List<CommonMsData.RemoteApi.WatersConnect.Compound>();
-            CommonMsData.RemoteApi.WatersConnect.Compound currentTarget = null;
-            CommonMsData.RemoteApi.WatersConnect.AdductInfo currentAdduct = null;
+            var targets = new List<WatersConnect.Compound>();
+            WatersConnect.Compound currentTarget = null;
+            WatersConnect.AdductInfo currentAdduct = null;
             while (!linesReader.EndOfStream)
             {
                 linesReader.ReadLine();
                 // we assume that the lines are sorted by target
                 if (currentTarget == null || !currentTarget.IsSameCompound(linesReader))
                 {
-                    currentTarget = new CommonMsData.RemoteApi.WatersConnect.Compound();
+                    currentTarget = new WatersConnect.Compound();
                     targets.Add(currentTarget);
                     currentTarget.ParseObject(linesReader);
-                    currentTarget.Adducts = new List<CommonMsData.RemoteApi.WatersConnect.AdductInfo>();
+                    currentTarget.Adducts = new List<WatersConnect.AdductInfo>();
                 }
                 if (currentTarget.Adducts.Count == 0 || !currentTarget.Adducts.Last().IsSameAdduct(linesReader))
                 {
                     if (currentAdduct != null && !currentAdduct.Transitions.Any(t => t.IsQuanIon))
                         currentAdduct.Transitions.First().IsQuanIon = true; // make sure that there is always a quant ion
-                    currentAdduct = new CommonMsData.RemoteApi.WatersConnect.AdductInfo();
+                    currentAdduct = new WatersConnect.AdductInfo();
                     currentTarget.Adducts.Add(currentAdduct);
                     currentAdduct.ParseObject(linesReader);
-                    currentAdduct.Transitions = new List<CommonMsData.RemoteApi.WatersConnect.Transition>();
+                    currentAdduct.Transitions = new List<WatersConnect.Transition>();
                 }
-                var currentTransition = new CommonMsData.RemoteApi.WatersConnect.Transition();
+                var currentTransition = new WatersConnect.Transition();
                 currentAdduct?.Transitions.Add(currentTransition);
                 currentTransition.ParseObject(linesReader);
             }

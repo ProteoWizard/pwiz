@@ -232,7 +232,7 @@ make sure your instrument can handle the number of transitions in each file.</va
     <value>4</value>
   </data>
   <data name="wcDecideBuckets.Text" xml:space="preserve">
-    <value>&amp;Let w_c decide</value>
+    <value>&amp;Let Waters Connect decide</value>
   </data>
   <data name="wcDecideBuckets.ToolTip" xml:space="preserve">
     <value>Create as many files as needed, given constraints on transition count.</value>

@@ -117,7 +117,6 @@
     </Compile>
     <Compile Include="RemoteApi\Unifi\UnifiSession.cs" />
     <Compile Include="RemoteApi\Unifi\UnifiUrl.cs" />
-    <Compile Include="RemoteApi\WatersConnect\MethodModel.cs" />
     <Compile Include="RemoteApi\WatersConnect\WatersConnectAccount.cs" />
     <Compile Include="RemoteApi\WatersConnect\WatersConnectAcquisitionMethodUrl.cs" />
     <Compile Include="RemoteApi\WatersConnect\WatersConnectFileObject.cs" />

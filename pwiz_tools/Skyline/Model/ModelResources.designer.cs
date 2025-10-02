@@ -451,6 +451,15 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Compound from Skyline document {0} - {1}.
+        /// </summary>
+        public static string Compound_ParseObject_Compound_from_Skyline_document__0_____1_ {
+            get {
+                return ResourceManager.GetString("Compound_ParseObject_Compound_from_Skyline_document__0_____1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Custom molecules must specify a formula or valid monoisotopic and average masses..
         /// </summary>
         public static string CustomMolecule_Validate_Custom_molecules_must_specify_a_formula_or_valid_monoisotopic_and_average_masses_ {

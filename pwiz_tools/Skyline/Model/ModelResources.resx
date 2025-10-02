@@ -924,4 +924,7 @@ Would you like to continue?
   <data name="WatersConnectMethodExporter_ExportMethod_Method_creation_from_Skyline_transition_list" xml:space="preserve">
     <value>Method creation from Skyline transition list</value>
   </data>
+  <data name="Compound_ParseObject_Compound_from_Skyline_document__0_____1_" xml:space="preserve">
+    <value>Compound from Skyline document {0} - {1}</value>
+  </data>
 </root>
