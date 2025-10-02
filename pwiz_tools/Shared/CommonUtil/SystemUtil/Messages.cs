@@ -39,14 +39,30 @@ namespace pwiz.Common.SystemUtil
 
         public static void WriteAsyncDebugMessage(string message, params object[] args)
         {
-            WriteDebugMessage(message, args);
+            if (args?.Length > 0)
+            {
+                WriteDebugMessage(message, args);
+            }
+            else
+            {
+                // If there were no formatting arguments, then pass the message as an argument so that it is not interpreted as a formatting template
+                WriteDebugMessage(@"{0}", new object[] { message });
+            }
         }
 
         public static void WriteAsyncUserMessage(string message, params object[] args)
         {
             // For Skyline UI, the TraceWarningListener class causes these messages to appear in the
             // Immediate Window, for commandline they appear in the console.
-            WriteUserMessage(message, args);
+            if (args?.Length > 0)
+            {
+                WriteUserMessage(message, args);
+            }
+            else
+            {
+                // If there were formatting no arguments, then pass the message as an argument so that it is not interpreted as a formatting template
+                WriteUserMessage(@"{0}", new object[] { message });
+            }
         }
     }
 
