@@ -60,6 +60,7 @@ using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.FilesTree;
 using pwiz.Skyline.Controls.Lists;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Menus;
@@ -105,6 +106,7 @@ namespace pwiz.Skyline
             IRemoteAccountStorage
     {
         private SequenceTreeForm _sequenceTreeForm;
+        private FilesTreeForm _filesTreeForm;
         private ImmediateWindow _immediateWindow;
 
         private SrmDocument _document;
@@ -125,6 +127,7 @@ namespace pwiz.Skyline
 
         public event EventHandler<DocumentChangedEventArgs> DocumentChangedEvent;
         public event EventHandler<DocumentChangedEventArgs> DocumentUIChangedEvent;
+        public event EventHandler<DocumentSavedEventArgs> DocumentSavedEvent;
 
         private readonly List<IProgressStatus> _listProgress;
         private readonly TaskbarProgress _taskbarProgress = new TaskbarProgress();
@@ -224,7 +227,12 @@ namespace pwiz.Skyline
             if (maximize)
                 WindowState = FormWindowState.Maximized;
 
+            // As of April 2025, new Skyline projects are configured to:
+            //   1) Include tabs for Targets and Files trees
+            //   2) Make Targets tree active by default
             ShowSequenceTreeForm(true);
+            ShowFilesTreeForm(true);
+            _sequenceTreeForm.Activate();
 
             // Force the handle into existence before any background threads
             // are started by setting the initial document.  Otherwise, calls
@@ -472,6 +480,11 @@ namespace pwiz.Skyline
             get { return _sequenceTreeForm != null ? _sequenceTreeForm.SequenceTree : null; }
         }
 
+        public FilesTree FilesTree
+        {
+            get { return _filesTreeForm != null ? _filesTreeForm.FilesTree : null; }
+        }
+
         public ToolStripComboBox ComboResults
         {
             get { return _sequenceTreeForm != null ? _sequenceTreeForm.ComboResults : null; }
@@ -585,7 +598,7 @@ namespace pwiz.Skyline
                 _sequenceTreeForm.UpdateResultsUI(settingsNew, settingsOld);
                 _sequenceTreeForm.SequenceTree.OnDocumentChanged(this, e);
             }
-
+            
             // Fire event to allow listeners to update.
             if (DocumentUIChangedEvent != null)
                 DocumentUIChangedEvent(this, e);
@@ -1964,6 +1977,9 @@ namespace pwiz.Skyline
         {
             TargetsTextFactor = textFactor;
             SequenceTree.OnTextZoomChanged();
+
+            // Null check is required since FilesTree is not visible by default and may not exist yet
+            FilesTree?.OnTextZoomChanged(); 
         }
 
         public void ChangeColorScheme()
@@ -3153,6 +3169,67 @@ namespace pwiz.Skyline
 
         #endregion
 
+        #region FilesTree
+
+        public FilesTreeForm FilesTreeForm => _filesTreeForm;
+        public bool FilesTreeFormIsVisible => _filesTreeForm is { Visible: true };
+        public bool FilesTreeFormIsActivated => _filesTreeForm is { IsActivated: true };
+
+        public void ShowFilesTreeForm(bool show, string persistentState = null)
+        {
+            if (show)
+            {
+                // CONSIDER: should FilesTree always be added behind SequenceTree?
+                if (_filesTreeForm != null)
+                {
+                    if (_filesTreeForm.DockPanel == null)
+                        _filesTreeForm.Show(dockPanel, DockState.DockLeft);
+
+                    _filesTreeForm.Activate();
+                }
+                else
+                {
+                    _filesTreeForm = CreateFilesTreeForm(persistentState);
+                    _filesTreeForm.Show(dockPanel, DockState.DockLeft);
+                }
+            }
+            else
+            {
+                _filesTreeForm.Hide();
+            }
+        }
+
+        private FilesTreeForm CreateFilesTreeForm(string persistentString)
+        {
+            string expansionAndSelection = null;
+            if (persistentString != null)
+            {
+                var sepIndex = persistentString.IndexOf('|');
+                if (sepIndex != -1)
+                    expansionAndSelection = persistentString.Substring(sepIndex + 1);
+            }
+
+            _filesTreeForm = new FilesTreeForm(this);
+
+            if (expansionAndSelection != null)
+            {
+                _filesTreeForm.FilesTree.RestoreExpansionAndSelection(expansionAndSelection);
+            }
+
+            return _filesTreeForm;
+        }
+
+        public void DestroyFilesTreeForm()
+        {
+            if (_filesTreeForm != null)
+            {
+                _filesTreeForm.Close();
+                _filesTreeForm = null;
+            }
+        }
+
+        #endregion
+
         #region SequenceTree events
 
         public bool SequenceTreeFormIsVisible
@@ -3202,6 +3279,14 @@ namespace pwiz.Skyline
                 int sepIndex = persistentString.IndexOf('|');
                 if (sepIndex != -1)
                     expansionAndSelection = persistentString.Substring(sepIndex + 1);
+
+                // If this string is not present, SequenceTree's view state was written with a Skyline version 
+                // pre-dating the FilesTree. So, show FilesTree as a tab behind SequenceTree. This check
+                // should run exactly once for any view file.
+                if (!persistentString.EndsWith(@"|" + FilesTree.FILES_TREE_SHOWN_ONCE_TOKEN))
+                {
+                    _shouldShowFilesTree = true;
+                }
             }             
             _sequenceTreeForm = new SequenceTreeForm(this, expansionAndSelection != null);
             _sequenceTreeForm.FormClosed += sequenceTreeForm_FormClosed;
@@ -3243,6 +3328,7 @@ namespace pwiz.Skyline
                 _sequenceTreeForm.ComboResults.SelectedIndexChanged -= comboResults_SelectedIndexChanged;
                 _sequenceTreeForm.Close();
                 _sequenceTreeForm = null;
+                _shouldShowFilesTree = false;
             }
         }
 
@@ -4840,6 +4926,11 @@ namespace pwiz.Skyline
             {
                 throw new ApplicationException(@"Crash Skyline Menu Item Clicked");
             }).Start();
+        }
+
+        public int DocumentSavedEventSubscriberCount()
+        {
+            return DocumentSavedEvent != null ? DocumentSavedEvent.GetInvocationList().Length : 0;
         }
 
         public IEnumerable<RemoteAccount> GetRemoteAccounts()
