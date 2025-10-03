@@ -19,7 +19,6 @@
 using System;
 using System.Data.SQLite;
 using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using pwiz.Common.Database;
 using pwiz.Common.SystemUtil;
