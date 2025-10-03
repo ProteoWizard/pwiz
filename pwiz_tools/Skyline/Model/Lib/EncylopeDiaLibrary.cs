@@ -250,7 +250,6 @@ namespace pwiz.Skyline.Model.Lib
             IProgressStatus status = new ProgressStatus(
                 string.Format(Resources.ChromatogramLibrary_LoadLibraryFromDatabase_Reading_precursors_from__0_,
                     Name));
-            DateTime start = DateTime.UtcNow;
             try
             {
                 loader.UpdateProgress(status);
@@ -346,7 +345,6 @@ namespace pwiz.Skyline.Model.Lib
                 _sourceFiles = new LibraryFiles(sourceFiles);
                 // ReSharper restore PossibleMultipleEnumeration
                 loader.UpdateProgress(status.Complete());
-                Console.Out.WriteLine("Loaded {0} in {1}", FilePath, DateTime.UtcNow - start);
                 return true;
             }
             catch (Exception e)
