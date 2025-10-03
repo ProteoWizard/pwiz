@@ -1841,6 +1841,16 @@ namespace pwiz.Skyline.FileUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The name {0} conflicts with the existing method {1} since this is a multiple file upload..
+        /// </summary>
+        public static string WatersConnectSaveMethodFileDialog_ItemSelected_The_name__0__conflicts_with_the_existing_method__1__since_this_is_a_multiple_file_upload_ {
+            get {
+                return ResourceManager.GetString("WatersConnectSaveMethodFileDialog_ItemSelected_The_name__0__conflicts_with_the_ex" +
+                        "isting_method__1__since_this_is_a_multiple_file_upload_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Open.
         /// </summary>
         public static string WatersConnectSaveMethodFileDialog_OpenButtonText {

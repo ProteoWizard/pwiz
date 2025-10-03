@@ -698,4 +698,7 @@ Would you like to remove some or all of this suffix to shorten the names used in
     <value>Upload successful. Server returns: 
 </value>
   </data>
+  <data name="WatersConnectSaveMethodFileDialog_ItemSelected_The_name__0__conflicts_with_the_existing_method__1__since_this_is_a_multiple_file_upload_" xml:space="preserve">
+    <value>The name {0} conflicts with the existing method {1} since this is a multiple file upload.</value>
+  </data>
 </root>

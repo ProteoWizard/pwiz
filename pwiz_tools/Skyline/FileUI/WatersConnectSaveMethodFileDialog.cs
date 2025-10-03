@@ -83,7 +83,7 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        protected bool IsMultipleMethodConflict(string fileName, out string conflictName)
+        private bool IsMultipleMethodConflict(string fileName, out string conflictName)
         {
             conflictName = null;
             if (MethodNameSuffixes == null || !MethodNameSuffixes.Any() || listView.Items.Count == 0)
@@ -109,7 +109,7 @@ namespace pwiz.Skyline.FileUI
             {
                 MessageDlg.Show(this,
                     string.Format(
-                        "The name {0} conflicts with the existing method {1} since this is a multiple file upload.", methodName, conflictName));
+                        FileUIResources.WatersConnectSaveMethodFileDialog_ItemSelected_The_name__0__conflicts_with_the_existing_method__1__since_this_is_a_multiple_file_upload_, methodName, conflictName));
                 return false;
             }
             MethodName = methodName.Trim();
