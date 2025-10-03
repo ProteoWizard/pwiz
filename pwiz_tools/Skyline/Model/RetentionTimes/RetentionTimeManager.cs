@@ -134,7 +134,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
                 using var settingsChangeMonitor =
                     new SrmSettingsChangeMonitor(new LoadMonitor(this, container, docCurrent),
-                        "Updating retention time alignment");
+                        RetentionTimesResources.RetentionTimeManager_PerformNextAlignment_Updating_retention_time_alignment);
                 docNew = docCurrent.ChangeSettings(
                     docCurrent.Settings.ChangeDocumentRetentionTimes(newDocumentRetentionTimes), settingsChangeMonitor);
             }
