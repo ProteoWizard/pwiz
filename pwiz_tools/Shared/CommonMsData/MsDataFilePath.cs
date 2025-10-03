@@ -107,7 +107,6 @@ namespace pwiz.CommonMsData
 
     public class MsDataFilePath : MsDataFileUri
     {
-        private LockMassParameters _lockMassParameters;
         public static MsDataFilePath ParseUri(string url)
         {
             var filePath = SampleHelp.GetPathFilePart(url);
@@ -138,40 +137,39 @@ namespace pwiz.CommonMsData
             FilePath = filePath;
             SampleName = sampleName;
             SampleIndex = sampleIndex;
-            LockMassParameters = lockMassParameters;
+            LockMassParameters = lockMassParameters ?? LockMassParameters.EMPTY;
             LegacyCentroidMs1 = centroidMs1;
             LegacyCentroidMs2 = centroidMs2;
             LegacyCombineIonMobilitySpectra = combineIonMobilitySpectra;
+        }
+
+        protected MsDataFilePath(MsDataFilePath msDataFilePath)
+        {
+            FilePath = msDataFilePath.FilePath;
+            SampleName = msDataFilePath.SampleName;
+            SampleIndex = msDataFilePath.SampleIndex;
+            LockMassParameters = msDataFilePath.LockMassParameters;
+            LegacyCentroidMs1 = msDataFilePath.LegacyCentroidMs1;
+            LegacyCentroidMs2 = msDataFilePath.LegacyCentroidMs2;
+            LegacyCombineIonMobilitySpectra = msDataFilePath.LegacyCombineIonMobilitySpectra;
         }
 
         public string FilePath { get; private set; }
 
         public MsDataFilePath SetFilePath(string filePath)
         {
-            return ChangeProp(ImClone(this), im => im.FilePath = filePath);
+            return new MsDataFilePath(this){FilePath = filePath};
         }
         public string SampleName { get; private set; }
         public int SampleIndex { get; private set; }
-
-        public LockMassParameters LockMassParameters
-        {
-            get
-            {
-                return _lockMassParameters ?? LockMassParameters.EMPTY;
-            }
-            private set
-            {
-                _lockMassParameters = Equals(value, LockMassParameters.EMPTY) ? null : value;
-            }
-        }
-
+        public LockMassParameters LockMassParameters { get; private set; }
         public bool LegacyCentroidMs1 { get; private set; }
         public bool LegacyCentroidMs2 { get; private set; }
         public bool LegacyCombineIonMobilitySpectra { get; private set; } // BACKWARD COMPATIBILITY: Skyline-daily 19.1.9.338 & 350 stored URLs with this parameter
 
         public override MsDataFileUri GetLocation()
         {
-            if (_lockMassParameters != null || LegacyCentroidMs1 || LegacyCentroidMs2 || LegacyCombineIonMobilitySpectra)
+            if (!LockMassParameters.IsEmpty || LegacyCentroidMs1 || LegacyCentroidMs2 || LegacyCombineIonMobilitySpectra)
                 return new MsDataFilePath(FilePath, SampleName, SampleIndex);
             return this;
         }
@@ -229,7 +227,8 @@ namespace pwiz.CommonMsData
 
         public override MsDataFileUri ChangeLockMassParameters(LockMassParameters lockMassParameters)
         {
-            return ChangeProp(ImClone(this), im => im.LockMassParameters = lockMassParameters);
+            return new MsDataFilePath(FilePath, SampleName, SampleIndex, lockMassParameters,
+                LegacyCentroidMs1, LegacyCentroidMs2, LegacyCombineIonMobilitySpectra);
         }
 
         public override bool LegacyGetCentroidMs1()
@@ -276,7 +275,7 @@ namespace pwiz.CommonMsData
                 LegacyCentroidMs1 == other.LegacyCentroidMs1 &&
                 LegacyCentroidMs2 == other.LegacyCentroidMs2 &&
                 LegacyCombineIonMobilitySpectra == other.LegacyCombineIonMobilitySpectra &&
-                Equals(_lockMassParameters, other._lockMassParameters);
+                LockMassParameters.Equals(other.LockMassParameters);
         }
 
         public override bool Equals(object obj)
@@ -294,7 +293,7 @@ namespace pwiz.CommonMsData
                 int hashCode = FilePath.GetHashCode();
                 hashCode = (hashCode*397) ^ (SampleName != null ? SampleName.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ SampleIndex;
-                hashCode = (hashCode*397) ^ (_lockMassParameters?.GetHashCode() ?? 0);
+                hashCode = (hashCode*397) ^ (LockMassParameters != null ? LockMassParameters.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ (LegacyCentroidMs1 ? 1 : 0);
                 hashCode = (hashCode*397) ^ (LegacyCentroidMs2 ? 1 : 0);
                 hashCode = (hashCode*397) ^ (LegacyCombineIonMobilitySpectra ? 1 : 0);
@@ -310,38 +309,21 @@ namespace pwiz.CommonMsData
 
         public override MsDataFileUri RemoveLegacyParameters()
         {
-            // FUTURE: Remove LockMassParameters
-
             // Remove LegacyCombineIonMobilitySpectra, LegacyCentroidMs1, LegacyCentroidMs2
             if (!LegacyCombineIonMobilitySpectra && !LegacyCentroidMs1 && !LegacyCentroidMs2)
                 return this;
 
-            return ChangeProp(ImClone(this), im =>
-            {
-                im.LegacyCentroidMs1 = false;
-                im.LegacyCentroidMs2 = false;
-                im.LegacyCombineIonMobilitySpectra = false;
-            });
+            // FUTURE: Remove LockMassParameters
+            return new MsDataFilePath(FilePath, SampleName, SampleIndex, LockMassParameters);
         }
 
         public override MsDataFileUri RestoreLegacyParameters(bool centroidMs1, bool centroidMs2)
         {
             if (!centroidMs1 && !centroidMs2)
                 return this;
-            return ChangeProp(ImClone(this), im =>
-            {
-                im.LegacyCentroidMs1 = centroidMs1;
-                im.LegacyCentroidMs2 = centroidMs2;
-                im.LegacyCombineIonMobilitySpectra = false;
-            });
-        }
 
-        public MsDataFilePath ChangeSample(string sampleName)
-        {
-            return ChangeProp(ImClone(this), im =>
-            {
-                im.SampleName = sampleName;
-            });
+            return new MsDataFilePath(FilePath, SampleName, SampleIndex, LockMassParameters,
+                centroidMs1, centroidMs2, false);
         }
     }
 }
