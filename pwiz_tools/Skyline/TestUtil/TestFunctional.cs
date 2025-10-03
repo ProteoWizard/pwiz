@@ -159,6 +159,7 @@ namespace pwiz.SkylineTestUtil
         public const string HARDKLOR_UNICODE_ISSUES = "Hardklor doesn't handle unicode paths";
         public const string ZIP_INSIDE_ZIP = "ZIP inside ZIP does not seem to work on MACS2";
         public const string DOCKER_ROOT_CERTS = "Docker runners do not yet have access to the root certificates needed for Koina";
+        public const string WEB_BROWSER_USE = "WebBrowser class throws UnauthorizedAccessException on Wine";
     }
 
     /// <summary>
@@ -1984,12 +1985,24 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public static void CancelDialog(Form form)
+        {
+            RunUI(() => form.CancelButton.PerformClick());
+            WaitForClosedForm(form);
+        }
+        
         public static void CancelDialog(Form form, Action cancelAction)
         {
             RunUI(cancelAction);
             WaitForClosedForm(form);
         }
 
+        public static void OkDialog(Form form)
+        {
+            RunUI(() => form.AcceptButton.PerformClick());
+            WaitForClosedForm(form);
+        }
+        
         public static void OkDialog(Form form, Action okAction)
         {
             RunUI(okAction);
@@ -2554,8 +2567,17 @@ namespace pwiz.SkylineTestUtil
                 // Release all resources by setting the document to something that
                 // holds no file handles.
                 var docNew = new SrmDocument(SrmSettingsList.GetDefault());
+                bool verboseLogging = Program.IsVerboseLogging(GetType().FullName);
+                if (verboseLogging)
+                {
+                    Console.Out.WriteLine("Before switch to blank document");
+                }
                 // Try twice, because this operation can fail due to active background processing
                 RunUI(() => TryHelper.TryTwice(() => SkylineWindow.SwitchDocument(docNew, null)));
+                if (verboseLogging)
+                {
+                    Console.Out.WriteLine("After switch to blank document");
+                }
 
                 WaitForCondition(1000, () => !FileStreamManager.Default.HasPooledStreams, string.Empty, false);
                 if (FileStreamManager.Default.HasPooledStreams)
@@ -2729,16 +2751,13 @@ namespace pwiz.SkylineTestUtil
 
         public void RestoreViewOnScreen(string viewFilePath)
         {
-            if (!Program.SkylineOffscreen)
+            RunUI(() =>
             {
-                RunUI(() =>
+                using (var fileStream = new FileStream(viewFilePath, FileMode.Open))
                 {
-                    using (var fileStream = new FileStream(viewFilePath, FileMode.Open))
-                    {
-                        SkylineWindow.LoadLayout(fileStream);
-                    }
-                });
-            }
+                    SkylineWindow.LoadLayout(fileStream);
+                }
+            });
         }
 
         protected abstract void DoTest();
