@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.RetentionTimes
@@ -130,8 +131,12 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 {
                     return false;
                 }
+
+                using var settingsChangeMonitor =
+                    new SrmSettingsChangeMonitor(new LoadMonitor(this, container, docCurrent),
+                        "Updating retention time alignment");
                 docNew = docCurrent.ChangeSettings(
-                    docCurrent.Settings.ChangeDocumentRetentionTimes(newDocumentRetentionTimes));
+                    docCurrent.Settings.ChangeDocumentRetentionTimes(newDocumentRetentionTimes), settingsChangeMonitor);
             }
             while (!CompleteProcessing(container, docNew, docCurrent));
             return true;
