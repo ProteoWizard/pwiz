@@ -35,8 +35,6 @@ namespace pwiz.Skyline.Model.Results
     [XmlRoot("measured_results")]
     public sealed class MeasuredResults : Immutable, IXmlSerializable
     {
-        public static readonly MeasuredResults EMPTY = new MeasuredResults(new ChromatogramSet[0]);
-
         private static readonly HashSet<MsDataFileUri> EMPTY_FILES = new HashSet<MsDataFileUri>();
 
         private ImmutableList<ChromatogramSet> _chromatograms;
@@ -62,11 +60,6 @@ namespace pwiz.Skyline.Model.Results
             // The only way to get peaks with areas not normalized by
             // time is to load an older document that was created this way.
             IsTimeNormalArea = true;
-        }
-
-        public bool IsEmpty
-        {
-            get { return _chromatograms == null || _chromatograms.Count == 0; }
         }
 
         [TrackChildren]
@@ -995,11 +988,6 @@ namespace pwiz.Skyline.Model.Results
 
         public MeasuredResults ChangeChromatograms(IList<ChromatogramSet> prop)
         {
-            if (!IsEmpty && prop?.Count == 0)
-            {
-                throw new ArgumentException(@"Cannot use a zero-length list to remove all chromatograms from MeasuredResults. Pass null instead.");
-            }
-
             var results = ChangeProp(ImClone(this), im => im.Chromatograms = prop);
             if (RequiresCacheUpdate(results))
             {

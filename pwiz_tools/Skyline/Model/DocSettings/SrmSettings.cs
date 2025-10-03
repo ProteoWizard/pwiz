@@ -531,7 +531,15 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public SrmSettings ChangeMeasuredResults(MeasuredResults prop)
         {
+            ValidateMeasuredResults(prop);
+
             return ChangeProp(ImClone(this), im => im.MeasuredResults = prop);
+        }
+
+        private void ValidateMeasuredResults(MeasuredResults measuredResults)
+        {
+            if (measuredResults != null && measuredResults.Chromatograms.Count == 0)
+                throw new ArgumentException(@"MeasuredResults must have at least one ChromatogramSet. Use null to remove all results.");
         }
 
         public SrmSettings ChangeIsResultsJoiningDisabled(bool prop)
@@ -2280,15 +2288,20 @@ namespace pwiz.Skyline.Model.DocSettings
             // 10.23.12 -- The order of <measured_results> and <data_settings> has been switched to enable parsing (in Panorama)
             // of all annotation definitions before reading any replicate annotations in <measured_results>.
             // We want Skyline to be able to read older documents where <measured_results> come before <data_settings>
+            MeasuredResults NullIfEmpty(MeasuredResults val)
+            {
+                return val?.Chromatograms?.Count == 0 ? null : val;
+            }
+
             if (reader.IsStartElement(new XmlElementHelper<MeasuredResults>().ElementNames[0]))
             {
-                MeasuredResults = reader.DeserializeElement<MeasuredResults>();
+                MeasuredResults = NullIfEmpty(reader.DeserializeElement<MeasuredResults>());
                 DataSettings = reader.DeserializeElement<DataSettings>() ?? DataSettings.DEFAULT;   
             }
             else
             {
                 DataSettings = reader.DeserializeElement<DataSettings>() ?? DataSettings.DEFAULT;
-                MeasuredResults = reader.DeserializeElement<MeasuredResults>();
+                MeasuredResults = NullIfEmpty(reader.DeserializeElement<MeasuredResults>());
             }
             DocumentRetentionTimes = reader.DeserializeElement<DocumentRetentionTimes>() ?? DocumentRetentionTimes.EMPTY;
             reader.ReadEndElement();
