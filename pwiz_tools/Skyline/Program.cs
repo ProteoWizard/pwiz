@@ -80,6 +80,15 @@ namespace pwiz.Skyline
                 CommonApplicationSettings.FunctionalTest = value;
             }
         }
+
+        // TODO(nicksh): Remove this once intermittent failures in these tests are fixed
+        public static bool IsVerboseLogging(string name)
+        {
+            return FunctionalTest && new[]
+            {
+                @"ShareDocumentTest", @"InternationalFilenamesTest"
+            }.Any(folder => name.IndexOf(folder, StringComparison.Ordinal) >= 0);
+        }
         public static string TestName { get; set; }                 // Set during unit and functional tests
         public static bool ClosingForms { get; set; }               // Set to true during AbstractFunctionalTest.CloseOpenForm (all forms should check this before cancelling a Close request)
         public static string DefaultUiMode { get; set; }            // Set to avoid seeing NoModeUiDlg at the start of a test
