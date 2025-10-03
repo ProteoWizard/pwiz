@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.CommonMsData.RemoteApi;
 using pwiz.CommonMsData.RemoteApi.WatersConnect;
@@ -10,6 +11,10 @@ namespace pwiz.Skyline.FileUI
     public sealed class WatersConnectSaveMethodFileDialog : WatersConnectMethodFileDialog
     {
         public string MethodName { get; private set; }
+        /// <summary>
+        /// This property is used to trigger file name check for multiple method uploads
+        /// </summary>
+        public List<string> MethodNameSuffixes { get; set; }
 
         public WatersConnectSaveMethodFileDialog(IList<RemoteAccount> remoteAccounts,  IList<string> specificDataSourceFilter = null)
             : base(remoteAccounts, specificDataSourceFilter)
@@ -61,7 +66,10 @@ namespace pwiz.Skyline.FileUI
                     return;
                 case FileStatus.does_not_exist:
                     actionButton.Text = FileUIResources.WatersConnectSaveMethodFileDialog_SaveButtonText;
-                    if (!haveFolderId || !canWrite || string.IsNullOrEmpty(sourcePathTextBox.Text))     // Cannot save if root or no write permission.
+
+
+                    if (!haveFolderId || !canWrite || string.IsNullOrEmpty(sourcePathTextBox.Text) 
+                        || IsMultipleMethodConflict(sourcePathTextBox.Text, out _))     // Cannot save if root or no write permission.
                     {
                         actionButton.Font = new Font(actionButton.Font, FontStyle.Bold); // Save not allowed
                         actionButton.ForeColor = Color.Red;
@@ -75,6 +83,19 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        protected bool IsMultipleMethodConflict(string fileName, out string conflictName)
+        {
+            conflictName = null;
+            if (MethodNameSuffixes == null || !MethodNameSuffixes.Any() || listView.Items.Count == 0)
+                return false;
+             var conflictItem = listView.Items.OfType<ListViewItem>()
+                .FirstOrDefault(lvi => MethodNameSuffixes.Any(sufx => lvi.Text.Equals(fileName + sufx)));
+             if (conflictItem == null)
+                 return false;
+             conflictName = conflictItem.Text;
+             return true;
+        }
+
         protected override bool ItemSelected(ListViewItem item)
         {
             MessageDlg.Show(this,
@@ -84,6 +105,13 @@ namespace pwiz.Skyline.FileUI
 
         protected override bool ItemSelected(string methodName)
         {
+            if (IsMultipleMethodConflict(methodName, out var conflictName))
+            {
+                MessageDlg.Show(this,
+                    string.Format(
+                        "The name {0} conflicts with the existing method {1} since this is a multiple file upload.", methodName, conflictName));
+                return false;
+            }
             MethodName = methodName.Trim();
             return true;
         }

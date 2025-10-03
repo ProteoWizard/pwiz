@@ -1258,6 +1258,8 @@ namespace pwiz.Skyline.FileUI
                 // Point the browser to the same folder as the template
                 saveDlg.InitialDirectory = templateUrl
                     .ChangeType(WatersConnectUrl.ItemType.folder_with_methods);
+                if (_recalcMethodCountStatus != RecalcMethodCountStatus.running && _methodNameSuffixes.Any())
+                    saveDlg.MethodNameSuffixes = new List<string>(_methodNameSuffixes);
 
                 if (saveDlg.ShowDialog(this) == DialogResult.Cancel)
                     return;
@@ -1844,9 +1846,10 @@ namespace pwiz.Skyline.FileUI
             else if (!Equals(comboTargetType.SelectedItem, ExportMethodType.Standard.GetLocalizedString()))
                 cbIgnoreProteins.Checked = true;
 
-            if (radioSingle.Checked)
+            if (radioSingle.Checked || wcDecideBuckets.Checked)
             {
                 labelMethodNum.Text = 1.ToString(LocalizationHelper.CurrentCulture);
+                _methodNameSuffixes.Clear();
             }
             else
             {
@@ -2152,6 +2155,7 @@ namespace pwiz.Skyline.FileUI
 
         private enum RecalcMethodCountStatus { waiting, running, pending }
         private RecalcMethodCountStatus _recalcMethodCountStatus = RecalcMethodCountStatus.waiting;
+        private List<string> _methodNameSuffixes = new List<string>();
 
         private void CalcMethodCount()
         {
@@ -2215,13 +2219,17 @@ namespace pwiz.Skyline.FileUI
             }
 
             int? methodCount = null;
+            IEnumerable<string> methodSuffixes = null;
             if (exporter != null && exporter.MemoryOutput != null)
+            {
                 methodCount = exporter.MemoryOutput.Count;
+                methodSuffixes = exporter.MemoryOutput.Keys.Select(s => s.Replace(AbstractMassListExporter.MEMORY_KEY_ROOT, ""));
+            }
             // Switch back to the UI thread to update the form
             try
             {
                 if (!_cancellationTokenSource.IsCancellationRequested)
-                    Invoke(new Action<int?>(UpdateMethodCount), methodCount);
+                    Invoke(new Action<int?, IEnumerable<string>>(UpdateMethodCount), methodCount, methodSuffixes);
             }
 // ReSharper disable EmptyGeneralCatchClause
             catch (Exception)
@@ -2231,12 +2239,13 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        private void UpdateMethodCount(int? methodCount)
+        private void UpdateMethodCount(int? methodCount, IEnumerable<string> methodSuffixes)
         {
             labelMethodNum.Text = methodCount.HasValue
                 ? methodCount.Value.ToString(LocalizationHelper.CurrentCulture)
                 : string.Empty;
-
+            _methodNameSuffixes.Clear();
+            _methodNameSuffixes.AddRange(methodSuffixes);
             var recalcMethodCountStatus = _recalcMethodCountStatus;
             _recalcMethodCountStatus = RecalcMethodCountStatus.waiting;
             if (recalcMethodCountStatus == RecalcMethodCountStatus.pending)
