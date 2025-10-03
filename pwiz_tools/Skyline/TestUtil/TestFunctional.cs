@@ -2742,16 +2742,13 @@ namespace pwiz.SkylineTestUtil
 
         public void RestoreViewOnScreen(string viewFilePath)
         {
-            if (!Program.SkylineOffscreen)
+            RunUI(() =>
             {
-                RunUI(() =>
+                using (var fileStream = new FileStream(viewFilePath, FileMode.Open))
                 {
-                    using (var fileStream = new FileStream(viewFilePath, FileMode.Open))
-                    {
-                        SkylineWindow.LoadLayout(fileStream);
-                    }
-                });
-            }
+                    SkylineWindow.LoadLayout(fileStream);
+                }
+            });
         }
 
         protected abstract void DoTest();
