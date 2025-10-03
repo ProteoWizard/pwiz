@@ -455,7 +455,7 @@ namespace pwiz.Skyline
         public double? LockmassPositive { get; private set; }
         public double? LockmassNegative { get; private set; }
         public double? LockmassTolerance { get; private set; }
-        public LockMassParameters LockMassParameters { get { return new LockMassParameters(LockmassPositive, LockmassNegative, LockmassTolerance); } }
+        public LockMassParameters LockMassParameters { get { return LockMassParameters.Create(LockmassPositive, LockmassNegative, LockmassTolerance); } }
 
         private void ParseImportFile(NameValuePair pair)
         {
