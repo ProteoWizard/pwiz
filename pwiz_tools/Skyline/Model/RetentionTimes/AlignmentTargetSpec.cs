@@ -21,11 +21,14 @@ using pwiz.Skyline.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.RetentionTimes
 {
@@ -201,11 +204,8 @@ namespace pwiz.Skyline.Model.RetentionTimes
                     return RetentionTimesResources.AlignmentTargetSpec_GetLabel_Default;
                 }
 
-                if (defaultOption == null)
-                {
-                    return RetentionTimesResources.AlignmentTargetSpec_GetLabel_Default__None_;
-                }
-                return string.Format(RetentionTimesResources.AlignmentTargetSpec_GetLabel_Default___0__, defaultOption.DisplayName);
+                var defaultSpec = defaultOption?.ToAlignmentTargetSpec() ?? None;
+                return TextUtil.SpaceSeparate(defaultSpec.GetLabel(peptideSettings), "(default)");
             }
 
             if (Type == Library.Type)
@@ -230,6 +230,76 @@ namespace pwiz.Skyline.Model.RetentionTimes
             }
 
             return RetentionTimesResources.AlignmentTargetSpec_GetLabel___Invalid__;
+        }
+
+        public string GetTooltip(PeptideSettings peptideSettings, SrmDocument.DOCUMENT_TYPE documentType)
+        {
+            if (Type == None.Type)
+            {
+                return "Retention time values will be unchanged when mapping between runs";
+            }
+
+            if (Type == Default.Type)
+            {
+                if (!RtCalculatorOption.TryGetDefault(peptideSettings, out var defaultOption))
+                {
+                    return "Use the retention time calculator if there is one or the first library";
+                }
+
+                var defaultSpec = defaultOption?.ToAlignmentTargetSpec() ?? None;
+                return defaultSpec.GetTooltip(peptideSettings, documentType);
+            }
+
+            if (Type == Calculator.Type)
+            {
+                var calculator = peptideSettings.Prediction.RetentionTime?.Calculator;
+                if (calculator == null)
+                {
+                    return "Invalid";
+                }
+
+                if (calculator is RCalcIrt rCalcIrt)
+                {
+                    int standardCount = rCalcIrt.GetStandardPeptides().Count();
+                    if (standardCount != 0)
+                    {
+                        if (documentType == SrmDocument.DOCUMENT_TYPE.proteomic)
+                        {
+                            return string.Format("{0} regression against {1} standard peptides in calculator {2}",
+                                rCalcIrt.RegressionType, standardCount, rCalcIrt.Name);
+                        }
+                        else
+                        {
+                            return string.Format("{0} regression against {1} standard molecules in calculator {2}",
+                                rCalcIrt.RegressionType, standardCount, rCalcIrt.Name);
+                        }
+                    }
+
+                    if (documentType == SrmDocument.DOCUMENT_TYPE.proteomic)
+                    {
+                        return string.Format("{0} regression against all peptides in calculator {1}",
+                            rCalcIrt.RegressionType, rCalcIrt.Name);
+                    }
+
+                    return string.Format("{0} regression against all molecules in calculator {1}",
+                        rCalcIrt.RegressionType, rCalcIrt.Name);
+                }
+            }
+
+            if (Type == Library.Type)
+            {
+                return string.Format("{0} regression against median retention times from library {1}",
+                    IrtRegressionType.LOWESS, Name);
+            }
+
+            if (Type == ChromatogramPeaks.Type)
+            {
+                return string.Format(
+                    "{0} regression against median chromatogram peak apex times across replicate in this document",
+                    IrtRegressionType.LOWESS);
+            }
+
+            return null;
         }
 
         public bool TryGetAlignmentTarget(SrmSettings settings, out AlignmentTarget alignmentTarget)
@@ -294,5 +364,30 @@ namespace pwiz.Skyline.Model.RetentionTimes
         }
 
         public bool IsChromatogramPeaks => Type == ChromatogramPeaks.Type;
+
+        public bool IsSameAsDefault(PeptideSettings peptideSettings)
+        {
+            if (!RtCalculatorOption.TryGetDefault(peptideSettings, out var defaultOption))
+            {
+                return false;
+            }
+
+            if (Type == None.Type)
+            {
+                return defaultOption == null;
+            }
+
+            if (Type == Calculator.Type)
+            {
+                return defaultOption is RtCalculatorOption.Irt;
+            }
+
+            if (Type == Library.Type)
+            {
+                return defaultOption is RtCalculatorOption.Library libraryOption && libraryOption.LibraryName == Name;
+            }
+
+            return false;
+        }
     }
 }
