@@ -479,7 +479,7 @@ namespace pwiz.Skyline.Model
                     var dataFileUri = MsDataFileUri.Parse(fileName);
                     if (sampleName != null && dataFileUri is MsDataFilePath msDataFilePath)
                     {
-                        var uriWithSample = new MsDataFilePath(msDataFilePath.FilePath, sampleName, msDataFilePath.SampleIndex, msDataFilePath.LockMassParameters);
+                        var uriWithSample = msDataFilePath.ChangeSample(sampleName);
                         fileMatch = Document.Settings.MeasuredResults.FindMatchingMSDataFile(uriWithSample);
                         if (fileMatch == null)
                         {

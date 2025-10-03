@@ -107,9 +107,15 @@ namespace pwiz.CommonMsData
 
     public class MsDataFilePath : MsDataFileUri
     {
+        private LockMassParameters _lockMassParameters;
         public static MsDataFilePath ParseUri(string url)
         {
-            return new MsDataFilePath(SampleHelp.GetPathFilePart(url),
+            var filePath = SampleHelp.GetPathFilePart(url);
+            if (ReferenceEquals(filePath, url))
+            {
+                return new MsDataFilePath(filePath);
+            }
+            return new MsDataFilePath(filePath,
                 SampleHelp.GetPathSampleNamePart(url),
                 SampleHelp.GetPathSampleIndexPart(url),
                 SampleHelp.GetLockmassParameters(url),
@@ -132,39 +138,40 @@ namespace pwiz.CommonMsData
             FilePath = filePath;
             SampleName = sampleName;
             SampleIndex = sampleIndex;
-            LockMassParameters = lockMassParameters ?? LockMassParameters.EMPTY;
+            LockMassParameters = lockMassParameters;
             LegacyCentroidMs1 = centroidMs1;
             LegacyCentroidMs2 = centroidMs2;
             LegacyCombineIonMobilitySpectra = combineIonMobilitySpectra;
-        }
-
-        protected MsDataFilePath(MsDataFilePath msDataFilePath)
-        {
-            FilePath = msDataFilePath.FilePath;
-            SampleName = msDataFilePath.SampleName;
-            SampleIndex = msDataFilePath.SampleIndex;
-            LockMassParameters = msDataFilePath.LockMassParameters;
-            LegacyCentroidMs1 = msDataFilePath.LegacyCentroidMs1;
-            LegacyCentroidMs2 = msDataFilePath.LegacyCentroidMs2;
-            LegacyCombineIonMobilitySpectra = msDataFilePath.LegacyCombineIonMobilitySpectra;
         }
 
         public string FilePath { get; private set; }
 
         public MsDataFilePath SetFilePath(string filePath)
         {
-            return new MsDataFilePath(this){FilePath = filePath};
+            return ChangeProp(ImClone(this), im => im.FilePath = filePath);
         }
         public string SampleName { get; private set; }
         public int SampleIndex { get; private set; }
-        public LockMassParameters LockMassParameters { get; private set; }
+
+        public LockMassParameters LockMassParameters
+        {
+            get
+            {
+                return _lockMassParameters ?? LockMassParameters.EMPTY;
+            }
+            private set
+            {
+                _lockMassParameters = Equals(value, LockMassParameters.EMPTY) ? null : value;
+            }
+        }
+
         public bool LegacyCentroidMs1 { get; private set; }
         public bool LegacyCentroidMs2 { get; private set; }
         public bool LegacyCombineIonMobilitySpectra { get; private set; } // BACKWARD COMPATIBILITY: Skyline-daily 19.1.9.338 & 350 stored URLs with this parameter
 
         public override MsDataFileUri GetLocation()
         {
-            if (!LockMassParameters.IsEmpty || LegacyCentroidMs1 || LegacyCentroidMs2 || LegacyCombineIonMobilitySpectra)
+            if (_lockMassParameters != null || LegacyCentroidMs1 || LegacyCentroidMs2 || LegacyCombineIonMobilitySpectra)
                 return new MsDataFilePath(FilePath, SampleName, SampleIndex);
             return this;
         }
@@ -222,8 +229,7 @@ namespace pwiz.CommonMsData
 
         public override MsDataFileUri ChangeLockMassParameters(LockMassParameters lockMassParameters)
         {
-            return new MsDataFilePath(FilePath, SampleName, SampleIndex, lockMassParameters,
-                LegacyCentroidMs1, LegacyCentroidMs2, LegacyCombineIonMobilitySpectra);
+            return ChangeProp(ImClone(this), im => im.LockMassParameters = lockMassParameters);
         }
 
         public override bool LegacyGetCentroidMs1()
@@ -270,7 +276,7 @@ namespace pwiz.CommonMsData
                 LegacyCentroidMs1 == other.LegacyCentroidMs1 &&
                 LegacyCentroidMs2 == other.LegacyCentroidMs2 &&
                 LegacyCombineIonMobilitySpectra == other.LegacyCombineIonMobilitySpectra &&
-                LockMassParameters.Equals(other.LockMassParameters);
+                Equals(_lockMassParameters, other._lockMassParameters);
         }
 
         public override bool Equals(object obj)
@@ -288,7 +294,7 @@ namespace pwiz.CommonMsData
                 int hashCode = FilePath.GetHashCode();
                 hashCode = (hashCode*397) ^ (SampleName != null ? SampleName.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ SampleIndex;
-                hashCode = (hashCode*397) ^ (LockMassParameters != null ? LockMassParameters.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ (_lockMassParameters?.GetHashCode() ?? 0);
                 hashCode = (hashCode*397) ^ (LegacyCentroidMs1 ? 1 : 0);
                 hashCode = (hashCode*397) ^ (LegacyCentroidMs2 ? 1 : 0);
                 hashCode = (hashCode*397) ^ (LegacyCombineIonMobilitySpectra ? 1 : 0);
@@ -304,21 +310,38 @@ namespace pwiz.CommonMsData
 
         public override MsDataFileUri RemoveLegacyParameters()
         {
+            // FUTURE: Remove LockMassParameters
+
             // Remove LegacyCombineIonMobilitySpectra, LegacyCentroidMs1, LegacyCentroidMs2
             if (!LegacyCombineIonMobilitySpectra && !LegacyCentroidMs1 && !LegacyCentroidMs2)
                 return this;
 
-            // FUTURE: Remove LockMassParameters
-            return new MsDataFilePath(FilePath, SampleName, SampleIndex, LockMassParameters);
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.LegacyCentroidMs1 = false;
+                im.LegacyCentroidMs2 = false;
+                im.LegacyCombineIonMobilitySpectra = false;
+            });
         }
 
         public override MsDataFileUri RestoreLegacyParameters(bool centroidMs1, bool centroidMs2)
         {
             if (!centroidMs1 && !centroidMs2)
                 return this;
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.LegacyCentroidMs1 = centroidMs1;
+                im.LegacyCentroidMs2 = centroidMs2;
+                im.LegacyCombineIonMobilitySpectra = false;
+            });
+        }
 
-            return new MsDataFilePath(FilePath, SampleName, SampleIndex, LockMassParameters,
-                centroidMs1, centroidMs2, false);
+        public MsDataFilePath ChangeSample(string sampleName)
+        {
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.SampleName = sampleName;
+            });
         }
     }
 }
