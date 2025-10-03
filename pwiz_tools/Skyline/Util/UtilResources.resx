@@ -320,4 +320,7 @@ Charge states are inferred from the presence of these adduct components:{1}</val
   <data name="DsvStreamReader_DsvStreamReader_Empty_stream_" xml:space="preserve">
     <value>Empty stream.</value>
   </data>
+  <data name="ClipboardHelper_GetGenericClipboardErrorMessage_Failed_accessing_the_clipboard_" xml:space="preserve">
+    <value>Failed accessing the clipboard.</value>
+  </data>
 </root>

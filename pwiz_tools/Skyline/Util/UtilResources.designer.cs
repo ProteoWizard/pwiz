@@ -197,6 +197,15 @@ namespace pwiz.Skyline.Util {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed accessing the clipboard..
+        /// </summary>
+        public static string ClipboardHelper_GetGenericClipboardErrorMessage_Failed_accessing_the_clipboard_ {
+            get {
+                return ResourceManager.GetString("ClipboardHelper_GetGenericClipboardErrorMessage_Failed_accessing_the_clipboard_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The process &apos;{0}&apos; (ID = {1}) has the clipboard open..
         /// </summary>
         public static string ClipboardHelper_GetOpenClipboardMessage_The_process__0__ID__1__has_the_clipboard_open {

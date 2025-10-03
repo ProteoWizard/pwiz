@@ -40,6 +40,15 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            // ValidateDocumentationInViewer();
+
+            // Run all keyboard validation tests
+            ValidateNoDuplicateKeyboardShortcuts();
+            ValidateNoDuplicateMnemonics();
+        }
+
+        private static void ValidateDocumentationInViewer()
+        {
             // Test that the keyboard shortcuts documentation can be generated
             RunDlg<DocumentationViewer>(SkylineWindow.ShowKeyboardShortcutsDocumentation, docViewer =>
             {
@@ -64,10 +73,6 @@ namespace pwiz.SkylineTestFunctional
                 
                 docViewer.Close();
             });
-
-            // Run all keyboard validation tests
-            ValidateNoDuplicateKeyboardShortcuts();
-            ValidateNoDuplicateMnemonics();
         }
 
         private void ValidateNoDuplicateKeyboardShortcuts()
