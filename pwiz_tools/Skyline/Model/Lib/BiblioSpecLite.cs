@@ -725,7 +725,6 @@ namespace pwiz.Skyline.Model.Lib
                         rowsRead++;
                         if (loader.IsCanceled)
                         {
-                            LogForFuncTest(@"Cancelled during RefSpectra", TraceLevel.Info);
                             return;
                         }
 
@@ -834,7 +833,6 @@ namespace pwiz.Skyline.Model.Lib
             if (loader.IsCanceled)
             {
                 loader.UpdateProgress(status.Cancel());
-                LogForFuncTest(@"Cancelled after RefSpectra", TraceLevel.Info);
                 return false;
             }
 
@@ -847,7 +845,6 @@ namespace pwiz.Skyline.Model.Lib
                 if (loader.IsCanceled)
                 {
                     loader.UpdateProgress(status.Cancel());
-                    LogForFuncTest(@"Cancelled during RetentionTime", TraceLevel.Info);
                     return false;
                 }
                 var retentionTimesBySpectraId = retentionTimeReader.GetRetentionTimes();
@@ -881,7 +878,6 @@ namespace pwiz.Skyline.Model.Lib
             SetLibraryEntries(FilterInvalidLibraryEntries(ref status, libraryEntries.OrderBy(spec=>spec.Id)));
             EnsureConnections(sm);
             loader.UpdateProgress(status.ChangeSegments(segmentCount - 1, segmentCount).Complete());
-            LogForFuncTest(@"Finished Load", TraceLevel.Verbose);
             return true;
         }
 
@@ -926,7 +922,6 @@ namespace pwiz.Skyline.Model.Lib
             }
             catch (Exception x)
             {
-                LogForFuncTest(x.Message, TraceLevel.Warning);
                 // SQLiteExceptions are not considered programming defects and should be shown to the user
                 // as an ordinary error message
                 if (x is SQLiteException || x is TargetInvocationException && x.InnerException is SQLiteException || !ExceptionUtil.IsProgrammingDefect(x))
@@ -941,7 +936,6 @@ namespace pwiz.Skyline.Model.Lib
                     throw new Exception(FormatErrorMessage(x), x);
                 }
             }
-            LogForFuncTest(@"Load Failed", TraceLevel.Warning);
             // Close any streams that got opened
             foreach (var pooledStream in ReadStreams)
                 pooledStream.CloseStream();
@@ -2443,14 +2437,6 @@ namespace pwiz.Skyline.Model.Lib
                 im.FilePath = newSpec.FilePath;
                 _sqliteConnection = new PooledSqliteConnection(connectionPool, newSpec.FilePath);
             });
-        }
-
-        private void LogForFuncTest(string eventName, TraceLevel traceLevel)
-        {
-            if (Program.FunctionalTest && traceLevel < TraceLevel.Verbose)
-            {
-                Console.Out.WriteLine(@"Event: {0} File: {1}", eventName, FilePath);
-            }
         }
     }
 
