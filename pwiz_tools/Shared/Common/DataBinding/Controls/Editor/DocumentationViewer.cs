@@ -1,6 +1,7 @@
 ﻿/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Cursor (Claude Sonnet 4) <cursor .at. anysphere.co>
  *
  * Copyright 2016 University of Washington - Seattle, WA
  *
@@ -17,31 +18,216 @@
  * limitations under the License.
  */
 using System;
+using System.IO;
+using System.Threading;
 using System.Windows.Forms;
+using Microsoft.Web.WebView2.Core;
+using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding.Controls.Editor
 {
     public partial class DocumentationViewer : CommonFormEx
     {
+        private string _documentationHtml = string.Empty;
+        private string _webView2Html = string.Empty;
+        private string _testDataFolder;
+
+        /// <summary>
+        /// Static property to set the WebView2 environment directory for test scenarios.
+        /// Tests should set this before creating a DocumentationViewer and reset to null when done.
+        /// </summary>
+        public static string TestWebView2EnvironmentDirectory { get; set; }
+
         public DocumentationViewer(bool showInTaskBar)
         {
             InitializeComponent();
 
-            // WINDOWS 10 UPDATE HACK: Because Windows 10 update version 1803 causes unparented non-ShowInTaskbar windows to leak GDI and User handles
+            // WINDOWS 10 UPDATE HACK: Because Windows 10 update version 1803 causes un-parented non-ShowInTaskbar windows to leak GDI and User handles
             ShowInTaskbar = showInTaskBar;
         }
 
-        public String DocumentationHtml
+        public bool IsWebView2Initialized { get; private set; }
+
+        public string DocumentationHtml
         {
-            get { return webBrowser1.DocumentText; } 
-            set { webBrowser1.DocumentText = value; }
+            get => _documentationHtml;
+            set
+            {
+                _documentationHtml = value;
+
+                if (IsWebView2Initialized)
+                    NavigateToHtml();
+            }
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            InitializeWebView2();
+            
+            base.OnHandleCreated(e);
+        }
+
+        private void InitializeWebView2()
+        {
+            try
+            {
+                // Initialize WebView2 environment on UI thread to avoid COM threading issues
+                var environment = InitWebView2Environment();
+                var task = webView2.EnsureCoreWebView2Async(environment);
+
+                // Initialize WebView2 on a background thread
+                CommonActionUtil.RunAsync(() =>
+                {
+                    try
+                    {
+                        // Initialize WebView2 with the environment
+                        task.Wait();
+                        IsWebView2Initialized = true;
+
+                        // Navigate to the HTML if it was set before initialization
+                        if (!string.IsNullOrEmpty(_documentationHtml))
+                        {
+                            RunUI(NavigateToHtml);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        RunUI(() => CommonAlertDlg.ShowException(this, ex));
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                CommonAlertDlg.ShowException(this, ex);
+            }
+        }
+
+        private void NavigateToHtml()
+        {
+            if (IsWebView2Initialized && !string.IsNullOrEmpty(_documentationHtml))
+            {
+                webView2.NavigateToString(_documentationHtml);
+            }
         }
 
         protected override void OnFormClosed(FormClosedEventArgs e)
         {
             base.OnFormClosed(e);
-            Dispose();
+
+            CleanupTestDataFolder();
         }
+
+        #region Test helpers
+        
+        /// <summary>
+        /// Gets the HTML content currently displayed in the WebView2 control.
+        /// This is useful for testing to verify that the content was actually rendered.
+        /// </summary>
+        public string GetWebView2HtmlContent(int minLen = 1)
+        {
+            // Wait for the HTML content of the control to stabilize as matching the documentation HTML
+            // Normalize line endings for comparison since WebView2 may normalize \r\n to \n
+            if (_webView2Html.Length >= minLen)
+                return _webView2Html;
+            
+            if (!IsWebView2Initialized || webView2?.CoreWebView2 == null)
+                return string.Empty;
+
+            try
+            {
+                // Execute JavaScript to get the document's HTML content
+                var task = webView2.CoreWebView2.ExecuteScriptAsync(@"document.documentElement.outerHTML");
+                CommonActionUtil.RunAsync(() =>
+                {
+                    try
+                    {
+                        var encodedHtml = task.Result;
+                        // Decode Unicode escape sequences (e.g., \u003C -> <)
+                        var decodedHtml = System.Text.RegularExpressions.Regex.Unescape(encodedHtml);
+                        // Remove leading and trailing quotation marks from JavaScript string
+                        var rawHtml = decodedHtml.Trim('"');
+                        // Normalize line endings to match WebView2's normalization
+                        _webView2Html = rawHtml;
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log cleanup errors for debugging but don't throw
+                        System.Diagnostics.Debug.WriteLine($@"Failed to get WebView2 outerHtml: {ex}");
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                // Log cleanup errors for debugging but don't throw
+                System.Diagnostics.Debug.WriteLine($@"Failed to execute script on WebView2: {ex}");
+            }
+            return string.Empty;
+        }
+
+        private CoreWebView2Environment InitWebView2Environment()
+        {
+            if (string.IsNullOrEmpty(TestWebView2EnvironmentDirectory))
+                return null;
+
+            // If a test environment directory is specified, use it
+            _testDataFolder = TestWebView2EnvironmentDirectory;
+            Directory.CreateDirectory(_testDataFolder);
+                    
+            // Create environment with custom user data folder and additional options for test isolation
+            var options = new CoreWebView2EnvironmentOptions();
+            // Force WebView2 to use the test directory for all temp files and cache
+            options.AdditionalBrowserArguments = CommonTextUtil.SpaceSeparate(
+                $@"--user-data-dir=""{_testDataFolder}""",
+                $@"--disk-cache-dir=""{_testDataFolder}\\cache\""",
+                @" --disk-cache-size=0",
+                @"--disable-web-security",
+                @"--disable-features=VizDisplayCompositor",
+                @"--no-sandbox",
+                @"--disable-gpu",
+                @"--disable-background-timer-throttling",
+                @"--disable-backgrounding-occluded-windows",
+                @"--disable-renderer-backgrounding");
+            
+            // Create environment with custom user data folder on UI thread
+            return CoreWebView2Environment.CreateAsync(null, _testDataFolder, options).Result;
+        }
+
+        private void RunUI(Action act)
+        {
+            Invoke(act);
+        }
+
+        private void CleanupTestDataFolder()
+        {
+            // Clean up test data folder if it was created
+            if (!string.IsNullOrEmpty(_testDataFolder) && Directory.Exists(_testDataFolder))
+            {
+                // Explicitly clear WebView2 content and dispose
+                if (webView2?.CoreWebView2 != null)
+                    webView2.CoreWebView2.Navigate(@"about:blank");
+                webView2?.Dispose();
+                
+                // Give WebView2 more time to release file handles
+                Thread.Sleep(200);
+                
+                // Force garbage collection to help release any remaining handles
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                GC.Collect();
+                
+                // Try to delete with retry logic for locked files
+                try
+                {
+                    TryHelper.TryTwice(() => Directory.Delete(_testDataFolder, true), 5, 200, @"Failed to cleanup WebView2 test folder");
+                }
+                catch
+                {
+                    // Ignore and expect the test to fail with a useful message about why this folder cannot be removed
+                }
+            }
+        }
+
+        #endregion
     }
 }

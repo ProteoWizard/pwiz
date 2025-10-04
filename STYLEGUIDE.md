@@ -2,6 +2,8 @@
 
 This guide captures Skyline-specific C# conventions to keep AI- and human-authored code consistent with `pwiz_tools/Skyline`.
 
+**Universal AI Guidelines**: This file serves as the comprehensive style guide for all AI tools (Cursor, Claude Code, GitHub Copilot, ChatGPT, etc.). The `.cursorrules` file references this document to avoid duplication.
+
 ## Control flow
 - If statements must not be single-line. If braces are omitted, keep the condition and body on separate lines.
   
@@ -73,6 +75,7 @@ EditorConfig
 - If a specific Executables project needs different rules, add a minimal project-level `.editorconfig` or project `.DotSettings` override local to that solution only.
 
 ## Resource strings (localization)
+- **CRITICAL: ALL user-facing text must be in .resx files - NO string literals in .cs files**
 - Add new UI strings for menus/dialogs/pages to `pwiz_tools/Skyline/Menus/MenusResources.resx`.
 - Strings will be translated to Chinese/Japanese via our translation process; use clear, concise English.
 - Generate resource keys from the English text in a ReSharper-like way:
