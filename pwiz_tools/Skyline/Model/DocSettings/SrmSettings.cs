@@ -531,7 +531,15 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public SrmSettings ChangeMeasuredResults(MeasuredResults prop)
         {
+            ValidateMeasuredResults(prop);
+
             return ChangeProp(ImClone(this), im => im.MeasuredResults = prop);
+        }
+
+        private void ValidateMeasuredResults(MeasuredResults measuredResults)
+        {
+            if (measuredResults != null && measuredResults.Chromatograms.Count == 0)
+                throw new ArgumentException(@"MeasuredResults must have at least one ChromatogramSet. Use null to remove all results.");
         }
 
         public SrmSettings ChangeIsResultsJoiningDisabled(bool prop)
@@ -2282,13 +2290,13 @@ namespace pwiz.Skyline.Model.DocSettings
             // We want Skyline to be able to read older documents where <measured_results> come before <data_settings>
             if (reader.IsStartElement(new XmlElementHelper<MeasuredResults>().ElementNames[0]))
             {
-                MeasuredResults = reader.DeserializeElement<MeasuredResults>();
+                MeasuredResults = reader.DeserializeElement<MeasuredResults>()?.NullIfEmpty();
                 DataSettings = reader.DeserializeElement<DataSettings>() ?? DataSettings.DEFAULT;   
             }
             else
             {
                 DataSettings = reader.DeserializeElement<DataSettings>() ?? DataSettings.DEFAULT;
-                MeasuredResults = reader.DeserializeElement<MeasuredResults>();
+                MeasuredResults = reader.DeserializeElement<MeasuredResults>()?.NullIfEmpty();
             }
             DocumentRetentionTimes = reader.DeserializeElement<DocumentRetentionTimes>() ?? DocumentRetentionTimes.EMPTY;
             reader.ReadEndElement();
