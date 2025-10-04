@@ -62,6 +62,16 @@ namespace pwiz.Skyline.Model.Results
             IsTimeNormalArea = true;
         }
 
+        /// <summary>
+        /// Returns null if Chromatograms is empty to help with assignment
+        /// to SrmSettings, which does not allow MeasuredResults with empty
+        /// Chromatograms, but requires null instead in this case.
+        /// </summary>
+        public MeasuredResults NullIfEmpty()
+        {
+            return Chromatograms.Count == 0 ? null : this;
+        }
+
         [TrackChildren]
         public IList<ChromatogramSet> Chromatograms
         {
