@@ -22,7 +22,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Skyline.Menus;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
@@ -30,7 +29,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
-    public class KeyboardShortcutHelpTest : AbstractFunctionalTest
+    public class KeyboardShortcutHelpTest : AbstractFunctionalTestEx
     {
         [TestMethod, NoParallelTesting(TestExclusionReason.WEB_BROWSER_USE)]
         public void TestKeyboardShortcutHelp()
@@ -40,30 +39,29 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            // Test that the keyboard shortcuts documentation can be generated
-            RunDlg<DocumentationViewer>(SkylineWindow.ShowKeyboardShortcutsDocumentation, docViewer =>
+            using (var docViewerHelper = new DocumentationViewerHelper(TestContext, SkylineWindow.ShowKeyboardShortcutsDocumentation))
             {
-                // Wait for the document to load completely
-                WaitForCondition(() => docViewer.DocumentationHtml.Length > 100);
-                
-                var html = docViewer.DocumentationHtml;
-                AssertEx.Contains(html, MenusResources.Keyboard_Shortcuts_Title);
-                AssertEx.Contains(html, MenusResources.Keyboard_Shortcuts_Table_Title);
-                AssertEx.Contains(html, MenusResources.Keyboard_Mnemonics_Table_Title);
-                AssertEx.Contains(html, "<table");
-                AssertEx.Contains(html, "</table>");
-                
-                // Test that the number of <td> tags matches the expected number of rows
-                var shortcutRows = KeyboardShortcutDocumentation.GetShortcutRows(SkylineWindow.MainMenuStrip);
-                var mnemonicRows = KeyboardShortcutDocumentation.GetMnemonicRows(SkylineWindow.MainMenuStrip);
-                var expectedTdCount = (shortcutRows.Count + mnemonicRows.Count) * 2; // 2 columns per row
-                
-                var actualTdCount = html.Split(new[] { "<td>" }, StringSplitOptions.None).Length - 1;
-                Assert.AreEqual(expectedTdCount, actualTdCount, 
-                    $"Expected {expectedTdCount} <td> tags ({shortcutRows.Count + mnemonicRows.Count} rows × 2 columns), but found {actualTdCount}");
-                
-                docViewer.Close();
-            });
+                RunUI(() =>
+                {
+                    // Get the HTML content from WebView2 (not just the member variable)
+                    var html = docViewerHelper.DocViewer.GetWebView2HtmlContent();
+                    AssertEx.Contains(html, MenusResources.Keyboard_Shortcuts_Title);
+                    AssertEx.Contains(html, MenusResources.Keyboard_Shortcuts_Table_Title);
+                    AssertEx.Contains(html, MenusResources.Keyboard_Mnemonics_Table_Title);
+                    AssertEx.Contains(html, "<table");
+                    AssertEx.Contains(html, "</table>");
+                    
+                    // Test that the number of <td> tags matches the expected number of rows
+                    var shortcutRows = KeyboardShortcutDocumentation.GetShortcutRows(SkylineWindow.MainMenuStrip);
+                    var mnemonicRows = KeyboardShortcutDocumentation.GetMnemonicRows(SkylineWindow.MainMenuStrip);
+                    var gridViewRows = KeyboardShortcutDocumentation.GetGridViewShortcutRows();
+                    var expectedTdCount = (shortcutRows.Count + mnemonicRows.Count + gridViewRows.Count) * 2; // 2 columns per row
+                    
+                    var actualTdCount = html.Split(new[] { "<td>" }, StringSplitOptions.None).Length - 1;
+                    Assert.AreEqual(expectedTdCount, actualTdCount, 
+                        $"Expected {expectedTdCount} <td> tags ({shortcutRows.Count + mnemonicRows.Count + gridViewRows.Count} rows × 2 columns), but found {actualTdCount}");
+                });
+            }
 
             // Run all keyboard validation tests
             ValidateNoDuplicateKeyboardShortcuts();

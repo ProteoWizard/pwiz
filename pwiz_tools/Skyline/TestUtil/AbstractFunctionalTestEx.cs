@@ -922,5 +922,35 @@ namespace pwiz.SkylineTestUtil
 
             return docAfterAdd;
         }
+
+
+        /// <summary>
+        /// Helper class for tests to show and dispose of a <see cref="DocumentationViewer"/>.
+        /// </summary>
+        public class DocumentationViewerHelper : IDisposable
+        {
+            private readonly string _originalDirectory;
+
+            public DocumentationViewerHelper(TestContext testContext, Action showViewer)
+            {
+                _originalDirectory = DocumentationViewer.TestWebView2EnvironmentDirectory;
+                DocumentationViewer.TestWebView2EnvironmentDirectory = testContext.GetTestResultsPath(@"WebView2");
+                // Wait for the document to load completely in WebView2
+                DocViewer = ShowDialog<DocumentationViewer>(SkylineWindow.ShowKeyboardShortcutsDocumentation);
+                WaitForConditionUI(() => DocViewer.GetWebView2HtmlContent(100).Length > 0);
+            }
+            
+            public DocumentationViewer DocViewer { get; }
+
+            public void Dispose()
+            {
+                OkDialog(DocViewer, DocViewer.Close);
+                
+                // Give folder clean-up an extra 2 seconds to complete
+                TryWaitForCondition(2000, () => !Directory.Exists(DocumentationViewer.TestWebView2EnvironmentDirectory));
+                DocumentationViewer.TestWebView2EnvironmentDirectory = _originalDirectory;
+            }
+        }
+
     }
 }
