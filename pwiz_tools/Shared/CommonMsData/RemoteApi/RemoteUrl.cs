@@ -72,16 +72,16 @@ namespace pwiz.CommonMsData.RemoteApi
 
         protected virtual void Init(NameValueParameters nameValueParameters)
         {
-            LegacyCentroidMs1 = nameValueParameters.GetBoolValue(Attr.centroid_ms1.ToString());
-            LegacyCentroidMs2 = nameValueParameters.GetBoolValue(Attr.centroid_ms2.ToString());
-            LockMassParameters = new LockMassParameters(
-                nameValueParameters.GetDoubleValue(Attr.lockmass_pos.ToString()),
-                nameValueParameters.GetDoubleValue(Attr.lockmass_neg.ToString()),
-                nameValueParameters.GetDoubleValue(Attr.lockmass_tol.ToString()));
-            ServerUrl = nameValueParameters.GetValue(Attr.server.ToString());
-            Username = nameValueParameters.GetValue(Attr.username.ToString());
-            EncodedPath = nameValueParameters.GetValue(Attr.path.ToString());
-            ModifiedTime = nameValueParameters.GetDateValue(Attr.modified_time.ToString());
+            LegacyCentroidMs1 = nameValueParameters.GetBoolValue(nameof(Attr.centroid_ms1));
+            LegacyCentroidMs2 = nameValueParameters.GetBoolValue(nameof(Attr.centroid_ms2));
+            LockMassParameters = LockMassParameters.Create(
+                nameValueParameters.GetDoubleValue(nameof(Attr.lockmass_pos)),
+                nameValueParameters.GetDoubleValue(nameof(Attr.lockmass_neg)),
+                nameValueParameters.GetDoubleValue(nameof(Attr.lockmass_tol)));
+            ServerUrl = nameValueParameters.GetValue(nameof(Attr.server));
+            Username = nameValueParameters.GetValue(nameof(Attr.username));
+            EncodedPath = nameValueParameters.GetValue(nameof(Attr.path));
+            ModifiedTime = nameValueParameters.GetDateValue(nameof(Attr.modified_time));
         }
 
         public override MsDataFileUri ChangeLockMassParameters(LockMassParameters lockMassParameters)
