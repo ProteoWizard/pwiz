@@ -46,32 +46,30 @@ namespace pwiz.SkylineTestFunctional
             ValidateNoDuplicateMnemonics();
         }
 
-        private static void ValidateDocumentationInViewer()
+        private void ValidateDocumentationInViewer()
         {
             // Test that the keyboard shortcuts documentation can be generated
-            using (var docViewerHelper = new DocumentationViewerHelper(TestContext, SkylineWindow.ShowKeyboardShortcutsDocumentation))
+            using var docViewerHelper = new DocumentationViewerHelper(TestContext, SkylineWindow.ShowKeyboardShortcutsDocumentation);
+            RunUI(() =>
             {
-                RunUI(() =>
-                {
-                    // Get the HTML content from WebView2 (not just the member variable)
-                    var html = docViewerHelper.DocViewer.GetWebView2HtmlContent();
-                    AssertEx.Contains(html, MenusResources.Keyboard_Shortcuts_Title);
-                    AssertEx.Contains(html, MenusResources.Keyboard_Shortcuts_Table_Title);
-                    AssertEx.Contains(html, MenusResources.Keyboard_Mnemonics_Table_Title);
-                    AssertEx.Contains(html, "<table");
-                    AssertEx.Contains(html, "</table>");
+                // Get the HTML content from WebView2 (not just the member variable)
+                var html = docViewerHelper.DocViewer.GetWebView2HtmlContent();
+                AssertEx.Contains(html, MenusResources.Keyboard_Shortcuts_Title);
+                AssertEx.Contains(html, MenusResources.Keyboard_Shortcuts_Table_Title);
+                AssertEx.Contains(html, MenusResources.Keyboard_Mnemonics_Table_Title);
+                AssertEx.Contains(html, "<table");
+                AssertEx.Contains(html, "</table>");
                     
-                    // Test that the number of <td> tags matches the expected number of rows
-                    var shortcutRows = KeyboardShortcutDocumentation.GetShortcutRows(SkylineWindow.MainMenuStrip);
-                    var mnemonicRows = KeyboardShortcutDocumentation.GetMnemonicRows(SkylineWindow.MainMenuStrip);
-                    var gridViewRows = KeyboardShortcutDocumentation.GetGridViewShortcutRows();
-                    var expectedTdCount = (shortcutRows.Count + mnemonicRows.Count + gridViewRows.Count) * 2; // 2 columns per row
+                // Test that the number of <td> tags matches the expected number of rows
+                var shortcutRows = KeyboardShortcutDocumentation.GetShortcutRows(SkylineWindow.MainMenuStrip);
+                var mnemonicRows = KeyboardShortcutDocumentation.GetMnemonicRows(SkylineWindow.MainMenuStrip);
+                var gridViewRows = KeyboardShortcutDocumentation.GetGridViewShortcutRows();
+                var expectedTdCount = (shortcutRows.Count + mnemonicRows.Count + gridViewRows.Count) * 2; // 2 columns per row
                     
-                    var actualTdCount = html.Split(new[] { "<td>" }, StringSplitOptions.None).Length - 1;
-                    Assert.AreEqual(expectedTdCount, actualTdCount, 
-                        $"Expected {expectedTdCount} <td> tags ({shortcutRows.Count + mnemonicRows.Count + gridViewRows.Count} rows × 2 columns), but found {actualTdCount}");
-                });
-            }
+                var actualTdCount = html.Split(new[] { "<td>" }, StringSplitOptions.None).Length - 1;
+                Assert.AreEqual(expectedTdCount, actualTdCount, 
+                    $"Expected {expectedTdCount} <td> tags ({shortcutRows.Count + mnemonicRows.Count + gridViewRows.Count} rows × 2 columns), but found {actualTdCount}");
+            });
         }
 
         private void ValidateNoDuplicateKeyboardShortcuts()
