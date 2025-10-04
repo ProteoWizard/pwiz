@@ -132,11 +132,20 @@ namespace pwiz.Skyline.Model.RetentionTimes
                     return false;
                 }
 
-                using var settingsChangeMonitor =
-                    new SrmSettingsChangeMonitor(new LoadMonitor(this, container, docCurrent),
-                        RetentionTimesResources.RetentionTimeManager_PerformNextAlignment_Updating_retention_time_alignment);
-                docNew = docCurrent.ChangeSettings(
-                    docCurrent.Settings.ChangeDocumentRetentionTimes(newDocumentRetentionTimes), settingsChangeMonitor);
+                try
+                {
+                    using var settingsChangeMonitor =
+                        new SrmSettingsChangeMonitor(new LoadMonitor(this, container, docCurrent),
+                            RetentionTimesResources
+                                .RetentionTimeManager_PerformNextAlignment_Updating_retention_time_alignment);
+                    docNew = docCurrent.ChangeSettings(
+                        docCurrent.Settings.ChangeDocumentRetentionTimes(newDocumentRetentionTimes),
+                        settingsChangeMonitor);
+                }
+                catch (OperationCanceledException)
+                {
+                    return false;
+                }
             }
             while (!CompleteProcessing(container, docNew, docCurrent));
             return true;
