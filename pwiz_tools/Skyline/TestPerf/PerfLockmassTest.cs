@@ -85,7 +85,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 loadStopwatch.Start();
                 ImportResults(GetTestPath(TestFilesPersistent[0]),
                     (testloop == 0)
-                        ? new LockMassParameters(0, lockmassNegative, lockmassToler) // ESI- data
+                        ? LockMassParameters.Create(0, lockmassNegative, lockmassToler) // ESI- data
                         : LockMassParameters.EMPTY);
 
                 var document = WaitForDocumentLoaded(400000);

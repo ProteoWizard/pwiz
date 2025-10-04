@@ -827,7 +827,7 @@ namespace pwiz.Skyline
                 }
                 catch (Exception e)
                 {
-                    MessageDlg.ShowException(this, e);
+                    MessageDlg.ShowException(parent ?? this, e);
                 }
             }
             else if (!File.Exists(pathCache) &&

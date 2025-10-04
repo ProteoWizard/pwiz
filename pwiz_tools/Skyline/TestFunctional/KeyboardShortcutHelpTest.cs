@@ -39,6 +39,16 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            ValidateDocumentationInViewer();
+
+            // Run all keyboard validation tests
+            ValidateNoDuplicateKeyboardShortcuts();
+            ValidateNoDuplicateMnemonics();
+        }
+
+        private static void ValidateDocumentationInViewer()
+        {
+            // Test that the keyboard shortcuts documentation can be generated
             using (var docViewerHelper = new DocumentationViewerHelper(TestContext, SkylineWindow.ShowKeyboardShortcutsDocumentation))
             {
                 RunUI(() =>
@@ -62,10 +72,6 @@ namespace pwiz.SkylineTestFunctional
                         $"Expected {expectedTdCount} <td> tags ({shortcutRows.Count + mnemonicRows.Count + gridViewRows.Count} rows × 2 columns), but found {actualTdCount}");
                 });
             }
-
-            // Run all keyboard validation tests
-            ValidateNoDuplicateKeyboardShortcuts();
-            ValidateNoDuplicateMnemonics();
         }
 
         private void ValidateNoDuplicateKeyboardShortcuts()
