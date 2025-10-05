@@ -19,7 +19,6 @@
 using System;
 using System.Data.SQLite;
 using System.IO;
-using System.Runtime.CompilerServices;
 using pwiz.Common.Database;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
@@ -39,7 +38,6 @@ namespace pwiz.Skyline.Util
 
         protected override IDisposable Connect()
         {
-            LogEvent(@"Connect");
             return SqliteOperations.OpenConnection(FilePath);
         }
 
@@ -97,14 +95,6 @@ namespace pwiz.Skyline.Util
                     throw new IOException(string.Format(Resources.BiblioSpecLiteLibrary_ReadSpectrum_Unexpected_SQLite_failure_reading__0__,
                         FilePath), x);
                 }
-            }
-        }
-
-        public void LogEvent(string eventName)
-        {
-            if (Program.IsVerboseLogging(FilePath))
-            {
-                Console.Out.WriteLine(@"{0}: ID:{1} Path:{2}", eventName, RuntimeHelpers.GetHashCode(this), FilePath);
             }
         }
     }
