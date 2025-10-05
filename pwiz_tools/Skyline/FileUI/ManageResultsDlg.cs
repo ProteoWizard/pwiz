@@ -185,19 +185,19 @@ namespace pwiz.Skyline.FileUI
         {
             get
             {
-                var results = DocumentUIContainer.Document.MeasuredResults ?? MeasuredResults.EMPTY;
+                var chromatograms = DocumentUIContainer.Document.MeasuredResults?.Chromatograms ?? Array.Empty<ChromatogramSet>();
                 var remainingReplicates = listResults.Items.Cast<ManageResultsAction>().Select(a => a.Chromatograms);
 
                 // only keep renames where there's still a replicate with the new name
                 var renamed = _renamedReplicates.Where(r => remainingReplicates.Any(rep => rep.Name == r.Value))
                     .Select(r => new RenamedReplicate(r.Key, r.Value)).ToList();
 
-                var removed = results.Chromatograms.Except(remainingReplicates)
+                var removed = chromatograms.Except(remainingReplicates)
                     .Where(chrom => renamed.All(r => r.OldName != chrom.Name))
                     .Select(c => c.Name).ToList();
 
                 return new ManageResultsSettings(renamed, removed,
-                    LibraryRunsRemovedList, removed.Count == results.Chromatograms.Count,
+                    LibraryRunsRemovedList, removed.Count == chromatograms.Count,
                     IsRemoveAllLibraryRuns,
                     IsRemoveCorrespondingReplicates, IsRemoveCorrespondingLibraries);
             }
