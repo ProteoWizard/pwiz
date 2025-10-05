@@ -251,7 +251,7 @@ namespace pwiz.Skyline.Util
 
         public virtual void CancelDialog()
         {
-            CancelButton.PerformClick();
+            CancelButton?.PerformClick();
         }
 
         public static Control GetFocused(Control.ControlCollection controls)

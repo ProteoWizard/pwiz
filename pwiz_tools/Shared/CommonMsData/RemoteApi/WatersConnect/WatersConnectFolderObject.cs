@@ -22,7 +22,8 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
     public class WatersConnectFolderObject : WatersConnectObject
     {
         public string Path { get; private set; }
-        public bool HasSampleSets { get; private set; }
+        public bool CanRead { get; private set; }
+        public bool CanWrite { get; private set; }
         public string ParentId { get; private set; }
 
         public WatersConnectFolderObject(JObject jobject, string parentId, bool isSampleSet)
@@ -32,16 +33,26 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             if (isSampleSet)
             {
                 Id = GetProperty(jobject, "sampleSetId");
-                HasSampleSets = true;
+                CanRead = true;
+                CanWrite = false;
             }
             else
             {
                 Id = GetProperty(jobject, "id");
                 Path = GetProperty(jobject, "path");
-                HasSampleSets = jobject["accessType"]["read"].Value<bool>();
+                CanRead = jobject["accessType"]["read"].Value<bool>();
+                CanWrite = jobject["accessType"]["write"].Value<bool>();
             }
             // ReSharper restore LocalizableElement
             ParentId = parentId;
+        }
+
+        public override WatersConnectUrl ToUrl(WatersConnectUrl currentConnectUrl)
+        {
+            return (WatersConnectUrl) currentConnectUrl
+                .ChangeType(WatersConnectUrl.ItemType.folder)
+                .ChangeFolderOrSampleSetId(Id)
+                .ChangePathPartsOnly(Path.Split('/'));
         }
     }
 }
