@@ -244,7 +244,6 @@ namespace pwiz.Skyline.Util
                 IDisposable connection;
                 if (!_connections.TryGetValue(id.GlobalIndex, out connection))
                     return;
-                (id as PooledSqliteConnection)?.LogEvent(@"Disconnect");
                 _connections.Remove(id.GlobalIndex);
                 // Disconnect inside lock, since a new attempt to connect
                 // may fail if the old connection is not fully disconnected.
