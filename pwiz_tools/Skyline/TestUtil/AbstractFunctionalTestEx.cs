@@ -935,8 +935,11 @@ namespace pwiz.SkylineTestUtil
             {
                 _originalDirectory = DocumentationViewer.TestWebView2EnvironmentDirectory;
                 DocumentationViewer.TestWebView2EnvironmentDirectory = testContext.GetTestResultsPath(@"WebView2");
-                // Wait for the document to load completely in WebView2
+                Directory.CreateDirectory(DocumentationViewer.TestWebView2EnvironmentDirectory);
+
                 DocViewer = ShowDialog<DocumentationViewer>(SkylineWindow.ShowKeyboardShortcutsDocumentation);
+
+                // Wait for the document to load completely in WebView2
                 WaitForConditionUI(() => DocViewer.GetWebView2HtmlContent(100).Length > 0);
             }
             
@@ -947,10 +950,38 @@ namespace pwiz.SkylineTestUtil
                 OkDialog(DocViewer, DocViewer.Close);
                 
                 // Give folder clean-up an extra 2 seconds to complete
-                TryWaitForCondition(2000, () => !Directory.Exists(DocumentationViewer.TestWebView2EnvironmentDirectory));
+                TryWaitForCondition(2000, CleanupTestDataFolder);
                 DocumentationViewer.TestWebView2EnvironmentDirectory = _originalDirectory;
             }
-        }
 
+            private bool CleanupTestDataFolder()
+            {
+                var testDataFolder = DocumentationViewer.TestWebView2EnvironmentDirectory;
+                // Clean up test data folder if it was created
+                if (Directory.Exists(testDataFolder))
+                {
+                    // Give WebView2 more time to release file handles
+                    Thread.Sleep(200);
+
+                    // Force garbage collection to help release any remaining handles
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+                    GC.Collect();
+
+                    // Try to delete with retry logic for locked files
+                    try
+                    {
+                        TryHelper.TryTwice(() => Directory.Delete(testDataFolder, true), 5, 200, @"Failed to cleanup WebView2 test folder");
+                    }
+                    catch
+                    {
+                        // Ignore and expect the test to fail with a useful message about why this folder cannot be removed
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+        }
     }
 }

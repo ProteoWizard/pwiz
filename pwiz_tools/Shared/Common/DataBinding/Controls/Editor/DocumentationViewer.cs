@@ -18,9 +18,6 @@
  * limitations under the License.
  */
 using System;
-using System.IO;
-using System.Threading;
-using System.Windows.Forms;
 using Microsoft.Web.WebView2.Core;
 using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
@@ -31,7 +28,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
     {
         private string _documentationHtml = string.Empty;
         private string _webView2Html = string.Empty;
-        private string _testDataFolder;
 
         /// <summary>
         /// Static property to set the WebView2 environment directory for test scenarios.
@@ -88,12 +84,12 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                         // Navigate to the HTML if it was set before initialization
                         if (!string.IsNullOrEmpty(_documentationHtml))
                         {
-                            RunUI(NavigateToHtml);
+                            RunUIAsync(NavigateToHtml);
                         }
                     }
                     catch (Exception ex)
                     {
-                        RunUI(() => CommonAlertDlg.ShowException(this, ex));
+                        RunUIAsync(() => CommonAlertDlg.ShowException(this, ex));
                     }
                 });
             }
@@ -103,19 +99,26 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             }
         }
 
+        private CoreWebView2Environment InitWebView2Environment()
+        {
+            if (string.IsNullOrEmpty(TestWebView2EnvironmentDirectory))
+                return null;
+
+            // Create environment with custom user data folder on UI thread
+            return CoreWebView2Environment.CreateAsync(null, TestWebView2EnvironmentDirectory).Result;
+        }
+
+        private void RunUIAsync(Action act)
+        {
+            CommonActionUtil.SafeBeginInvoke(this, act);
+        }
+
         private void NavigateToHtml()
         {
             if (IsWebView2Initialized && !string.IsNullOrEmpty(_documentationHtml))
             {
                 webView2.NavigateToString(_documentationHtml);
             }
-        }
-
-        protected override void OnFormClosed(FormClosedEventArgs e)
-        {
-            base.OnFormClosed(e);
-
-            CleanupTestDataFolder();
         }
 
         #region Test helpers
@@ -163,69 +166,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                 System.Diagnostics.Debug.WriteLine($@"Failed to execute script on WebView2: {ex}");
             }
             return string.Empty;
-        }
-
-        private CoreWebView2Environment InitWebView2Environment()
-        {
-            if (string.IsNullOrEmpty(TestWebView2EnvironmentDirectory))
-                return null;
-
-            // If a test environment directory is specified, use it
-            _testDataFolder = TestWebView2EnvironmentDirectory;
-            Directory.CreateDirectory(_testDataFolder);
-                    
-            // Create environment with custom user data folder and additional options for test isolation
-            var options = new CoreWebView2EnvironmentOptions();
-            // Force WebView2 to use the test directory for all temp files and cache
-            options.AdditionalBrowserArguments = CommonTextUtil.SpaceSeparate(
-                $@"--user-data-dir=""{_testDataFolder}""",
-                $@"--disk-cache-dir=""{_testDataFolder}\\cache\""",
-                @" --disk-cache-size=0",
-                @"--disable-web-security",
-                @"--disable-features=VizDisplayCompositor",
-                @"--no-sandbox",
-                @"--disable-gpu",
-                @"--disable-background-timer-throttling",
-                @"--disable-backgrounding-occluded-windows",
-                @"--disable-renderer-backgrounding");
-            
-            // Create environment with custom user data folder on UI thread
-            return CoreWebView2Environment.CreateAsync(null, _testDataFolder, options).Result;
-        }
-
-        private void RunUI(Action act)
-        {
-            Invoke(act);
-        }
-
-        private void CleanupTestDataFolder()
-        {
-            // Clean up test data folder if it was created
-            if (!string.IsNullOrEmpty(_testDataFolder) && Directory.Exists(_testDataFolder))
-            {
-                // Explicitly clear WebView2 content and dispose
-                if (webView2?.CoreWebView2 != null)
-                    webView2.CoreWebView2.Navigate(@"about:blank");
-                webView2?.Dispose();
-                
-                // Give WebView2 more time to release file handles
-                Thread.Sleep(200);
-                
-                // Force garbage collection to help release any remaining handles
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-                GC.Collect();
-                
-                // Try to delete with retry logic for locked files
-                try
-                {
-                    TryHelper.TryTwice(() => Directory.Delete(_testDataFolder, true), 5, 200, @"Failed to cleanup WebView2 test folder");
-                }
-                catch
-                {
-                    // Ignore and expect the test to fail with a useful message about why this folder cannot be removed
-                }
-            }
         }
 
         #endregion
