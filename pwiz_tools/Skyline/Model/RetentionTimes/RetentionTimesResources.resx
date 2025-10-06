@@ -169,4 +169,7 @@
   <data name="AlignmentTargetSpec_GetLabel_RT_calculator__0_" xml:space="preserve">
 	  <value>RT calculator {0}</value>
   </data>
+  <data name="RetentionTimeManager_PerformNextAlignment_Updating_retention_time_alignment" xml:space="preserve">
+	  <value>Updating retention time alignment</value>
+  </data>
 </root>

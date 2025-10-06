@@ -2609,7 +2609,7 @@ namespace pwiz.Skyline
                     {
                         throw;
                     }
-                    MessageDlg.ShowWithException(this, TextUtil.LineSeparate(Resources.ShareListDlg_OkDialog_An_error_occurred, exception.Message), exception);
+                    MessageDlg.ShowWithException(parent ?? this, TextUtil.LineSeparate(Resources.ShareListDlg_OkDialog_An_error_occurred, exception.Message), exception);
                     return false;
                 }
                 finally
