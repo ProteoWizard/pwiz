@@ -341,7 +341,7 @@ namespace pwiz.Skyline.Model.Lib
                 var spectrumInfos = libKeySourceFileDatas
                     .Where(entry => quantPeptides.Contains(entry.Key))
                     .Select(entry => MakeSpectrumInfo(entry.Key, entry.Value, sourceFileIds));
-                SetLibraryEntries(FilterInvalidLibraryEntries(ref status, spectrumInfos));
+                SetLibraryEntries(FilterInvalidLibraryEntries(ref status, spectrumInfos, Path.GetFileName(FilePath)));
                 _sourceFiles = new LibraryFiles(sourceFiles);
                 // ReSharper restore PossibleMultipleEnumeration
                 loader.UpdateProgress(status.Complete());
