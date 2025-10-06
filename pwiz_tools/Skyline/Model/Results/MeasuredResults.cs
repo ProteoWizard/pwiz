@@ -25,6 +25,7 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -34,8 +35,6 @@ namespace pwiz.Skyline.Model.Results
     [XmlRoot("measured_results")]
     public sealed class MeasuredResults : Immutable, IXmlSerializable
     {
-        public static readonly MeasuredResults EMPTY = new MeasuredResults(new ChromatogramSet[0]);
-
         private static readonly HashSet<MsDataFileUri> EMPTY_FILES = new HashSet<MsDataFileUri>();
 
         private ImmutableList<ChromatogramSet> _chromatograms;
@@ -63,9 +62,14 @@ namespace pwiz.Skyline.Model.Results
             IsTimeNormalArea = true;
         }
 
-        public bool IsEmpty
+        /// <summary>
+        /// Returns null if Chromatograms is empty to help with assignment
+        /// to SrmSettings, which does not allow MeasuredResults with empty
+        /// Chromatograms, but requires null instead in this case.
+        /// </summary>
+        public MeasuredResults NullIfEmpty()
         {
-            get { return _chromatograms == null || _chromatograms.Count == 0; }
+            return Chromatograms.Count == 0 ? null : this;
         }
 
         [TrackChildren]
@@ -241,6 +245,13 @@ namespace pwiz.Skyline.Model.Results
         {
             return (_cacheFinal != null && Equals(cachePath, _cacheFinal.CachePath)) ||
                 (_listPartialCaches != null && _listPartialCaches.Contains(cache => Equals(cachePath, cache.CachePath)));
+        }
+
+        public bool FinalCacheIncomplete { get; private set; }
+
+        public MeasuredResults ChangeFinalCacheIncomplete(bool value)
+        {
+            return ChangeProp(ImClone(this), im => im.FinalCacheIncomplete = value);
         }
 
         /// <summary>
@@ -1283,6 +1294,42 @@ namespace pwiz.Skyline.Model.Results
             SetClonedCacheState(null);
         }
 
+        public MeasuredResults LoadFinalCache(string cachePath, IProgressStatus status, ILoadMonitor loader, SrmDocument doc)
+        {
+            if (!File.Exists(cachePath))
+            {
+                return ChangeFinalCacheIncomplete(true);
+            }
+
+            using var stream = File.OpenRead(cachePath);
+            var cachedFilePaths = ChromatogramCache.GetCachedFilePaths(stream).ToHashSet();
+            if (!Chromatograms.SelectMany(chrom => chrom.MSDataFilePaths).All(cachedFilePaths.Contains))
+            {
+                return null;
+            }
+
+            ChromatogramCache chromatogramCache;
+            try
+            {
+                chromatogramCache = ChromatogramCache.Load(cachePath, status, loader, doc);
+            }
+            catch (Exception)
+            {
+                chromatogramCache = null;
+            }
+
+            if (chromatogramCache == null)
+            {
+                return ChangeFinalCacheIncomplete(true);
+            }
+
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.SetClonedCacheState(chromatogramCache);
+                im.Chromatograms = Chromatograms;
+            });
+        }
+
         #endregion
 
         #region Implementation of IXmlSerializable
@@ -1343,7 +1390,7 @@ namespace pwiz.Skyline.Model.Results
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return ArrayUtil.EqualsDeep(obj._chromatograms, _chromatograms);
+            return ArrayUtil.EqualsDeep(obj._chromatograms, _chromatograms) && obj.FinalCacheIncomplete == FinalCacheIncomplete;
         }
 
         public override bool Equals(object obj)

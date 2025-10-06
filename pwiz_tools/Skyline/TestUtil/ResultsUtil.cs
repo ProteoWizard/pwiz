@@ -16,14 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Xml;
-using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -32,6 +26,13 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading;
+using System.Xml;
+using System.Xml.Serialization;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -481,6 +482,94 @@ namespace pwiz.SkylineTestUtil
                 }
             }
             return maxTime;
+        }
+
+        // Debug aid for comparing chromatogram results before and after re-extraction
+        public static void CompareResultsText(SrmDocument doc, string skyFileText, string comparisonFileName, string expectedValuesFileName, double? maxExpectedHeight)
+        {
+            GetResultsTextForComparison(doc, skyFileText, comparisonFileName, out var maxHeight);
+            var rtErrors = new List<string>();
+
+            using var actual = File.ReadLines(comparisonFileName).GetEnumerator();
+            using var expected = File.ReadLines(expectedValuesFileName).GetEnumerator();
+
+            while (true)
+            {
+                var hasActual = actual.MoveNext();
+                var hasExpected = expected.MoveNext();
+                if (!hasActual && !hasExpected)
+                {
+                    break; // both ended
+                }
+                if (!hasActual)
+                {
+                    rtErrors.Add($@"Expected:{Environment.NewLine}{expected.Current}{Environment.NewLine}got:{Environment.NewLine}nothing");
+                }
+                else if (!hasExpected)
+                {
+                    rtErrors.Add($@"Expected:{Environment.NewLine}nothing{Environment.NewLine}got:{Environment.NewLine}{actual.Current}");
+
+                }
+                else if (!string.Equals(expected.Current, actual.Current))
+                {
+                    rtErrors.Add($@"Expected:{Environment.NewLine}{expected.Current}{Environment.NewLine}got:{Environment.NewLine}{actual.Current}");
+                }
+            }
+            Assert.AreEqual(0, rtErrors.Count, string.Join(Environment.NewLine, rtErrors));
+            if (maxExpectedHeight.HasValue)
+            {
+                AssertEx.AreEqual(maxExpectedHeight, maxHeight, 1, @"max height");
+            }
+        }
+
+        public static void GetResultsTextForComparison(SrmDocument doc, string skyFileContents,
+            string comparisonFileName, out double maxObservedHeight)
+        {
+            var tolerance = (float)doc.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            var results = doc.Settings.MeasuredResults;
+            maxObservedHeight = 0.0;
+
+            using var streamWriter = new StreamWriter(comparisonFileName);
+
+            var fileNames = doc.MeasuredResults.MSDataFilePaths.ToArray();
+            for (var index = 0; index < fileNames.Length; index++)
+            {
+                var fileName = fileNames[index].GetFileName();
+                if (!skyFileContents.Contains(fileName))
+                {
+                    continue; // Replicate was removed for debug purposes
+                }
+                streamWriter.WriteLine($@"f{index}: {fileName}");
+                foreach (var chrom in doc.MeasuredResults.Chromatograms)
+                {
+                    foreach (var pair in doc.PeptidePrecursorPairs)
+                    {
+                        if (!results.TryLoadChromatogram(chrom, pair.NodePep, pair.NodeGroup,
+                                tolerance, out var chromGroupInfo) ||
+                            !(chrom.MSDataFilePaths.Any(p=>Equals(fileName, p.GetFileName()))))
+                        {
+                            var observation =
+                                $@"f{index} {pair.NodePep.RawTextIdDisplay} no chromatogram ";
+                            streamWriter.WriteLine(observation);
+                            continue;
+                        }
+
+                        foreach (var chromGroup in chromGroupInfo.Where(cg => Equals(cg.FilePath.GetFileName(), fileName)))
+                        {
+                            foreach (var tranInfo in chromGroup.TransitionPointSets)
+                            {
+                                maxObservedHeight = Math.Max(maxObservedHeight, tranInfo.MaxIntensity);
+                                foreach (var peak in tranInfo.Peaks)
+                                {
+                                    var observation =
+                                        $@"f{index} {chromGroup.ChromatogramGroupId} tran {tranInfo.PrecursorMz:F4}/{tranInfo.ProductMz:F4} peak {peak}";
+                                    streamWriter.WriteLine(observation);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

@@ -26,6 +26,7 @@ using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.MSGraph;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -82,25 +83,24 @@ namespace pwiz.SkylineTestTutorial
         protected override bool IsRecordMode => false;
 
         private readonly string[] EXPECTED_ANNOTATIONS =
-            {
-                "35.7;-34.5 ppm|36.6;-2.8 ppm|32.6;-8.2 ppm|33.2;-1.8 ppm|34.1;+17.2 ppm|37.5;+22.3 ppm|38.5;+5.7 ppm|39.1;-5.5 ppm", // Not L10N
-                "39.0;-33.2 ppm;(idotp 0.90)|34.1;-25 ppm|34.6;-21.5 ppm|35.7;-48.1 ppm|36.1;-42.9 ppm;(idotp 0.97)|37.8;-9.2 ppm;(idotp 0.96)|37.8;-27.3 ppm|36.5;-52.7 ppm|40.9;+59.7 ppm", // Not L10N
-                "37.0;-10.8 ppm|32.4;-12.2 ppm|35.2;+8.3 ppm|36.6;-10.4 ppm|37.5;-6.2 ppm|39.1;+7.1 ppm|40.5;-38.3 ppm|40.7;-38.2 ppm|42.0;+11.2 ppm|33.1;+39.9 ppm", // Not L10N
-                "37.0;-10.8 ppm|32.4;-12.2 ppm|35.2;+8.3 ppm|36.6;-10.4 ppm|37.5;-6.2 ppm|39.1;+7.1 ppm|40.5;-38.3 ppm|40.7;-38.2 ppm|42.0;+11.2 ppm|33.1;+39.9 ppm", // Not L10N
-                "37.0;-9.4 ppm|32.4;-12.2 ppm|35.2;+8.3 ppm|39.1;+7.1 ppm|40.5;-38.3 ppm|40.7;-38.2 ppm|42.0;+11.2 ppm|33.1;+39.9 ppm", // Not L10N
-                "37.0;-10.8 ppm|36.6;-10.4 ppm|37.5;-6.2 ppm|40.5;-38.3 ppm|40.7;-38.2 ppm|42.0;+11.2 ppm|33.1;+39.9 ppm|32.2;+17.4 ppm|34.6;-41.3 ppm|39.7;+3 ppm", // Not L10N
-                "37.4;+2.6 ppm|40.8;-20.9 ppm|33.2;+48 ppm|34.9;-41.1 ppm", // Not L10N
-                "37.5;-33.7 ppm|33.6;-6.2 ppm|35.5;-20.6 ppm|36.0;+27.5 ppm|36.9;+9.3 ppm|38.8;+3.5 ppm|39.6;+59.8 ppm|42.0;-4.6 ppm|42.5;-2.1 ppm", // Not L10N
-                "34.1;-9.9 ppm|36.1;+20.7 ppm|42.6;+11.7 ppm|38.2;+22.1 ppm", // Not L10N
-                "37.7;-9.7 ppm|34.1;-9.9 ppm|36.1;+20.7 ppm|39.0;-0.9 ppm|42.6;+11.7 ppm", // Not L10N
-                "34.5;+11.1 ppm|35.3;+2.9 ppm|35.3;+7.3 ppm|37.5;-9.4 ppm|38.9;-36.6 ppm;(idotp 0.80)|36.5;+6.5 ppm|36.6;+2.2 ppm;(idotp 0.89)|39.4;-61 ppm|40.9;-22.7 ppm", // Not L10N
-                "35.7;+19.8 ppm|39.3;-17.9 ppm", // Not L10N
-                "35.3;+2.9 ppm|35.3;+7.3 ppm;(idotp 0.78)|38.9;-37.4 ppm;(idotp 0.65)|34.5;+24.3 ppm|36.8;+13.8 ppm|36.8;+8.1 ppm|37.3;+5 ppm;(idotp 0.71)|39.4;-23.5 ppm|41.1;-7.5 ppm", // Not L10N
-                "35.7;+19.8 ppm;(idotp 0.67)|38.4;+10.2 ppm;(idotp 0.54)", // Not L10N
-                "36.1;-6.3 ppm|36.0;-34.1 ppm|37.3;-29.4 ppm|38.2;-19.2 ppm|38.5;-19.2 ppm|39.1;-1.8 ppm|39.9;-3.6 ppm|32.2;-11.1 ppm|34.3;-9.3 ppm", // Not L10N
-                "41.9;+13.1 ppm|37.5;-12.8 ppm|34.7;+21.7 ppm|32.5;+0.1 ppm|42.4;-6.7 ppm", // Not L10N
-                "35.9;-19.4 ppm|33.0;-55.9 ppm|39.5;-54.1 ppm|34.3;-50.2 ppm|37.3;-40.4 ppm", // Not L10N
-            };
+        {
+            "35.7;-34.5 ppm|36.6;-2.8 ppm|32.6;-8.2 ppm|33.2;-1.8 ppm|34.1;+17.2 ppm|37.5;+22.3 ppm|38.5;+5.7 ppm|39.1;-5.5 ppm", // Not L10N
+            "39.0;-33.2 ppm;(idotp 0.90)|34.3;-23.7 ppm|35.7;-48.8 ppm|36.1;-42.4 ppm;(idotp 0.97)|37.8;-19.9 ppm|37.8;-27.6 ppm|35.0;-41.3 ppm|36.5;-53.4 ppm|40.9;+53.4 ppm", // Not L10N
+            "37.0;-10.8 ppm|32.4;-12.2 ppm|35.2;+8.3 ppm|36.6;-10.4 ppm|37.5;-6.2 ppm|39.1;+7.1 ppm|40.5;-38.3 ppm|40.7;-38.2 ppm|42.0;+13.1 ppm|33.1;+39.9 ppm", // Not L10N
+            "37.0;-10.8 ppm|32.4;-12.2 ppm|35.2;+8.3 ppm|36.6;-10.4 ppm|37.5;-6.2 ppm|39.1;+7.1 ppm|40.5;-38.3 ppm|40.7;-38.2 ppm|42.0;+13.1 ppm|33.1;+39.9 ppm", // Not L10N
+            "37.0;-9.4 ppm|32.4;-12.2 ppm|35.2;+8.3 ppm|39.1;+7.1 ppm|40.5;-38.3 ppm|40.7;-38.2 ppm|42.0;+13.1 ppm|33.1;+39.9 ppm", // Not L10N
+            "37.0;-10.8 ppm|36.6;-10.4 ppm|37.5;-6.2 ppm|40.5;-38.3 ppm|40.7;-38.2 ppm|42.0;+13.1 ppm|33.1;+39.9 ppm|32.2;+17.4 ppm|34.6;-41.3 ppm|39.7;+3 ppm", // Not L10N
+            "37.4;+2.6 ppm|40.8;-20.9 ppm|33.2;+48 ppm|34.9;-41.1 ppm", // Not L10N
+            "32.8;-7.6 ppm|34.1;-7.6 ppm;(idotp 0.70)|35.5;-19.9 ppm;(idotp 0.82)|36.0;+27.5 ppm;(idotp 0.76)|36.9;+9.6 ppm|38.8;+3.6 ppm;(idotp 0.82)|39.6;+59.5 ppm|42.0;-4 ppm;(idotp 0.77)|38.0;+16.3 ppm;(idotp 0.59)", // Not L10N
+            "34.1;-9.9 ppm|36.1;+20.7 ppm|42.6;+11.7 ppm|38.2;+22.1 ppm", // Not L10N
+            "37.7;-9.7 ppm|34.1;-9.9 ppm|36.1;+20.7 ppm|39.0;-0.9 ppm|42.6;+11.7 ppm", // Not L10N
+            "34.5;+11.1 ppm|35.3;+2.9 ppm|35.3;+6.9 ppm|37.0;+16.4 ppm|38.9;-36.6 ppm;(idotp 0.80)|36.5;+6.5 ppm|36.6;+1.3 ppm;(idotp 0.89)|40.9;-22.6 ppm", // Not L10N
+            "35.7;+19.8 ppm|39.3;-17.9 ppm", // Not L10N
+            "35.3;+2.9 ppm|35.3;+6.9 ppm;(idotp 0.79)|38.9;-37.5 ppm;(idotp 0.65)|34.5;+24.3 ppm|36.8;+13.7 ppm|36.8;+8 ppm|37.3;+9.5 ppm|41.1;-7.6 ppm", // Not L10N
+            "35.7;+19.8 ppm;(idotp 0.67)|38.4;+10.2 ppm;(idotp 0.54)", // Not L10N
+            "36.1;-6.3 ppm|36.0;-34.1 ppm|37.3;-29.4 ppm|38.2;-19.2 ppm|38.5;-19.2 ppm|39.1;-1.8 ppm|39.9;-3.6 ppm|32.2;-11.1 ppm|34.3;-9.3 ppm", // Not L10N
+            "41.9;+13.1 ppm|37.5;-12.8 ppm|34.7;+21.7 ppm|32.5;+0.1 ppm|42.4;-6.7 ppm", // Not L10N
+        };
 
         private bool PreferWiff
         {
@@ -449,7 +449,9 @@ namespace pwiz.SkylineTestTutorial
                 PauseForScreenShot<ScreenForm>("Peak Areas view (show context menu)", null,
                     bmp =>
                     {
-                        bmp = bmp.CleanupBorder(ScreenshotManager.GetFramedWindowBounds(peakAreas),
+                        var rectBorder = ScreenshotProcessingExtensions.GetToolWindowBorderRect(
+                            ScreenshotManager.GetFramedWindowBounds(peakAreas));
+                        bmp = bmp.CleanupBorder(rectBorder,
                             ScreenshotProcessingExtensions.CornerToolWindow, 
                             Rectangle.Union(menuStrip.Bounds, subMenuStrip.Bounds));
 
@@ -659,7 +661,6 @@ namespace pwiz.SkylineTestTutorial
             {
                 SkylineWindow.SynchronizeZooming(true);
                 SkylineWindow.LockYChrom(false);
-                SkylineWindow.AlignToFile = GetGraphChromatogram(TIP3).GetChromFileInfoId(); // align to Tip3
             });
             ZoomBoth(36.5, 39.5, 1600); // simulate the wheel scroll described in tutorial
             RunUI(() =>

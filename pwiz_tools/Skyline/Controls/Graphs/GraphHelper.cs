@@ -367,7 +367,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var bestStartTime = firstPeak.StartRetentionTime;
             var bestEndTime = lastPeak.EndRetentionTime;
             // If relative zooming, scale to the best peak
-            if (chromDisplayState.TimeRange == 0 || chromDisplayState.PeakRelativeTime)
+            if (bestEndTime > bestStartTime && (chromDisplayState.TimeRange == 0 || chromDisplayState.PeakRelativeTime))
             {
                 double multiplier = (chromDisplayState.TimeRange != 0 ? chromDisplayState.TimeRange : GraphChromatogram.DEFAULT_PEAK_RELATIVE_WINDOW);
                 bestStartTime -= firstPeak.Fwb * (multiplier - 1) / 2;
@@ -658,7 +658,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
     }
 
-    public struct PaneKey : IComparable
+    public struct PaneKey : IComparable, IEquatable<PaneKey>
     {
         public static readonly PaneKey PRECURSORS = new PaneKey(Adduct.EMPTY, null, false);
         public static readonly PaneKey PRODUCTS = new PaneKey(Adduct.EMPTY, null, true);
@@ -718,6 +718,28 @@ namespace pwiz.Skyline.Controls.Graphs
                 return false;
             }
             return true;
+        }
+
+        public bool Equals(PaneKey other)
+        {
+            return Equals(PrecursorAdduct, other.PrecursorAdduct) && Equals(IsotopeLabelType, other.IsotopeLabelType) && Nullable.Equals(SpectrumClassFilter, other.SpectrumClassFilter) && IsProducts == other.IsProducts;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is PaneKey other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = (PrecursorAdduct != null ? PrecursorAdduct.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (IsotopeLabelType != null ? IsotopeLabelType.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ SpectrumClassFilter.GetHashCode();
+                hashCode = (hashCode * 397) ^ IsProducts.GetHashCode();
+                return hashCode;
+            }
         }
     }    
 }

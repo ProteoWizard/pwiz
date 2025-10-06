@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using pwiz.Common.SystemUtil;
@@ -35,6 +34,20 @@ namespace pwiz.Skyline.Util.Extensions
     /// </summary>
     public static class TextUtil
     {
+        public const string HYPHEN = "-";
+        public const string SPACE = " ";
+        public const string CARET = @"^";
+        public const string AMPERSAND = @"&";
+        public const string AT = @"@";
+        public const string EQUAL = @"=";
+        public const string FORWARD_SLASH = @"/";
+        public const string SEMICOLON = @";";
+        public const string UNDERSCORE = @"_";
+        public const string LEFT_PARENTHESIS = @"(";
+        public const string RIGHT_PARENTHESIS = @")";
+        public const string LEFT_SQUARE_BRACKET = @"[";
+        public const string RIGHT_SQUARE_BRACKET = @"]";
+
         public const string EXT_CSV = ".csv";
         public const string EXT_TSV = ".tsv";
 
@@ -571,6 +584,24 @@ namespace pwiz.Skyline.Util.Extensions
             return sb.ToString();
         }
 
+        private const int TAB_SIZE = 4;
+        
+        public static string GetIndentation(int indentLevel, int tabSize = TAB_SIZE)
+        {
+            if (indentLevel <= 0)
+                return string.Empty;
+
+            return new string(' ', tabSize * indentLevel);
+        }
+
+        public static string Indent(this string s, int indentLevel, int tabSize = TAB_SIZE)
+        {
+            if (s == null || indentLevel <= 0)
+                return s;
+
+            return GetIndentation(indentLevel, tabSize) + s;
+        }
+
         /// <summary>
         /// Returns a filter string suitable for a common file dialog (e.g. "CSV (Comma delimited) (*.csv)|*.csv")
         /// </summary>
@@ -628,12 +659,12 @@ namespace pwiz.Skyline.Util.Extensions
         /// </summary>
         public static string EncryptString(string str)
         {
-            return Convert.ToBase64String(ProtectedData.Protect(Encoding.UTF8.GetBytes(str), null, DataProtectionScope.CurrentUser));
+            return CommonTextUtil.EncryptString(str);
         }
 
         public static string DecryptString(string str)
         {
-            return Encoding.UTF8.GetString(ProtectedData.Unprotect(Convert.FromBase64String(str), null, DataProtectionScope.CurrentUser));
+            return CommonTextUtil.DecryptString(str);
         }
 
         /// <summary>
@@ -823,7 +854,7 @@ namespace pwiz.Skyline.Util.Extensions
     /// the names of the columns, and all following lines contain data for each column.
     /// When ctor's optional hasHeaders arg == false, then columns are named "0", "1","2","3" etc.
     /// </summary>
-    public class DsvFileReader
+    public class DsvFileReader : IDisposable
     {
         private char _separator;
         private string[] _currentFields;
@@ -973,13 +1004,13 @@ namespace pwiz.Skyline.Util.Extensions
         }
 
         /// <summary>
-        /// If loading from a file, use this to dispose the text reader.
+        /// IDisposable pattern implementation for using clause to dispose of the reader,
+        /// in case it is a StreamReader holding onto a file handle.
         /// </summary>
         public void Dispose()
         {
             _reader.Dispose();
         }
-
     }
 
     public class LineColNumberedIoException : IOException

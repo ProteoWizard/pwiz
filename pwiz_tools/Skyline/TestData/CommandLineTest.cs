@@ -31,6 +31,7 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;

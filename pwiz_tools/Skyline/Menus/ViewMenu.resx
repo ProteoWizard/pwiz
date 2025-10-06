@@ -721,7 +721,7 @@
     <value>180, 22</value>
   </data>
   <data name="retentionTimesMenuItem.Text" xml:space="preserve">
-    <value>Retention &amp;Times</value>
+    <value>Retention T&amp;imes</value>
   </data>
   <data name="replicateComparisonMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>F8</value>
@@ -745,7 +745,7 @@
     <value>228, 22</value>
   </data>
   <data name="regressionMenuItem.Text" xml:space="preserve">
-    <value>&amp;Regression</value>
+    <value>R&amp;egression</value>
   </data>
   <data name="scoreToRunMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>142, 22</value>
@@ -907,7 +907,7 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=24.1.1.219, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0 Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;viewToolStripMenuItem.Name" xml:space="preserve">
     <value>viewToolStripMenuItem</value>

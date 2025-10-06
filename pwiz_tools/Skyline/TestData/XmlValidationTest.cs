@@ -26,6 +26,7 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -74,7 +75,7 @@ namespace pwiz.SkylineTestData
             using (var docContainer = new ResultsTestDocumentContainer(docCurrent, docCurrentPath))
             {
                 string replicateName = Path.GetFileNameWithoutExtension(resultsPath);
-                var lockMassParameters = new LockMassParameters(456.78, 567.89, 12.34);
+                var lockMassParameters = LockMassParameters.Create(456.78, 567.89, 12.34);
                 var listChromatograms = new List<ChromatogramSet> { new ChromatogramSet(replicateName, new[] { new MsDataFilePath(resultsPath, lockMassParameters) }) };
 
                 // Lockmass values are Waters only so don't expect them to be saved to the doc which has no Waters results

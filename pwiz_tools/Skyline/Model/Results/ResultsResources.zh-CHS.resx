@@ -281,9 +281,6 @@
   <data name="OverlapDemultiplexer_InitializeFile_OverlapDemultiplexer_InitializeFile_Improperly_formed_overlap_multiplexing_file" xml:space="preserve">
     <value>重叠多路输出选择器：错误地初始化文件形成了重叠多路复用文件</value>
   </data>
-  <data name="PeptideChromDataSets_AddDataSet_Unable_to_process_chromatograms_for_the_molecule___0___because_one_chromatogram_ends_at_time___1___and_the_other_ends_at_time___2___" xml:space="preserve">
-    <value>由于一个色谱图的结束时间为“{1}”，另一个色谱图的结束时间为“{2}”，所以无法处理分子“{0}”的色谱图。</value>
-  </data>
   <data name="PeptideChromDataSets_MergePeakGroups_Unexpected_null_peak_list" xml:space="preserve">
     <value>意外的无效峰列表</value>
   </data>
@@ -333,7 +330,11 @@
     <value>由于明确保留时间 {1} 不介于 {2} 和 {3} 之间，因此丢弃“{0}”的色谱图</value>
   </data>
   <data name="IonMobilityFinder_EvaluateBestIonMobilityValue_need_a_value_for_Transition_Settings___ion_mobility_filtering___Window_type" xml:space="preserve">
-    <value>需要提供离子对设置离子迁移过滤窗口类型值</value>
+    <value>需要提供离子对设置、离子迁移过滤、窗口类型值</value>
+    <comment>Needs Review:English text changed
+Old English:need a value for  Transition Settings  Ion mobility filtering  Window type
+Current English:need a value for Transition Settings, Ion mobility filtering, Window type
+Old Localized:需要提供离子对设置离子迁移过滤窗口类型值</comment>
   </data>
   <data name="IonMobilityFinder_FindIonMobilityPeaks_mixed_ion_mobility_types_are_not_supported" xml:space="preserve">
     <value>不支持混合离子迁移类型</value>
@@ -343,5 +344,8 @@
   </data>
   <data name="DataFileInstrumentInfo_IonMobilityFromCCS_no_conversion" xml:space="preserve">
     <value>供应商提供的库无法确定 CCS 为 {1:0.###}、质荷比为 {2:0.####}、电荷为 {3} 的 {0} 的离子迁移。</value>
+  </data>
+  <data name="PeptideChromDataSets_FilterByRetentionTime_Discarding_empty_chromatograms_for__0_" xml:space="preserve">
+    <value>丢弃其空色谱图: {0}</value>
   </data>
 </root>

@@ -21,7 +21,6 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -35,6 +34,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Util.Extensions;
 
@@ -175,20 +175,30 @@ namespace pwiz.Skyline.Model.DdaSearch
             @"c,z",
         };
 
-        public static string MSFRAGGER_VERSION = @"4.1";
+        public static string MSFRAGGER_VERSION = @"4.1"; // TODO: after next release and daily, remove outdated rtbUsageConditions.Text translations for ja/zh
         public static string MSFRAGGER_FILENAME = @"MSFragger-4.1";
         public static string MsFraggerDirectory => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), MSFRAGGER_FILENAME);
-        public static string MsFraggerBinary => Path.Combine(MsFraggerDirectory, MSFRAGGER_FILENAME, MSFRAGGER_FILENAME + @".jar");
-        public static FileDownloadInfo MsFraggerDownloadInfo => new FileDownloadInfo { Filename = MSFRAGGER_FILENAME, InstallPath = MsFraggerDirectory, OverwriteExisting = true, Unzip = true };
+        public static string MsFraggerBinary => Settings.Default.SearchToolList.GetToolPathOrDefault(SearchToolType.MSFragger, Path.Combine(MsFraggerDirectory, MSFRAGGER_FILENAME, MSFRAGGER_FILENAME + @".jar"));
+        public static string MsFraggerArgs => Settings.Default.SearchToolList.GetToolArgsOrDefault(SearchToolType.MSFragger, "");
+        public static FileDownloadInfo MsFraggerDownloadInfo => new FileDownloadInfo
+        {
+            Filename = MSFRAGGER_FILENAME, InstallPath = MsFraggerDirectory, OverwriteExisting = true, Unzip = true,
+            ToolType = SearchToolType.MSFragger, ToolPath = MsFraggerBinary, ToolExtraArgs = MsFraggerArgs
+        };
 
-        static string CRUX_FILENAME = @"crux-4.2";
+        static string CRUX_FILENAME = @"crux-4.3";
         static Uri CRUX_URL = new Uri($@"https://noble.gs.washington.edu/crux-downloads/{CRUX_FILENAME}/{CRUX_FILENAME}.Windows.AMD64.zip");
         public static string CruxDirectory => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), CRUX_FILENAME);
-        public static string CruxBinary => Path.Combine(CruxDirectory, $@"{CRUX_FILENAME}.Windows.AMD64", @"bin", @"crux");
-
+        public static string CruxBinary => Settings.Default.SearchToolList.GetToolPathOrDefault(SearchToolType.CruxPercolator, Path.Combine(CruxDirectory, $@"{CRUX_FILENAME}.Windows.AMD64", @"bin", @"crux.exe"));
+        public static string PercolatorArgs => Settings.Default.SearchToolList.GetToolArgsOrDefault(SearchToolType.CruxPercolator, "");
+        public static FileDownloadInfo CruxDownloadInfo => new FileDownloadInfo
+        {
+            Filename = CRUX_FILENAME, DownloadUrl = CRUX_URL, InstallPath = CruxDirectory, OverwriteExisting = true, Unzip = true,
+            ToolType = SearchToolType.CruxPercolator, ToolPath = CruxBinary, ToolExtraArgs = PercolatorArgs
+        };
         public static FileDownloadInfo[] FilesToDownload => JavaDownloadInfo.FilesToDownload.Concat(new[] {
             MsFraggerDownloadInfo,
-            new FileDownloadInfo { Filename = CRUX_FILENAME, DownloadUrl = CRUX_URL, InstallPath = CruxDirectory, OverwriteExisting = true, Unzip = true }
+            CruxDownloadInfo
         }).ToArray();
 
         private MzTolerance _precursorMzTolerance;
@@ -277,12 +287,10 @@ namespace pwiz.Skyline.Model.DdaSearch
                     _intermediateFiles.Add(paramsFile);
                     File.WriteAllText(paramsFile, paramsFileText.ToString());
 
-                    long javaMaxHeapMB = Math.Min(24 * 1024L * 1024 * 1024, MemoryInfo.TotalBytes / 2) / 1024 / 1024;
-
                     // Run MSFragger
                     var pr = new ProcessRunner();
                     var psi = new ProcessStartInfo(JavaDownloadInfo.JavaBinary,
-                            $@"-Xmx{javaMaxHeapMB}M -jar """ + MsFraggerBinary + $@""" ""{paramsFile}""")// ""{spectrumFilename}""")
+                            $@"{JavaDownloadInfo.JavaExtraArgs} -jar """ + MsFraggerBinary + $@""" {MsFraggerArgs} ""{paramsFile}""")// ""{spectrumFilename}""")
                     {
                         CreateNoWindow = true,
                         UseShellExecute = false
@@ -304,7 +312,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                     string cruxOutputDir = Path.Combine(defaultOutputDirectory, "crux-output");
                     _intermediateFiles.Add(cruxOutputDir);
                     psi.FileName = CruxBinary;
-                    psi.Arguments = $@"percolator --only-psms T --output-dir ""{cruxOutputDir}"" --overwrite T --decoy-prefix ""{_decoyPrefix}"" --parameter-file ""{cruxParamsFile}""";
+                    psi.Arguments = $@"percolator {PercolatorArgs} --only-psms T --output-dir ""{cruxOutputDir}"" --overwrite T --decoy-prefix ""{_decoyPrefix}"" --parameter-file ""{cruxParamsFile}""";
 
                     foreach (var settingName in PERCOLATOR_SETTINGS)
                         psi.Arguments += $@" --{AdditionalSettings[settingName].ToString(false, CultureInfo.InvariantCulture)}";
@@ -469,7 +477,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         private void GetPercolatorScores(string percolatorTsvFilepath, Dictionary<string, double> qvalueByPsmId)
         {
-            var percolatorTargetPsmsReader = new DsvFileReader(percolatorTsvFilepath, TextUtil.SEPARATOR_TSV);
+            using var percolatorTargetPsmsReader = new DsvFileReader(percolatorTsvFilepath, TextUtil.SEPARATOR_TSV);
             int psmIdColumn = percolatorTargetPsmsReader.GetFieldIndex(@"PSMId");
             int qvalueColumn = percolatorTargetPsmsReader.GetFieldIndex(@"q-value");
             while (percolatorTargetPsmsReader.ReadLine() != null)

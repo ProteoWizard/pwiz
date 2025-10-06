@@ -176,6 +176,15 @@ namespace pwiz.Skyline.Model.Results {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Loading {0}.
+        /// </summary>
+        public static string ChromatogramManager_LoadBackground_Loading__0_ {
+            get {
+                return ResourceManager.GetString("ChromatogramManager_LoadBackground_Loading__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Attempting to save results info for a file that cannot be found..
         /// </summary>
         public static string ChromatogramSet_GetOrdinalSaveId_Attempting_to_save_results_info_for_a_file_that_cannot_be_found {
@@ -454,7 +463,7 @@ namespace pwiz.Skyline.Model.Results {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to need a value for Ion mobility filtering Window type in Transition Settings.
+        ///   Looks up a localized string similar to need a value for Transition Settings, Ion mobility filtering, Window type.
         /// </summary>
         public static string IonMobilityFinder_EvaluateBestIonMobilityValue_need_a_value_for_Transition_Settings___ion_mobility_filtering___Window_type {
             get {
@@ -608,17 +617,6 @@ namespace pwiz.Skyline.Model.Results {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unable to process chromatograms for the molecule &apos;{0}&apos; because one chromatogram ends at time &apos;{1}&apos; and the other ends at time &apos;{2}&apos;..
-        /// </summary>
-        public static string PeptideChromDataSets_AddDataSet_Unable_to_process_chromatograms_for_the_molecule___0___because_one_chromatogram_ends_at_time___1___and_the_other_ends_at_time___2___ {
-            get {
-                return ResourceManager.GetString("PeptideChromDataSets_AddDataSet_Unable_to_process_chromatograms_for_the_molecule_" +
-                        "__0___because_one_chromatogram_ends_at_time___1___and_the_other_ends_at_time___2" +
-                        "___", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Discarding chromatograms for &apos;{0}&apos; because the explicit retention time {1} is not between {2} and {3}.
         /// </summary>
         public static string PeptideChromDataSets_FilterByRetentionTime_Discarding_chromatograms_for___0___because_the_explicit_retention_time__1__is_not_between__2__and__3_ {
@@ -732,6 +730,15 @@ namespace pwiz.Skyline.Model.Results {
             get {
                 return ResourceManager.GetString("SpectrumFilter_CalcDiaIsolationValues_Unable_to_determine_isolation_width_for_the" +
                         "_scan_targeted_at__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No isolation window found in {0} for precursor {1} (m/z={2} im={3}).
+        /// </summary>
+        public static string SpectrumFilter_No_Isolation_Window_Found_For_Precursor_ {
+            get {
+                return ResourceManager.GetString("SpectrumFilter_No_Isolation_Window_Found_For_Precursor_", resourceCulture);
             }
         }
         

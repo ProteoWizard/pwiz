@@ -51,6 +51,7 @@ popd
 
 
 set end=%time%
+if ERRORLEVEL 1 echo Build failed: exit code was %ERRORLEVEL%.
 echo Build finished at %end%
 
 REM # Calculate elapsed time

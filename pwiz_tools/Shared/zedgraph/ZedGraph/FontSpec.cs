@@ -360,27 +360,10 @@ namespace ZedGraph
 			get { return _size; }
 			set
 			{
-				if ( value != _size )
+				if (value != _size)
 				{
-					try
-					{
-						if (_size == 0)
-						{
-							Font newFont = null;
-							Remake(value, 1, ref _scaledSize, ref newFont);
-							_font = newFont; 
-						}
-						else
-						{
-							Remake(_scaledSize / _size * value, _size, 
-								ref _scaledSize, ref _font);
-						}
-						_size = value;
-					}
-					catch (Exception e)
-					{
-						throw new Exception(string.Format(@"Unable to set FontSpec.Size to {0} for _size {1} _scaledSize {2}", value, _size, _scaledSize), e);
-					}
+					Remake(_scaledSize / _size, value, ref _scaledSize, ref _font);
+					_size = value;
 				}
 			}
 		}

@@ -351,6 +351,9 @@
   <data name="cbGpf.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
   </data>
+  <data name="cbGpf.Text" xml:space="preserve">
+    <value>気相分画(&amp;G)</value>
+  </data>
   <data name="&gt;&gt;cbGpf.Name" xml:space="preserve">
     <value>cbGpf</value>
   </data>

@@ -31,6 +31,7 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Documentation;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.PanoramaClient;
 using pwiz.ProteomeDatabase.API;
 using pwiz.ProteowizardWrapper;
@@ -41,8 +42,8 @@ using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Model.Results.RemoteApi.Ardia;
-using pwiz.Skyline.Model.Results.RemoteApi.Unifi;
+using pwiz.CommonMsData.RemoteApi.Ardia;
+using pwiz.CommonMsData.RemoteApi.Unifi;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
@@ -454,7 +455,7 @@ namespace pwiz.Skyline
         public double? LockmassPositive { get; private set; }
         public double? LockmassNegative { get; private set; }
         public double? LockmassTolerance { get; private set; }
-        public LockMassParameters LockMassParameters { get { return new LockMassParameters(LockmassPositive, LockmassNegative, LockmassTolerance); } }
+        public LockMassParameters LockMassParameters { get { return LockMassParameters.Create(LockmassPositive, LockmassNegative, LockmassTolerance); } }
 
         private void ParseImportFile(NameValuePair pair)
         {

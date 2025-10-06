@@ -28,6 +28,7 @@ using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.Database.NHibernate;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
@@ -116,7 +117,8 @@ namespace pwiz.Skyline.Model.Lib.Midas
                     return LibraryFiles.EMPTY;
                 }
 
-                return new LibraryFiles(_spectra.Keys.Select(key => key.FilePath).Distinct());
+                var sourceFiles = _spectra.Keys.Select(key => key.FilePath).Distinct().ToList();
+                return new LibraryFiles(sourceFiles);
             }
         }
 

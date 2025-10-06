@@ -583,6 +583,9 @@ Would you like to remove some or all of this suffix to shorten the names used in
   <data name="PublishDocumentDlg_PublishDocumentDlgLoad_Go_to_Tools___Options___Panorama_tab_to_update_the_username_and_password_" xml:space="preserve">
     <value>Go to Tools &gt; Options &gt; Panorama tab to update the username and password.</value>
   </data>
+  <data name="PublishDocumentDlg_Panorama_ServerFolders" xml:space="preserve">
+    <value>Panorama Folders:</value>
+  </data>
   <data name="PublishDocumentDlg_UploadSharedZipFile_Error_obtaining_server_information" xml:space="preserve">
     <value>Error obtaining server information.</value>
   </data>
@@ -657,8 +660,5 @@ Would you like to remove some or all of this suffix to shorten the names used in
   </data>
   <data name="ChooseIrtStandardPeptidesDlg_ChooseIrtStandardPeptidesDlg_Unavailable__no_matching_iRT_standards_found" xml:space="preserve">
     <value>Unavailable: no matching iRT standards found</value>
-  </data>
-  <data name="OpenFileDialogNE_OpenFileDialogNE_Open" xml:space="preserve">
-    <value>Open</value>
   </data>
 </root>

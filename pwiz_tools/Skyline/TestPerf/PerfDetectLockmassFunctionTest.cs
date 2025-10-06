@@ -20,8 +20,8 @@
 
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
-using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the global RunPerfTests flag is set
@@ -67,7 +67,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             AssertEx.IsDocumentState(doc0, null, 24, 24, 24, 24);
 
             ImportResults(GetTestPath(TestFilesPersistent[0]),
-                new LockMassParameters(lockmassPositive, lockmassNegative, lockmassToler));
+                LockMassParameters.Create(lockmassPositive, lockmassNegative, lockmassToler));
 
             var document = WaitForDocumentLoaded(400000);
 

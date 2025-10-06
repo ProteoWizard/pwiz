@@ -21,13 +21,14 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
@@ -115,13 +116,13 @@ namespace pwiz.SkylineTestData.Results
         {
             var fname = "test.mzML";
             var pathSample = SampleHelp.LegacyEncodePath(fname, null, -1, null, true, false, false);
-            var lockmassParametersA = new LockMassParameters(1.23, 3.45, 4.56);
-            var lockmassParametersB = new LockMassParameters(1.23, null, 4.56);
+            var lockmassParametersA = LockMassParameters.Create(1.23, 3.45, 4.56);
+            var lockmassParametersB = LockMassParameters.Create(1.23, null, 4.56);
 
             Assert.IsTrue(lockmassParametersA.CompareTo(LockMassParameters.EMPTY) > 0);
             Assert.IsTrue(lockmassParametersA.CompareTo(null) < 0);
             Assert.IsTrue(lockmassParametersB.CompareTo(lockmassParametersA) < 0);
-            Assert.IsTrue(lockmassParametersA.CompareTo(new LockMassParameters(1.23, 3.45, 4.56)) == 0);
+            Assert.IsTrue(lockmassParametersA.CompareTo(LockMassParameters.Create(1.23, 3.45, 4.56)) == 0);
             
 
             var c = new ChromatogramSet("test", new[] { MsDataFileUri.Parse(pathSample) });

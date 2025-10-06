@@ -281,9 +281,6 @@ It is recommended that you delete this file so that Skyline can create a new fil
   <data name="OverlapDemultiplexer_InitializeFile_OverlapDemultiplexer_InitializeFile_Improperly_formed_overlap_multiplexing_file" xml:space="preserve">
     <value>OverlapDemultiplexer:InitializeFile Improperly-formed overlap multiplexing file</value>
   </data>
-  <data name="PeptideChromDataSets_AddDataSet_Unable_to_process_chromatograms_for_the_molecule___0___because_one_chromatogram_ends_at_time___1___and_the_other_ends_at_time___2___" xml:space="preserve">
-    <value>Unable to process chromatograms for the molecule '{0}' because one chromatogram ends at time '{1}' and the other ends at time '{2}'.</value>
-  </data>
   <data name="PeptideChromDataSets_MergePeakGroups_Unexpected_null_peak_list" xml:space="preserve">
     <value>Unexpected null peak list</value>
   </data>
@@ -346,5 +343,11 @@ It is recommended that you delete this file so that Skyline can create a new fil
   </data>
   <data name="PeptideChromDataSets_FilterByRetentionTime_Discarding_empty_chromatograms_for__0_" xml:space="preserve">
     <value>Discarding empty chromatograms for {0}</value>
+  </data>
+  <data name="SpectrumFilter_No_Isolation_Window_Found_For_Precursor_" xml:space="preserve">
+      <value>No isolation window found in {0} for precursor {1} (m/z={2} im={3})</value>
+  </data>
+  <data name="ChromatogramManager_LoadBackground_Loading__0_" xml:space="preserve">
+	  <value>Loading {0}</value>
   </data>
 </root>

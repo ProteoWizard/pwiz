@@ -31,6 +31,7 @@ using pwiz.PanoramaClient;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
+using pwiz.CommonMsData;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -47,7 +48,6 @@ using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -491,13 +491,13 @@ namespace pwiz.SkylineTestTutorial
 
                 PauseForManualTutorialStep("MANUAL STEP (no screenshot). Enter password in the Edit Server dialog but DO NOT click OK. Close this window instead to proceed.");
 
-                var publishDialog = ShowDialog<PublishDocumentDlg>(loginDialog.OkDialog);
+                var publishDialog = ShowDialog<PublishDocumentDlgPanorama>(loginDialog.OkDialog);
                 WaitForCondition(() => publishDialog.IsLoaded);
                 RunUI(() =>
                 {
                     publishDialog.SelectItem(testFolderName);
                 });
-                PauseForScreenShot<PublishDocumentDlg>("Folder selection dialog.");
+                PauseForScreenShot<PublishDocumentDlgPanorama>("Folder selection dialog.");
                 var shareTypeDlg = ShowDialog<ShareTypeDlg>(publishDialog.OkDialog);
                 var browserConfirmationDialog = ShowDialog<MultiButtonMsgDlg>(shareTypeDlg.OkDialog);
                 OkDialog(browserConfirmationDialog, browserConfirmationDialog.ClickYes);

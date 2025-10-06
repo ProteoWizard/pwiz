@@ -304,7 +304,7 @@ namespace pwiz.Skyline.Controls
             var modLosses = peptideSet.Modifications.StaticModsDeduped;
 
             //remove the buttons for losses
-            foreach (var cb in Controls.OfType<CheckBox>().ToList().FindAll(cb => cb.Tag is FragmentLoss).ToList())
+            foreach (var cb in Controls.OfType<CheckBox>().ToList().FindAll(cb => cb.Tag is FragmentLoss))
             {
                 Controls.Remove(cb);
                 cb.CheckedChanged -= LossButton_CheckedChanged;
@@ -339,9 +339,12 @@ namespace pwiz.Skyline.Controls
                     //Add the buttons that are not there yet
                     if (!Controls.OfType<CheckBox>().Any(cb => loss.Equals(cb.Tag)))
                     {
+                        string lossText = string.Format(CultureInfo.CurrentCulture, @"-{0:F0}", loss.AverageMass);
+                        if (loss.Charge > 0)
+                            lossText += Transition.GetChargeIndicator(loss.Charge);
                         var cb = new IonSelectorButton(loss)
                         {
-                            Text = string.Format(CultureInfo.CurrentCulture, @"-{0:F0}", loss.AverageMass),
+                            Text = lossText,
                             Checked = lossButtonStates.Contains(loss.PersistentName)
                         };
                         cb.CheckedChanged += LossButton_CheckedChanged;

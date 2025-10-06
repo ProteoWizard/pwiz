@@ -50,6 +50,18 @@ namespace pwiz.Skyline.EditUI
             set { comboDecoysGenerationMethod.SelectedItem = value; }
         }
 
+        public bool PreservePrecursorMass
+        {
+            get
+            {
+                return cbxPreservePrecursorMass.Checked;
+            }
+            set
+            {
+                cbxPreservePrecursorMass.Checked = value;
+            }
+        }
+
         public GenerateDecoysDlg(SrmDocument document)
         {
             _document = document;
@@ -95,6 +107,11 @@ namespace pwiz.Skyline.EditUI
         private void btnOK_Click(object sender, EventArgs e)
         {
             OkDialog();
+        }
+
+        private void comboDecoysGenerationMethod_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            cbxPreservePrecursorMass.Enabled = !DecoyGeneration.ADD_RANDOM.Equals(DecoysMethod);
         }
     }
 }

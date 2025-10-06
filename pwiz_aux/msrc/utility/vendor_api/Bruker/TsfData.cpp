@@ -293,7 +293,7 @@ size_t TsfDataImpl::getSpectrumIndex(int frame, int scan) const
     auto findItr = frames_.find(frame);
     if (findItr == frames_.end())
         throw out_of_range("[TsfData::getSpectrumIndex] invalid frame index");
-    return findItr->second->frameId() - 1;
+    return findItr - frames_.begin();
 }
 
 
@@ -314,6 +314,7 @@ InstrumentFamily TsfDataImpl::getInstrumentFamily() const { return instrumentFam
 int TsfDataImpl::getInstrumentRevision() const { return instrumentRevision_; }
 std::string TsfDataImpl::getInstrumentDescription() const { return ""; }
 std::string TsfDataImpl::getInstrumentSerialNumber() const { return serialNumber_; }
+std::string TsfDataImpl::getDiaFrameMsMsWindowsTable() const { return ""; }
 InstrumentSource TsfDataImpl::getInstrumentSource() const { return instrumentSource_; }
 std::string TsfDataImpl::getAcquisitionSoftware() const { return acquisitionSoftware_; }
 std::string TsfDataImpl::getAcquisitionSoftwareVersion() const { return acquisitionSoftwareVersion_; }
@@ -351,11 +352,19 @@ TsfFrame::TsfFrame(TsfDataImpl& TsfDataImpl, int64_t frameId,
 
 bool TsfSpectrum::hasLineData() const { return frame_.tsfDataImpl_.hasLineSpectra_; }
 bool TsfSpectrum::hasProfileData() const { return frame_.tsfDataImpl_.hasProfileSpectra_; }
-size_t TsfSpectrum::getLineDataSize() const { return frame_.tsfDataImpl_.tsfStorage_.readLineSpectrum(frame_.frameId_, false).first.get().size(); }
-size_t TsfSpectrum::getProfileDataSize() const { return frame_.tsfDataImpl_.tsfStorage_.readProfileSpectrum(frame_.frameId_, false).first.get().size(); }
+size_t TsfSpectrum::getLineDataSize() const { return hasLineData() ? frame_.tsfDataImpl_.tsfStorage_.readLineSpectrum(frame_.frameId_, false).first.get().size() : 0; }
+size_t TsfSpectrum::getProfileDataSize() const { return hasProfileData() ? frame_.tsfDataImpl_.tsfStorage_.readProfileSpectrum(frame_.frameId_, false).first.get().size() : 0; }
 
 void TsfSpectrum::getLineData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities) const
 {
+    // Do not call readLineSpectrum if line spectra are not available
+    if (!hasLineData())
+    {
+        mz.resize(0);
+        intensities.resize(0);
+        return;
+    }
+
     auto& storage = frame_.tsfDataImpl_.tsfStorage_;
     const auto& mzIntensityArrays = storage.readLineSpectrum(frame_.frameId(), true);
 
@@ -373,6 +382,14 @@ void TsfSpectrum::getLineData(pwiz::util::BinaryData<double>& mz, pwiz::util::Bi
 
 void TsfSpectrum::getProfileData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities) const
 {
+    // Do not call readProfileSpectrum if profile spectra are not available
+    if (!hasProfileData())
+    {
+        mz.resize(0);
+        intensities.resize(0);
+        return;
+    }
+
     auto& storage = frame_.tsfDataImpl_.tsfStorage_;
     const auto& mzIntensityArrays = storage.readProfileSpectrum(frame_.frameId(), true);
 

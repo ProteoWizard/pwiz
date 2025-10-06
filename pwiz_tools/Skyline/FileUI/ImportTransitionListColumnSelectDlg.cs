@@ -73,7 +73,7 @@ namespace pwiz.Skyline.FileUI
         // Stores the position of proteins for _proteinTip
         private List<Protein> _proteinList;
 
-        public struct HeaderDocType
+        public struct HeaderDocType : IEquatable<HeaderDocType>
         {
             public HeaderDocType(string name, SrmDocument.DOCUMENT_TYPE docType)
             {
@@ -83,6 +83,24 @@ namespace pwiz.Skyline.FileUI
 
             public string Name;
             public SrmDocument.DOCUMENT_TYPE DocType;
+
+            public bool Equals(HeaderDocType other)
+            {
+                return Name == other.Name && DocType == other.DocType;
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is HeaderDocType other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return ((Name != null ? Name.GetHashCode() : 0) * 397) ^ (int)DocType;
+                }
+            }
         }
 
         // This list stores headers in the order we want to present them to the user along with an identifier denoting which mode they are associated with

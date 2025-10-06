@@ -228,7 +228,7 @@ void MaxQuantReader::initFixedModifications()
                 {
                     // Not there, error
                     Verbosity::error("mqpar.xml file not found. Please move it to the directory %s "
-                        "with the msms.txt file.", filesystem::canonical(tsvDir).string().c_str());
+                        "with the msms.txt file.", pwiz::util::canonical(tsvDir).string().c_str());
                 }
             }
         }

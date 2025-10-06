@@ -153,11 +153,138 @@ namespace pwiz.Skyline.Menus {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No imputations options have been chosen for this document.
+        ///Go to the Prediction tab in Peptide Settings to choose some imputation options..
+        /// </summary>
+        public static string EditMenu_ImputePeakBoundaries_ {
+            get {
+                return ResourceManager.GetString("EditMenu_ImputePeakBoundaries_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Imputed peak boundaries.
+        /// </summary>
+        public static string EditMenu_ImputePeakBoundaries_Imputed_peak_boundaries {
+            get {
+                return ResourceManager.GetString("EditMenu_ImputePeakBoundaries_Imputed_peak_boundaries", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Imputing peak boundaries.
+        /// </summary>
+        public static string EditMenu_ImputePeakBoundaries_Imputing_peak_boundaries {
+            get {
+                return ResourceManager.GetString("EditMenu_ImputePeakBoundaries_Imputing_peak_boundaries", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Change synchronized integration to {0}.
         /// </summary>
         public static string EditMenu_SetSynchronizedIntegration_Change_synchronized_integration_to__0_ {
             get {
                 return ResourceManager.GetString("EditMenu_SetSynchronizedIntegration_Change_synchronized_integration_to__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Menu.
+        /// </summary>
+        public static string Keyboard_Mnemonics_Header_Menu {
+            get {
+                return ResourceManager.GetString("Keyboard_Mnemonics_Header_Menu", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Mnemonic.
+        /// </summary>
+        public static string Keyboard_Mnemonics_Header_Mnemonic {
+            get {
+                return ResourceManager.GetString("Keyboard_Mnemonics_Header_Mnemonic", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Menu Mnemonics.
+        /// </summary>
+        public static string Keyboard_Mnemonics_Table_Title {
+            get {
+                return ResourceManager.GetString("Keyboard_Mnemonics_Table_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Menu.
+        /// </summary>
+        public static string Keyboard_Shortcuts_Header_Menu {
+            get {
+                return ResourceManager.GetString("Keyboard_Shortcuts_Header_Menu", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Shortcut.
+        /// </summary>
+        public static string Keyboard_Shortcuts_Header_Shortcut {
+            get {
+                return ResourceManager.GetString("Keyboard_Shortcuts_Header_Shortcut", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Keyboard Shortcuts.
+        /// </summary>
+        public static string Keyboard_Shortcuts_Table_Title {
+            get {
+                return ResourceManager.GetString("Keyboard_Shortcuts_Table_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Skyline provides two types of keyboard access to menu commands:.
+        /// </summary>
+        public static string Keyboard_Shortcuts_Explanation_Intro {
+            get {
+                return ResourceManager.GetString("Keyboard_Shortcuts_Explanation_Intro", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Mnemonics are underlined letters in menu text that become visible when you press the Alt key. You can use these letters to navigate menus using the keyboard, or learn the complete keystroke sequences to access any menu command without using the mouse..
+        /// </summary>
+        public static string Keyboard_Shortcuts_Explanation_Mnemonics {
+            get {
+                return ResourceManager.GetString("Keyboard_Shortcuts_Explanation_Mnemonics", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Keyboard Shortcuts are single-stroke key combinations (like Ctrl+N) that can be used to perform menu actions directly. These shortcuts are displayed to the right of the menu text on the menus themselves..
+        /// </summary>
+        public static string Keyboard_Shortcuts_Explanation_Shortcuts {
+            get {
+                return ResourceManager.GetString("Keyboard_Shortcuts_Explanation_Shortcuts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Keyboard Shortcuts.
+        /// </summary>
+        public static string Keyboard_Shortcuts_Title {
+            get {
+                return ResourceManager.GetString("Keyboard_Shortcuts_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Keyboard Shortcuts.
+        /// </summary>
+        public static string KeyboardShortcutDocumentation_GenerateKeyboardShortcutHtml_Keyboard_Shortcuts {
+            get {
+                return ResourceManager.GetString("KeyboardShortcutDocumentation_GenerateKeyboardShortcutHtml_Keyboard_Shortcuts", resourceCulture);
             }
         }
         
@@ -184,6 +311,15 @@ namespace pwiz.Skyline.Menus {
             get {
                 return ResourceManager.GetString("RefineMenu_ShowGenerateDecoysDlg_Are_you_sure_you_want_to_add_decoys_to_this_docu" +
                         "ment_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Waiting for document to finish loading.
+        /// </summary>
+        public static string RefineMenu_ShowReintegrateDialog_Waiting_for_document_to_finish_loading {
+            get {
+                return ResourceManager.GetString("RefineMenu_ShowReintegrateDialog_Waiting_for_document_to_finish_loading", resourceCulture);
             }
         }
         

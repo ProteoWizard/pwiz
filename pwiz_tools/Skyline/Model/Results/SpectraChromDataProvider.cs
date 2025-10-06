@@ -27,6 +27,7 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.Spectra;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Spectra;
@@ -66,7 +67,7 @@ namespace pwiz.Skyline.Model.Results
         private BlockWriter _blockWriter;
         private bool _isSrm;
 
-        private readonly OptimizableRegression _optimization;
+        private readonly ChromatogramSet _chromatogramSet;
 
         private readonly object _disposeLock = new object();
         private bool _isDisposing;
@@ -118,8 +119,8 @@ namespace pwiz.Skyline.Model.Results
             // during interpolation.
             _isProcessedScans = dataFile.IsMzWiffXml;
 
-            _optimization = _document.Settings.MeasuredResults.Chromatograms
-                .FirstOrDefault(chromSet => chromSet.ContainsFile(fileInfo.FilePath))?.OptimizationFunction;
+            _chromatogramSet = _document.Settings.MeasuredResults.Chromatograms
+                .FirstOrDefault(chromSet => chromSet.IndexOfId(fileInfo.FileId) >= 0);
 
             UpdatePercentComplete();
 
@@ -130,7 +131,7 @@ namespace pwiz.Skyline.Model.Results
             // Create the filter responsible for chromatogram extraction
             bool firstPass = (_retentionTimePredictor != null);
             _filter = new SpectrumFilter(_document, FileInfo.FilePath, new DataFileInstrumentInfo(dataFile),
-                _optimization, _maxIonMobilityValue, _retentionTimePredictor, firstPass, _globalChromatogramExtractor);
+                _chromatogramSet, _maxIonMobilityValue, _retentionTimePredictor, firstPass, _globalChromatogramExtractor);
 
             if (!_isSrm && (_filter.EnabledMs || _filter.EnabledMsMs))
             {
@@ -225,7 +226,7 @@ namespace pwiz.Skyline.Model.Results
             var dataFile = _spectra.Detach();
 
             // Start the second pass
-            _filter = new SpectrumFilter(_document, FileInfo.FilePath, _filter, _optimization, _maxIonMobilityValue,
+            _filter = new SpectrumFilter(_document, FileInfo.FilePath, _filter, _chromatogramSet, _maxIonMobilityValue,
                 _retentionTimePredictor, false, _globalChromatogramExtractor);
             _spectra = null;
             _isSrm = false;
@@ -1095,7 +1096,10 @@ namespace pwiz.Skyline.Model.Results
                                 if (msLevel > 1)
                                 {
                                     var precursors = _lookaheadContext.GetPrecursors(i, 1);
-                                    if (precursors.Any() && !_filter.HasProductFilterPairs(rtCheck, precursors))
+                                    var windowGroup = _filter.HasWindowGroupTable
+                                        ? _lookaheadContext.GetWindowGroup(i) // For diaPASEF
+                                        : null;
+                                    if (precursors.Any() && !_filter.HasProductFilterPairs(rtCheck, precursors, windowGroup))
                                     {
                                         continue;
                                     }
@@ -1410,6 +1414,14 @@ namespace pwiz.Skyline.Model.Results
                     return _dataFile.GetPrecursors(index, level);
             }
 
+            public int? GetWindowGroup(int index)
+            {
+                if (index == _lookAheadIndex && _lookAheadDataSpectrum != null)
+                    return _lookAheadDataSpectrum.WindowGroup;
+                else
+                    return _dataFile.GetWindowGroup(index);
+            }
+
             public MsDataSpectrum GetSpectrum(int index)
             {
                 if (index == _lookAheadIndex)
@@ -1582,6 +1594,8 @@ namespace pwiz.Skyline.Model.Results
 
         public bool HasDeclaredMSnSpectra { get { return _dataFile.HasDeclaredMSnSpectra; } }
 
+        public bool PassEntireDiaPasefFrame { get { return _dataFile.PassEntireDiaPasefFrame; }} // For Bruker TIMSTOF data
+
         public IEnumerable<MsInstrumentConfigInfo> ConfigInfoList
         {
             get { return _dataFile.GetInstrumentConfigInfoList(); }
@@ -1614,6 +1628,12 @@ namespace pwiz.Skyline.Model.Results
         public Tuple<int, int> SonarMzToBinRange(double mz, double tolerance)
         {
             return _dataFile.SonarMzToBinRange(mz, tolerance);
+        }
+
+        // Sanity check, useful in debugging
+        public bool IsValidDiaPasefPoint(int windowGroup, double im, double isoMzLow, double isoMzHigh)
+        {
+            return _dataFile.IsValidDiaPasefPoint(windowGroup, im, isoMzLow, isoMzHigh);
         }
     }
     internal enum TimeSharing { single, shared, grouped }

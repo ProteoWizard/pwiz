@@ -112,6 +112,17 @@ namespace pwiz.Skyline.Model.Proteome
             ParsimoniousProteins = null;
         }
 
+        public ProteinAssociation Clone()
+        {
+            var result = (ProteinAssociation)MemberwiseClone();
+            result._proteinOrGeneGroupResultCacheByGeneLevel = new Dictionary<bool, ProteinOrGeneGroupResultCache>()
+            {
+                { false, null },
+                { true, null }
+            };
+            return result;
+        }
+
         public void UseFastaFile(string file, ILongWaitBroker broker)
         {
             if (!File.Exists(file))
@@ -1078,7 +1089,7 @@ namespace pwiz.Skyline.Model.Proteome
                 }
                 else if (newNodePepGroup.Any())
                 {
-                    newPeptideGroups.Add((PeptideGroupDocNode)nodePepGroup.ChangeChildren(newNodePepGroup.ToArray()));
+                    newPeptideGroups.Add((PeptideGroupDocNode)nodePepGroup.ChangeChildren(newNodePepGroup.ToArray()).ChangeAutoManageChildren(false));
                 }
             }
 
@@ -1086,7 +1097,7 @@ namespace pwiz.Skyline.Model.Proteome
             {
                 var unmappedNakedPeptides = unmappedPeptideNodes.Select(node => node.Value.RemoveFastaSequence());
                 var unmappedPeptideList = new PeptideGroupDocNode(new PeptideGroup(), Annotations.EMPTY,
-                    Resources.ProteinAssociation_CreateDocTree_Unmapped_Peptides, string.Empty, unmappedNakedPeptides.ToArray());
+                    Resources.ProteinAssociation_CreateDocTree_Unmapped_Peptides, string.Empty, unmappedNakedPeptides.ToArray(), false);
                 appendPeptideLists.Add(unmappedPeptideList);
             }
 
@@ -1114,7 +1125,7 @@ namespace pwiz.Skyline.Model.Proteome
                     }).ToList())
                     : new ProteinMetadata(protein.Name, protein.Description, metadata.PreferredName, metadata.Accession,
                         metadata.Gene, metadata.Species);
-                var peptideGroupDocNode = new PeptideGroupDocNode(protein, proteinOrGroupMetadata, children.ToArray());
+                var peptideGroupDocNode = new PeptideGroupDocNode(protein, proteinOrGroupMetadata, children.ToArray(), false);
                 //peptideGroupDocNode = peptideGroupDocNode.ChangeName(protein.Name).ChangeDescription(protein.Description);
                 newPeptideGroups.Add(peptideGroupDocNode);
 

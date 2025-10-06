@@ -18,10 +18,12 @@
  */
 
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Forms;
-using pwiz.Skyline.Model.Results.RemoteApi;
-using pwiz.Skyline.Model.Results.RemoteApi.Ardia;
-using pwiz.Skyline.Model.Results.RemoteApi.Unifi;
+using pwiz.CommonMsData.RemoteApi;
+using pwiz.CommonMsData.RemoteApi.Ardia;
+using pwiz.CommonMsData.RemoteApi.Unifi;
+using pwiz.CommonMsData.RemoteApi.WatersConnect;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 
@@ -32,6 +34,11 @@ namespace pwiz.Skyline.Properties
         public override IEnumerable<RemoteAccount> GetDefaults(int revisionIndex)
         {
             yield break;
+        }
+
+        public IEnumerable<RemoteAccount> GetAccountsOfType(RemoteAccountType type)
+        {
+            return Items.Where(item => item.AccountType == type);
         }
 
         public override string Title { get { return PropertiesResources.RemoteAccountList_Title_Edit_Remote_Accounts; } }
@@ -60,6 +67,7 @@ namespace pwiz.Skyline.Properties
             {
                 new XmlElementHelper<UnifiAccount>(),
                 new XmlElementHelper<ArdiaAccount>(),
+                new XmlElementHelper<WatersConnectAccount>(),
             };
         }
     }

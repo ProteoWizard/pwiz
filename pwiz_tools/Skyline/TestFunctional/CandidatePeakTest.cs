@@ -167,6 +167,7 @@ namespace pwiz.SkylineTestFunctional
                         Assert.AreEqual(candidatePeakGroup.PeakGroupEndTime, transitionGroupChromInfo.EndRetentionTime.Value, 1);
                     }
                 });
+                WaitForCondition(() => candidatePeakForm.IsComplete);
             }
         }
 

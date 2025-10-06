@@ -135,7 +135,7 @@
     <value>1</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>Sign in into Ardia web below</value>
+    <value>Sign in to Ardia below</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -415,7 +415,7 @@
     <value>wizardPagesRegisterPhases</value>
   </data>
   <data name="&gt;&gt;wizardPagesRegisterPhases.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=23.1.1.557, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.WizardPages, Skyline, Version=1.0.0.0 Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;wizardPagesRegisterPhases.Parent" xml:space="preserve">
     <value>tabMainRegisterSkyline</value>
@@ -1024,7 +1024,7 @@
     <value>wizardPagesLoginPhases</value>
   </data>
   <data name="&gt;&gt;wizardPagesLoginPhases.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=23.1.1.557, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.WizardPages, Skyline, Version=1.0.0.0 Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;wizardPagesLoginPhases.Parent" xml:space="preserve">
     <value>tabMainLogin</value>
@@ -1099,7 +1099,7 @@
     <value>wizardPagesMain</value>
   </data>
   <data name="&gt;&gt;wizardPagesMain.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=23.1.1.557, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.WizardPages, Skyline, Version=1.0.0.0 Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;wizardPagesMain.Parent" xml:space="preserve">
     <value>$this</value>
@@ -1123,12 +1123,12 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=23.1.1.557, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0 Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ArdiaLoginDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=23.1.1.557, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0 Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

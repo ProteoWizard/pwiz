@@ -245,6 +245,36 @@
   <data name="editSpectrumFilterContextMenuItem.Text" xml:space="preserve">
     <value>编辑谱图过滤器…</value>
   </data>
+  <data name="expandSelectionContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>228, 22</value>
+  </data>
+  <data name="expandSelectionContextMenuItem.Text" xml:space="preserve">
+    <value>扩展选择</value>
+  </data>
+  <data name="expandSelectionNoneContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>228, 22</value>
+  </data>
+  <data name="expandSelectionNoneContextMenuItem.Text" xml:space="preserve">
+    <value>无</value>
+  </data>
+  <data name="expandSelectionProteinsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>228, 22</value>
+  </data>
+  <data name="expandSelectionProteinsContextMenuItem.Text" xml:space="preserve">
+    <value>蛋白质</value>
+  </data>
+  <data name="expandSelectionPeptidesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>228, 22</value>
+  </data>
+  <data name="expandSelectionPeptidesContextMenuItem.Text" xml:space="preserve">
+    <value>肽段</value>
+  </data>
+  <data name="expandSelectionPrecursorsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>228, 22</value>
+  </data>
+  <data name="expandSelectionPrecursorsContextMenuItem.Text" xml:space="preserve">
+    <value>母离子</value>
+  </data>
   <data name="toggleQuantitativeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>228, 22</value>
   </data>
@@ -926,6 +956,9 @@
   <data name="relativeAbundanceLogScaleContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 22</value>
   </data>
+  <data name="relativeAbundanceLogScaleContextMenuItem.Text" xml:space="preserve">
+    <value>对数尺度</value>
+  </data>
   <data name="peptideCvsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 22</value>
   </data>
@@ -1360,7 +1393,7 @@
     <value>200, 22</value>
   </data>
   <data name="startPageMenuItem.Text" xml:space="preserve">
-    <value>开始(&amp;R)…</value>
+    <value>开始(&amp;T)…</value>
   </data>
   <data name="newMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Fuchsia</value>
@@ -1462,7 +1495,7 @@
     <value>200, 22</value>
   </data>
   <data name="searchStripMenuItem.Text" xml:space="preserve">
-    <value>搜索(&amp;S)</value>
+    <value>搜索(&amp;R)</value>
   </data>
   <data name="importResultsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>170, 22</value>
@@ -1516,7 +1549,7 @@
     <value>170, 22</value>
   </data>
   <data name="importAnnotationsMenuItem.Text" xml:space="preserve">
-    <value>注释…(&amp;A)</value>
+    <value>注释…(&amp;N)</value>
   </data>
   <data name="importToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>200, 22</value>
@@ -2290,6 +2323,36 @@
     <value>editSpectrumFilterContextMenuItem</value>
   </data>
   <data name="&gt;&gt;editSpectrumFilterContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;expandSelectionContextMenuItem.Name" xml:space="preserve">
+    <value>expandSelectionContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;expandSelectionContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;expandSelectionNoneContextMenuItem.Name" xml:space="preserve">
+    <value>expandSelectionNoneContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;expandSelectionNoneContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;expandSelectionProteinsContextMenuItem.Name" xml:space="preserve">
+    <value>expandSelectionProteinsContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;expandSelectionProteinsContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;expandSelectionPeptidesContextMenuItem.Name" xml:space="preserve">
+    <value>expandSelectionPeptidesContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;expandSelectionPeptidesContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;expandSelectionPrecursorsContextMenuItem.Name" xml:space="preserve">
+    <value>expandSelectionPrecursorsContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;expandSelectionPrecursorsContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toggleQuantitativeContextMenuItem.Name" xml:space="preserve">

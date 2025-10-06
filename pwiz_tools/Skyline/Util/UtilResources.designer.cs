@@ -197,6 +197,15 @@ namespace pwiz.Skyline.Util {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed accessing the clipboard..
+        /// </summary>
+        public static string ClipboardHelper_GetGenericClipboardErrorMessage_Failed_accessing_the_clipboard_ {
+            get {
+                return ResourceManager.GetString("ClipboardHelper_GetGenericClipboardErrorMessage_Failed_accessing_the_clipboard_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The process &apos;{0}&apos; (ID = {1}) has the clipboard open..
         /// </summary>
         public static string ClipboardHelper_GetOpenClipboardMessage_The_process__0__ID__1__has_the_clipboard_open {
@@ -271,113 +280,12 @@ namespace pwiz.Skyline.Util {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An error occurred attempting to read sample information from the file {0}..
-        /// </summary>
-        public static string DataSourceUtil_GetWiffSubPaths_An_error_occurred_attempting_to_read_sample_information_from_the_file__0__ {
-            get {
-                return ResourceManager.GetString("DataSourceUtil_GetWiffSubPaths_An_error_occurred_attempting_to_read_sample_inform" +
-                        "ation_from_the_file__0__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The file may be corrupted, missing, or the correct libraries may not be installed..
-        /// </summary>
-        public static string DataSourceUtil_GetWiffSubPaths_The_file_may_be_corrupted_missing_or_the_correct_libraries_may_not_be_installed {
-            get {
-                return ResourceManager.GetString("DataSourceUtil_GetWiffSubPaths_The_file_may_be_corrupted_missing_or_the_correct_l" +
-                        "ibraries_may_not_be_installed", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Source directory does not exist or could not be found: .
         /// </summary>
         public static string DirectoryEx_DirectoryCopy_Source_directory_does_not_exist_or_could_not_be_found__ {
             get {
                 return ResourceManager.GetString("DirectoryEx_DirectoryCopy_Source_directory_does_not_exist_or_could_not_be_found__" +
                         "", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Directory could not be found: {0}.
-        /// </summary>
-        public static string FileEx_SafeDelete_Directory_could_not_be_found___0_ {
-            get {
-                return ResourceManager.GetString("FileEx_SafeDelete_Directory_could_not_be_found___0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to File path is invalid: {0}.
-        /// </summary>
-        public static string FileEx_SafeDelete_File_path_is_invalid___0_ {
-            get {
-                return ResourceManager.GetString("FileEx_SafeDelete_File_path_is_invalid___0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to File path is too long: {0}.
-        /// </summary>
-        public static string FileEx_SafeDelete_File_path_is_too_long___0_ {
-            get {
-                return ResourceManager.GetString("FileEx_SafeDelete_File_path_is_too_long___0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Insufficient permission to delete file: {0}.
-        /// </summary>
-        public static string FileEx_SafeDelete_Insufficient_permission_to_delete_file___0_ {
-            get {
-                return ResourceManager.GetString("FileEx_SafeDelete_Insufficient_permission_to_delete_file___0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Path contains invalid characters: {0}.
-        /// </summary>
-        public static string FileEx_SafeDelete_Path_contains_invalid_characters___0_ {
-            get {
-                return ResourceManager.GetString("FileEx_SafeDelete_Path_contains_invalid_characters___0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Path is empty.
-        /// </summary>
-        public static string FileEx_SafeDelete_Path_is_empty {
-            get {
-                return ResourceManager.GetString("FileEx_SafeDelete_Path_is_empty", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Unable to delete directory: {0}.
-        /// </summary>
-        public static string FileEx_SafeDelete_Unable_to_delete_directory___0_ {
-            get {
-                return ResourceManager.GetString("FileEx_SafeDelete_Unable_to_delete_directory___0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Unable to delete file which is in use: {0}.
-        /// </summary>
-        public static string FileEx_SafeDelete_Unable_to_delete_file_which_is_in_use___0_ {
-            get {
-                return ResourceManager.GetString("FileEx_SafeDelete_Unable_to_delete_file_which_is_in_use___0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Unable to delete read-only file: {0}.
-        /// </summary>
-        public static string FileEx_SafeDelete_Unable_to_delete_read_only_file___0_ {
-            get {
-                return ResourceManager.GetString("FileEx_SafeDelete_Unable_to_delete_read_only_file___0_", resourceCulture);
             }
         }
         

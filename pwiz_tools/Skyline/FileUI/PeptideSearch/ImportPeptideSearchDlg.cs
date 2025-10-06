@@ -27,6 +27,7 @@ using System.Windows.Forms;
 using pwiz.BiblioSpec;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
@@ -34,7 +35,6 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -494,6 +494,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                          !BuildPepSearchLibControl.PerformDDASearch; }
         }
 
+        private bool GetAreLibrarySpectraDIA()
+        {
+            if (!IsImportingSearchResults)
+                return WorkflowType == Workflow.dia;
+
+            var libraryFiles = ImportPeptideSearch.DocLib.LibraryDetails.DataFiles;
+            return libraryFiles.All(d => d.WorkflowType == Model.Lib.WorkflowType.DIA);
+        }
+
         private Pages LastPage
         {
             get
@@ -617,7 +626,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     var oldImportResultsControl = (Control) ImportResultsControl;
                     getChromatogramsPage.Controls.Remove(oldImportResultsControl);
 
-                    if (WorkflowType != Workflow.dia || HasPeakBoundaries)
+                    if (WorkflowType != Workflow.dia || HasPeakBoundaries || (IsImportingSearchResults && GetAreLibrarySpectraDIA()))
                     {
                         if (!(ImportResultsControl is ImportResultsControl))
                         {
@@ -857,6 +866,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     var scoreType = IsFeatureDetectionWorkflow
                         ? ScoreType.HardklorIdotp
                         : ScoreType.GenericQValue;
+
                     BuildPepSearchLibControl.Grid.Files = ImportPeptideSearch.SearchEngine.SpectrumFileNames.Select(f =>
                         new BuildLibraryGridView.File(ImportPeptideSearch.SearchEngine.GetSearchResultFilepath(f), scoreType, scoreThreshold));
                     BuildPepSearchLibControl.ImportPeptideSearch.SearchFilenames = BuildPepSearchLibControl.Grid.FilePaths.ToArray();
@@ -905,6 +915,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             CurrentPage = newPage;
             UpdateButtons();
+            UpdateMinimumSize();
         }
 
         private void AddDetectedFeaturesToDocument(IProgressMonitor progressMonitor)
@@ -1166,6 +1177,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     SearchControl.SearchFinished -= SearchControlSearchFinished;
                     break;
             }
+            UpdateMinimumSize();
         }
 
         private void UpdateButtons()
@@ -1188,6 +1200,19 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             btnNext.Text = CurrentPage != LastPage
                 ? PeptideSearchResources.ImportPeptideSearchDlg_ImportPeptideSearchDlg_Next
                 : PeptideSearchResources.ImportPeptideSearchDlg_NextPage_Finish;
+        }
+
+        private void UpdateMinimumSize()
+        {
+            var pageControl = GetPageControl(wizardPagesImportPeptideSearch.SelectedTab);
+            if (pageControl != null && pageControl.MinimumSize.Height > 0)
+            {
+                var outsideHeight = Height - wizardPagesImportPeptideSearch.Height + addModsTitlePanel.Height;
+                var outsideWidth = Width - wizardPagesImportPeptideSearch.Width;
+                MinimumSize = new Size(
+                    pageControl.MinimumSize.Width + outsideWidth,
+                    pageControl.MinimumSize.Height + outsideHeight);
+            }
         }
 
         private bool UpdateModificationSettings()
@@ -1272,8 +1297,23 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 FullScanSettingsControl.PrecursorChargesString = TransitionFilter.AdductListToString(precursorCharges);
                 filter = TransitionSettings.Filter.ChangePeptidePrecursorCharges(precursorCharges);
             }
-            if (IsDdaWorkflow && !filter.PeptideIonTypes.Contains(IonType.precursor))
-                filter = filter.ChangePeptideIonTypes(new[] { IonType.precursor });
+
+            TransitionLibraries libraries = TransitionSettings.Libraries;
+            if (IsDdaWorkflow)
+            {
+                if (FullScanSettingsControl.AcquisitionMethod == FullScanAcquisitionMethod.None)
+                {
+                    filter = filter.ChangePeptideIonTypes(new[] { IonType.precursor });
+                    if (libraries.MinIonCount > 0)
+                        libraries = libraries.ChangeMinIonCount(0); // Avoid filtering due to lack of product ions
+                }
+                else if (!filter.PeptideIonTypes.Contains(IonType.precursor))
+                {
+                    var listIonTypes = filter.PeptideIonTypes.ToList();
+                    listIonTypes.Add(IonType.precursor);
+                    filter = filter.ChangePeptideIonTypes(listIonTypes);
+                }
+            }
             if (!filter.AutoSelect)
                 filter = filter.ChangeAutoSelect(true);
             Helpers.AssignIfEquals(ref filter, TransitionSettings.Filter);
@@ -1329,7 +1369,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             try
             {
                 transitionSettings = new TransitionSettings(prediction, filter,
-                    TransitionSettings.Libraries, TransitionSettings.Integration, TransitionSettings.Instrument, fullScan, ionMobilityFiltering);
+                    libraries, TransitionSettings.Integration, TransitionSettings.Instrument, fullScan, ionMobilityFiltering);
 
                 Helpers.AssignIfEquals(ref transitionSettings, TransitionSettings);
             }
@@ -1516,7 +1556,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private bool CanWizardClose()
         {
             var wizardPageControl = GetPageControl(wizardPagesImportPeptideSearch.SelectedTab) as WizardPageControl;
-            return wizardPageControl == null || wizardPageControl.CanWizardClose();
+            return wizardPageControl == null || Program.ClosingForms || wizardPageControl.CanWizardClose();
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)

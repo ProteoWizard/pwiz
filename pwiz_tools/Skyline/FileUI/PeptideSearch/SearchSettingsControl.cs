@@ -143,7 +143,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             MSGFPlus,
             MSFragger,
             Comet,
+            Tide,
             Hardklor
+
         }
 
         public SearchEngine SelectedSearchEngine
@@ -176,9 +178,28 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private bool EnsureRequiredFilesDownloaded(IEnumerable<FileDownloadInfo> requiredFiles, Func<bool> extraDownloadAction = null)
         {
             var requiredFilesList = requiredFiles.ToList();
+
             var filesNotAlreadyDownloaded = SimpleFileDownloader.FilesNotAlreadyDownloaded(requiredFilesList).ToList();
             if (!filesNotAlreadyDownloaded.Any())
                 return true;
+
+            while(true)
+            {
+                var missingTools = SimpleFileDownloader.SearchToolsConfiguredButMissing(requiredFilesList).ToList();
+                if (missingTools.Any())
+                {
+                    var allTools = Settings.Default.SearchToolList.Select(i => i).ToList();
+                    foreach (var missingTool in missingTools)
+                    {
+                        var updatedItem = Settings.Default.SearchToolList.EditItem(this, missingTool, allTools, null);
+                        if (updatedItem == null)
+                            return false; // user canceled
+                        Settings.Default.SearchToolList.Add(updatedItem);
+                    }
+                }
+                else
+                    break;
+            }
 
             if (extraDownloadAction != null && !extraDownloadAction())
                 return false;
@@ -192,14 +213,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 SimpleFileDownloaderDlg.Show(TopLevelControl,
                     string.Format(PeptideSearchResources.SearchSettingsControl_EnsureRequiredFilesDownloaded_Download__0_,
                         searchEngineComboBox.SelectedItem), filesNotAlreadyDownloaded);
+
+                return !SimpleFileDownloader.FilesNotAlreadyDownloaded(filesNotAlreadyDownloaded).Any();
             }
             catch (Exception exception)
             {
                 MessageDlg.ShowWithException(this, exception.Message, exception);
                 return false;
             }
-
-            return !SimpleFileDownloader.FilesNotAlreadyDownloaded(filesNotAlreadyDownloaded).Any();
         }
 
         private bool EnsureRequiredFilesDownloaded()
@@ -212,6 +233,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     return EnsureRequiredFilesDownloaded(MsFraggerSearchEngine.FilesToDownload, ShowDownloadMsFraggerDialog);
                 case SearchEngine.Comet:
                     return EnsureRequiredFilesDownloaded(CometSearchEngine.FilesToDownload);
+                case SearchEngine.Tide:
+                    return EnsureRequiredFilesDownloaded(TideSearchEngine.FilesToDownload);
                 case SearchEngine.Hardklor:
                 case SearchEngine.MSAmanda:
                     return true;
@@ -220,28 +243,29 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
-        public static bool HasRequiredFilesDownloaded(SearchEngine searchEngine)
+        public static FileDownloadInfo[] GetSearchEngineRequiredFiles(SearchEngine searchEngine)
         {
-            FileDownloadInfo[] fileDownloadInfo;
             switch (searchEngine)
             {
                 case SearchEngine.Hardklor:
                 case SearchEngine.MSAmanda:
-                    return true;
+                    return Array.Empty<FileDownloadInfo>();
                 case SearchEngine.MSGFPlus:
-                    fileDownloadInfo = MsgfPlusSearchEngine.FilesToDownload;
-                    break;
+                    return MsgfPlusSearchEngine.FilesToDownload;
                 case SearchEngine.MSFragger:
-                    fileDownloadInfo = MsFraggerSearchEngine.FilesToDownload;
-                    break;
+                    return MsFraggerSearchEngine.FilesToDownload;
                 case SearchEngine.Comet:
-                    fileDownloadInfo = CometSearchEngine.FilesToDownload;
-                    break;
+                    return CometSearchEngine.FilesToDownload;
+                case SearchEngine.Tide:
+                    return TideSearchEngine.FilesToDownload;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+        }
 
-            return !SimpleFileDownloader.FilesNotAlreadyDownloaded(fileDownloadInfo).Any();
+        public static bool HasRequiredFilesDownloaded(SearchEngine searchEngine)
+        {
+            return !SimpleFileDownloader.FilesNotAlreadyDownloaded(GetSearchEngineRequiredFiles(searchEngine)).Any();
         }
 
         private AbstractDdaSearchEngine InitSelectedSearchEngine()
@@ -262,6 +286,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     return new MsFraggerSearchEngine(dataType);
                 case SearchEngine.Comet:
                     return new CometSearchEngine(CutoffScore);
+                case SearchEngine.Tide:
+                    return new TideSearchEngine(CutoffScore);
                 case SearchEngine.Hardklor:
                     return new HardklorSearchEngine(ImportPeptideSearch);
                 default:
@@ -677,6 +703,19 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 setting => setting.ValidValues);
 
             InitializeControls();
+        }
+
+        private void btnEditSearchTools_Click(object sender, EventArgs e)
+        {
+            ShowSearchToolsDlg();
+        }
+
+        public void ShowSearchToolsDlg()
+        {
+            using var listbox = new ListBox();
+            var driverTools = new SettingsListBoxDriver<SearchTool>(listbox, Settings.Default.SearchToolList);
+            driverTools.LoadList();
+            driverTools.EditList();
         }
     }
 

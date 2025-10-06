@@ -1330,16 +1330,26 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        private MzTolerance.Units? _mzMatchToleranceUnitsCurrent;
+
         private void comboToleranceUnits_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (double.TryParse(textTolerance.Text, out var matchTolerance))
+            // Only perform tolerance scaling when the units are known, and
+            // they are being changed.
+            if (_mzMatchToleranceUnitsCurrent.HasValue &&
+                _mzMatchToleranceUnitsCurrent.Value != IonMatchToleranceUnits)
             {
-                if (IonMatchToleranceUnits == MzTolerance.Units.mz)
-                    IonMatchTolerance = matchTolerance / 1000;
-                else
-                    IonMatchTolerance = matchTolerance * 1000;
+                if (double.TryParse(textTolerance.Text, out var matchTolerance))
+                {
+                    if (IonMatchToleranceUnits == MzTolerance.Units.mz)
+                        IonMatchTolerance = matchTolerance / 1000;
+                    else
+                        IonMatchTolerance = matchTolerance * 1000;
+                }
             }
+            _mzMatchToleranceUnitsCurrent = IonMatchToleranceUnits;
         }
+
         private void btnEditSpectrumFilter_Click(object sender, EventArgs e)
         {
             EditSpectrumFilter();
@@ -1425,7 +1435,9 @@ namespace pwiz.Skyline.SettingsUI
                 MessageDlg.Show(this, SettingsUIResources.TransitionSettingsUI_EditSpectrumFilter_MS1_or_MS_MS_filtering_must_be_enabled_on_the_Full_Scan_tab_in_order_to_use_this_feature_);
                 return;
             }
+
             using var dlg = new EditSpectrumFilterDlg(rootColumn, filterPages);
+            dlg.AutoComplete = new SpectrumFilterAutoComplete(_parent);
             dlg.CreateCopyVisible = false;
             if (dlg.ShowDialog(this) == DialogResult.OK)
             {

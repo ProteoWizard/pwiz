@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mzML xmlns="http://psi.hupo.org/ms/mzml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.0.xsd" id="diaPASEF" version="1.1.0">
   <cvList count="2">
-    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.1.99" URI="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"/>
+    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.1.182" URI="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"/>
     <cv id="UO" fullName="Unit Ontology" version="09:04:2014" URI="https://raw.githubusercontent.com/bio-ontology-research-group/unit-ontology/master/unit.obo"/>
   </cvList>
   <fileDescription>
@@ -34,7 +34,7 @@
     <software id="micrOTOFcontrol" version="6.0.110.229-14868-vc141">
       <cvParam cvRef="MS" accession="MS:1000726" name="micrOTOFcontrol" value=""/>
     </software>
-    <software id="pwiz_Reader_Bruker" version="3.0.22236">
+    <software id="pwiz_Reader_Bruker" version="3.0.25209">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
@@ -42,6 +42,40 @@
     <instrumentConfiguration id="IC1">
       <referenceableParamGroupRef ref="CommonInstrumentParams"/>
       <cvParam cvRef="MS" accession="MS:1000529" name="instrument serial number" value="1854399.63"/>
+      <userParam name="DiaFrameMsMsWindowsTable" value="WindowGroup,invK0Begin,invK0End,IsolationMz,IsolationWidth,CollisionEnergy"/>
+      <userParam name="WindowGroup" value="1,1.637221297889762,0.91846702123752666,813,26,41.572228443449049"/>
+      <userParam name="WindowGroup" value="1,0.91621049245299668,0.60156745661641153,413,26,24.945128779395297"/>
+      <userParam name="WindowGroup" value="2,1.637221297889762,0.93425663922354318,838,26,41.82306830907055"/>
+      <userParam name="WindowGroup" value="2,0.9320016310957715,0.60156745661641153,438,26,25.195968645016798"/>
+      <userParam name="WindowGroup" value="3,1.637221297889762,0.9511622819273341,863,26,42.109742441209406"/>
+      <userParam name="WindowGroup" value="3,0.94890890136953709,0.60156745661641153,463,26,25.482642777155654"/>
+      <userParam name="WindowGroup" value="4,1.637221297889762,0.96692987505147598,888,26,42.360582306830906"/>
+      <userParam name="WindowGroup" value="4,0.96467801196973535,0.60156745661641153,488,26,25.733482642777155"/>
+      <userParam name="WindowGroup" value="5,1.637221297889762,0.98381194437640151,913,26,42.611422172452407"/>
+      <userParam name="WindowGroup" value="5,0.98156170546149402,0.60156745661641153,513,26,25.984322508398655"/>
+      <userParam name="WindowGroup" value="6,1.637221297889762,0.99955755869010909,938,26,42.862262038073908"/>
+      <userParam name="WindowGroup" value="6,0.9973088340794205,0.60156745661641153,538,26,26.235162374020156"/>
+      <userParam name="WindowGroup" value="7,1.637221297889762,1.0164161039082094,963,26,43.148936170212764"/>
+      <userParam name="WindowGroup" value="7,1.0141690000706931,0.60156745661641153,563,26,26.521836506159016"/>
+      <userParam name="WindowGroup" value="8,1.637221297889762,1.0321397853346284,988,26,43.399776035834265"/>
+      <userParam name="WindowGroup" value="8,1.0298941926383267,0.60156745661641153,588,26,26.772676371780516"/>
+      <userParam name="WindowGroup" value="9,1.637221297889762,1.0478528948689727,1013,26,43.650615901455765"/>
+      <userParam name="WindowGroup" value="9,1.045608811790071,0.60156745661641153,613,26,27.023516237402017"/>
+      <userParam name="WindowGroup" value="10,1.637221297889762,1.064676649915151,1038,26,43.901455767077266"/>
+      <userParam name="WindowGroup" value="10,1.0624341825948229,0.60156745661641153,638,26,27.274356103023518"/>
+      <userParam name="WindowGroup" value="11,1.637221297889762,1.080367894419952,1063,26,44.152295632698767"/>
+      <userParam name="WindowGroup" value="11,1.0781269335670614,0.60156745661641153,663,26,27.525195968645015"/>
+      <userParam name="WindowGroup" value="12,1.637221297889762,1.0971682470976498,1088,26,44.438969764837623"/>
+      <userParam name="WindowGroup" value="12,1.0949288986330685,0.60156745661641153,688,26,27.811870100783874"/>
+      <userParam name="WindowGroup" value="13,1.637221297889762,1.1128376721794535,1113,26,44.689809630459123"/>
+      <userParam name="WindowGroup" value="13,1.110599827041105,0.60156745661641153,713,26,28.062709966405375"/>
+      <userParam name="WindowGroup" value="14,1.637221297889762,1.1296146712848685,1138,26,44.940649496080624"/>
+      <userParam name="WindowGroup" value="14,1.127378435173932,0.60156745661641153,738,26,28.313549832026876"/>
+      <userParam name="WindowGroup" value="15,1.637221297889762,1.1452623224234728,1163,26,45.191489361702125"/>
+      <userParam name="WindowGroup" value="15,1.1430275865062915,0.60156745661641153,763,26,28.564389697648377"/>
+      <userParam name="WindowGroup" value="16,1.637221297889762,1.1620160166172375,1188,26,45.478163493840988"/>
+      <userParam name="WindowGroup" value="16,1.1597828863759048,0.60156745661641153,788,26,28.851063829787233"/>
+      <userParam name="WindowGroup"/>
       <componentList count="5">
         <source order="1">
           <cvParam cvRef="MS" accession="MS:1000398" name="nanoelectrospray" value=""/>
@@ -5424,49 +5458,49 @@
       </spectrum>
     </spectrumList>
     <chromatogramList count="2" defaultDataProcessingRef="pwiz_Reader_Bruker_conversion">
-      <chromatogram index="0" id="TIC" defaultArrayLength="4">
+      <chromatogram index="0" id="TIC" defaultArrayLength="1">
         <cvParam cvRef="MS" accession="MS:1000235" name="total ion current chromatogram" value=""/>
         <binaryDataArrayList count="3">
-          <binaryDataArray encodedLength="52">
+          <binaryDataArray encodedLength="24">
             <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000595" name="time array" value="" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
-            <binary>eJzL17z69rTJOgebNk0rRtN1DrnrvZnNgfT7qkkLc4A0AOFWDYA=</binary>
+            <binary>eJx7XzVpYY7pOgcAFVIELA==</binary>
           </binaryDataArray>
-          <binaryDataArray encodedLength="44">
+          <binaryDataArray encodedLength="24">
             <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
-            <binary>eJxjYGBgUMhVdARSDGb7VMC0zjdVEO2wqCzSEQBIdwXD</binary>
+            <binary>eJxjYGBwWFQW6QgABiUB8w==</binary>
           </binaryDataArray>
-          <binaryDataArray arrayLength="4" encodedLength="20">
+          <binaryDataArray arrayLength="1" encodedLength="16">
             <cvParam cvRef="MS" accession="MS:1000522" name="64-bit integer" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000786" name="non-standard data array" value="ms level" unitCvRef="UO" unitAccession="UO:0000186" unitName="dimensionless unit"/>
-            <binary>eJxjYoAAJhw0AADAAAk=</binary>
+            <binary>eJxjYoAAAAAYAAM=</binary>
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="1" id="BPC" defaultArrayLength="4">
+      <chromatogram index="1" id="BPC" defaultArrayLength="1">
         <cvParam cvRef="MS" accession="MS:1000628" name="basepeak chromatogram" value=""/>
         <binaryDataArrayList count="3">
-          <binaryDataArray encodedLength="52">
+          <binaryDataArray encodedLength="24">
             <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000595" name="time array" value="" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
-            <binary>eJzL17z69rTJOgebNk0rRtN1DrnrvZnNgfT7qkkLc4A0AOFWDYA=</binary>
+            <binary>eJx7XzVpYY7pOgcAFVIELA==</binary>
           </binaryDataArray>
-          <binaryDataArray encodedLength="36">
+          <binaryDataArray encodedLength="24">
             <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
-            <binary>eJxjYACChhIHEMXAMQlCN/RC6IMHHQBACwUe</binary>
+            <binary>eJxjYGBwWFQW6QgABiUB8w==</binary>
           </binaryDataArray>
-          <binaryDataArray arrayLength="4" encodedLength="20">
+          <binaryDataArray arrayLength="1" encodedLength="16">
             <cvParam cvRef="MS" accession="MS:1000522" name="64-bit integer" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000786" name="non-standard data array" value="ms level" unitCvRef="UO" unitAccession="UO:0000186" unitName="dimensionless unit"/>
-            <binary>eJxjYoAAJhw0AADAAAk=</binary>
+            <binary>eJxjYoAAAAAYAAM=</binary>
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>

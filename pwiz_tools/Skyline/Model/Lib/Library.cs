@@ -31,6 +31,7 @@ using pwiz.BiblioSpec;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
@@ -126,13 +127,16 @@ namespace pwiz.Skyline.Model.Lib
                     if (spec == null || dictLibraries.ContainsKey(spec.Name))
                         continue;
                     var library = LoadLibrary(container, spec);
+                    if (library != null)
+                    {
+                        dictLibraries.Add(spec.Name, library);
+                    }
                     if (library == null || !ReferenceEquals(document.Id, container.Document.Id))
                     {
                         // Loading was cancelled or document changed
                         EndProcessing(document);
                         return false;
                     }
-                    dictLibraries.Add(spec.Name, library);
                 }
 
                 var missingMidasFiles = MidasLibrary.GetMissingFiles(document, libraries.Libraries);
@@ -605,7 +609,22 @@ namespace pwiz.Skyline.Model.Lib
         LibrarySpec LibrarySpec { get; }
     }
 
+    /// <summary>
+    /// Extra interface that can be added to an <see cref="ILibraryBuilder"/> class to provide
+    /// a warning to the users before the build begins and possibly to decide not to build.
+    /// </summary>
+    public interface ILibraryBuildWarning
+    {
+        string GetWarning();
+    }
+
     public enum LibraryRedundancy { best, all, all_redundant }
+
+    public enum WorkflowType
+    {
+        DDA = 0,
+        DIA
+    }
 
     public abstract class Library : XmlNamedElement
     {
@@ -805,7 +824,6 @@ namespace pwiz.Skyline.Model.Lib
             return new double[0];
         }
 
-
         /// <summary>
         /// Attempts to get ion mobility information for a specific
         /// (sequence, charge) pair and file.
@@ -982,6 +1000,53 @@ namespace pwiz.Skyline.Model.Lib
             get { return false; }
         }
 
+        public Dictionary<Target, double> GetMedianRetentionTimes()
+        {
+            var allRetentionTimes = GetAllRetentionTimes(null);
+            if (allRetentionTimes == null)
+            {
+                return null;
+            }
+
+            if (!allRetentionTimes.SelectMany(dict => dict.Values).Distinct().Skip(1).Any())
+            {
+                // If all the retention times are the same, then return null
+                return null;
+            }
+
+            return allRetentionTimes.SelectMany(dict => dict).GroupBy(kvp => kvp.Key, kvp => kvp.Value)
+                .ToDictionary(group => group.Key, MathNet.Numerics.Statistics.Statistics.Median);
+        }
+
+        public virtual Dictionary<Target, double>[] GetAllRetentionTimes(IEnumerable<string> spectrumSourceFiles)
+        {
+            return null;
+        }
+
+        public virtual IList<double>[] GetRetentionTimesWithSequences(IEnumerable<string> spectrumSourceFiles,
+            ICollection<Target> targets)
+        {
+            var result = new List<IList<double>>();
+            foreach (var file in spectrumSourceFiles ?? LibraryFiles)
+            {
+                int? fileIndex = null;
+                result.Add(GetRetentionTimesWithSequences(file, targets, ref fileIndex).ToList());
+            }
+
+            return result.ToArray();
+        }
+
+        public IList<double> GetRetentionTimes(MsDataFileUri fileUri, ICollection<Target> targets)
+        {
+            int index = LibraryFiles.FindIndexOf(fileUri);
+            if (index < 0)
+            {
+                return null;
+            }
+
+            return GetRetentionTimesWithSequences(new[] { LibraryFiles[index] }, targets)?[0];
+        }
+
         #region Implementation of IXmlSerializable
 
         /// <summary>
@@ -1077,6 +1142,8 @@ namespace pwiz.Skyline.Model.Lib
             _libraryEntries = new LibKeyMap<TInfo>(entryList, entryList.Select(entry=>entry.Key.LibraryKey));
         }
 
+        // Try to build a precursor from the information in each entry of the library. For those that fail, report the issue
+        // and remove them from the list of entries.
         protected List<TInfo> FilterInvalidLibraryEntries(ref IProgressStatus status, IEnumerable<TInfo> entries, string dataSource)
         {
             var validEntries = new List<TInfo>();
@@ -1087,7 +1154,7 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     invalidKeys.Add(entry.Key);
                     Messages.WriteAsyncUserMessage(ModelResources.AbstractModificationMatcher_CreateDocNodeFromSettings_In_entry___0___of___1_____2_, 
-                        entry.Key, dataSource, whyNot);
+                        entry.Key, dataSource, whyNot);  // Report to immediate window
                 }
                 else
                 {
@@ -1405,6 +1472,17 @@ namespace pwiz.Skyline.Model.Lib
                 dict.Add(entry.Key, entry.Value.Item2.Min());
             }
             return dict;
+        }
+
+        public static LibraryRetentionTimes FromRetentionTimes(string path, TimeSource timeSource,
+            IDictionary<Target, double> retentionTimes)
+        {
+            if (retentionTimes == null)
+            {
+                return null;
+            }
+            return new LibraryRetentionTimes(path,
+                retentionTimes.ToDictionary(kvp => kvp.Key, kvp => Tuple.Create(timeSource, new[] { kvp.Value })));
         }
     }
 
@@ -1961,7 +2039,7 @@ namespace pwiz.Skyline.Model.Lib
             return (Peaks != null ? Peaks.GetHashCode() : 0);
         }
 
-        public struct MI
+        public struct MI : IEquatable<MI>
         {
             private bool _notQuantitative;
             private List<SpectrumPeakAnnotation> _annotations; // A peak may have multiple annotations
@@ -2901,7 +2979,7 @@ namespace pwiz.Skyline.Model.Lib
     /// Key for use in dictionaries that store library header information in
     /// memory.
     /// </summary>
-    public struct LibKey
+    public struct LibKey : IEquatable<LibKey>
     {
         public static LibKey EMPTY = new LibKey(SmallMoleculeLibraryAttributes.EMPTY, Adduct.EMPTY);
 
@@ -3089,10 +3167,11 @@ namespace pwiz.Skyline.Model.Lib
 
     public class SpectrumSourceFileDetails
     {
-        public SpectrumSourceFileDetails(string filePath, string idFilePath = null)
+        public SpectrumSourceFileDetails(string filePath, string idFilePath = null, WorkflowType workflowType = WorkflowType.DDA)
         {
             FilePath = filePath;
             IdFilePath = idFilePath;
+            WorkflowType = workflowType;
             ScoreThresholds = new Dictionary<ScoreType, double?>();
             BestSpectrum = 0;
             MatchedSpectrum = 0;
@@ -3100,6 +3179,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public string FilePath { get; private set; }
         public string IdFilePath { get; set; }
+        public WorkflowType WorkflowType { get; }
         public Dictionary<ScoreType, double?> ScoreThresholds { get; private set; }
         public int BestSpectrum { get; set; }
         public int MatchedSpectrum { get; set; }

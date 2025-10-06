@@ -1443,15 +1443,6 @@ namespace pwiz.Skyline.FileUI {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Open.
-        /// </summary>
-        public static string OpenFileDialogNE_OpenFileDialogNE_Open {
-            get {
-                return ResourceManager.GetString("OpenFileDialogNE_OpenFileDialogNE_Open", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Continue peak boundary import ignoring these charge states?.
         /// </summary>
         public static string PeakBoundaryImporter_UnrecognizedPeptidesCancel_Continue_peak_boundary_import_ignoring_these_charge_states_ {
@@ -1515,6 +1506,15 @@ namespace pwiz.Skyline.FileUI {
         public static string PublishDocumentDlg_btnBrowse_Click_Upload_Document {
             get {
                 return ResourceManager.GetString("PublishDocumentDlg_btnBrowse_Click_Upload_Document", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Panorama Folders:.
+        /// </summary>
+        public static string PublishDocumentDlg_Panorama_ServerFolders {
+            get {
+                return ResourceManager.GetString("PublishDocumentDlg_Panorama_ServerFolders", resourceCulture);
             }
         }
         

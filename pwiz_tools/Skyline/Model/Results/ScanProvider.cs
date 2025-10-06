@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using pwiz.Common.Chemistry;
+using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
@@ -287,6 +288,7 @@ namespace pwiz.Skyline.Model.Results
                         combineIonMobilitySpectra: _cachedFile?.HasCombinedIonMobility ?? false,
                         requireVendorCentroidedMS1: centroidedMs1 ?? _cachedFile?.UsedMs1Centroids ?? false,
                         requireVendorCentroidedMS2: centroidedMs2 ?? _cachedFile?.UsedMs2Centroids ?? false,
+                        passEntireDiaPasefFrame: _cachedFile?.PassEntireDiaPasefFrame ?? false,
                         ignoreZeroIntensityPoints: ignoreZeroIntensityPoints);
                 }
                 else
@@ -299,6 +301,7 @@ namespace pwiz.Skyline.Model.Results
                             PreferOnlyMs1 = preferOnlyMs1,
                             CentroidMs1 = _cachedFile?.UsedMs1Centroids ?? false,
                             CentroidMs2 = _cachedFile?.UsedMs2Centroids ?? false,
+                            PassEntireDiaPasefFrame = _cachedFile?.PassEntireDiaPasefFrame ?? false,
                             IgnoreZeroIntensityPoints = ignoreZeroIntensityPoints,
                             DownloadPath = docDir
                         };
