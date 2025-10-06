@@ -127,13 +127,16 @@ namespace pwiz.Skyline.Model.Lib
                     if (spec == null || dictLibraries.ContainsKey(spec.Name))
                         continue;
                     var library = LoadLibrary(container, spec);
+                    if (library != null)
+                    {
+                        dictLibraries.Add(spec.Name, library);
+                    }
                     if (library == null || !ReferenceEquals(document.Id, container.Document.Id))
                     {
                         // Loading was cancelled or document changed
                         EndProcessing(document);
                         return false;
                     }
-                    dictLibraries.Add(spec.Name, library);
                 }
 
                 var missingMidasFiles = MidasLibrary.GetMissingFiles(document, libraries.Libraries);
@@ -1024,7 +1027,7 @@ namespace pwiz.Skyline.Model.Lib
             ICollection<Target> targets)
         {
             var result = new List<IList<double>>();
-            foreach (var file in spectrumSourceFiles)
+            foreach (var file in spectrumSourceFiles ?? LibraryFiles)
             {
                 int? fileIndex = null;
                 result.Add(GetRetentionTimesWithSequences(file, targets, ref fileIndex).ToList());

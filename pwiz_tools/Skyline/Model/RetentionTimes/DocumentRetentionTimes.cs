@@ -146,6 +146,33 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         public ResultFileAlignments ResultFileAlignments { get; private set; } = ResultFileAlignments.EMPTY;
 
+        public bool Equivalent(DocumentRetentionTimes other)
+        {
+            if (Equals(other))
+            {
+                return true;
+            }
+
+            var thisUnloaded = UnloadLibraries();
+            var otherUnloaded = other.UnloadLibraries();
+            if (Equals(thisUnloaded, otherUnloaded))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        private DocumentRetentionTimes UnloadLibraries()
+        {
+            return ChangeProp(ImClone(this), im =>
+            {
+                im._libraryAlignments = _libraryAlignments.ToDictionary(kvp => kvp.Key,
+                    kvp => new LibraryAlignmentValue(null, kvp.Value.Alignments));
+                im._deserializedAlignmentFunctions ??= CollectionUtil.SafeToDictionary(im.ResultFileAlignments.GetAlignmentFunctions());
+                im.ResultFileAlignments = ResultFileAlignments.EMPTY;
+            });
+        }
         #region Object Overrides
         public bool Equals(DocumentRetentionTimes other)
         {
@@ -153,7 +180,8 @@ namespace pwiz.Skyline.Model.RetentionTimes
             if (ReferenceEquals(this, other)) return true;
             return CollectionUtil.EqualsDeep(_libraryAlignments, other._libraryAlignments)
                    && Equals(ResultFileAlignments, other.ResultFileAlignments)
-                   && Equals(MedianDocumentRetentionTimes, other.MedianDocumentRetentionTimes);
+                   && Equals(MedianDocumentRetentionTimes, other.MedianDocumentRetentionTimes)
+                   && CollectionUtil.EqualsDeep(_deserializedAlignmentFunctions, other._deserializedAlignmentFunctions);
 
         }
 
@@ -644,7 +672,10 @@ namespace pwiz.Skyline.Model.RetentionTimes
             });
         }
 
-        public AlignmentFunction GetAlignmentFunction(PeptideLibraries peptideLibraries, MsDataFileUri filePath, bool forward)
+        /// <summary>
+        /// Returns an alignment function which only uses ID times from spectral libraries, and does not use chromatogram peak information in the document.
+        /// </summary>
+        public AlignmentFunction GetLibraryAlignmentFunction(PeptideLibraries peptideLibraries, MsDataFileUri filePath, bool forward)
         {
             foreach (var library in peptideLibraries.Libraries.Where(lib => true == lib?.IsLoaded))
             {
@@ -660,6 +691,19 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 }
             }
 
+            return null;
+        }
+
+        /// <summary>
+        /// Returns an alignment function which either uses ID times from spectral libraries or chromatogram peak information.
+        /// </summary>
+        public AlignmentFunction GetRunToRunAlignmentFunction(PeptideLibraries peptideLibraries, MsDataFileUri filePath, bool forward)
+        {
+            var libraryAlignmentFunction = GetLibraryAlignmentFunction(peptideLibraries, filePath, forward);
+            if (libraryAlignmentFunction != null)
+            {
+                return libraryAlignmentFunction;
+            }
             return ResultFileAlignments.GetAlignmentFunction(filePath)?.ToAlignmentFunction(forward);
         }
 
