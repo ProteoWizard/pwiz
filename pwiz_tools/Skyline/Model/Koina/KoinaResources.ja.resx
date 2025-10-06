@@ -103,6 +103,9 @@
   <data name="KoinaPeptideTooLongException_KoinaUnsupportedAminoAcidException_Amino_acid___0___in___1___is_not_supported_by_Koina" xml:space="preserve">
     <value>「{1}」内のアミノ酸「{0}」はKoinaでサポートされません</value>
   </data>
+  <data name="KoinaUnsupportedModificationException_KoinaUnsupportedModificationException_Modification___0___at_index___1___in___2___is_not_supported_by_Koina" xml:space="preserve">
+    <value>「{2}」のインデックス「{1}」の修飾「{0}」はKoinaではサポートされていません。</value>
+  </data>
   <data name="KoinaModel_BatchPredict_Constructing_Koina_inputs" xml:space="preserve">
     <value>Koina入力を構築しています</value>
   </data>
@@ -158,7 +161,6 @@
     <value>スペクトルライブラリの一致がありません</value>
   </data>
   <data name="KoinaModel_PredictBatches_Error___0__retrying__1_____2__" xml:space="preserve">
-    <value>Error: {0} retrying {1}/{2}.</value>
-    <comment>Needs Review:Missing translation</comment>
+    <value>エラー： {0} 再試行回数{1}/{2}。</value>
   </data>
 </root>

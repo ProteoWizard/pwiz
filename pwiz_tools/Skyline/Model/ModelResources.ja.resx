@@ -797,6 +797,9 @@
   <data name="ZipFileShare_AddFile_The_name___0___is_already_in_use_from_the_path__1_" xml:space="preserve">
     <value>「{0}」という名前は既にパス{1}で使用されています。</value>
   </data>
+  <data name="SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Chemical_Formula" xml:space="preserve">
+    <value>化学式</value>
+  </data>
   <data name="ModificationMatcher_GetStaticMod_found_more_than_one_UniMod_match__add_terminus_and_or_amino_acid_specificity_to_choose_a_single_match" xml:space="preserve">
     <value>UniModに一致する結果が複数見つかりました。末端やアミノ酸の特異性で絞り込み、一致する結果を1つだけ選択してください</value>
     <comment>Intended to be appended to a "Lookup failed" message as the reason for lookup failure.</comment>
@@ -814,5 +817,29 @@
   </data>
   <data name="PasteDlg_UpdateMoleculeType_Library_Intensity" xml:space="preserve">
     <value>ライブラリ強度</value>
+  </data>
+  <data name="PeptideGroupBuilder_AppendSequence_Failed_to_interpret_modified_sequence__0_" xml:space="preserve">
+    <value>修飾シークエンスを解釈できませんでした {0}</value>
+  </data>
+  <data name="ThermoMassListExporter_EnsureLibraries_The_installed_Thermo_instrument_type___0___does_not_match_the_requested_output_method_type___1___" xml:space="preserve">
+    <value>インストールされたThermo装置タイプ「{0}」は、リクエストされた出力メソッドタイプ「 {1}」と一致しません。</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__The_specified_instrument_type___0___does_not_match_the_installed_software___1___" xml:space="preserve">
+    <value>エラー： 指定された装置タイプ「{0}」はインストールされたソフトウェア「{1}」に一致しません。</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Use_the_instrument_type__Thermo__to_export_a_method_with_the_installed_software_" xml:space="preserve">
+    <value>装置タイプ「Thermo」を使用して、インストールされたソフトウェアでメソッドをエクスポートします。</value>
+  </data>
+  <data name="ThermoDllFinder_GetSoftwareInfo_The_key__0__was_not_found_in_the_Windows_registry_" xml:space="preserve">
+    <value>キー「{0}」がWindowsレジストリに見つかりませんでした。</value>
+  </data>
+  <data name="ThermoDllFinder_GetSoftwareInfo_The_ProgramPath__0__for_the_instrument__1__is_missing_required_files_" xml:space="preserve">
+    <value>装置{1}のProgramPath{0}に必須ファイルがありません:</value>
+  </data>
+  <data name="ThermoDllFinder_GetSoftwareInfo_Failed_to_find_a_machine_name_key_with_a_valid_ProgramPath" xml:space="preserve">
+    <value>以下のWindowsレジストリキー「 {0}」 で有効なProgramPath値のあるマシン名キーを検出できませんでした:</value>
+  </data>
+  <data name="ThermoMassListExporter_EnsureLibraries_Unknown_Thermo_instrument_type___0___installed_" xml:space="preserve">
+    <value>インストールされたThermo装置タイプ「{0}」が不明です。</value>
   </data>
 </root>

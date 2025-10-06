@@ -253,8 +253,7 @@
     <value>0</value>
   </data>
   <data name="label5.Text" xml:space="preserve">
-    <value>L&amp;earning document:</value>
-    <comment>Needs Review:Missing translation</comment>
+    <value>学习文件(&amp;E):</value>
   </data>
   <data name="&gt;&gt;label5.Name" xml:space="preserve">
     <value>label5</value>
@@ -656,6 +655,9 @@
   <data name="tabAlphaSource.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
   </data>
+  <data name="tabAlphaSource.Text" xml:space="preserve">
+    <value>AlphaPeptDeep</value>
+  </data>
   <data name="&gt;&gt;tabAlphaSource.Name" xml:space="preserve">
     <value>tabAlphaSource</value>
   </data>
@@ -676,6 +678,9 @@
   </data>
   <data name="tabCarafeSource.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
+  </data>
+  <data name="tabCarafeSource.Text" xml:space="preserve">
+    <value>Carafe</value>
   </data>
   <data name="&gt;&gt;tabCarafeSource.Name" xml:space="preserve">
     <value>tabCarafeSource</value>
@@ -705,11 +710,7 @@
     <value>0</value>
   </data>
   <data name="ceLabel.Text" xml:space="preserve">
-    <value>NC&amp;E:</value>
-    <comment>Needs Review:English text changed
-Old English:N&amp;CE:
-Current English:NC&amp;E:
-Old Localized:N&amp;CE：</comment>
+    <value>NCE(&amp;E):</value>
   </data>
   <data name="&gt;&gt;ceLabel.Name" xml:space="preserve">
     <value>ceLabel</value>
@@ -880,6 +881,9 @@ Old Localized:N&amp;CE：</comment>
   <data name="radioCarafeSource.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
+  <data name="radioCarafeSource.Text" xml:space="preserve">
+    <value>Carafe(&amp;C)</value>
+  </data>
   <data name="&gt;&gt;radioCarafeSource.Name" xml:space="preserve">
     <value>radioCarafeSource</value>
   </data>
@@ -906,6 +910,9 @@ Old Localized:N&amp;CE：</comment>
   </data>
   <data name="radioAlphaSource.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
+  </data>
+  <data name="radioAlphaSource.Text" xml:space="preserve">
+    <value>AlphaPeptDeep(&amp;D)</value>
   </data>
   <data name="&gt;&gt;radioAlphaSource.Name" xml:space="preserve">
     <value>radioAlphaSource</value>

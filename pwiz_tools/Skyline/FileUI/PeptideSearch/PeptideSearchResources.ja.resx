@@ -362,4 +362,7 @@
   <data name="ImportPeptideSearchDlg_NextPage_Adding_detected_features_to_document" xml:space="preserve">
     <value>検出したフィーチャーをドキュメントに追加中</value>
   </data>
+  <data name="SearchControl_CanWizardClose_Cannot_close_wizard_while_the_search_is_running_" xml:space="preserve">
+    <value>検索を実行中にウィザードを閉じることはできません。検索をキャンセルしますか？</value>
+  </data>
 </root>

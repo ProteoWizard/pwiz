@@ -150,6 +150,18 @@
   <data name="TargetedMSMS_Caption" xml:space="preserve">
     <value>靶向 MS/MS (PRM)</value>
   </data>
+  <data name="PRMOrbitraip_Description" xml:space="preserve">
+    <value>使用平行反应监测 (PRM) ，获得建立采集方法的实际操作处理经验，以便量化小鼠成纤维细胞中 19 种相关蛋白质的 31 个肽段。使用配备 Orbitrap 质量分析仪的 Thermo Fusion 质谱仪，对 3 个生物学重复测定进行 9 次检测。</value>
+  </data>
+  <data name="PRMOrbitrap_Caption" xml:space="preserve">
+    <value>使用 Orbitrap 质谱仪的平行反应监测</value>
+  </data>
+  <data name="DIA_Umpire_TTOF_Description" xml:space="preserve">
+    <value>根据 Navarro, Nature Biotech 2016 基准测试文献，使用为指示说明而创建的 3 种生物体混合数据集，获得直接在 SCIEX TripleTOF 仪器的数据独立采集 (DIA) 数据集上搜索肽段谱图的实际操作处理经验。</value>
+  </data>
+  <data name="DIA_Umpire_TTOF_Caption" xml:space="preserve">
+    <value>免费库 DIA/SWATH</value>
+  </data>
   <data name="iRT_Caption" xml:space="preserve">
     <value>iRT 保留时间预测</value>
   </data>

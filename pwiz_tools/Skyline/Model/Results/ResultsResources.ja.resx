@@ -330,11 +330,7 @@ Skylineがもう一度生データファイルからクロマトグラムを抽�
     <value>保持時間{1}が{2}と{3}の間でないため「{0}」 のクロマトグラムを破棄しています</value>
   </data>
   <data name="IonMobilityFinder_EvaluateBestIonMobilityValue_need_a_value_for_Transition_Settings___ion_mobility_filtering___Window_type" xml:space="preserve">
-    <value>need a value for Transition Settings, Ion mobility filtering, Window type</value>
-    <comment>Needs Review:English text changed
-Old English:need a value for  Transition Settings  Ion mobility filtering  Window type
-Current English:need a value for Transition Settings, Ion mobility filtering, Window type
-Old Localized:トランジション設定のイオン移動度フィルタウィンドウタイプの値が必要</comment>
+    <value>トランジション設定、イオン移動度フィルタリング、ウィンドウタイプの値が必要です</value>
   </data>
   <data name="IonMobilityFinder_FindIonMobilityPeaks_mixed_ion_mobility_types_are_not_supported" xml:space="preserve">
     <value>混合イオン移動度タイプには対応していません</value>
@@ -344,6 +340,9 @@ Old Localized:トランジション設定のイオン移動度フィルタウィ
   </data>
   <data name="DataFileInstrumentInfo_IonMobilityFromCCS_no_conversion" xml:space="preserve">
     <value>ベンダー提供のライブラリでは、{0}のイオン移動度をCSS={1:0.###}、mz={2:0.####}、電荷={3}で決定できません。</value>
+  </data>
+  <data name="PeptideChromDataSets_FilterByRetentionTime_Discarding_empty_chromatograms_for__0_" xml:space="preserve">
+    <value>次に対する空のクロマトグラムを破棄しています: {0}</value>
   </data>
   <data name="ChromatogramManager_LoadBackground_Loading__0_" xml:space="preserve">
     <value>Loading {0}</value>

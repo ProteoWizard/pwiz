@@ -1808,6 +1808,12 @@
   <data name="TransitionFullScan_SpectrumFilter" xml:space="preserve">
     <value>スペクトルフィルタ</value>
   </data>
+  <data name="ImportResultsSettings_IsGpf" xml:space="preserve">
+    <value>気相分画</value>
+  </data>
+  <data name="BuildPeptideSearchLibrarySettings_UseDiaUmpire" xml:space="preserve">
+    <value>DIA-Umpireでスペクトルをデコンボリューション</value>
+  </data>
   <data name="TransitionFilterAndLibrariesSettings_SpectrumFilter" xml:space="preserve">
     <value>スペクトルフィルタ</value>
   </data>

@@ -173,11 +173,7 @@
     <value>msconvert変換を開始しています</value>
   </data>
   <data name="HardklorSearchEngine_PerformAllAlignments_Performing_retention_time_alignment__0__vs__1_" xml:space="preserve">
-    <value>RT alignment: {0} vs {1}</value>
-    <comment>Needs Review:English text changed
-Old English:Retention time alignment: {0} vs {1}
-Current English:RT alignment: {0} vs {1}
-Old Localized:保持時間アラインメント：{0}対{1}</comment>
+    <value>保持時間アラインメント：{0}対{1}</value>
   </data>
   <data name="HardklorSearchEngine_FindSimilarFeatures_Looking_for_features_occurring_in_multiple_replicates" xml:space="preserve">
     <value>複数の繰り返し測定で発生するフィーチャーの検索中</value>
@@ -191,6 +187,12 @@ Old Localized:保持時間アラインメント：{0}対{1}</comment>
   <data name="HardklorSearchEngine_PerformAllAlignments_Preparing_for_retention_time_alignment_on___0__" xml:space="preserve">
     <value>「{0}」の保持時間アラインメントの準備中</value>
   </data>
+  <data name="HardklorSearchEngine_Run_Searching_for_peptide_like_features" xml:space="preserve">
+    <value>ペプチド様フィーチャーの検索中</value>
+  </data>
+  <data name="HardklorSearchEngine_Run_Searching_for_persistent_features_in_Hardklor_results" xml:space="preserve">
+    <value>Hardklor結果の一貫したフィーチャーを検索中</value>
+  </data>
   <data name="MsconvertDdaConverter_Run_Converting_file___0___to__1_" xml:space="preserve">
     <value>ファイル「{0}」を{1}に変換中</value>
   </data>
@@ -199,5 +201,26 @@ Old Localized:保持時間アラインメント：{0}対{1}</comment>
   </data>
   <data name="HardklorSearchEngine_SearchEngineBlurb" xml:space="preserve">
     <value>Hardklorは、averagineモデルを使用してMS1スキャンでペプチド様フィーチャーを検索します。Hardklorが発見したフィーチャーは、SkylineではHardklorがそのフィーチャーに一致する同位体分布を生成するために使用した化学式を持つ小分子として表現されます。さらに、高分解能ピークの質量電荷比に一致させるために質量オフセットも付加されます。これは質量分析計で検出されたMS1ピークの実際の分子式ではなく、同位体分布の一致を使用した近似式です。</value>
+  </data>
+  <data name="HardklorSearchEngine_Generate_Waiting_for_Hardklor_Bullseye_completion" xml:space="preserve">
+    <value>Hardklor/Bullseyeの完了を待機中</value>
+  </data>
+  <data name="HardklorSearchEngine_Generate_Preparing__0__for_RT_alignment" xml:space="preserve">
+    <value>{0}RT調整の準備中</value>
+  </data>
+  <data name="HardklorSearchEngine_Generate_Reading__0_" xml:space="preserve">
+    <value>読み取り中 {0}</value>
+  </data>
+  <data name="HardklorSearchEngine_Generate_Align_replicates" xml:space="preserve">
+    <value>繰り返し測定を調整</value>
+  </data>
+  <data name="HardklorSearchEngine_Generate_Searching_for_common_features_across_replicates" xml:space="preserve">
+    <value>繰り返し測定で共通のフィーチャーを検索中</value>
+  </data>
+  <data name="HardklorSearchEngine_PerformAllAlignments_Waiting_for_next_file" xml:space="preserve">
+    <value>次のファイルを待機中</value>
+  </data>
+  <data name="SearchSettingsControl_SelectedIndexChanged_Only_MSFragger_is_currently_supported" xml:space="preserve">
+    <value>生データのDIA検索で現在サポートされているのは、MSFraggerだけです。他の検索エンジンを使用するには、DIA-Umpireを有効にしてください。</value>
   </data>
 </root>

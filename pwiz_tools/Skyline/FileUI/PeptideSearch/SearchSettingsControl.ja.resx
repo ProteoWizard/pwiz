@@ -501,6 +501,9 @@
   <data name="searchEngineComboBox.Items2" xml:space="preserve">
     <value>MSFragger</value>
   </data>
+  <data name="searchEngineComboBox.Items3" xml:space="preserve">
+    <value>Comet</value>
+  </data>
   <data name="searchEngineComboBox.Location" type="System.Drawing.Point, System.Drawing">
     <value>16, 39</value>
   </data>

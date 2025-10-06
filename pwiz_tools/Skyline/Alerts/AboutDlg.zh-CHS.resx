@@ -437,34 +437,12 @@ https://www.zlib.net</value>
     <value>10</value>
   </data>
   <data name="linkLabel1.Text" xml:space="preserve">
-    <value>Copyright © 2008-2025 University of Washington, all rights reserved
-
-MacCoss Lab, Department of Genome Sciences, UW
-
-This software was created by the MacCoss Lab using federal and
-private funding sources. For complete details, consult the
-Skyline website.</value>
-    <comment>Needs Review:English text changed
-Old English:Copyright © 2008-2024 University of Washington, all rights reserved
-
-MacCoss Lab, Department of Genome Sciences, UW
-
-This software was created by the MacCoss Lab using federal and
-private funding sources. For complete details, consult the
-Skyline website.
-Current English:Copyright © 2008-2025 University of Washington, all rights reserved
-
-MacCoss Lab, Department of Genome Sciences, UW
-
-This software was created by the MacCoss Lab using federal and
-private funding sources. For complete details, consult the
-Skyline website.
-Old Localized:版权所有 © 2008-2024 华盛顿大学，保留所有权利
+    <value>版权所有 © 2008-2025 华盛顿大学，保留所有权利
 
 华盛顿大学，基因组科学系，MacCoss 实验室
 
 此软件是由 MacCoss 实验室使用联邦和私人资金创建的。
-欲知详情，请浏览 Skyline 网站。</comment>
+欲知详情，请浏览 Skyline 网站。</value>
   </data>
   <data name="&gt;&gt;linkLabel1.Name" xml:space="preserve">
     <value>linkLabel1</value>

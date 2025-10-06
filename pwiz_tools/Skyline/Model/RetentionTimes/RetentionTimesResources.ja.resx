@@ -112,6 +112,9 @@
   <data name="AlignmentTargetSpec_GetLabel_Default" xml:space="preserve">
     <value>デフォルト</value>
   </data>
+  <data name="AlignmentTargetSpec_GetLabel_Default___0__" xml:space="preserve">
+    <value>デフォルト ({0})</value>
+  </data>
   <data name="Library_DisplayName_Library__0_" xml:space="preserve">
     <value>ライブラリ{0}</value>
   </data>

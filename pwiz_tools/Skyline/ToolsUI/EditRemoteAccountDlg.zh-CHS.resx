@@ -829,7 +829,6 @@ Old Localized:身份服务器：</comment>
   </data>
   <data name="tabPage2.Text" xml:space="preserve">
     <value>Ardia</value>
-    <comment>Needs Review:Missing translation</comment>
   </data>
   <data name="cbArdiaDeleteRawAfterImport.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -842,6 +841,9 @@ Old Localized:身份服务器：</comment>
   </data>
   <data name="cbArdiaDeleteRawAfterImport.TabIndex" type="System.Int32, mscorlib">
     <value>12</value>
+  </data>
+  <data name="cbArdiaDeleteRawAfterImport.Text" xml:space="preserve">
+    <value>导入后删除 RAW 文件</value>
   </data>
   <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>155, 17</value>
@@ -857,6 +859,12 @@ Old Localized:身份服务器：</comment>
   </data>
   <data name="btnLogoutArdia.TabIndex" type="System.Int32, mscorlib">
     <value>13</value>
+  </data>
+  <data name="btnLogoutArdia.Text" xml:space="preserve">
+    <value>注销 Ardia</value>
+  </data>
+  <data name="btnLogoutArdia.ToolTip" xml:space="preserve">
+    <value>此操作将同时注销默认浏览器中的 Ardia 会话。</value>
   </data>
   <data name="textArdiaAlias_Username.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -886,8 +894,7 @@ Old Localized:身份服务器：</comment>
     <value>8</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>&amp;Alias:</value>
-    <comment>Needs Review:Missing translation</comment>
+    <value>别名(&amp;A):</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>

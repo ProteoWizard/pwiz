@@ -173,11 +173,7 @@
     <value>正在启动 msconvert 转换。</value>
   </data>
   <data name="HardklorSearchEngine_PerformAllAlignments_Performing_retention_time_alignment__0__vs__1_" xml:space="preserve">
-    <value>RT alignment: {0} vs {1}</value>
-    <comment>Needs Review:English text changed
-Old English:Retention time alignment: {0} vs {1}
-Current English:RT alignment: {0} vs {1}
-Old Localized:保留时间校准：{0} 与 {1}</comment>
+    <value>RT 对齐：{0}与{1}</value>
   </data>
   <data name="HardklorSearchEngine_FindSimilarFeatures_Looking_for_features_occurring_in_multiple_replicates" xml:space="preserve">
     <value>正在查找在多个重复测定中出现的特征</value>
@@ -191,6 +187,12 @@ Old Localized:保留时间校准：{0} 与 {1}</comment>
   <data name="HardklorSearchEngine_PerformAllAlignments_Preparing_for_retention_time_alignment_on___0__" xml:space="preserve">
     <value>正在准备对“{0}”进行保留时间校准</value>
   </data>
+  <data name="HardklorSearchEngine_Run_Searching_for_peptide_like_features" xml:space="preserve">
+    <value>正在搜索类似肽段的特征</value>
+  </data>
+  <data name="HardklorSearchEngine_Run_Searching_for_persistent_features_in_Hardklor_results" xml:space="preserve">
+    <value>正在搜索 Hardklor 结果中的持久特征</value>
+  </data>
   <data name="MsconvertDdaConverter_Run_Converting_file___0___to__1_" xml:space="preserve">
     <value>文件“{0}”正在转换为 {1}</value>
   </data>
@@ -199,5 +201,26 @@ Old Localized:保留时间校准：{0} 与 {1}</comment>
   </data>
   <data name="HardklorSearchEngine_SearchEngineBlurb" xml:space="preserve">
     <value>Hardklor 使用平均氨基酸模型在 MS1 扫描中搜索类似肽段的特征。Hardklor 所发现的特征在 Skyline 中表示为小分子，Hardklor 使用其化学式来生成与特征相匹配的同位素分布，再加上用来匹配高分辨率峰质量与电荷比的质量偏移。这并非质谱仪中产生 MS1 峰的分子的实际化学式，而是匹配同位素分布的近似值。</value>
+  </data>
+  <data name="HardklorSearchEngine_Generate_Waiting_for_Hardklor_Bullseye_completion" xml:space="preserve">
+    <value>正在等待 Hardklor/Bullseye 完成</value>
+  </data>
+  <data name="HardklorSearchEngine_Generate_Preparing__0__for_RT_alignment" xml:space="preserve">
+    <value>正在准备{0}用于 RT 对齐</value>
+  </data>
+  <data name="HardklorSearchEngine_Generate_Reading__0_" xml:space="preserve">
+    <value>正在读取 {0}</value>
+  </data>
+  <data name="HardklorSearchEngine_Generate_Align_replicates" xml:space="preserve">
+    <value>对齐重复测定</value>
+  </data>
+  <data name="HardklorSearchEngine_Generate_Searching_for_common_features_across_replicates" xml:space="preserve">
+    <value>正在搜索重复测定中的共同特征</value>
+  </data>
+  <data name="HardklorSearchEngine_PerformAllAlignments_Waiting_for_next_file" xml:space="preserve">
+    <value>正在等待下一个文件</value>
+  </data>
+  <data name="SearchSettingsControl_SelectedIndexChanged_Only_MSFragger_is_currently_supported" xml:space="preserve">
+    <value>目前仅 MSFragger 支持原始 DIA 搜索。启用 DIA-Umpire，使用其他搜索引擎。</value>
   </data>
 </root>

@@ -739,11 +739,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>Create iRT Calculator</value>
-    <comment>Needs Review:English text changed
-Old English:Create iRT calculator
-Current English:Create iRT Calculator
-Old Localized:创建 iRT 计算器</comment>
+    <value>创建 iRT 计算器</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
     <value>modeUIHandler</value>

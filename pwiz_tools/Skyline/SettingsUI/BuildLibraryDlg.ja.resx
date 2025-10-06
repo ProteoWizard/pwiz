@@ -253,8 +253,7 @@
     <value>0</value>
   </data>
   <data name="label5.Text" xml:space="preserve">
-    <value>L&amp;earning document:</value>
-    <comment>Needs Review:Missing translation</comment>
+    <value>学習ドキュメント(&amp;E):</value>
   </data>
   <data name="&gt;&gt;label5.Name" xml:space="preserve">
     <value>label5</value>
@@ -282,10 +281,6 @@
   </data>
   <data name="gridInputFiles.Size" type="System.Drawing.Size, System.Drawing">
     <value>460, 353</value>
-    <comment>Needs Review:English text changed
-Old English:460, 336
-Current English:460, 353
-Old Localized:428, 336</comment>
   </data>
   <data name="gridInputFiles.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -310,10 +305,6 @@ Old Localized:428, 336</comment>
   </data>
   <data name="btnAddPaths.Location" type="System.Drawing.Point, System.Drawing">
     <value>472, 83</value>
-    <comment>Needs Review:English text changed
-Old English:477, 96
-Current English:472, 83
-Old Localized:445, 96</comment>
   </data>
   <data name="btnAddPaths.Size" type="System.Drawing.Size, System.Drawing">
     <value>125, 23</value>
@@ -344,10 +335,6 @@ Old Localized:445, 96</comment>
   </data>
   <data name="btnAddFile.Location" type="System.Drawing.Point, System.Drawing">
     <value>472, 25</value>
-    <comment>Needs Review:English text changed
-Old English:477, 38
-Current English:472, 25
-Old Localized:445, 38</comment>
   </data>
   <data name="btnAddFile.Size" type="System.Drawing.Size, System.Drawing">
     <value>125, 23</value>
@@ -411,10 +398,6 @@ Old Localized:445, 38</comment>
   </data>
   <data name="btnAddDirectory.Location" type="System.Drawing.Point, System.Drawing">
     <value>472, 54</value>
-    <comment>Needs Review:English text changed
-Old English:477, 67
-Current English:472, 54
-Old Localized:445, 67</comment>
   </data>
   <data name="btnAddDirectory.Size" type="System.Drawing.Size, System.Drawing">
     <value>125, 23</value>
@@ -669,6 +652,9 @@ Old Localized:445, 67</comment>
   <data name="tabAlphaSource.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
   </data>
+  <data name="tabAlphaSource.Text" xml:space="preserve">
+    <value>AlphaPeptDeep</value>
+  </data>
   <data name="&gt;&gt;tabAlphaSource.Name" xml:space="preserve">
     <value>tabAlphaSource</value>
   </data>
@@ -689,6 +675,9 @@ Old Localized:445, 67</comment>
   </data>
   <data name="tabCarafeSource.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
+  </data>
+  <data name="tabCarafeSource.Text" xml:space="preserve">
+    <value>カラフ</value>
   </data>
   <data name="&gt;&gt;tabCarafeSource.Name" xml:space="preserve">
     <value>tabCarafeSource</value>
@@ -719,10 +708,6 @@ Old Localized:445, 67</comment>
   </data>
   <data name="ceLabel.Text" xml:space="preserve">
     <value>NC&amp;E:</value>
-    <comment>Needs Review:English text changed
-Old English:N&amp;CE:
-Current English:NC&amp;E:
-Old Localized:N&amp;CE：</comment>
   </data>
   <data name="&gt;&gt;ceLabel.Name" xml:space="preserve">
     <value>ceLabel</value>
@@ -893,6 +878,9 @@ Old Localized:N&amp;CE：</comment>
   <data name="radioCarafeSource.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
+  <data name="radioCarafeSource.Text" xml:space="preserve">
+    <value>カラフ(&amp;C)</value>
+  </data>
   <data name="&gt;&gt;radioCarafeSource.Name" xml:space="preserve">
     <value>radioCarafeSource</value>
   </data>
@@ -919,6 +907,9 @@ Old Localized:N&amp;CE：</comment>
   </data>
   <data name="radioAlphaSource.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
+  </data>
+  <data name="radioAlphaSource.Text" xml:space="preserve">
+    <value>AlphaPept&amp;Deep</value>
   </data>
   <data name="&gt;&gt;radioAlphaSource.Name" xml:space="preserve">
     <value>radioAlphaSource</value>
