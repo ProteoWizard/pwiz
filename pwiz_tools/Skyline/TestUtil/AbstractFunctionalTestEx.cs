@@ -937,7 +937,7 @@ namespace pwiz.SkylineTestUtil
                 DocumentationViewer.TestWebView2EnvironmentDirectory = testContext.GetTestResultsPath(@"WebView2");
                 Directory.CreateDirectory(DocumentationViewer.TestWebView2EnvironmentDirectory);
 
-                DocViewer = ShowDialog<DocumentationViewer>(SkylineWindow.ShowKeyboardShortcutsDocumentation);
+                DocViewer = ShowDialog<DocumentationViewer>(showViewer);
 
                 // Wait for the document to load completely in WebView2
                 WaitForConditionUI(() => DocViewer.GetWebView2HtmlContent(100).Length > 0);
