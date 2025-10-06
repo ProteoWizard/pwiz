@@ -237,6 +237,18 @@ namespace pwiz.Skyline.Model.Results
                 if (imRangeHelper.IsBeyondRange(spectrum))
                     break;
 
+                if (ReferenceEquals(productFilters, Ms2ProductFilters) &&
+                    spectrum.Metadata != null &&
+                    spectrum.Metadata.ScanWindowLowerLimit.HasValue &&
+                    spectrum.Metadata.ScanWindowUpperLimit.HasValue &&
+                    productFilters.All(f =>
+                        spectrum.Metadata.ScanWindowLowerLimit > f.TargetMz ||
+                        spectrum.Metadata.ScanWindowUpperLimit < f.TargetMz))
+                {
+                    // No overlap of any target with this spectrum's scan window
+                    continue;
+                }
+
                 // If these are spectra from distinct retention times, average them.
                 // Note that for ion mobility data we will see fewer retention time changes 
                 // than the total spectra count - ascending DT (or descending 1/K0) within each RT.  Within a
