@@ -104,7 +104,7 @@ namespace pwiz.Skyline.Model.Files
 
             { // Replicates
                 var measuredResults = document.MeasuredResults;
-                if (measuredResults is { IsEmpty: false })
+                if (document.Settings.HasResults)
                 {
                     var files = measuredResults.Chromatograms.Select(chromatogramSet => Replicate.Create(documentFilePath, chromatogramSet)).ToList();
                     var folder = new ReplicatesFolder(documentFilePath, files);
