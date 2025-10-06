@@ -192,9 +192,6 @@
   <data name="moreDisplayOptionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>197, 22</value>
   </data>
-  <data name="moreDisplayOptionsContextMenuItem.Text" xml:space="preserve">
-    <value>更多显示选项...</value>
-  </data>
   <data name="contextMenuStrip1.Size" type="System.Drawing.Size, System.Drawing">
     <value>198, 202</value>
   </data>

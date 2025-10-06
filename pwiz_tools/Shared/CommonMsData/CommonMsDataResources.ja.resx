@@ -98,12 +98,12 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="DataSourceUtil_GetWiffSubPaths_An_error_occurred_attempting_to_read_sample_information_from_the_file__0__" xml:space="preserve">
-    <value>An error occurred attempting to read sample information from the file {0}.</value>
+    <value>ファイル{0}から試料情報を読み込もうとした際にエラーが発生しました。</value>
   </data>
   <data name="DataSourceUtil_GetWiffSubPaths_The_file_may_be_corrupted_missing_or_the_correct_libraries_may_not_be_installed" xml:space="preserve">
-    <value>The file may be corrupted, missing, or the correct libraries may not be installed.</value>
+    <value>ファイルが壊れているか、ファイルがないか、または正しいライブラリがインストールされていない可能性があります。</value>
   </data>
   <data name="RemoteSession_FetchContents_There_was_an_error_communicating_with_the_server__" xml:space="preserve">
-    <value>There was an error communicating with the server: </value>
+    <value>サーバーとの通信にエラーが発生しました：</value>
   </data>
 </root>

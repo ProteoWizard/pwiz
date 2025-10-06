@@ -351,9 +351,6 @@
   <data name="cbGpf.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
   </data>
-  <data name="cbGpf.Text" xml:space="preserve">
-    <value>気相分画(&amp;G)</value>
-  </data>
   <data name="&gt;&gt;cbGpf.Name" xml:space="preserve">
     <value>cbGpf</value>
   </data>
@@ -371,6 +368,9 @@
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
+  </data>
+  <data name="$this.MinimumSize" type="System.Drawing.Size, System.Drawing">
+    <value>381, 225</value>
   </data>
   <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
     <value>381, 425</value>

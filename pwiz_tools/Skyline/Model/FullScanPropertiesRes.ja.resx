@@ -268,9 +268,6 @@
   <data name="TotalIonCurrent" xml:space="preserve">
     <value>総イオン電流</value>
   </data>
-  <data name="Description_TotalIonCurrent" xml:space="preserve">
-    <value>このスペクトルで検出されたイオンすべての強度の合計</value>
-  </data>
   <data name="InjectionTime" xml:space="preserve">
     <value>注入時間</value>
   </data>

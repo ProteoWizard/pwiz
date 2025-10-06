@@ -453,6 +453,9 @@
   <data name="NumericAggregate_Sum" xml:space="preserve">
     <value>合計</value>
   </data>
+  <data name="NumericAggregate_Median" xml:space="preserve">
+    <value>中央値</value>
+  </data>
   <data name="SelectOne_Max" xml:space="preserve">
     <value>最大</value>
   </data>
@@ -598,7 +601,7 @@
     <value>DDA生データ (ライブラリの検索と構築)</value>
   </data>
   <data name="InputFile_dia_raw" xml:space="preserve">
-    <value>DIA生データ(検索してライブラリを構築)</value>
+    <value>DIA raw (search and build library)</value>
     <comment>Needs Review:English text changed
 Old English:DIA raw (deconvolute, search, and build library)
 Current English:DIA raw (search and build library)
@@ -724,9 +727,6 @@ Old Localized:DIA生データ (ライブラリのデコンボリューション�
   <data name="Simple_ratio_to_light" xml:space="preserve">
     <value>Lightに対する比率</value>
   </data>
-  <data name="LodCalculation_turning_point_stderr" xml:space="preserve">
-    <value>双線形転換点標準エラー</value>
-  </data>
   <data name="BilinearRegressionFit_bilinear" xml:space="preserve">
     <value>双線形</value>
   </data>
@@ -741,8 +741,5 @@ Old Localized:DIA生データ (ライブラリのデコンボリューション�
   </data>
   <data name="SharedPeptidesGene_Removed" xml:space="preserve">
     <value>削除済み（ペプチドは1つの遺伝子に固有の必要がある）</value>
-  </data>
-  <data name="SearchEngine_Comet" xml:space="preserve">
-    <value>Comet</value>
   </data>
 </root>

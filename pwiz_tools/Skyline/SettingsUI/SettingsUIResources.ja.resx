@@ -1181,10 +1181,4 @@ Skylineで保持時間フィルタリングを適用する必要は通常あり�
   <data name="EditPeakScoringModelDlg_ShowEditPeakScoringModelDlg_Train_Model" xml:space="preserve">
     <value>モデルのトレーニング</value>
   </data>
-  <data name="BuildLibraryDlg_ValidateBuilder_You_must_specify_a_valid_path_to_a_Skyline_document_to_learn_from_" xml:space="preserve">
-    <value>学習元のSkylineドキュメントへの有効なパスを指定する必要があります。</value>
-  </data>
-  <data name="TransitionSettingsUI_EditSpectrumFilter_MS1_or_MS_MS_filtering_must_be_enabled_on_the_Full_Scan_tab_in_order_to_use_this_feature_" xml:space="preserve">
-    <value>このフィーチャーを使用するには、[フルスキャン]タブのMS1またはMS/MSフィルタリングを有効にする必要があります。</value>
-  </data>
 </root>

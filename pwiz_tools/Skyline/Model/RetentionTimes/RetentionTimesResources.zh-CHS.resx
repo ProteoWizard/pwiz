@@ -100,4 +100,19 @@
   <data name="DocumentRetentionTimes_RecalculateAlignments_Aligning_retention_times" xml:space="preserve">
     <value>校准保留时间</value>
   </data>
+  <data name="RtGraphValue_FWB_Time" xml:space="preserve">
+    <value>FWB时间</value>
+  </data>
+  <data name="RtGraphValue_FWHM_Time" xml:space="preserve">
+    <value>半峰宽时间</value>
+  </data>
+  <data name="RtGraphValue_Retention_Time" xml:space="preserve">
+    <value>保留时间</value>
+  </data>
+  <data name="AlignmentTargetSpec_GetLabel_Default" xml:space="preserve">
+    <value>默认</value>
+  </data>
+  <data name="Library_DisplayName_Library__0_" xml:space="preserve">
+    <value>库{0}</value>
+  </data>
 </root>

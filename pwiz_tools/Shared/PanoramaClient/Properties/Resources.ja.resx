@@ -307,13 +307,4 @@
   <data name="AbstractPanoramaClient_ParseUploadFileCompletedEventArgs_There_was_an_error_reading_the_server_response_" xml:space="preserve">
     <value>サーバー応答の読み取り中にエラーが発生しました。</value>
   </data>
-  <data name="AbstractPanoramaClient_CreateTargetedMsFolder_Error_creating_Panorama_folder__0__" xml:space="preserve">
-    <value>Panoramaフォルダ{0}作成中にエラーが発生しました。</value>
-  </data>
-  <data name="AbstractPanoramaClient_DeleteFolderIfExists_Error_deleting_Panorama_folder__0__" xml:space="preserve">
-    <value>Panoramaフォルダ{0}削除中にエラーが発生しました。</value>
-  </data>
-  <data name="AbstractPanoramaClient_CreateTargetedMsFolder_Folder_already_exists___0__" xml:space="preserve">
-    <value>フォルダは既に存在します: {0}.</value>
-  </data>
 </root>

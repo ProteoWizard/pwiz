@@ -134,9 +134,6 @@
   <data name="cbxLogXAxis.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
-  <data name="cbxLogXAxis.Text" xml:space="preserve">
-    <value>对数 X 轴</value>
-  </data>
   <data name="&gt;&gt;cbxLogXAxis.Name" xml:space="preserve">
     <value>cbxLogXAxis</value>
   </data>
@@ -160,9 +157,6 @@
   </data>
   <data name="cbxLogYAxis.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
-  </data>
-  <data name="cbxLogYAxis.Text" xml:space="preserve">
-    <value>对数 Y 轴</value>
   </data>
   <data name="&gt;&gt;cbxLogYAxis.Name" xml:space="preserve">
     <value>cbxLogYAxis</value>
@@ -309,9 +303,6 @@
   <data name="lblShowSampleTypes.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
   </data>
-  <data name="lblShowSampleTypes.Text" xml:space="preserve">
-    <value>显示样品类型：</value>
-  </data>
   <data name="&gt;&gt;lblShowSampleTypes.Name" xml:space="preserve">
     <value>lblShowSampleTypes</value>
   </data>
@@ -335,9 +326,6 @@
   </data>
   <data name="cbxSingleBatch.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
-  </data>
-  <data name="cbxSingleBatch.Text" xml:space="preserve">
-    <value>仅显示一个批次的重复测定</value>
   </data>
   <data name="&gt;&gt;cbxSingleBatch.Name" xml:space="preserve">
     <value>cbxSingleBatch</value>
@@ -363,9 +351,6 @@
   <data name="cbxShowLegend.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
   </data>
-  <data name="cbxShowLegend.Text" xml:space="preserve">
-    <value>显示图例</value>
-  </data>
   <data name="&gt;&gt;cbxShowLegend.Name" xml:space="preserve">
     <value>cbxShowLegend</value>
   </data>
@@ -389,9 +374,6 @@
   </data>
   <data name="cbxShowFiguresOfMerit.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
-  </data>
-  <data name="cbxShowFiguresOfMerit.Text" xml:space="preserve">
-    <value>显示品质因数</value>
   </data>
   <data name="&gt;&gt;cbxShowFiguresOfMerit.Name" xml:space="preserve">
     <value>cbxShowFiguresOfMerit</value>
@@ -502,13 +484,14 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>校准曲线显示选项</value>
+    <value>Calibration Curve Display Options</value>
+    <comment>Needs Review:Missing translation</comment>
   </data>
   <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=24.1.1.355, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0 Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;toolTip1.Name" xml:space="preserve">
     <value>toolTip1</value>
@@ -520,6 +503,6 @@
     <value>CalibrationCurveOptionsDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=24.1.1.355, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0 Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

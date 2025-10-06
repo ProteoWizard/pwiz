@@ -1808,13 +1808,16 @@
   <data name="TransitionFullScan_SpectrumFilter" xml:space="preserve">
     <value>谱图过滤器</value>
   </data>
-  <data name="ImportResultsSettings_IsGpf" xml:space="preserve">
-    <value>气相分馏</value>
-  </data>
-  <data name="BuildPeptideSearchLibrarySettings_UseDiaUmpire" xml:space="preserve">
-    <value>使用 DIA-Umpire 的反卷积谱图</value>
-  </data>
   <data name="TransitionFilterAndLibrariesSettings_SpectrumFilter" xml:space="preserve">
     <value>谱图过滤器</value>
+  </data>
+  <data name="AlignmentTargetSpec_Type" xml:space="preserve">
+    <value>类型</value>
+  </data>
+  <data name="AlignmentTargetSpec_Name" xml:space="preserve">
+    <value>名称</value>
+  </data>
+  <data name="AlignmentTargetSpec_RegressionMethod" xml:space="preserve">
+    <value>回归方法</value>
   </data>
 </root>

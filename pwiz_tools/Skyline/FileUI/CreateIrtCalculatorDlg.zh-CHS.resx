@@ -739,7 +739,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>创建 iRT 计算器</value>
+    <value>Create iRT Calculator</value>
     <comment>Needs Review:English text changed
 Old English:Create iRT calculator
 Current English:Create iRT Calculator

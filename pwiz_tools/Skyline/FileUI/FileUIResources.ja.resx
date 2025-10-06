@@ -581,6 +581,9 @@
   <data name="PublishDocumentDlg_PublishDocumentDlgLoad_Go_to_Tools___Options___Panorama_tab_to_update_the_username_and_password_" xml:space="preserve">
     <value>[ツール] &gt; [オプション] &gt; [パノラマ]タブへ移動し、ユーザー名とパスワードを更新してください。</value>
   </data>
+  <data name="PublishDocumentDlg_Panorama_ServerFolders" xml:space="preserve">
+    <value>Panoramaフォルダ：</value>
+  </data>
   <data name="PublishDocumentDlg_UploadSharedZipFile_Error_obtaining_server_information" xml:space="preserve">
     <value>サーバー情報の取得エラー。</value>
   </data>
@@ -652,8 +655,5 @@
   </data>
   <data name="SkypSupport_ShowDownloadError_There_was_an_error_downloading_the_Skyline_document__0__from__1__" xml:space="preserve">
     <value>Skylineドキュメント{0}の{1}からのダウンロード中にエラーが発生しました。</value>
-  </data>
-  <data name="ChooseIrtStandardPeptidesDlg_ChooseIrtStandardPeptidesDlg_Unavailable__no_matching_iRT_standards_found" xml:space="preserve">
-    <value>利用不可: 一致するiRT標準がありません</value>
   </data>
 </root>

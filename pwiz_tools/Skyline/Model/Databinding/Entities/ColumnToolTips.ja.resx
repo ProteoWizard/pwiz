@@ -125,33 +125,6 @@
     <value>スペクトルの収集に使用したアナライザーの種類です。
 1つ以上のアナライザーが使用された場合、アナライザー名はスラッシュで区切られます。</value>
   </data>
-  <data name="ApexAnalyteIonCount">
-    <value>総トランジション強度とトランジション強度が最高のスペクトルの注入時間の積</value>
-  </data>
-  <data name="ApexAnalyteIonCountFragment">
-    <value>総トランジション強度とトランジション強度が最高のMS2スペクトルの注入時間の積</value>
-  </data>
-  <data name="ApexAnalyteIonCountMS1">
-    <value>総プリカーサー強度とプリカーサー強度が最高のMS1スペクトルの注入時間の積</value>
-  </data>
-  <data name="ApexSpectrumId">
-    <value>トランジション強度が最高のスペクトルの識別子</value>
-  </data>
-  <data name="ApexSpectrumIdFragment">
-    <value>トランジション強度が最高のMS2スペクトルの識別子</value>
-  </data>
-  <data name="ApexSpectrumIdMS1">
-    <value>プリカーサー強度が最高のMS1スペクトルの識別子</value>
-  </data>
-  <data name="ApexTotalIonCount">
-    <value>総イオン電流値とトランジション強度が最高のMS2スペクトルの注入時間の積</value>
-  </data>
-  <data name="ApexTotalIonCountFragment">
-    <value>総イオン電流値とトランジション強度が最高のMS2スペクトルの注入時間の積</value>
-  </data>
-  <data name="ApexTotalIonCountMS1">
-    <value>総プリカーサー強度とプリカーサー強度が最高のMS1スペクトルの注入時間の積</value>
-  </data>
   <data name="Area">
     <value>トランジションピークの曲線下の面積（AUC）からバックグラウンドを引いたものです。</value>
   </data>
@@ -189,7 +162,7 @@
     <value>真の場合、Skylineは[トランジションの設定]フィルタ、スペクトルライブラリなどによってプリカーサーから自動的にトランジションを追加または削除します。</value>
   </data>
   <data name="AverageMassErrorPPM">
-    <value>100万分の1(PPM)の単位で表される予測m/z値と測定m/z値の間の差のすべてのトランジションの面積加重平均</value>
+    <value>The area weighted mean for all transitions of the difference between the expected and measured m/z values expressed in parts per million (PPM)</value>
     <comment>Needs Review:English text changed
 Old English:Average Mass Error PPM
 Current English:The area weighted mean for all transitions of the difference between the expected and measured m/z values expressed in parts per million (PPM)
@@ -310,9 +283,9 @@ Old Localized:平均質量誤差(PPM)</comment>
     <value>倍率変化を中心とする信頼区間を決定するのに使用された信頼度です。</value>
   </data>
   <data name="CountTruncated">
-    <value>データ取得時間範囲のいずれかの終端の
-境界でピーク積分するプリカーサーのトランジション数。この場合、その終端の強度は
-もう一方の終端よりもバックグラウンドを差し引いたピーク高さが25%以上高いものを対象とします。</value>
+    <value>The number of transitions for a precursor that integrate a peak with a
+boundary at either end of the acquisition time range, where intensity at the end is
+greater than 25% of the background-subtracted peak height higher than the other extent.</value>
     <comment>Needs Review:English text changed
 Old English:The number of transitions for a precursor that integrate a peak with a
 boundary at either end of the acquisition time range, where intensity at the end is
@@ -576,10 +549,6 @@ Old Localized:取得時間範囲内のピークの両側で強度が全体のピ
   <data name="IsDecoy">
     <value>デコイのプリカーサーであれば真です。</value>
   </data>
-  <data name="IsolationWindowWidth">
-    <value>プリカーサ―が単離されたm/zウィンドウの幅。
-2つ以上のプリカーサーが単離された場合、単離ウィンドウ幅は、各プリカーサー周囲のウィンドウの合計となります。</value>
-  </data>
   <data name="IsotopeDistIndex">
     <value>モノアイソトピックピークであればゼロ、M+1であれば1、M+2であれば2などとなります。 </value>
   </data>
@@ -606,39 +575,6 @@ Old Localized:取得時間範囲内のピークの両側で強度が全体のピ
   </data>
   <data name="LastPosition">
     <value>ペプチドに含まれるタンパク質シークエンスの最後の（C末端）アミノ酸の位置です。タンパク質シークエンスがない場合には#N/Aとなります。</value>
-  </data>
-  <data name="LcPeakAnalyteIonCount">
-    <value>トランジション強度とピーク積分境界間でのスペクトルの注入時間との積の合計</value>
-  </data>
-  <data name="LcPeakAnalyteIonCountFragment">
-    <value>トランジション強度とピーク積分境界間でのMS2スペクトルの注入時間との積の合計</value>
-  </data>
-  <data name="LcPeakAnalyteIonCountMS1">
-    <value>総プリカーサー強度とピーク積分境界間でのMS1スペクトルの注入時間との積の合計</value>
-  </data>
-  <data name="LcPeakIonMetricsFragment">
-    <value>ピーク積分境界間のMS2スペクトルを取得する間に質量分析装置内に存在するイオン数に関係する値</value>
-  </data>
-  <data name="LcPeakIonMetricsMS1">
-    <value>ピーク積分境界間のMS1スペクトルを取得する間に質量分析装置内に存在するイオン数に関係する値</value>
-  </data>
-  <data name="LcPeakTotalIonCount">
-    <value>ピーク積分境界間のスペクトルの総イオン電流値と注入時間の積の総和</value>
-  </data>
-  <data name="LcPeakTotalIonCountFragment">
-    <value>ピーク積分境界間のMS2スペクトルの総イオン電流値と注入時間の積の総和</value>
-  </data>
-  <data name="LcPeakTotalIonCountMS1">
-    <value>ピーク積分境界間のMS1スペクトルの総イオン電流値と注入時間の積の総和</value>
-  </data>
-  <data name="LcPeakTotalIonCurrentArea">
-    <value>ピーク積分境界間の総イオン電流値の総和</value>
-  </data>
-  <data name="LcPeakTotalIonCurrentAreaFragment">
-    <value>ピーク積分境界間のMS2スペクトルの総イオン電流値の総和</value>
-  </data>
-  <data name="LcPeakTotalIonCurrentAreaMS1">
-    <value>ピーク積分境界間のMS1スペクトルの総イオン電流値の総和</value>
   </data>
   <data name="LibraryCollisionCrossSection">
     <value>イオン移動度ライブラリからのプリカーサーの衝突断面積</value>
@@ -840,7 +776,11 @@ Old Localized:取得時間範囲内のピークの両側で強度が全体のピ
     <value>ディスク上で元の質量分析計のファイルが前回編集された日時</value>
   </data>
   <data name="Molecule">
-    <value>分子は分子リストに属し、プリカーサーが含まれます。</value>
+    <value>Molecules belong to Molecule Lists and contain Precursors.</value>
+    <comment>Needs Review:English text changed
+Old English:Molecules belong to Molecule Lists and contain Percursors.
+Current English:Molecules belong to Molecule Lists and contain Precursors.
+Old Localized:分子は分子リストに属し、プリカーサーが含まれます。</comment>
   </data>
   <data name="MoleculeFormula">
     <value>質量分析計で測定される荷電されていない非標識の分子の原子化学式。</value>
@@ -849,19 +789,44 @@ Old Localized:取得時間範囲内のピークの両側で強度が全体のピ
     <value>Skylineドキュメントにある分子のグループ化です。</value>
   </data>
   <data name="MoleculeListAbundance">
-    <value>[分子定量化] 設定で指定された「正規化メソッド」に従って算出された、分子リストの存在量を示す数値</value>
+    <value>A number representing the abundance of the molecule list.
+Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.</value>
+    <comment>Needs Review:English text changed
+Old English:A number representing the abundance of the molecule list, calculated according to the "Normalization Method" specified in the Molecule Quantification settings
+Current English:A number representing the abundance of the molecule list.
+Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.
+Old Localized:[分子定量化] 設定で指定された「正規化メソッド」に従って算出された、分子リストの存在量を示す数値</comment>
   </data>
   <data name="MoleculeListAbundanceMessage">
     <value>繰り返し測定間の「分子リスト存在量」の比較に欠損データが影響する場合に警告を表示</value>
   </data>
   <data name="MoleculeListAbundanceStrict">
-    <value>[分子定量化] 設定で指定された「正規化メソッド」に従って算出された、分子リストの存在量を示す数値。繰り返し測定間の比較に欠損データの影響がある場合には利用できません。</value>
+    <value>A number representing the abundance of the molecule list.
+Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.
+Unavailable when missing data impacts comparisons between replicates.</value>
+    <comment>Needs Review:English text changed
+Old English:A number representing the abundance of the molecule list, calculated according to the "Normalization Method" specified in the Molecule Quantification settings.
+Unavailable when missing data impacts comparisons between replicates.
+Current English:A number representing the abundance of the molecule list.
+Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.
+Unavailable when missing data impacts comparisons between replicates.
+Old Localized:[分子定量化] 設定で指定された「正規化メソッド」に従って算出された、分子リストの存在量を示す数値。繰り返し測定間の比較に欠損データの影響がある場合には利用できません。</comment>
   </data>
   <data name="MoleculeListAbundanceTransitionAveraged">
-    <value>分子リストの下にあるトランジションの平均正規化面積。この面積は [分子定量化] 設定で指定された正規化メソッドに従って正規化されます。</value>
+    <value>Obsolete: Use Molecule List Abundance Raw instead.</value>
+    <comment>Needs Review:English text changed
+Old English:Average of the normalized areas of the transitions under the Molecule List.
+The areas are normalized according to the Normalization Method specified in the Molecule Quantification settings.
+Current English:Obsolete: Use Molecule List Abundance Raw instead.
+Old Localized:分子リストの下にあるトランジションの平均正規化面積。この面積は [分子定量化] 設定で指定された正規化メソッドに従って正規化されます。</comment>
   </data>
   <data name="MoleculeListAbundanceTransitionSummed">
-    <value>分子リストの下にあるトランジションの合計正規化面積。この面積は [分子定量化] 設定で指定された正規化メソッドに従って正規化されます</value>
+    <value>Obsolete: Equal to Molecule List Abundance Raw times the number of Transitions.</value>
+    <comment>Needs Review:English text changed
+Old English:Sum of the normalized areas of the transitions under the Molecule List.
+The areas are normalized according to the Normalization Method specified in the Molecule Quantification settings
+Current English:Obsolete: Equal to Molecule List Abundance Raw times the number of Transitions.
+Old Localized:分子リストの下にあるトランジションの合計正規化面積。この面積は [分子定量化] 設定で指定された正規化メソッドに従って正規化されます</comment>
   </data>
   <data name="MoleculeListLocator">
     <value>ドキュメント内の分子リストの一意の識別子です。これは「MoleculeGroup:」で始まります。</value>
@@ -1174,28 +1139,48 @@ Old Localized:取得時間範囲内のピークの両側で強度が全体のピ
   <data name="ProductNeutralMass">
     <value>ペプチドのプロダクトイオンのニュートラルな質量（Da）。</value>
   </data>
-  <data name="ProportionTruncated">
-    <value>データ取得時間範囲のいずれかの終端の
-境界でピーク積分するプリカーサーのトランジションの面積加重平均(0～1.0)。この場合、その終端の強度は
-もう一方の終端よりもバックグラウンドを差し引いたピーク高さが25%以上高いものを対象とします。</value>
-  </data>
   <data name="Protein">
     <value>タンパク質</value>
   </data>
   <data name="ProteinAbundance">
-    <value>[ペプチド定量化] 設定で指定された「正規化メソッド」に従って算出された、タンパク質の存在量を示す数値。</value>
+    <value>A number representing the abundance of the molecule list.
+Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.</value>
+    <comment>Needs Review:English text changed
+Old English:A number representing the abundance of the protein, calculated according to the "Normalization Method" specified in the Peptide Quantification settings.
+Current English:A number representing the abundance of the molecule list.
+Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.
+Old Localized:[ペプチド定量化] 設定で指定された「正規化メソッド」に従って算出された、タンパク質の存在量を示す数値。</comment>
   </data>
   <data name="ProteinAbundanceMessage">
     <value>繰り返し測定間の「タンパク質存在量」の比較に欠損データが影響がある場合に警告を表示</value>
   </data>
   <data name="ProteinAbundanceStrict">
-    <value>[ペプチド定量化] 設定で指定された「正規化メソッド」に従って算出された、タンパク質の存在量を示す数値。繰り返し測定間の比較に欠損データの影響がある場合には利用できません。</value>
+    <value>A number representing the abundance of the molecule list.
+Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.
+Unavailable when missing data impacts comparisons between replicates.</value>
+    <comment>Needs Review:English text changed
+Old English:A number representing the abundance of the protein, calculated according to the "Normalization Method" specified in the Peptide Quantification settings.
+Unavailable when missing data impacts comparisons between replicates.
+Current English:A number representing the abundance of the molecule list.
+Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.
+Unavailable when missing data impacts comparisons between replicates.
+Old Localized:[ペプチド定量化] 設定で指定された「正規化メソッド」に従って算出された、タンパク質の存在量を示す数値。繰り返し測定間の比較に欠損データの影響がある場合には利用できません。</comment>
   </data>
   <data name="ProteinAbundanceTransitionAveraged">
-    <value>[タンパク質] の下にあるトランジションの平均正規化面積。この面積は、[ペプチド定量化] 設定で指定された正規化メソッドに従って正規化されます。</value>
+    <value>Obsolete: Use Protein Abundance Raw instead.</value>
+    <comment>Needs Review:English text changed
+Old English:Average of the normalized areas of the transitions under the Protein.
+The areas are normalized according to the Normalization Method specified in the Peptide Quantification settings.
+Current English:Obsolete: Use Protein Abundance Raw instead.
+Old Localized:[タンパク質] の下にあるトランジションの平均正規化面積。この面積は、[ペプチド定量化] 設定で指定された正規化メソッドに従って正規化されます。</comment>
   </data>
   <data name="ProteinAbundanceTransitionSummed">
-    <value>[タンパク質] の下にあるトランジションの合計正規化面積。この面積は、[ペプチド定量化] 設定で指定された正規化メソッドに従って正規化されます。</value>
+    <value>Obsolete: Equal to Protein Abundance Raw times the number of transitions.</value>
+    <comment>Needs Review:English text changed
+Old English:Sum of the normalized areas of the transitions under the Protein.
+The areas are normalized according to the Normalization Method specified in the Peptide Quantification settings.
+Current English:Obsolete: Equal to Protein Abundance Raw times the number of transitions.
+Old Localized:[タンパク質] の下にあるトランジションの合計正規化面積。この面積は、[ペプチド定量化] 設定で指定された正規化メソッドに従って正規化されます。</comment>
   </data>
   <data name="ProteinAccession">
     <value>タンパク質アクセッション番号</value>
@@ -1467,7 +1452,7 @@ Double Blank（ダブルブランク）</value>
     <value>プリカーサーのTotalAreaNormalized値の標準偏差。</value>
   </data>
   <data name="Strict">
-    <value>データがない場合に計算された値が利用できないと、繰り返し測定間の比較に影響を及ぼす可能性があります。</value>
+    <value>Calculated value unavailable when missing data could impact comparisons between replicates.</value>
     <comment>Needs Review:English text changed
 Old English:Calculated value unavailable when missing data could comparisons between replicates.
 Current English:Calculated value unavailable when missing data could impact comparisons between replicates.
@@ -1563,7 +1548,9 @@ Old Localized:繰り返し測定間の比較に欠損データが影響する可
     <value>トランジション</value>
   </data>
   <data name="Truncated">
-    <value>積分ピークの境界がデータ取得時間幅のいずれかの終端にあり、その終端がもう一方の終端よりもバックグラウンドを差し引いたピーク高さが25%以上高い場合は真となります。</value>
+    <value>True if the integrate peak has a boundary at either end of the acquisition
+time range, where intensity at the end is greater than 25% of the background-subtracted peak height
+higher than the other extent.</value>
     <comment>Needs Review:English text changed
 Old English:True if the integrated a peak has a boundary at either end of the acquisition
 time range, where intensity at the end is greater than 1% of the entire peak height

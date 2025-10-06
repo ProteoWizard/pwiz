@@ -889,7 +889,7 @@
     <value>17</value>
   </data>
   <data name="label13.Text" xml:space="preserve">
-    <value>高级过滤(&amp;V):</value>
+    <value>Ad&amp;vanced filtering:</value>
     <comment>Needs Review:English text changed
 Old English:Time &amp;window:
 Current English:Ad&amp;vanced filtering:
@@ -912,6 +912,9 @@ Old Localized:时间窗口(&amp;W)：</comment>
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
+  </data>
+  <data name="$this.MinimumSize" type="System.Drawing.Size, System.Drawing">
+    <value>363, 425</value>
   </data>
   <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
     <value>363, 425</value>

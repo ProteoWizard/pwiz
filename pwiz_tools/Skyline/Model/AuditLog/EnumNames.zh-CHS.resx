@@ -453,6 +453,9 @@
   <data name="NumericAggregate_Sum" xml:space="preserve">
     <value>总和</value>
   </data>
+  <data name="NumericAggregate_Median" xml:space="preserve">
+    <value>中位数</value>
+  </data>
   <data name="SelectOne_Max" xml:space="preserve">
     <value>最大</value>
   </data>
@@ -598,7 +601,7 @@
     <value>DDA 原始（搜索和构建库）</value>
   </data>
   <data name="InputFile_dia_raw" xml:space="preserve">
-    <value>DIA 原始文件（搜索并建库）</value>
+    <value>DIA raw (search and build library)</value>
     <comment>Needs Review:English text changed
 Old English:DIA raw (deconvolute, search, and build library)
 Current English:DIA raw (search and build library)
@@ -724,9 +727,6 @@ Old Localized:DIA 原始（去卷积、搜索和构建库）</comment>
   <data name="Simple_ratio_to_light" xml:space="preserve">
     <value>相对于轻的比率</value>
   </data>
-  <data name="LodCalculation_turning_point_stderr" xml:space="preserve">
-    <value>双线性拐点标准误差</value>
-  </data>
   <data name="BilinearRegressionFit_bilinear" xml:space="preserve">
     <value>双线性</value>
   </data>
@@ -741,8 +741,5 @@ Old Localized:DIA 原始（去卷积、搜索和构建库）</comment>
   </data>
   <data name="SharedPeptidesGene_Removed" xml:space="preserve">
     <value>已删除（肽段必须对单个基因唯一）</value>
-  </data>
-  <data name="SearchEngine_Comet" xml:space="preserve">
-    <value>Comet</value>
   </data>
 </root>

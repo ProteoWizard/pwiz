@@ -652,7 +652,11 @@
     <value>20</value>
   </data>
   <data name="label13.Text" xml:space="preserve">
-    <value>フィルタリング詳細設定(&amp;V):</value>
+    <value>Ad&amp;vanced filtering:</value>
+    <comment>Needs Review:English text changed
+Old English:Time &amp;window:
+Current English:Ad&amp;vanced filtering:
+Old Localized:時間ウィンドウ(&amp;W)：</comment>
   </data>
   <data name="&gt;&gt;label13.Name" xml:space="preserve">
     <value>label13</value>
@@ -1125,7 +1129,7 @@
     <value>7</value>
   </data>
   <data name="lblMethodMatchTolerance.Text" xml:space="preserve">
-    <value>メソッド許容誤差m/z(&amp;T)：</value>
+    <value>メソッド許容誤差m/z(&amp;t)：</value>
   </data>
   <data name="&gt;&gt;lblMethodMatchTolerance.Name" xml:space="preserve">
     <value>lblMethodMatchTolerance</value>

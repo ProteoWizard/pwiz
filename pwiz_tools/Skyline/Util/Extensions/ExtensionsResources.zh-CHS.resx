@@ -119,10 +119,10 @@
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="ColonEndOfLine" xml:space="preserve">
-    <value>：</value>
+    <value>:</value>
   </data>
   <data name="ColonSeparator" xml:space="preserve">
-    <value>{0}：{1}</value>
+    <value>{0}: {1}</value>
   </data>
   <data name="ExportStrategyExtension_LOCALIZED_VALUES_Average" xml:space="preserve">
     <value>平均</value>

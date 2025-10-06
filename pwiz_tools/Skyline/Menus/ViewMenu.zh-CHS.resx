@@ -195,7 +195,7 @@
     <value>180, 22</value>
   </data>
   <data name="viewModificationsMenuItem.Text" xml:space="preserve">
-    <value>修饰(&amp;M)</value>
+    <value>&amp;Modifications</value>
     <comment>Needs Review:English text changed
 Old English:Modifications
 Current English:&amp;Modifications
@@ -255,9 +255,6 @@ Old Localized:修饰</comment>
   <data name="liveReportsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>180, 22</value>
   </data>
-  <data name="liveReportsMenuItem.Text" xml:space="preserve">
-    <value>实时报告(&amp;R)</value>
-  </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="documentGridMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Alt+3</value>
@@ -266,7 +263,7 @@ Old Localized:修饰</comment>
     <value>191, 22</value>
   </data>
   <data name="documentGridMenuItem.Text" xml:space="preserve">
-    <value>文档网格(&amp;D)</value>
+    <value>&amp;Document Grid</value>
     <comment>Needs Review:English text changed
 Old English:Document &amp;Grid
 Current English:&amp;Document Grid
@@ -336,7 +333,7 @@ Old Localized:文档网格(&amp;G)</comment>
     <value>191, 22</value>
   </data>
   <data name="spectrumGridMenuItem.Text" xml:space="preserve">
-    <value>谱图网格(&amp;S)</value>
+    <value>&amp;Spectrum Grid</value>
     <comment>Needs Review:English text changed
 Old English:Spectrum Grid
 Current English:&amp;Spectrum Grid
@@ -345,14 +342,8 @@ Old Localized:谱图网格</comment>
   <data name="librariesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>180, 22</value>
   </data>
-  <data name="librariesMenuItem.Text" xml:space="preserve">
-    <value>库(&amp;L)</value>
-  </data>
   <data name="libraryExplorerMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>183, 22</value>
-  </data>
-  <data name="libraryExplorerMenuItem.Text" xml:space="preserve">
-    <value>库浏览器(&amp;E)</value>
   </data>
   <data name="toolStripSeparator39.Size" type="System.Drawing.Size, System.Drawing">
     <value>180, 6</value>
@@ -733,7 +724,11 @@ Old Localized:谱图网格</comment>
     <value>180, 22</value>
   </data>
   <data name="retentionTimesMenuItem.Text" xml:space="preserve">
-    <value>保留时间(&amp;I)</value>
+    <value>Retention T&amp;imes</value>
+    <comment>Needs Review:English text changed
+Old English:Retention &amp;Times
+Current English:Retention T&amp;imes
+Old Localized:保留时间(&amp;T)</comment>
   </data>
   <data name="replicateComparisonMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>F8</value>
@@ -757,7 +752,11 @@ Old Localized:谱图网格</comment>
     <value>228, 22</value>
   </data>
   <data name="regressionMenuItem.Text" xml:space="preserve">
-    <value>回归(&amp;E)</value>
+    <value>R&amp;egression</value>
+    <comment>Needs Review:English text changed
+Old English:&amp;Regression
+Current English:R&amp;egression
+Old Localized:回归(&amp;R)</comment>
   </data>
   <data name="scoreToRunMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>142, 22</value>

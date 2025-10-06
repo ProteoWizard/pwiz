@@ -619,15 +619,6 @@
   <data name="RtAlignment_AxisTitleAlignedTo" xml:space="preserve">
     <value>{0}を{1}にアラインする</value>
   </data>
-  <data name="RtGraphValue_FWB_Time" xml:space="preserve">
-    <value>FWB時間</value>
-  </data>
-  <data name="RtGraphValue_FWHM_Time" xml:space="preserve">
-    <value>FWHM時間</value>
-  </data>
-  <data name="RtGraphValue_Retention_Time" xml:space="preserve">
-    <value>保持時間</value>
-  </data>
   <data name="RTLinearRegressionGraphPane_RTLinearRegressionGraphPane_Score" xml:space="preserve">
     <value>スコア</value>
   </data>
@@ -742,13 +733,13 @@
   <data name="RelativeAbundanceGraph_ToolTip_PeakArea" xml:space="preserve">
     <value>ピーク面積</value>
   </data>
-  <data name="RelativeAbundanceGraph_ToolTip_LogPeakArea" xml:space="preserve">
-    <value>ピーク面積をログ</value>
-  </data>
   <data name="RelativeAbundanceGraph_ToolTip_Rank" xml:space="preserve">
     <value>ランク</value>
   </data>
-  <data name="GraphChromatogram_UpdateUI_No_quantitative_chromatograms_found" xml:space="preserve">
-    <value>定量クロマトグラムがありません</value>
+  <data name="GraphChromatogram_SetRetentionTimeIdIndicators_Waiting_for_retention_time_alignment" xml:space="preserve">
+    <value>保持時間のアライメントの待機中</value>
+  </data>
+  <data name="RTLinearRegressionGraphPane_UpdateGraph_Calculating___" xml:space="preserve">
+    <value>計算中...</value>
   </data>
 </root>
