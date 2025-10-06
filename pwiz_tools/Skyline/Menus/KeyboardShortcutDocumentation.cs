@@ -57,6 +57,12 @@ namespace pwiz.Skyline.Menus
                 GetMnemonicRows(menuMain), 
                 MenusResources.Keyboard_Mnemonics_Table_Title, 
                 MenusResources.Keyboard_Mnemonics_Header_Mnemonic);
+
+            // GridView shortcuts table
+            AddShortcutsTable(sb, 
+                GetGridViewShortcutRows(), 
+                MenusResources.Keyboard_GridView_Table_Title, 
+                MenusResources.Keyboard_GridView_Header_Action);
             
             sb.Append(@"</body></html>");
             return sb.ToString();
@@ -114,6 +120,48 @@ namespace pwiz.Skyline.Menus
             return rows;
         }
 
+        public static List<(string MenuPath, string Shortcut)> GetGridViewShortcutRows()
+        {
+            var gridViewShortcuts = new List<(Keys Keys, string Action)>
+            {
+                (Keys.D | Keys.Control, MenusResources.GridView_Action_FillDown),
+                (Keys.R | Keys.Control, MenusResources.GridView_Action_FillRight),
+                (Keys.F2, MenusResources.GridView_Action_EnterEditMode),
+                (Keys.Escape, MenusResources.GridView_Action_CancelEditMode),
+                (Keys.Enter, MenusResources.GridView_Action_ConfirmEditMoveDown),
+                (Keys.Tab, MenusResources.GridView_Action_ConfirmEditMoveRight),
+                (Keys.Tab | Keys.Shift, MenusResources.GridView_Action_ConfirmEditMoveLeft),
+                (Keys.A | Keys.Control, MenusResources.GridView_Action_SelectAll),
+                (Keys.D0 | Keys.Control, MenusResources.GridView_Action_ClearCell),
+                (Keys.Space | Keys.Shift, MenusResources.GridView_Action_SelectRow),
+                (Keys.Down, MenusResources.GridView_Action_MoveDownOneCell),
+                (Keys.Down | Keys.Control, MenusResources.GridView_Action_MoveToEndOfColumn),
+                (Keys.Down | Keys.Control | Keys.Shift, MenusResources.GridView_Action_SelectToEndOfColumn),
+                (Keys.Up, MenusResources.GridView_Action_MoveUpOneCell),
+                (Keys.Up | Keys.Control, MenusResources.GridView_Action_MoveToBeginningOfColumn),
+                (Keys.Up | Keys.Control | Keys.Shift, MenusResources.GridView_Action_SelectToBeginningOfColumn),
+                (Keys.Left, MenusResources.GridView_Action_MoveLeftOneCell),
+                (Keys.Left | Keys.Control, MenusResources.GridView_Action_MoveToBeginningOfRow),
+                (Keys.Left | Keys.Control | Keys.Shift, MenusResources.GridView_Action_SelectToBeginningOfRow),
+                (Keys.Right, MenusResources.GridView_Action_MoveRightOneCell),
+                (Keys.Right | Keys.Control, MenusResources.GridView_Action_MoveToEndOfRow),
+                (Keys.Right | Keys.Control | Keys.Shift, MenusResources.GridView_Action_SelectToEndOfRow),
+                (Keys.Home, MenusResources.GridView_Action_MoveToFirstCellInRow),
+                (Keys.Home | Keys.Control, MenusResources.GridView_Action_MoveToFirstCellInGrid),
+                (Keys.End, MenusResources.GridView_Action_MoveToLastCellInRow),
+                (Keys.End | Keys.Control, MenusResources.GridView_Action_MoveToLastCellInGrid)
+            };
+
+            return gridViewShortcuts.Select(item => (GetShortcut(item.Keys), item.Action)).ToList();
+        }
+
+        private static string GetShortcut(Keys keys)
+        {
+            var converter = new KeysConverter();
+            var str = converter.ConvertToInvariantString(keys);
+            return str?.Replace(@", ", @"+") ?? string.Empty;
+        }
+
         private static void AppendMenuItems(List<(string MenuPath, string Shortcut)> rows, string parentPath, ToolStripItemCollection items)
         {
             if (items == null)
@@ -153,9 +201,7 @@ namespace pwiz.Skyline.Menus
 
             if (item.ShortcutKeys != Keys.None)
             {
-                var converter = new KeysConverter();
-                var str = converter.ConvertToInvariantString(item.ShortcutKeys);
-                return str?.Replace(@", ", @"+");
+                return GetShortcut(item.ShortcutKeys);
             }
 
             return string.Empty;
