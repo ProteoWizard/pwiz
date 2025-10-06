@@ -1078,12 +1078,10 @@ namespace pwiz.Skyline.Menus
 
         private void viewFilesMenuItem_Click(object sender, EventArgs e)
         {
-            if (!(sender is ToolStripMenuItem toolStripMenuItem))
+            if (!(sender is ToolStripMenuItem))
                 throw new InvalidOperationException(@"viewFilesMenuItem_Click must be triggered by a ToolStripMenuItem");
 
-            var isChecked = toolStripMenuItem.Checked;
-
-            ShowFilesWindow(isChecked);
+            ShowFilesWindow(true);
         }
 
         private void ShowFilesWindow(bool isChecked)

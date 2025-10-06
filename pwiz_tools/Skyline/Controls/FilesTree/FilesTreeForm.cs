@@ -60,6 +60,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             filesTree.NodeMouseDoubleClick += FilesTree_TreeNodeMouseDoubleClick;
             filesTree.MouseDown += FilesTree_MouseDown;
             filesTree.MouseMove += FilesTree_MouseMove;
+            filesTree.MouseLeave += FilesTree_MouseLeave;
             filesTree.LostFocus += FilesTree_LostFocus;
             filesTree.BeforeLabelEdit += FilesTree_BeforeLabelEdit;
             filesTree.AfterLabelEdit += FilesTree_AfterLabelEdit;
@@ -71,6 +72,8 @@ namespace pwiz.Skyline.Controls.FilesTree
             filesTree.QueryContinueDrag += FilesTree_QueryContinueDrag;
             filesTree.KeyDown += FilesTree_KeyDown;
             filesTree.BeforeCollapse += FilesTree_BeforeCollapse;
+            filesTree.HideSelection = false;
+            filesTree.RestoredFromPersistentString = false;
 
             SkylineWindow.DocumentSavedEvent += OnDocumentSavedEvent;
             SkylineWindow.DocumentUIChangedEvent += OnDocumentUIChangedEvent;
@@ -384,7 +387,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             }
             finally
             {
-                HideRemoveDropTarget(false);
+                HideDragAndDropEffects(false);
             }
         }
 
@@ -558,6 +561,11 @@ namespace pwiz.Skyline.Controls.FilesTree
             _nodeTip?.HideTip();
         }
 
+        private void FilesTree_MouseLeave(object sender, EventArgs e)
+        {
+            _nodeTip?.HideTip();
+        }
+
         private void FilesTree_MouseMove(Point location, MouseButtons button)
         {
             // Skip if the mouse hasn't moved enough to do stuff
@@ -691,7 +699,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             {
                 e.Effect = DragDropEffects.None;
 
-                HideRemoveDropTarget();
+                HideDragAndDropEffects();
             }
 
             // Re-paint "current" and surrounding nodes as the mouse moves so
@@ -729,6 +737,12 @@ namespace pwiz.Skyline.Controls.FilesTree
             var dropPoint = filesTree.PointToClient(new Point(e.X, e.Y));
             var dropNode = (FilesTreeNode)filesTree.GetNodeAt(dropPoint);
 
+            if (dropNode == null)
+            {
+                HideDragAndDropEffects();
+                return;
+            }
+
             var primaryDraggedNode = (FilesTreeNode)e.Data.GetData(typeof(PrimarySelectedNode));
             var dragNodeList = (IList<FilesTreeNode>)e.Data.GetData(typeof(FilesTreeNode));
 
@@ -754,7 +768,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             if (e.EscapePressed)
             {
                 e.Action = DragAction.Cancel;
-                HideRemoveDropTarget();
+                HideDragAndDropEffects();
             }
         }
 
@@ -784,7 +798,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             }
             finally
             {
-                HideRemoveDropTarget();
+                HideDragAndDropEffects();
             }
         }
 
@@ -795,7 +809,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
             if (!inside)
             {
-                HideRemoveDropTarget();
+                HideDragAndDropEffects();
             }
         }
 
@@ -807,7 +821,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             _dropTargetRemove.BackColor = highlight ? Color.LightYellow : Color.WhiteSmoke;
         }
 
-        private void HideRemoveDropTarget(bool clearSelection = true)
+        private void HideDragAndDropEffects(bool clearSelection = true)
         {
             FilesTree.IsDuringDragAndDrop = false;
 

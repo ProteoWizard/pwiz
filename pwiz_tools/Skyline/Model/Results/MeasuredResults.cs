@@ -72,6 +72,8 @@ namespace pwiz.Skyline.Model.Results
             return Chromatograms.Count == 0 ? null : this;
         }
 
+        public ChromatogramCache CacheFinal => _cacheFinal;
+
         [TrackChildren]
         public IList<ChromatogramSet> Chromatograms
         {

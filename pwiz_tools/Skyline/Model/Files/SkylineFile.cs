@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using pwiz.Common.Collections;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Files
 {
@@ -85,22 +86,13 @@ namespace pwiz.Skyline.Model.Files
                 list.Add(view);
             }
 
-            // TODO: adding Chromatograms to FilesTree causes drag-and-drop tests to fail. Cause unknown - maybe moving
-            //       nodes further puts them outside the visible frame and causes DnD issues?
-            // CONSIDER: is this correct? See more where Cache files are created in MeasuredResults @ line 1640
-            // { // Chromatogram Cache (.skyd)
-            //     var cachePaths = document.Settings.MeasuredResults?.CachePaths;
-            //     if (cachePaths != null)
-            //     {
-            //         foreach (var _ in cachePaths)
-            //         {
-            //             var name = FileResources.FileModel_ChromatogramCache;
-            //             var filePath = ChromatogramCache.FinalPathForName(documentFilePath, null);
-            //
-            //             list.Add(SkylineChromatogramCache.Create(documentFilePath, name, filePath));
-            //         }
-            //     }
-            // }
+            { // Chromatogram Cache (.skyd) - only picks out the final cache and not smaller, temporary files
+                var skydFile = document.Settings.MeasuredResults?.CacheFinal;
+                if (skydFile != null)
+                {
+                    list.Add(SkylineChromatogramCache.Create(documentFilePath, document.Settings.MeasuredResults.CacheFinal));
+                }
+            }
 
             { // Replicates
                 var measuredResults = document.MeasuredResults;
@@ -157,6 +149,11 @@ namespace pwiz.Skyline.Model.Files
             }
 
             return ImmutableList.ValueOf(list);
+        }
+
+        public IList<FileNode> InList()
+        {
+            return new SingletonList<FileNode>(this);
         }
     }
 }

@@ -3175,21 +3175,20 @@ namespace pwiz.Skyline
         public bool FilesTreeFormIsVisible => _filesTreeForm is { Visible: true };
         public bool FilesTreeFormIsActivated => _filesTreeForm is { IsActivated: true };
 
-        public void ShowFilesTreeForm(bool show, string persistentState = null)
+        public void ShowFilesTreeForm(bool show)
         {
             if (show)
             {
-                // CONSIDER: should FilesTree always be added behind SequenceTree?
                 if (_filesTreeForm != null)
                 {
-                    if (_filesTreeForm.DockPanel == null)
-                        _filesTreeForm.Show(dockPanel, DockState.DockLeft);
-
                     _filesTreeForm.Activate();
+                    _filesTreeForm.Focus();
                 }
+                // CONSIDER: instead of always docking Files on DockLeft, should Files
+                // find SequenceTree and add itself to the same panel?
                 else
                 {
-                    _filesTreeForm = CreateFilesTreeForm(persistentState);
+                    _filesTreeForm = CreateFilesTreeForm(null);
                     _filesTreeForm.Show(dockPanel, DockState.DockLeft);
                 }
             }

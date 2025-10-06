@@ -47,6 +47,7 @@ namespace pwiz.SkylineTestFunctional
 
         // TODO: assert file states
         // TODO: change file names, delete files, change directory names, delete directories
+        // TODO: include sample file missing by default. Adding it to expected path marks file as available
         private void TestFileSystemService()
         {
             Assert.AreEqual(0, SkylineWindow.FilesTree.FileSystemService.MonitoredDirectories().Count);

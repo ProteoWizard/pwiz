@@ -48,9 +48,10 @@ namespace pwiz.SkylineTestFunctional
             var docSettings = SkylineWindow.Document.Settings;
 
             // <root>/
+            //      Chromatogram Cache
             //      replicates/
             var modelReplicatesFolder = modelFiles.Folder<ReplicatesFolder>();
-            Assert.AreSame(modelFiles.Files[1], modelReplicatesFolder);
+            Assert.AreSame(modelFiles.Files[2], modelReplicatesFolder);
 
             Assert.IsInstanceOfType(modelReplicatesFolder, typeof(ReplicatesFolder));
             Assert.AreEqual(docSettings.MeasuredResults.Chromatograms.Count, modelReplicatesFolder.Files.Count);
@@ -134,7 +135,7 @@ namespace pwiz.SkylineTestFunctional
             docSettings = SkylineWindow.Document.Settings;
 
             var newDocReplicate = docSettings.MeasuredResults.Chromatograms[0];
-            var newModelReplicate = modelFiles.Files[1].Files[0];
+            var newModelReplicate = modelFiles.Files[2].Files[0];
 
             Assert.IsInstanceOfType(newModelReplicate, typeof(Replicate));
             Assert.AreEqual(docReplicate.Id, newModelReplicate.IdentityPath.GetIdentity(0));

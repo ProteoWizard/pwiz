@@ -27,7 +27,6 @@ using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Files;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 
 // ReSharper disable WrongIndentSize
 namespace pwiz.Skyline.Controls.FilesTree
@@ -41,8 +40,6 @@ namespace pwiz.Skyline.Controls.FilesTree
         private FilesTreeNode _triggerLabelEditForNode;
         private TextBox _editTextBox;
         private string _editedLabel;
-
-        private bool _topNodeAlreadySet;
 
         /// <summary>
         /// Used to cancel any pending async work when the document changes including any
@@ -165,7 +162,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             if (args == null || DocumentContainer.Document == null)
                 return;
 
-            // Check SrmSettings. If it didn't change, there's nothing to do  so short-circuit
+            // Short-circuit if SrmSettings has no changes
             if (ReferenceEquals(DocumentContainer.Document.Settings, args.DocumentPrevious?.Settings))
                 return;
 
@@ -181,26 +178,12 @@ namespace pwiz.Skyline.Controls.FilesTree
             var document = DocumentContainer.Document;
             var documentFilePath = DocumentContainer.DocumentFilePath;
 
-            // // Logging useful for debugging issues related to document events and file system monitoring
-            // {
-            //     var nameMsg = documentFilePath != null ? $@"{documentFilePath}" : @"<unsaved>";
-            //     var versionMsg = document != null ? @$"{document.RevisionIndex}" : @"null";
-            //     Console.WriteLine($@"===== Updating document {nameMsg} with version {versionMsg}.");
-            // }
+            BeginUpdateMS();
 
+            var savedTopNode = TopNode as FilesTreeNode;     
+            var savedSelectedNode = SelectedNode as FilesTreeNode;
             try
             {
-                BeginUpdateMS();
-
-                // Manually set TopNode. For unknown reasons, the default behavior of TreeStateRestorer does not work
-                // correctly on FilesTree. So use this trick to set TopNode exactly once per FilesTree instance.
-                // TODO: revisit - needs a proper fix
-                if (!_topNodeAlreadySet && NextTopNode != null)
-                {
-                    TopNode = NextTopNode;
-                    _topNodeAlreadySet = true;
-                }
-
                 // Remove existing nodes from FilesTree if the document has changed completely
                 if (changeAll)
                 {
@@ -220,11 +203,8 @@ namespace pwiz.Skyline.Controls.FilesTree
                     _fileSystemService.StartWatching(documentDirectory, _cancellationTokenSource.Token);
                 }
 
-                var files = SkylineFile.Create(document, documentFilePath);
-
-                MergeNodes(new SingletonList<FileNode>(files), Nodes, _cancellationTokenSource.Token);
-
-                Root.Expand(); // Root node should always be expanded
+                var files = SkylineFile.Create(document, documentFilePath).InList();
+                MergeNodes(files, Nodes, _cancellationTokenSource.Token);
 
                 var cancellationToken = _cancellationTokenSource.Token;
                 _backgroundActionService.RunUI(() => 
@@ -234,10 +214,23 @@ namespace pwiz.Skyline.Controls.FilesTree
                         Root.RefreshState();
                     }
                 });
+
+                // Reset selected node and top node which could have changed while merging nodes
+                if (savedSelectedNode != null && FindNodeByIdentityPath(Root, savedSelectedNode.Model.IdentityPath, out var foundSelectedNode))
+                {
+                    SelectedNode = foundSelectedNode;
+                }
             }
             finally
             {
                 EndUpdateMS();
+
+                // TreeView may not accept setting TopNode in Begin/EndUpdate so set after calling EndUpdate
+                if (savedTopNode != null && FindNodeByIdentityPath(Root, savedTopNode.Model.IdentityPath, out var foundTopNode))
+                {
+                    foundTopNode.EnsureVisible();
+                    TopNode = foundTopNode;
+                }
             }
         }
 
@@ -436,7 +429,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             if (e.Button == MouseButtons.Left)
             {
                 var node = (FilesTreeNode)SelectedNode;
-                if (node == GetNodeAt(0, e.Y) && node.SupportsRename())
+                if (node != null && node == GetNodeAt(0, e.Y) && node.SupportsRename())
                 {
                     _triggerLabelEditForNode = node;
                 }
@@ -576,7 +569,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         public void FileDeleted(string filePath, CancellationToken cancellationToken)
         {
-            var matchingNodes = FindNodesByPath(filePath);
+            var matchingNodes = FindNodesByFilePath(filePath);
             if (matchingNodes.Count > 0)
             {
                 foreach (var node in matchingNodes)
@@ -598,7 +591,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             // Look for a tree node associated with the new file name. If Files Tree isn't aware
             // of a file with that name, ignore the event.
-            var matchingNodes = FindNodesByPath(filePath);
+            var matchingNodes = FindNodesByFilePath(filePath);
             if (matchingNodes.Count > 0)
             {
                 foreach (var node in matchingNodes)
@@ -620,7 +613,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             // Look for a tree node with the file's previous name. If a node with that name is found
             // treat the file as missing.
-            var matchingNodes = FindNodesByPath(oldFilePath);
+            var matchingNodes = FindNodesByFilePath(oldFilePath);
             if (matchingNodes.Count > 0)
             {
                 foreach (var node in matchingNodes)
@@ -639,7 +632,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
             // Now, look for a tree node with the new file name. If found, a file was restored with
             // a name Files Tree is aware of, so mark the file as available.
-            matchingNodes = FindNodesByPath(newFilePath);
+            matchingNodes = FindNodesByFilePath(newFilePath);
             if (matchingNodes.Count > 0)
             {
                 foreach (var node in matchingNodes)
@@ -662,14 +655,12 @@ namespace pwiz.Skyline.Controls.FilesTree
         #region Enable and disable cut, copy, paste, delete when gaining or losing focus
         protected override void OnEnter(EventArgs e)
         {
-            // Console.WriteLine($@"FilesTree.OnEnter");
             base.OnEnter(e);
             ClipboardControlGotLostFocus(true);
         }
 
         protected override void OnLeave(EventArgs e)
         {
-            // Console.WriteLine($@"FilesTree.OnLeave");
             base.OnLeave(e);
             ClipboardControlGotLostFocus(false);
         }
@@ -735,39 +726,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             base.Dispose(disposing);
         }
 
-        /// <summary>
-        /// Recursively search FilesTree for a node whose LocalFilePath matches the specified file path.
-        /// If found, return true and set value to the matching node. Otherwise, return false and set
-        /// value to null.
-        /// </summary>
-        /// <param name="filesTreeNode">Current tree node</param>
-        /// <param name="filePath">Looking for a node with this file path.</param>
-        /// <param name="value">The matching node</param>
-        /// <returns></returns>
-        // TODO: unit tests
-        // CONSIDER: a dictionary mapping paths to FilesTreeNode would improve performance
-        private static bool FindTreeNodeForFilePath(FilesTreeNode filesTreeNode, string filePath, out FilesTreeNode value)
-        {
-            value = null;
-
-            if (filesTreeNode.Model.IsBackedByFile && 
-                filesTreeNode.LocalFilePath != null && 
-                filesTreeNode.LocalFilePath.Equals(filePath, StringComparison.OrdinalIgnoreCase))
-            {
-                value = filesTreeNode;
-                return true;
-            }
-
-            foreach (FilesTreeNode n in filesTreeNode.Nodes)
-            {
-                if (FindTreeNodeForFilePath(n, filePath, out value))
-                    return true;
-            }
-
-            return false;
-        }
-
-        public IList<FilesTreeNode> FindNodesByPath(string targetPath)
+        public IList<FilesTreeNode> FindNodesByFilePath(string targetPath)
         {
             var matchingNodes = new List<FilesTreeNode>();
 
@@ -802,6 +761,28 @@ namespace pwiz.Skyline.Controls.FilesTree
             {
                 CollectMatchingNodes(child, normalizedTargetPath, matchingNodes);
             }
+        }
+
+        private static bool FindNodeByIdentityPath(FilesTreeNode node, IdentityPath identityPath, out FilesTreeNode found)
+        {
+            found = null;
+
+            if (node == null || identityPath == null)
+                return false;
+
+            if (node.Model.IdentityPath.Equals(identityPath))
+            {
+                found = node;
+                return true;
+            }
+
+            foreach (FilesTreeNode child in node.Nodes)
+            {
+                if (FindNodeByIdentityPath(child, identityPath, out found))
+                    return true;
+            }
+
+            return false;
         }
 
         private static SkylineWindow FindParentSkylineWindow(Control me)
