@@ -35,8 +35,6 @@ namespace pwiz.Skyline.Model.Results
     [XmlRoot("measured_results")]
     public sealed class MeasuredResults : Immutable, IXmlSerializable
     {
-        public static readonly MeasuredResults EMPTY = new MeasuredResults(new ChromatogramSet[0]);
-
         private static readonly HashSet<MsDataFileUri> EMPTY_FILES = new HashSet<MsDataFileUri>();
 
         private ImmutableList<ChromatogramSet> _chromatograms;
@@ -64,9 +62,14 @@ namespace pwiz.Skyline.Model.Results
             IsTimeNormalArea = true;
         }
 
-        public bool IsEmpty
+        /// <summary>
+        /// Returns null if Chromatograms is empty to help with assignment
+        /// to SrmSettings, which does not allow MeasuredResults with empty
+        /// Chromatograms, but requires null instead in this case.
+        /// </summary>
+        public MeasuredResults NullIfEmpty()
         {
-            get { return _chromatograms == null || _chromatograms.Count == 0; }
+            return Chromatograms.Count == 0 ? null : this;
         }
 
         [TrackChildren]

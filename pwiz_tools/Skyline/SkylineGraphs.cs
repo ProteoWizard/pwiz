@@ -54,7 +54,9 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Windows.Forms;
+using System.Xml;
 using pwiz.Skyline.Controls.Lists;
 using ZedGraph;
 using PeptideDocNode = pwiz.Skyline.Model.PeptideDocNode;
@@ -483,6 +485,10 @@ namespace pwiz.Skyline
         {
             using (new DockPanelLayoutLock(dockPanel, true))
             {
+                if (Program.SkylineOffscreen)
+                {
+                    layoutStream = MoveLayoutOffScreen(layoutStream);
+                }
                 LoadLayoutLocked(layoutStream);
             }
         }
@@ -568,6 +574,40 @@ namespace pwiz.Skyline
             }
 
             EnsureFloatingWindowsVisible();
+        }
+
+        /// <summary>
+        /// Change the "Bounds" attribute of the "FloatingWindow" elements in the .sky.view file
+        /// to a point offscreen.
+        /// </summary>
+        private static MemoryStream MoveLayoutOffScreen(Stream layoutStream)
+        {
+            const string attrBounds = @"Bounds";
+            var xd = new XmlDocument();
+            xd.Load(layoutStream);
+            var rectangleConverter = new RectangleConverter();
+            foreach (XmlElement el in xd.SelectNodes(@"//FloatingWindow")!)
+            {
+                var strBounds = el.GetAttribute(attrBounds);
+                if (!string.IsNullOrEmpty(strBounds))
+                {
+                    if (rectangleConverter.ConvertFromInvariantString(el.GetAttribute(attrBounds)) 
+                        is Rectangle rectBounds)
+                    {
+                        var newBounds = new Rectangle(GetOffscreenPoint(), rectBounds.Size);
+                        el.SetAttribute(attrBounds, rectangleConverter.ConvertToInvariantString(newBounds));
+                    }
+                }
+            }
+
+            var memoryStream = new MemoryStream();
+            var xmlTextWriter = new XmlTextWriter(memoryStream, Encoding.UTF8)
+            {
+                Formatting = Formatting.Indented
+            };
+            xd.Save(xmlTextWriter);
+            memoryStream.Position = 0;
+            return memoryStream;
         }
 
         public void DestroyAllChromatogramsGraph()
