@@ -24,7 +24,9 @@ using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 
-// TODO: add a new background task that refreshes the state of all items in the cache periodically. For example, when Skyline gains focus
+// TODO: periodically check whether drives associated with monitored directory paths are available. This helps detect and recover from
+//       errors (ex: a network drive becomes unavailable).
+// TODO: add a background task that refreshes the state of all items in the cache periodically. For example, when Skyline gains focus
 //       after being minimized or after the user switches from a different application back to Skyline. 
 namespace pwiz.Skyline.Controls.FilesTree
 {
@@ -33,9 +35,11 @@ namespace pwiz.Skyline.Controls.FilesTree
     public interface IFileSystemService
     {
         FileSystemType FileSystemType { get; }
+
         IList<string> MonitoredDirectories();
         bool IsMonitoringDirectory(string fullPath);
         bool IsFileAvailable(string fullPath);
+
         void StartWatching(string directoryPath, CancellationToken cancellationToken);
         void LoadFile(string localFilePath, string filePath, string fileName, string documentPath, Action<string, CancellationToken> callback);
         void StopWatching();
@@ -53,8 +57,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             return new FileSystemService(synchronizingObject, backgroundActionService, fileDeletedAction, fileCreatedAction, fileRenamedAction);
         }
 
-        private static readonly IFileSystemService NONE = new NoFileSystem();
-        private static readonly IFileSystemService IN_MEMORY = new InMemoryFileSystem();
+        private static readonly IFileSystemService NO_DOCUMENT = new DefaultService();
 
         private readonly Action<string, CancellationToken> _fileDeletedAction;
         private readonly Action<string, CancellationToken> _fileCreatedAction;
@@ -76,8 +79,8 @@ namespace pwiz.Skyline.Controls.FilesTree
             _fileCreatedAction = fileCreatedAction;
             _fileRenamedAction = fileRenamedAction;
 
-            // Start with the default implementation (NONE) until Skyline loads a document to monitor
-            _delegate = NONE;
+            // Start with the default implementation (NO_DOCUMENT) until Skyline has a document to monitor.
+            _delegate = NO_DOCUMENT;
         }
 
         public FileSystemType FileSystemType => _delegate.FileSystemType;
@@ -96,9 +99,9 @@ namespace pwiz.Skyline.Controls.FilesTree
             // Console.WriteLine($@"===== StartWatching {directoryPath ?? @"in-memory"} {cancellationToken.GetHashCode()}");
 
             if (directoryPath == null)
-                _delegate = IN_MEMORY;
+                _delegate = new MemoryOnlyService(_backgroundActionService);
             else
-                _delegate = new LocalFileSystem(_synchronizingObject, _backgroundActionService, _fileDeletedAction, _fileCreatedAction, _fileRenamedAction);
+                _delegate = new LocalStorageService(_synchronizingObject, _backgroundActionService, _fileDeletedAction, _fileCreatedAction, _fileRenamedAction);
 
             _delegate.StartWatching(directoryPath, cancellationToken);
         }
@@ -115,8 +118,8 @@ namespace pwiz.Skyline.Controls.FilesTree
 
             _delegate.StopWatching();
 
-            // Revert to the default NONE implementation until the owner specifies a directory to monitor
-            _delegate = NONE;
+            // Revert to the default NO_DOCUMENT implementation until a document is loaded
+            _delegate = NO_DOCUMENT;
         }
 
         public void Dispose()
@@ -125,7 +128,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         }
     }
 
-    internal class NoFileSystem : IFileSystemService
+    internal class DefaultService : IFileSystemService
     {
         public FileSystemType FileSystemType => FileSystemType.none;
         public IList<string> MonitoredDirectories() => ImmutableList.Empty<string>();
@@ -137,25 +140,46 @@ namespace pwiz.Skyline.Controls.FilesTree
         public void Dispose() { }
     }
 
-    internal class InMemoryFileSystem : IFileSystemService
+    internal class MemoryOnlyService : IFileSystemService
     {
+        public MemoryOnlyService(BackgroundActionService backgroundActionService)
+        {
+            BackgroundActionService = backgroundActionService;
+        }
+
+        private BackgroundActionService BackgroundActionService { get; }
+        private CancellationToken CancellationToken { get; set; }
+
         public FileSystemType FileSystemType => FileSystemType.in_memory;
         public IList<string> MonitoredDirectories() => ImmutableList.Empty<string>();
         public bool IsMonitoringDirectory(string fullPath) => fullPath == null;
         public bool IsFileAvailable(string fullPath) => true;
-        public void StartWatching(string directoryPath, CancellationToken cancellationToken) { }
-        public void LoadFile(string localFilePath, string filePath, string fileName, string documentPath, Action<string, CancellationToken> callback) { }
+
+        public void StartWatching(string directoryPath, CancellationToken cancellationToken)
+        {
+            CancellationToken = cancellationToken;
+        }
+
+        public void LoadFile(string localFilePath, string filePath, string fileName, string documentPath, Action<string, CancellationToken> callback)
+        {
+            var cancellationToken = CancellationToken;
+            BackgroundActionService.RunUI(() =>
+            {
+                callback(localFilePath, cancellationToken);
+            });
+        }
+
         public void StopWatching() { }
         public void Dispose() { }
     }
 
-    public class LocalFileSystem : IFileSystemService
+    public class LocalStorageService : IFileSystemService
     {
         private static readonly IList<string> FILE_EXTENSION_IGNORE_LIST = new List<string> { @".tmp", @".bak" };
 
         private readonly object _fswLock = new object();
 
-        internal LocalFileSystem(Control synchronizingObject,
+        internal LocalStorageService(Control synchronizingObject,
             BackgroundActionService backgroundActionService,
             Action<string, CancellationToken> fileDeletedAction,
             Action<string, CancellationToken> fileCreatedAction,
@@ -209,7 +233,12 @@ namespace pwiz.Skyline.Controls.FilesTree
             return isMonitored;
         }
 
-        public bool IsFileAvailable(string fullPath) => Cache.ContainsKey(Path.GetFullPath(fullPath));
+        public bool IsFileAvailable(string fullPath)
+        {
+            fullPath = Path.GetFullPath(fullPath);
+
+            return Cache.TryGetValue(fullPath, out var isAvailable) && isAvailable;
+        }
 
         private Control SynchronizingObject { get; }
         private BackgroundActionService BackgroundActionService { get; }
@@ -562,6 +591,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         /// <param name="directoryPath">Path to a directory</param>
         /// <param name="filePath">Path to a directory or a file</param>
         /// <returns>true if child contained in parent. False otherwise.</returns>
+        /// CONSIDER: how should this handle a filePath that's too long and throws PathTooLongException?
         public static bool IsFileInDirectory(string directoryPath, string filePath)
         {
             var fullParentPath = Path.GetFullPath(directoryPath);
@@ -576,6 +606,13 @@ namespace pwiz.Skyline.Controls.FilesTree
             return filePath.StartsWith(fullParentPath, StringComparison.OrdinalIgnoreCase);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="baseDirectory"></param>
+        /// <param name="potentialSubdirectory"></param>
+        /// <returns></returns>
+        /// CONSIDER: how should this handle a filePath that's too long and throws PathTooLongException?
         public static bool IsInOrSubdirectoryOf(string baseDirectory, string potentialSubdirectory)
         {
             // Normalize paths to ensure consistent comparison (e.g., handle relative paths, different separators)
@@ -587,7 +624,18 @@ namespace pwiz.Skyline.Controls.FilesTree
             normalizedBaseDirectory += Path.DirectorySeparatorChar;
 
             // Perform a case-insensitive comparison. Returns true if potentialSubdirectory is somewhere below baseDirectory.
-            return string.Equals(normalizedPotentialSubdirectory, normalizedBaseDirectory.TrimEnd(Path.DirectorySeparatorChar), StringComparison.OrdinalIgnoreCase);
+            return PathEquals(normalizedPotentialSubdirectory, normalizedBaseDirectory.TrimEnd(Path.DirectorySeparatorChar));
+        }
+
+        /// <summary>
+        /// Compare two directory paths, remembering to ignore capitalization.
+        /// </summary>
+        /// <param name="path1"></param>
+        /// <param name="path2"></param>
+        /// <returns>true if the paths are the same; false otherwise</returns>
+        public static bool PathEquals(string path1, string path2)
+        {
+            return string.Equals(path1, path2, StringComparison.OrdinalIgnoreCase);
         }
     }
 }

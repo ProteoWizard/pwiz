@@ -191,8 +191,8 @@ namespace pwiz.Skyline.Controls.FilesTree
 
             BeginUpdateMS();
 
-            var savedTopNode = TopNode as FilesTreeNode;     
-            var savedSelectedNode = SelectedNode as FilesTreeNode;
+            var savedTopNodeId = ((FilesTreeNode)TopNode)?.Model.IdentityPath;
+            var savedSelectedNodeId = ((FilesTreeNode)SelectedNode)?.Model.IdentityPath;
             try
             {
                 var cancellationToken = _cancellationTokenSource.Token;
@@ -215,20 +215,28 @@ namespace pwiz.Skyline.Controls.FilesTree
                 });
 
                 // Reset selected node and top node which could have changed while merging nodes
-                if (savedSelectedNode != null && FindNodeByIdentityPath(Root, savedSelectedNode.Model.IdentityPath, out var foundSelectedNode))
+                var foundNode = FindNodeByIdentityPath(savedSelectedNodeId);
+                if (foundNode != null)
                 {
-                    SelectedNode = foundSelectedNode;
+                    SelectedNode = foundNode;
                 }
             }
             finally
             {
                 EndUpdateMS();
 
-                // Set TopNode *after* the BeginUpdateMS / EndUpdateMS block. Otherwise, TreeView will not correctly set TopNode.
-                if (savedTopNode != null && FindNodeByIdentityPath(Root, savedTopNode.Model.IdentityPath, out var foundTopNode))
+                // Root should always be expanded.
+                if (Nodes.Count > 0 && !Nodes[0].IsExpanded)
                 {
-                    foundTopNode.EnsureVisible();
-                    TopNode = foundTopNode;
+                    Root.Expand();
+                }
+
+                // Set TopNode *after* the BeginUpdateMS / EndUpdateMS block. Otherwise, TreeView will not correctly set TopNode.
+                var foundNode = FindNodeByIdentityPath(savedTopNodeId);
+                if (foundNode != null)
+                {
+                    foundNode.EnsureVisible();
+                    TopNode = foundNode;
                 }
             }
         }
@@ -735,64 +743,105 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         public IList<FilesTreeNode> FindNodesByFilePath(string targetPath)
         {
-            var matchingNodes = new List<FilesTreeNode>();
-
             var normalizedTargetPath = Path.GetFullPath(targetPath);
-            CollectMatchingNodes(Root, normalizedTargetPath, matchingNodes);
 
+            var matchingNodes = new List<FilesTreeNode>();
+            Traverse(Root, filesTreeNode =>
+            {
+                if (filesTreeNode.Model.IsBackedByFile && filesTreeNode.LocalFilePath != null)
+                {
+                    var normalizedCurrentPath = Path.GetFullPath(filesTreeNode.LocalFilePath).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+                    // Check for exact match - if found, this is the target node
+                    if (LocalStorageService.PathEquals(normalizedCurrentPath, normalizedTargetPath))
+                    {
+                        matchingNodes.Add(filesTreeNode);
+                    }
+                    // Check for partial match - if found, this node was in a directory whose name changed
+                    else if (LocalStorageService.IsFileInDirectory(normalizedTargetPath, normalizedCurrentPath))
+                    {
+                        matchingNodes.Add(filesTreeNode);
+                    }
+                }
+
+                return true; // continue traversal
+            });
+            
             return matchingNodes;
         }
 
-        private static void CollectMatchingNodes(FilesTreeNode currentNode, string normalizedTargetPath, IList<FilesTreeNode> matchingNodes)
+        private FilesTreeNode FindNodeByIdentityPath(IdentityPath identityPath)
+        {
+            if (identityPath == null)
+            {
+                return null;
+            }
+        
+            FilesTreeNode result = null;
+        
+            Traverse(Root, filesTreeNode =>
+            {
+                if (filesTreeNode.Model.IdentityPath.Equals(identityPath))
+                {
+                    result = filesTreeNode;
+                    return false; // found a match, stop traversal
+                }
+        
+                return true; // continue traversal
+            });
+        
+            return result;
+        }
+
+        /// <summary>
+        /// Update UI of all FilesTree nodes. Traverses bottom-up so upper nodes can process the state of lower nodes, especially
+        /// so changes to a node's <see cref="FileState"/> appear in the UI. This happens on the UI thread and should not access
+        /// the file system.
+        /// </summary>
+        /// <param name="node">Node to update</param>
+        private void UpdateNodeStates(FilesTreeNode node)
+        {
+            Traverse(Root, filesTreeNode =>
+            {
+                filesTreeNode.UpdateState();
+                return true; // continue traversal
+            }, true);
+        }
+
+        /// <summary>
+        /// Traverse the tree performing <see cref="visit"/> on each node until (1) all nodes are visited or (2) traversal was stopped early when visiting a node.
+        /// </summary>
+        /// <param name="currentNode">The current node. Typically starts with the tree's root.</param>
+        /// <param name="visit">Function to call on each node, passing the current node as a parameter. Return false to continue traversal and true to stop traversal.</param>
+        /// <param name="postOrder">Flag indicating whether to perform call <see cref="visit"/> before traversing child nodes or after. Defaults to pre-order.</param>
+        /// <returns></returns>
+        internal bool Traverse(FilesTreeNode currentNode, Func<FilesTreeNode, bool> visit, bool postOrder = false)
         {
             if (currentNode == null)
-                return;
-
-            if (currentNode.Model.IsBackedByFile && currentNode.LocalFilePath != null)
-            {
-                var normalizedCurrentPath = Path.GetFullPath(currentNode.LocalFilePath).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-
-                // Check for exact match - if found, this is the target node
-                if (string.Equals(normalizedCurrentPath, normalizedTargetPath))
-                {
-                    matchingNodes.Add(currentNode);
-                }
-                // Check for partial match - if found, this node was in a directory whose name changed
-                else if (LocalFileSystem.IsFileInDirectory(normalizedTargetPath, normalizedCurrentPath))
-                {
-                    matchingNodes.Add(currentNode);
-                }
-            }
-
-            foreach (FilesTreeNode child in currentNode.Nodes)
-            {
-                CollectMatchingNodes(child, normalizedTargetPath, matchingNodes);
-            }
-        }
-
-        private static bool FindNodeByIdentityPath(FilesTreeNode node, IdentityPath identityPath, out FilesTreeNode found)
-        {
-            found = null;
-
-            if (node == null || identityPath == null)
-                return false;
-
-            if (node.Model.IdentityPath.Equals(identityPath))
-            {
-                found = node;
                 return true;
-            }
 
-            foreach (FilesTreeNode child in node.Nodes)
+            if (!postOrder && !visit(currentNode))
             {
-                if (FindNodeByIdentityPath(child, identityPath, out found))
-                    return true;
+                return false;
             }
 
-            return false;
+            foreach (FilesTreeNode childNode in currentNode.Nodes)
+            {
+                if (!Traverse(childNode, visit, postOrder))
+                {
+                    return false;
+                }
+            }
+
+            if (postOrder && !visit(currentNode))
+            {
+                return false;
+            }
+
+            return true;
         }
 
-        // CONSIDER: does SkylineWindow have a method for this?
+        // CONSIDER: does SkylineWindow already have a way to do this? If not, should it?
         private static SkylineWindow FindParentSkylineWindow(Control me)
         {
             for (var control = me; control != null; control = control.Parent)
@@ -803,25 +852,6 @@ namespace pwiz.Skyline.Controls.FilesTree
                 }
             }
             return null;
-        }
-
-        /// <summary>
-        /// Update UI of all FilesTree nodes. Traverses bottom-up so upper nodes can process the state of lower nodes, especially
-        /// so changes to a node's <see cref="FileState"/> appear in the UI. This happens on the UI thread and should not access
-        /// the file system.
-        /// </summary>
-        /// <param name="node">Node to update</param>
-        private static void UpdateNodeStates(FilesTreeNode node)
-        {
-            if (node == null)
-                return;
-
-            foreach (FilesTreeNode child in node.Nodes)
-            {
-                UpdateNodeStates(child);
-            }
-
-            node.UpdateState();
         }
     }
 }

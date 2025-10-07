@@ -41,7 +41,7 @@ using static pwiz.Skyline.Model.Files.FileModel;
 // CONSIDER: handling of non-local paths from SrmSettings (ex: replicate sample file paths cannot be found locally)
 // CONSIDER: new test making sure clicking 'x' upper RHC of confirm dialog does not delete Replicate / Spectral Library
 
-// TODO: make tests more readable / easier to maintain with a helper to get a node by model type
+// TODO: improve test readability with a helper that gets node by model type
 
 // ReSharper disable WrongIndentSize
 namespace pwiz.SkylineTestFunctional
@@ -79,44 +79,46 @@ namespace pwiz.SkylineTestFunctional
 
         protected void TestFileSystemWatcherIgnoreList()
         {
-            Assert.IsTrue(LocalFileSystem.IgnoreFileName(@"c:\Users\foobar\file.tmp"));
-            Assert.IsTrue(LocalFileSystem.IgnoreFileName(@"c:\Users\foobar\file.bak"));
-            Assert.IsTrue(LocalFileSystem.IgnoreFileName(null));
-            Assert.IsTrue(LocalFileSystem.IgnoreFileName(string.Empty));
-            Assert.IsTrue(LocalFileSystem.IgnoreFileName(@""));
-            Assert.IsTrue(LocalFileSystem.IgnoreFileName(@"   "));
+            Assert.IsTrue(LocalStorageService.IgnoreFileName(@"c:\Users\foobar\file.tmp"));
+            Assert.IsTrue(LocalStorageService.IgnoreFileName(@"c:\Users\foobar\file.bak"));
+            Assert.IsTrue(LocalStorageService.IgnoreFileName(null));
+            Assert.IsTrue(LocalStorageService.IgnoreFileName(string.Empty));
+            Assert.IsTrue(LocalStorageService.IgnoreFileName(@""));
+            Assert.IsTrue(LocalStorageService.IgnoreFileName(@"   "));
 
-            Assert.IsFalse(LocalFileSystem.IgnoreFileName(@"c:\Users\foobar\file.sky"));
-            Assert.IsFalse(LocalFileSystem.IgnoreFileName(@"c:\Users\foobar\file.xls"));
-            Assert.IsFalse(LocalFileSystem.IgnoreFileName(@"c:\Users\foobar\file.txt"));
-            Assert.IsFalse(LocalFileSystem.IgnoreFileName(@"c:\Users\foobar\file.raw"));
-            Assert.IsFalse(LocalFileSystem.IgnoreFileName(@"c:\Users\foobar\file.RAW"));
+            Assert.IsFalse(LocalStorageService.IgnoreFileName(@"c:\Users\foobar\file.sky"));
+            Assert.IsFalse(LocalStorageService.IgnoreFileName(@"c:\Users\foobar\file.xls"));
+            Assert.IsFalse(LocalStorageService.IgnoreFileName(@"c:\Users\foobar\file.txt"));
+            Assert.IsFalse(LocalStorageService.IgnoreFileName(@"c:\Users\foobar\file.raw"));
+            Assert.IsFalse(LocalStorageService.IgnoreFileName(@"c:\Users\foobar\file.RAW"));
         }
 
         protected void TestFileSystemHelpers()
         {
             // Is file contained in directory?
-            Assert.IsTrue(LocalFileSystem.IsFileInDirectory(@"c:\Users\foobar\directory", @"c:\users\foobar\directory\child.txt"));
-            Assert.IsTrue(LocalFileSystem.IsFileInDirectory(@"c:\Users\foobar\directory\", @"c:\users\foobar\directory\child.txt"));
-            Assert.IsTrue(LocalFileSystem.IsFileInDirectory(@"c:\Users\foobar\directory\\", @"c:\users\foobar\directory\child.txt"));
-            Assert.IsTrue(LocalFileSystem.IsFileInDirectory(@"c:\Users\foobar\", @"c:\users\foobar\directory\child.txt"));
-            Assert.IsTrue(LocalFileSystem.IsFileInDirectory(@"c:\Users\", @"c:\users\foobar\directory\child.txt"));
-            Assert.IsTrue(LocalFileSystem.IsFileInDirectory(@"c:\", @"c:\users\foobar\directory\child.txt"));
+            Assert.IsTrue(LocalStorageService.IsFileInDirectory(@"c:\Users\foobar\directory", @"c:\users\foobar\directory\child.txt"));
+            Assert.IsTrue(LocalStorageService.IsFileInDirectory(@"c:\Users\foobar\directory\", @"c:\users\foobar\directory\child.txt"));
+            Assert.IsTrue(LocalStorageService.IsFileInDirectory(@"c:\Users\foobar\directory\\", @"c:\users\foobar\directory\child.txt"));
+            Assert.IsTrue(LocalStorageService.IsFileInDirectory(@"c:\Users\foobar\", @"c:\users\foobar\directory\child.txt"));
+            Assert.IsTrue(LocalStorageService.IsFileInDirectory(@"c:\Users\", @"c:\users\foobar\directory\child.txt"));
+            Assert.IsTrue(LocalStorageService.IsFileInDirectory(@"c:\", @"c:\users\foobar\directory\child.txt"));
 
-            Assert.IsFalse(LocalFileSystem.IsFileInDirectory(@"c:\tmp\rat-plasma\", @"c:\users\foobar\tmp"));
-            Assert.IsFalse(LocalFileSystem.IsFileInDirectory(@"d:\", @"c:\users\foobar\tmp"));
+            Assert.IsFalse(LocalStorageService.IsFileInDirectory(@"c:\tmp\rat-plasma\", @"c:\users\foobar\tmp"));
+            Assert.IsFalse(LocalStorageService.IsFileInDirectory(@"d:\", @"c:\users\foobar\tmp"));
 
             // Do two string paths refer to the same directory?
-            Assert.IsTrue(LocalFileSystem.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory", @"c:\users\foobar\directory"));
-            Assert.IsTrue(LocalFileSystem.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory", @"c:\users\foobar\directory\"));
-            Assert.IsTrue(LocalFileSystem.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory", @"c:\users\foobar\directory\\"));
-            Assert.IsTrue(LocalFileSystem.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory\", @"c:\users\foobar\directory"));
-            Assert.IsTrue(LocalFileSystem.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory\\", @"c:\users\foobar\directory"));
-            Assert.IsTrue(LocalFileSystem.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory\", @"c:\users\foobar\directory\\"));
-            Assert.IsTrue(LocalFileSystem.IsInOrSubdirectoryOf(@"C:\USERS\FOOBAR\DIRECTORY\", @"c:\users\foobar\directory\\"));
+            Assert.IsTrue(LocalStorageService.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory", @"c:\users\foobar\directory"));
+            Assert.IsTrue(LocalStorageService.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory", @"c:\users\foobar\directory\"));
+            Assert.IsTrue(LocalStorageService.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory", @"c:\users\foobar\directory\\"));
+            Assert.IsTrue(LocalStorageService.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory\", @"c:\users\foobar\directory"));
+            Assert.IsTrue(LocalStorageService.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory\\", @"c:\users\foobar\directory"));
+            Assert.IsTrue(LocalStorageService.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory\", @"c:\users\foobar\directory\\"));
+            Assert.IsTrue(LocalStorageService.IsInOrSubdirectoryOf(@"C:\USERS\FOOBAR\DIRECTORY\", @"c:\users\foobar\directory\\"));
 
-            Assert.IsFalse(LocalFileSystem.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory", @"c:\users\foobar\directory\subdirectory"));
-            Assert.IsFalse(LocalFileSystem.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory", @"c:\users\foobar\dir"));
+            Assert.IsFalse(LocalStorageService.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory", @"c:\users\foobar\directory\subdirectory"));
+            Assert.IsFalse(LocalStorageService.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory", @"c:\users\foobar\dir"));
+
+            Assert.IsTrue(LocalStorageService.PathEquals(@"C:\Users\Foobar\directory\foo.mzML", @"c:\users\foobar\directory\foo.mzml"));
         }
 
         protected void TestEmptyDocument()
@@ -202,10 +204,13 @@ namespace pwiz.SkylineTestFunctional
                 WaitForFilesTree();
             }
 
+            RunUI(() => Assert.IsTrue(SkylineWindow.FilesTree.Root.IsExpanded));
+
             Assert.AreEqual(FileSystemType.in_memory, SkylineWindow.FilesTree.FileSystemType());
             Assert.AreEqual(0, SkylineWindow.FilesTree.MonitoredDirectories().Count);
 
-            Assert.AreEqual(FileState.not_initialized, SkylineWindow.FilesTree.Root.NodeAt(0).FileState);
+            // Audit Log
+            Assert.AreEqual(FileState.in_memory, SkylineWindow.FilesTree.Root.NodeAt(0).FileState);
             Assert.IsNull(SkylineWindow.FilesTree.Root.NodeAt(0).LocalFilePath);
 
             // Save document for the first time
@@ -666,11 +671,11 @@ namespace pwiz.SkylineTestFunctional
                 var documentFilePath = SkylineWindow.DocumentFilePath;
                 var directoryName = Path.GetDirectoryName(documentFilePath);
                 var matchingNodes = SkylineWindow.FilesTree.FindNodesByFilePath(directoryName);
-                // Assert.AreEqual(47, matchingNodes.Count);
+                Assert.AreEqual(47, matchingNodes.Count);
 
                 directoryName = Path.GetDirectoryName(directoryName);
                 matchingNodes = SkylineWindow.FilesTree.FindNodesByFilePath(directoryName);
-                // Assert.AreEqual(47, matchingNodes.Count);
+                Assert.AreEqual(47, matchingNodes.Count);
             }
 
             var replicateFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();

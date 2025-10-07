@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.FilesTree;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model.Files;
 using pwiz.SkylineTestUtil;
-
-// TODO: change directory name containing raw files
-// TODO: use raw files in directory that's a sibling of directory containing .sky file
 
 // ReSharper disable WrongIndentSize
 namespace pwiz.SkylineTestFunctional
@@ -45,8 +43,6 @@ namespace pwiz.SkylineTestFunctional
             TestFileSystemService();
         }
 
-        // TODO: assert file states
-        // TODO: change file names, delete files, change directory names, delete directories
         // TODO: include sample file missing by default. Adding it to expected path marks file as available
         private void TestFileSystemService()
         {
@@ -104,6 +100,67 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(fileSystemService.MonitoredDirectories().Contains(DirForPath(sampleFilePath)));
 
             Assert.IsTrue(ReferenceEquals(fileSystemService, SkylineWindow.FilesTree.FileSystemService));
+
+            { // Delete sample file in subdirectory
+                var fileName = Path.Combine(TestFilesDirs[0].FullPath, @"SiblingDirectory02", @"small-04-sibling-directory02.mzml");
+                File.Delete(fileName);
+                WaitForFilesTree();
+
+                var filesTreeNode = FindNodeForPath(fileName);
+                Assert.IsFalse(fileSystemService.IsFileAvailable(fileName));
+                Assert.AreEqual(FileState.missing, filesTreeNode.FileState);
+            }
+
+            { // Rename sample file in subdirectory
+                var fileName = Path.Combine(TestFilesDirs[0].FullPath, @"Main", @"SubDirectory", @"small-02-sub-directory.mzml");
+                File.Move(fileName, fileName + @"RENAME");
+                WaitForFilesTree();
+
+                var filesTreeNode = FindNodeForPath(fileName);
+                Assert.IsFalse(fileSystemService.IsFileAvailable(fileName));
+                Assert.AreEqual(FileState.missing, filesTreeNode.FileState);
+
+                File.Move(fileName + @"RENAME", fileName);
+                WaitForFilesTree();
+
+                Assert.IsTrue(fileSystemService.IsFileAvailable(fileName));
+                Assert.AreEqual(FileState.available, filesTreeNode.FileState);
+            }
+
+            { // Delete subdirectory
+                var dirName = Path.Combine(TestFilesDirs[0].FullPath, @"SiblingDirectory02");
+                Directory.Delete(dirName);
+                WaitForFilesTree();
+
+                var filesTreeNodes = FindNodesForDir(dirName);
+                foreach (var node in filesTreeNodes)
+                {
+                    Assert.IsFalse(fileSystemService.IsFileAvailable(node.LocalFilePath));
+                    Assert.AreEqual(FileState.missing, node.FileState);
+                }
+            }
+
+            { // Rename subdirectory 
+                var dirName = Path.Combine(TestFilesDirs[0].FullPath, @"SiblingDirectory01");
+                Directory.Move(dirName, dirName + @"RENAME");
+                WaitForFilesTree();
+
+                var filesTreeNodes = FindNodesForDir(dirName);
+                foreach (var node in filesTreeNodes)
+                {
+                    Assert.IsFalse(fileSystemService.IsFileAvailable(node.LocalFilePath));
+                    Assert.AreEqual(FileState.missing, node.FileState);
+                }
+
+                Directory.Move(dirName + @"RENAME", dirName);
+                WaitForFilesTree();
+
+                foreach (var node in filesTreeNodes)
+                {
+                    Assert.IsTrue(fileSystemService.IsFileAvailable(node.LocalFilePath));
+                    Assert.AreEqual(FileState.available, node.FileState);
+                }
+            }
         }
 
         private static string DirForPath(string fullPath)
@@ -134,6 +191,16 @@ namespace pwiz.SkylineTestFunctional
         {
             WaitForDocumentLoaded();
             WaitForConditionUI(() => SkylineWindow.FilesTree.IsComplete());
+        }
+
+        private static FilesTreeNode FindNodeForPath(string filePath)
+        {
+            return SkylineWindow.FilesTree.FindNodesByFilePath(filePath)[0];
+        }
+
+        private static IList<FilesTreeNode> FindNodesForDir(string dirPath)
+        {
+            return SkylineWindow.FilesTree.FindNodesByFilePath(dirPath);
         }
     }
 }
