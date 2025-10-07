@@ -180,7 +180,8 @@ namespace pwiz.Skyline.Model.Results
             var filteredSpectra = spectra.Where(spectrum => spectrum.Metadata == null ||
                                                             !spectrum.Metadata.ScanWindowLowerLimit.HasValue ||
                                                             !spectrum.Metadata.ScanWindowUpperLimit.HasValue ||
-                                                            (spectrum.Metadata.ScanWindowLowerLimit < Ms2ProductFilters.Last().TargetMz &&
+                                                            (Ms2ProductFilters.Any() &&
+                                                             spectrum.Metadata.ScanWindowLowerLimit < Ms2ProductFilters.Last().TargetMz &&
                                                              spectrum.Metadata.ScanWindowUpperLimit > Ms2ProductFilters.First().TargetMz));
             return FilterSpectrumList(filteredSpectra.ToArray(), Ms2ProductFilters, HighAccQ3, useIonMobilityHighEnergyOffset);
         }
