@@ -159,7 +159,7 @@ namespace pwiz.Skyline.Controls.Databinding
             QueueUpdateRowSource();
         }
 
-        private void QueueUpdateRowSource()
+        public void QueueUpdateRowSource()
         {
             _updatePending = true;
             BeginInvoke(new Action(UpdateRowSource));
@@ -328,7 +328,7 @@ namespace pwiz.Skyline.Controls.Databinding
             }
 
             var chromatogramSet = document.Settings.MeasuredResults.Chromatograms[replicateIndex];
-            var chromFileInfoId = chromatogramSet.MSDataFileInfos.First().FileId;
+            var chromFileInfoId = GetChromFileInfoId(peptideDocNode, chromatogramSet);
             foreach (var comparableGroup in peptideDocNode.GetComparableGroups())
             {
                 var transitionGroups = ImmutableList.ValueOf(comparableGroup.Select(tg => tg.TransitionGroup));
@@ -340,6 +340,24 @@ namespace pwiz.Skyline.Controls.Databinding
             }
 
             return null;
+        }
+
+        private ChromFileInfoId GetChromFileInfoId(PeptideDocNode peptideDocNode, ChromatogramSet chromatogramSet)
+        {
+            if (chromatogramSet.MSDataFileInfos.Count == 1)
+            {
+                return chromatogramSet.MSDataFileInfos[0].FileId;
+            }
+
+            ChromFileInfoId fileId = null;
+            var graphChrom = SkylineWindow.GetGraphChrom(chromatogramSet.Name);
+            if (true == graphChrom?.Visible)
+            {
+                fileId = graphChrom.GetChromFileInfoId();
+            }
+
+            return fileId ?? peptideDocNode?.Results?.SelectMany(chromInfoList => chromInfoList).FirstOrDefault()?.FileId 
+                ?? chromatogramSet.MSDataFileInfos.First().FileId;
         }
 
         private class Selector
