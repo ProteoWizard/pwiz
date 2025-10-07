@@ -176,7 +176,13 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
 
-            return FilterSpectrumList(spectra, Ms2ProductFilters, HighAccQ3, useIonMobilityHighEnergyOffset);
+            // Filter out spectra with no overlap of any target with the spectrum's scan window
+            var filteredSpectra = spectra.Where(spectrum => spectrum.Metadata == null ||
+                                                            !spectrum.Metadata.ScanWindowLowerLimit.HasValue ||
+                                                            !spectrum.Metadata.ScanWindowUpperLimit.HasValue ||
+                                                            (spectrum.Metadata.ScanWindowLowerLimit < Ms2ProductFilters.Last().TargetMz &&
+                                                             spectrum.Metadata.ScanWindowUpperLimit > Ms2ProductFilters.First().TargetMz));
+            return FilterSpectrumList(filteredSpectra.ToArray(), Ms2ProductFilters, HighAccQ3, useIonMobilityHighEnergyOffset);
         }
 
         /// <summary>
@@ -236,18 +242,6 @@ namespace pwiz.Skyline.Model.Results
 
                 if (imRangeHelper.IsBeyondRange(spectrum))
                     break;
-
-                if (ReferenceEquals(productFilters, Ms2ProductFilters) &&
-                    spectrum.Metadata != null &&
-                    spectrum.Metadata.ScanWindowLowerLimit.HasValue &&
-                    spectrum.Metadata.ScanWindowUpperLimit.HasValue &&
-                    productFilters.All(f =>
-                        spectrum.Metadata.ScanWindowLowerLimit > f.TargetMz ||
-                        spectrum.Metadata.ScanWindowUpperLimit < f.TargetMz))
-                {
-                    // No overlap of any target with this spectrum's scan window
-                    continue;
-                }
 
                 // If these are spectra from distinct retention times, average them.
                 // Note that for ion mobility data we will see fewer retention time changes 
