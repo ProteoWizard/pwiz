@@ -18,7 +18,7 @@ using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.Files
 {
-    public class SkylineChromatogramCache : FileNode
+    public class SkylineChromatogramCache : FileModel
     {
         public static SkylineChromatogramCache Create(string documentFilePath, ChromatogramCache chromatogramCache)
         {

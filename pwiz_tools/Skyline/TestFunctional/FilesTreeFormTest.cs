@@ -31,7 +31,7 @@ using pwiz.Skyline.Model.Files;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
-using static pwiz.Skyline.Model.Files.FileNode;
+using static pwiz.Skyline.Model.Files.FileModel;
 
 // CONSIDER: test additional file types - imsdb, irtdb, protdb
 // CONSIDER: double-click on a Background Proteome opens the correct dialog
@@ -41,7 +41,7 @@ using static pwiz.Skyline.Model.Files.FileNode;
 // CONSIDER: handling of non-local paths from SrmSettings (ex: replicate sample file paths cannot be found locally)
 // CONSIDER: new test making sure clicking 'x' upper RHC of confirm dialog does not delete Replicate / Spectral Library
 
-// TODO: add a helper to get nodes by model type to make tests more readable
+// TODO: make tests more readable / easier to maintain with a helper to get a node by model type
 
 // ReSharper disable WrongIndentSize
 namespace pwiz.SkylineTestFunctional
@@ -894,7 +894,7 @@ namespace pwiz.SkylineTestFunctional
                                                         int dropNodeIndex,
                                                         DragAndDropDirection direction,
                                                         MoveType moveType = MoveType.move_to)
-            where T : FileNode
+            where T : FileModel
         {
             var folder = SkylineWindow.FilesTree.Folder<T>();
 
@@ -947,7 +947,7 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         /// <typeparam name="TFolder"></typeparam>
         /// <param name="d"></param>
-        private static void AssertDragAndDropResults<TFolder>(DragAndDropParams d) where TFolder : FileNode
+        private static void AssertDragAndDropResults<TFolder>(DragAndDropParams d) where TFolder : FileModel
         {
             // CONSIDER: assert a more specific location in SrmSettings changed, which would differ depending on the type of {TFolder}
             // Check SrmSettings changed after a DnD operation
@@ -1021,7 +1021,7 @@ namespace pwiz.SkylineTestFunctional
         /// <param name="expectedCount">Expected number of child nodes. Only counts direct children - not recursive children.</param>
         /// <exception cref="ArgumentException"></exception>
         private static void AssertTreeFolderMatchesDocumentAndModel<T>(int expectedCount) 
-            where T : FileNode
+            where T : FileModel
         {
             var filesModel = SkylineFile.Create(SkylineWindow.Document, SkylineWindow.DocumentFilePath);
 

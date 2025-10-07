@@ -20,20 +20,20 @@ using System.Linq;
 namespace pwiz.Skyline.Model.Files
 {
     // .irtdb
-    public class RTCalcFolder : FileNode
+    public class RTCalcFolder : FileModel
     {
         private static readonly IdentityPath IDENTITY_PATH = new IdentityPath(new StaticFolderId());
 
         internal RTCalcFolder(string documentFilePath, IList<RTCalc> files) : 
             base(documentFilePath, IDENTITY_PATH)
         {
-            Files= files.Cast<FileNode>().ToList();
+            Files= files.Cast<FileModel>().ToList();
         }
 
         public override string Name => SkylineResources.SkylineWindow_FindIrtDatabase_iRT_Calculator;
         public override string FilePath => string.Empty;
         public override ImageId ImageAvailable => ImageId.folder;
         public override ImageId ImageMissing => ImageId.folder_missing;
-        public override IList<FileNode> Files { get; }
+        public override IList<FileModel> Files { get; }
     }
 }

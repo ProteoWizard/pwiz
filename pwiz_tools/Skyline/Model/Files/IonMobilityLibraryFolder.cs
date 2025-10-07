@@ -20,20 +20,20 @@ using System.Linq;
 namespace pwiz.Skyline.Model.Files
 {
     // .imsdb
-    public class IonMobilityLibraryFolder : FileNode
+    public class IonMobilityLibraryFolder : FileModel
     {
         private static readonly IdentityPath IDENTITY_PATH = new IdentityPath(new StaticFolderId());
 
         public IonMobilityLibraryFolder(string documentFilePath, IList<IonMobilityLibrary> files) : 
             base(documentFilePath, IDENTITY_PATH)
         {
-            Files= files.Cast<FileNode>().ToList();
+            Files= files.Cast<FileModel>().ToList();
         }
 
         public override string Name => SkylineResources.SkylineWindow_FindIonMobilityLibrary_Ion_Mobility_Library;
         public override string FilePath => string.Empty;
         public override ImageId ImageAvailable => ImageId.folder;
         public override ImageId ImageMissing => ImageId.folder_missing;
-        public override IList<FileNode> Files { get; }
+        public override IList<FileModel> Files { get; }
     }
 }

@@ -22,7 +22,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Files
 {
-    public class SkylineFile : FileNode
+    public class SkylineFile : FileModel
     {
         public static SkylineFile Create(SrmDocument document, string documentFilePath) 
         {
@@ -48,7 +48,7 @@ namespace pwiz.Skyline.Model.Files
             return new SkylineFile(documentFilePath, name, fileName, filePath, files);
         }
 
-        private SkylineFile(string documentFilePath, string name, string fileName, string filePath, IList<FileNode> files) :
+        private SkylineFile(string documentFilePath, string name, string fileName, string filePath, IList<FileModel> files) :
             base(documentFilePath, IdentityPath.ROOT)
         {
             Name = name;
@@ -62,17 +62,17 @@ namespace pwiz.Skyline.Model.Files
         public override string Name { get; }
         public override string FilePath { get; }
         public override string FileName { get; }
-        public override IList<FileNode> Files { get; }
+        public override IList<FileModel> Files { get; }
         public override ImageId ImageAvailable => ImageId.skyline;
 
-        public FileNode Folder<T>() where T : FileNode
+        public FileModel Folder<T>() where T : FileModel
         {
             return Files.OfType<T>().FirstOrDefault();
         }
 
-        private static IList<FileNode> BuildFromDocument(SrmDocument document, string documentFilePath)
+        private static IList<FileModel> BuildFromDocument(SrmDocument document, string documentFilePath)
         {
-            var list = new List<FileNode>();
+            var list = new List<FileModel>();
 
             if (document.Settings.DataSettings.IsAuditLoggingEnabled)
             {
@@ -151,9 +151,9 @@ namespace pwiz.Skyline.Model.Files
             return ImmutableList.ValueOf(list);
         }
 
-        public IList<FileNode> InList()
+        public IList<FileModel> AsList()
         {
-            return new SingletonList<FileNode>(this);
+            return new SingletonList<FileModel>(this);
         }
     }
 }

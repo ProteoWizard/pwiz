@@ -18,7 +18,7 @@ using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.Files
 {
-    public class ReplicateSampleFile : FileNode
+    public class ReplicateSampleFile : FileModel
     {
         public static ReplicateSampleFile Create(string documentFilePath, IdentityPath chromSetId, ChromFileInfo chromFileInfo)
         {

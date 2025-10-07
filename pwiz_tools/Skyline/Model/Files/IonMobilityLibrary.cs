@@ -20,7 +20,7 @@ using pwiz.Common.Collections;
 namespace pwiz.Skyline.Model.Files
 {
     // .imsdb
-    public class IonMobilityLibrary : FileNode
+    public class IonMobilityLibrary : FileModel
     {
         public static IList<IonMobilityLibrary> Create(string documentFilePath, IonMobility.IonMobilityLibrary imsDb)
         {

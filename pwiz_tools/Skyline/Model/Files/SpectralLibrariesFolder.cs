@@ -23,7 +23,7 @@ using pwiz.Skyline.Model.Lib;
 
 namespace pwiz.Skyline.Model.Files
 {
-    public class SpectralLibrariesFolder : FileNode
+    public class SpectralLibrariesFolder : FileModel
     {
         private static readonly IdentityPath IDENTITY_PATH = new IdentityPath(new StaticFolderId());
 
@@ -35,14 +35,14 @@ namespace pwiz.Skyline.Model.Files
         internal SpectralLibrariesFolder(string documentFilePath, IList<SpectralLibrary> libraries) : 
             base(documentFilePath, IDENTITY_PATH)
         {
-            Files = libraries.Cast<FileNode>().ToList();
+            Files = libraries.Cast<FileModel>().ToList();
         }
 
         public override string Name => FileResources.FileModel_Libraries;
         public override string FilePath => string.Empty;
         public override ImageId ImageAvailable => ImageId.folder;
         public override ImageId ImageMissing => ImageId.folder_missing;
-        public override IList<FileNode> Files { get; }
+        public override IList<FileModel> Files { get; }
 
         public ModifiedDocument DeleteAll(SrmDocument document, SrmSettingsChangeMonitor monitor)
         {

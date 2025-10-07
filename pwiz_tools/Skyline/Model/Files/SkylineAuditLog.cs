@@ -16,7 +16,7 @@
 
 namespace pwiz.Skyline.Model.Files
 {
-    public class SkylineAuditLog : FileNode
+    public class SkylineAuditLog : FileModel
     {
         private static readonly IdentityPath IDENTITY_PATH = new IdentityPath(new StaticFolderId());
 

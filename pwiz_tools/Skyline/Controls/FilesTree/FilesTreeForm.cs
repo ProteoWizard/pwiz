@@ -29,7 +29,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Files;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
-using static pwiz.Skyline.Model.Files.FileNode;
+using static pwiz.Skyline.Model.Files.FileModel;
 using Debugger = System.Diagnostics.Debugger;
 using Process = System.Diagnostics.Process;
 
@@ -57,6 +57,8 @@ namespace pwiz.Skyline.Controls.FilesTree
             // FilesTree
             filesTree.LabelEdit = true;
             filesTree.AllowDrop = true;
+            filesTree.HideSelection = false;
+            filesTree.RestoredFromPersistentString = false;
             filesTree.NodeMouseDoubleClick += FilesTree_TreeNodeMouseDoubleClick;
             filesTree.MouseDown += FilesTree_MouseDown;
             filesTree.MouseMove += FilesTree_MouseMove;
@@ -72,8 +74,6 @@ namespace pwiz.Skyline.Controls.FilesTree
             filesTree.QueryContinueDrag += FilesTree_QueryContinueDrag;
             filesTree.KeyDown += FilesTree_KeyDown;
             filesTree.BeforeCollapse += FilesTree_BeforeCollapse;
-            filesTree.HideSelection = false;
-            filesTree.RestoredFromPersistentString = false;
 
             SkylineWindow.DocumentSavedEvent += OnDocumentSavedEvent;
             SkylineWindow.DocumentUIChangedEvent += OnDocumentUIChangedEvent;
@@ -85,7 +85,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             // FilesTree => tooltips
             _nodeTip = new NodeTip(this) { Parent = TopLevelControl };
 
-            // FilesTree => floating drop target
+            // FilesTree => trash can drop target that appears when dragging tree nodes
             _dropTargetRemove = CreateDropTarget(FilesTreeResources.Trash, DockStyle.None);
             _dropTargetRemove.Visible = false;
             _dropTargetRemove.AllowDrop = true;
@@ -279,7 +279,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                     {
                         // The selected nodes could include sample files. If so, remove them so the list is only Replicates, which
                         // makes the Audit Log messages more consistent.
-                        var deletedModels = nodes.Select(item => item.Model).OfType<Replicate>().Cast<FileNode>().ToList();
+                        var deletedModels = nodes.Select(item => item.Model).OfType<Replicate>().Cast<FileModel>().ToList();
                         modifiedDoc = Replicate.Delete(originalDoc, monitor, deletedModels);
                     }
                     else if (model is SpectralLibrary)
@@ -461,14 +461,14 @@ namespace pwiz.Skyline.Controls.FilesTree
         }
 
         /// <summary>
-        /// Use this method for debugging - it forces a refresh of the entire tree and is a convenient place
-        /// to set a breakpoint that can be triggered by a context menu action.
+        /// Context menu used for debugging to force a refresh of the entire tree. This method is also a convenient
+        /// place to set a breakpoint to debug internal tree state.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void FilesTree_DebugRefreshTreeMenuItem(object sender, EventArgs e)
         {
-            FilesTree.Root.RefreshState();
+            FilesTree.UpdateNodeStates();
         }
 
         private void FilesTree_TreeNodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)

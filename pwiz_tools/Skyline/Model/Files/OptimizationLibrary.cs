@@ -19,7 +19,7 @@ using pwiz.Common.Collections;
 
 namespace pwiz.Skyline.Model.Files
 {
-    public class OptimizationLibrary : FileNode
+    public class OptimizationLibrary : FileModel
     {
         public static IList<OptimizationLibrary> Create(string documentFilePath, Optimization.OptimizationLibrary predictionOptimizedLibrary)
         {

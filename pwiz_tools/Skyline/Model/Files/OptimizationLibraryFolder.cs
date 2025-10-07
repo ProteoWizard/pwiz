@@ -19,7 +19,7 @@ using System.Linq;
 
 namespace pwiz.Skyline.Model.Files
 {
-    public class OptimizationLibraryFolder : FileNode
+    public class OptimizationLibraryFolder : FileModel
     {
         // ReSharper disable once IdentifierTypo
         private static readonly IdentityPath IDENTITY_PATH = new IdentityPath(new StaticFolderId());
@@ -27,13 +27,13 @@ namespace pwiz.Skyline.Model.Files
         public OptimizationLibraryFolder(string documentFilePath, IList<OptimizationLibrary> files) : 
             base(documentFilePath, IDENTITY_PATH)
         {
-            Files = files.Cast<FileNode>().ToList();
+            Files = files.Cast<FileModel>().ToList();
         }
 
         public override string Name => FileResources.FileModel_OptimizationLibrary;
         public override string FilePath => string.Empty;
         public override ImageId ImageAvailable => ImageId.folder;
         public override ImageId ImageMissing => ImageId.folder_missing;
-        public override IList<FileNode> Files { get; }
+        public override IList<FileModel> Files { get; }
     }
 }

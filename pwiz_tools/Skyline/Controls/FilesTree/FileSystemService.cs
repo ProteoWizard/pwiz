@@ -173,15 +173,19 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         public FileSystemType FileSystemType => FileSystemType.local_file_system;
 
+        /// <summary>
+        /// Get the directories currently monitored for changes. Paths are fully qualified. The returned list is immutable.
+        /// </summary>
+        /// <returns>List of paths. If no paths monitored, list will be empty and non-null.</returns>
         public IList<string> MonitoredDirectories()
         {
             var list = new List<string>();
             lock (_fswLock)
             {
-                list.AddRange(FileSystemWatchers.Select(watcher => watcher.Path));
+                list.AddRange(FileSystemWatchers.Select(watcher => Path.GetFullPath(watcher.Path)));
             }
 
-            return list;
+            return ImmutableList.ValueOfOrEmpty(list);
         }
 
         public bool IsMonitoringDirectory(string fullPath)
@@ -205,7 +209,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             return isMonitored;
         }
 
-        public bool IsFileAvailable(string fullPath) => Cache.ContainsKey(fullPath);
+        public bool IsFileAvailable(string fullPath) => Cache.ContainsKey(Path.GetFullPath(fullPath));
 
         private Control SynchronizingObject { get; }
         private BackgroundActionService BackgroundActionService { get; }
@@ -272,6 +276,8 @@ namespace pwiz.Skyline.Controls.FilesTree
                     // Check whether this file's location is monitored for changes. If not, start a new FileSystemWatcher for that location
                     if (localFilePath != null)
                     {
+                        localFilePath = Path.GetFullPath(localFilePath);
+
                         lock (_fswLock)
                         {
                             var directoryPath = Path.GetDirectoryName(localFilePath);
@@ -295,6 +301,15 @@ namespace pwiz.Skyline.Controls.FilesTree
 
                         Cache[localFilePath] = true;
                     }
+                    // Add files that could not be found to the cache (marked as missing) even though they couldn't be found. This records
+                    // our potential interest in these paths since we cannot tell right now whether a network drive is down, the file will
+                    // be restored later, and so on.
+                    else
+                    {
+                        var fullFilePath = Path.GetFullPath(filePath);
+
+                        Cache[fullFilePath] = false;
+                    }
 
                     BackgroundActionService.RunUI(() =>
                     {
@@ -313,10 +328,10 @@ namespace pwiz.Skyline.Controls.FilesTree
             {
                 foreach (var watcher in FileSystemWatchers)
                 {
+                    watcher.EnableRaisingEvents = false;
                     watcher.Renamed -= FileSystemWatcher_OnRenamed;
                     watcher.Deleted -= FileSystemWatcher_OnDeleted;
                     watcher.Created -= FileSystemWatcher_OnCreated;
-                    watcher.EnableRaisingEvents = false;
 
                     watcher.Dispose();
                 }

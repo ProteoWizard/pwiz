@@ -21,14 +21,14 @@ using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.Files
 {
-    public class ReplicatesFolder : FileNode
+    public class ReplicatesFolder : FileModel
     {
         private static readonly IdentityPath IDENTITY_PATH = new IdentityPath(new StaticFolderId());
 
         public ReplicatesFolder(string documentFilePath, IList<Replicate> files) : 
             base(documentFilePath, IDENTITY_PATH)
         {
-            Files = files.Cast<FileNode>().ToList();
+            Files = files.Cast<FileModel>().ToList();
         }
 
         public override string Name => FileResources.FileModel_Replicates;
@@ -36,7 +36,7 @@ namespace pwiz.Skyline.Model.Files
         public override string FileName => string.Empty;
         public override ImageId ImageAvailable => ImageId.folder;
         public override ImageId ImageMissing => ImageId.folder_missing;
-        public override IList<FileNode> Files { get; }
+        public override IList<FileModel> Files { get; }
 
         public int SampleFileCount()
         {

@@ -598,7 +598,7 @@
     <Compile Include="Model\DocumentModifier.cs" />
     <Compile Include="Model\Files\BackgroundProteome.cs" />
     <Compile Include="Model\Files\BackgroundProteomeFolder.cs" />
-    <Compile Include="Model\Files\FileNode.cs" />
+    <Compile Include="Model\Files\FileModel.cs" />
     <Compile Include="Controls\FilesTree\FilesTreeResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

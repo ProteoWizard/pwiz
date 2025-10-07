@@ -33,22 +33,22 @@ namespace pwiz.Skyline.Controls.FilesTree
     // CONSIDER: customize behavior in subclasses. Overloading FilesTreeNode won't scale long-term.
     public class FilesTreeNode : TreeNodeMS, ITipProvider
     {
-        private FileNode _model;
+        private FileModel _model;
 
-        internal static FilesTreeNode CreateNode(FileNode model)
+        internal static FilesTreeNode CreateNode(FileModel model)
         {
             Assume.IsNotNull(model);
 
             return new FilesTreeNode(model);
         }
 
-        private FilesTreeNode(FileNode model)
+        private FilesTreeNode(FileModel model)
         {
             FileState = FileState.not_initialized;
             Model = model;
         }
 
-        public FileNode Model
+        public FileModel Model
         {
             get => _model;
             internal set
@@ -65,10 +65,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         public FileState FileState { get; internal set; }
         public ImageId ImageAvailable => Model.ImageAvailable;
         public ImageId ImageMissing => Model.ImageMissing;
-        
         public bool HasTip => true;
-
-        // Convenience to avoid casts
         public FilesTree FilesTree => (FilesTree)TreeView;
         public FilesTreeNode ParentFTN => (FilesTreeNode)Parent;
 
@@ -126,31 +123,10 @@ namespace pwiz.Skyline.Controls.FilesTree
             }
         }
 
-        public void RefreshState()
-        {
-            RefreshState(this);
-        }
-
         /// <summary>
-        /// Update the UI of all nodes in a FilesTree. Works bottom-up to ensure the entire tree reflects the latest
-        /// state, making sure any changes to the node's <see cref="FileState"/> are shown in the UI. Does not access
-        /// the file system.
+        /// See if a file is available locally.
         /// </summary>
-        /// <param name="node"></param>
-        internal static void RefreshState(FilesTreeNode node)
-        {
-            foreach (FilesTreeNode child in node.Nodes)
-            {
-                RefreshState(child);
-            }
-
-            node.UpdateState();
-        }
-
-        /// <summary>
-        /// Check if a file is available locally. This check is subtle so see in-line docs.
-        /// </summary>
-        /// <returns>true if the file is available locally - either on disk or in-memory. false otherwise.</returns>
+        /// <returns>true if a local file is available (on disk or in memory). false otherwise.</returns>
         public bool LocalFileIsAvailable()
         {
             if (!Model.IsBackedByFile)
@@ -266,6 +242,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 }
             }
 
+            // When debugging, add more info to each node's tooltip. 
             if (Debugger.IsAttached)
             {
                 TooltipNewRowWithText(@"     ", customTable, rt);
@@ -322,7 +299,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                     customTable.AddDetailRow(@"Audit logging enabled by the test framework?", $@"{(auditLogEnabledByTestFramework ? @"Yes" : @"No")}", rt);
                 }
 
-                // CONSIDER: add SrmDocument.RevisionIndex to FileNode
+                // CONSIDER: add SrmDocument.RevisionIndex to FileModel
                 // customTable.AddDetailRow(@"Document revision", $@"{Model.DocumentRevisionIndex}", rt);
             }
 
@@ -375,6 +352,15 @@ namespace pwiz.Skyline.Controls.FilesTree
             return (FilesTreeNode)Nodes[index];
         }
 
+        /// <summary>
+        /// Draw bounds for this tree node - <see cref="TreeNode.Bounds"/> in green and <see cref="TreeNodeMS.BoundsMS"/> in red.
+        /// This is useful for debugging click target issues. A typical problem is <see cref="TreeViewMS"/> thinking a node is wider
+        /// than <see cref="TreeView"/> when picking up nodes during drag-and-drop or a long-click to edit a node's label.
+        /// Increasing the Skyline's font size above "default" increases the discrepancy of the widths of between those
+        /// bounding boxes.
+        /// </summary>
+        /// <param name="g"><see cref="Graphics"/> instance used to render the tree node</param>
+        /// <param name="rightEdge"></param>
         protected override void DebugBorders(Graphics g, int rightEdge)
         {
             // var bounds = BoundsMS;

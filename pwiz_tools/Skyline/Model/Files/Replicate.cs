@@ -24,7 +24,7 @@ using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.Files
 {
-    public class Replicate : FileNode
+    public class Replicate : FileModel
     {
         public static Replicate Create(string documentFilePath, [NotNull] ChromatogramSet chromSet)
         {
@@ -40,7 +40,7 @@ namespace pwiz.Skyline.Model.Files
             base(documentFilePath, identityPath)
         {
             Name = name;
-            Files = files.Cast<FileNode>().ToList();
+            Files = files.Cast<FileModel>().ToList();
         }
 
         public override string Name { get; }
@@ -48,7 +48,7 @@ namespace pwiz.Skyline.Model.Files
         public override string FileName => null;
         public override ImageId ImageAvailable => ImageId.replicate;
         public override ImageId ImageMissing => ImageId.replicate_missing;
-        public override IList<FileNode> Files { get; }
+        public override IList<FileModel> Files { get; }
 
         public static ChromatogramSet LoadChromSetFromDocument(SrmDocument document, Replicate replicate)
         {
@@ -57,7 +57,7 @@ namespace pwiz.Skyline.Model.Files
             return chromSet;
         }
 
-        public static ModifiedDocument Delete(SrmDocument document, SrmSettingsChangeMonitor monitor, List<FileNode> models)
+        public static ModifiedDocument Delete(SrmDocument document, SrmSettingsChangeMonitor monitor, List<FileModel> models)
         {
             var deleteIds = models.Select(model => ReferenceValue.Of(model.IdentityPath.Child)).ToHashSet();
             var deleteNames = models.Select(item => item.Name).ToList();
@@ -91,7 +91,7 @@ namespace pwiz.Skyline.Model.Files
             return new ModifiedDocument(newDocument).ChangeAuditLogEntry(entry);
         }
 
-        public static ModifiedDocument Rearrange(SrmDocument document, SrmSettingsChangeMonitor monitor, List<FileNode> draggedModels, FileNode dropModel, MoveType moveType)
+        public static ModifiedDocument Rearrange(SrmDocument document, SrmSettingsChangeMonitor monitor, List<FileModel> draggedModels, FileModel dropModel, MoveType moveType)
         {
             var draggedChromSets = draggedModels.Cast<Replicate>().Select(model => LoadChromSetFromDocument(document, model)).ToList();
 

@@ -19,14 +19,14 @@ using System.Linq;
 
 namespace pwiz.Skyline.Model.Files
 {
-    public class BackgroundProteomeFolder : FileNode
+    public class BackgroundProteomeFolder : FileModel
     {
         private static readonly IdentityPath IDENTITY_PATH = new IdentityPath(new StaticFolderId());
 
         public BackgroundProteomeFolder(string documentFilePath, IList<BackgroundProteome> files) : 
             base(documentFilePath, IDENTITY_PATH)
         {
-            Files = files.Cast<FileNode>().ToList();
+            Files = files.Cast<FileModel>().ToList();
         }
 
         public override string Name => FileResources.FileModel_BackgroundProteome;
@@ -34,6 +34,6 @@ namespace pwiz.Skyline.Model.Files
         public override string FileName => string.Empty;
         public override ImageId ImageAvailable => ImageId.folder;
         public override ImageId ImageMissing => ImageId.folder_missing;
-        public override IList<FileNode> Files { get; }
+        public override IList<FileModel> Files { get; }
     }
 }

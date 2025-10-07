@@ -20,7 +20,7 @@ using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.Files
 {
-    public class RTCalc : FileNode
+    public class RTCalc : FileModel
     {
         public static IList<RTCalc> Create(string documentFilePath, RetentionScoreCalculatorSpec irtDb)
         {
