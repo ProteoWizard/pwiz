@@ -160,7 +160,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>232, 368</value>
+    <value>232, 411</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -190,7 +190,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnOK.Location" type="System.Drawing.Point, System.Drawing">
-    <value>151, 368</value>
+    <value>151, 411</value>
   </data>
   <data name="btnOK.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -355,7 +355,7 @@
     <value>Bottom, Right</value>
   </data>
   <data name="btnTest.Location" type="System.Drawing.Point, System.Drawing">
-    <value>70, 368</value>
+    <value>70, 411</value>
   </data>
   <data name="btnTest.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -505,7 +505,7 @@
     <value>0, 142</value>
   </data>
   <data name="groupBoxUnifi.Size" type="System.Drawing.Size, System.Drawing">
-    <value>288, 144</value>
+    <value>288, 189</value>
   </data>
   <data name="groupBoxUnifi.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
@@ -619,7 +619,7 @@
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabUnifiSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>288, 284</value>
+    <value>288, 329</value>
   </data>
   <data name="tabUnifiSettings.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -817,7 +817,7 @@
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabPage2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>288, 284</value>
+    <value>288, 329</value>
   </data>
   <data name="tabPage2.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -841,7 +841,7 @@
     <value>15, 52</value>
   </data>
   <data name="wizardPagesByAccountType.Size" type="System.Drawing.Size, System.Drawing">
-    <value>296, 310</value>
+    <value>296, 353</value>
   </data>
   <data name="wizardPagesByAccountType.TabIndex" type="System.Int32, mscorlib">
     <value>12</value>
@@ -865,7 +865,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>323, 403</value>
+    <value>323, 446</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>

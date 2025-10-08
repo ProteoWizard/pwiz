@@ -233,6 +233,7 @@ make sure your instrument can handle the number of transitions in each file.</va
   </data>
   <data name="wcDecideBuckets.Text" xml:space="preserve">
     <value>&amp;Let waters_connect decide</value>
+    <comment>Lower case is intentional branding.</comment>
   </data>
   <data name="wcDecideBuckets.ToolTip" xml:space="preserve">
     <value>Create as many files as needed, given constraints on transition count.</value>

@@ -114,6 +114,7 @@ namespace pwiz.Skyline.ToolsUI
             if (remoteAccount is UnifiAccount unifiAccount)
             {
                 wizardPagesByAccountType.SelectedIndex = UNIFI_WIZARD_PAGE_INDEX;
+                groupBoxUnifi.Text = RemoteApiResources.Unifi_GroupBox_Label;
 
                 btnTest.Text = _btnTest_OriginalLabel_Test;
 
@@ -129,7 +130,8 @@ namespace pwiz.Skyline.ToolsUI
             else if (remoteAccount is WatersConnectAccount wcAccount)
             {
                 wizardPagesByAccountType.SelectedIndex = UNIFI_WIZARD_PAGE_INDEX;
-                
+                groupBoxUnifi.Text = RemoteApiResources.Waters_Connect_GroupBox_Label;
+
                 btnTest.Text = _btnTest_OriginalLabel_Test;
 
                 textUsername.Text = remoteAccount.Username;
@@ -667,7 +669,12 @@ namespace pwiz.Skyline.ToolsUI
                 }
                 else if (RemoteAccountType.WATERS_CONNECT.Equals(AccountType))
                 {
-                    SetRemoteAccount(WatersConnectAccount.DEFAULT);
+                    if (Install.IsDeveloperInstall)
+                    {
+                        SetRemoteAccount(WatersConnectAccount.DEV_DEFAULT);
+                    }
+                    else
+                        SetRemoteAccount(WatersConnectAccount.DEFAULT);
                 }
             }
 

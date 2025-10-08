@@ -98,7 +98,7 @@ namespace pwiz.CommonMsData.RemoteApi
 
             public override RemoteAccount GetEmptyAccount()
             {
-                return new WatersConnectAccount(@"https://devconnect.waters.com:48444", null, null);
+                return WatersConnectAccount.DEFAULT;
             }
         }
     }
