@@ -101,7 +101,7 @@ namespace pwiz.SkylineTestFunctional
             };
         }
 
-        public bool HasMissingDependencies => CallUI(() => !SearchSettingsControl.HasRequiredFilesDownloaded(_testDetails.SearchEngine));
+        public bool HasMissingDependencies() => CallUI(() => !SearchSettingsControl.HasRequiredFilesDownloaded(_testDetails.SearchEngine));
 
         [TestMethod,
          NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE),
@@ -467,7 +467,7 @@ namespace pwiz.SkylineTestFunctional
             // Run the search
             SkylineWindow.BeginInvoke(new Action(() => importPeptideSearchDlg.ClickNextButton()));
 
-            if (HasMissingDependencies)
+            if (HasMissingDependencies())
             {
                 if (testDetails.SearchEngine == SearchSettingsControl.SearchEngine.MSFragger)
                 {
@@ -759,7 +759,7 @@ namespace pwiz.SkylineTestFunctional
             // Run the search
             SkylineWindow.BeginInvoke(new Action(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton())));
 
-            if (HasMissingDependencies)
+            if (HasMissingDependencies())
             {
                 if (testDetails.SearchEngine == SearchSettingsControl.SearchEngine.MSFragger)
                 {
