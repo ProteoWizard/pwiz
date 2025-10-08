@@ -14,9 +14,12 @@
  * limitations under the License.
  */
 
+using pwiz.Common.Collections;
+using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.Databinding.Entities;
+using System;
 using System.Collections.Generic;
 using System.IO;
-using pwiz.Common.Collections;
 
 /*
   (1) How to check whether a file exists in a separate thread? Where to store file states?
@@ -91,11 +94,8 @@ namespace pwiz.Skyline.Model.Files
 
         public override string ToString() => @$"{GetType().Name}: " + (Name ?? string.Empty);
 
-        // All implementers should override
-        public virtual GlobalizedObject GetProperties(SrmDocument document, string localFilePath)
-        {
-            return new FileNodeProperties(this, localFilePath);
-        }
+        // Provide a way to instantiate the PropertyObject for this model
+        public virtual Func<SkylineDataSchema, IdentityPath, SkylineObject> PropertyObjectInstancer => (dataSchema, identityPath) => null;
 
         /// <summary>
         /// Use this to decide whether the file represented by this model is ready to be monitored. A model may not be ready if:

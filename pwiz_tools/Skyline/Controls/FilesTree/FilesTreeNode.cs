@@ -22,7 +22,6 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
-using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Files;
 
@@ -73,11 +72,6 @@ namespace pwiz.Skyline.Controls.FilesTree
         public FilesTree FilesTree => (FilesTree)TreeView;
         public FilesTreeNode ParentFTN => (FilesTreeNode)Parent;
 
-        public GlobalizedObject GetProperties(SrmDocument document)
-        {
-            return Model.GetProperties(document, LocalFilePath);
-        }
-        
         /// <summary>
         /// Update the node's state given a local file path. If the local file path is non-null,
         /// the file is available either in-memory or on the local file system.

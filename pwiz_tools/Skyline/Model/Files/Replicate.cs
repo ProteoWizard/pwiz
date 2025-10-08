@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 
@@ -57,10 +60,13 @@ namespace pwiz.Skyline.Model.Files
             return chromSet;
         }
 
-        public override GlobalizedObject GetProperties(SrmDocument document, string localFilePath)
-        {
-            return new ReplicateProperties(document, this, localFilePath);
-        }
+        public override Func<SkylineDataSchema, IdentityPath, SkylineObject> PropertyObjectInstancer =>
+            (dataSchema, identityPath) =>
+            {
+                var chromSetId = identityPath.GetIdentity(0);
+                dataSchema.Document.MeasuredResults.TryGetChromatogramSet(chromSetId.GlobalIndex, out var set, out var index);
+                return new Databinding.Entities.Replicate(dataSchema, index);
+            };
 
         public static ModifiedDocument Delete(SrmDocument document, SrmSettingsChangeMonitor monitor, List<FileNode> models)
         {

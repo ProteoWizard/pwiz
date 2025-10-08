@@ -25,6 +25,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Irt;
@@ -102,10 +103,8 @@ namespace pwiz.Skyline.Model
             ExplicitMods?.VerifyNoLegacyData();
         }
 
-        public override GlobalizedObject GetProperties(SrmDocument document, SkylineDataSchema dataSchema, IdentityPath identityPath)
-        {
-            return new PeptideDocNodeProperties(document, new Skyline.Model.Databinding.Entities.Peptide(dataSchema, identityPath));
-        }
+        public override Func<SkylineDataSchema, IdentityPath, SkylineObject> PropertyObjectInstancer =>
+            (dataSchema, identityPath) => new Databinding.Entities.Peptide(dataSchema, identityPath);
 
         public override string AuditLogText
         {

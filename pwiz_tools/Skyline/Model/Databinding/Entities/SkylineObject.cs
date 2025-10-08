@@ -19,14 +19,17 @@
 
 using System;
 using System.ComponentModel;
+using System.Linq;
+using System.Resources;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.ElementLocators;
+using AttributeCollection = System.ComponentModel.AttributeCollection;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
-    public abstract class SkylineObject
+    public abstract class SkylineObject : ICustomTypeDescriptor
     {
         [Browsable(false)]
         public SkylineDataSchema DataSchema
@@ -76,6 +79,59 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 columnCaption.GetCaption(DataSchemaLocalizer.INVARIANT));
             return new EditDescription(columnCaption, auditLogParseString, GetElementRef(), value);
         }
+
+        #region PropertyGrid Support
+
+        protected virtual ResourceManager GetResourceManager() => null;
+
+        protected virtual bool PropertyFilter(PropertyDescriptor prop)
+        {
+            if (prop is AnnotationPropertyDescriptor anno && anno.PropertyType == typeof(bool))
+            {
+
+            }
+            return GetResourceManager()?.GetString(prop.Name) != null || prop is AnnotationPropertyDescriptor;
+        }
+
+        protected virtual PropertyGridPropertyDescriptor PropertyTransform(PropertyDescriptor prop) =>
+            new PropertyGridPropertyDescriptor(prop, GetResourceManager(),
+                prop is AnnotationPropertyDescriptor annotationProperty ? annotationProperty.DisplayName : null);
+        
+        #endregion
+
+        #region ICustomTypeDescriptor Implementation
+
+        public PropertyDescriptorCollection GetProperties(Attribute[] attributes)
+        {
+            var allProps = DataSchema.GetPropertyDescriptors(GetType());
+            var filteredProps = allProps.Where(PropertyFilter);
+            var transformedProps = filteredProps.Select(PropertyTransform);
+            return new PropertyDescriptorCollection(transformedProps.Cast<PropertyDescriptor>().ToArray());
+        }
+
+        public PropertyDescriptorCollection GetProperties() => GetProperties(null);
+
+        public string GetClassName() => TypeDescriptor.GetClassName(this, true);
+
+        public AttributeCollection GetAttributes() => TypeDescriptor.GetAttributes(this, true);
+
+        public string GetComponentName() => TypeDescriptor.GetComponentName(this, true);
+
+        public TypeConverter GetConverter() => TypeDescriptor.GetConverter(this, true);
+
+        public EventDescriptor GetDefaultEvent() => TypeDescriptor.GetDefaultEvent(this, true);
+
+        public PropertyDescriptor GetDefaultProperty() => TypeDescriptor.GetDefaultProperty(this, true);
+
+        public object GetEditor(Type editorBaseType) => TypeDescriptor.GetEditor(this, editorBaseType, true);
+
+        public EventDescriptorCollection GetEvents(Attribute[] attributes) => TypeDescriptor.GetEvents(this, attributes, true);
+
+        public EventDescriptorCollection GetEvents() => TypeDescriptor.GetEvents(this, true);
+
+        public object GetPropertyOwner(PropertyDescriptor pd) => this;
+
+        #endregion
     }
 
     /// <summary>

@@ -37,12 +37,12 @@
             resources.ApplyResources(this.propertyGrid, "propertyGrid");
             this.propertyGrid.Name = "propertyGrid";
             // 
-            // PropertyForm
+            // PropertyGridForm
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.propertyGrid);
-            this.Name = "PropertyForm";
+            this.Name = "PropertyGridForm";
             this.ResumeLayout(false);
 
         }

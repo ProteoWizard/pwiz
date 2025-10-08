@@ -17,11 +17,10 @@
  * limitations under the License.
  */
 
-using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Controls.FilesTree;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Util;
+using pwiz.Common.Collections;
 using System.ComponentModel;
 using System.Windows.Forms;
 
@@ -33,60 +32,44 @@ namespace pwiz.Skyline.Controls
         {
             InitializeComponent();
         }
-        
+
         public PropertyGridForm(SkylineWindow skylineWindow) : this()
         {
             HideOnClose = true; // Hide the form when closed, but do not dispose it
             SkylineWindow = skylineWindow;
 
-            propertyGrid.PropertyValueChanged += PropertyGrid_PropertyValueChanged;
+            SkylineWindow.Listen(SkylineWindow_OnDocumentChanged);
         }
 
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public SkylineWindow SkylineWindow { get; }
 
-        public void SetPropertyObject(GlobalizedObject properties)
+        public void SetPropertyObject(SkylineObject properties)
         {
             propertyGrid.SelectedObject = properties;
             propertyGrid.ExpandAllGridItems();
+            propertyGrid.Refresh();
         }
 
-        public GlobalizedObject GetPropertyObject()
+        public SkylineObject GetPropertyObject()
         {
-            return propertyGrid.SelectedObject as GlobalizedObject;
+            return propertyGrid.SelectedObject as SkylineObject;
         }
 
-        private void PropertyGrid_PropertyValueChanged(object sender, PropertyValueChangedEventArgs e) =>
-            UpdateDocument(e.ChangedItem.PropertyDescriptor, e.ChangedItem.Value);
-
-        private void UpdateDocument(PropertyDescriptor propertyDescriptor, object newValue)
+        private void SkylineWindow_OnDocumentChanged(object sender, DocumentChangedEventArgs e)
         {
-            Assume.IsTrue(propertyDescriptor is IModifiablePropertyDescriptor { IsReadOnly: false });
-            var modifiablePropertyDescriptor = (IModifiablePropertyDescriptor)propertyDescriptor;
-
-            // acquire the document change lock and modify the document by calling the GetModifiedDocument delegate of the property descriptor. 
-            lock (SkylineWindow.GetDocumentChangeLock())
-            {
-                var originalDoc = SkylineWindow.Document;
-                ModifiedDocument modifiedDoc = null;
-
-                using var longWaitDlg = new LongWaitDlg();
-                longWaitDlg.PerformWork(this, 750, progressMonitor =>
-                {
-                    using var monitor = new SrmSettingsChangeMonitor(progressMonitor, longWaitDlg.Text, SkylineWindow);
-
-                    modifiedDoc = modifiablePropertyDescriptor.GetModifiedDocument(SkylineWindow.Document, monitor, newValue);
-                });
-
-                SkylineWindow.ModifyDocument(FilesTreeResources.Change_ReplicateName, DocumentModifier.FromResult(originalDoc, modifiedDoc));
-            }
+            Invoke(new MethodInvoker(() => SkylineWindow.UpdatePropertyGrid()));
         }
 
         #region Test Support
 
-        public void PropertyObjectValuesModifiedManually(PropertyDescriptor propertyDescriptor)
-            => UpdateDocument(propertyDescriptor, propertyDescriptor.GetValue(GetPropertyObject()));
+        public bool PropertyIsNullOrNotFound(string propName)
+        {
+            return GetPropertyObject() != null &&
+                   GetPropertyObject().GetProperties()[propName] != null &&
+                   ((string)GetPropertyObject().GetProperties()[propName].GetValue(GetPropertyObject())).IsNullOrEmpty();
+        }
 
         #endregion
     }

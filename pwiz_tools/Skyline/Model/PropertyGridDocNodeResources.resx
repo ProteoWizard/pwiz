@@ -150,4 +150,25 @@
   <data name="StandardType" xml:space="preserve">
     <value>Standard Type</value>
   </data>
+  <data name="Note" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="ConcentrationMultiplier" xml:space="preserve">
+    <value>Concentration Multiplier</value>
+  </data>
+  <data name="AttributeGroupId" xml:space="preserve">
+    <value>Attribute Group ID</value>
+  </data>
+  <data name="AutoSelectPrecursors" xml:space="preserve">
+    <value>Auto Select Precursors</value>
+  </data>
+  <data name="ExplicitRetentionTime" xml:space="preserve">
+    <value>Explicit Retention Time</value>
+  </data>
+  <data name="ExplicitRetentionTimeWindow" xml:space="preserve">
+    <value>Explicit Retention Time Window</value>
+  </data>
+  <data name="InternalStandardConcentration" xml:space="preserve">
+    <value>Internal Standard Concentration</value>
+  </data>
 </root>

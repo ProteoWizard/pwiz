@@ -17,12 +17,12 @@
  * limitations under the License.
  */
 
-using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding.Entities;
 
 namespace pwiz.Skyline.Controls
 {
     public interface IPropertyProvider
     {
-        public GlobalizedObject GetSelectedObjectProperties();
+        public SkylineObject GetPropertyObject();
     }
 }

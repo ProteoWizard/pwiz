@@ -688,7 +688,7 @@ namespace pwiz.Skyline
             }
             if (Equals(persistentString, typeof(PropertyGridForm).ToString()))
             {
-                return _propertyForm ?? CreatePropertyForm();
+                return _propertyGridForm ?? CreatePropertyGridForm();
             }
             if (persistentString.StartsWith(typeof(GraphChromatogram).ToString()))
             {

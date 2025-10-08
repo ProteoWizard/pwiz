@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Resources;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.CommonMsData;
@@ -28,6 +29,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Files;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
@@ -42,6 +44,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             ReplicateIndex = replicateIndex;
             _chromatogramSet = CachedValue.Create(DataSchema, FindChromatogramSet);
         }
+
+        #region PropertyGrid Support
+
+        protected override ResourceManager GetResourceManager() => PropertyGridFileNodeResources.ResourceManager;
+
+        #endregion
 
         [Browsable(false)]
         public int ReplicateIndex { get; private set; }

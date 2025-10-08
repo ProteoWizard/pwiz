@@ -542,9 +542,6 @@
     <Compile Include="FileUI\PeptideSearch\HardklorSearchControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Model\Files\InstrumentProperties.cs" />
-    <Compile Include="Model\Files\ReplicateSampleFileProperties.cs" />
-    <Compile Include="Model\Files\ReplicatesFolderProperties.cs" />
     <Compile Include="FileUI\PublishDocumentDlgArdia.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -652,9 +649,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>PropertyGridFileNodeResources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Model\Files\FileNodeProperties.cs" />
-    <Compile Include="Model\Files\ReplicateProperties.cs" />
-    <Compile Include="Model\PeptideDocNodeProperties.cs" />
     <Compile Include="Model\PropertyGridDocNodeResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

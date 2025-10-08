@@ -3,7 +3,7 @@
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
  * Copyright 2012 University of Washington - Seattle, WA
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,11 +17,11 @@
  * limitations under the License.
  */
 
-using EnvDTE;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Proteome;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Util;
 using System;
 using System.Collections.Generic;
@@ -51,11 +51,11 @@ namespace pwiz.Skyline.Controls
 
         #region IPropertyProvider Implementation
 
-        public GlobalizedObject GetSelectedObjectProperties()
+        public SkylineObject GetPropertyObject()
         {
-            var dataSchema = SkylineWindowDataSchema.FromDocumentContainer(SkylineWindow);
+            var dataSchema = new SkylineWindowDataSchema(SkylineWindow);
             var identityPath = SequenceTree.SelectedPath;
-            return SequenceTree.SelectedNodeSrmTreeNode?.Model.GetProperties(SkylineWindow.Document, dataSchema, identityPath);
+            return SequenceTree.SelectedNodeSrmTreeNode?.Model.PropertyObjectInstancer(dataSchema, identityPath);
         }
 
         #endregion
@@ -143,7 +143,7 @@ namespace pwiz.Skyline.Controls
 
         private void SequenceTree_AfterSelect(object sender, TreeViewEventArgs e)
         {
-            SkylineWindow.ShowProperties(GetSelectedObjectProperties());
+            SkylineWindow.FocusPropertyProvider(this);
         }
 
         private void toolBarResults_Resize(object sender, EventArgs e)

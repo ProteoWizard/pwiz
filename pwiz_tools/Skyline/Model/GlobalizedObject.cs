@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-using JetBrains.Annotations;
 using Newtonsoft.Json;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Properties;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -27,7 +26,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Resources;
-using pwiz.Common.Collections;
 
 namespace pwiz.Skyline.Model
 {
@@ -96,21 +94,17 @@ namespace pwiz.Skyline.Model
         public object GetPropertyOwner(PropertyDescriptor pd) => this;
 
         /// <summary>
-        /// Gets the base property descriptor of this object by name. Note that GetProperties(GetType()) returns the base properties,
-        /// not the properties returned by GetProperties() in this class.
-        /// Used by derived classes to get the base property descriptor when adding custom properties.
-        /// </summary>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        public PropertyDescriptor GetBaseDescriptorByName(string name) => TypeDescriptor.GetProperties(GetType()).Find(name, false);
-
-        /// <summary>
         /// Called to get the properties of a type.
         /// </summary>
         /// <param name="attributes"></param>
         /// <returns></returns>
         public PropertyDescriptorCollection GetProperties(Attribute[] attributes)
         {
+            /*if (this is PeptideDocNodeProperties peptideDocNodeProperties)
+            {
+                return new PropertyDescriptorCollection(peptideDocNodeProperties._peptide.DataSchema.GetPropertyDescriptors(peptideDocNodeProperties
+                    ._peptide.GetType()).ToArray());
+            }*/
             if (_globalizedProps == null)
             {
                 // Get the collection of properties
@@ -121,106 +115,21 @@ namespace pwiz.Skyline.Model
                 // For each property use a property descriptor of our own that is able to be globalized
                 foreach (PropertyDescriptor oProp in baseProps)
                 {
-                    // don't copy over properties that require custom handling
-                    if (oProp.Attributes[typeof(UseCustomHandlingAttribute)] != null ||
-                        oProp.Attributes[typeof(UsedImplicitlyAttribute)] != null)
-                        continue;
-
                     // Only display properties whose values have been set
                     if (oProp.GetValue(this) == null)
                         continue;
 
                     _globalizedProps.Add(new GlobalizedPropertyDescriptor(oProp, GetResourceManager()));
                 }
-
-                AddCustomizedProperties();
-
-                if (this is IAnnotatable { Annotations: { } } annotatable) AddAnnotationProperties(this, annotatable);
             }
 
             return _globalizedProps;
-        }
-
-        /// <summary>
-        /// Helper function called by implementers of IAnnotatable in the constructor to populate their Annotation properties
-        /// </summary>
-        /// <param name="annotatable"></param> GlobalizedObject implementing IAnnotatable
-        /// <param name="annotations"></param> Annotations object holding the actual annotation values - passed as parameter as the method of access is context-dependent
-        /// <param name="document"></param> reference to the SrmDocument, needed to get the AnnotationDefs from settings
-        /// <param name="annotationTarget"></param> Target type for filtering applicable annotations
-        /// <param name="annotationEditFunctionMap"></param> Function that returns the appropriate ModifiedDocument function for editing a given annotation
-        protected static void PopulateAnnotationValues(IAnnotatable annotatable, Annotations annotations, 
-            SrmDocument document, AnnotationDef.AnnotationTarget annotationTarget,
-            Func<AnnotationDef, Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument>> annotationEditFunctionMap)
-        {
-            annotatable.Annotations = new List<Annotations.Annotation>();
-            annotatable.EditAnnotationFuncDictionary = new Dictionary<Annotations.Annotation, Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument>>();
-            foreach (var annotationDef in document.Settings.DataSettings.AnnotationDefs)
-            {
-                if (annotationDef.AnnotationTargets.Contains(annotationTarget))
-                {
-                    var annotation = new Annotations.Annotation(new KeyValuePair<string, string>(
-                        annotationDef.Name, annotations.GetAnnotation(annotationDef.Name)));
-                    annotatable.Annotations.Add(annotation);
-                    annotatable.EditAnnotationFuncDictionary.Add(annotation, annotationEditFunctionMap(annotationDef));
-                }
-            }
-        }
-
-        // Prefix to use for annotation property names, to avoid conflicts with other property names since annotation names are user-defined
-        private const string ANNOTATION_PROPNAME_PREFIX = "Annotation_";
-
-        /// <summary>
-        /// Adds annotation properties to the specified <see cref="GlobalizedObject"/> based on the annotations defined
-        /// in the provided <see cref="IAnnotatable"/> instance.
-        /// </summary>
-        /// <remarks>This method iterates through the annotations of the <paramref name="annotatable"/>
-        /// object and creates corresponding properties in the <paramref name="obj"/>. If an annotation defines a value
-        /// list of strings, a dropdown list of options is created, including a blank entry to allow for empty
-        /// values.</remarks>
-        /// <param name="obj">The <see cref="GlobalizedObject"/> to which the annotation properties will be added.</param>
-        /// <param name="annotatable">The <see cref="GlobalizedObject"/>, cast as a <see cref="IAnnotatable"/> to access the annotations to process.</param>
-        private static void AddAnnotationProperties(GlobalizedObject obj, IAnnotatable annotatable)
-        {
-            foreach (var annotation in annotatable.Annotations)
-            {
-                List<string> dropDownOptions = null;
-                if (annotation.AnnotationDef.Type == AnnotationDef.AnnotationType.value_list &&
-                    annotation.AnnotationDef.ValueType == typeof(string))
-                {
-                    dropDownOptions = annotation.AnnotationDef.Items.ToList();
-                    dropDownOptions.Insert(0, null); // Allow blank entry
-                }
-
-                var prop = new CustomHandledGlobalizedPropertyDescriptor(
-                    annotation.AnnotationDef.ValueType,
-                    ANNOTATION_PROPNAME_PREFIX + annotation.Name,
-                    annotation.GetAnnotation(),
-                    obj.GetBaseDescriptorByName(nameof(Annotations)).Category,
-                    obj.GetResourceManager());
-
-                prop.SetNonLocalizedDisplayName(annotation.Name);
-                prop.SetDocumentModifierFunc(annotatable.EditAnnotationFuncDictionary[annotation]);
-                prop.SetDropDownOptions(dropDownOptions);
-
-                obj.AddProperty(prop);
-            }
         }
 
         public PropertyDescriptorCollection GetProperties()
         {
             return GetProperties(null);
         }
-
-        protected void AddProperty(PropertyDescriptor propertyDescriptor)
-        {
-            _globalizedProps.Add(propertyDescriptor);
-        }
-
-        /// <summary>
-        /// Override this method to add custom properties to the property collection, like if we needed to dynamically add nested properties.
-        /// </summary>
-        protected virtual void AddCustomizedProperties() { }
 
         #region Test suppport
 
@@ -352,9 +261,6 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        // For localization testing
-        public ResourceManager GetResourceManagerForTest() => GetResourceManager();
-
         #endregion
     }
 
@@ -366,7 +272,7 @@ namespace pwiz.Skyline.Model
     ///     https://www.codeproject.com/script/Articles/ViewDownloads.aspx?aid=2138
     ///
     /// </summary>
-    public class GlobalizedPropertyDescriptor : PropertyDescriptor, IModifiablePropertyDescriptor
+    public class GlobalizedPropertyDescriptor : PropertyDescriptor
     {
         private const string DESCRIPTION_PREFIX = @"Description_";
         private const string CATEGORY_PREFIX = @"Category_";
@@ -374,22 +280,11 @@ namespace pwiz.Skyline.Model
         private readonly ResourceManager _resourceManager;
         private readonly PropertyDescriptor _basePropertyDescriptor;
 
-        private readonly Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument> _getModifiedDocument;
-
-        public GlobalizedPropertyDescriptor(PropertyDescriptor basePropertyDescriptor, ResourceManager resourceManager,
-            Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument> getModifiedDocument = null)
+        public GlobalizedPropertyDescriptor(PropertyDescriptor basePropertyDescriptor, ResourceManager resourceManager)
             : base(basePropertyDescriptor)
         {
             _basePropertyDescriptor = basePropertyDescriptor;
             _resourceManager = resourceManager;
-            _getModifiedDocument = getModifiedDocument;
-        }
-
-        public ModifiedDocument GetModifiedDocument(SrmDocument document, SrmSettingsChangeMonitor monitor, object newValue)
-        {
-            // GetModifiedDocument should not be called if the property is read-only.
-            Assume.IsNotNull(_getModifiedDocument);
-            return _getModifiedDocument.Invoke(document, monitor, newValue);
         }
 
         public override bool CanResetValue(object component)
@@ -434,7 +329,7 @@ namespace pwiz.Skyline.Model
             return value;
         }
 
-        public override bool IsReadOnly => _getModifiedDocument == null;
+        public override bool IsReadOnly => _basePropertyDescriptor.IsReadOnly;
 
         public override string Name => _basePropertyDescriptor.Name;
 
@@ -458,144 +353,55 @@ namespace pwiz.Skyline.Model
         }
     }
 
-    /// <summary>
-    /// Used to support properties returned in GetProperties() that are not present on the globalized object, or need custom handling.
-    /// </summary>
-    public class CustomHandledGlobalizedPropertyDescriptor : PropertyDescriptor, IModifiablePropertyDescriptor
+    public class PropertyGridPropertyDescriptor : GlobalizedPropertyDescriptor
     {
-        private const string DESCRIPTION_PREFIX = @"Description_";
-        private const string CATEGORY_PREFIX = @"Category_";
+        private readonly PropertyDescriptor _basePropertyDescriptor;
 
         private readonly ResourceManager _resourceManager;
+        private readonly string _invariantDisplayName;
 
-        private object _value;
-        private readonly string _category;
-        private readonly string _name;
-        private readonly Type _type;
+        // Since many property grid object setters don't actually change the value, just the document, need to store actual value for display
+        private object _displayValue;
 
-        private Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument> _getModifiedDocument;
-        private string _nonLocalizedDisplayName;
-        private List<string> _dropDownOptions; // set only if we want a drop-down list of options, and _type is string
-        private Action<object> _setAction; // set only if we want custom handling of setting the value
-
-        public CustomHandledGlobalizedPropertyDescriptor(
-            Type type, string name, object value, string category, ResourceManager resourceManager,
-            Attribute[] attributes = null)
-            : base(name, attributes)
+        public PropertyGridPropertyDescriptor(PropertyDescriptor basePropertyDescriptor, ResourceManager resourceManager, string invariantDisplayName = null)
+            : base(basePropertyDescriptor, resourceManager)
         {
+            Assume.IsNotNull(resourceManager);
+
+            _basePropertyDescriptor = basePropertyDescriptor;
             _resourceManager = resourceManager;
-            _value = value;
-            _category = category;
-            _name = name;
-            _type = type;
+            _invariantDisplayName = invariantDisplayName;
         }
 
-        #region Factory Methods
+        public override string DisplayName => _invariantDisplayName ?? _resourceManager.GetString(_basePropertyDescriptor.Name);
 
-        public void SetDocumentModifierFunc(Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument> getModifiedDocument)
+        public override object GetValue(object component)
         {
-            _getModifiedDocument = getModifiedDocument;
+            if (_displayValue != null) return _displayValue;
+
+            return _basePropertyDescriptor.GetValue(component) ?? string.Empty;
         }
-
-        public void SetNonLocalizedDisplayName(string name)
-        {
-            _nonLocalizedDisplayName = name;
-        }
-
-        public void SetDropDownOptions(List<string> dropDownOptions)
-        {
-            _dropDownOptions = dropDownOptions;
-        }
-
-        public void SetCustomSetter(Action<object> setAction)
-        {
-            _setAction = setAction;
-        }
-
-        #endregion
-
-        public ModifiedDocument GetModifiedDocument(SrmDocument document, SrmSettingsChangeMonitor monitor, object newValue)
-        {
-            // GetModifiedDocument should not be called if the property is read-only.
-            Assume.IsNotNull(_getModifiedDocument);
-            return _getModifiedDocument.Invoke(document, monitor, newValue);
-        }
-
-        public override bool CanResetValue(object component) => false;
-
-        public override Type ComponentType => _type;
-
-        public override string DisplayName
-        {
-            get
-            {
-                var displayName = _resourceManager.GetString(_name);
-
-                return displayName ?? _nonLocalizedDisplayName ?? string.Empty;
-            }
-        }
-
-        public override string Description => _resourceManager.GetString(DESCRIPTION_PREFIX + _name) ?? string.Empty;
-
-        public override string Category
-        {
-            get
-            {
-                if (_category != null)
-                {
-                    return _resourceManager.GetString(CATEGORY_PREFIX + _category) ?? string.Empty;
-                }
-
-                return null;
-            }
-        }
-
-        public override object GetValue(object component) => _value;
-
-        public override bool IsReadOnly => _getModifiedDocument == null;
-
-        public override string Name => _name;
-
-        public override Type PropertyType => _type;
-
-        public override void ResetValue(object component) { }
-
-        public override bool ShouldSerializeValue(object component) => false;
 
         public override void SetValue(object component, object value)
         {
-            _value = value;
-            _setAction?.Invoke(value);
+            _basePropertyDescriptor.SetValue(component, value);
+            _displayValue = value;
         }
 
-        public override TypeConverter Converter => _dropDownOptions != null && _type == typeof(string)
-            ? new DropDownConverter(_dropDownOptions) : base.Converter;
-    }
+        public override TypeConverter Converter
+        {
+            get
+            {
+                if (_basePropertyDescriptor.PropertyType == typeof(double))
+                    return new TwoDecimalDoubleConverter();
 
-    /// <summary>
-    /// Interfacce for property descriptors that are potentially editable.
-    /// GetModifiedDocument should not be called if IsReadOnly is true.
-    /// </summary>
-    public interface IModifiablePropertyDescriptor
-    {
-        public bool IsReadOnly { get; }
+                if (_basePropertyDescriptor is AnnotationPropertyDescriptor annotationProperty &&
+                    annotationProperty.AnnotationDef.Type == AnnotationDef.AnnotationType.value_list)
+                    return new DropDownConverter(annotationProperty.AnnotationDef.Items.ToList());
 
-        public ModifiedDocument GetModifiedDocument(SrmDocument document, SrmSettingsChangeMonitor monitor, object newValue);
-    }
-
-    /// <summary>
-    /// Interface for GlobalizedObjects which can have annotations, defined in Settings.Default.AnnotationDefList.
-    /// Allows GlobalizedObject to add annotations as editable properties.
-    /// Implementer must populate both properties in its constructor.
-    /// </summary>
-    public interface IAnnotatable
-    {
-        // Annotations need to be added as individual properties under the Annotations category
-        // Annotation properties are added in GlobalizedObject, but EditAnnotationFuncDictionary must be populated on construction
-        [UseCustomHandling] 
-        [Category("Annotations")] List<Annotations.Annotation> Annotations { get; set; }
-        [UseCustomHandling]
-        Dictionary<Annotations.Annotation, Func<SrmDocument, SrmSettingsChangeMonitor, object, ModifiedDocument>> EditAnnotationFuncDictionary { get; set; }
+                return _basePropertyDescriptor.Converter;
+            }
+        }
     }
 
     public class TwoDecimalDoubleConverter : DoubleConverter
@@ -615,6 +421,7 @@ namespace pwiz.Skyline.Model
         public DropDownConverter(List<string> options)
         {
             _options = options;
+            _options.Insert(0, null); // default is no option selected
         }
 
         public override bool GetStandardValuesSupported(ITypeDescriptorContext context) => true;
@@ -623,9 +430,4 @@ namespace pwiz.Skyline.Model
 
         public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext context) => new StandardValuesCollection(_options);
     }
-
-    // Used to flag properties that should not be carried over directly to the globalized object, as they require custom handling.
-    // Custom handling is implemented in the derived class, typically in AddCustomizedProperties() or programatically in AddAnnotationProperties().
-    [AttributeUsage(AttributeTargets.Property)]
-    public class UseCustomHandlingAttribute : Attribute { }
 }

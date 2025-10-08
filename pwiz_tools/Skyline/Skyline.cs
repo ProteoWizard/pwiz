@@ -107,7 +107,7 @@ namespace pwiz.Skyline
     {
         private SequenceTreeForm _sequenceTreeForm;
         private FilesTreeForm _filesTreeForm;
-        private PropertyGridForm _propertyForm;
+        private PropertyGridForm _propertyGridForm;
         private ImmediateWindow _immediateWindow;
 
         private SrmDocument _document;
@@ -1098,7 +1098,7 @@ namespace pwiz.Skyline
                     SequenceTree.UseKeysOverride = false;
                     return true;
                 case Keys.F4:
-                    ShowPropertyForm(show: !(_propertyForm is { Visible: true }));
+                    ShowPropertyGridForm(show: !(_propertyGridForm is { Visible: true }));
                     return true;
             }
             return base.ProcessCmdKey(ref msg, keyData);
@@ -3239,60 +3239,62 @@ namespace pwiz.Skyline
 
         #region Properties
 
-        public PropertyGridForm PropertyForm => _propertyForm;
-        public bool PropertyFormIsVisible => _propertyForm is { Visible: true };
-        public bool PropertyFormIsActivated => _propertyForm is { IsActivated: true };
+        public PropertyGridForm PropertyGridForm => _propertyGridForm;
+        public bool PropertyGridFormIsVisible => _propertyGridForm is { Visible: true };
+        public bool PropertyGridFormIsActivated => _propertyGridForm is { IsActivated: true };
+        private IPropertyProvider _lastFocusedPropertyProvider;
 
-        public void ShowPropertyForm(bool show, string persistentState = null)
+        public void ShowPropertyGridForm(bool show, string persistentState = null)
         {
             if (show)
             {
-                _propertyForm ??= CreatePropertyForm();
-                PotentialPropertyProviderGotFocus(DockPanel.ActiveContent);
+                _propertyGridForm ??= CreatePropertyGridForm();
+                UpdatePropertyGrid();
 
-                if (_propertyForm.DockPanel != null)
-                    _propertyForm.Activate();
+                if (_propertyGridForm.DockPanel != null)
+                    _propertyGridForm.Activate();
                 else
-                    _propertyForm.Show(dockPanel, DockState.DockRight);
+                    _propertyGridForm.Show(dockPanel, DockState.DockRight);
             }
             else
             {
-                _propertyForm.Hide();
+                _propertyGridForm.Hide();
             }
         }
 
-        private PropertyGridForm CreatePropertyForm()
+        private PropertyGridForm CreatePropertyGridForm()
         {
-            _propertyForm = new PropertyGridForm(this);
-            PotentialPropertyProviderGotFocus(DockPanel.ActiveContent);
+            _propertyGridForm = new PropertyGridForm(this);
+            UpdatePropertyGrid();
 
-            return _propertyForm;
+            return _propertyGridForm;
         }
 
-        public void DestroyPropertyForm()
+        public void DestroyPropertyGridForm()
         {
-            if (_propertyForm != null)
+            if (_propertyGridForm != null)
             {
-                _propertyForm.Close();
-                _propertyForm = null;
+                _propertyGridForm.Close();
+                _propertyGridForm = null;
             }
         }
 
-        private void PotentialPropertyProviderGotFocus(IDockableForm form)
+        public void FocusPropertyProvider(IPropertyProvider propertyProvider)
         {
-            if (form is IPropertyProvider propertyProvider)
-                ShowProperties(propertyProvider.GetSelectedObjectProperties());
+            _lastFocusedPropertyProvider = propertyProvider;
+            UpdatePropertyGrid();
         }
 
-        public void ShowProperties(GlobalizedObject properties)
+        public void DockPanel_ActiveContentChanged(object sender, EventArgs e)
         {
-            if (_propertyForm is { Visible:true })
-                _propertyForm.SetPropertyObject(properties);
+            if (DockPanel.ActiveContent is IPropertyProvider propertyProvider)
+                FocusPropertyProvider(propertyProvider);
         }
 
-        private void DockPanel_ActiveContentChanged(object sender, EventArgs e)
+        public void UpdatePropertyGrid()
         {
-            PotentialPropertyProviderGotFocus(DockPanel.ActiveContent);
+            if (_propertyGridForm is { Visible: true })
+                _propertyGridForm.SetPropertyObject(_lastFocusedPropertyProvider?.GetPropertyObject());
         }
 
         #endregion

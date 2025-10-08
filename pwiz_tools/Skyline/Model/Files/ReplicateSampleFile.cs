@@ -44,21 +44,5 @@ namespace pwiz.Skyline.Model.Files
         public override string FilePath { get; }
         public override string FileName { get; }
         public override ImageId ImageAvailable => ImageId.replicate_sample_file;
-
-        public static ChromFileInfo LoadChromFileInfoFromDocument(SrmDocument document, ReplicateSampleFile replicateSampleFile)
-        {
-            var chromSetId = replicateSampleFile.IdentityPath.GetIdentity(0);
-            if (document.MeasuredResults.TryGetChromatogramSet(chromSetId.GlobalIndex, out var chromSet, out _))
-            {
-                var chromFileInfoId = (ChromFileInfoId)replicateSampleFile.IdentityPath.GetIdentity(1);
-                return chromSet.GetFileInfo(chromFileInfoId);
-            }
-            else return null;
-        }
-
-        public override GlobalizedObject GetProperties(SrmDocument document, string localFilePath)
-        {
-            return new ReplicateSampleFileProperties(document, this, localFilePath);
-        }
     }
 }

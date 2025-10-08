@@ -61,6 +61,24 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Attribute Group ID.
+        /// </summary>
+        internal static string AttributeGroupId {
+            get {
+                return ResourceManager.GetString("AttributeGroupId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Auto Select Precursors.
+        /// </summary>
+        internal static string AutoSelectPrecursors {
+            get {
+                return ResourceManager.GetString("AutoSelectPrecursors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Average Measured Retention Time.
         /// </summary>
         internal static string AvgMeasuredRetentionTime {
@@ -88,11 +106,47 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Concentration Multiplier.
+        /// </summary>
+        internal static string ConcentrationMultiplier {
+            get {
+                return ResourceManager.GetString("ConcentrationMultiplier", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Explicit Retention Time.
+        /// </summary>
+        internal static string ExplicitRetentionTime {
+            get {
+                return ResourceManager.GetString("ExplicitRetentionTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Explicit Retention Time Window.
+        /// </summary>
+        internal static string ExplicitRetentionTimeWindow {
+            get {
+                return ResourceManager.GetString("ExplicitRetentionTimeWindow", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to First Position.
         /// </summary>
         internal static string FirstPosition {
             get {
                 return ResourceManager.GetString("FirstPosition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Internal Standard Concentration.
+        /// </summary>
+        internal static string InternalStandardConcentration {
+            get {
+                return ResourceManager.GetString("InternalStandardConcentration", resourceCulture);
             }
         }
         
@@ -120,6 +174,15 @@ namespace pwiz.Skyline.Model {
         internal static string ModifiedSequence {
             get {
                 return ResourceManager.GetString("ModifiedSequence", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Note.
+        /// </summary>
+        internal static string Note {
+            get {
+                return ResourceManager.GetString("Note", resourceCulture);
             }
         }
         

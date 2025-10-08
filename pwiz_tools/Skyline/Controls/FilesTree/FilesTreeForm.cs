@@ -22,8 +22,10 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Files;
 using pwiz.Skyline.SettingsUI;
@@ -31,6 +33,7 @@ using pwiz.Skyline.Util;
 using static pwiz.Skyline.Model.Files.FileNode;
 using Debugger = System.Diagnostics.Debugger;
 using Process = System.Diagnostics.Process;
+using Replicate = pwiz.Skyline.Model.Files.Replicate;
 
 // CONSIDER: using IdentityPath (and DocNode.ReplaceChild) to simplify replicate name changes
 //           But replicates do not have IdentityPath support because ChromatogramSet does not
@@ -107,14 +110,10 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             filesTree.OnDocumentSaved(sender, args);
         }
-
+        
         private void OnDocumentUIChangedEvent(object sender, DocumentChangedEventArgs e)
         {
             filesTree.OnDocumentChanged(sender, e);
-
-            // if property grid is showing FileNodeProperties, update it
-            if (SkylineWindow.PropertyForm?.GetPropertyObject() is FileNodeProperties)
-                SkylineWindow.PropertyForm.SetPropertyObject(GetSelectedObjectProperties());
         }
 
         protected override string GetPersistentString()
@@ -401,12 +400,14 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         #endregion
 
-        #region IPropertySheetOwner implementation
+        #region IPropertyProvider implementation
 
-        public GlobalizedObject GetSelectedObjectProperties()
+        public SkylineObject GetPropertyObject()
         {
-            var filesTreeNodeSelected = FilesTree.SelectedNodeFTN;
-            return filesTreeNodeSelected?.GetProperties(SkylineWindow.Document);
+            var selectedNode = FilesTree.SelectedNodeFTN;
+            var dataSchema = new SkylineWindowDataSchema(SkylineWindow);
+            var identityPath = selectedNode?.Model.IdentityPath;
+            return selectedNode?.Model.PropertyObjectInstancer(dataSchema, identityPath);
         }
 
         #endregion
@@ -501,7 +502,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         private void FilesTree_AfterSelect(object sender, TreeViewEventArgs e)
         {
-            SkylineWindow.ShowProperties(GetSelectedObjectProperties());
+            SkylineWindow.FocusPropertyProvider(this);
         }
         
         private void FilesTree_BeforeCollapse(object sender, TreeViewCancelEventArgs e)
@@ -559,7 +560,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         private void FilesTree_OpenPropertiesViewMenuItem(object sender, EventArgs e)
         {
-            SkylineWindow.ShowPropertyForm(true);
+            SkylineWindow.ShowPropertyGridForm(true);
         }
 
         // FilesTree => initiate drag-and-drop, hide tooltips 
