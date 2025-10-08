@@ -310,10 +310,11 @@ namespace pwiz.Skyline.Model
         {
             get
             {
+                if (_basePropertyDescriptor is AnnotationPropertyDescriptor)
+                    return PropertyGridResources.Category_Annotations;
+
                 if (_basePropertyDescriptor.Category != null)
-                {
                     return _resourceManager.GetString(CATEGORY_PREFIX + _basePropertyDescriptor.Category) ?? string.Empty;
-                }
 
                 return null;
             }
