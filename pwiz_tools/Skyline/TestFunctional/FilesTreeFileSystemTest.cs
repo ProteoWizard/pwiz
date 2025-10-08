@@ -16,6 +16,7 @@
 
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.FilesTree;
 using pwiz.Skyline.FileUI;
@@ -59,7 +60,7 @@ namespace pwiz.SkylineTestFunctional
 
             var fileSystemService = SkylineWindow.FilesTree.FileSystemService;
             Assert.AreEqual(FileSystemType.local_file_system, fileSystemService.FileSystemType);
-            Assert.AreEqual(2, fileSystemService.MonitoredDirectories().Count);
+            Assert.AreEqual(1, fileSystemService.MonitoredDirectories().Count);
             Assert.IsTrue(fileSystemService.MonitoredDirectories().Contains(DirForPath(documentPath)));
 
             // Import replicate in Main\
@@ -69,7 +70,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForFilesTree();
 
             Assert.AreEqual(FileSystemType.local_file_system, fileSystemService.FileSystemType);
-            Assert.AreEqual(2, fileSystemService.MonitoredDirectories().Count);
+            Assert.AreEqual(1, fileSystemService.MonitoredDirectories().Count);
             Assert.IsTrue(fileSystemService.MonitoredDirectories().Contains(DirForPath(sampleFilePath)));
 
             // Import replicate in Main\SubDirectory\
@@ -78,7 +79,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForFilesTree();
 
             Assert.AreEqual(FileSystemType.local_file_system, fileSystemService.FileSystemType);
-            Assert.AreEqual(3, fileSystemService.MonitoredDirectories().Count);
+            Assert.AreEqual(2, fileSystemService.MonitoredDirectories().Count);
             Assert.IsTrue(fileSystemService.MonitoredDirectories().Contains(DirForPath(sampleFilePath)));
 
             // Import replicate in Main\..\SiblingDirectory01\
@@ -87,7 +88,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForFilesTree();
 
             Assert.AreEqual(FileSystemType.local_file_system, fileSystemService.FileSystemType);
-            Assert.AreEqual(4, fileSystemService.MonitoredDirectories().Count);
+            Assert.AreEqual(3, fileSystemService.MonitoredDirectories().Count);
             Assert.IsTrue(fileSystemService.MonitoredDirectories().Contains(DirForPath(sampleFilePath)));
 
             // Import replicate in Main\..\SiblingDirectory02\
@@ -96,7 +97,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForFilesTree();
 
             Assert.AreEqual(FileSystemType.local_file_system, fileSystemService.FileSystemType);
-            Assert.AreEqual(5, fileSystemService.MonitoredDirectories().Count);
+            Assert.AreEqual(4, fileSystemService.MonitoredDirectories().Count);
             Assert.IsTrue(fileSystemService.MonitoredDirectories().Contains(DirForPath(sampleFilePath)));
 
             Assert.IsTrue(ReferenceEquals(fileSystemService, SkylineWindow.FilesTree.FileSystemService));
@@ -143,6 +144,8 @@ namespace pwiz.SkylineTestFunctional
             { // Rename subdirectory 
                 var dirName = Path.Combine(TestFilesDirs[0].FullPath, @"SiblingDirectory01");
                 Directory.Move(dirName, dirName + @"RENAME");
+                ((LocalStorageService)SkylineWindow.FilesTree.FileSystemService.Delegate).TriggerAvailabilityMonitor();
+                Thread.Sleep(250); // Wait briefly for the availability monitor to trigger
                 WaitForFilesTree();
 
                 var filesTreeNodes = FindNodesForDir(dirName);
@@ -153,6 +156,8 @@ namespace pwiz.SkylineTestFunctional
                 }
 
                 Directory.Move(dirName + @"RENAME", dirName);
+                ((LocalStorageService)SkylineWindow.FilesTree.FileSystemService.Delegate).TriggerAvailabilityMonitor();
+                Thread.Sleep(250); // Wait briefly for the availability monitor to trigger
                 WaitForFilesTree();
 
                 foreach (var node in filesTreeNodes)

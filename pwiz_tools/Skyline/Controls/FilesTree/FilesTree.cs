@@ -743,22 +743,22 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         public IList<FilesTreeNode> FindNodesByFilePath(string targetPath)
         {
-            var normalizedTargetPath = Path.GetFullPath(targetPath);
+            var normalizedTargetPath = FileSystemUtil.Normalize(targetPath);
 
             var matchingNodes = new List<FilesTreeNode>();
             Traverse(Root, filesTreeNode =>
             {
                 if (filesTreeNode.Model.IsBackedByFile && filesTreeNode.LocalFilePath != null)
                 {
-                    var normalizedCurrentPath = Path.GetFullPath(filesTreeNode.LocalFilePath).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                    var normalizedCurrentPath = FileSystemUtil.Normalize(filesTreeNode.LocalFilePath).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
 
                     // Check for exact match - if found, this is the target node
-                    if (LocalStorageService.PathEquals(normalizedCurrentPath, normalizedTargetPath))
+                    if (FileSystemUtil.PathEquals(normalizedCurrentPath, normalizedTargetPath))
                     {
                         matchingNodes.Add(filesTreeNode);
                     }
                     // Check for partial match - if found, this node was in a directory whose name changed
-                    else if (LocalStorageService.IsFileInDirectory(normalizedTargetPath, normalizedCurrentPath))
+                    else if (FileSystemUtil.IsFileInDirectory(normalizedTargetPath, normalizedCurrentPath))
                     {
                         matchingNodes.Add(filesTreeNode);
                     }
