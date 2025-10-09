@@ -3279,6 +3279,14 @@ namespace pwiz.Skyline
             }
         }
 
+        public void PropertyProviderSelectionChanged(IPropertyProvider propertyProvider)
+        {
+            if (ReferenceEquals(_lastFocusedPropertyProvider, propertyProvider))
+            {
+                UpdatePropertyGrid();
+            }
+        }
+
         public void FocusPropertyProvider(IPropertyProvider propertyProvider)
         {
             _lastFocusedPropertyProvider = propertyProvider;

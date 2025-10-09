@@ -40,7 +40,7 @@ namespace pwiz.Skyline.Controls
             HideOnClose = true; // Hide the form when closed, but do not dispose it
             SkylineWindow = skylineWindow;
 
-            SkylineWindow.Listen(SkylineWindow_OnDocumentChanged);
+            ((IDocumentUIContainer)SkylineWindow).ListenUI(SkylineWindow_OnUiDocumentChanged);
         }
 
         [Browsable(false)]
@@ -59,19 +59,12 @@ namespace pwiz.Skyline.Controls
             return propertyGrid.SelectedObject as SkylineObject;
         }
 
-        private void SkylineWindow_OnDocumentChanged(object sender, DocumentChangedEventArgs e)
+        private void SkylineWindow_OnUiDocumentChanged(object sender, DocumentChangedEventArgs e)
         {
-            Invoke(new MethodInvoker(() => SkylineWindow.UpdatePropertyGrid()));
+            SkylineWindow.UpdatePropertyGrid();
         }
 
         #region Test Support
-
-        public bool PropertyIsNullOrNotFound(string propName)
-        {
-            return GetPropertyObject() != null &&
-                   GetPropertyObject().GetProperties()[propName] != null &&
-                   ((string)GetPropertyObject().GetProperties()[propName].GetValue(GetPropertyObject())).IsNullOrEmpty();
-        }
 
         public GridItem GetGridItemByPropName(string name)
         {

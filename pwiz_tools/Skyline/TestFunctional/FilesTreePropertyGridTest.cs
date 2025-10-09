@@ -291,28 +291,24 @@ namespace pwiz.SkylineTestFunctional
             {
                 replicateStringProp?.SetValue(selectedObject, stringEditedValue);
             });
-            lock (SkylineWindow.GetDocumentChangeLock()) { }
             selectedObject = SkylineWindow.PropertyGridForm.GetPropertyObject();
             var replicateNumberProp = TypeDescriptor.GetProperties(selectedObject, false)[ANNOTATION_NAME_PREFIX + NUMBER_ANNOTATION_NAME];
             RunUI(() =>
             {
                 replicateNumberProp?.SetValue(selectedObject, numberEditedValue);
             });
-            lock (SkylineWindow.GetDocumentChangeLock()) { }
             selectedObject = SkylineWindow.PropertyGridForm.GetPropertyObject();
             var replicateBoolProp = TypeDescriptor.GetProperties(selectedObject, false)[ANNOTATION_NAME_PREFIX + BOOL_ANNOTATION_NAME];
             RunUI(() =>
             {
                 replicateBoolProp?.SetValue(selectedObject, boolEditedValue);
             });
-            lock (SkylineWindow.GetDocumentChangeLock()) { }
             selectedObject = SkylineWindow.PropertyGridForm.GetPropertyObject();
             var replicateListProp = TypeDescriptor.GetProperties(selectedObject, false)[ANNOTATION_NAME_PREFIX + LIST_ANNOTATION_NAME];
             RunUI(() =>
             {
                 replicateListProp?.SetValue(selectedObject, listEditedValue);
             });
-            lock (SkylineWindow.GetDocumentChangeLock()) { }
 
             var doc = SkylineWindow.Document;
             var chromSetId = replicateNode.Model.IdentityPath.GetIdentity(0);
