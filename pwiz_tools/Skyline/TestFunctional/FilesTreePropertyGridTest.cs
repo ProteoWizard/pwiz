@@ -26,6 +26,7 @@ using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Skyline.Controls;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -62,13 +63,9 @@ namespace pwiz.SkylineTestFunctional
             TestEditProperties();
 
             TestEditPropertiesUI();
-
-            // Destroy the property form and files tree form to avoid test freezing
-            RunUI(() =>
-            {
-                SkylineWindow.DestroyPropertyGridForm();
-                SkylineWindow.DestroyFilesTreeForm();
-            });
+            var propertyGridForm = FindOpenForm<PropertyGridForm>();
+            Assert.IsNotNull(propertyGridForm);
+            OkDialog(propertyGridForm, propertyGridForm.Close);
         }
 
         private void VerifySetup()
@@ -293,29 +290,24 @@ namespace pwiz.SkylineTestFunctional
             {
                 replicateStringProp?.SetValue(selectedObject, stringEditedValue);
             });
-            lock (SkylineWindow.GetDocumentChangeLock()) { }
             selectedObject = SkylineWindow.PropertyGridForm.GetPropertyObject();
             var replicateNumberProp = TypeDescriptor.GetProperties(selectedObject, false)[ANNOTATION_NAME_PREFIX + NUMBER_ANNOTATION_NAME];
             RunUI(() =>
             {
                 replicateNumberProp?.SetValue(selectedObject, numberEditedValue);
             });
-            lock (SkylineWindow.GetDocumentChangeLock()) { }
             selectedObject = SkylineWindow.PropertyGridForm.GetPropertyObject();
             var replicateBoolProp = TypeDescriptor.GetProperties(selectedObject, false)[ANNOTATION_NAME_PREFIX + BOOL_ANNOTATION_NAME];
             RunUI(() =>
             {
                 replicateBoolProp?.SetValue(selectedObject, boolEditedValue);
             });
-            lock (SkylineWindow.GetDocumentChangeLock()) { }
             selectedObject = SkylineWindow.PropertyGridForm.GetPropertyObject();
             var replicateListProp = TypeDescriptor.GetProperties(selectedObject, false)[ANNOTATION_NAME_PREFIX + LIST_ANNOTATION_NAME];
             RunUI(() =>
             {
                 replicateListProp?.SetValue(selectedObject, listEditedValue);
             });
-            lock (SkylineWindow.GetDocumentChangeLock()) { }
-
             var doc = SkylineWindow.Document;
             var chromSetId = replicateNode.Model.IdentityPath.GetIdentity(0);
             doc.MeasuredResults.TryGetChromatogramSet(chromSetId.GlobalIndex, out var chromSet, out var _);
@@ -324,6 +316,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(numberEditedValue, annotations.GetAnnotation(defNumber));
             Assert.AreEqual(boolEditedValue, annotations.GetAnnotation(defBool));
             Assert.AreEqual(listEditedValue, annotations.GetAnnotation(defList));
+            
         }
 
         private static void TestEditPropertiesUI()
@@ -355,8 +348,6 @@ namespace pwiz.SkylineTestFunctional
             {
                 nameGridItem.PropertyDescriptor?.SetValue(selectedObject, newName);
             });
-            lock(SkylineWindow.GetDocumentChangeLock()) { }
-
             nameGridItem = SkylineWindow.PropertyGridForm.GetGridItemByPropName(NAME_PROP_NAME);
             Assert.IsNotNull(nameGridItem);
             Assert.AreEqual(nameGridItem.Value, newName);

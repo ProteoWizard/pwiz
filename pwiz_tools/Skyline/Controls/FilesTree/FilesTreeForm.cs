@@ -502,7 +502,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         private void FilesTree_AfterSelect(object sender, TreeViewEventArgs e)
         {
-            SkylineWindow.FocusPropertyProvider(this);
+            SkylineWindow.PropertyProviderSelectionChanged(this);
         }
         
         private void FilesTree_BeforeCollapse(object sender, TreeViewCancelEventArgs e)

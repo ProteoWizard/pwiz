@@ -143,7 +143,7 @@ namespace pwiz.Skyline.Controls
 
         private void SequenceTree_AfterSelect(object sender, TreeViewEventArgs e)
         {
-            SkylineWindow.FocusPropertyProvider(this);
+            SkylineWindow.PropertyProviderSelectionChanged(this);
         }
 
         private void toolBarResults_Resize(object sender, EventArgs e)
