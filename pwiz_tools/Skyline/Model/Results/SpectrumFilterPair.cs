@@ -176,7 +176,14 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
 
-            return FilterSpectrumList(spectra, Ms2ProductFilters, HighAccQ3, useIonMobilityHighEnergyOffset);
+            // Filter out spectra with no overlap of any target with the spectrum's scan window
+            var filteredSpectra = spectra.Where(spectrum => spectrum.Metadata == null ||
+                                                            !spectrum.Metadata.ScanWindowLowerLimit.HasValue ||
+                                                            !spectrum.Metadata.ScanWindowUpperLimit.HasValue ||
+                                                            (Ms2ProductFilters.Any() &&
+                                                             spectrum.Metadata.ScanWindowLowerLimit < Ms2ProductFilters.Last().TargetMz &&
+                                                             spectrum.Metadata.ScanWindowUpperLimit > Ms2ProductFilters.First().TargetMz));
+            return FilterSpectrumList(filteredSpectra.ToArray(), Ms2ProductFilters, HighAccQ3, useIonMobilityHighEnergyOffset);
         }
 
         /// <summary>
