@@ -272,6 +272,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
         scan.set(MS_ion_mobility_drift_time, driftTime, UO_millisecond);
     }
 
+    vector<float> masses, intensities;
+
     if (msLevel > 1 && isMS)
     {
         double setMass = 0;
@@ -291,19 +293,28 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
 
         float lowerIsolationWindowOffset, maxIsolationWindowOffset;
         bool offsetsPresent = useDDAProcessor_ ? rawdata_->GetIsolationWindow(lowerIsolationWindowOffset, maxIsolationWindowOffset) : false;
-        
-        if (setMass == 0)
+
+        if (spectrumType == MS_SRM_spectrum)
         {
-            setMass = (maxMZ + minMZ) / 2;
-            precursor.isolationWindow.set(MS_isolation_window_upper_offset, maxMZ - setMass, xUnit);
-            precursor.isolationWindow.set(MS_isolation_window_lower_offset, maxMZ - setMass, xUnit);
+            vector<float> precursorMZs;
+            rawdata_->Reader.ReadScan(ie.function, 1, precursorMZs, intensities, masses);
+            precursor.isolationWindow.set(MS_isolation_window_target_m_z, precursorMZs[0], xUnit);
         }
-        else if (offsetsPresent)
+        else
         {
-            precursor.isolationWindow.set(MS_isolation_window_lower_offset, lowerIsolationWindowOffset, xUnit);
-            precursor.isolationWindow.set(MS_isolation_window_upper_offset, maxIsolationWindowOffset, xUnit);
+            if (setMass == 0)
+            {
+                setMass = (maxMZ + minMZ) / 2;
+                precursor.isolationWindow.set(MS_isolation_window_upper_offset, maxMZ - setMass, xUnit);
+                precursor.isolationWindow.set(MS_isolation_window_lower_offset, maxMZ - setMass, xUnit);
+            }
+            else if (offsetsPresent)
+            {
+                precursor.isolationWindow.set(MS_isolation_window_lower_offset, lowerIsolationWindowOffset, xUnit);
+                precursor.isolationWindow.set(MS_isolation_window_upper_offset, maxIsolationWindowOffset, xUnit);
+            }
+            precursor.isolationWindow.set(MS_isolation_window_target_m_z, setMass, xUnit);
         }
-        precursor.isolationWindow.set(MS_isolation_window_target_m_z, setMass, xUnit);
 
         precursor.activation.set(MS_beam_type_collision_induced_dissociation); // AFAIK there is no Waters instrument with a trap collision cell
 
@@ -352,8 +363,6 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
         }
         else
         {
-            vector<float> masses, intensities;
-
             if (useDDAProcessor_)
             {
                 getDDAScan(index, doCentroid, masses, intensities);
@@ -369,9 +378,12 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
             }
             else // not ion mobility
             {
-                rawdata_->ReadScan(ie.function, ie.scan, doCentroid, masses, intensities);
-                if (doCentroid)
-                    calculatePeakMetadata(result, masses, intensities);
+                if (spectrumType != MS_SRM_spectrum) // SRM spectra already got their data above
+                {
+                    rawdata_->ReadScan(ie.function, ie.scan, doCentroid, masses, intensities);
+                    if (doCentroid)
+                        calculatePeakMetadata(result, masses, intensities);
+                }
                 result->defaultArrayLength = masses.size();
             }
 
@@ -652,7 +664,7 @@ PWIZ_API_DECL void SpectrumList_Waters::createIndex()
             cout << "  " << item << "\n";
         }*/
 
-        if (spectrumType == MS_SRM_spectrum ||
+        if ((spectrumType == MS_SRM_spectrum && !config_.srmAsSpectra) ||
             spectrumType == MS_SIM_spectrum ||
             spectrumType == MS_constant_neutral_loss_spectrum ||
             spectrumType == MS_constant_neutral_gain_spectrum)
