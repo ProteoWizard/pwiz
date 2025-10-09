@@ -17,9 +17,9 @@
  * limitations under the License.
  */
 
+using System;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Util;
 using System.ComponentModel;
@@ -30,21 +30,14 @@ namespace pwiz.Skyline.Controls
 {
     public partial class PropertyGridForm : DockableFormEx
     {
-        private PropertyGridForm()
+        public PropertyGridForm(SkylineWindow skylineWindow)
         {
             InitializeComponent();
-        }
-
-        public PropertyGridForm(SkylineWindow skylineWindow) : this()
-        {
             HideOnClose = true; // Hide the form when closed, but do not dispose it
             SkylineWindow = skylineWindow;
-
             ((IDocumentUIContainer)SkylineWindow).ListenUI(SkylineWindow_OnUiDocumentChanged);
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public SkylineWindow SkylineWindow { get; }
 
         public void SetPropertyObject(SkylineObject properties)
