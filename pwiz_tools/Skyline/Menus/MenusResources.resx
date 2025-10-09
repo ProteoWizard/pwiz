@@ -333,17 +333,17 @@ To be ready to train a peak scoring model effectively, follow these steps:
     <value>Add Decoys</value>
   </data>
   <data name="EditMenu_ImputePeakBoundaries_" xml:space="preserve">
-	  <value>No imputations options have been chosen for this document.
+    <value>No imputations options have been chosen for this document.
 Go to the Prediction tab in Peptide Settings to choose some imputation options.</value>
   </data>
   <data name="EditMenu_ImputePeakBoundaries_Imputing_peak_boundaries" xml:space="preserve">
-	  <value>Imputing peak boundaries</value>
+    <value>Imputing peak boundaries</value>
   </data>
   <data name="EditMenu_ImputePeakBoundaries_Imputed_peak_boundaries" xml:space="preserve">
-	  <value>Imputed peak boundaries</value>
+    <value>Imputed peak boundaries</value>
   </data>
   <data name="RefineMenu_ShowReintegrateDialog_Waiting_for_document_to_finish_loading" xml:space="preserve">
-	  <value>Waiting for document to finish loading</value>
+    <value>Waiting for document to finish loading</value>
   </data>
   <data name="Keyboard_Shortcuts_Title" xml:space="preserve">
     <value>Keyboard Shortcuts</value>
@@ -355,7 +355,7 @@ Go to the Prediction tab in Peptide Settings to choose some imputation options.<
     <value>Shortcut</value>
   </data>
   <data name="KeyboardShortcutDocumentation_GenerateKeyboardShortcutHtml_Keyboard_Shortcuts" xml:space="preserve">
-      <value>Keyboard Shortcuts</value>
+    <value>Keyboard Shortcuts</value>
   </data>
   <data name="Keyboard_Shortcuts_Table_Title" xml:space="preserve">
     <value>Keyboard Shortcuts</value>
