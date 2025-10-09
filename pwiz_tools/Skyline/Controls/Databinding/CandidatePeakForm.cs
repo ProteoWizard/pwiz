@@ -328,7 +328,7 @@ namespace pwiz.Skyline.Controls.Databinding
             }
 
             var chromatogramSet = document.Settings.MeasuredResults.Chromatograms[replicateIndex];
-            var chromFileInfoId = GetChromFileInfoId(peptideDocNode, chromatogramSet);
+            var chromFileInfoId = GetChromFileInfoId(peptideDocNode, replicateIndex, chromatogramSet);
             foreach (var comparableGroup in peptideDocNode.GetComparableGroups())
             {
                 var transitionGroups = ImmutableList.ValueOf(comparableGroup.Select(tg => tg.TransitionGroup));
@@ -342,22 +342,41 @@ namespace pwiz.Skyline.Controls.Databinding
             return null;
         }
 
-        private ChromFileInfoId GetChromFileInfoId(PeptideDocNode peptideDocNode, ChromatogramSet chromatogramSet)
+        private ChromFileInfoId GetChromFileInfoId(PeptideDocNode peptideDocNode, int replicateIndex, ChromatogramSet chromatogramSet)
         {
             if (chromatogramSet.MSDataFileInfos.Count == 1)
             {
                 return chromatogramSet.MSDataFileInfos[0].FileId;
             }
 
-            ChromFileInfoId fileId = null;
+            IList<ReferenceValue<ChromFileInfoId>> candidateFileIds = Array.Empty<ReferenceValue<ChromFileInfoId>>();
+            if (peptideDocNode.Results != null)
+            {
+                candidateFileIds = peptideDocNode.GetSafeChromInfo(replicateIndex)
+                    .Select(info => ReferenceValue.Of(info.FileId)).ToList();
+            }
+
+            if (candidateFileIds.Count == 0)
+            {
+                candidateFileIds = chromatogramSet.MSDataFileInfos.Select(file => ReferenceValue.Of(file.FileId))
+                    .ToList();
+            }
+
+            if (candidateFileIds.Count == 1)
+            {
+                return candidateFileIds[0];
+            }
+            
             var graphChrom = SkylineWindow.GetGraphChrom(chromatogramSet.Name);
             if (true == graphChrom?.Visible)
             {
-                fileId = graphChrom.GetChromFileInfoId();
+                var graphChromFileId = graphChrom.GetChromFileInfoId();
+                if (graphChromFileId != null && candidateFileIds.Contains(graphChromFileId))
+                {
+                    return graphChromFileId;
+                }
             }
-
-            return fileId ?? peptideDocNode?.Results?.SelectMany(chromInfoList => chromInfoList).FirstOrDefault()?.FileId 
-                ?? chromatogramSet.MSDataFileInfos.First().FileId;
+            return candidateFileIds.FirstOrDefault();
         }
 
         private class Selector
