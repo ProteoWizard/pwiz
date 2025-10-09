@@ -18,14 +18,12 @@
  */
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Files;
 using pwiz.SkylineTestUtil;
 using System;
 using System.ComponentModel;
 using System.Linq;
-using System.Windows.Forms;
 
 namespace pwiz.SkylineTestFunctional
 {

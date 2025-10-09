@@ -110,7 +110,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             filesTree.OnDocumentSaved(sender, args);
         }
-        
+
         private void OnDocumentUIChangedEvent(object sender, DocumentChangedEventArgs e)
         {
             filesTree.OnDocumentChanged(sender, e);
