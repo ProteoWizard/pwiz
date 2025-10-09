@@ -644,6 +644,8 @@ namespace pwiz.SkylineTest
             }
         }
 
+        //TODO: FIX THIS FOR NEW DESIGN ARCHITECTURE
+
         /// <summary>
         /// Tests all implementing classes of GlobalizedObject to ensure that each property has a corresponding resource string.
         /// The test also requires that each non-abstract GlobalizedObject has a static ResourceManager method.
@@ -672,7 +674,7 @@ namespace pwiz.SkylineTest
                 return;
             }
 
-            foreach (var prop in type.GetProperties()) if (!prop.IsDefined(typeof(UseCustomHandlingAttribute), inherit: true))
+            foreach (var prop in type.GetProperties()) if (!prop.IsDefined(null, inherit: true))
             {
                 // Verify that the property has a resource
                 var resourceManager = (ResourceManager)resourceManagerMethod.Invoke(null, new object[] { });

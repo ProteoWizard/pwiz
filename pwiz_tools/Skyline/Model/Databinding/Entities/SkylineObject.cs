@@ -82,16 +82,10 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         #region PropertyGrid Support
 
-        protected virtual ResourceManager GetResourceManager() => null;
+        public virtual ResourceManager GetResourceManager() => null;
 
-        protected virtual bool PropertyFilter(PropertyDescriptor prop)
-        {
-            if (prop is AnnotationPropertyDescriptor anno && anno.PropertyType == typeof(bool))
-            {
-
-            }
-            return GetResourceManager()?.GetString(prop.Name) != null || prop is AnnotationPropertyDescriptor;
-        }
+        protected virtual bool PropertyFilter(PropertyDescriptor prop) =>
+            GetResourceManager()?.GetString(prop.Name) != null || prop is AnnotationPropertyDescriptor;
 
         protected virtual PropertyGridPropertyDescriptor PropertyTransform(PropertyDescriptor prop) =>
             new PropertyGridPropertyDescriptor(prop, GetResourceManager(),

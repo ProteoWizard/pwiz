@@ -64,7 +64,7 @@ namespace pwiz.Skyline.Model.Files
             (dataSchema, identityPath) =>
             {
                 var chromSetId = identityPath.GetIdentity(0);
-                dataSchema.Document.MeasuredResults.TryGetChromatogramSet(chromSetId.GlobalIndex, out var set, out var index);
+                dataSchema.Document.MeasuredResults.TryGetChromatogramSet(chromSetId.GlobalIndex, out var _, out var index);
                 return new Databinding.Entities.Replicate(dataSchema, index);
             };
 

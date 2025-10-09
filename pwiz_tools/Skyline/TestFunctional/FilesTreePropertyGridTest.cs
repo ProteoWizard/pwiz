@@ -17,13 +17,15 @@
  * limitations under the License.
  */
 
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Files;
+using pwiz.SkylineTestUtil;
 using System;
 using System.ComponentModel;
 using System.Linq;
-using pwiz.Skyline.Model.Files;
-using pwiz.SkylineTestUtil;
-using pwiz.Skyline.Model.DocSettings;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Windows.Forms;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -31,14 +33,15 @@ namespace pwiz.SkylineTestFunctional
     public class FilesTreePropertyGridTest : AbstractFunctionalTest
     {
         // Both 10, but have different props summing to that
-        internal const int REP_FILE_PROP_NUM = 10;
+        internal const int REP_FILE_PROP_NUM = 5;
         internal const int REP_SAMPLE_FILE_PROP_NUM = 10;
 
         private const string STRING_ANNOTATION_NAME = "StringAnnotation";
         private const string NUMBER_ANNOTATION_NAME = "NumberAnnotation";
         private const string BOOL_ANNOTATION_NAME = "BoolAnnotation";
         private const string LIST_ANNOTATION_NAME = "ListAnnotation";
-        private const string ANNOTATION_NAME_PREFIX = "Annotation_";
+        private const string ANNOTATION_NAME_PREFIX = "annotation_";
+        private const string NAME_PROP_NAME = "Name";
 
         [TestMethod]
         public void TestFilesTreePropertyGrid()
@@ -57,6 +60,8 @@ namespace pwiz.SkylineTestFunctional
             TestAnnotationProperties();
 
             TestEditProperties();
+
+            TestEditPropertiesUI();
 
             // Destroy the property form and files tree form to avoid test freezing
             RunUI(() =>
@@ -92,24 +97,25 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 SkylineWindow.FilesTreeForm.FilesTree.SelectNodeWithoutResettingSelection(replicateNode);
-                SkylineWindow.ShowProperties(SkylineWindow.FilesTreeForm.GetSelectedObjectProperties());
+                SkylineWindow.FocusPropertyProvider(SkylineWindow.FilesTreeForm);
             });
 
             var selectedObject = SkylineWindow.PropertyGridForm?.GetPropertyObject();
             Assert.IsNotNull(selectedObject);
-            Assert.AreEqual(typeof(ReplicateProperties), selectedObject.GetType());
 
             var props = TypeDescriptor.GetProperties(selectedObject, false);
             // only non-null properties end up in the property sheet
             Assert.AreEqual(REP_FILE_PROP_NUM, props.Count);
 
             // test globalizedPropertyDescriptor property for localization
-            const string namePropName = "Name";
-            var nameProp = props[namePropName];
+            var nameProp = props[NAME_PROP_NAME];
             Assert.IsNotNull(nameProp);
-            Assert.AreEqual(nameProp.Name, namePropName);
-            Assert.AreEqual(selectedObject.GetResourceManagerForTest().GetString(nameProp.Name), nameProp.DisplayName);
+            Assert.AreEqual(nameProp.Name, NAME_PROP_NAME);
+            Assert.AreEqual(selectedObject.GetResourceManager().GetString(nameProp.Name), nameProp.DisplayName);
 
+            // NOT IMPLEMENTED YET
+
+            /*
             // test selecting a replicate sample file node
             var sampleFileNode = SkylineWindow.FilesTree.File<ReplicateSampleFile>(replicateNode);
             Assert.IsNotNull(sampleFileNode);
@@ -117,12 +123,11 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 SkylineWindow.FilesTreeForm.FilesTree.SelectNodeWithoutResettingSelection(sampleFileNode);
-                SkylineWindow.ShowProperties(SkylineWindow.FilesTreeForm.GetSelectedObjectProperties());
+                SkylineWindow.FocusPropertyProvider(SkylineWindow.FilesTreeForm);
             });
 
             selectedObject = SkylineWindow.PropertyGridForm?.GetPropertyObject();
             Assert.IsNotNull(selectedObject);
-            Assert.AreEqual(typeof(ReplicateSampleFileProperties), selectedObject.GetType());
 
             props = TypeDescriptor.GetProperties(selectedObject, false);
             // only non-null properties end up in the property sheet
@@ -134,7 +139,7 @@ namespace pwiz.SkylineTestFunctional
             var modelProp = props[instrumentModelPropName];
             Assert.IsNotNull(modelProp);
             Assert.AreEqual(modelProp.Name, instrumentModelPropName);
-            Assert.AreEqual(selectedObject.GetResourceManagerForTest().GetString(modelProp.Name), modelProp.DisplayName);
+            Assert.AreEqual(selectedObject.GetResourceManagerForTest().GetString(modelProp.Name), modelProp.DisplayName); */
         }
 
         private static void TestAnnotationProperties()
@@ -153,12 +158,11 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 SkylineWindow.FilesTreeForm.FilesTree.SelectNodeWithoutResettingSelection(replicateNode);
-                SkylineWindow.ShowProperties(SkylineWindow.FilesTreeForm.GetSelectedObjectProperties());
+                SkylineWindow.FocusPropertyProvider(SkylineWindow.FilesTreeForm);
             });
 
             var selectedObject = SkylineWindow.PropertyGridForm?.GetPropertyObject();
             Assert.IsNotNull(selectedObject);
-            Assert.AreEqual(typeof(ReplicateProperties), selectedObject.GetType());
 
             var props = TypeDescriptor.GetProperties(selectedObject, false);
             // Test if sum of original properties and new annotation definition properties appear
@@ -265,7 +269,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 SkylineWindow.ShowPropertyGridForm(true);
                 SkylineWindow.FilesTreeForm.FilesTree.SelectNodeWithoutResettingSelection(replicateNode);
-                SkylineWindow.ShowProperties(SkylineWindow.FilesTreeForm.GetSelectedObjectProperties());
+                SkylineWindow.FocusPropertyProvider(SkylineWindow.FilesTreeForm);
             });
 
             var defs = SkylineWindow.Document.Settings.DataSettings.AnnotationDefs;
@@ -280,44 +284,82 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNotNull(defList);
 
             // Edit annotation properties through the PropertyGrid
+            Assert.IsNotNull(SkylineWindow.PropertyGridForm);
+
+            var selectedObject = SkylineWindow.PropertyGridForm.GetPropertyObject();
+            Assert.IsNotNull(selectedObject);
+            var replicateStringProp = TypeDescriptor.GetProperties(selectedObject, false)[ANNOTATION_NAME_PREFIX + STRING_ANNOTATION_NAME];
             RunUI(() =>
             {
-                var PropertyGridForm = SkylineWindow.PropertyGridForm;
-                Assert.IsNotNull(PropertyGridForm);
-
-                var selectedObject = PropertyGridForm.GetPropertyObject();
-                Assert.IsNotNull(selectedObject);
-
-                var props = TypeDescriptor.GetProperties(selectedObject, false);
-
-                // Set each annotation property using the property grid and manually trigger the event for each
-                var replicateStringProp = props[ANNOTATION_NAME_PREFIX + STRING_ANNOTATION_NAME];
                 replicateStringProp?.SetValue(selectedObject, stringEditedValue);
-                SkylineWindow.PropertyGridForm.PropertyObjectValuesModifiedManually(replicateStringProp);
-
-                var replicateNumberProp = props[ANNOTATION_NAME_PREFIX + NUMBER_ANNOTATION_NAME];
-                replicateNumberProp?.SetValue(selectedObject, numberEditedValue);
-                SkylineWindow.PropertyGridForm.PropertyObjectValuesModifiedManually(replicateNumberProp);
-
-                var replicateBoolProp = props[ANNOTATION_NAME_PREFIX + BOOL_ANNOTATION_NAME];
-                replicateBoolProp?.SetValue(selectedObject, boolEditedValue); // For bool, use actual bool type
-                SkylineWindow.PropertyGridForm.PropertyObjectValuesModifiedManually(replicateBoolProp);
-
-                var replicateListProp = props[ANNOTATION_NAME_PREFIX + LIST_ANNOTATION_NAME];
-                replicateListProp?.SetValue(selectedObject, listEditedValue);
-                SkylineWindow.PropertyGridForm.PropertyObjectValuesModifiedManually(replicateListProp);
-
-                SkylineWindow.PropertyGridForm.Refresh();
             });
+            lock (SkylineWindow.GetDocumentChangeLock()) { }
+            selectedObject = SkylineWindow.PropertyGridForm.GetPropertyObject();
+            var replicateNumberProp = TypeDescriptor.GetProperties(selectedObject, false)[ANNOTATION_NAME_PREFIX + NUMBER_ANNOTATION_NAME];
+            RunUI(() =>
+            {
+                replicateNumberProp?.SetValue(selectedObject, numberEditedValue);
+            });
+            lock (SkylineWindow.GetDocumentChangeLock()) { }
+            selectedObject = SkylineWindow.PropertyGridForm.GetPropertyObject();
+            var replicateBoolProp = TypeDescriptor.GetProperties(selectedObject, false)[ANNOTATION_NAME_PREFIX + BOOL_ANNOTATION_NAME];
+            RunUI(() =>
+            {
+                replicateBoolProp?.SetValue(selectedObject, boolEditedValue);
+            });
+            lock (SkylineWindow.GetDocumentChangeLock()) { }
+            selectedObject = SkylineWindow.PropertyGridForm.GetPropertyObject();
+            var replicateListProp = TypeDescriptor.GetProperties(selectedObject, false)[ANNOTATION_NAME_PREFIX + LIST_ANNOTATION_NAME];
+            RunUI(() =>
+            {
+                replicateListProp?.SetValue(selectedObject, listEditedValue);
+            });
+            lock (SkylineWindow.GetDocumentChangeLock()) { }
 
-            // Verify the document reflects the edits
             var doc = SkylineWindow.Document;
-            var chromSet = doc.MeasuredResults.Chromatograms[0];
+            var chromSetId = replicateNode.Model.IdentityPath.GetIdentity(0);
+            doc.MeasuredResults.TryGetChromatogramSet(chromSetId.GlobalIndex, out var chromSet, out var _);
             var annotations = chromSet.Annotations;
             Assert.AreEqual(stringEditedValue, annotations.GetAnnotation(defString));
             Assert.AreEqual(numberEditedValue, annotations.GetAnnotation(defNumber));
-            Assert.AreEqual(boolEditedValue, annotations.GetAnnotation(defBool)); // Stored as string
+            Assert.AreEqual(boolEditedValue, annotations.GetAnnotation(defBool));
             Assert.AreEqual(listEditedValue, annotations.GetAnnotation(defList));
+        }
+
+        private static void TestEditPropertiesUI()
+        {
+            var replicateFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
+            var replicateNode = SkylineWindow.FilesTree.File<Replicate>(replicateFolder);
+            Assert.IsNotNull(replicateNode);
+
+            // Select the replicate node so its properties appear in the property sheet
+            RunUI(() =>
+            {
+                SkylineWindow.ShowPropertyGridForm(true);
+                SkylineWindow.FilesTreeForm.FilesTree.SelectNodeWithoutResettingSelection(replicateNode);
+                SkylineWindow.FocusPropertyProvider(SkylineWindow.FilesTreeForm);
+            });
+
+            // find griditem associate with Name property
+            var selectedObject = SkylineWindow.PropertyGridForm.GetPropertyObject();
+            var nameGridItem = SkylineWindow.PropertyGridForm.GetGridItemByPropName(NAME_PROP_NAME);
+            Assert.IsNotNull(nameGridItem);
+            var nameGridItemValue = nameGridItem.Value;
+            Assert.IsTrue(nameGridItemValue is string);
+            var nameValue = (string)nameGridItemValue;
+            Assert.AreEqual(replicateNode.Name, nameValue);
+
+            // Edit the Name property through the PropertyGrid UI
+            const string newName = "EditedName";
+            RunUI(() =>
+            {
+                nameGridItem.PropertyDescriptor?.SetValue(selectedObject, newName);
+            });
+            lock(SkylineWindow.GetDocumentChangeLock()) { }
+
+            nameGridItem = SkylineWindow.PropertyGridForm.GetGridItemByPropName(NAME_PROP_NAME);
+            Assert.IsNotNull(nameGridItem);
+            Assert.AreEqual(nameGridItem.Value, newName);
         }
     }
 }

@@ -17,11 +17,13 @@
  * limitations under the License.
  */
 
+using pwiz.Common.Collections;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Util;
-using pwiz.Common.Collections;
 using System.ComponentModel;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace pwiz.Skyline.Controls
@@ -69,6 +71,24 @@ namespace pwiz.Skyline.Controls
             return GetPropertyObject() != null &&
                    GetPropertyObject().GetProperties()[propName] != null &&
                    ((string)GetPropertyObject().GetProperties()[propName].GetValue(GetPropertyObject())).IsNullOrEmpty();
+        }
+
+        public GridItem GetGridItemByPropName(string name)
+        {
+            if (propertyGrid == null || string.IsNullOrEmpty(name))
+                return null;
+
+            // Get the root grid item (the "Properties" category)
+            var root = propertyGrid.SelectedGridItem;
+            while (root?.Parent != null)
+                root = root.Parent;
+
+            if (root == null)
+                return null;
+
+            // Search all children for a property with the given name
+            return (from GridItem category in root.GridItems from GridItem item in category.GridItems select item)
+                .FirstOrDefault(item => item.PropertyDescriptor != null && item.PropertyDescriptor.Name == name);
         }
 
         #endregion
