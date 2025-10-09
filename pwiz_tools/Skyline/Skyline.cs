@@ -3279,18 +3279,22 @@ namespace pwiz.Skyline
             }
         }
 
+        public void FocusPropertyProvider(IPropertyProvider propertyProvider)
+        {
+            _lastFocusedPropertyProvider = propertyProvider;
+            UpdatePropertyGrid();
+        }
+
+        /// <summary>
+        /// Called when the selection on a property provider has changed. If the property
+        /// provider is the currently focused property provider then update the property sheet.
+        /// </summary>
         public void PropertyProviderSelectionChanged(IPropertyProvider propertyProvider)
         {
             if (ReferenceEquals(_lastFocusedPropertyProvider, propertyProvider))
             {
                 UpdatePropertyGrid();
             }
-        }
-
-        public void FocusPropertyProvider(IPropertyProvider propertyProvider)
-        {
-            _lastFocusedPropertyProvider = propertyProvider;
-            UpdatePropertyGrid();
         }
 
         public void DockPanel_ActiveContentChanged(object sender, EventArgs e)
