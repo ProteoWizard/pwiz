@@ -3249,12 +3249,13 @@ namespace pwiz.Skyline
             if (show)
             {
                 _propertyGridForm ??= CreatePropertyGridForm();
-                UpdatePropertyGrid();
 
                 if (_propertyGridForm.DockPanel != null)
                     _propertyGridForm.Activate();
                 else
                     _propertyGridForm.Show(dockPanel, DockState.DockRight);
+
+                UpdatePropertyGrid();
             }
             else
             {

@@ -32,10 +32,13 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class SequenceTreeRatioTest : AbstractFunctionalTest
     {
+        internal const string TEST_FILES_ZIP = @"TestFunctional\SequenceTreeRatioTest.zip";
+        internal const string TEST_FILE_NAME = "SequenceTreeRatioTest.sky";
+
         [TestMethod]
         public void TestSequenceTreeRatio()
         {
-            TestFilesZip = @"TestFunctional\SequenceTreeRatioTest.zip";
+            TestFilesZip = TEST_FILES_ZIP;
             RunFunctionalTest();
         }
 
@@ -43,7 +46,7 @@ namespace pwiz.SkylineTestFunctional
         {
             RunUI(()=>
             {
-                SkylineWindow.OpenFile(TestFilesDir.GetTestPath("SequenceTreeRatioTest.sky"));
+                SkylineWindow.OpenFile(TestFilesDir.GetTestPath(TEST_FILE_NAME));
                 SkylineWindow.ExpandPrecursors();
             });
             VerifyDisplayText(NodeTextWithNoRatio);

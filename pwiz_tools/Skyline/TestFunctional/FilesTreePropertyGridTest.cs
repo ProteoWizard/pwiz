@@ -32,7 +32,6 @@ namespace pwiz.SkylineTestFunctional
     {
         // Both 10, but have different props summing to that
         internal const int REP_FILE_PROP_NUM = 5;
-        internal const int REP_SAMPLE_FILE_PROP_NUM = 10;
 
         private const string STRING_ANNOTATION_NAME = "StringAnnotation";
         private const string NUMBER_ANNOTATION_NAME = "NumberAnnotation";
@@ -110,34 +109,6 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNotNull(nameProp);
             Assert.AreEqual(nameProp.Name, NAME_PROP_NAME);
             Assert.AreEqual(selectedObject.GetResourceManager().GetString(nameProp.Name), nameProp.DisplayName);
-
-            // NOT IMPLEMENTED YET
-
-            /*
-            // test selecting a replicate sample file node
-            var sampleFileNode = SkylineWindow.FilesTree.File<ReplicateSampleFile>(replicateNode);
-            Assert.IsNotNull(sampleFileNode);
-            
-            RunUI(() =>
-            {
-                SkylineWindow.FilesTreeForm.FilesTree.SelectNodeWithoutResettingSelection(sampleFileNode);
-                SkylineWindow.FocusPropertyProvider(SkylineWindow.FilesTreeForm);
-            });
-
-            selectedObject = SkylineWindow.PropertyGridForm?.GetPropertyObject();
-            Assert.IsNotNull(selectedObject);
-
-            props = TypeDescriptor.GetProperties(selectedObject, false);
-            // only non-null properties end up in the property sheet
-            Assert.AreEqual(REP_SAMPLE_FILE_PROP_NUM, props.Count);
-
-            // test globalizedPropertyDescriptor property for localization
-            // must give string name, not nameof() because it's added dynamically
-            const string instrumentModelPropName = "Model";
-            var modelProp = props[instrumentModelPropName];
-            Assert.IsNotNull(modelProp);
-            Assert.AreEqual(modelProp.Name, instrumentModelPropName);
-            Assert.AreEqual(selectedObject.GetResourceManagerForTest().GetString(modelProp.Name), modelProp.DisplayName); */
         }
 
         private static void TestAnnotationProperties()

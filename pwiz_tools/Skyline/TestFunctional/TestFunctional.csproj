@@ -162,6 +162,7 @@
     <Compile Include="AlertDlgTest.cs" />
     <Compile Include="AlignedIdTimesTest.cs" />
     <Compile Include="AlphabeticalReportEditorTest.cs" />
+    <Compile Include="AnnotationsPropertyGridTest.cs" />
     <Compile Include="ApplyPeakToAllTest.cs" />
     <Compile Include="AreaNormalizeOptionTest.cs" />
     <Compile Include="AssociateProteinsParsimonySettingsTest.cs" />
@@ -175,6 +176,7 @@
     <Compile Include="CandidatePeakTest.cs" />
     <Compile Include="CantReadSkydTest.cs" />
     <Compile Include="ChargedLossesLibraryTest.cs" />
+    <Compile Include="SequenceTreePropertyGridTest.cs" />
     <Compile Include="SkylineWindowEventsTest.cs" />
     <Compile Include="FilesModelTest.cs" />
     <Compile Include="ChromatogramExtractionRangeTest.cs" />
