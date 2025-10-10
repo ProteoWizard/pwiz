@@ -165,15 +165,17 @@ local generate-mzML = [ MATCH (--generate-mzML) : [ modules.peek : ARGV ] ] ;
 
 # special run target for Reader_ABI_Test, which needs external data 
 # use --preserve-test-targets to prevent bjam from deleting the executable
-run-if-exists Reader_ABI_Test.cpp $(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_vendor_reader_test_harness
-    : # args
-        \"$(TEST_DATA_PATH)\" $(generate-mzML)
-    : # input-files
-    : # requirements
-        <library>pwiz_reader_abi
-        <conditional>@test-requirements
-    : # target name
-        Reader_ABI_Test 
-    : # default-build
-    ;
+#run-if-exists Reader_ABI_Test.cpp $(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_vendor_reader_test_harness
+#    : # args
+#        \"$(TEST_DATA_PATH)\" $(generate-mzML)
+#    : # input-files
+#    : # requirements
+#        <library>pwiz_reader_abi
+#        <conditional>@test-requirements
+#        # configuration file sets the "useLegacyV2RuntimeActivationPolicy" attribute
+#        <toolset>msvc:<configuration-file>Reader_ABI_Test.exe.config
+#    : # target name
+#        Reader_ABI_Test 
+#    : # default-build
+#    ;
 
