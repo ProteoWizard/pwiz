@@ -126,7 +126,7 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>497, 605</value>
+    <value>497, 658</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -154,7 +154,7 @@
     <value>Bottom, Right</value>
   </data>
   <data name="btnNext.Location" type="System.Drawing.Point, System.Drawing">
-    <value>416, 605</value>
+    <value>416, 658</value>
   </data>
   <data name="btnNext.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -487,7 +487,7 @@
     <value>False</value>
   </data>
   <data name="btnEarlyFinish.Location" type="System.Drawing.Point, System.Drawing">
-    <value>254, 605</value>
+    <value>254, 658</value>
   </data>
   <data name="btnEarlyFinish.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -523,7 +523,7 @@
     <value>3, 46</value>
   </data>
   <data name="buildLibraryPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>570, 524</value>
+    <value>570, 577</value>
   </data>
   <data name="buildLibraryPanel.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -601,7 +601,7 @@
     <value>3, 3, 3, 3</value>
   </data>
   <data name="buildSearchSpecLibPage.Size" type="System.Drawing.Size, System.Drawing">
-    <value>576, 573</value>
+    <value>576, 626</value>
   </data>
   <data name="buildSearchSpecLibPage.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1042,7 +1042,7 @@
     <value>12, 9</value>
   </data>
   <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>200, 20</value>
+    <value>151, 20</value>
   </data>
   <data name="label2.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1126,7 +1126,7 @@
     <value>12, 9</value>
   </data>
   <data name="lblSearchSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>172, 20</value>
+    <value>123, 20</value>
   </data>
   <data name="lblSearchSettings.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1285,7 +1285,7 @@
     <value>0, 0</value>
   </data>
   <data name="wizardPagesImportPeptideSearch.Size" type="System.Drawing.Size, System.Drawing">
-    <value>584, 599</value>
+    <value>584, 652</value>
   </data>
   <data name="wizardPagesImportPeptideSearch.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1309,7 +1309,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnBack.Location" type="System.Drawing.Point, System.Drawing">
-    <value>335, 605</value>
+    <value>335, 658</value>
   </data>
   <data name="btnBack.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -1345,7 +1345,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>584, 641</value>
+    <value>584, 694</value>
   </data>
   <data name="$this.MinimumSize" type="System.Drawing.Size, System.Drawing">
     <value>418, 585</value>

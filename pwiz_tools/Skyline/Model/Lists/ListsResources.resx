@@ -137,6 +137,6 @@
     <value>Column '{0}' cannot be blank.</value>
   </data>
   <data name="ListDesigner_OkDialog_Name_cannot_be_blank" xml:space="preserve">
-	  <value>Name cannot be blank</value>
+    <value>Name cannot be blank</value>
   </data>
 </root>

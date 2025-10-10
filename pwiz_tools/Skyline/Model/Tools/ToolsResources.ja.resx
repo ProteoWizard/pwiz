@@ -244,4 +244,16 @@
   <data name="ToolMacros_listArguments_This_tool_requires_an_Active_Replicate_Name_to_run" xml:space="preserve">
     <value>このツールを実行するにはアクティブな繰り返し測定名が必要です</value>
   </data>
+  <data name="PythonInstaller_GetPackages_Installing_Packages" xml:space="preserve">
+    <value>パッケージのインストール</value>
+  </data>
+  <data name="PythonInstaller_GetPip_Installing_Pip" xml:space="preserve">
+    <value>Pipのインストール中</value>
+  </data>
+  <data name="PythonInstaller_GetPython_Installing_Python" xml:space="preserve">
+    <value>Pythonのインストール</value>
+  </data>
+  <data name="PythonInstaller_InstallPackages_Install" xml:space="preserve">
+    <value>インストール</value>
+  </data>
 </root>
