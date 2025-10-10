@@ -191,6 +191,7 @@
     </Compile>
     <Compile Include="FormSeen.cs" />
     <Compile Include="GridTester.cs" />
+    <Compile Include="InstallTestUtil.cs" />
     <Compile Include="LongWaitDialogCanceler.cs" />
     <Compile Include="MemoryStreamManager.cs" />
     <Compile Include="MovedDirectory.cs" />

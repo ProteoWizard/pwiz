@@ -131,14 +131,18 @@ namespace pwiz.Skyline.ToolsUI
         {
             try
             {
+                IProgressStatus status;
                 using (var dlg = new LongWaitDlg())
                 {
                     dlg.Message = ToolsUIResources.RInstaller_InstallR_Downloading_R;
                     dlg.ProgressValue = 0;
                     // Short wait, because this can't possible happen fast enough to avoid
                     // showing progress, except in testing
-                    dlg.PerformWork(this, 50, DownloadR);
+                    status = dlg.PerformWork(this, 50, DownloadR);
                 }
+                if (status.IsCanceled)
+                    return false; // Stay on form, allow retry
+                    
                 using (var dlg = new LongWaitDlg(null, false))
                 {
                     dlg.Message = ToolsUIResources.RInstaller_GetR_Installing_R;
@@ -146,14 +150,10 @@ namespace pwiz.Skyline.ToolsUI
                 }
                 MessageDlg.Show(this, Resources.RInstaller_GetR_R_installation_complete_);
             }
-            catch (TargetInvocationException ex)
+            catch (Exception ex)
             {
-                if (ex.InnerException is ToolExecutionException)
-                {
-                    MessageDlg.ShowException(this, ex);
-                    return false;
-                }
-                throw;
+                MessageDlg.ShowException(this, ex);
+                return false; // Stay on form, allow retry
             }
             return true;
         }
@@ -174,7 +174,6 @@ namespace pwiz.Skyline.ToolsUI
             // create the webclient
             using (var webClient = TestDownloadClient ?? new MultiFileAsynchronousDownloadClient(longWaitBroker, 2))
             {
-
                 // First try downloading it as if it is the most recent release of R. The most
                 // recent version is stored in a different location of the CRAN repo than older versions.
                 // Otherwise, check and see if it is an older release
@@ -182,13 +181,20 @@ namespace pwiz.Skyline.ToolsUI
                 var recentUri = new Uri(baseUri + exe);
                 var olderUri = new Uri(baseUri + @"old/" + _version + @"/" + exe);
 
-                Exception downloadException;
-                if (!webClient.DownloadFileAsync(recentUri, DownloadPath, out downloadException) && !webClient.DownloadFileAsync(olderUri, DownloadPath, out downloadException))
-                    throw new ToolExecutionException(
-                        TextUtil.LineSeparate(
-                            Resources.RInstaller_DownloadR_Download_failed_,
-                            Resources
-                                .RInstaller_DownloadPackages_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_), downloadException);
+                try
+                {
+                    webClient.DownloadFileAsyncOrThrow(recentUri, DownloadPath);
+                }
+                catch (OperationCanceledException)
+                {
+                    // Don't try alternate URL on cancellation, just propagate
+                    throw;
+                }
+                catch (Exception)
+                {
+                    // First URL failed, try the older release location
+                    webClient.DownloadFileAsyncOrThrow(olderUri, DownloadPath);
+                }
             }
         }
 

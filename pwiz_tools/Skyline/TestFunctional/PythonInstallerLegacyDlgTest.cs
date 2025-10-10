@@ -26,7 +26,6 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
-using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
@@ -38,7 +37,7 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class PythonInstallerLegacyDlgTest : AbstractFunctionalTest
     {
-        //[TestMethod]
+        [TestMethod]
         public void  TestPythonInstallerLegacyDlg()
         {
             RunFunctionalTest();
@@ -130,9 +129,11 @@ namespace pwiz.SkylineTestFunctional
         private static void TestPythonDownloadCanceled()
         {
             var pythonInstaller = FormatPythonInstaller(true, false, false);
-            var messageDlg = ShowDialog<MessageDlg>(pythonInstaller.OkDialog);
-            RunUI(() => Assert.AreEqual(Resources.MultiFileAsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled_, messageDlg.Message));
-            OkDialog(messageDlg, messageDlg.OkDialog);
+            // Click OK to start download - will be canceled by test
+            pythonInstaller.Invoke((Action)pythonInstaller.OkDialog);
+            // Form should remain open after cancellation, allowing user to retry or cancel
+            // User can now click OK again to retry, or Cancel to exit
+            OkDialog(pythonInstaller, pythonInstaller.CancelButton.PerformClick);
             WaitForClosedForm(pythonInstaller);
         }
 
@@ -141,11 +142,10 @@ namespace pwiz.SkylineTestFunctional
         {
             var pythonInstaller = FormatPythonInstaller(false, false, false);
             var messageDlg = ShowDialog<MessageDlg>(pythonInstaller.OkDialog);
-            RunUI(() => Assert.AreEqual(TextUtil.LineSeparate(
-                Resources.PythonInstaller_DownloadPython_Download_failed_, 
-                Resources.PythonInstaller_DownloadPython_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_), messageDlg.Message));
+            RunUI(() => Assert.AreEqual(TestAsynchronousDownloadClient.DOWNLOAD_FAILED_MESSAGE, messageDlg.Message));
             OkDialog(messageDlg, messageDlg.OkDialog);
-            WaitForClosedForm(pythonInstaller);
+            // Form should remain open after error, allowing user to retry or cancel
+            OkDialog(pythonInstaller, pythonInstaller.CancelButton.PerformClick);
         }
 
         // Test Python installation failure
@@ -155,7 +155,8 @@ namespace pwiz.SkylineTestFunctional
             var messageDlg = ShowDialog<MessageDlg>(pythonInstaller.OkDialog);
             RunUI(() => Assert.AreEqual(Resources.PythonInstaller_InstallPython_Python_installation_failed__Canceling_tool_installation_, messageDlg.Message));
             OkDialog(messageDlg, messageDlg.OkDialog);
-            WaitForClosedForm(pythonInstaller);
+            // Form should remain open after error, allowing user to retry or cancel
+            OkDialog(pythonInstaller, pythonInstaller.CancelButton.PerformClick);
         }
 
         // Test Python installation success
@@ -202,9 +203,12 @@ namespace pwiz.SkylineTestFunctional
         private static void TestPackagesDownloadCanceled()
         {
             var pythonInstaller = FormatPackageInstallerBothTypes(true, false, false, false);
-            var messageDlg = ShowDialog<MessageDlg>(pythonInstaller.OkDialog);
-            RunUI(() => Assert.AreEqual(Resources.MultiFileAsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled_, messageDlg.Message));
-            OkDialog(messageDlg, messageDlg.OkDialog);
+            // Click OK to start download - will be canceled by test
+            RunDlg<MultiButtonMsgDlg>(pythonInstaller.OkDialog, installMsgDlg => installMsgDlg.OkDialog());
+            // pythonInstaller.Invoke((Action)pythonInstaller.OkDialog);
+            // Form should remain open after cancellation, allowing user to retry or cancel
+            // User can now click OK again to retry, or Cancel to exit
+            OkDialog(pythonInstaller, pythonInstaller.CancelButton.PerformClick);
             WaitForClosedForm(pythonInstaller);
         }
 
@@ -216,11 +220,10 @@ namespace pwiz.SkylineTestFunctional
             var packages = new Collection<string> {EXE_PACKAGE};
             RunUI(() => Assert.AreEqual(TextUtil.LineSeparate(Resources.PythonInstaller_DownloadPackages_Failed_to_download_the_following_packages_, 
                                                   string.Empty, 
-                                                  TextUtil.LineSeparate(packages), 
-                                                  string.Empty, 
-                                                  Resources.PythonInstaller_DownloadPython_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_), messageDlg.Message));
+                                                  TextUtil.LineSeparate(packages)), messageDlg.Message));
             OkDialog(messageDlg, messageDlg.OkDialog);
-            WaitForClosedForm(pythonInstaller);
+            // Form should remain open after error, allowing user to retry or cancel
+            OkDialog(pythonInstaller, pythonInstaller.CancelButton.PerformClick);
         }
 
         // Test that tool installation works properly when no packages are selected
@@ -253,7 +256,7 @@ namespace pwiz.SkylineTestFunctional
             var errorDlg = ShowDialog<MessageDlg>(messageDlg.BtnCancelClick);
             RunUI(() => Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Python_package_installation_cannot_continue__Canceling_tool_installation_, errorDlg.Message));
             OkDialog(errorDlg, errorDlg.OkDialog);
-            WaitForClosedForm(pythonInstaller);
+            OkDialog(pythonInstaller, pythonInstaller.CancelDialog);
         }
 
         // Test canceling the pip download
@@ -263,13 +266,10 @@ namespace pwiz.SkylineTestFunctional
             SetPipInstallResults(pythonInstaller, true, false, false, false);
             var messageDlg = ShowDialog<MultiButtonMsgDlg>(pythonInstaller.OkDialog);
             RunUI(() => Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_Python_package_manager_Pip_to_install_packages_from_source__Click_install_to_begin_the_installation_process_, messageDlg.Message));
-            var pipErrorDlg = ShowDialog<MessageDlg>(() => Accept(messageDlg));
-            RunUI(() => Assert.AreEqual(Resources.MultiFileAsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled_, pipErrorDlg.Message));
-            OkDialog(pipErrorDlg, pipErrorDlg.OkDialog);
-            var packageErrorDlg = WaitForOpenForm<MessageDlg>();
-            RunUI(() => Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Python_package_installation_cannot_continue__Canceling_tool_installation_, packageErrorDlg.Message));
-            OkDialog(packageErrorDlg, packageErrorDlg.OkDialog);
-            WaitForClosedForm(pythonInstaller);
+            // Pip download will be canceled - no message dialogs shown, form just stays open
+            RunUI(() => Accept(messageDlg));
+            // Form should remain open after cancellation, allowing user to retry or cancel
+            OkDialog(pythonInstaller, pythonInstaller.CancelDialog);
         }
 
         // Test failing the pip download
@@ -280,12 +280,10 @@ namespace pwiz.SkylineTestFunctional
             var messageDlg = ShowDialog<MultiButtonMsgDlg>(pythonInstaller.OkDialog);
             RunUI(() => Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_Python_package_manager_Pip_to_install_packages_from_source__Click_install_to_begin_the_installation_process_, messageDlg.Message));
             var pipErrorDlg = ShowDialog<MessageDlg>(() => Accept(messageDlg));
-            RunUI(() => Assert.AreEqual(Resources.PythonInstaller_DownloadPip_Download_failed__Check_your_network_connection_or_contact_Skyline_developers_, pipErrorDlg.Message));
+            RunUI(() => Assert.AreEqual(TestAsynchronousDownloadClient.DOWNLOAD_FAILED_MESSAGE, pipErrorDlg.Message));
             OkDialog(pipErrorDlg, pipErrorDlg.OkDialog);
-            var packageErrorDlg = WaitForOpenForm<MessageDlg>();
-            RunUI(() => Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Python_package_installation_cannot_continue__Canceling_tool_installation_, packageErrorDlg.Message));
-            OkDialog(packageErrorDlg, packageErrorDlg.OkDialog);
-            WaitForClosedForm(pythonInstaller);
+            // Form should remain open after error, allowing user to retry or cancel
+            OkDialog(pythonInstaller, pythonInstaller.CancelDialog);
         }
 
         // Test failing to connect in the pip installation
@@ -298,10 +296,8 @@ namespace pwiz.SkylineTestFunctional
             var pipErrorDlg = ShowDialog<MessageDlg>(() => Accept(messageDlg));
             RunUI(() => Assert.AreEqual(Resources.PythonInstaller_InstallPip_Unknown_error_installing_pip_, pipErrorDlg.Message));
             OkDialog(pipErrorDlg, pipErrorDlg.OkDialog);
-            var packageErrorDlg = WaitForOpenForm<MessageDlg>();
-            RunUI(() => Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Python_package_installation_cannot_continue__Canceling_tool_installation_, packageErrorDlg.Message));
-            OkDialog(packageErrorDlg, packageErrorDlg.OkDialog);
-            WaitForClosedForm(pythonInstaller);
+            // Form should remain open after error, allowing user to retry or cancel
+            OkDialog(pythonInstaller, pythonInstaller.CancelDialog);
         }
 
         // Test failing the pip installation
@@ -314,10 +310,8 @@ namespace pwiz.SkylineTestFunctional
             var pipErrorDlg = ShowDialog<MessageDlg>(() => Accept(messageDlg));
             RunUI(() => Assert.AreEqual(Resources.PythonInstaller_InstallPip_Pip_installation_failed__Error_log_output_in_immediate_window__, pipErrorDlg.Message));
             OkDialog(pipErrorDlg, pipErrorDlg.OkDialog);
-            var packageErrorDlg = FindOpenForm<MessageDlg>();
-            RunUI(() => Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Python_package_installation_cannot_continue__Canceling_tool_installation_, packageErrorDlg.Message));
-            OkDialog(packageErrorDlg, packageErrorDlg.OkDialog);
-            WaitForClosedForm(pythonInstaller);
+            // Form should remain open after error, allowing user to retry or cancel
+            OkDialog(pythonInstaller, pythonInstaller.CancelDialog);
         }
 
         private static void TestSourceConnectFailure()
@@ -332,7 +326,8 @@ namespace pwiz.SkylineTestFunctional
             var errorDlg = WaitForOpenForm<MessageDlg>();
             RunUI(() => Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Unknown_error_installing_packages_, errorDlg.Message));
             OkDialog(errorDlg, errorDlg.OkDialog);
-            WaitForClosedForm(pythonInstaller);
+            // Form should remain open after error, allowing user to retry or cancel
+            OkDialog(pythonInstaller, pythonInstaller.CancelButton.PerformClick);
         }
 
         // Test failing to install the packages from source
@@ -348,7 +343,8 @@ namespace pwiz.SkylineTestFunctional
             var errorDlg = WaitForOpenForm<MessageDlg>();
             RunUI(() => Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Package_installation_failed__Error_log_output_in_immediate_window_, errorDlg.Message));
             OkDialog(errorDlg, errorDlg.OkDialog);
-            WaitForClosedForm(pythonInstaller);
+            // Form should remain open after error, allowing user to retry or cancel
+            OkDialog(pythonInstaller, pythonInstaller.CancelButton.PerformClick);
         }
 
         // Test successfully installing packages from source only
@@ -400,7 +396,8 @@ namespace pwiz.SkylineTestFunctional
             var messageDlg = ShowDialog<MessageDlg>(pythonInstaller.OkDialog);
             RunUI(() => Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Package_Installation_was_not_completed__Canceling_tool_installation_, messageDlg.Message));
             OkDialog(messageDlg, messageDlg.OkDialog);
-            WaitForClosedForm(pythonInstaller);
+            // Form should remain open after error, allowing user to retry or cancel
+            OkDialog(pythonInstaller, pythonInstaller.CancelButton.PerformClick);
         }
 
         // Test successfully installing packages from executables only
@@ -458,18 +455,23 @@ namespace pwiz.SkylineTestFunctional
             var pythonInstaller = ShowDialog<PythonInstallerLegacyDlg>(() => InstallProgram(ppc, packageUris, true));
             WaitForConditionUI(() => pythonInstaller.IsLoaded);
             RunUI(() =>
+            {
+                pythonInstaller.TestDownloadClient = new TestAsynchronousDownloadClient
                 {
-                    pythonInstaller.TestDownloadClient = new TestAsynchronousDownloadClient
-                        {
-                            CancelDownload = cancelDownload,
-                            DownloadSuccess = downloadSuccess
-                        };
-                    pythonInstaller.TestSkylineProcessRunner = new TestSkylineProcessRunner
-                        {
-                            ConnectSuccess = connectSuccess,
-                            ExitCode = installSuccess ? 0 : 1
-                        };
-                });
+                    CancelDownload = cancelDownload,
+                    DownloadSuccess = downloadSuccess
+                };
+                pythonInstaller.TestPipDownloadClient = new TestAsynchronousDownloadClient
+                {
+                    CancelDownload = cancelDownload,
+                    DownloadSuccess = downloadSuccess
+                };
+                pythonInstaller.TestSkylineProcessRunner = new TestSkylineProcessRunner
+                {
+                    ConnectSuccess = connectSuccess,
+                    ExitCode = installSuccess ? 0 : 1
+                };
+            });
             return pythonInstaller;
         }
 

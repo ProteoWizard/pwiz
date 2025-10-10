@@ -8031,35 +8031,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Download failed. Check your network connection or contact Skyline developers..
-        /// </summary>
-        public static string PythonInstaller_DownloadPip_Download_failed__Check_your_network_connection_or_contact_Skyline_developers_ {
-            get {
-                return ResourceManager.GetString("PythonInstaller_DownloadPip_Download_failed__Check_your_network_connection_or_con" +
-                        "tact_Skyline_developers_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Check your network connection or contact the tool provider for installation support..
-        /// </summary>
-        public static string PythonInstaller_DownloadPython_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_ {
-            get {
-                return ResourceManager.GetString("PythonInstaller_DownloadPython_Check_your_network_connection_or_contact_the_tool_" +
-                        "provider_for_installation_support_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Download failed..
-        /// </summary>
-        public static string PythonInstaller_DownloadPython_Download_failed_ {
-            get {
-                return ResourceManager.GetString("PythonInstaller_DownloadPython_Download_failed_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Package installation completed..
         /// </summary>
         public static string PythonInstaller_GetPackages_Package_installation_completed_ {
@@ -9065,25 +9036,6 @@ namespace pwiz.Skyline.Properties {
         public static string RetentionTimeRegression_RecalcRegression_Recalculating_regression {
             get {
                 return ResourceManager.GetString("RetentionTimeRegression_RecalcRegression_Recalculating_regression", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Check your network connection or contact the tool provider for installation support..
-        /// </summary>
-        public static string RInstaller_DownloadPackages_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_ {
-            get {
-                return ResourceManager.GetString("RInstaller_DownloadPackages_Check_your_network_connection_or_contact_the_tool_pro" +
-                        "vider_for_installation_support_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Download failed..
-        /// </summary>
-        public static string RInstaller_DownloadR_Download_failed_ {
-            get {
-                return ResourceManager.GetString("RInstaller_DownloadR_Download_failed_", resourceCulture);
             }
         }
         

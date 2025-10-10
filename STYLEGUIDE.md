@@ -60,8 +60,9 @@ Additional guidance:
 - Enum members: `snake_case` (e.g., `not_set`).
 
 ## Whitespace and formatting
-- Tabs are disallowed; use spaces. Do not change existing files’ indentation, but when adding new code use spaces.
+- Tabs are disallowed; use spaces. Do not change existing files' indentation, but when adding new code use spaces.
 - Avoid mixing tabs and spaces. Align with existing file formatting.
+- **Line endings**: Use Windows-style line endings (`\r\n`, CRLF) for all files. This is the standard for Windows development and matches the team's development environment. When creating or modifying files, ensure line endings are `\r\n`, not Unix-style `\n` (LF).
 
 ## Tools
 - We develop with Visual Studio 2022 and ReSharper; aim for warning-free under its inspections.
@@ -141,6 +142,46 @@ All source files should include the standard header with copyright and license i
 - New files: Use `uw.edu` (current UW standard)
 - Existing files: Keep existing `u.washington.edu` format (no need to change)
 - Both formats are acceptable
+
+## Asynchronous programming patterns
+
+### CRITICAL: No async/await keywords
+- **DO NOT use `async`/`await` keywords** in C# code
+- Use `AsyncUtil.RunAsync()` and `CommonAsyncUtil.RunAsync()` for background operations
+- Use `Control.Invoke()` and `Control.BeginInvoke()` to return to UI thread
+- See `DocumentationViewer.cs` for example implementation pattern
+
+### Background operation pattern
+```csharp
+// Background operation with UI callback
+CommonActionUtil.RunAsync(() =>
+{
+    try
+    {
+        // Background work here
+        var result = DoBackgroundWork();
+        
+        // Return to UI thread for updates
+        RunUI(() => UpdateUI(result));
+    }
+    catch (Exception ex)
+    {
+        RunUI(() => CommonAlertDlg.ShowException(this, ex));
+    }
+});
+
+private void RunUI(Action act)
+{
+    Invoke(act);
+}
+```
+
+### WebClient replacement pattern
+When replacing WebClient with HttpClient:
+- Maintain synchronous interface for existing callers
+- Use `RunAsync()` to execute HTTP operations in background
+- Use `Control.Invoke()` to return results to UI thread
+- Preserve existing error handling patterns
 
 ## Testing guidelines
 

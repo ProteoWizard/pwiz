@@ -101,6 +101,7 @@
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Net.Http" />
     <Reference Include="System.Security" />
     <Reference Include="System.Web" />
     <Reference Include="System.Windows.Forms" />
@@ -224,6 +225,7 @@
     <Compile Include="Collections\IndexedSubList.cs" />
     <Compile Include="SystemUtil\ConcurrencyVisualizer.cs" />
     <Compile Include="SystemUtil\FormUtil.cs" />
+    <Compile Include="SystemUtil\HttpClientWithProgress.cs" />
     <Compile Include="SystemUtil\Immutable.cs" />
     <Compile Include="SystemUtil\IProgressMonitor.cs" />
     <Compile Include="SystemUtil\LocalizationHelper.cs" />

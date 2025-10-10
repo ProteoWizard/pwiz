@@ -137,10 +137,11 @@ namespace pwiz.SkylineTestFunctional
         private static void TestRDownloadCancel()
         {
             var rInstaller = FormatRInstaller(true, false, false);
-            var messageDlg = ShowDialog<MessageDlg>(rInstaller.OkDialog);
-            RunUI(() => Assert.AreEqual(Resources.MultiFileAsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled_, messageDlg.Message));
-            OkDialog(messageDlg, messageDlg.OkDialog);
-            WaitForClosedForm(rInstaller);
+            // Click OK to start download - will be canceled by test
+            rInstaller.Invoke((Action) rInstaller.OkDialog);
+            // Form should remain open after cancellation, allowing user to retry or cancel
+            // User can now click OK again to retry, or Cancel to exit
+            OkDialog(rInstaller, rInstaller.CancelButton.PerformClick);
         }
 
         // Test R download success && install success
@@ -168,9 +169,10 @@ namespace pwiz.SkylineTestFunctional
         {
             var rInstaller = FormatRInstaller(false, false, false);
             var messageDlg = ShowDialog<MessageDlg>(rInstaller.OkDialog);
-            RunUI(() => Assert.AreEqual(TextUtil.LineSeparate(Resources.RInstaller_DownloadR_Download_failed_, Resources.RInstaller_DownloadPackages_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_), messageDlg.Message));
+            RunUI(() => Assert.AreEqual(TestAsynchronousDownloadClient.DOWNLOAD_FAILED_MESSAGE, messageDlg.Message));
             OkDialog(messageDlg, messageDlg.OkDialog);
-            WaitForClosedForm(rInstaller);
+            // Form should remain open after error, allowing user to retry or cancel
+            OkDialog(rInstaller, rInstaller.CancelButton.PerformClick);
         }
 
         // helper method for setting up the R installer form to support a number of possible installation outcomes

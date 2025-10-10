@@ -239,9 +239,6 @@
   <data name="AssociateProteinsDlg_ApplyChanges_Associated_proteins" xml:space="preserve">
     <value>关联的蛋白质</value>
   </data>
-  <data name="PythonInstaller_DownloadPip_Download_failed__Check_your_network_connection_or_contact_Skyline_developers_" xml:space="preserve">
-    <value>下载失败。检查您的网络连接或联络 Skyline 开发者。</value>
-  </data>
   <data name="SkylineWindow_AddGroupComparison_Add_Fold_Change" xml:space="preserve">
     <value>添加倍数变化</value>
   </data>
@@ -652,9 +649,6 @@
   </data>
   <data name="ResultsGrid_ResultsGrid_Identified" xml:space="preserve">
     <value>已确认的</value>
-  </data>
-  <data name="RInstaller_DownloadPackages_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_" xml:space="preserve">
-    <value>检查您的网络连接或联络工具提供商以获得安装支持。</value>
   </data>
   <data name="EditIonMobilityLibraryDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_charge__Charges_must_be_integer_values_between_1_and__1__" xml:space="preserve">
     <value>值 {0} 不是有效电荷。电荷必须是介于 1 和 {1} 之间的整数。</value>
@@ -1568,9 +1562,6 @@
   <data name="ResultsGrid_ResultsGrid_Average_Mass_Error_PPM" xml:space="preserve">
     <value>平均质量误差 PPM</value>
   </data>
-  <data name="PythonInstaller_DownloadPython_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_" xml:space="preserve">
-    <value>检查您的网络连接或联络工具提供商以获得安装支持。</value>
-  </data>
   <data name="EditIonMobilityLibraryDlg_EditIonMobilityLibraryDlg_Adduct" xml:space="preserve">
     <value>加合物</value>
   </data>
@@ -2377,9 +2368,6 @@
   <data name="EditIonMobilityLibraryDlg_OkDialog_Do_you_want_to_change_it_" xml:space="preserve">
     <value>是否要更改？</value>
   </data>
-  <data name="RInstaller_DownloadR_Download_failed_" xml:space="preserve">
-    <value>下载失败。</value>
-  </data>
   <data name="CommandLine_AssociateProteins_Failed_to_associate_proteins" xml:space="preserve">
     <value>未能关联蛋白质</value>
   </data>
@@ -2394,9 +2382,6 @@
   </data>
   <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name" xml:space="preserve">
     <value>片段名称</value>
-  </data>
-  <data name="PythonInstaller_DownloadPython_Download_failed_" xml:space="preserve">
-    <value>下载失败。</value>
   </data>
   <data name="CommandLine_ImportTool_Error__to_import_a_tool_it_must_have_a_name_and_a_command___Use___tool_add_to_specify_a_name_and_use___tool_command_to_specify_a_command___The_tool_was_not_imported___" xml:space="preserve">
     <value>错误：如要导入工具，则必须含有名称和命令。 使用“--工具-添加”来指定一个名称，并且使用“--工具-命令”来指定一个命令。 工具未导入…</value>

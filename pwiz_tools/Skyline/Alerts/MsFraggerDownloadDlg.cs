@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Matt Chambers <matt.chambers42 .at. gmail.com >
  *
  * Copyright 2021 University of Washington - Seattle, WA
@@ -22,7 +22,6 @@ using System.Collections.Specialized;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -136,7 +135,6 @@ namespace pwiz.Skyline.Alerts
                 return string.Empty;
 
             using var downloadProgressDlg = new LongWaitDlg();
-            using var client = new WebClient();
 
             var postData = new NameValueCollection();
             postData[@"transfer"] = @"academic";
@@ -151,14 +149,11 @@ namespace pwiz.Skyline.Alerts
             postData[@"is_fragpipe"] = @"true";
 
             string resultString = string.Empty;
+            IProgressStatus status = new ProgressStatus(AlertsResources.MsFraggerDownloadDlg_RequestVerificationCode_Contacting_MS_Fragger_download_server);
             downloadProgressDlg.PerformWork(this, 50, broker =>
             {
-                var uploadTask = client.UploadValuesTaskAsync(VERIFY_URL, VERIFY_METHOD, postData);
-                uploadTask.Wait(broker.CancellationToken);
-                if (uploadTask.Exception != null)
-                    throw uploadTask.Exception;
-
-                var resultBytes = uploadTask.Result;
+                using var httpClient = new HttpClientWithProgress(broker, status);
+                var resultBytes = httpClient.UploadValues(VERIFY_URL, VERIFY_METHOD, postData);
                 resultString = Encoding.UTF8.GetString(resultBytes);
             });
             return resultString;
@@ -168,58 +163,58 @@ namespace pwiz.Skyline.Alerts
         {
             using (var downloadProgressDlg = new LongWaitDlg())
             {
-                downloadProgressDlg.Message = string.Format(AlertsResources.MsFraggerDownloadDlg_Download_Downloading_MSFragger__0_, MsFraggerSearchEngine.MSFRAGGER_VERSION);
+                string message = string.Format(AlertsResources.MsFraggerDownloadDlg_Download_Downloading_MSFragger__0_,
+                    MsFraggerSearchEngine.MSFRAGGER_VERSION);
+                downloadProgressDlg.Message = message;
                 if (Program.FunctionalTest && !Program.IsPaused) // original URLs not possible with "verification code" system
                 {
                     var msFraggerDownloadInfo = MsFraggerSearchEngine.MsFraggerDownloadInfo;
                     msFraggerDownloadInfo.DownloadUrl = DOWNLOAD_URL_FOR_FUNCTIONAL_TESTS;
                     downloadProgressDlg.PerformWork(this, 50, pm => SimpleFileDownloader.DownloadRequiredFiles(new[] { msFraggerDownloadInfo }, pm));
-                    return true;
+                    // If the user canceled the dialog, treat as cancellation
+                    return !downloadProgressDlg.IsCanceled;
                 }
 
-                using (var client = new WebClient())
+                var status = new ProgressStatus(message);
+                var statusRet = downloadProgressDlg.PerformWork(this, 50, broker =>
                 {
-                    var status = downloadProgressDlg.PerformWork(this, 50, broker =>
+                    using var httpClient = new HttpClientWithProgress(broker, status);
+                    string downloadUrl = string.Format(DOWNLOAD_URL_WITH_TOKEN, tbVerificationCode.Text);
+                    var msFraggerZipBytes = httpClient.DownloadData(downloadUrl);
+
+                    // check if downloaded bytes are actually a zip file
+                    if (!ZipFile.IsZipFile(new MemoryStream(msFraggerZipBytes), false))
                     {
-                        client.DownloadProgressChanged += (sender, args) => broker.UpdateProgress(new ProgressStatus().ChangePercentComplete(args.ProgressPercentage));
-
-                        string downloadUrl = string.Format(DOWNLOAD_URL_WITH_TOKEN, tbVerificationCode.Text);
-                        var msFraggerZipBytes = client.DownloadData(downloadUrl);
-
-                        // check if downloaded bytes are actually a zip file
-                        if (!ZipFile.IsZipFile(new MemoryStream(msFraggerZipBytes), false))
-                        {
-                            var resultString = Encoding.UTF8.GetString(msFraggerZipBytes);
+                        var resultString = Encoding.UTF8.GetString(msFraggerZipBytes);
                             broker.UpdateProgress(new ProgressStatus().ChangeErrorException(
                                 new InvalidOperationException(string.Format(@"{0}{1}{1}{2}",
                                     Resources.TestToolStoreClient_GetToolZipFile_Error_downloading_tool,
                                     Environment.NewLine, resultString))));
-                            return;
-                        }
-
-                        var installPath = MsFraggerSearchEngine.MsFraggerDirectory;
-                        var downloadFilename = Path.Combine(installPath, MsFraggerSearchEngine.MSFRAGGER_FILENAME + @".zip");
-                        using (var fileSaver = new FileSaver(downloadFilename))
-                        {
-                            File.WriteAllBytes(fileSaver.SafeName, msFraggerZipBytes);
-                            fileSaver.Commit();
-                        }
-
-                        Directory.CreateDirectory(installPath);
-                        using (var zipFile = new ZipFile(downloadFilename))
-                        {
-                            zipFile.ExtractAll(installPath, ExtractExistingFileAction.OverwriteSilently);
-                        }
-                        FileEx.SafeDelete(downloadFilename);
-                    });
-
-                    if (status.IsError)
-                    {
-                        MessageDlg.Show(this, status.ErrorException.Message);
-                        return false;
+                        return;
                     }
-                    return true;
+
+                    var installPath = MsFraggerSearchEngine.MsFraggerDirectory;
+                    var downloadFilename = Path.Combine(installPath, MsFraggerSearchEngine.MSFRAGGER_FILENAME + @".zip");
+                    using (var fileSaver = new FileSaver(downloadFilename))
+                    {
+                        File.WriteAllBytes(fileSaver.SafeName, msFraggerZipBytes);
+                        fileSaver.Commit();
+                    }
+
+                    Directory.CreateDirectory(installPath);
+                    using (var zipFile = new ZipFile(downloadFilename))
+                    {
+                        zipFile.ExtractAll(installPath, ExtractExistingFileAction.OverwriteSilently);
+                    }
+                    FileEx.SafeDelete(downloadFilename);
+                });
+
+                if (statusRet.IsError)
+                {
+                    MessageDlg.Show(this, statusRet.ErrorException.Message);
+                    return false;
                 }
+                return !statusRet.IsCanceled;
             }
         }
 
