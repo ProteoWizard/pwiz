@@ -733,6 +733,8 @@ PWIZ_API_DECL void SpectrumList_Agilent::createIndex() const
 			scanTypes & MSScanType_ProductIon ||
 			scanTypes & MSScanType_PrecursorIon ||
             scanTypes & MSScanType_SelectedIon ||
+            scanTypes & MSScanType_NeutralLoss ||
+            scanTypes & MSScanType_NeutralGain ||
             scanTypes & MSScanType_MultipleReaction)
 		{
 
