@@ -40,7 +40,12 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results
 {
-    public sealed class ChromatogramCache : Immutable, IDisposable
+    /// <summary>
+    /// Identity class to allow identity equality on <see cref="ChromatogramCache"/>.
+    /// </summary>
+    public sealed class ChromatogramCacheId : Identity { }
+
+    public sealed class ChromatogramCache : Immutable, IDisposable, IFile
     {
         public const CacheFormatVersion FORMAT_VERSION_CACHE_11 = CacheFormatVersion.Eleven; // Adds chromatogram start, stop times, and uncompressed size info, and new flag bit for SignedMz
         public const CacheFormatVersion FORMAT_VERSION_CACHE_10 = CacheFormatVersion.Ten; // Introduces waters lockmass correction in MSDataFileUri syntax
@@ -130,6 +135,7 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromatogramCache(string cachePath, RawData raw, IPooledStream readStream)
         {
+            Id = new ChromatogramCacheId();
             CachePath = cachePath;
             _rawData = raw;
             _scoreTypeIndices = raw.ScoreTypes;
@@ -138,6 +144,11 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public string CachePath { get; private set; }
+
+        public Identity Id { get; }
+        public string Name => string.Empty;
+        public string FilePath => CachePath;
+
         public CacheFormatVersion Version
         {
             get { return _rawData.FormatVersion; }

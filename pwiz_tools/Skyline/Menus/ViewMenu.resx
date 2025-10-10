@@ -254,7 +254,16 @@
   <data name="liveReportsMenuItem.Text" xml:space="preserve">
     <value>Live &amp;Reports</value>
   </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="viewFilesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="viewFilesMenuItem.Text" xml:space="preserve">
+    <value>Files</value>
+  </data>
+  <data name="viewFilesMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
+      <value>Alt+9</value>
+  </data>
+    <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="documentGridMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Alt+3</value>
   </data>
@@ -918,6 +927,9 @@
   <data name="&gt;&gt;viewTargetsMenuItem.Name" xml:space="preserve">
     <value>viewTargetsMenuItem</value>
   </data>
+  <data name="viewTargetsMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
+      <value>Alt+0</value>
+  </data>
   <data name="&gt;&gt;viewTargetsMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
@@ -1003,6 +1015,18 @@
     <value>mixedToolStripMenuItem</value>
   </data>
   <data name="&gt;&gt;mixedToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator1.Name" xml:space="preserve">
+    <value>toolStripSeparator1</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;viewFilesMenuItem.Name" xml:space="preserve">
+    <value>viewFilesMenuItem</value>
+  </data>
+  <data name="&gt;&gt;viewFilesMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator41.Name" xml:space="preserve">
