@@ -996,7 +996,7 @@ namespace SkylineNightly
                 {
                     try
                     {
-                        doc.Root.Add(new XElement("Log", log));
+                        doc.Root.Add(new XElement("Log", ReplaceInvalidChars(log)));
                         xml = doc.ToString();
                     }
                     catch (Exception e)
@@ -1373,6 +1373,22 @@ namespace SkylineNightly
         {
             [OperationContract]
             void SetEndTime(DateTime endTime);
+        }
+        public static bool IsValidChar(char ch)
+        {
+
+            return ch == 0x9 || ch == 0xA || ch == 0xD || (ch >= 0x20 && ch <= 0xD7FF) ||
+                   (ch >= 0xE000 && ch <= 0xFFFD);
+        }
+
+        public static string ReplaceInvalidChars(string s)
+        {
+            if (s.All(IsValidChar))
+            {
+                return s;
+            }
+
+            return new string(s.Select(ch => IsValidChar(ch) ? ch : '?').ToArray());
         }
     }
 
