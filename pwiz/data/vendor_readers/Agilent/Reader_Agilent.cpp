@@ -117,6 +117,8 @@ void fillInMetadata(const string& rawpath, MassHunterDataPtr rawfile, MSData& ms
     if (scanTypes & MSScanType_Scan)         msd.fileDescription.fileContent.set(MS_MS1_spectrum);
     if (scanTypes & MSScanType_ProductIon)   msd.fileDescription.fileContent.set(MS_MSn_spectrum);
     if (scanTypes & MSScanType_PrecursorIon) msd.fileDescription.fileContent.set(MS_precursor_ion_spectrum);
+    if (scanTypes & MSScanType_NeutralLoss)  msd.fileDescription.fileContent.set(MS_constant_neutral_loss_spectrum);
+    if (scanTypes & MSScanType_NeutralGain)  msd.fileDescription.fileContent.set(MS_constant_neutral_gain_spectrum);
     // other scan types are not enumerated
 
     if (!msd.fileDescription.fileContent.empty())
