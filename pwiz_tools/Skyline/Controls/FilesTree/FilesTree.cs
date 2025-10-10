@@ -51,11 +51,10 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         public FilesTree()
         {
+            _cancellationTokenSource = new CancellationTokenSource();
+
             BackgroundActionService = BackgroundActionService.Create(this);
             FileSystemService = FileSystemService.Create(this, BackgroundActionService, FileDeleted, FileCreated, FileRenamed);
-
-            _cancellationTokenSource = new CancellationTokenSource();
-            FileSystemService.StartWatching(null, _cancellationTokenSource.Token);
 
             // Icons size is 16x16
             ImageList = new ImageList
@@ -186,7 +185,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
                 // Start watching the current directory using a new CancellationToken. 
                 _cancellationTokenSource = new CancellationTokenSource();
-                FileSystemService.StartWatching(documentDirectory, _cancellationTokenSource.Token);
+                FileSystemService.StartWatching(_cancellationTokenSource.Token);
             }
 
             BeginUpdateMS();

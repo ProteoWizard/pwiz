@@ -146,7 +146,6 @@ namespace pwiz.SkylineTestFunctional
 
             AssertTopLevelFiles(typeof(SkylineAuditLog));
 
-            Assert.AreEqual(FileSystemType.in_memory, SkylineWindow.FilesTree.FileSystemType());
             Assert.AreEqual(0, SkylineWindow.FilesTree.MonitoredDirectories().Count);
         }
 
@@ -163,7 +162,6 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() => { SkylineWindow.ShowFilesTreeForm(true); });
                 WaitForFilesTree();
 
-                Assert.AreEqual(FileSystemType.in_memory, SkylineWindow.FilesTree.FileSystemType());
                 Assert.AreEqual(0, SkylineWindow.FilesTree.MonitoredDirectories().Count);
             }
 
@@ -202,11 +200,9 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(() => Assert.IsTrue(SkylineWindow.FilesTree.Root.IsExpanded));
 
-            Assert.AreEqual(FileSystemType.in_memory, SkylineWindow.FilesTree.FileSystemType());
             Assert.AreEqual(0, SkylineWindow.FilesTree.MonitoredDirectories().Count);
 
             // Audit Log
-            Assert.AreEqual(FileState.in_memory, SkylineWindow.FilesTree.Root.NodeAt(0).FileState);
             Assert.IsNull(SkylineWindow.FilesTree.Root.NodeAt(0).LocalFilePath);
 
             // Save document for the first time

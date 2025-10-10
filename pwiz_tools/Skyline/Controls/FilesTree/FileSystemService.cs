@@ -28,7 +28,7 @@ using pwiz.Common.SystemUtil;
 //       after being minimized or after the user switches from a different application back to Skyline. 
 namespace pwiz.Skyline.Controls.FilesTree
 {
-    public enum FileSystemType { in_memory, local_file_system, none }
+    public enum FileSystemType { local_file_system, none }
     public enum PathAvailability { available, unavailable, unknown }
 
     public interface IFileSystemService
@@ -39,7 +39,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         bool IsMonitoringDirectory(string fullPath);
         bool IsFileAvailable(string fullPath);
 
-        void StartWatching(string directoryPath, CancellationToken cancellationToken);
+        void StartWatching(CancellationToken cancellationToken);
         void LoadFile(string localFilePath, string filePath, string fileName, string documentPath, Action<string, CancellationToken> callback);
         void StopWatching();
         void Dispose();
@@ -56,15 +56,13 @@ namespace pwiz.Skyline.Controls.FilesTree
             return new FileSystemService(synchronizingObject, backgroundActionService, fileDeletedAction, fileCreatedAction, fileRenamedAction);
         }
 
-        private static readonly IFileSystemService NO_DOCUMENT = new DefaultService();
+        private static readonly IFileSystemService NO_DOCUMENT = new NoOpService();
 
         private readonly Action<string, CancellationToken> _fileDeletedAction;
         private readonly Action<string, CancellationToken> _fileCreatedAction;
         private readonly Action<string, string, CancellationToken> _fileRenamedAction;
         private readonly Control _synchronizingObject;
         private readonly BackgroundActionService _backgroundActionService;
-
-        private IFileSystemService _delegate;
 
         private FileSystemService(Control synchronizingObject,
             BackgroundActionService backgroundActionService,
@@ -79,37 +77,33 @@ namespace pwiz.Skyline.Controls.FilesTree
             _fileRenamedAction = fileRenamedAction;
 
             // Start with the default implementation (NO_DOCUMENT) until Skyline has a document to monitor.
-            _delegate = NO_DOCUMENT;
+            Delegate = NO_DOCUMENT;
         }
 
-        public FileSystemType FileSystemType => _delegate.FileSystemType;
-        public IFileSystemService Delegate => _delegate;
+        public FileSystemType FileSystemType => Delegate.FileSystemType;
+        public IFileSystemService Delegate { get; private set; }
 
-        public bool IsMonitoringDirectory(string fullPath) => _delegate.IsMonitoringDirectory(fullPath);
-        public bool IsFileAvailable(string fullPath) => _delegate.IsFileAvailable(fullPath);
+        public bool IsMonitoringDirectory(string fullPath) => Delegate.IsMonitoringDirectory(fullPath);
+        public bool IsFileAvailable(string fullPath) => Delegate.IsFileAvailable(fullPath);
 
         public IList<string> MonitoredDirectories()
         {
-            Assume.IsNotNull(_delegate.MonitoredDirectories());
-            return _delegate.MonitoredDirectories();
+            Assume.IsNotNull(Delegate.MonitoredDirectories());
+            return Delegate.MonitoredDirectories();
         }
 
         // CONSIDER: does this need to lock while updating _delegate?
-        public void StartWatching(string directoryPath, CancellationToken cancellationToken)
+        public void StartWatching(CancellationToken cancellationToken)
         {
             // Console.WriteLine($@"===== StartWatching {directoryPath ?? @"in-memory"} {cancellationToken.GetHashCode()}");
 
-            if (directoryPath == null)
-                _delegate = new MemoryOnlyService(_backgroundActionService);
-            else
-                _delegate = new LocalStorageService(_synchronizingObject, _backgroundActionService, _fileDeletedAction, _fileCreatedAction, _fileRenamedAction);
-
-            _delegate.StartWatching(directoryPath, cancellationToken);
+            Delegate = new LocalStorageService(_synchronizingObject, _backgroundActionService, _fileDeletedAction, _fileCreatedAction, _fileRenamedAction);
+            Delegate.StartWatching(cancellationToken);
         }
 
         public void LoadFile(string localFilePath, string filePath, string fileName, string documentPath, Action<string, CancellationToken> callback)
         {
-            _delegate.LoadFile(localFilePath, filePath, fileName, documentPath, callback);
+            Delegate.LoadFile(localFilePath, filePath, fileName, documentPath, callback);
         }
 
         // CONSIDER: does this need to lock while updating _delegate?
@@ -117,59 +111,26 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             // Console.WriteLine($@"===== StopWatching {MonitoredDirectories ?? @"in-memory"}");
 
-            _delegate.StopWatching();
+            Delegate.StopWatching();
 
             // Revert to the default NO_DOCUMENT implementation until a document is loaded
-            _delegate = NO_DOCUMENT;
+            Delegate = NO_DOCUMENT;
         }
 
         public void Dispose()
         {
-            _delegate.Dispose();
+            Delegate.Dispose();
         }
     }
 
-    internal class DefaultService : IFileSystemService
+    internal class NoOpService : IFileSystemService
     {
         public FileSystemType FileSystemType => FileSystemType.none;
         public IList<string> MonitoredDirectories() => ImmutableList.Empty<string>();
         public bool IsMonitoringDirectory(string fullPath) => false;
         public bool IsFileAvailable(string fullPath) => false;
-        public void StartWatching(string directoryPath, CancellationToken cancellationToken) { }
+        public void StartWatching(CancellationToken cancellationToken) { }
         public void LoadFile(string localFilePath, string filePath, string fileName, string documentPath, Action<string, CancellationToken> callback) { }
-        public void StopWatching() { }
-        public void Dispose() { }
-    }
-
-    internal class MemoryOnlyService : IFileSystemService
-    {
-        public MemoryOnlyService(BackgroundActionService backgroundActionService)
-        {
-            BackgroundActionService = backgroundActionService;
-        }
-
-        private BackgroundActionService BackgroundActionService { get; }
-        private CancellationToken CancellationToken { get; set; }
-
-        public FileSystemType FileSystemType => FileSystemType.in_memory;
-        public IList<string> MonitoredDirectories() => ImmutableList.Empty<string>();
-        public bool IsMonitoringDirectory(string fullPath) => fullPath == null;
-        public bool IsFileAvailable(string fullPath) => true;
-
-        public void StartWatching(string directoryPath, CancellationToken cancellationToken)
-        {
-            CancellationToken = cancellationToken;
-        }
-
-        public void LoadFile(string localFilePath, string filePath, string fileName, string documentPath, Action<string, CancellationToken> callback)
-        {
-            var cancellationToken = CancellationToken;
-            BackgroundActionService.RunUI(() =>
-            {
-                callback(localFilePath, cancellationToken);
-            });
-        }
-
         public void StopWatching() { }
         public void Dispose() { }
     }
@@ -259,13 +220,10 @@ namespace pwiz.Skyline.Controls.FilesTree
             HealthMonitor.Trigger();
         }
 
-        public void StartWatching(string directoryPath, CancellationToken cancellationToken)
+        public void StartWatching(CancellationToken cancellationToken)
         {
             CancellationToken = cancellationToken;
             HealthMonitor.Start();
-
-            directoryPath = FileSystemUtil.Normalize(directoryPath);
-            WatchDirectory(directoryPath);
         }
 
         /// <summary>
@@ -327,12 +285,14 @@ namespace pwiz.Skyline.Controls.FilesTree
                     // Add files that could not be found to the cache (marked as missing) even though they couldn't be found. This records
                     // our potential interest in these paths since we cannot tell right now whether a network drive is down, the file will
                     // be restored later, and so on.
-                    else
+                    else if(filePath != null)
                     {
                         var fullFilePath = FileSystemUtil.Normalize(filePath);
 
                         Cache[fullFilePath] = false;
                     }
+                    // Otherwise, filePath is null, which typically indicates a file that has never been saved. So, do not 
+                    // put it in the cache (because it has no file path) but do queue a task to update the UI.
 
                     BackgroundActionService.RunUI(() =>
                     {
@@ -688,90 +648,6 @@ namespace pwiz.Skyline.Controls.FilesTree
             var extension = Path.GetExtension(filePath);
 
             return FILE_EXTENSION_IGNORE_LIST.Contains(extension);
-        }
-    }
-
-    public class FileSystemUtil
-    {
-        // Private constructor - do not create instances
-        private FileSystemUtil() { }
-
-        public static string GetDirectoryOrRoot(string filePath)
-        {
-            var result = Path.GetDirectoryName(filePath);
-            if (result == null && Path.IsPathRooted(filePath))
-            {
-                // Special case for root directory: return the root itself
-                result = Path.GetPathRoot(filePath);
-            }
-
-            return Normalize(result);
-        }
-
-        /// <summary>
-        /// Compare two directory paths, remembering to ignore capitalization.
-        /// </summary>
-        /// <param name="path1"></param>
-        /// <param name="path2"></param>
-        /// <returns>true if the paths are the same; false otherwise</returns>
-        public static bool PathEquals(string path1, string path2)
-        {
-            return string.Equals(path1, path2, StringComparison.OrdinalIgnoreCase);
-        }
-
-        public static string Normalize(string path)
-        {
-            return path != null ? Path.GetFullPath(path) : null;
-        }
-
-        /// <summary>
-        /// Check whether the <see cref="filePath"/> is contained in the <see cref="directoryPath"/>.
-        /// </summary>
-        /// <param name="directoryPath">Path to a directory</param>
-        /// <param name="filePath">Path to a directory or a file</param>
-        /// <returns>true if child contained in parent. False otherwise.</returns>
-        /// CONSIDER: how should this handle a filePath that's too long and throws PathTooLongException?
-        public static bool IsFileInDirectory(string directoryPath, string filePath)
-        {
-            var normalizedDirectoryPath = Normalize(directoryPath);
-            if(!normalizedDirectoryPath.EndsWith(Path.DirectorySeparatorChar.ToString()) && 
-               !normalizedDirectoryPath.EndsWith(Path.AltDirectorySeparatorChar.ToString()))
-            {
-                normalizedDirectoryPath += Path.DirectorySeparatorChar;
-            }
-
-            var normalizedFileDirectoryPath = Path.GetDirectoryName(Normalize(filePath));
-            if (normalizedFileDirectoryPath == null)
-                return false;
-
-            if (!normalizedFileDirectoryPath.EndsWith(Path.DirectorySeparatorChar.ToString()) &&
-                !normalizedFileDirectoryPath.EndsWith(Path.AltDirectorySeparatorChar.ToString()))
-            {
-                normalizedFileDirectoryPath += Path.DirectorySeparatorChar;
-            }
-
-            return PathEquals(normalizedDirectoryPath, normalizedFileDirectoryPath);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="baseDirectory"></param>
-        /// <param name="possibleSubdirectory"></param>
-        /// <returns></returns>
-        /// CONSIDER: how should this handle a filePath that's too long and throws PathTooLongException?
-        public static bool IsInOrSubdirectoryOf(string baseDirectory, string possibleSubdirectory)
-        {
-            // Normalize paths to ensure consistent comparison (e.g., handle relative paths, different separators)
-            var normalizedPotentialSubdirectory = Normalize(possibleSubdirectory).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-            var normalizedBaseDirectory = Normalize(baseDirectory).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-
-            // Add a directory separator to the base directory for accurate 'Contains' check
-            // This prevents false positives where a directory name is a prefix of another (e.g., C:\Dir and C:\Directory)
-            normalizedBaseDirectory += Path.DirectorySeparatorChar;
-
-            // Perform a case-insensitive comparison. Returns true if possibleSubdirectory is somewhere below baseDirectory.
-            return PathEquals(normalizedPotentialSubdirectory, normalizedBaseDirectory.TrimEnd(Path.DirectorySeparatorChar));
         }
     }
 }

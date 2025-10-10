@@ -205,6 +205,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Controls\FilesTree\FileSystemHealthMonitor.cs" />
+    <Compile Include="Controls\FilesTree\FileSystemUtil.cs" />
     <Compile Include="Controls\FilesTree\ManagedFileSystemWatcher.cs" />
     <Compile Include="Menus\KeyboardShortcutDocumentation.cs" />
   </ItemGroup>
