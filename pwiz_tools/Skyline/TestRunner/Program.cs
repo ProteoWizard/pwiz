@@ -2095,6 +2095,7 @@ namespace TestRunner
         // Generate a summary report of errors and memory leaks from a log file.
         private static void Report(string logFile)
         {
+            Console.OutputEncoding = Encoding.UTF8;
             var logLines = File.ReadAllLines(logFile);
 
             var errorList = new List<string>();
