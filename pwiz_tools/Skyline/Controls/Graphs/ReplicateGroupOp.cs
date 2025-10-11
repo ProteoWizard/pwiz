@@ -64,7 +64,7 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <summary>
         /// Returns the ReplicateGroupOp based on the current value of Settings.Default.GroupByReplicateAnnotation,
         /// and the specified AggregateOp.  Note that if the ReplicateGroupOp is not grouping on an annotation,
-        /// the AggregateOp will be override with the value MEAN.
+        /// the AggregateOp will be overridden with the value MEAN.
         /// </summary>
         public static ReplicateGroupOp FromCurrentSettings(SrmDocument document, GraphValues.AggregateOp aggregateOp)
         {

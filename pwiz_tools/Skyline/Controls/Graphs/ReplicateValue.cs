@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding.Entities;
@@ -49,6 +50,14 @@ namespace pwiz.Skyline.Controls.Graphs
         public abstract object GetValue(AnnotationCalculator annotationCalculator, ChromatogramSet chromatogramSet);
 
         protected abstract string DisambiguationPrefix { get; }
+
+        protected virtual IEnumerable<AnnotationDef> AncestorAnnotationDefs
+        {
+            get
+            {
+                return Array.Empty<AnnotationDef>();
+            }
+        }
 
         public static ReplicateValue FromPersistedString(SrmSettings settings, string persistedString)
         {
@@ -106,6 +115,95 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 return AnnotationDef.Name.GetHashCode();
             }
+
+            protected override IEnumerable<AnnotationDef> AncestorAnnotationDefs
+            {
+                get
+                {
+                    return new[] { AnnotationDef };
+                }
+            }
+        }
+
+        public class Lookup : ReplicateValue
+        {
+            public Lookup(ReplicateValue parent, AnnotationDef listColumn)
+            {
+                Parent = parent;
+                ListColumn = listColumn;
+            }
+            
+            public ReplicateValue Parent { get; }
+            public AnnotationDef ListColumn { get; }
+
+            public override string ToPersistedString()
+            {
+                return PropertyPath.ToString();
+            }
+
+            public PropertyPath PropertyPath
+            {
+                get
+                {
+                    if (Parent is Lookup lookup)
+                    {
+                        return lookup.PropertyPath.Property(AnnotationDef.ANNOTATION_PREFIX + ListColumn.Name);
+                    }
+                    return PropertyPath.Root.Property(Parent.ToPersistedString()).Property(AnnotationDef.ANNOTATION_PREFIX + ListColumn.Name);
+                }
+            }
+
+            protected override string BaseTitle
+            {
+                get
+                {
+                    return new string(' ', AncestorAnnotationDefs.Count()) + ListColumn.Name;
+                }
+            }
+
+            public override object GetValue(AnnotationCalculator annotationCalculator, ChromatogramSet chromatogramSet)
+            {
+                var parentAnnotationDef = Parent.AncestorAnnotationDefs.FirstOrDefault();
+                if (string.IsNullOrEmpty(parentAnnotationDef?.Lookup))
+                {
+                    return null;
+                }
+
+                var parentValue = Parent.GetValue(annotationCalculator, chromatogramSet);
+                if (parentValue == null)
+                {
+                    return null;
+                }
+                var listData = annotationCalculator.SrmDocument.Settings.DataSettings.FindList(parentAnnotationDef.Lookup);
+                var rowIndex = listData.RowIndexOfPrimaryKey(parentValue);
+                if (rowIndex < 0)
+                {
+                    return null;
+                }
+                int columnIndex = listData.FindColumnIndex(ListColumn.Name);
+                if (columnIndex < 0)
+                {
+                    return null;
+                }
+
+                return listData.Columns[columnIndex].GetValue(rowIndex);
+            }
+
+            protected override string DisambiguationPrefix
+            {
+                get
+                {
+                    return Parent.AncestorAnnotationDefs.FirstOrDefault()?.Lookup + " ";
+                }
+            }
+
+            protected override IEnumerable<AnnotationDef> AncestorAnnotationDefs
+            {
+                get
+                {
+                    return Parent.AncestorAnnotationDefs.Prepend(ListColumn);
+                }
+            }
         }
 
         public class Property : ReplicateValue
@@ -159,13 +257,45 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        private static IEnumerable<ReplicateValue> GetLookupReplicateValues(SrmSettings settings, ReplicateValue parent)
+        {
+            var listDef = settings.DataSettings
+                .FindList(parent.AncestorAnnotationDefs.FirstOrDefault()?.Lookup)?.ListDef;
+            if (listDef == null)
+            {
+                yield break;
+            }
+            var parentLists = parent.AncestorAnnotationDefs.Select(annotationDef => annotationDef.Lookup).ToHashSet();
+            foreach (var column in listDef.Properties)
+            {
+                if (column.Name == listDef.IdProperty)
+                {
+                    continue;
+                }
+                var lookup = new Lookup(parent, column);
+                yield return lookup;
+                if (string.IsNullOrEmpty(column.Lookup) || parentLists.Contains(column.Lookup))
+                {
+                    foreach (var child in GetLookupReplicateValues(settings, lookup))
+                    {
+                        yield return child;
+                    }
+                }
+            }
+        }
+
         public static IEnumerable<ReplicateValue> GetAllReplicateValues(SrmSettings settings)
         {
             foreach (var annotationDef in settings.DataSettings.AnnotationDefs)
             {
                 if (annotationDef.AnnotationTargets.Contains(AnnotationDef.AnnotationTarget.replicate))
                 {
-                    yield return new Annotation(annotationDef);
+                    var annotation = new Annotation(annotationDef);
+                    yield return annotation;
+                    foreach (var child in GetLookupReplicateValues(settings, annotation))
+                    {
+                        yield return child;
+                    }
                 }
             }
 
