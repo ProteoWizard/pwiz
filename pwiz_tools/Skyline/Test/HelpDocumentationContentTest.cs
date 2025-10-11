@@ -46,6 +46,10 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestKeyboardShortcutsHelpDocumentation()
         {
+            if (ProcessEx.IsRunningOnWine)
+            {
+                return;
+            }
             ForEachLanguage(() =>
             {
                 var filePath = Path.Combine(GetDocumentationHelpFolder(), "KeyboardShortcuts.html");
