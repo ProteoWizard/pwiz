@@ -722,7 +722,7 @@ namespace pwiz.SkylineTestFunctional
             
             // Cancel search (but don't close wizard)
             RunUI(importPeptideSearchDlg.SearchControl.Cancel);
-            WaitForConditionUI(60000, () => searchSucceeded.HasValue);
+            WaitForConditionUI(WAIT_TIME, () => searchSucceeded.HasValue);
 
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()));
 
