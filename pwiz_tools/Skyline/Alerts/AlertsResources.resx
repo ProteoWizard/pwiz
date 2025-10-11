@@ -329,4 +329,7 @@
 
 If you don't get an email, double-check your email address or click "More Info" for troubleshooting.</value>
   </data>
+  <data name="MsFraggerDownloadDlg_RequestVerificationCode_Contacting_MS_Fragger_download_server" xml:space="preserve">
+    <value>Contacting MS Fragger download server</value>
+  </data>
 </root>

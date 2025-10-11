@@ -239,9 +239,6 @@ Here are the {0} pairs with multiple entries:
   <data name="AssociateProteinsDlg_ApplyChanges_Associated_proteins" xml:space="preserve">
     <value>Associated proteins</value>
   </data>
-  <data name="PythonInstaller_DownloadPip_Download_failed__Check_your_network_connection_or_contact_Skyline_developers_" xml:space="preserve">
-    <value>Download failed. Check your network connection or contact Skyline developers.</value>
-  </data>
   <data name="SkylineWindow_AddGroupComparison_Add_Fold_Change" xml:space="preserve">
     <value>Add Fold Change</value>
   </data>
@@ -652,9 +649,6 @@ If your transition list format combines formulas and adducts in a single column 
   </data>
   <data name="ResultsGrid_ResultsGrid_Identified" xml:space="preserve">
     <value>Identified</value>
-  </data>
-  <data name="RInstaller_DownloadPackages_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_" xml:space="preserve">
-    <value>Check your network connection or contact the tool provider for installation support.</value>
   </data>
   <data name="EditIonMobilityLibraryDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_charge__Charges_must_be_integer_values_between_1_and__1__" xml:space="preserve">
     <value>the value {0} is not a valid charge. Charges must be integer values between 1 and {1}.</value>
@@ -1570,9 +1564,6 @@ Supported values include:
   <data name="ResultsGrid_ResultsGrid_Average_Mass_Error_PPM" xml:space="preserve">
     <value>Average Mass Error PPM</value>
   </data>
-  <data name="PythonInstaller_DownloadPython_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_" xml:space="preserve">
-    <value>Check your network connection or contact the tool provider for installation support.</value>
-  </data>
   <data name="EditIonMobilityLibraryDlg_EditIonMobilityLibraryDlg_Adduct" xml:space="preserve">
     <value>Adduct</value>
   </data>
@@ -2382,9 +2373,6 @@ Most peptide transition lists can be imported with the "File|Import|Transition L
   <data name="EditIonMobilityLibraryDlg_OkDialog_Do_you_want_to_change_it_" xml:space="preserve">
     <value>Do you want to change it?</value>
   </data>
-  <data name="RInstaller_DownloadR_Download_failed_" xml:space="preserve">
-    <value>Download failed.</value>
-  </data>
   <data name="CommandLine_AssociateProteins_Failed_to_associate_proteins" xml:space="preserve">
     <value>Failed to associate proteins</value>
   </data>
@@ -2399,9 +2387,6 @@ Most peptide transition lists can be imported with the "File|Import|Transition L
   </data>
   <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name" xml:space="preserve">
     <value>Fragment Name</value>
-  </data>
-  <data name="PythonInstaller_DownloadPython_Download_failed_" xml:space="preserve">
-    <value>Download failed.</value>
   </data>
   <data name="CommandLine_ImportTool_Error__to_import_a_tool_it_must_have_a_name_and_a_command___Use___tool_add_to_specify_a_name_and_use___tool_command_to_specify_a_command___The_tool_was_not_imported___" xml:space="preserve">
     <value>Error: to import a tool it must have a name and a command.  Use --tool-add to specify a name and use --tool-command to specify a command.  The tool was not imported...</value>

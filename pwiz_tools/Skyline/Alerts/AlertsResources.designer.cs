@@ -503,6 +503,16 @@ namespace pwiz.Skyline.Alerts {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Contacting MS Fragger download server.
+        /// </summary>
+        public static string MsFraggerDownloadDlg_RequestVerificationCode_Contacting_MS_Fragger_download_server {
+            get {
+                return ResourceManager.GetString("MsFraggerDownloadDlg_RequestVerificationCode_Contacting_MS_Fragger_download_serve" +
+                        "r", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Do you want to filter them from the pasted list?.
         /// </summary>
         public static string PasteFilteredPeptidesDlg_Peptides_Do_you_want_to_filter_them_from_the_pasted_list {

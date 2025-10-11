@@ -112,7 +112,7 @@ namespace ImageComparer
 
         public bool IsEmpty => string.IsNullOrEmpty(Name);
 
-        private const string BASE_URL = "https://skyline.ms/tutorials/24-1";
+        private const string BASE_URL = "https://skyline.ms/tutorials/25-1";
         public string UrlInTutorial => $"{BASE_URL}/{Name}/{Locale}/index.html#s-{Number}";
         public string UrlToDownload => $"{BASE_URL}/{RelativePath}";
         // RelativePath is used for ComboBox display

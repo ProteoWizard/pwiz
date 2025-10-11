@@ -185,5 +185,68 @@ namespace pwiz.Common.Properties {
                 return ResourceManager.GetString("Units_ppm", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The request to {0} timed out. Please try again..
+        /// </summary>
+        internal static string HttpClientWithProgress_MapHttpException_The_request_to__0__timed_out__Please_try_again_ {
+            get {
+                return ResourceManager.GetString("HttpClientWithProgress_MapHttpException_The_request_to__0__timed_out__Please_try_again_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No network connection detected. Please check your internet connection and try again..
+        /// </summary>
+        internal static string HttpClientWithProgress_MapHttpException_No_network_connection_detected__Please_check_your_internet_connection_and_try_again_ {
+            get {
+                return ResourceManager.GetString("HttpClientWithProgress_MapHttpException_No_network_connection_detected__Please_check_your_internet_connection_and_try_again_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to resolve host {0}. Please check your DNS settings or VPN/proxy..
+        /// </summary>
+        internal static string HttpClientWithProgress_MapHttpException_Failed_to_resolve_host__0___Please_check_your_DNS_settings_or_VPN_proxy_ {
+            get {
+                return ResourceManager.GetString("HttpClientWithProgress_MapHttpException_Failed_to_resolve_host__0___Please_check_your_DNS_settings_or_VPN_proxy_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to connect to {0}. Please check your network connection, VPN/proxy, or firewall..
+        /// </summary>
+        internal static string HttpClientWithProgress_MapHttpException_Failed_to_connect_to__0___Please_check_your_network_connection__VPN_proxy__or_firewall_ {
+            get {
+                return ResourceManager.GetString("HttpClientWithProgress_MapHttpException_Failed_to_connect_to__0___Please_check_your_network_connection__VPN_proxy__or_firewall_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The connection was lost during download. Please check your internet connection and try again..
+        /// </summary>
+        internal static string HttpClientWithProgress_MapHttpException_The_connection_was_lost_during_download__Please_check_your_internet_connection_and_try_again_ {
+            get {
+                return ResourceManager.GetString("HttpClientWithProgress_MapHttpException_The_connection_was_lost_during_download__Please_check_your_internet_connection_and_try_again_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The read operation timed out while downloading from {0}..
+        /// </summary>
+        internal static string HttpClientWithProgress_ReadWithTimeout_The_read_operation_timed_out_while_downloading_from__0__ {
+            get {
+                return ResourceManager.GetString("HttpClientWithProgress_ReadWithTimeout_The_read_operation_timed_out_while_downloading_from__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to server.
+        /// </summary>
+        internal static string HttpClientWithProgress_MapHttpException_server {
+            get {
+                return ResourceManager.GetString("HttpClientWithProgress_MapHttpException_server", resourceCulture);
+            }
+        }
     }
 }

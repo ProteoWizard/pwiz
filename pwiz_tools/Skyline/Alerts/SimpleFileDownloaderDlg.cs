@@ -42,8 +42,15 @@ namespace pwiz.Skyline.Alerts
                 //AutoScroll = true,
                 BackColor = SystemColors.Window
             };
-            var requiredFilesList = requiredFiles.ToList();
-            layout.RowCount = requiredFilesList.Count + 3; // message in first row, then blank second row, and blank last row
+            // Normalize and guard against null enumerable
+            var requiredFilesList = (requiredFiles ?? Enumerable.Empty<FileDownloadInfo>()).ToList();
+
+            // Only display and download entries that actually have a download URL.
+            // Some flows (e.g., MSFragger) populate the URL after a license/verification step;
+            // those entries must be handled by the specialized flow and should not be shown here.
+            var downloadableFiles = requiredFilesList.Where(f => f.DownloadUrl != null).ToList();
+
+            layout.RowCount = downloadableFiles.Count + 3; // message in first row, then blank second row, and blank last row
             layout.ColumnCount = 2;
             foreach (ColumnStyle style in layout.ColumnStyles)
             {
@@ -70,12 +77,12 @@ namespace pwiz.Skyline.Alerts
             int row = 2;
             var gridLabels = new List<Label>();
             // group by URL when presenting to user, although different FileDownloadInfos could have the same URL but different ToolType (e.g. Crux)
-            var distinctFiles = requiredFilesList.GroupBy(f => f.DownloadUrl).Select(g => g.First());
-            foreach (var requiredFile in distinctFiles)
+            var distinctFiles = downloadableFiles.GroupBy(f => f.DownloadUrl).Select(g => g.First());
+            foreach (var downloadableFile in distinctFiles)
             {
                 var name = new Label
                 {
-                    Text = requiredFile.Filename,
+                    Text = downloadableFile.Filename,
                     Dock = DockStyle.Fill,
                     TextAlign = ContentAlignment.BottomRight,
                     AutoSize = true,
@@ -83,7 +90,7 @@ namespace pwiz.Skyline.Alerts
                 };
                 var url = new Label
                 {
-                    Text = requiredFile.DownloadUrl.ToString(),
+                    Text = downloadableFile.DownloadUrl.ToString(),
                     Dock = DockStyle.Fill,
                     TextAlign = ContentAlignment.BottomLeft,
                     AutoSize = true,
@@ -127,7 +134,7 @@ namespace pwiz.Skyline.Alerts
             {
                 dlg.Message = AlertsResources.SimpleFileDownloaderDlg_Show_Downloading_required_files___;
                 dlg.ProgressValue = 0;
-                dlg.PerformWork(parent, 50, pm => SimpleFileDownloader.DownloadRequiredFiles(requiredFilesList, pm));
+                dlg.PerformWork(parent, 50, pm => SimpleFileDownloader.DownloadRequiredFiles(downloadableFiles, pm));
             }
             return DialogResult.Yes;
         }

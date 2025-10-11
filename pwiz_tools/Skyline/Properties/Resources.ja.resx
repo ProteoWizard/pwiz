@@ -236,9 +236,6 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   <data name="AssociateProteinsDlg_ApplyChanges_Associated_proteins" xml:space="preserve">
     <value>関連付けられたタンパク質</value>
   </data>
-  <data name="PythonInstaller_DownloadPip_Download_failed__Check_your_network_connection_or_contact_Skyline_developers_" xml:space="preserve">
-    <value>ダウンロードに失敗しました。ネットワーク接続をチェックするか、Skyline開発者に連絡します。</value>
-  </data>
   <data name="SkylineWindow_AddGroupComparison_Add_Fold_Change" xml:space="preserve">
     <value>倍率変化を追加</value>
   </data>
@@ -649,9 +646,6 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   </data>
   <data name="ResultsGrid_ResultsGrid_Identified" xml:space="preserve">
     <value>同定済み</value>
-  </data>
-  <data name="RInstaller_DownloadPackages_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_" xml:space="preserve">
-    <value>ネットワーク接続を確認するか、ツールプロバイダに問い合わせてインストールのサポートを依頼します。</value>
   </data>
   <data name="EditIonMobilityLibraryDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_charge__Charges_must_be_integer_values_between_1_and__1__" xml:space="preserve">
     <value>値{0}は有効な電荷ではありません。電荷は1から{1}の整数である必要があります。</value>
@@ -1565,9 +1559,6 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   <data name="ResultsGrid_ResultsGrid_Average_Mass_Error_PPM" xml:space="preserve">
     <value>平均質量誤差PPM</value>
   </data>
-  <data name="PythonInstaller_DownloadPython_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_" xml:space="preserve">
-    <value>ネットワーク接続を確認するか、ツールプロバイダに問い合わせてインストールのサポートを依頼します。</value>
-  </data>
   <data name="EditIonMobilityLibraryDlg_EditIonMobilityLibraryDlg_Adduct" xml:space="preserve">
     <value>付加物</value>
   </data>
@@ -2374,9 +2365,6 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   <data name="EditIonMobilityLibraryDlg_OkDialog_Do_you_want_to_change_it_" xml:space="preserve">
     <value>変更しますか？</value>
   </data>
-  <data name="RInstaller_DownloadR_Download_failed_" xml:space="preserve">
-    <value>ダウンロードに失敗しました。</value>
-  </data>
   <data name="CommandLine_AssociateProteins_Failed_to_associate_proteins" xml:space="preserve">
     <value>タンパク質の関連付けに失敗しました</value>
   </data>
@@ -2391,9 +2379,6 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   </data>
   <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name" xml:space="preserve">
     <value>フラグメント名</value>
-  </data>
-  <data name="PythonInstaller_DownloadPython_Download_failed_" xml:space="preserve">
-    <value>ダウンロードに失敗しました。</value>
   </data>
   <data name="CommandLine_ImportTool_Error__to_import_a_tool_it_must_have_a_name_and_a_command___Use___tool_add_to_specify_a_name_and_use___tool_command_to_specify_a_command___The_tool_was_not_imported___" xml:space="preserve">
     <value>エラー：ツールをインポートするには、名前とコマンドがなければなりません。 名前を指定するには--tool-addを使用し、コマンドを指定するには--tool-commandを使用します。 ツールがインポートされませんでした...</value>
