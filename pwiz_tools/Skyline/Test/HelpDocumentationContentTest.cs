@@ -77,6 +77,9 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestCommandLineHelpDocumentation()
         {
+            // Reset the settings before the test since some command-line options like "--background-proteome-name" include
+            // values from the user settings.
+            Settings.Default.Reset();
             ForEachLanguage(() =>
             {
                 var filePath = Path.Combine(GetDocumentationHelpFolder(), "CommandLine.html");
