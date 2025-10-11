@@ -267,10 +267,6 @@ namespace TestRunner
         [STAThread, MethodImpl(MethodImplOptions.NoOptimization)]
         static int Main(string[] args)
         {
-            if (!ProcessEx.IsRunningOnWine)
-            {
-                Console.OutputEncoding = Encoding.UTF8;
-            }
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
             Application.ThreadException += ThreadExceptionEventHandler;
 
@@ -292,6 +288,9 @@ namespace TestRunner
                     Report(commandLineArgs.ArgAsString("report"));
                     return 0;
             }
+
+            if (commandLineArgs.ArgAsString("language") != "en" && commandLineArgs.ArgAsString("language") != "en-US")
+                Console.OutputEncoding = Encoding.UTF8;  // So we can send Japanese to SkylineTester, which monitors our stdout
 
             Console.WriteLine();
             if (!commandLineArgs.ArgAsBool("status") && !commandLineArgs.ArgAsBool("buildcheck") && !commandLineArgs.HasArg("listonly") && commandLineArgs.ArgAsBool("showheader"))
