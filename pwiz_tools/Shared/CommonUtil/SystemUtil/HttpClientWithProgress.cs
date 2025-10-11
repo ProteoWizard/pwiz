@@ -29,6 +29,7 @@ using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using pwiz.Common.CommonResources;
 
 namespace pwiz.Common.SystemUtil
 {
@@ -47,9 +48,9 @@ namespace pwiz.Common.SystemUtil
         /// <summary>
         /// Creates an HttpClient wrapper with optional progress reporting.
         /// </summary>
-        /// <param name="progressMonitor">Optional progress monitor for reporting download progress and handling cancellation</param>
-        /// <param name="status">Initial progress status to update with an ID tracked by the progress monitor</param>
-        public HttpClientWithProgress(IProgressMonitor progressMonitor, IProgressStatus status)
+        /// <param name="progressMonitor">Progress monitor for reporting download progress and handling cancellation</param>
+        /// <param name="status">Initial progress status to update with an ID tracked by the progress monitor. If null, creates a new ProgressStatus.</param>
+        public HttpClientWithProgress(IProgressMonitor progressMonitor, IProgressStatus status = null)
         {
             // Ensure HttpClient respects system proxy (including PAC) and supports gzip/deflate
             var handler = new HttpClientHandler
@@ -67,7 +68,7 @@ namespace pwiz.Common.SystemUtil
 
             _httpClient = new HttpClient(handler);
             _progressMonitor = progressMonitor;
-            _progressStatus = status;
+            _progressStatus = status ?? new ProgressStatus();
         }
 
         /// <summary>
@@ -288,25 +289,25 @@ namespace pwiz.Common.SystemUtil
 
             // Check for cancellation first (but distinguish between user cancellation and timeout)
             if (root is TaskCanceledException)
-                return new IOException(string.Format(Properties.Resources.HttpClientWithProgress_MapHttpException_The_request_to__0__timed_out__Please_try_again_, uri), root);
+                return new IOException(string.Format(MessageResources.HttpClientWithProgress_MapHttpException_The_request_to__0__timed_out__Please_try_again_, uri), root);
 
             if (root is OperationCanceledException)
                 return root;
 
             if (root is TimeoutException)
-                return new IOException(string.Format(Properties.Resources.HttpClientWithProgress_MapHttpException_The_request_to__0__timed_out__Please_try_again_, uri), root);
+                return new IOException(string.Format(MessageResources.HttpClientWithProgress_MapHttpException_The_request_to__0__timed_out__Please_try_again_, uri), root);
 
             if (!NetworkInterface.GetIsNetworkAvailable())
-                return new IOException(Properties.Resources.HttpClientWithProgress_MapHttpException_No_network_connection_detected__Please_check_your_internet_connection_and_try_again_, root);
+                return new IOException(MessageResources.HttpClientWithProgress_MapHttpException_No_network_connection_detected__Please_check_your_internet_connection_and_try_again_, root);
 
             if (root is HttpRequestException httpEx)
             {
-                string server = uri?.Host ?? Properties.Resources.HttpClientWithProgress_MapHttpException_server;
+                string server = uri?.Host ?? MessageResources.HttpClientWithProgress_MapHttpException_server;
                 // DNS resolution failure (e.g., 'The remote name could not be resolved')
                 if (httpEx.InnerException is WebException webEx && webEx.Status == WebExceptionStatus.NameResolutionFailure)
-                    return new IOException(string.Format(Properties.Resources.HttpClientWithProgress_MapHttpException_Failed_to_resolve_host__0___Please_check_your_DNS_settings_or_VPN_proxy_, server), root);
+                    return new IOException(string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Failed_to_resolve_host__0___Please_check_your_DNS_settings_or_VPN_proxy_, server), root);
 
-                return new IOException(string.Format(Properties.Resources.HttpClientWithProgress_MapHttpException_Failed_to_connect_to__0___Please_check_your_network_connection__VPN_proxy__or_firewall_, server), root);
+                return new IOException(string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Failed_to_connect_to__0___Please_check_your_network_connection__VPN_proxy__or_firewall_, server), root);
             }
 
             if (root is IOException ioEx)
@@ -321,7 +322,7 @@ namespace pwiz.Common.SystemUtil
                 if (hResult == unchecked((int)0x8007006D) || hResult == unchecked((int)0x8007006E) || 
                     hResult == unchecked((int)0x80070050) || hResult == unchecked((int)0x8007006F))
                 {
-                    return new IOException(Properties.Resources.HttpClientWithProgress_MapHttpException_The_connection_was_lost_during_download__Please_check_your_internet_connection_and_try_again_, root);
+                    return new IOException(MessageResources.HttpClientWithProgress_MapHttpException_The_connection_was_lost_during_download__Please_check_your_internet_connection_and_try_again_, root);
                 }
             }
 
@@ -333,7 +334,7 @@ namespace pwiz.Common.SystemUtil
             var readTask = stream.ReadAsync(buffer, 0, buffer.Length);
             var completed = Task.WaitAny(readTask, Task.Delay(timeoutMs));
             if (completed != 0)
-                throw new TimeoutException(string.Format(Properties.Resources.HttpClientWithProgress_ReadWithTimeout_The_read_operation_timed_out_while_downloading_from__0__, uri));
+                throw new TimeoutException(string.Format(MessageResources.HttpClientWithProgress_ReadWithTimeout_The_read_operation_timed_out_while_downloading_from__0__, uri));
             return readTask.Result;
         }
 

@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.CommonResources;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
@@ -278,7 +279,10 @@ namespace pwiz.SkylineTestFunctional
         {
             var rInstaller = FormatPackageInstaller(true);
             var messageDlg = ShowDialog<MessageDlg>(rInstaller.OkDialog);
-            RunUI(() => Assert.AreEqual(TextUtil.LineSeparate(Resources.RInstaller_InstallPackages_Error__No_internet_connection_, string.Empty, Resources.RInstaller_InstallPackages_Installing_R_packages_requires_an_internet_connection__Please_check_your_connection_and_try_again), messageDlg.Message));
+            RunUI(() => Assert.AreEqual(RInstaller.GetInternetConnectionForPackagesFailureMessage(
+                    RUtil.INTERNET_CHECK_SITE,
+                    MessageResources.HttpClientWithProgress_MapHttpException_No_network_connection_detected__Please_check_your_internet_connection_and_try_again_),
+                messageDlg.Message));
             OkDialog(messageDlg, messageDlg.OkDialog);
             WaitForClosedForm(rInstaller);
         }
@@ -301,7 +305,7 @@ namespace pwiz.SkylineTestFunctional
                 // R Installation
                 rInstaller.TestDownloadClient = new TestAsynchronousDownloadClient { DownloadSuccess = true, CancelDownload = false };
                 // Package Installation
-                rInstaller.PackageInstallHelpers = new TestPackageInstallationHelper { PackagesToInstall = missingPackages ?? new List<ToolPackage>(), RProgramPath = "testPath.exe", InternetConnectionDoesNotExists = cutoffInternet };
+                rInstaller.PackageInstallHelpers = new TestPackageInstallationHelper { PackagesToInstall = missingPackages ?? new List<ToolPackage>(), RProgramPath = "testPath.exe", InternetConnectionDoesNotExist = cutoffInternet };
                 rInstaller.TestSkylineProcessRunnerWrapper = new TestSkylineProcessRunner { stringToWriteToWriter = stringToWrite, ExitCode = packageInstallerExitCode, UserOkRunAsAdministrator = okAdminPrivledges, ConnectSuccess = connectionSuccess };
             });
             return rInstaller;
@@ -351,13 +355,14 @@ namespace pwiz.SkylineTestFunctional
         {
             public ICollection<ToolPackage> PackagesToInstall { private get; set; }
             public string RProgramPath { private get; set; }
-            public bool InternetConnectionDoesNotExists { private get; set; }
+            public bool InternetConnectionDoesNotExist { private get; set; }
 
             public ICollection<ToolPackage> WhichPackagesToInstall(ICollection<ToolPackage> packages, string pathToR)
             {
                 if (PackagesToInstall != null)
                     return PackagesToInstall;
-                else return new List<ToolPackage>();
+                else
+                    return new List<ToolPackage>();
             }
 
             public string FindRProgramPath(string rVersion)
@@ -365,10 +370,16 @@ namespace pwiz.SkylineTestFunctional
                 return RProgramPath ?? string.Empty;
             }
 
-            public bool CheckForInternetConnection(out string site)
+            public bool CheckForInternetConnection(out string site, out string errorMessage)
             {
-                site = null;
-                return !InternetConnectionDoesNotExists;
+                site = RUtil.INTERNET_CHECK_SITE;
+                errorMessage = string.Empty;
+                if (InternetConnectionDoesNotExist)
+                {
+                    errorMessage = MessageResources
+                        .HttpClientWithProgress_MapHttpException_No_network_connection_detected__Please_check_your_internet_connection_and_try_again_;
+                }
+                return !InternetConnectionDoesNotExist;
             }
         }
     }

@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
@@ -239,13 +238,10 @@ namespace pwiz.Skyline.ToolsUI
             if (PackagesToInstall.Count == 0)
                 return;
 
-            if (!PackageInstallHelpers.CheckForInternetConnection(out string checkedSite))
+            if (!PackageInstallHelpers.CheckForInternetConnection(out string checkedSite, out string errorMessage))
             {
-                string failedMessage = string.IsNullOrEmpty(checkedSite)
-                    ? Resources.RInstaller_InstallPackages_Error__No_internet_connection_
-                    : string.Format(ToolsUIResources.RInstaller_InstallPackages_Error__Failed_to_connect_to_the_website__0_, checkedSite);
-                throw new ToolExecutionException(
-                    TextUtil.LineSeparate(failedMessage,string.Empty, Resources.RInstaller_InstallPackages_Installing_R_packages_requires_an_internet_connection__Please_check_your_connection_and_try_again));
+                var failureMessage = GetInternetConnectionForPackagesFailureMessage(checkedSite, errorMessage);
+                throw new ToolExecutionException(failureMessage);
             }
 
             string programPath = PackageInstallHelpers.FindRProgramPath(_version);
@@ -293,18 +289,34 @@ namespace pwiz.Skyline.ToolsUI
                                                                   ex.Message));
             }
         }
+
+        public static string GetInternetConnectionForPackagesFailureMessage(string checkedSite, string errorMessage)
+        {
+            var failedMessage = string.IsNullOrEmpty(checkedSite)
+                ? ToolsUIResources.RInstaller_InstallPackages_Error__No_internet_connection_
+                : string.Format(ToolsUIResources.RInstaller_InstallPackages_Error__Failed_to_connect_to_the_website__0_, checkedSite);
+                
+            // Include detailed error message if available (DNS failure, proxy issues, etc.)
+            var messageParts = new List<string> { failedMessage };
+            if (!string.IsNullOrEmpty(errorMessage))
+                messageParts.Add(errorMessage);
+            messageParts.Add(string.Empty);
+            messageParts.Add(ToolsUIResources.RInstaller_InstallPackages_Installing_R_packages_requires_an_internet_connection__Please_check_your_connection_and_try_again);
+            return TextUtil.LineSeparate(messageParts.ToArray());
+        }
+
         #region Functional testing support
 
         public interface IPackageInstallHelpers
         {
             ICollection<ToolPackage> WhichPackagesToInstall(ICollection<ToolPackage> packages, string pathToR);
             string FindRProgramPath(string rVersion);
-            bool CheckForInternetConnection(out string site);
+            bool CheckForInternetConnection(out string site, out string errorMessage);
         } 
 
         public IPackageInstallHelpers PackageInstallHelpers
         {
-            get { return _packageInstallHelpers ?? (_packageInstallHelpers = new PackageInstallHelpers()); }
+            get { return _packageInstallHelpers ??= new PackageInstallHelpers(); }
             set { _packageInstallHelpers = value; }
         }
         private IPackageInstallHelpers _packageInstallHelpers { get; set; }
@@ -337,10 +349,10 @@ namespace pwiz.Skyline.ToolsUI
             return RUtil.FindRProgramPath(rVersion);
         }
 
-        public bool CheckForInternetConnection(out string site)
+        public bool CheckForInternetConnection(out string site, out string errorMessage)
         {
             site = RUtil.INTERNET_CHECK_SITE;
-            return RUtil.CheckForInternetConnection();
+            return RUtil.CheckForInternetConnection(out errorMessage);
         }
     }
 
@@ -469,20 +481,29 @@ namespace pwiz.Skyline.ToolsUI
         public const string INTERNET_CHECK_SITE = "www.r-project.org";
 
         /// <summary>
-        /// Returns true if internet connection is avalible.
+        /// Returns true if internet connection is available and can reach r-project.org.
+        /// Uses a lightweight HEAD request to minimize bandwidth and verify connectivity
+        /// to the R Project site specifically (needed for R package downloads).
         /// </summary>
-        public static bool CheckForInternetConnection()
+        /// <param name="errorMessage">If returns false, contains a user-friendly error message explaining the issue</param>
+        public static bool CheckForInternetConnection(out string errorMessage)
         {
+            errorMessage = null;
+
+            // Verify we can actually reach r-project.org with a lightweight HEAD request
             try
             {
-                using (var client = new WebClient())
-                using (client.OpenRead(@"https://" + INTERNET_CHECK_SITE))
-                {
-                    return true;
-                }
+                using var httpClient = new HttpClientWithProgress(new SilentProgressMonitor());
+                var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Head, 
+                    @"https://" + INTERNET_CHECK_SITE);
+                var response = httpClient.HttpClient.SendAsync(request).Result;
+                return response.IsSuccessStatusCode;
             }
-            catch
+            catch (Exception ex)
             {
+                // HttpClientWithProgress provides detailed error messages (DNS failure, proxy issues, etc.)
+                // Preserve this useful information for the user
+                errorMessage = ex.Message;
                 return false;
             }
         }

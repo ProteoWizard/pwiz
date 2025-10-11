@@ -1979,9 +1979,6 @@
     <value>蛋白质</value>
     <comment>Used in PeptideToMoleculeText.Translate to update strings like "choose a protein" to read "choose a molecule list" when non-peptide documents are in use</comment>
   </data>
-  <data name="RInstaller_InstallPackages_Installing_R_packages_requires_an_internet_connection__Please_check_your_connection_and_try_again" xml:space="preserve">
-    <value>安装 R 软件包需要网络连接。请检查您的连接并重试</value>
-  </data>
   <data name="TransitionGroupDecoy" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\transitiongroupdecoy.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -2080,9 +2077,6 @@
   </data>
   <data name="ConfigureToolsDlg_CheckPassTool_Supported_Types___1_" xml:space="preserve">
     <value>支持类型：{1}</value>
-  </data>
-  <data name="RInstaller_InstallPackages_Error__No_internet_connection_" xml:space="preserve">
-    <value>错误：无网络连接。</value>
   </data>
   <data name="PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units" xml:space="preserve">
     <value>明示离子迁移单位</value>

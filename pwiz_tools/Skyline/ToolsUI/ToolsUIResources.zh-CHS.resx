@@ -358,4 +358,10 @@
   <data name="EditSearchToolDlg_OkDialog_The_file__0__does_not_exist_" xml:space="preserve">
     <value>文件{0}不存在。</value>
   </data>
+  <data name="RInstaller_InstallPackages_Error__No_internet_connection_" xml:space="preserve">
+    <value>错误：无网络连接。</value>
+  </data>
+  <data name="RInstaller_InstallPackages_Installing_R_packages_requires_an_internet_connection__Please_check_your_connection_and_try_again" xml:space="preserve">
+    <value>安装 R 软件包需要网络连接。请检查您的连接并重试</value>
+  </data>
 </root>
