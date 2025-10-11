@@ -50,8 +50,7 @@ namespace pwiz.SkylineTest
             {
                 var filePath = Path.Combine(GetDocumentationHelpFolder(), "KeyboardShortcuts.html");
                 var skylineWindow = new SkylineWindow();
-                var html = FormatHtml(
-                    KeyboardShortcutDocumentation.GenerateKeyboardShortcutHtml(skylineWindow.MainMenuStrip));
+                var html = KeyboardShortcutDocumentation.GenerateKeyboardShortcutHtml(skylineWindow.MainMenuStrip);
                 VerifyFileContents(filePath, html);
             });
         }
@@ -133,11 +132,6 @@ namespace pwiz.SkylineTest
                 AssertEx.FileExists(path, message);
                 AssertEx.NoDiff(expectedContents, actualContents, message);
             }
-        }
-
-        public static string FormatHtml(string html)
-        {
-            return html;
         }
     }
 }
