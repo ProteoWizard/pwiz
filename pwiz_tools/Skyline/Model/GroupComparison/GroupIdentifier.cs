@@ -18,11 +18,15 @@
  */
 
 using System;
+using System.Globalization;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Hibernate;
 
 namespace pwiz.Skyline.Model.GroupComparison
 {
     public readonly struct GroupIdentifier : IComparable, IEquatable<GroupIdentifier>
     {
+        public static readonly GroupIdentifier EMPTY = default;
         public bool Equals(GroupIdentifier other)
         {
             return Equals(_value, other._value);
@@ -40,19 +44,9 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         private readonly object _value;
 
-        public GroupIdentifier(bool boolValue)
+        public GroupIdentifier(object value)
         {
-            _value = boolValue;
-        }
-
-        public GroupIdentifier(double doubleValue)
-        {
-            _value = doubleValue;
-        }
-
-        public GroupIdentifier(string stringValue)
-        {
-            _value = stringValue;
+            _value = value;
         }
 
         public double? Number
@@ -80,6 +74,26 @@ namespace pwiz.Skyline.Model.GroupComparison
             return _value.ToString();
         }
 
+        public string ToPersistedString()
+        {
+            if (_value == null)
+            {
+                return string.Empty;
+            }
+
+            if (_value is double doubleValue)
+            {
+                return doubleValue.ToString(Formats.RoundTrip, CultureInfo.InvariantCulture);
+            }
+
+            if (_value is string stringValue)
+            {
+                return stringValue;
+            }
+
+            return LocalizationHelper.CallWithCulture(CultureInfo.InvariantCulture, _value.ToString);
+        }
+
         public int CompareTo(object obj)
         {
             if (obj == null)
@@ -102,21 +116,18 @@ namespace pwiz.Skyline.Model.GroupComparison
             return StringComparer.CurrentCultureIgnoreCase.Compare(ToString(), that.ToString());
         }
 
+        public bool IsEmpty()
+        {
+            return null == _value;
+        }
+
         public static GroupIdentifier MakeGroupIdentifier(object value)
         {
-            if (value == null)
+            if (value is string stringValue && string.IsNullOrEmpty(stringValue))
             {
-                return default(GroupIdentifier);
+                value = null;
             }
-            if (value is bool)
-            {
-                return new GroupIdentifier((bool) value);
-            }
-            if (value is double)
-            {
-                return new GroupIdentifier((double) value);
-            }
-            return new GroupIdentifier(value as string ?? value.ToString());
+            return new GroupIdentifier(value);
         }
     }
 }

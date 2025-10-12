@@ -44,7 +44,9 @@ namespace pwiz.Skyline.Model.GroupComparison
             var annotationCalculator = new AnnotationCalculator(document);
             _qrFactorizationCache = qrFactorizationCache;
             List<KeyValuePair<int, ReplicateDetails>> replicateIndexes = new List<KeyValuePair<int, ReplicateDetails>>();
-            var controlGroupIdentifier = ComparisonDef.GetControlGroupIdentifier(SrmDocument.Settings);
+            var controlReplicateValue = ComparisonDef.GetControlReplicateValue(document.Settings);
+            var controlGroupIdentifier = GroupIdentifier.MakeGroupIdentifier(controlReplicateValue.ParsePersistedValue(comparisonDef.ControlValue));
+            var caseGroupIdentifier = GroupIdentifier.MakeGroupIdentifier(controlReplicateValue.ParsePersistedValue(comparisonDef.CaseValue));
             if (SrmDocument.Settings.HasResults)
             {
                 var chromatograms = SrmDocument.Settings.MeasuredResults.Chromatograms;
@@ -61,13 +63,9 @@ namespace pwiz.Skyline.Model.GroupComparison
                     }
                     else
                     {
-                        if (!string.IsNullOrEmpty(ComparisonDef.CaseValue))
+                        if (!caseGroupIdentifier.IsEmpty() && !Equals(caseGroupIdentifier, replicateDetails.GroupIdentifier))
                         {
-                            var annotationValue = chromatogramSet.Annotations.GetAnnotation(ComparisonDef.ControlAnnotation);
-                            if (!Equals(annotationValue, ComparisonDef.CaseValue))
-                            {
-                                continue;
-                            }
+                            continue;
                         }
                     }
                     if (null != ComparisonDef.IdentityAnnotation)

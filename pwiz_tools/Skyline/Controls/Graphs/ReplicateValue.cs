@@ -16,26 +16,48 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
 using pwiz.Skyline.Model.Results;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
     public abstract class ReplicateValue : Immutable
     {
-        public abstract string ToPersistedString();
+        protected ReplicateValue(PropertyPath propertyPath)
+        {
+            PropertyPath = propertyPath;
+        }
+        
+        public PropertyPath PropertyPath { get; }
+
+        public string ToPersistedString()
+        {
+            return PropertyPath.ToString();
+        }
+
+        public abstract object ParsePersistedValue(string value);
 
         public string Title
         {
-            get { return DisambiguateTitle ? DisambiguationPrefix + BaseTitle : BaseTitle; }
+            get
+            {
+                if (DisambiguateTitle)
+                {
+                    return DisambiguationPrefix + BaseTitle;
+                }
+
+                var indent = new string(' ', Math.Max(PropertyPath.Length - 1, 0));
+                return indent + BaseTitle;
+            }
         }
 
         protected abstract string BaseTitle { get; }
@@ -59,6 +81,41 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        public override string ToString()
+        {
+            return Title;
+        }
+
+        protected bool Equals(ReplicateValue other)
+        {
+            return Equals(PropertyPath, other.PropertyPath);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is null)
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
+            if (obj.GetType() != GetType())
+            {
+                return false;
+            }
+
+            return Equals((ReplicateValue)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return PropertyPath.GetHashCode();
+        }
+
         public static ReplicateValue FromPersistedString(SrmSettings settings, string persistedString)
         {
             if (string.IsNullOrEmpty(persistedString))
@@ -71,7 +128,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public class Annotation : ReplicateValue
         {
-            public Annotation(AnnotationDef annotationDef)
+            public Annotation(AnnotationDef annotationDef) : base(PropertyPath.Root.Property(DocumentAnnotations.ANNOTATION_PREFIX + annotationDef.Name))
             {
                 AnnotationDef = annotationDef;
             }
@@ -86,11 +143,6 @@ namespace pwiz.Skyline.Controls.Graphs
             public override object GetValue(AnnotationCalculator annotationCalculator, ChromatogramSet chromatogramSet)
             {
                 return annotationCalculator.GetReplicateAnnotation(AnnotationDef, chromatogramSet);
-            }
-
-            public override string ToPersistedString()
-            {
-                return DocumentAnnotations.ANNOTATION_PREFIX + AnnotationDef.Name;
             }
 
             protected override string DisambiguationPrefix
@@ -123,11 +175,16 @@ namespace pwiz.Skyline.Controls.Graphs
                     return new[] { AnnotationDef };
                 }
             }
+
+            public override object ParsePersistedValue(string value)
+            {
+                return AnnotationDef.ParsePersistedString(value);
+            }
         }
 
         public class Lookup : ReplicateValue
         {
-            public Lookup(ReplicateValue parent, AnnotationDef listColumn)
+            public Lookup(ReplicateValue parent, AnnotationDef listColumn) : base(parent.PropertyPath.Property(AnnotationDef.ANNOTATION_PREFIX + listColumn.Name))
             {
                 Parent = parent;
                 ListColumn = listColumn;
@@ -135,29 +192,11 @@ namespace pwiz.Skyline.Controls.Graphs
             
             public ReplicateValue Parent { get; }
             public AnnotationDef ListColumn { get; }
-
-            public override string ToPersistedString()
-            {
-                return PropertyPath.ToString();
-            }
-
-            public PropertyPath PropertyPath
-            {
-                get
-                {
-                    if (Parent is Lookup lookup)
-                    {
-                        return lookup.PropertyPath.Property(AnnotationDef.ANNOTATION_PREFIX + ListColumn.Name);
-                    }
-                    return PropertyPath.Root.Property(Parent.ToPersistedString()).Property(AnnotationDef.ANNOTATION_PREFIX + ListColumn.Name);
-                }
-            }
-
             protected override string BaseTitle
             {
                 get
                 {
-                    return new string(' ', AncestorAnnotationDefs.Count()) + ListColumn.Name;
+                    return ListColumn.Name;
                 }
             }
 
@@ -193,7 +232,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 get
                 {
-                    return Parent.AncestorAnnotationDefs.FirstOrDefault()?.Lookup + " ";
+                    return Parent.AncestorAnnotationDefs.FirstOrDefault()?.Lookup + @" ";
                 }
             }
 
@@ -204,17 +243,24 @@ namespace pwiz.Skyline.Controls.Graphs
                     return Parent.AncestorAnnotationDefs.Prepend(ListColumn);
                 }
             }
+
+            public override object ParsePersistedValue(string value)
+            {
+                return ListColumn.ParsePersistedString(value);
+            }
         }
 
         public class Property : ReplicateValue
         {
-            private Func<string> _getLabelFunc;
-            private Func<ChromatogramSet, object> _getValueFunc;
-            public Property(string name, Func<string> getLabelFunc, Func<ChromatogramSet, object> getValueFunc)
+            private readonly Func<string> _getLabelFunc;
+            private readonly Func<ChromatogramSet, object> _getValueFunc;
+            private readonly Func<string, object> _parseFunc;
+            private Property(string name, Func<string> getLabelFunc, Func<ChromatogramSet, object> getValueFunc, Func<string, object> parseFunc) : base(PropertyPath.Root.Property(DocumentAnnotations.PROPERTY_PREFIX + name))
             {
                 PropertyName = name;
                 _getLabelFunc = getLabelFunc;
                 _getValueFunc = getValueFunc;
+                _parseFunc = parseFunc;
             }
 
             public string PropertyName { get; private set; }
@@ -226,11 +272,6 @@ namespace pwiz.Skyline.Controls.Graphs
             public override object GetValue(AnnotationCalculator annotationCalculator, ChromatogramSet node)
             {
                 return _getValueFunc(node);
-            }
-
-            public override string ToPersistedString()
-            {
-                return DocumentAnnotations.PROPERTY_PREFIX + PropertyName;
             }
 
             protected override string DisambiguationPrefix
@@ -254,6 +295,29 @@ namespace pwiz.Skyline.Controls.Graphs
             public override int GetHashCode()
             {
                 return PropertyName.GetHashCode();
+            }
+
+            public static Property Define<T>(string name, Func<string> getLabelFunc,
+                Func<ChromatogramSet, T> getValueFunc, Func<string, T> parseFunc)
+            {
+                return new Property(name, getLabelFunc, c => getValueFunc(c), s => parseFunc(s));
+            }
+
+            public static Property DefineString(string name, Func<string> getLabelFunc,
+                Func<ChromatogramSet, string> getValueFunc)
+            {
+                return Define(name, getLabelFunc, getValueFunc, s => s);
+            }
+
+            public static Property DefineNumber(string name, Func<string> getLabelFunc,
+                Func<ChromatogramSet, double?> getValueFunc)
+            {
+                return Define(name, getLabelFunc, getValueFunc, AnnotationDef.ParseNumber);
+            }
+
+            public override object ParsePersistedValue(string value)
+            {
+                return _parseFunc(value);
             }
         }
 
@@ -299,13 +363,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            yield return new Property(nameof(ColumnCaptions.SampleType),
-                () => ColumnCaptions.SampleType, chromatogramSet => chromatogramSet.SampleType);
-            yield return new Property(nameof(ColumnCaptions.AnalyteConcentration),
+            yield return Property.Define(nameof(ColumnCaptions.SampleType),
+                () => ColumnCaptions.SampleType, chromatogramSet => chromatogramSet.SampleType, SampleType.FromName);
+            yield return Property.DefineNumber(nameof(ColumnCaptions.AnalyteConcentration),
                 () => ColumnCaptions.AnalyteConcentration, chromatogramSet => chromatogramSet.AnalyteConcentration);
-            yield return new Property(nameof(ColumnCaptions.BatchName),
+            yield return Property.DefineString(nameof(ColumnCaptions.BatchName),
                 () => ColumnCaptions.BatchName, chromatogramSet => chromatogramSet.BatchName);
-            yield return new Property(nameof(ColumnCaptions.SampleDilutionFactor),
+            yield return Property.DefineNumber(nameof(ColumnCaptions.SampleDilutionFactor),
                 ()=>ColumnCaptions.SampleDilutionFactor, chromatogramSet=>chromatogramSet.SampleDilutionFactor);
         }
 
@@ -313,12 +377,18 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             var settings = document.Settings;
             var annotationCalculator = new AnnotationCalculator(document);
-            var withDistinctValues = GetAllReplicateValues(settings)
-                .Where(replicateValue=>replicateValue is Annotation || HasDistinctValues(annotationCalculator, replicateValue)).ToArray();
-            var lookupByTitle = withDistinctValues.ToLookup(replicateValue => replicateValue.Title);
-            foreach (var replicateValue in withDistinctValues)
+            var replicateValues = GetAllReplicateValues(settings).ToList();
+            if (document.Settings.HasResults)
             {
-                if (lookupByTitle[replicateValue.Title].Skip(1).Any())
+                replicateValues = replicateValues.Where(replicateValue =>
+                    replicateValue is Annotation || HasDistinctValues(annotationCalculator, replicateValue)).ToList();
+            }
+
+            var countsByTitle = replicateValues.GroupBy(replicateValue => replicateValue.Title)
+                .ToDictionary(group => group.Key, group => group.Count());
+            foreach (var replicateValue in replicateValues)
+            {
+                if (countsByTitle[replicateValue.Title] > 1)
                 {
                     yield return replicateValue.ChangeDisambiguateTitle(true);
                 }
