@@ -126,7 +126,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         /// <typeparam name="T">The model type</typeparam>
         /// <param name="folder"></param>
         /// <returns></returns>
-        public FilesTreeNode File<T>(FilesTreeNode folder) where T : FileNode
+        public FilesTreeNode File<T>(FilesTreeNode folder) where T : FileModel
         {
             return folder.Nodes.Cast<FilesTreeNode>().FirstOrDefault(filesTreeNode => filesTreeNode.Model is T);
         }

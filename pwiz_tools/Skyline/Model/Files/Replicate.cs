@@ -68,7 +68,7 @@ namespace pwiz.Skyline.Model.Files
                 return new Databinding.Entities.Replicate(dataSchema, index);
             };
 
-        public static ModifiedDocument Delete(SrmDocument document, SrmSettingsChangeMonitor monitor, List<FileNode> models)
+        public static ModifiedDocument Delete(SrmDocument document, SrmSettingsChangeMonitor monitor, List<FileModel> models)
         {
             var deleteIds = models.Select(model => ReferenceValue.Of(model.IdentityPath.Child)).ToHashSet();
             var deleteNames = models.Select(item => item.Name).ToList();
