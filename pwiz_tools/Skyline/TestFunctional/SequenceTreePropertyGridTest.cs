@@ -89,7 +89,7 @@ namespace pwiz.SkylineTestFunctional
             // Check that sequence property matches value in selected node
             Assert.AreEqual(((PeptideDocNode)selectedDocNode).Peptide.Sequence, props[SEQUENCE_PROP_NAME].GetValue(selectedObject));
 
-            // smoke test check total number of properties
+            // smoke test check total number of properties - this failing could just mean another relevant property was added
             Assert.AreEqual(PEPTIDE_EXPECTED_PROP_NUM, props.Count);
 
             // Test localization of property grid property display names

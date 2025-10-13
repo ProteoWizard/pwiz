@@ -84,7 +84,7 @@ namespace pwiz.SkylineTestFunctional
             var selectedObject = SkylineWindow.PropertyGridForm?.GetPropertyObject();
             Assert.IsNotNull(selectedObject);
 
-            // smoke test check total number of properties
+            // smoke test check total number of properties - this failing could just mean another relevant property was added
             var props = TypeDescriptor.GetProperties(selectedObject, false);
             Assert.AreEqual(REPLICATE_EXPECTED_PROP_NUM, props.Count);
 
