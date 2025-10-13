@@ -19,11 +19,18 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.DataBinding;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.GroupComparison;
+using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -40,7 +47,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            const string groupComparisonName = "Peptides by Condition";
+            const string peptidesByCondition = "Peptides by Condition";
             RunUI(() =>
             {
                 SkylineWindow.OpenFile(TestFilesDir.GetTestPath("RatsWithSamples.sky"));
@@ -50,7 +57,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 RunUI(()=>
                 {
-                    editGroupComparisonDlg.TextBoxName.Text = groupComparisonName;
+                    editGroupComparisonDlg.TextBoxName.Text = peptidesByCondition;
                     SelectComboItem(editGroupComparisonDlg.ComboControlAnnotation, " Condition");
                     SelectComboItem(editGroupComparisonDlg.ComboIdentityAnnotation, " Name");
                 });
@@ -60,7 +67,7 @@ namespace pwiz.SkylineTestFunctional
                     SelectComboItem(editGroupComparisonDlg.ComboControlValue, "Healthy");
                 });
             }, editGroupComparisonDlg=>editGroupComparisonDlg.OkDialog());
-            RunUI(()=>SkylineWindow.ShowGroupComparisonWindow(groupComparisonName));
+            RunUI(()=>SkylineWindow.ShowGroupComparisonWindow(peptidesByCondition));
             var groupComparisonGrid = FindOpenForm<FoldChangeGrid>();
             WaitForConditionUI(() => groupComparisonGrid.IsComplete);
             RunUI(() =>
@@ -104,6 +111,56 @@ namespace pwiz.SkylineTestFunctional
             var alphabeticalRatNames =
                 ratNamesByRunStartTime.OrderBy(name => name, StringComparer.CurrentCultureIgnoreCase).ToList();
             CollectionAssert.AreEqual(alphabeticalRatNames, GetAreaAxisLabels());
+            
+            // Set SampleType and Concentration on Replicates and use those to define a group comparison
+            RunUI(()=>SkylineWindow.ShowDocumentGrid(true));
+            var documentGrid = FindOpenForm<DocumentGridForm>();
+            Assert.IsNotNull(documentGrid);
+            RunUI(()=>documentGrid.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Replicates));
+            WaitForConditionUI(() => documentGrid.IsComplete);
+            RunUI(() =>
+            {
+                var sampleTypes = Enumerable.Repeat(SampleType.BLANK.ToString(), 21)
+                    .Concat(Enumerable.Repeat(SampleType.DOUBLE_BLANK.ToString(), 21));
+                var colSampleType =
+                    documentGrid.DataboundGridControl.FindColumn(
+                        PropertyPath.Root.Property(nameof(Replicate.SampleType)));
+                Assert.IsNotNull(colSampleType);
+                documentGrid.DataGridView.CurrentCell = documentGrid.DataGridView.Rows[0].Cells[colSampleType.Index];
+                SetClipboardText(TextUtil.LineSeparate(sampleTypes));
+                documentGrid.DataGridView.SendPaste();
+                var concentrations = Enumerable.Range(0, 7).SelectMany(i =>
+                    Enumerable.Repeat((i * i / 10.0).ToString(CultureInfo.CurrentCulture), 3));
+                var colConcentration =
+                    documentGrid.DataboundGridControl.FindColumn(
+                        PropertyPath.Root.Property(nameof(Replicate.AnalyteConcentration)));
+                documentGrid.DataGridView.CurrentCell = documentGrid.DataGridView.Rows[0].Cells[colConcentration.Index];
+                SetClipboardText(TextUtil.LineSeparate(concentrations));
+                documentGrid.DataGridView.SendPaste();
+                documentGrid.DataGridView.CurrentCell = documentGrid.DataGridView.Rows[0].Cells[0];
+            });
+
+            const string proteinsBySampleType = "Proteins by Sample Type";
+            RunLongDlg<EditGroupComparisonDlg>(SkylineWindow.AddGroupComparison, editGroupComparisonDlg =>
+            {
+                RunUI(() =>
+                {
+                    editGroupComparisonDlg.TextBoxName.Text = proteinsBySampleType;
+                    SelectComboItem(editGroupComparisonDlg.ComboControlAnnotation, ColumnCaptions.SampleType);
+                    SelectComboItem(editGroupComparisonDlg.ComboIdentityAnnotation, ColumnCaptions.AnalyteConcentration);
+                    editGroupComparisonDlg.RadioScopePerProtein.Checked = true;
+                });
+                WaitForConditionUI(() => editGroupComparisonDlg.ComboControlValue.Items.Count > 1);
+                RunUI(() =>
+                {
+                    SelectComboItem(editGroupComparisonDlg.ComboControlValue, SampleType.BLANK.ToString());
+                });
+            }, editGroupComparisonDlg => editGroupComparisonDlg.OkDialog());
+            RunUI(() => SkylineWindow.ShowGroupComparisonWindow(proteinsBySampleType));
+
+            var proteinsBySampleTypeGrid = FoldChangeForm.FindForm<FoldChangeGrid>(SkylineWindow, proteinsBySampleType);
+            WaitForConditionUI(() => proteinsBySampleTypeGrid.IsComplete);
+            Assert.AreEqual(48, proteinsBySampleTypeGrid.DataboundGridControl.RowCount);
         }
 
         private List<string> GetAreaAxisLabels()

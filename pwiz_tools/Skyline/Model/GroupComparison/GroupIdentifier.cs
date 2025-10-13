@@ -65,6 +65,14 @@ namespace pwiz.Skyline.Model.GroupComparison
             }
         }
 
+        public object Value
+        {
+            get
+            {
+                return _value;
+            }
+        }
+
         public override string ToString()
         {
             if (_value == null)
@@ -72,26 +80,6 @@ namespace pwiz.Skyline.Model.GroupComparison
                 return string.Empty;
             }
             return _value.ToString();
-        }
-
-        public string ToPersistedString()
-        {
-            if (_value == null)
-            {
-                return string.Empty;
-            }
-
-            if (_value is double doubleValue)
-            {
-                return doubleValue.ToString(Formats.RoundTrip, CultureInfo.InvariantCulture);
-            }
-
-            if (_value is string stringValue)
-            {
-                return stringValue;
-            }
-
-            return LocalizationHelper.CallWithCulture(CultureInfo.InvariantCulture, _value.ToString);
         }
 
         public int CompareTo(object obj)
@@ -114,11 +102,6 @@ namespace pwiz.Skyline.Model.GroupComparison
                 return -1;
             } 
             return StringComparer.CurrentCultureIgnoreCase.Compare(ToString(), that.ToString());
-        }
-
-        public bool IsEmpty()
-        {
-            return null == _value;
         }
 
         public static GroupIdentifier MakeGroupIdentifier(object value)

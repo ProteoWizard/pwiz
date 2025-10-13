@@ -66,7 +66,7 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public GroupIdentifier GetControlGroupIdentifier(ReplicateValue controlReplicateValue)
         {
-            return GroupIdentifier.MakeGroupIdentifier(controlReplicateValue?.ParsePersistedValue(ControlValue));
+            return controlReplicateValue?.Parse(ControlValue) ?? GroupIdentifier.EMPTY;
         }
 
         public GroupIdentifier? GetCaseGroupIdentifier(ReplicateValue controlReplicateValue)
@@ -75,7 +75,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 return null;
             }
-            return GroupIdentifier.MakeGroupIdentifier(controlReplicateValue?.ParsePersistedValue(CaseValue));
+            return controlReplicateValue.Parse(CaseValue);
         }
         
         public GroupComparisonDef ChangeControlAnnotation(string value)
@@ -95,22 +95,12 @@ namespace pwiz.Skyline.Model.GroupComparison
             return ChangeProp(ImClone(this), im => im.ControlValue = string.IsNullOrEmpty(value) ? null : value);
         }
 
-        public GroupComparisonDef ChangeControlValue(GroupIdentifier? groupIdentifier)
-        {
-            return ChangeControlValue(groupIdentifier?.ToPersistedString());
-        }
-
         [Track]
         public string CaseValue { get; private set; }
 
         public GroupComparisonDef ChangeCaseValue(string value)
         {
             return ChangeProp(ImClone(this), im => im.CaseValue = string.IsNullOrEmpty(value) ? null : value);
-        }
-
-        public GroupComparisonDef ChangeCaseValue(GroupIdentifier? groupIdentifier)
-        {
-            return ChangeCaseValue(groupIdentifier?.ToPersistedString());
         }
 
         [Track]
@@ -222,7 +212,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 return default;
             }
 
-            return GroupIdentifier.MakeGroupIdentifier(GetControlReplicateValue(settings)?.ParsePersistedValue(ControlValue));
+            return GetControlReplicateValue(settings).Parse(ControlValue);
         }
 
         [TrackChildren]

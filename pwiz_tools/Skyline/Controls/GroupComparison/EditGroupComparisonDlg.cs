@@ -336,12 +336,18 @@ namespace pwiz.Skyline.Controls.GroupComparison
             {
                 return;
             }
-            var groupComparisonDef = GroupComparisonDef.ChangeControlValue(comboControlValue.SelectedItem as GroupIdentifier?);
+
+            var groupComparisonDef = GroupComparisonDef.ChangeControlValue(SerializeGroupIdentifier(comboControlValue.SelectedItem as GroupIdentifier?));
             if (Equals(groupComparisonDef.ControlValue, groupComparisonDef.CaseValue))
             {
-                groupComparisonDef = groupComparisonDef.ChangeCaseValue(GroupIdentifier.EMPTY);
+                groupComparisonDef = groupComparisonDef.ChangeCaseValue(string.Empty);
             }
             GroupComparisonDef = groupComparisonDef;
+        }
+
+        private string SerializeGroupIdentifier(GroupIdentifier? groupIdentifier)
+        {
+            return (comboControlAnnotation.SelectedItem as ReplicateValue)?.Serialize(groupIdentifier);
         }
 
         protected void comboNormalizationMethod_SelectedIndexChanged(object sender, EventArgs e)
@@ -359,7 +365,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             {
                 return;
             }
-            GroupComparisonDef = GroupComparisonDef.ChangeCaseValue(comboCaseValue.SelectedItem as GroupIdentifier?);
+            GroupComparisonDef = GroupComparisonDef.ChangeControlValue(SerializeGroupIdentifier(comboCaseValue.SelectedItem as GroupIdentifier?));
         }
 
         protected void comboIdentityAnnotation_SelectedIndexChanged(object sender, EventArgs e)

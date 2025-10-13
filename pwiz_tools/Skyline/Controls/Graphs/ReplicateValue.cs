@@ -26,7 +26,9 @@ using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
 using pwiz.Skyline.Model.Results;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using pwiz.Skyline.Model.GroupComparison;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
@@ -48,7 +50,26 @@ namespace pwiz.Skyline.Controls.Graphs
             return PropertyPath.ToString();
         }
 
-        public abstract object ParsePersistedValue(string value);
+        public GroupIdentifier Parse(string value)
+        {
+            return GroupIdentifier.MakeGroupIdentifier(ParsePersistedValue(value));
+        }
+
+        public string Serialize(GroupIdentifier? groupIdentifier)
+        {
+            return SerializeValue(groupIdentifier?.Value);
+        }
+
+        protected abstract object ParsePersistedValue(string value);
+
+        protected virtual string SerializeValue(object value)
+        {
+            if (value == null)
+            {
+                return string.Empty;
+            }
+            return LocalizationHelper.CallWithCulture(CultureInfo.InvariantCulture, value.ToString);
+        }
 
         public string Title
         {
@@ -180,7 +201,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            public override object ParsePersistedValue(string value)
+            protected override object ParsePersistedValue(string value)
             {
                 return AnnotationDef.ParsePersistedString(value);
             }
@@ -248,7 +269,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            public override object ParsePersistedValue(string value)
+            protected override object ParsePersistedValue(string value)
             {
                 return ListColumn.ParsePersistedString(value);
             }
@@ -259,12 +280,14 @@ namespace pwiz.Skyline.Controls.Graphs
             private readonly Func<string> _getLabelFunc;
             private readonly Func<ChromatogramSet, object> _getValueFunc;
             private readonly Func<string, object> _parseFunc;
-            private Property(string name, Func<string> getLabelFunc, Func<ChromatogramSet, object> getValueFunc, Func<string, object> parseFunc) : base(PropertyPath.Root.Property(DocumentAnnotations.PROPERTY_PREFIX + name))
+            private readonly Func<object, string> _serializeFunc;
+            private Property(string name, Func<string> getLabelFunc, Func<ChromatogramSet, object> getValueFunc, Func<string, object> parseFunc, Func<object, string> serializeFunc) : base(PropertyPath.Root.Property(DocumentAnnotations.PROPERTY_PREFIX + name))
             {
                 PropertyName = name;
                 _getLabelFunc = getLabelFunc;
                 _getValueFunc = getValueFunc;
                 _parseFunc = parseFunc;
+                _serializeFunc = serializeFunc;
             }
 
             public string PropertyName { get; private set; }
@@ -302,26 +325,34 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             public static Property Define<T>(string name, Func<string> getLabelFunc,
-                Func<ChromatogramSet, T> getValueFunc, Func<string, T> parseFunc)
+                Func<ChromatogramSet, T> getValueFunc, Func<string, T> parseFunc, Func<T, string> serializeFunc)
             {
-                return new Property(name, getLabelFunc, c => getValueFunc(c), s => parseFunc(s));
+                Func<object, string> serializeObjectFunc = o => o is T t ? serializeFunc(t) : string.Empty;
+                return new Property(name, getLabelFunc, c => getValueFunc(c), s => parseFunc(s), serializeObjectFunc);
             }
 
             public static Property DefineString(string name, Func<string> getLabelFunc,
                 Func<ChromatogramSet, string> getValueFunc)
             {
-                return Define(name, getLabelFunc, getValueFunc, s => s);
+                return Define(name, getLabelFunc, getValueFunc, s => s, s=>s);
             }
 
             public static Property DefineNumber(string name, Func<string> getLabelFunc,
                 Func<ChromatogramSet, double?> getValueFunc)
             {
-                return Define(name, getLabelFunc, getValueFunc, AnnotationDef.ParseNumber);
+                return Define(name, getLabelFunc, getValueFunc, 
+                    AnnotationDef.ParseNumber,
+                    d => d?.ToString(CultureInfo.InvariantCulture) ?? string.Empty);
             }
 
-            public override object ParsePersistedValue(string value)
+            protected override object ParsePersistedValue(string value)
             {
                 return _parseFunc(value);
+            }
+
+            protected override string SerializeValue(object value)
+            {
+                return _serializeFunc(value);
             }
         }
 
@@ -368,7 +399,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             yield return Property.Define(nameof(ColumnCaptions.SampleType),
-                () => ColumnCaptions.SampleType, chromatogramSet => chromatogramSet.SampleType, SampleType.FromName);
+                () => ColumnCaptions.SampleType, chromatogramSet => chromatogramSet.SampleType, SampleType.FromName, s=>s.Name);
             yield return Property.DefineNumber(nameof(ColumnCaptions.AnalyteConcentration),
                 () => ColumnCaptions.AnalyteConcentration, chromatogramSet => chromatogramSet.AnalyteConcentration);
             yield return Property.DefineString(nameof(ColumnCaptions.BatchName),
