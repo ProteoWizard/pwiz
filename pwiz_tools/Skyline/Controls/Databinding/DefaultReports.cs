@@ -97,17 +97,35 @@ namespace pwiz.Skyline.Controls.Databinding
                 propertyPaths.AddRange(GetAnnotations(AnnotationDef.AnnotationTarget.replicate)
                     .Select(ppAnnotation => ppReplicate.Concat(ppAnnotation)));
             }
+            else if (rowType == typeof(MultiTransitionResult))
+            {
+                annotationTarget = AnnotationDef.AnnotationTarget.transition_result;
+                propertyPaths.AddRange(new []
+                {
+                    Property(nameof(MultiTransitionResult.Note)),
+                    Property(nameof(MultiTransitionResult.File))
+                });
+            }
+            else if (rowType == typeof(MultiPrecursorResult))
+            {
+                annotationTarget = AnnotationDef.AnnotationTarget.precursor_result;
+                propertyPaths.AddRange(new []
+                {
+                    Property(nameof(MultiPrecursorResult.Note)),
+                    Property(nameof(MultiPrecursorResult.File))
+                });
+            }
             else if (rowType == typeof(Protein))
             {
                 annotationTarget = AnnotationDef.AnnotationTarget.protein;
-                propertyPaths.AddRange(new []
+                propertyPaths.AddRange(new[]
                 {
-                    PropertyPath.Root, 
+                    PropertyPath.Root,
                     Property(nameof(Protein.Description)),
                 });
                 if (!HasOnlyCustomIons)
                 {
-                    propertyPaths.AddRange(new []
+                    propertyPaths.AddRange(new[]
                     {
                         Property(nameof(Protein.Accession)),
                         Property(nameof(Protein.PreferredName)),
@@ -121,11 +139,11 @@ namespace pwiz.Skyline.Controls.Databinding
             else if (rowType == typeof(Peptide))
             {
                 annotationTarget = AnnotationDef.AnnotationTarget.peptide;
-                propertyPaths.AddRange(new []
+                propertyPaths.AddRange(new[]
                 {
                     PropertyPath.Root,
                     Property(nameof(Peptide.Protein)),
-                    
+
                 });
                 if (!HasOnlyCustomIons)
                 {
@@ -133,7 +151,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 }
                 if (HasCustomIons)
                 {
-                    propertyPaths.AddRange(new []
+                    propertyPaths.AddRange(new[]
                     {
                         Property(nameof(Peptide.MoleculeName)),
                         Property(nameof(Peptide.MoleculeFormula))
@@ -152,7 +170,7 @@ namespace pwiz.Skyline.Controls.Databinding
 
                 if (HasCustomIons)
                 {
-                    propertyPaths.AddRange(new []
+                    propertyPaths.AddRange(new[]
                     {
                         Property(nameof(Peptide.ExplicitRetentionTime)),
                         Property(nameof(Peptide.ExplicitRetentionTimeWindow))
@@ -164,14 +182,14 @@ namespace pwiz.Skyline.Controls.Databinding
                 annotationTarget = AnnotationDef.AnnotationTarget.precursor;
                 propertyPaths.AddRange(new[]
                 {
-                    PropertyPath.Root, 
+                    PropertyPath.Root,
                     Property(nameof(Precursor.Peptide)),
                     Property(nameof(Precursor.Charge)),
                     Property(nameof(Precursor.IsotopeLabelType)),
                 });
                 if (HasCustomIons)
                 {
-                    propertyPaths.AddRange(new []
+                    propertyPaths.AddRange(new[]
                     {
                         Property(nameof(Precursor.IonName)),
                         Property(nameof(Precursor.IonFormula)),
@@ -184,7 +202,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 {
                     propertyPaths.Add(Property(nameof(Precursor.ModifiedSequence)));
                 }
-                propertyPaths.AddRange(new []
+                propertyPaths.AddRange(new[]
                 {
                     Property(nameof(Precursor.PrecursorExplicitCollisionEnergy)),
                     Property(nameof(Precursor.Note)),
@@ -196,7 +214,7 @@ namespace pwiz.Skyline.Controls.Databinding
             else if (rowType == typeof(Transition))
             {
                 annotationTarget = AnnotationDef.AnnotationTarget.transition;
-                propertyPaths.AddRange(new []
+                propertyPaths.AddRange(new[]
                 {
                     PropertyPath.Root,
                     Property(nameof(Transition.Precursor)),
@@ -210,7 +228,7 @@ namespace pwiz.Skyline.Controls.Databinding
 
                 if (HasCustomIons)
                 {
-                    propertyPaths.AddRange(new []
+                    propertyPaths.AddRange(new[]
                     {
                         Property(nameof(Transition.ProductIonFormula)),
                         Property(nameof(Transition.ProductNeutralFormula)),
@@ -222,7 +240,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 {
                     propertyPaths.Add(Property(nameof(Transition.Losses)));
                 }
-                propertyPaths.AddRange(new []
+                propertyPaths.AddRange(new[]
                 {
                     Property(nameof(Transition.Quantitative)),
                     Property(nameof(Transition.Note))
@@ -231,7 +249,7 @@ namespace pwiz.Skyline.Controls.Databinding
             else if (rowType == typeof(Replicate))
             {
                 annotationTarget = AnnotationDef.AnnotationTarget.replicate;
-                propertyPaths.AddRange(new []
+                propertyPaths.AddRange(new[]
                 {
                     PropertyPath.Root,
                     Property(nameof(Replicate.SampleType)),
