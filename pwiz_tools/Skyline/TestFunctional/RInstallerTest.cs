@@ -139,7 +139,14 @@ namespace pwiz.SkylineTestFunctional
         {
             var rInstaller = FormatRInstaller(true, false, false);
             // Click OK to start download - will be canceled by test
-            rInstaller.Invoke((Action) rInstaller.OkDialog);
+            var messageDlg = ShowDialog<MessageDlg>(rInstaller.OkDialog);
+            RunUI(() =>
+            {
+                // Message should be the default .NET cancellation message
+                Assert.IsFalse(string.IsNullOrEmpty(messageDlg.Message));
+                Assert.AreEqual(new OperationCanceledException().Message, messageDlg.Message);
+            });
+            OkDialog(messageDlg, messageDlg.OkDialog);
             // Form should remain open after cancellation, allowing user to retry or cancel
             // User can now click OK again to retry, or Cancel to exit
             OkDialog(rInstaller, () => Cancel(rInstaller));

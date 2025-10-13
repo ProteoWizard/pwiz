@@ -1686,6 +1686,7 @@ namespace pwiz.Skyline.Util
             // User-actionable exceptions with friendly messages
             if (exception is InvalidDataException 
                 || exception is IOException 
+                || exception is OperationCanceledException
                 || exception is UnauthorizedAccessException
                 || exception is UserMessageException)  // Covers all custom user-facing exceptions
             {

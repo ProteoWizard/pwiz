@@ -189,12 +189,12 @@ namespace pwiz.Skyline.Controls
                 }
                 completionEvent?.Dispose();
 
-                // Treat any OperationCanceledException as cancellation, regardless of whether
-                // the user clicked Cancel or the operation itself threw the exception
-                if (null != x && (x is OperationCanceledException || x.InnerException is OperationCanceledException))
+                if (IsCanceled && null != x)
                 {
-                    _cancellationTokenSource.Cancel();
-                    x = null;
+                    if (x is OperationCanceledException || x.InnerException is OperationCanceledException)
+                    {
+                        x = null;
+                    }
                 }
 
                 if (x != null)

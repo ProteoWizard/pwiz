@@ -6241,16 +6241,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Download canceled..
-        /// </summary>
-        public static string MultiFileAsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled_ {
-            get {
-                return ResourceManager.GetString("MultiFileAsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled" +
-                        "_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Check the Modification tab in the Peptide Settings, the m/z types on the Prediction tab, or the m/z match tolerance on the Instrument tab of the Transition Settings..
         /// </summary>
         public static string MzMatchException_suggestion {

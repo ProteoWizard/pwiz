@@ -683,9 +683,6 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="PasteDlg_CheckSequence_There_is_no_sequence_for_this_protein" xml:space="preserve">
     <value>There is no sequence for this protein</value>
   </data>
-  <data name="MultiFileAsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled_" xml:space="preserve">
-    <value>Download canceled.</value>
-  </data>
   <data name="ToolUpdatesDlg_DisplayInstallSummary_Failed_to_update_the_following_tools" xml:space="preserve">
     <value>Failed to update the following tools</value>
   </data>

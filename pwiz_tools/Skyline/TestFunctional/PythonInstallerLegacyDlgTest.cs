@@ -130,11 +130,17 @@ namespace pwiz.SkylineTestFunctional
         {
             var pythonInstaller = FormatPythonInstaller(true, false, false);
             // Click OK to start download - will be canceled by test
-            pythonInstaller.Invoke((Action)pythonInstaller.OkDialog);
+            var messageDlg = ShowDialog<MessageDlg>(pythonInstaller.OkDialog);
+            RunUI(() =>
+            {
+                // Message should be the default .NET cancellation message
+                Assert.IsFalse(string.IsNullOrEmpty(messageDlg.Message));
+                Assert.AreEqual(new OperationCanceledException().Message, messageDlg.Message);
+            });
+            OkDialog(messageDlg, messageDlg.OkDialog);
             // Form should remain open after cancellation, allowing user to retry or cancel
             // User can now click OK again to retry, or Cancel to exit
-            OkDialog(pythonInstaller, pythonInstaller.CancelButton.PerformClick);
-            WaitForClosedForm(pythonInstaller);
+            OkDialog(pythonInstaller, () => Cancel(pythonInstaller));
         }
 
         // Test Python download failure
@@ -145,7 +151,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => Assert.AreEqual(TestAsynchronousDownloadClient.DOWNLOAD_FAILED_MESSAGE, messageDlg.Message));
             OkDialog(messageDlg, messageDlg.OkDialog);
             // Form should remain open after error, allowing user to retry or cancel
-            OkDialog(pythonInstaller, pythonInstaller.CancelButton.PerformClick);
+            OkDialog(pythonInstaller, () => Cancel(pythonInstaller));
         }
 
         // Test Python installation failure
@@ -156,7 +162,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => Assert.AreEqual(Resources.PythonInstaller_InstallPython_Python_installation_failed__Canceling_tool_installation_, messageDlg.Message));
             OkDialog(messageDlg, messageDlg.OkDialog);
             // Form should remain open after error, allowing user to retry or cancel
-            OkDialog(pythonInstaller, pythonInstaller.CancelButton.PerformClick);
+            OkDialog(pythonInstaller, () => Cancel(pythonInstaller));
         }
 
         // Test Python installation success
@@ -204,7 +210,14 @@ namespace pwiz.SkylineTestFunctional
         {
             var pythonInstaller = FormatPackageInstallerBothTypes(true, false, false, false);
             // Click OK to start download - will be canceled by test
-            pythonInstaller.Invoke((Action)pythonInstaller.OkDialog);
+            var messageDlg = ShowDialog<MessageDlg>(pythonInstaller.OkDialog);
+            RunUI(() =>
+            {
+                // Message should be the default .NET cancellation message
+                Assert.IsFalse(string.IsNullOrEmpty(messageDlg.Message));
+                Assert.AreEqual(new OperationCanceledException().Message, messageDlg.Message);
+            });
+            OkDialog(messageDlg, messageDlg.OkDialog);
             // Form should remain open after cancellation, allowing user to retry or cancel
             // User can now click OK again to retry, or Cancel to exit
             OkDialog(pythonInstaller, () => Cancel(pythonInstaller));
@@ -264,8 +277,15 @@ namespace pwiz.SkylineTestFunctional
             SetPipInstallResults(pythonInstaller, true, false, false, false);
             var messageDlg = ShowDialog<MultiButtonMsgDlg>(pythonInstaller.OkDialog);
             RunUI(() => Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_Python_package_manager_Pip_to_install_packages_from_source__Click_install_to_begin_the_installation_process_, messageDlg.Message));
-            // Pip download will be canceled - no message dialogs shown, form just stays open
-            RunUI(() => Accept(messageDlg));
+            // Pip download will be canceled - expect MessageDlg showing cancellation message
+            var cancelMessageDlg = ShowDialog<MessageDlg>(() => Accept(messageDlg));
+            RunUI(() =>
+            {
+                // Message should be the default .NET cancellation message
+                Assert.IsFalse(string.IsNullOrEmpty(cancelMessageDlg.Message));
+                Assert.AreEqual(new OperationCanceledException().Message, cancelMessageDlg.Message);
+            });
+            RunUI(() => Accept(cancelMessageDlg));
             // Form should remain open after cancellation, allowing user to retry or cancel
             OkDialog(pythonInstaller, pythonInstaller.CancelDialog);
         }
