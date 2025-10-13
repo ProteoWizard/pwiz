@@ -54,7 +54,10 @@ namespace pwiz.Skyline.Controls.FilesTree
             _cancellationTokenSource = new CancellationTokenSource();
 
             BackgroundActionService = BackgroundActionService.Create(this);
-            FileSystemService = FileSystemService.Create(this, BackgroundActionService, FileDeleted, FileCreated, FileRenamed);
+            FileSystemService = FileSystemService.Create(this, BackgroundActionService);
+            FileSystemService.FileDeletedAction += FileDeleted;
+            FileSystemService.FileCreatedAction += FileCreated;
+            FileSystemService.FileRenamedAction += FileRenamed;
 
             // Icons size is 16x16
             ImageList = new ImageList

@@ -67,7 +67,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             FileSystemWatcher.Created += (sender, eventArgs) => Created?.Invoke(this, eventArgs);
             FileSystemWatcher.Deleted += (sender, eventArgs) => Deleted?.Invoke(this, eventArgs);
             FileSystemWatcher.Renamed += (sender, eventArgs) => Renamed?.Invoke(this, eventArgs);
-            FileSystemWatcher.Error += (sender, EventArgs) => Error?.Invoke(this, EventArgs);
+            FileSystemWatcher.Error += (sender, eventArgs) => Error?.Invoke(this, eventArgs);
 
             Error += ErrorHandler;
         }

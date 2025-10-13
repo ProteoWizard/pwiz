@@ -47,34 +47,24 @@ namespace pwiz.Skyline.Controls.FilesTree
 
     public class FileSystemService : IFileSystemService
     {
-        internal static FileSystemService Create(Control synchronizingObject,
-            BackgroundActionService backgroundActionService,
-            Action<string, CancellationToken> fileDeletedAction,
-            Action<string, CancellationToken> fileCreatedAction,
-            Action<string, string, CancellationToken> fileRenamedAction)
+        internal static FileSystemService Create(Control synchronizingObject, BackgroundActionService backgroundActionService)
         {
-            return new FileSystemService(synchronizingObject, backgroundActionService, fileDeletedAction, fileCreatedAction, fileRenamedAction);
+            return new FileSystemService(synchronizingObject, backgroundActionService);
         }
 
         private static readonly IFileSystemService NO_DOCUMENT = new NoOpService();
 
-        private readonly Action<string, CancellationToken> _fileDeletedAction;
-        private readonly Action<string, CancellationToken> _fileCreatedAction;
-        private readonly Action<string, string, CancellationToken> _fileRenamedAction;
         private readonly Control _synchronizingObject;
         private readonly BackgroundActionService _backgroundActionService;
 
-        private FileSystemService(Control synchronizingObject,
-            BackgroundActionService backgroundActionService,
-            Action<string, CancellationToken> fileDeletedAction,
-            Action<string, CancellationToken> fileCreatedAction,
-            Action<string, string, CancellationToken> fileRenamedAction)
+        internal event Action<string, CancellationToken> FileDeletedAction;
+        internal event Action<string, CancellationToken> FileCreatedAction;
+        internal event Action<string, string, CancellationToken> FileRenamedAction;
+
+        private FileSystemService(Control synchronizingObject, BackgroundActionService backgroundActionService)
         {
             _synchronizingObject = synchronizingObject;
             _backgroundActionService = backgroundActionService;
-            _fileDeletedAction = fileDeletedAction;
-            _fileCreatedAction = fileCreatedAction;
-            _fileRenamedAction = fileRenamedAction;
 
             // Start with the default implementation (NO_DOCUMENT) until Skyline has a document to monitor.
             Delegate = NO_DOCUMENT;
@@ -97,7 +87,12 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             // Console.WriteLine($@"===== StartWatching {directoryPath ?? @"in-memory"} {cancellationToken.GetHashCode()}");
 
-            Delegate = new LocalStorageService(_synchronizingObject, _backgroundActionService, _fileDeletedAction, _fileCreatedAction, _fileRenamedAction);
+            var localStorageService = new LocalStorageService(_synchronizingObject, _backgroundActionService);
+            localStorageService.FileDeletedAction += FileDeletedAction;
+            localStorageService.FileCreatedAction += FileCreatedAction;
+            localStorageService.FileRenamedAction += FileRenamedAction;
+            Delegate = localStorageService;
+
             Delegate.StartWatching(cancellationToken);
         }
 
@@ -141,18 +136,10 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         private readonly object _fswLock = new object();
 
-        internal LocalStorageService(Control synchronizingObject,
-            BackgroundActionService backgroundActionService,
-            Action<string, CancellationToken> fileDeletedAction,
-            Action<string, CancellationToken> fileCreatedAction,
-            Action<string, string, CancellationToken> fileRenamedAction)
+        internal LocalStorageService(Control synchronizingObject, BackgroundActionService backgroundActionService)
         {
             SynchronizingObject = synchronizingObject;
             BackgroundActionService = backgroundActionService;
-
-            FileDeletedAction = fileDeletedAction;
-            FileCreatedAction = fileCreatedAction;
-            FileRenamedAction = fileRenamedAction;
 
             Cache = new ConcurrentDictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
             FileSystemWatchers = new ConcurrentDictionary<string, ManagedFileSystemWatcher>();
@@ -164,13 +151,14 @@ namespace pwiz.Skyline.Controls.FilesTree
             HealthMonitor.PathAvailabilityChanged += OnPathAvailabilityChanged;
         }
 
+        internal event Action<string, CancellationToken> FileDeletedAction;
+        internal event Action<string, CancellationToken> FileCreatedAction;
+        internal event Action<string, string, CancellationToken> FileRenamedAction;
+
         private Control SynchronizingObject { get; }
         private BackgroundActionService BackgroundActionService { get; }
         private ConcurrentDictionary<string, bool> Cache { get; }
         private CancellationToken CancellationToken { get; set; }
-        private Action<string, CancellationToken> FileDeletedAction { get; }
-        private Action<string, CancellationToken> FileCreatedAction { get; }
-        private Action<string, string, CancellationToken> FileRenamedAction { get; }
         private ConcurrentDictionary<string, ManagedFileSystemWatcher> FileSystemWatchers { get; }
         private FileSystemHealthMonitor HealthMonitor { get; set; }
 
