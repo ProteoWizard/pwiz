@@ -54,6 +54,7 @@ namespace pwiz.SkylineTestTutorial
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
 //            IsCoverShotMode = true;
+//            ForceMzmlInScreenShots = true;
             CoverShotName = "MethodRefine";
 
             // Multi-file import has problems with mzML on this test

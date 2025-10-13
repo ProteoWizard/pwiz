@@ -21,7 +21,7 @@ using pwiz.Skyline.Model.Proteome;
 
 namespace pwiz.Skyline.Model.Files
 {
-    public class BackgroundProteome : FileNode
+    public class BackgroundProteome : FileModel
     {
         public static IList<BackgroundProteome> Create(string documentFilePath, Proteome.BackgroundProteome proteome)
         {

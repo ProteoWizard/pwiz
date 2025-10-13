@@ -33,22 +33,22 @@ namespace pwiz.Skyline.Controls.FilesTree
     // CONSIDER: customize behavior in subclasses. Overloading FilesTreeNode won't scale long-term.
     public class FilesTreeNode : TreeNodeMS, ITipProvider
     {
-        private FileNode _model;
+        private FileModel _model;
 
-        internal static FilesTreeNode CreateNode(FileNode model)
+        internal static FilesTreeNode CreateNode(FileModel model)
         {
             Assume.IsNotNull(model);
 
             return new FilesTreeNode(model);
         }
 
-        private FilesTreeNode(FileNode model)
+        private FilesTreeNode(FileModel model)
         {
             FileState = FileState.not_initialized;
             Model = model;
         }
 
-        public FileNode Model
+        public FileModel Model
         {
             get => _model;
             internal set
@@ -65,10 +65,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         public FileState FileState { get; internal set; }
         public ImageId ImageAvailable => Model.ImageAvailable;
         public ImageId ImageMissing => Model.ImageMissing;
-        
         public bool HasTip => true;
-
-        // Convenience to avoid casts
         public FilesTree FilesTree => (FilesTree)TreeView;
         public FilesTreeNode ParentFTN => (FilesTreeNode)Parent;
 
@@ -126,31 +123,10 @@ namespace pwiz.Skyline.Controls.FilesTree
             }
         }
 
-        public void RefreshState()
-        {
-            RefreshState(this);
-        }
-
         /// <summary>
-        /// Update the UI of all nodes in a FilesTree. Works bottom-up to ensure the entire tree reflects the latest
-        /// state, making sure any changes to the node's <see cref="FileState"/> are shown in the UI. Does not access
-        /// the file system.
+        /// See if a file is available locally.
         /// </summary>
-        /// <param name="node"></param>
-        internal static void RefreshState(FilesTreeNode node)
-        {
-            foreach (FilesTreeNode child in node.Nodes)
-            {
-                RefreshState(child);
-            }
-
-            node.UpdateState();
-        }
-
-        /// <summary>
-        /// Check if a file is available locally. This check is subtle so see in-line docs.
-        /// </summary>
-        /// <returns>true if the file is available locally - either on disk or in-memory. false otherwise.</returns>
+        /// <returns>true if a local file is available (on disk or in memory). false otherwise.</returns>
         public bool LocalFileIsAvailable()
         {
             if (!Model.IsBackedByFile)
@@ -244,72 +220,86 @@ namespace pwiz.Skyline.Controls.FilesTree
                 customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_Tooltip_FilePath, FilePath, rt);
 
                 customTable.AddDetailRow(@" ", @" ", rt);
-                if (FileState == FileState.available || FileState == FileState.in_memory)
+
+                // If saved file path and local file path are the same: only show "File Path: c:\foo\bar"
+                // Otherwise, show both "Saved File Path: c:\abc\def" and "Local File Path: c:\foo\bar"
+                // Show LocalFilePath as red if the local file is unavailable.
+                if (string.Compare(FilePath, LocalFilePath, StringComparison.Ordinal) == 0)
                 {
-                    customTable.AddDetailRow(@"LocalFilePath", LocalFilePath, rt);
+                    if (FileState == FileState.available || FileState == FileState.in_memory)
+                        customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_Tooltip_FilePath, FilePath, rt);
+                    else
+                        TooltipNewRowWithRedValue(FilesTreeResources.FilesTree_TreeNode_Tooltip_FilePath, FilePath, customTable, rt);
                 }
                 else
                 {
-                    var label = @"LocalFilePath";
-                    var value = LocalFilePath;
+                    customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_Tooltip_SavedFilePath, FilePath, rt);
 
-                    RenderTipAddRowWithRedValue(label, value, customTable, rt);
+                    if (FileState == FileState.available || FileState == FileState.in_memory)
+                        customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_Tooltip_LocalFilePath, LocalFilePath, rt);
+                    else
+                        TooltipNewRowWithRedValue(FilesTreeResources.FilesTree_TreeNode_Tooltip_LocalFilePath, FilesTreeResources.FilesTree_TreeNode_Tooltip_FileMissing, customTable, rt);
                 }
-
-                // TODO: Brendan wants tooltips to look like this. Restore.
-                // // if saved file path and local file path are the same: show only "File Path: c:\foo\bar"
-                // // otherwise, show both "Saved File Path: c:\abc\def" and "Local File Path: c:\foo\bar"
-                // if (string.Compare(FilePath, LocalFilePath, StringComparison.Ordinal) == 0)
-                // {
-                //     customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_Tooltip_FilePath, FilePath, rt);
-                // }
-                // else
-                // {
-                //     customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_Tooltip_SavedFilePath, FilePath, rt);
-                //
-                //     // CONSIDER: use red font for missing files?
-                //     var localFilePath = FileState == FileState.missing ? FilesTreeResources.FilesTree_TreeNode_Tooltip_FileMissing : LocalFilePath;
-                //     customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_Tooltip_LocalFilePath, localFilePath, rt);
-                // }
             }
 
+            // When debugging, add more info to each node's tooltip. 
             if (Debugger.IsAttached)
             {
-                customTable.AddDetailRow(@" ", @" ", rt);
-                customTable.AddDetailRow(@"Debug Info", @"(only visible when debugger attached) ", rt);
-                customTable.AddDetailRow(@" ", @" ", rt);
+                TooltipNewRowWithText(@"     ", customTable, rt);
+                TooltipNewRowWithText(@"====================", customTable, rt);
+                customTable.AddDetailRow(@"Debug Info", @"(only visible when debugger attached)", rt);
+                TooltipNewRowWithText(@"     ", customTable, rt);   
+
                 customTable.AddDetailRow(@"FileName", FileName, rt);
                 customTable.AddDetailRow(@"FilePath", FilePath, rt);
 
-                if (!Model.IsBackedByFile)
+                TooltipNewRowWithText(@"     ", customTable, rt);
+                customTable.AddDetailRow(@"Expect to find a local file?", $@"{(Model.IsBackedByFile ? @"Yes" : @"No")}", rt);
+                if (FileState == FileState.available || FileState == FileState.in_memory)
                 {
-                    customTable.AddDetailRow(@"FileState", @"Not backed by local file", rt);
-                }
-                else if (FileState == FileState.available || FileState == FileState.in_memory)
-                {
-                    customTable.AddDetailRow(@"FileState", FileState.ToString(), rt);
-                    customTable.AddDetailRow(@"LocalFilePath", LocalFilePath, rt);
+                    var value = FileState == FileState.available ? @"Yes (in local storage)" : @"Yes (in memory)";
+                    customTable.AddDetailRow(@"Found local file?", value, rt);
                 }
                 else
                 {
-                    RenderTipAddRowWithRedValue(@"FileState", FileState.ToString(), customTable, rt);
-                    RenderTipAddRowWithRedValue(@"LocalFilePath", LocalFilePath, customTable, rt);
+                    customTable.AddDetailRow(@"Found local file?", @"No", rt);
+                }
+                customTable.AddDetailRow(@"FileState", FileState.ToString(), rt);
+                TooltipNewRowWithText(@"     ", customTable, rt);
+
+                if (Model.IsBackedByFile) 
+                {
+                    if (FileState == FileState.available || FileState == FileState.in_memory)
+                    {
+                        customTable.AddDetailRow(@"LocalFilePath", LocalFilePath, rt);
+                    }
+                    else
+                    {
+                        TooltipNewRowWithRedValue(@"LocalFilePath", LocalFilePath, customTable, rt);
+                    }
                 }
 
-                // Show extra debug info on the .sky file
+                // Add more info to the .sky file
                 if (Model is SkylineFile)
                 {
-                    customTable.AddDetailRow(@" ", @" ", rt);
-                    customTable.AddDetailRow(@"Monitored directory", FilesTree.PathMonitoredForFileSystemChanges(), rt);
+                    TooltipNewRowWithText(@"     ", customTable, rt);
+
+                    var monitoredDirectoryPaths = FilesTree.MonitoredDirectories();
+                    TooltipNewRowWithText($@"Monitoring {monitoredDirectoryPaths.Count} directories:", customTable, rt);
+                    for (var i = 0; i < monitoredDirectoryPaths.Count; i++) {
+                        customTable.AddDetailRow($@"  ({i}) Directory: ", monitoredDirectoryPaths[i], rt);
+                    }
                 }
 
                 if (Model is SkylineAuditLog || Model is SkylineFile)
                 {
-                    var isForceEnabled = Program.FunctionalTest && !AuditLogList.IgnoreTestChecks;
-                    customTable.AddDetailRow(@"Audit Log enabled by tests?", $@"{(isForceEnabled ? @"yes" : @"no")}", rt);
+                    TooltipNewRowWithText(@"     ", customTable, rt);
+
+                    var auditLogEnabledByTestFramework = Program.FunctionalTest && !AuditLogList.IgnoreTestChecks;
+                    customTable.AddDetailRow(@"Audit logging enabled by the test framework?", $@"{(auditLogEnabledByTestFramework ? @"Yes" : @"No")}", rt);
                 }
 
-                // CONSIDER: add SrmDocument.RevisionIndex to FileNode
+                // CONSIDER: add SrmDocument.RevisionIndex to FileModel
                 // customTable.AddDetailRow(@"Document revision", $@"{Model.DocumentRevisionIndex}", rt);
             }
 
@@ -317,23 +307,6 @@ namespace pwiz.Skyline.Controls.FilesTree
             customTable.Draw(g);
 
             return new Size((int)size.Width + 4, (int)size.Height + 4);
-        }
-
-        private static void RenderTipAddRowWithRedValue(string label, string value, TableDesc table, RenderTools rt)
-        {
-            var cellLabel = new CellDesc(label, rt)
-            {
-                Font = rt.FontBold
-            };
-
-            var cellValue = new CellDesc(value, rt)
-            {
-                Brush = rt.BrushSelected
-            };
-
-            var row = new RowDesc { cellLabel, cellValue };
-
-            table.Add(row);
         }
 
         public bool SupportsRename()
@@ -379,6 +352,15 @@ namespace pwiz.Skyline.Controls.FilesTree
             return (FilesTreeNode)Nodes[index];
         }
 
+        /// <summary>
+        /// Draw bounds for this tree node - <see cref="TreeNode.Bounds"/> in green and <see cref="TreeNodeMS.BoundsMS"/> in red.
+        /// This is useful for debugging click target issues. A typical problem is <see cref="TreeViewMS"/> thinking a node is wider
+        /// than <see cref="TreeView"/> when picking up nodes during drag-and-drop or a long-click to edit a node's label.
+        /// Increasing the Skyline's font size above "default" increases the discrepancy of the widths of between those
+        /// bounding boxes.
+        /// </summary>
+        /// <param name="g"><see cref="Graphics"/> instance used to render the tree node</param>
+        /// <param name="rightEdge"></param>
         protected override void DebugBorders(Graphics g, int rightEdge)
         {
             // var bounds = BoundsMS;
@@ -410,6 +392,32 @@ namespace pwiz.Skyline.Controls.FilesTree
                 filesTreeNode.OnModelChanged();
                 filesTreeNode = filesTreeNode.ParentFTN;
             } while (filesTreeNode != null && filesTreeNode.ParentFTN != null);
+        }
+
+        private static void TooltipNewRowWithText(string text, TableDesc table, RenderTools rt)
+        {
+            var cell = new CellDesc(text, rt)
+            {
+                Font = rt.FontBold
+            };
+            table.Add(new RowDesc { cell });
+        }
+
+        private static void TooltipNewRowWithRedValue(string label, string value, TableDesc table, RenderTools rt)
+        {
+            var cellLabel = new CellDesc(label, rt)
+            {
+                Font = rt.FontBold
+            };
+
+            var cellValue = new CellDesc(value, rt)
+            {
+                Brush = rt.BrushSelected
+            };
+
+            var row = new RowDesc { cellLabel, cellValue };
+
+            table.Add(row);
         }
     }
 }

@@ -2632,7 +2632,7 @@ namespace pwiz.Skyline
                     {
                         throw;
                     }
-                    MessageDlg.ShowWithException(this, TextUtil.LineSeparate(Resources.ShareListDlg_OkDialog_An_error_occurred, exception.Message), exception);
+                    MessageDlg.ShowWithException(parent ?? this, TextUtil.LineSeparate(Resources.ShareListDlg_OkDialog_An_error_occurred, exception.Message), exception);
                     return false;
                 }
                 finally
@@ -3182,21 +3182,20 @@ namespace pwiz.Skyline
         public bool FilesTreeFormIsVisible => _filesTreeForm is { Visible: true };
         public bool FilesTreeFormIsActivated => _filesTreeForm is { IsActivated: true };
 
-        public void ShowFilesTreeForm(bool show, string persistentState = null)
+        public void ShowFilesTreeForm(bool show)
         {
             if (show)
             {
                 if (_filesTreeForm != null)
                 {
-                    if (_filesTreeForm.DockPanel == null)
-                        _filesTreeForm.Show(dockPanel, DockState.DockLeft);
-
                     _filesTreeForm.Activate();
-                    _filesTreeForm.FilesTree.ScrollToTop();
+                    _filesTreeForm.Focus();
                 }
+                // CONSIDER: instead of always docking Files on DockLeft, should Files
+                // find SequenceTree and add itself to the same panel?
                 else
                 {
-                    _filesTreeForm = CreateFilesTreeForm(persistentState);
+                    _filesTreeForm = CreateFilesTreeForm(null);
                     _filesTreeForm.Show(dockPanel, DockState.DockLeft);
                 }
             }
@@ -3361,6 +3360,14 @@ namespace pwiz.Skyline
                 int sepIndex = persistentString.IndexOf('|');
                 if (sepIndex != -1)
                     expansionAndSelection = persistentString.Substring(sepIndex + 1);
+
+                // If this string is not present, SequenceTree's view state was written with a Skyline version 
+                // pre-dating the FilesTree. So, show FilesTree as a tab behind SequenceTree. This check
+                // should run exactly once for any view file.
+                if (!persistentString.EndsWith(@"|" + FilesTree.FILES_TREE_SHOWN_ONCE_TOKEN))
+                {
+                    _shouldShowFilesTree = true;
+                }
             }             
             _sequenceTreeForm = new SequenceTreeForm(this, expansionAndSelection != null);
             _sequenceTreeForm.FormClosed += sequenceTreeForm_FormClosed;
@@ -3402,6 +3409,7 @@ namespace pwiz.Skyline
                 _sequenceTreeForm.ComboResults.SelectedIndexChanged -= comboResults_SelectedIndexChanged;
                 _sequenceTreeForm.Close();
                 _sequenceTreeForm = null;
+                _shouldShowFilesTree = false;
             }
         }
 

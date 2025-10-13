@@ -1817,4 +1817,13 @@
   <data name="TransitionFilterAndLibrariesSettings_SpectrumFilter" xml:space="preserve">
     <value>谱图过滤器</value>
   </data>
+  <data name="AlignmentTargetSpec_Type" xml:space="preserve">
+    <value>类型</value>
+  </data>
+  <data name="AlignmentTargetSpec_Name" xml:space="preserve">
+    <value>名称</value>
+  </data>
+  <data name="AlignmentTargetSpec_RegressionMethod" xml:space="preserve">
+    <value>回归方法</value>
+  </data>
 </root>

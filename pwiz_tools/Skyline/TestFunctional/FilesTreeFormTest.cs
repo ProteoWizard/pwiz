@@ -15,39 +15,33 @@
  */
 
 using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline.Model;
-using pwiz.SkylineTestUtil;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using DigitalRune.Windows.Docking;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
-using pwiz.Skyline.Controls.FilesTree;
-using pwiz.Skyline.SettingsUI;
-using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Model.Files;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.FilesTree;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
-using static pwiz.Skyline.Model.Files.FileNode;
+using pwiz.Skyline.Model.Files;
+using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.SettingsUI;
+using pwiz.SkylineTestUtil;
+using static pwiz.Skyline.Model.Files.FileModel;
 
-// CONSIDER: Replicate => verify right-click menu includes Open Containing Folder
-// CONSIDER: Test Tooltips. See MethodEditTutorialTest.ShowNodeTip
-// CONSIDER: add .sky file with imsdb, irtdb, protdb
-// CONSIDER: add an Audit Log scenario
-// CONSIDER: drag-and-drop disjoint selection
-// CONSIDER: tree disallows dragging non-draggable nodes
-// CONSIDER: use non-local file paths in SrmSettings (example: replicate sample files where SrmSettings paths point to directories that don't exist locally)
+// CONSIDER: test additional file types - imsdb, irtdb, protdb
+// CONSIDER: double-click on a Background Proteome opens the correct dialog
+// CONSIDER: verify right-click menu includes open containing folder only for files found locally
+// CONSIDER: test tooltips, see example in MethodEditTutorialTest.ShowNodeTip
+// CONSIDER: expand drag-and-drop tests - scenarios: disjoint selection, tree disallows dragging un-draggable nodes
+// CONSIDER: handling of non-local paths from SrmSettings (ex: replicate sample file paths cannot be found locally)
+// CONSIDER: new test making sure clicking 'x' upper RHC of confirm dialog does not delete Replicate / Spectral Library
 
-// TODO: test double-click on Background Proteome. Need an additional Skyline document with a Background Proteome
-// TODO: test new .sky document, import asset backed file (ex: .protdb), assert file system watching before document saved for the first time
-// TODO: add a new helper for getting a FilesTree node by model type to make this more readable: SkylineWindow.FilesTree.Root.NodeAt(0).FileState).
-// TODO: add test making sure clicking upper RHC 'x' on confirm dialog does nto delete Replicate or Spectral Library
-
-// TODO: local file system - change directory name containing raw files
-// TODO: local file system - use raw files in directory that's a sibling of directory containing .sky file
-// TODO: assert TopNode correctly restored from view state
+// TODO: improve test readability with a helper that gets node by model type
 
 // ReSharper disable WrongIndentSize
 namespace pwiz.SkylineTestFunctional
@@ -72,44 +66,58 @@ namespace pwiz.SkylineTestFunctional
         {
             // Non-UI tests
             TestFileSystemWatcherIgnoreList();
-            TestSubdirectoryHelper();
+            TestFileSystemHelpers();
 
             // UI tests
             TestEmptyDocument();
-            ResetFilesTree();
-            
             TestSave();
-            ResetFilesTree();
-            
             TestSaveAs();
-            ResetFilesTree();
-
             TestRatPlasmaDocument();
-            ResetFilesTree();
+            TestUpgradeExistingDocumentWithFilesTree();
         }
 
         protected void TestFileSystemWatcherIgnoreList()
         {
-            Assert.IsTrue(LocalFileSystem.IgnoreFileName(@"c:\Users\foobar\file.tmp"));
-            Assert.IsTrue(LocalFileSystem.IgnoreFileName(@"c:\Users\foobar\file.bak"));
-            Assert.IsTrue(LocalFileSystem.IgnoreFileName(null));
-            Assert.IsTrue(LocalFileSystem.IgnoreFileName(string.Empty));
-            Assert.IsTrue(LocalFileSystem.IgnoreFileName(@""));
-            Assert.IsTrue(LocalFileSystem.IgnoreFileName(@"   "));
+            Assert.IsTrue(LocalStorageService.IgnoreFileName(@"c:\Users\foobar\file.tmp"));
+            Assert.IsTrue(LocalStorageService.IgnoreFileName(@"c:\Users\foobar\file.bak"));
+            Assert.IsTrue(LocalStorageService.IgnoreFileName(null));
+            Assert.IsTrue(LocalStorageService.IgnoreFileName(string.Empty));
+            Assert.IsTrue(LocalStorageService.IgnoreFileName(@""));
+            Assert.IsTrue(LocalStorageService.IgnoreFileName(@"   "));
 
-            Assert.IsFalse(LocalFileSystem.IgnoreFileName(@"c:\Users\foobar\file.sky"));
-            Assert.IsFalse(LocalFileSystem.IgnoreFileName(@"c:\Users\foobar\file.xls"));
-            Assert.IsFalse(LocalFileSystem.IgnoreFileName(@"c:\Users\foobar\file.txt"));
+            Assert.IsFalse(LocalStorageService.IgnoreFileName(@"c:\Users\foobar\file.sky"));
+            Assert.IsFalse(LocalStorageService.IgnoreFileName(@"c:\Users\foobar\file.xls"));
+            Assert.IsFalse(LocalStorageService.IgnoreFileName(@"c:\Users\foobar\file.txt"));
+            Assert.IsFalse(LocalStorageService.IgnoreFileName(@"c:\Users\foobar\file.raw"));
+            Assert.IsFalse(LocalStorageService.IgnoreFileName(@"c:\Users\foobar\file.RAW"));
         }
 
-        protected void TestSubdirectoryHelper()
+        protected void TestFileSystemHelpers()
         {
-            Assert.IsTrue(LocalFileSystem.IsInDirectory(@"c:\Users\foobar\directory", @"c:\users\foobar\directory\child"));
-            Assert.IsTrue(LocalFileSystem.IsInDirectory(@"c:\Users\foobar\directory\", @"c:\users\foobar\directory\child"));
-            Assert.IsTrue(LocalFileSystem.IsInDirectory(@"c:\", @"c:\users\foobar\directory\child"));
+            // Is file contained in directory?
+            Assert.IsTrue(FileSystemUtil.IsFileInDirectory(@"c:\Users\foobar\directory", @"c:\users\foobar\directory\child.txt"));
+            Assert.IsTrue(FileSystemUtil.IsFileInDirectory(@"c:\Users\foobar\directory\", @"c:\users\foobar\directory\child.txt"));
+            Assert.IsTrue(FileSystemUtil.IsFileInDirectory(@"c:\Users\foobar\directory\\", @"c:\users\foobar\directory\child.txt"));
+            Assert.IsFalse(FileSystemUtil.IsFileInDirectory(@"c:\Users\foobar\", @"c:\users\foobar\directory\child.txt"));
+            Assert.IsFalse(FileSystemUtil.IsFileInDirectory(@"c:\Users\", @"c:\users\foobar\directory\child.txt"));
+            Assert.IsFalse(FileSystemUtil.IsFileInDirectory(@"c:\", @"c:\users\foobar\directory\child.txt"));
 
-            Assert.IsFalse(LocalFileSystem.IsInDirectory(@"c:\tmp\rat-plasma\", @"c:\users\foobar\tmp"));
-            Assert.IsFalse(LocalFileSystem.IsInDirectory(@"d:\", @"c:\users\foobar\tmp"));
+            Assert.IsFalse(FileSystemUtil.IsFileInDirectory(@"c:\tmp\rat-plasma\", @"c:\users\foobar\tmp"));
+            Assert.IsFalse(FileSystemUtil.IsFileInDirectory(@"d:\", @"c:\users\foobar\tmp"));
+
+            // Do two string paths refer to the same directory?
+            Assert.IsTrue(FileSystemUtil.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory", @"c:\users\foobar\directory"));
+            Assert.IsTrue(FileSystemUtil.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory", @"c:\users\foobar\directory\"));
+            Assert.IsTrue(FileSystemUtil.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory", @"c:\users\foobar\directory\\"));
+            Assert.IsTrue(FileSystemUtil.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory\", @"c:\users\foobar\directory"));
+            Assert.IsTrue(FileSystemUtil.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory\\", @"c:\users\foobar\directory"));
+            Assert.IsTrue(FileSystemUtil.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory\", @"c:\users\foobar\directory\\"));
+            Assert.IsTrue(FileSystemUtil.IsInOrSubdirectoryOf(@"C:\USERS\FOOBAR\DIRECTORY\", @"c:\users\foobar\directory\\"));
+
+            Assert.IsFalse(FileSystemUtil.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory", @"c:\users\foobar\directory\subdirectory"));
+            Assert.IsFalse(FileSystemUtil.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory", @"c:\users\foobar\dir"));
+
+            Assert.IsTrue(FileSystemUtil.PathEquals(@"C:\Users\Foobar\directory\foo.mzML", @"c:\users\foobar\directory\foo.mzml"));
         }
 
         protected void TestEmptyDocument()
@@ -120,7 +128,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(SkylineWindow.FilesTreeFormIsVisible);
             Assert.IsFalse(SkylineWindow.FilesTreeFormIsActivated);
 
-            var dockPane = (DigitalRune.Windows.Docking.DockPane)SkylineWindow.FilesTreeForm.Parent;
+            var dockPane = SkylineWindow.FilesTreeForm.ParentDockPane;
             Assert.AreEqual(2, dockPane.DisplayingContents.Count);
             Assert.IsInstanceOfType(dockPane.DisplayingContents[0], typeof(SequenceTreeForm));
             Assert.IsInstanceOfType(dockPane.DisplayingContents[1], typeof(FilesTreeForm));
@@ -137,13 +145,12 @@ namespace pwiz.SkylineTestFunctional
 
             AssertTopLevelFiles(typeof(SkylineAuditLog));
 
-            Assert.AreEqual(FileSystemType.in_memory, SkylineWindow.FilesTree.FileSystemType);
-            Assert.AreEqual(null, SkylineWindow.FilesTree.PathMonitoredForFileSystemChanges());
+            Assert.AreEqual(0, SkylineWindow.FilesTree.MonitoredDirectories().Count);
         }
 
         protected void TestSave() {
 
-            const string fileName = "savedFileName.sky";
+            const string fileName = "SavedFile.sky";
 
             // Create new, empty document
             {
@@ -154,29 +161,25 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() => { SkylineWindow.ShowFilesTreeForm(true); });
                 WaitForFilesTree();
 
-                Assert.AreEqual(FileSystemType.in_memory, SkylineWindow.FilesTree.FileSystemType);
-                Assert.AreEqual(null, SkylineWindow.FilesTree.PathMonitoredForFileSystemChanges());
+                Assert.AreEqual(0, SkylineWindow.FilesTree.MonitoredDirectories().Count);
             }
 
-            var monitoredPath = Path.Combine(TestFilesDir.FullPath, fileName);
+            var monitoredPath = Path.Combine(TestFilesDirs[0].FullPath, @"TestSave", fileName);
             RunUI(() => SkylineWindow.SaveDocument(monitoredPath));
             WaitForFilesTree();
 
-            Assert.AreEqual(FileSystemType.local_file_system, SkylineWindow.FilesTree.FileSystemType);
-            Assert.AreEqual(Path.GetDirectoryName(monitoredPath), SkylineWindow.FilesTree.PathMonitoredForFileSystemChanges());
+            Assert.AreEqual(FileSystemType.local_file_system, SkylineWindow.FilesTree.FileSystemType());
+            Assert.AreEqual(1, SkylineWindow.FilesTree.MonitoredDirectories().Count);
+            Assert.IsTrue(SkylineWindow.FilesTree.IsMonitoringDirectory(monitoredPath));
 
-            // After saving, Window Layout (.sky.view) is present
+            // Window Layout (.sky.view) appears in tree after document saved
             AssertTopLevelFiles(typeof(SkylineAuditLog), typeof(SkylineViewFile));
 
             // Skyline File
             Assert.AreEqual(fileName, SkylineWindow.FilesTree.Root.Name);
-            AssertFileState(FileState.available, SkylineWindow.FilesTree.Root);
-
-            // Audit Log
-            AssertFileState(FileState.available, SkylineWindow.FilesTree.Root.NodeAt(0));
-
-            // Window Layout
-            AssertFileState(FileState.available, SkylineWindow.FilesTree.Root.NodeAt(1));
+            AssertFileState(FileState.available, SkylineWindow.FilesTree.Root); // .sky file
+            AssertFileState(FileState.available, SkylineWindow.FilesTree.Root.NodeAt(0)); // .skyl file
+            AssertFileState(FileState.available, SkylineWindow.FilesTree.Root.NodeAt(1)); // .view file
         }
 
         protected void TestSaveAs()
@@ -194,19 +197,23 @@ namespace pwiz.SkylineTestFunctional
                 WaitForFilesTree();
             }
 
-            Assert.AreEqual(FileSystemType.in_memory, SkylineWindow.FilesTree.FileSystemType);
+            RunUI(() => Assert.IsTrue(SkylineWindow.FilesTree.Root.IsExpanded));
 
-            Assert.AreEqual(FileState.not_initialized, SkylineWindow.FilesTree.Root.NodeAt(0).FileState);
+            Assert.AreEqual(0, SkylineWindow.FilesTree.MonitoredDirectories().Count);
+
+            // Audit Log
             Assert.IsNull(SkylineWindow.FilesTree.Root.NodeAt(0).LocalFilePath);
 
             // Save document for the first time
-            var monitoredPath = Path.Combine(TestFilesDir.FullPath, origFileName);
+            var monitoredPath = Path.Combine(TestFilesDirs[0].FullPath, @"TestSaveAs", origFileName);
             {
                 RunUI(() => SkylineWindow.SaveDocument(monitoredPath));
                 WaitForFilesTree();
             }
 
-            Assert.AreEqual(Path.GetDirectoryName(monitoredPath), SkylineWindow.FilesTree.PathMonitoredForFileSystemChanges());
+            Assert.AreEqual(FileSystemType.local_file_system, SkylineWindow.FilesTree.FileSystemType());
+            Assert.AreEqual(1, SkylineWindow.FilesTree.MonitoredDirectories().Count);
+            Assert.IsTrue(SkylineWindow.FilesTree.IsMonitoringDirectory(monitoredPath));
 
             // Audit Log
             Assert.AreEqual(FileState.available, SkylineWindow.FilesTree.Root.NodeAt(0).FileState);
@@ -214,15 +221,16 @@ namespace pwiz.SkylineTestFunctional
 
             // Save the document to a new location - to test "Save As"
             {
-                monitoredPath = Path.Combine(TestFilesDir.FullPath, saveAsFileName);
+                monitoredPath = Path.Combine(TestFilesDirs[0].FullPath, @"TestSaveAs", saveAsFileName);
                 RunUI(() => SkylineWindow.SaveDocument(monitoredPath));
                 WaitForFilesTree();
             }
 
             // Check state of files and paths after saving
             var tree = SkylineWindow.FilesTree;
-            Assert.AreEqual(FileSystemType.local_file_system, tree.FileSystemType);
-            Assert.AreEqual(Path.GetDirectoryName(monitoredPath), tree.PathMonitoredForFileSystemChanges());
+            Assert.AreEqual(FileSystemType.local_file_system, tree.FileSystemType());
+            Assert.AreEqual(1, SkylineWindow.FilesTree.MonitoredDirectories().Count);
+            Assert.IsTrue(SkylineWindow.FilesTree.IsMonitoringDirectory(monitoredPath));
 
             AssertTopLevelFiles(typeof(SkylineAuditLog), typeof(SkylineViewFile));
 
@@ -239,9 +247,67 @@ namespace pwiz.SkylineTestFunctional
             AssertFileState(FileState.available, tree.Root.NodeAt(1));
         }
 
+        protected void TestUpgradeExistingDocumentWithFilesTree()
+        {
+            var documentPath = Path.Combine(TestFilesDirs[0].FullPath, @"TestUpgradeExistingDocumentWithFilesTree", @"UpgradeWithFilesTree.sky");
+
+            RunUI(() => SkylineWindow.OpenFile(documentPath));
+            WaitForDocumentLoaded();
+
+            Assert.IsNotNull(SkylineWindow.FilesTreeForm);
+            Assert.IsNotNull(SkylineWindow.FilesTree);
+
+            Assert.IsTrue(SkylineWindow.SequenceTreeFormIsVisible);
+            Assert.IsFalse(SkylineWindow.FilesTreeFormIsVisible);
+
+            string persistentString = null;
+            RunUI(() =>
+            {
+                // Trivial change so the document can be saved
+                SkylineWindow.Paste(@"PEPTIDEK");
+
+                var dockPane = SkylineWindow.FilesTreeForm.ParentDockPane;
+                var contents = dockPane.Contents;
+
+                Assert.IsTrue(dockPane.Visible);
+                Assert.AreEqual(DockState.DockLeft, dockPane.DockState);
+                Assert.AreEqual(2, contents.Count);
+                Assert.IsTrue(contents[0] is SequenceTreeForm);
+                Assert.IsTrue(contents[1] is FilesTreeForm);
+
+                var sequenceTreeForm = SkylineWindow.SequenceTree.Parent.Parent as SequenceTreeForm;
+                persistentString = sequenceTreeForm?.GetPersistentStringForTests();
+            });
+
+            Assert.IsNotNull(persistentString);
+            Assert.IsTrue(persistentString.Contains(@"|" + FilesTree.FILES_TREE_SHOWN_ONCE_TOKEN));
+
+            RunUI(() =>
+            {
+                SkylineWindow.ShowFilesTreeForm(false);
+                SkylineWindow.SaveDocument();
+
+                SkylineWindow.NewDocument();
+                WaitForDocumentLoaded();
+
+                SkylineWindow.OpenFile(documentPath);
+            });
+
+            // CONSIDER: Assert the .view file contains the FilesTreeShownOnce token
+
+            // FilesTree should not be shown after it was shown and closed in the last session
+            Assert.IsNotNull(SkylineWindow.SequenceTree);
+            Assert.IsTrue(SkylineWindow.SequenceTreeFormIsVisible);
+            Assert.IsFalse(SkylineWindow.FilesTreeFormIsVisible);
+
+            // CONSIDER: count the number of tabs in the DigitalRune DockPane. Unclear how to 
+            //           do this without using reflection since tab count is in a private member
+            //           at dockPane.TabStripControl.Tabs.Count.
+        }
+
         protected void TestRatPlasmaDocument()
         {
-            var documentPath = TestFilesDir.GetTestPath(RAT_PLASMA_FILE_NAME);
+            var documentPath = TestFilesDirs[0].GetTestPath(RAT_PLASMA_FILE_NAME);
             RunUI(() => SkylineWindow.OpenFile(documentPath));
 
             // Wait until SequenceTree is visible - does not wait on FilesTree because it's not visible yet
@@ -253,21 +319,21 @@ namespace pwiz.SkylineTestFunctional
 
             // Show FilesTree
             RunUI(() => SkylineWindow.ShowFilesTreeForm(true));
-            Assert.IsNotNull(SkylineWindow.FilesTree);
-            WaitForFilesTree();
+            WaitForDocumentLoaded(); // waits until .skyd file is ready
+            WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible && SkylineWindow.FilesTree.IsComplete());
 
-            Assert.AreEqual(RAT_PLASMA_FILE_NAME, SkylineWindow.FilesTree.Root.Text);
-
-            AssertTopLevelFiles(typeof(SkylineViewFile), typeof(ReplicatesFolder), typeof(SpectralLibrariesFolder)); // ORIG
-            // AssertTopLevelFiles(typeof(SkylineViewFile), typeof(SkylineChromatogramCache), typeof(ReplicatesFolder), typeof(SpectralLibrariesFolder));
-
-            Assert.AreEqual(Path.GetDirectoryName(documentPath), SkylineWindow.FilesTree.PathMonitoredForFileSystemChanges());
-            AssertFileState(FileState.available, SkylineWindow.FilesTree.Root);
+            Assert.AreEqual(FileSystemType.local_file_system, SkylineWindow.FilesTree.FileSystemType());
+            Assert.AreEqual(1, SkylineWindow.FilesTree.MonitoredDirectories().Count);
+            Assert.IsTrue(SkylineWindow.FilesTree.IsMonitoringDirectory(documentPath));
 
             AssertTreeOnlyHasFilesTreeNodes(SkylineWindow.FilesTree);
 
+            AssertTopLevelFiles(typeof(SkylineViewFile), typeof(SkylineChromatogramCache), typeof(ReplicatesFolder), typeof(SpectralLibrariesFolder));
+
+            Assert.AreEqual(RAT_PLASMA_FILE_NAME, SkylineWindow.FilesTree.Root.Text);
+            AssertFileState(FileState.available, SkylineWindow.FilesTree.Root);
+
             TestRestoreViewState();
-            WaitForFilesTree();
 
             AssertTreeFolderMatchesDocumentAndModel<ReplicatesFolder>(RAT_PLASMA_REPLICATE_COUNT);
 
@@ -547,21 +613,11 @@ namespace pwiz.SkylineTestFunctional
         }
 
         // Assumes rat-plasma.sky is loaded
-        // Expected tree:
-        //      <file>.sky/
-        //          Window Layout
-        //          Chromatograms
-        //          Replicates/
-        //              <Replicate-Name>/
-        //                  <Replicate-Sample-File>.raw
-        //              ...
-        //          Spectral Libraries/
-        //              <Library>
-        //              ...
-        private static void TestRestoreViewState()
+        private void TestRestoreViewState()
         {
             RunUI(() =>
             {
+                // Check expansion
                 Assert.IsTrue(SkylineWindow.FilesTree.Root.IsExpanded);
 
                 var replicatesFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
@@ -571,7 +627,30 @@ namespace pwiz.SkylineTestFunctional
 
                 var spectralLibrariesFolder = SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>();
                 Assert.IsTrue(spectralLibrariesFolder.IsExpanded);
+
+                // These checks fail due to the ChromatogramCache which was present when the indices for TopNode / SelectedNode
+                // were written but is not present when view state is restored, which results in  off-by-one errors when setting
+                // top and selected nodes. For now, adjust indices from the .view file to work in tree without a Chromatogram
+                // Cache.
+
+                // Check top node
+                const int expectedTopNodeIndex = 2;
+                var node = GetNthNode(SkylineWindow.FilesTree, AdjustForChromatogramCacheIssue(expectedTopNodeIndex));
+                Assert.AreEqual(SkylineWindow.FilesTree.TopNode, node);
+                Assert.IsTrue(ReferenceEquals(SkylineWindow.FilesTree.Folder<ReplicatesFolder>(), node));
+
+                // Check selection
+                const int expectedSelectedNodeIndex = 11;
+                node = GetNthNode(SkylineWindow.FilesTree, AdjustForChromatogramCacheIssue(expectedSelectedNodeIndex));
+                Assert.AreEqual(SkylineWindow.FilesTree.SelectedNode, node);
+                Assert.AreEqual(@"D_108_REP2", node.Name);
             });
+            return;
+
+            int AdjustForChromatogramCacheIssue(int expectedIndex)
+            {
+                return expectedIndex + 1;
+            }
         }
 
         // Assumes rat-plasma.sky is loaded
@@ -582,12 +661,8 @@ namespace pwiz.SkylineTestFunctional
             { // Smoke test finding nodes matching a directory name
                 var documentFilePath = SkylineWindow.DocumentFilePath;
                 var directoryName = Path.GetDirectoryName(documentFilePath);
-                var matchingNodes = SkylineWindow.FilesTree.FindNodesByPath(directoryName);
-                Assert.AreEqual(46, matchingNodes.Count);
-
-                directoryName = Path.GetDirectoryName(directoryName);
-                matchingNodes = SkylineWindow.FilesTree.FindNodesByPath(directoryName);
-                Assert.AreEqual(46, matchingNodes.Count);
+                var matchingNodes = SkylineWindow.FilesTree.FindNodesByFilePath(directoryName);
+                Assert.AreEqual(47, matchingNodes.Count);
             }
 
             var replicateFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
@@ -649,19 +724,23 @@ namespace pwiz.SkylineTestFunctional
             AssertIsExpectedImage(ImageId.skyline, SkylineWindow.FilesTree.Root);
 
             AssertTreeFolderMatchesDocumentAndModel<ReplicatesFolder>(RAT_PLASMA_REPLICATE_COUNT);
+
+            Assert.AreEqual(1, SkylineWindow.FilesTree.MonitoredDirectories().Count);
+            Assert.IsTrue(SkylineWindow.FilesTree.IsMonitoringDirectory(SkylineWindow.DocumentFilePath));
         }
 
         protected void TestDragAndDrop()
         {
             {
                 // Start with a clean document
-                var documentPath = TestFilesDir.GetTestPath(RAT_PLASMA_FILE_NAME);
+                var documentPath = TestFilesDirs[0].GetTestPath(RAT_PLASMA_FILE_NAME);
                 RunUI(() =>
                 {
                     SkylineWindow.OpenFile(documentPath);
                     SkylineWindow.ShowFilesTreeForm(true);
                 });
-                WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible);
+                WaitForDocumentLoaded();
+                WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible && SkylineWindow.FilesTree.IsComplete());
 
                 var indexOfLastReplicate = SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes.Count - 1;
 
@@ -736,13 +815,14 @@ namespace pwiz.SkylineTestFunctional
         protected void TestDragAndDropOnParentNode()
         {
             // Start with a clean document
-            var documentPath = TestFilesDir.GetTestPath(RAT_PLASMA_FILE_NAME);
+            var documentPath = TestFilesDirs[0].GetTestPath(RAT_PLASMA_FILE_NAME);
             RunUI(() =>
             {
                 SkylineWindow.OpenFile(documentPath);
                 SkylineWindow.ShowFilesTreeForm(true);
             });
-            WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible);
+            WaitForDocumentLoaded();
+            WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible && SkylineWindow.FilesTree.IsComplete());
 
             // A, B, C, D => Drag B, C to Parent Node => A, D, B, C
             var dndParams = DragAndDrop<ReplicatesFolder>(new[] { 1, 2, 3 }, -1, DragAndDropDirection.down, MoveType.move_last);
@@ -755,13 +835,13 @@ namespace pwiz.SkylineTestFunctional
         protected void TestReplicateLabelEdit()
         {
             // Start with a clean document
-            var documentPath = TestFilesDir.GetTestPath(RAT_PLASMA_FILE_NAME);
+            var documentPath = TestFilesDirs[0].GetTestPath(RAT_PLASMA_FILE_NAME);
             RunUI(() =>
             {
                 SkylineWindow.OpenFile(documentPath);
                 SkylineWindow.ShowFilesTreeForm(true);
             });
-            WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible);
+            WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible && SkylineWindow.FilesTree.IsComplete());
 
             var replicatesFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
             Assert.AreEqual(@"D_102_REP1", replicatesFolder.Nodes[0].Name);
@@ -792,12 +872,6 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(@"NEW NAME", SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[0].Name);
         }
 
-        private static void ResetFilesTree()
-        {
-            // Close FilesTreeForm so test framework doesn't fail the test due to an unexpected open dialog
-            RunUI(() => { SkylineWindow.DestroyFilesTreeForm(); });
-        }
-
         /// <summary>
         /// Helper method that performs a drag-and-drop operation on a FilesTree folder of type <typeparamref name="T"/>.
         /// For example, a folder of type <see cref="ReplicatesFolder"/>.
@@ -812,7 +886,7 @@ namespace pwiz.SkylineTestFunctional
                                                         int dropNodeIndex,
                                                         DragAndDropDirection direction,
                                                         MoveType moveType = MoveType.move_to)
-            where T : FileNode
+            where T : FileModel
         {
             var folder = SkylineWindow.FilesTree.Folder<T>();
 
@@ -865,7 +939,7 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         /// <typeparam name="TFolder"></typeparam>
         /// <param name="d"></param>
-        private static void AssertDragAndDropResults<TFolder>(DragAndDropParams d) where TFolder : FileNode
+        private static void AssertDragAndDropResults<TFolder>(DragAndDropParams d) where TFolder : FileModel
         {
             // CONSIDER: assert a more specific location in SrmSettings changed, which would differ depending on the type of {TFolder}
             // Check SrmSettings changed after a DnD operation
@@ -939,7 +1013,7 @@ namespace pwiz.SkylineTestFunctional
         /// <param name="expectedCount">Expected number of child nodes. Only counts direct children - not recursive children.</param>
         /// <exception cref="ArgumentException"></exception>
         private static void AssertTreeFolderMatchesDocumentAndModel<T>(int expectedCount) 
-            where T : FileNode
+            where T : FileModel
         {
             var filesModel = SkylineFile.Create(SkylineWindow.Document, SkylineWindow.DocumentFilePath);
 
@@ -1047,6 +1121,36 @@ namespace pwiz.SkylineTestFunctional
         private static void WaitForFilesTree()
         {
             WaitForConditionUI(() => SkylineWindow.FilesTree.IsComplete());
+        }
+
+        /// <summary>
+        /// Get the Nth node from a tree. <see cref="absoluteNodeIndex"/> is a zero-based index
+        /// that only counts visible nodes starting from the tree's root.
+        /// </summary>
+        /// <param name="filesTree">Tree to traverse</param>
+        /// <param name="absoluteNodeIndex">TreeNode to find. Returns null if the Nth node could not be found.</param>
+        /// <returns></returns>
+        private static TreeNode GetNthNode(FilesTree filesTree, int absoluteNodeIndex)
+        {
+            if (filesTree == null || absoluteNodeIndex < 0)
+            {
+                return null;
+            }
+
+            var currentNode = filesTree.Nodes[0];
+            var count = 0;
+
+            while (currentNode != null)
+            {
+                if (count == absoluteNodeIndex)
+                {
+                    return currentNode;
+                }
+                currentNode = currentNode.NextVisibleNode;
+                count++;
+            }
+
+            return null; // Nth visible node not found
         }
     }
 

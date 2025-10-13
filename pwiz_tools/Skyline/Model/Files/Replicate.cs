@@ -27,7 +27,7 @@ using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.Files
 {
-    public class Replicate : FileNode
+    public class Replicate : FileModel
     {
         public static Replicate Create(string documentFilePath, [NotNull] ChromatogramSet chromSet)
         {
@@ -43,7 +43,7 @@ namespace pwiz.Skyline.Model.Files
             base(documentFilePath, identityPath)
         {
             Name = name;
-            Files = files.Cast<FileNode>().ToList();
+            Files = files.Cast<FileModel>().ToList();
         }
 
         public override string Name { get; }
@@ -51,7 +51,7 @@ namespace pwiz.Skyline.Model.Files
         public override string FileName => null;
         public override ImageId ImageAvailable => ImageId.replicate;
         public override ImageId ImageMissing => ImageId.replicate_missing;
-        public override IList<FileNode> Files { get; }
+        public override IList<FileModel> Files { get; }
 
         public static ChromatogramSet LoadChromSetFromDocument(SrmDocument document, Replicate replicate)
         {
@@ -74,9 +74,14 @@ namespace pwiz.Skyline.Model.Files
             var deleteNames = models.Select(item => item.Name).ToList();
 
             var remainingChromatograms = 
-                document.MeasuredResults.Chromatograms.Where(chrom => !deleteIds.Contains(chrom.Id));
+                document.MeasuredResults.Chromatograms.Where(chrom => !deleteIds.Contains(chrom.Id)).ToList();
 
-            var newMeasuredResults = document.MeasuredResults.ChangeChromatograms(remainingChromatograms.ToList());
+            MeasuredResults newMeasuredResults = null;
+            if (remainingChromatograms.Count > 0)
+            {
+                newMeasuredResults = document.MeasuredResults.ChangeChromatograms(remainingChromatograms);
+            }
+
             var newDocument = document.ChangeMeasuredResults(newMeasuredResults, monitor);
             newDocument.ValidateResults();
             
@@ -97,7 +102,7 @@ namespace pwiz.Skyline.Model.Files
             return new ModifiedDocument(newDocument).ChangeAuditLogEntry(entry);
         }
 
-        public static ModifiedDocument Rearrange(SrmDocument document, SrmSettingsChangeMonitor monitor, List<FileNode> draggedModels, FileNode dropModel, MoveType moveType)
+        public static ModifiedDocument Rearrange(SrmDocument document, SrmSettingsChangeMonitor monitor, List<FileModel> draggedModels, FileModel dropModel, MoveType moveType)
         {
             var draggedChromSets = draggedModels.Cast<Replicate>().Select(model => LoadChromSetFromDocument(document, model)).ToList();
 

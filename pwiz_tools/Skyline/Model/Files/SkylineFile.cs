@@ -18,11 +18,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using pwiz.Common.Collections;
-using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Files
 {
-    public class SkylineFile : FileNode
+    public class SkylineFile : FileModel
     {
         public static SkylineFile Create(SrmDocument document, string documentFilePath) 
         {
@@ -48,7 +48,7 @@ namespace pwiz.Skyline.Model.Files
             return new SkylineFile(documentFilePath, name, fileName, filePath, files);
         }
 
-        private SkylineFile(string documentFilePath, string name, string fileName, string filePath, IList<FileNode> files) :
+        private SkylineFile(string documentFilePath, string name, string fileName, string filePath, IList<FileModel> files) :
             base(documentFilePath, IdentityPath.ROOT)
         {
             Name = name;
@@ -62,17 +62,17 @@ namespace pwiz.Skyline.Model.Files
         public override string Name { get; }
         public override string FilePath { get; }
         public override string FileName { get; }
-        public override IList<FileNode> Files { get; }
+        public override IList<FileModel> Files { get; }
         public override ImageId ImageAvailable => ImageId.skyline;
 
-        public FileNode Folder<T>() where T : FileNode
+        public FileModel Folder<T>() where T : FileModel
         {
             return Files.OfType<T>().FirstOrDefault();
         }
 
-        private static IList<FileNode> BuildFromDocument(SrmDocument document, string documentFilePath)
+        private static IList<FileModel> BuildFromDocument(SrmDocument document, string documentFilePath)
         {
-            var list = new List<FileNode>();
+            var list = new List<FileModel>();
 
             if (document.Settings.DataSettings.IsAuditLoggingEnabled)
             {
@@ -86,26 +86,17 @@ namespace pwiz.Skyline.Model.Files
                 list.Add(view);
             }
 
-            // TODO: adding Chromatograms to FilesTree causes drag-and-drop tests to fail. Cause unknown - maybe moving
-            //       nodes further puts them outside the visible frame and causes DnD issues?
-            // CONSIDER: is this correct? See more where Cache files are created in MeasuredResults @ line 1640
-            // { // Chromatogram Cache (.skyd)
-            //     var cachePaths = document.Settings.MeasuredResults?.CachePaths;
-            //     if (cachePaths != null)
-            //     {
-            //         foreach (var _ in cachePaths)
-            //         {
-            //             var name = FileResources.FileModel_ChromatogramCache;
-            //             var filePath = ChromatogramCache.FinalPathForName(documentFilePath, null);
-            //
-            //             list.Add(SkylineChromatogramCache.Create(documentFilePath, name, filePath));
-            //         }
-            //     }
-            // }
+            { // Chromatogram Cache (.skyd) - only picks out the final cache and not smaller, temporary files
+                var skydFile = document.Settings.MeasuredResults?.CacheFinal;
+                if (skydFile != null)
+                {
+                    list.Add(SkylineChromatogramCache.Create(documentFilePath, document.Settings.MeasuredResults.CacheFinal));
+                }
+            }
 
             { // Replicates
                 var measuredResults = document.MeasuredResults;
-                if (measuredResults is { IsEmpty: false })
+                if (document.Settings.HasResults)
                 {
                     var files = measuredResults.Chromatograms.Select(chromatogramSet => Replicate.Create(documentFilePath, chromatogramSet)).ToList();
                     var folder = new ReplicatesFolder(documentFilePath, files);
@@ -158,6 +149,11 @@ namespace pwiz.Skyline.Model.Files
             }
 
             return ImmutableList.ValueOf(list);
+        }
+
+        public IList<FileModel> AsList()
+        {
+            return new SingletonList<FileModel>(this);
         }
     }
 }

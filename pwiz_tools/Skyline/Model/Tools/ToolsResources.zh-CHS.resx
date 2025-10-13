@@ -244,4 +244,16 @@
   <data name="ToolMacros_listArguments_This_tool_requires_an_Active_Replicate_Name_to_run" xml:space="preserve">
     <value>此工具需要运行有效的重复测定名称</value>
   </data>
+  <data name="PythonInstaller_GetPackages_Installing_Packages" xml:space="preserve">
+    <value>安装包</value>
+  </data>
+  <data name="PythonInstaller_GetPip_Installing_Pip" xml:space="preserve">
+    <value>安装 Pip</value>
+  </data>
+  <data name="PythonInstaller_GetPython_Installing_Python" xml:space="preserve">
+    <value>安装 Python</value>
+  </data>
+  <data name="PythonInstaller_InstallPackages_Install" xml:space="preserve">
+    <value>安装</value>
+  </data>
 </root>

@@ -54,7 +54,9 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Windows.Forms;
+using System.Xml;
 using pwiz.Skyline.Controls.Lists;
 using ZedGraph;
 using PeptideDocNode = pwiz.Skyline.Model.PeptideDocNode;
@@ -85,6 +87,7 @@ namespace pwiz.Skyline
         private readonly List<GraphChromatogram> _listGraphChrom = new List<GraphChromatogram>(); // List order is MRU, with oldest in position 0
         private bool _inGraphUpdate;
         private bool _alignToPrediction;
+        private bool _shouldShowFilesTree;
 
         public RTGraphController RTGraphController
         {
@@ -482,6 +485,10 @@ namespace pwiz.Skyline
         {
             using (new DockPanelLayoutLock(dockPanel, true))
             {
+                if (Program.SkylineOffscreen)
+                {
+                    layoutStream = MoveLayoutOffScreen(layoutStream);
+                }
                 LoadLayoutLocked(layoutStream);
             }
         }
@@ -525,6 +532,33 @@ namespace pwiz.Skyline
                 DestroyGraphChrom(graphChrom);
             DestroyGraphFullScan();
             dockPanel.LoadFromXml(layoutStream, DeserializeForm);
+
+            if (_filesTreeForm == null && _shouldShowFilesTree)
+            {
+                // First time displaying FilesTree so no view state to restore
+                _filesTreeForm = CreateFilesTreeForm(null);
+            
+                // If SequenceTree exists, put FilesTree in a tab behind SequenceTree
+                if (_sequenceTreeForm != null) 
+                {
+                    var sequenceTreeDockState = _sequenceTreeForm.DockState;
+                    if (sequenceTreeDockState != DockState.Hidden)
+                    {
+                        _filesTreeForm.Show(dockPanel, sequenceTreeDockState);
+                        _sequenceTreeForm.Activate();
+                    }
+                    // If SequenceTree is hidden, skip.
+                    // CONSIDER: if SequenceTree exists but is hidden, FilesTree cannot be added. Ignoring that case for now.
+                }
+                else
+                {
+                    // Could not find SequenceTree so put Files in its default location
+                    _filesTreeForm.Show(dockPanel, DockState.DockLeft);
+                }
+            
+                _shouldShowFilesTree = false;
+            }
+
             // SequenceTree resizes often prior to display, so we must restore its scrolling after
             // all resizing has occurred
             if (SequenceTree != null)
@@ -540,6 +574,40 @@ namespace pwiz.Skyline
             }
 
             EnsureFloatingWindowsVisible();
+        }
+
+        /// <summary>
+        /// Change the "Bounds" attribute of the "FloatingWindow" elements in the .sky.view file
+        /// to a point offscreen.
+        /// </summary>
+        private static MemoryStream MoveLayoutOffScreen(Stream layoutStream)
+        {
+            const string attrBounds = @"Bounds";
+            var xd = new XmlDocument();
+            xd.Load(layoutStream);
+            var rectangleConverter = new RectangleConverter();
+            foreach (XmlElement el in xd.SelectNodes(@"//FloatingWindow")!)
+            {
+                var strBounds = el.GetAttribute(attrBounds);
+                if (!string.IsNullOrEmpty(strBounds))
+                {
+                    if (rectangleConverter.ConvertFromInvariantString(el.GetAttribute(attrBounds)) 
+                        is Rectangle rectBounds)
+                    {
+                        var newBounds = new Rectangle(GetOffscreenPoint(), rectBounds.Size);
+                        el.SetAttribute(attrBounds, rectangleConverter.ConvertToInvariantString(newBounds));
+                    }
+                }
+            }
+
+            var memoryStream = new MemoryStream();
+            var xmlTextWriter = new XmlTextWriter(memoryStream, Encoding.UTF8)
+            {
+                Formatting = Formatting.Indented
+            };
+            xd.Save(xmlTextWriter);
+            memoryStream.Position = 0;
+            return memoryStream;
         }
 
         public void DestroyAllChromatogramsGraph()

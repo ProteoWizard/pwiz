@@ -9506,6 +9506,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap Skyline_FilesTree {
+            get {
+                object obj = ResourceManager.GetObject("Skyline_FilesTree", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to peptides.
         /// </summary>
         public static string Skyline_peptides {

@@ -176,7 +176,11 @@
     <Compile Include="CandidatePeakTest.cs" />
     <Compile Include="CantReadSkydTest.cs" />
     <Compile Include="ChargedLossesLibraryTest.cs" />
+<<<<<<< HEAD
     <Compile Include="SequenceTreePropertyGridTest.cs" />
+=======
+    <Compile Include="FilesTreeFileSystemTest.cs" />
+>>>>>>> Skyline/work/20250102_FilesView
     <Compile Include="SkylineWindowEventsTest.cs" />
     <Compile Include="FilesModelTest.cs" />
     <Compile Include="ChromatogramExtractionRangeTest.cs" />
@@ -216,11 +220,13 @@
     <Compile Include="LogScaleAxisTest.cs" />
     <Compile Include="MedianNormalizationTest.cs" />
     <Compile Include="MessageBoxHelperTest.cs" />
+    <Compile Include="MinimizeWithEmptyFilesTest.cs" />
     <Compile Include="MinimizeIrtTest.cs" />
     <Compile Include="EADZIonsTest.cs" />
     <Compile Include="MissingOptStepsTest.cs" />
     <Compile Include="MixedSrmPrmTest.cs" />
     <Compile Include="Ms1SpectrumFilterTest.cs" />
+    <Compile Include="MultiInjectCandidatePeakTest.cs" />
     <Compile Include="MultiInjectionReplicatesTest.cs" />
     <Compile Include="MultiInjectReplicatePivotTest.cs" />
     <Compile Include="MultiInjectRescoreTest.cs" />

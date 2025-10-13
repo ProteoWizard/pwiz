@@ -22,9 +22,6 @@ using System.Collections.Generic;
 using System.IO;
 
 /*
-  (1) How to check whether a file exists in a separate thread? Where to store file states?
-        Look at ProducerConsumerWorker
-
     * rat-plasma.sky
             * Replicates\
                     * Replicate 1\
@@ -42,7 +39,7 @@ using System.IO;
                     * View
                     * Chromatogram Cache
 
-    File type reference, which Brendan shares with people using Skyline.
+    File type reference, shared when people ask about Skyline files.
         https://skyline.ms/wiki/home/software/Skyline/page.view?name=file-types
  */
 // ReSharper disable WrongIndentSize
@@ -67,11 +64,11 @@ namespace pwiz.Skyline.Model.Files
 
     internal class StaticFolderId : Identity { }
 
-    public abstract class FileNode
+    public abstract class FileModel
     {
         public enum MoveType { move_to, move_last }
 
-        protected FileNode(string documentFilePath, IdentityPath identityPath)
+        protected FileModel(string documentFilePath, IdentityPath identityPath)
         {
             IdentityPath = identityPath;
             DocumentPath = documentFilePath;
@@ -90,7 +87,7 @@ namespace pwiz.Skyline.Model.Files
         public virtual ImageId ImageAvailable => ImageId.file; 
         public virtual ImageId ImageMissing => ImageId.file_missing;
 
-        public virtual IList<FileNode> Files => ImmutableList.Empty<FileNode>();
+        public virtual IList<FileModel> Files => ImmutableList.Empty<FileModel>();
 
         public override string ToString() => @$"{GetType().Name}: " + (Name ?? string.Empty);
 

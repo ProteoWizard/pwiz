@@ -23,7 +23,7 @@ using pwiz.Skyline.Model.Lib;
 
 namespace pwiz.Skyline.Model.Files
 {
-    public class SpectralLibrary : FileNode
+    public class SpectralLibrary : FileModel
     {
         public static SpectralLibrary Create(string documentFilePath, LibrarySpec librarySpec)
         {
@@ -51,7 +51,7 @@ namespace pwiz.Skyline.Model.Files
             return document.Settings.PeptideSettings.Libraries.FindLibrarySpec(library.IdentityPath.GetIdentity(0));
         }
 
-        public static ModifiedDocument Delete(SrmDocument document, SrmSettingsChangeMonitor monitor, List<FileNode> models)
+        public static ModifiedDocument Delete(SrmDocument document, SrmSettingsChangeMonitor monitor, List<FileModel> models)
         {
             var deleteIds = models.Select(model => ReferenceValue.Of(model.IdentityPath.Child)).ToHashSet();
             var deleteNames = models.Select(item => item.Name).ToList();
@@ -79,7 +79,7 @@ namespace pwiz.Skyline.Model.Files
             return new ModifiedDocument(newDocument).ChangeAuditLogEntry(entry);
         }
 
-        public static ModifiedDocument Rearrange(SrmDocument document, SrmSettingsChangeMonitor monitor, List<FileNode> draggedModels, FileNode dropModel, MoveType moveType)
+        public static ModifiedDocument Rearrange(SrmDocument document, SrmSettingsChangeMonitor monitor, List<FileModel> draggedModels, FileModel dropModel, MoveType moveType)
         {
             var draggedLibraries = draggedModels.Cast<SpectralLibrary>().Select(model => LoadLibrarySpecFromDocument(document, model)).ToList();
 

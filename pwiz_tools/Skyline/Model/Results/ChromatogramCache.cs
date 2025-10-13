@@ -40,7 +40,12 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results
 {
-    public sealed class ChromatogramCache : Immutable, IDisposable
+    /// <summary>
+    /// Identity class to allow identity equality on <see cref="ChromatogramCache"/>.
+    /// </summary>
+    public sealed class ChromatogramCacheId : Identity { }
+
+    public sealed class ChromatogramCache : Immutable, IDisposable, IFile
     {
         public const CacheFormatVersion FORMAT_VERSION_CACHE_11 = CacheFormatVersion.Eleven; // Adds chromatogram start, stop times, and uncompressed size info, and new flag bit for SignedMz
         public const CacheFormatVersion FORMAT_VERSION_CACHE_10 = CacheFormatVersion.Ten; // Introduces waters lockmass correction in MSDataFileUri syntax
@@ -130,6 +135,7 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromatogramCache(string cachePath, RawData raw, IPooledStream readStream)
         {
+            Id = new ChromatogramCacheId();
             CachePath = cachePath;
             _rawData = raw;
             _scoreTypeIndices = raw.ScoreTypes;
@@ -138,6 +144,11 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public string CachePath { get; private set; }
+
+        public Identity Id { get; }
+        public string Name => string.Empty;
+        public string FilePath => CachePath;
+
         public CacheFormatVersion Version
         {
             get { return _rawData.FormatVersion; }
@@ -1545,9 +1556,7 @@ namespace pwiz.Skyline.Model.Results
             var listKeepTransitions = new BlockedArrayList<ChromTransition>(
                 ChromTransition.SizeOf, ChromTransition.DEFAULT_BLOCK_SIZE);
             ChromatogramGroupIds keepGroupIds = new ChromatogramGroupIds();
-            var dictKeepTextIdIndices = new Dictionary<ChromatogramGroupId, int>();
 
-            // TODO: Make these first 3 temporary files that delete on close
             using (var fsPeaks = new FileSaver(cachePathOpt + PEAKS_EXT, true))
             using (var fsScans = new FileSaver(cachePathOpt + SCANS_EXT, true))
             using (var fsScores = new FileSaver(cachePathOpt + SCORES_EXT, true))
@@ -1634,18 +1643,7 @@ namespace pwiz.Skyline.Model.Results
                     {
                         TransferPeaks(cacheFormat, firstPeakToTransfer, numPeaksToTransfer, fsPeaks.FileStream);
                     }
-
-                    if (_rawData.ChromCacheFiles[fileIndex].SizeScanIds == 0)
-                        listKeepCachedFiles.Add(_rawData.ChromCacheFiles[fileIndex]);
-                    else
-                    {
-                        // Write all scan ids for the last file to the scan ids output stream
-                        inStream.Seek(_rawData.LocationScanIds + _rawData.ChromCacheFiles[fileIndex].LocationScanIds, SeekOrigin.Begin);
-                        int lenReadIds = _rawData.ChromCacheFiles[fileIndex].SizeScanIds;
-                        long locationScanIds = fsScans.Stream.Position;
-                        inStream.TransferBytes(fsScans.Stream, lenReadIds, buffer);
-                        listKeepCachedFiles.Add(_rawData.ChromCacheFiles[fileIndex].RelocateScanIds(locationScanIds));
-                    }
+                    listKeepCachedFiles.Add(RelocateScanIds(_rawData.ChromCacheFiles[fileIndex], inStream, fsScans, buffer));
 
                     if (listKeepResultFileDatas != null)
                     {
@@ -1663,6 +1661,20 @@ namespace pwiz.Skyline.Model.Results
                     if (progress != null)
                         progress.SetProgressCheckCancel(i, listEntries.Length);
                 } while (i < listEntries.Length);
+
+                if (keepFilePaths.Count > listKeepCachedFiles.Count)
+                {
+                    // If there were any file paths that we were supposed to keep, but which did not have any chromatograms, they need
+                    // to be added to the cache file so that Skyline does not treat them as missing
+                    var chromCacheFiles = _rawData.ChromCacheFiles.ToDictionary(file => file.FilePath);
+                    foreach (var filePath in keepFilePaths.Except(listKeepCachedFiles.Select(file => file.FilePath)))
+                    {
+                        if (chromCacheFiles.TryGetValue(filePath, out var chromCachedFile))
+                        {
+                            listKeepCachedFiles.Add(RelocateScanIds(chromCachedFile, inStream, fsScans, buffer));
+                        }
+                    }
+                }
 
                 // CONSIDER: We should be able to figure out the order from the original order
                 //           without needing this second sort
@@ -1694,6 +1706,20 @@ namespace pwiz.Skyline.Model.Results
                     streamManager.CreatePooledStream(cachePathOpt, false));
             }
         }
+        }
+
+        private ChromCachedFile RelocateScanIds(ChromCachedFile chromCachedFile, Stream inStream, FileSaver fsScans, byte[] buffer)
+        {
+            if (chromCachedFile.SizeScanIds == 0)
+            {
+                return chromCachedFile;
+            }
+            // Write all scan ids for the last file to the scan ids output stream
+            inStream.Seek(_rawData.LocationScanIds + chromCachedFile.LocationScanIds, SeekOrigin.Begin);
+            int lenReadIds = chromCachedFile.SizeScanIds;
+            long locationScanIds = fsScans.Stream.Position;
+            inStream.TransferBytes(fsScans.Stream, lenReadIds, buffer);
+            return chromCachedFile.RelocateScanIds(locationScanIds);
         }
 
         public void TransferPeaks(CacheFormat targetFormat, int firstPeakIndex, int peakCount, Stream writeStream)

@@ -324,4 +324,10 @@
   <data name="ArdiaLoginDlg_CoreWebView2OnNavigationCompleted_AfterNavigateToLoginURL_Load_Login_page_failed_with_HTTP_status_code__0__Login_Page_URL___1_" xml:space="preserve">
     <value>加载登录页面失败，出现 HTTP 状态码{0}。客户端注册码很可能无效。刚从服务器接收到新的客户端注册码，这很可能是程序故障。登录页面 URL： {1}</value>
   </data>
+  <data name="MsFraggerDownloadDlg_btnRequestVerificationCode_Click_Check_your_email" xml:space="preserve">
+    <value>Check your email for the verification code and copy it into the box.
+
+If you don't get an email, double-check your email address or click "More Info" for troubleshooting.</value>
+    <comment>Needs Review:Missing translation</comment>
+  </data>
 </root>

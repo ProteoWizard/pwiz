@@ -14,19 +14,22 @@
  * limitations under the License.
  */
 
+using pwiz.Skyline.Model.Results;
+
 namespace pwiz.Skyline.Model.Files
 {
-    public class SkylineChromatogramCache : FileNode
+    public class SkylineChromatogramCache : FileModel
     {
-        private class ChromatogramCacheId : Identity { }
-
-        public static SkylineChromatogramCache Create(string documentFilePath, string name, string filePath)
+        public static SkylineChromatogramCache Create(string documentFilePath, ChromatogramCache chromatogramCache)
         {
-            return new SkylineChromatogramCache(documentFilePath, name, filePath);
+            var name = FileResources.FileModel_ChromatogramCache;
+            var filePath = chromatogramCache.FilePath;
+
+            return new SkylineChromatogramCache(documentFilePath, chromatogramCache.Id,name, filePath);
         }
 
-        public SkylineChromatogramCache(string documentFilePath, string name, string filePath) : 
-            base(documentFilePath, new IdentityPath(new ChromatogramCacheId()))
+        public SkylineChromatogramCache(string documentFilePath, Identity id, string name, string filePath) : 
+            base(documentFilePath, new IdentityPath(id))
         {
             Name = name;
             FilePath = filePath;

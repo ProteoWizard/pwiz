@@ -24,174 +24,194 @@ using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 
+// TODO: add a background task that refreshes the state of all items in the cache periodically. For example, when Skyline gains focus
+//       after being minimized or after the user switches from a different application back to Skyline. 
 namespace pwiz.Skyline.Controls.FilesTree
 {
-    public enum FileSystemType { in_memory, local_file_system, none }
+    public enum FileSystemType { local_file_system, none }
+    public enum PathAvailability { available, unavailable, unknown }
 
     public interface IFileSystemService
     {
         FileSystemType FileSystemType { get; }
-        string MonitoredDirectory { get; }
+
+        IList<string> MonitoredDirectories();
+        bool IsMonitoringDirectory(string fullPath);
         bool IsFileAvailable(string fullPath);
-        bool IsMonitoringDirectory(string documentDirectory);
-        void StartWatching(string directoryPath, CancellationToken cancellationToken);
+
+        void StartWatching(CancellationToken cancellationToken);
         void LoadFile(string localFilePath, string filePath, string fileName, string documentPath, Action<string, CancellationToken> callback);
         void StopWatching();
         void Dispose();
     }
 
-    // TODO: add a new background task that refreshes the state of all items in the cache periodically. For example, when Skyline gains focus
-    //       after being minimized or after the user switches from a different application back to Skyline. 
-    // CONSIDER: does FileSystemService work properly when a (1) a new document is created or (2) an existing document is opened and internal state is reset for the new Skyline document?
     public class FileSystemService : IFileSystemService
     {
-        internal static FileSystemService Create(Control synchronizingObject,
-            BackgroundActionService backgroundActionService,
-            Action<string, CancellationToken> fileDeletedAction,
-            Action<string, CancellationToken> fileCreatedAction,
-            Action<string, string, CancellationToken> fileRenamedAction)
+        internal static FileSystemService Create(Control synchronizingObject, BackgroundActionService backgroundActionService)
         {
-            return new FileSystemService(synchronizingObject, backgroundActionService, fileDeletedAction, fileCreatedAction, fileRenamedAction);
+            return new FileSystemService(synchronizingObject, backgroundActionService);
         }
 
-        private static readonly IFileSystemService NONE = new NoFileSystem();
-        private static readonly IFileSystemService IN_MEMORY = new InMemoryFileSystem();
+        private static readonly IFileSystemService NO_DOCUMENT = new NoOpService();
 
-        private readonly Action<string, CancellationToken> _fileDeletedAction;
-        private readonly Action<string, CancellationToken> _fileCreatedAction;
-        private readonly Action<string, string, CancellationToken> _fileRenamedAction;
         private readonly Control _synchronizingObject;
         private readonly BackgroundActionService _backgroundActionService;
 
-        private IFileSystemService _delegate;
+        internal event Action<string, CancellationToken> FileDeletedAction;
+        internal event Action<string, CancellationToken> FileCreatedAction;
+        internal event Action<string, string, CancellationToken> FileRenamedAction;
 
-        private FileSystemService(Control synchronizingObject,
-            BackgroundActionService backgroundActionService,
-            Action<string, CancellationToken> fileDeletedAction,
-            Action<string, CancellationToken> fileCreatedAction,
-            Action<string, string, CancellationToken> fileRenamedAction)
+        private FileSystemService(Control synchronizingObject, BackgroundActionService backgroundActionService)
         {
             _synchronizingObject = synchronizingObject;
             _backgroundActionService = backgroundActionService;
-            _fileDeletedAction = fileDeletedAction;
-            _fileCreatedAction = fileCreatedAction;
-            _fileRenamedAction = fileRenamedAction;
 
-            // Start with the default implementation (NONE) until Skyline loads a document to monitor
-            _delegate = NONE;
+            // Start with the default implementation (NO_DOCUMENT) until Skyline has a document to monitor.
+            Delegate = NO_DOCUMENT;
         }
 
-        public FileSystemType FileSystemType => _delegate.FileSystemType;
-        public string MonitoredDirectory => _delegate.MonitoredDirectory;
-        public bool IsFileAvailable(string fullPath) => _delegate.IsFileAvailable(fullPath);
-        public bool IsMonitoringDirectory(string documentDirectory) => _delegate.IsMonitoringDirectory(documentDirectory);
+        public FileSystemType FileSystemType => Delegate.FileSystemType;
+        public IFileSystemService Delegate { get; private set; }
+
+        public bool IsMonitoringDirectory(string fullPath) => Delegate.IsMonitoringDirectory(fullPath);
+        public bool IsFileAvailable(string fullPath) => Delegate.IsFileAvailable(fullPath);
+
+        public IList<string> MonitoredDirectories()
+        {
+            Assume.IsNotNull(Delegate.MonitoredDirectories());
+            return Delegate.MonitoredDirectories();
+        }
 
         // CONSIDER: does this need to lock while updating _delegate?
-        public void StartWatching(string directoryPath, CancellationToken cancellationToken)
+        public void StartWatching(CancellationToken cancellationToken)
         {
             // Console.WriteLine($@"===== StartWatching {directoryPath ?? @"in-memory"} {cancellationToken.GetHashCode()}");
 
-            if (directoryPath == null)
-                _delegate = IN_MEMORY;
-            else
-                _delegate = new LocalFileSystem(_synchronizingObject, _backgroundActionService, _fileDeletedAction, _fileCreatedAction, _fileRenamedAction);
+            var localStorageService = new LocalStorageService(_synchronizingObject, _backgroundActionService);
+            localStorageService.FileDeletedAction += FileDeletedAction;
+            localStorageService.FileCreatedAction += FileCreatedAction;
+            localStorageService.FileRenamedAction += FileRenamedAction;
+            Delegate = localStorageService;
 
-            _delegate.StartWatching(directoryPath, cancellationToken);
+            Delegate.StartWatching(cancellationToken);
         }
 
         public void LoadFile(string localFilePath, string filePath, string fileName, string documentPath, Action<string, CancellationToken> callback)
         {
-            _delegate.LoadFile(localFilePath, filePath, fileName, documentPath, callback);
+            Delegate.LoadFile(localFilePath, filePath, fileName, documentPath, callback);
         }
 
         // CONSIDER: does this need to lock while updating _delegate?
         public void StopWatching()
         {
-            // Console.WriteLine($@"===== StopWatching {MonitoredDirectory ?? @"in-memory"}");
+            // Console.WriteLine($@"===== StopWatching {MonitoredDirectories ?? @"in-memory"}");
 
-            _delegate.StopWatching();
+            Delegate.StopWatching();
 
-            // Revert to the default NONE implementation until the owner specifies a directory to monitor
-            _delegate = NONE;
+            // Revert to the default NO_DOCUMENT implementation until a document is loaded
+            Delegate = NO_DOCUMENT;
         }
 
         public void Dispose()
         {
-            _delegate.Dispose();
+            Delegate.Dispose();
         }
     }
 
-    internal class NoFileSystem : IFileSystemService
+    internal class NoOpService : IFileSystemService
     {
         public FileSystemType FileSystemType => FileSystemType.none;
-        public string MonitoredDirectory => null;
+        public IList<string> MonitoredDirectories() => ImmutableList.Empty<string>();
+        public bool IsMonitoringDirectory(string fullPath) => false;
         public bool IsFileAvailable(string fullPath) => false;
-        public bool IsMonitoringDirectory(string documentDirectory) => false;
-        public void StartWatching(string directoryPath, CancellationToken cancellationToken) { }
+        public void StartWatching(CancellationToken cancellationToken) { }
         public void LoadFile(string localFilePath, string filePath, string fileName, string documentPath, Action<string, CancellationToken> callback) { }
         public void StopWatching() { }
         public void Dispose() { }
     }
 
-    internal class InMemoryFileSystem : IFileSystemService
+    public class LocalStorageService : IFileSystemService
     {
-        public FileSystemType FileSystemType => FileSystemType.in_memory;
-        public string MonitoredDirectory => null;
-        public bool IsFileAvailable(string fullPath) => true;
-        public bool IsMonitoringDirectory(string documentDirectory) => documentDirectory == null;
-        public void StartWatching(string directoryPath, CancellationToken cancellationToken) { }
-        public void LoadFile(string localFilePath, string filePath, string fileName, string documentPath, Action<string, CancellationToken> callback) { }
-        public void StopWatching() { }
-        public void Dispose() { }
-    }
+        private static readonly HashSet<string> FILE_EXTENSION_IGNORE_LIST = new HashSet<string> { @".tmp", @".bak" };
 
-    public class LocalFileSystem : IFileSystemService
-    {
-        private static readonly IList<string> FILE_EXTENSION_IGNORE_LIST = new List<string> { @".tmp", @".bak" };
+        private readonly object _fswLock = new object();
 
-        internal LocalFileSystem(Control synchronizingObject,
-            BackgroundActionService backgroundActionService,
-            Action<string, CancellationToken> fileDeletedAction,
-            Action<string, CancellationToken> fileCreatedAction,
-            Action<string, string, CancellationToken> fileRenamedAction)
+        internal LocalStorageService(Control synchronizingObject, BackgroundActionService backgroundActionService)
         {
             SynchronizingObject = synchronizingObject;
             BackgroundActionService = backgroundActionService;
-            FileDeletedAction = fileDeletedAction;
-            FileCreatedAction = fileCreatedAction;
-            FileRenamedAction = fileRenamedAction;
 
             Cache = new ConcurrentDictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
+            FileSystemWatchers = new ConcurrentDictionary<string, ManagedFileSystemWatcher>();
+
+            // Use a different timespan when running tests. 
+            // CONSIDER: should tests configure this directly?
+            var timeSpan = Program.FunctionalTest ? TimeSpan.FromMilliseconds(500) : TimeSpan.FromSeconds(3);
+            HealthMonitor = new FileSystemHealthMonitor(timeSpan);
+            HealthMonitor.PathAvailabilityChanged += OnPathAvailabilityChanged;
         }
 
-        public FileSystemType FileSystemType => FileSystemType.local_file_system;
-        public string MonitoredDirectory => FileSystemWatcher.Path;
-        public bool IsFileAvailable(string fullPath) => Cache.ContainsKey(fullPath);
-        public bool IsMonitoringDirectory(string documentDirectory) => string.CompareOrdinal(MonitoredDirectory, documentDirectory) == 0;
+        internal event Action<string, CancellationToken> FileDeletedAction;
+        internal event Action<string, CancellationToken> FileCreatedAction;
+        internal event Action<string, string, CancellationToken> FileRenamedAction;
 
         private Control SynchronizingObject { get; }
         private BackgroundActionService BackgroundActionService { get; }
         private ConcurrentDictionary<string, bool> Cache { get; }
-        private FileSystemWatcher FileSystemWatcher { get; set; }
         private CancellationToken CancellationToken { get; set; }
-        private Action<string, CancellationToken> FileDeletedAction { get; }
-        private Action<string, CancellationToken> FileCreatedAction { get; }
-        private Action<string, string, CancellationToken> FileRenamedAction { get; }
+        private ConcurrentDictionary<string, ManagedFileSystemWatcher> FileSystemWatchers { get; }
+        private FileSystemHealthMonitor HealthMonitor { get; set; }
 
-        public void StartWatching(string directoryPath, CancellationToken cancellationToken)
+        public FileSystemType FileSystemType => FileSystemType.local_file_system;
+
+        /// <summary>
+        /// Get the directories currently monitored for changes. Paths are fully qualified. The returned list is immutable.
+        /// </summary>
+        /// <returns>List of paths. If no paths monitored, list will be non-null and empty.</returns>
+        public IList<string> MonitoredDirectories()
+        {
+            var list = new List<string>();
+            lock (_fswLock)
+            {
+                list.AddRange(FileSystemWatchers.Select(item => item.Value.Path));
+            }
+
+            return ImmutableList.ValueOfOrEmpty(list);
+        }
+
+        public bool IsMonitoringDirectory(string fullPath)
+        {
+            if(fullPath == null) 
+                return false;
+
+            // If fullPath is a file, get its directory
+            if (File.Exists(fullPath))
+            {
+                fullPath = FileSystemUtil.GetDirectoryOrRoot(fullPath);
+            }
+
+            if (fullPath == null)
+                return false;
+
+            return FileSystemWatchers.ContainsKey(fullPath);
+        }
+
+        public bool IsFileAvailable(string fullPath)
+        {
+            fullPath = FileSystemUtil.Normalize(fullPath);
+
+            return Cache.TryGetValue(fullPath, out var isAvailable) && isAvailable;
+        }
+
+        public void TriggerAvailabilityMonitor()
+        {
+            HealthMonitor.Trigger();
+        }
+
+        public void StartWatching(CancellationToken cancellationToken)
         {
             CancellationToken = cancellationToken;
-
-            FileSystemWatcher = new FileSystemWatcher();
-
-            FileSystemWatcher.Path = directoryPath;
-            FileSystemWatcher.SynchronizingObject = SynchronizingObject;
-            FileSystemWatcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName;
-            FileSystemWatcher.IncludeSubdirectories = true;
-            FileSystemWatcher.EnableRaisingEvents = true;
-            FileSystemWatcher.Renamed += FileSystemWatcher_OnRenamed;
-            FileSystemWatcher.Deleted += FileSystemWatcher_OnDeleted;
-            FileSystemWatcher.Created += FileSystemWatcher_OnCreated;
+            HealthMonitor.Start();
         }
 
         /// <summary>
@@ -226,7 +246,10 @@ namespace pwiz.Skyline.Controls.FilesTree
                     callback(localFilePath, cancellationToken);
                 });
             }
-            // Not in the cache, so (1) determine the path to the local file and (2) if found, queue work to invoke the callback with info about the local file path.
+            // Not in the cache, so queue a new background task to:
+            //
+            //  (1) determine the path to the local file
+            //  (2) update the UI with the results of locating the local file
             else
             {
                 BackgroundActionService.AddTask(() =>
@@ -236,10 +259,28 @@ namespace pwiz.Skyline.Controls.FilesTree
 
                     localFilePath = LocateFile(filePath, fileName, documentPath);
 
+                    // Check whether this file's location is monitored for changes. If not, start a new FileSystemWatcher for that location
                     if (localFilePath != null)
                     {
+                        localFilePath = FileSystemUtil.Normalize(localFilePath);
+
+                        // Use GetDirectoryOrRoot to handle cases where localFilePath is in a root directory - ex: C:\sample-file-123.raw
+                        var directoryPath = FileSystemUtil.GetDirectoryOrRoot(localFilePath);
+                        WatchDirectory(directoryPath);
+
                         Cache[localFilePath] = true;
                     }
+                    // Add files that could not be found to the cache (marked as missing) even though they couldn't be found. This records
+                    // our potential interest in these paths since we cannot tell right now whether a network drive is down, the file will
+                    // be restored later, and so on.
+                    else if(filePath != null)
+                    {
+                        var fullFilePath = FileSystemUtil.Normalize(filePath);
+
+                        Cache[fullFilePath] = false;
+                    }
+                    // Otherwise, filePath is null, which typically indicates a file that has never been saved. So, do not 
+                    // put it in the cache (because it has no file path) but do queue a task to update the UI.
 
                     BackgroundActionService.RunUI(() =>
                     {
@@ -249,32 +290,170 @@ namespace pwiz.Skyline.Controls.FilesTree
             }
         }
 
+        /// <summary>
+        /// Handle events raised by the <see cref="FileSystemHealthMonitor"/>. Triggered when the availability of a
+        /// directory monitored by FileSystemWatcher becomes available or unavailable.
+        ///
+        /// If a directory becomes unavailable, the FileSystemWatcher monitoring the directory will be paused until the
+        /// directory becomes available again when the FSW will be restarted.
+        /// </summary>
+        /// <param name="fullPath">The affected path.</param>
+        /// <param name="availability">Whether the path is available.</param>
+        private void OnPathAvailabilityChanged(string fullPath, PathAvailability availability)
+        {
+            BackgroundActionService.AddTask(() =>
+            {
+                // Directory became unavailable so pause the associated FileSystemWatcher and update the tree
+                if (availability == PathAvailability.unavailable)
+                {
+                    if (FileSystemWatchers.TryGetValue(fullPath, out var managedFsw))
+                    {
+                        managedFsw.Pause();
+
+                        HandleUnavailableDirectory(fullPath);
+                    }
+                }
+                // Directory became available so restart the associated FileSystemWatcher and update the tree
+                else if (availability == PathAvailability.available)
+                {
+                    if (FileSystemWatchers.TryGetValue(fullPath, out var managedFsw))
+                    {
+                        if (managedFsw.IsPaused)
+                        {
+                            managedFsw.Resume();
+
+                            HandleAvailableDirectory(fullPath);
+                        }
+                    }
+                }
+            });
+        }
+
+        private void FileSystemWatcher_OnError(object sender, ErrorEventArgs e)
+        {
+            var fsw = sender as FileSystemWatcher;
+            if (fsw == null)
+                return;
+
+            var directoryPath = fsw.Path;
+
+            // Likely means the directory is unavailable so find all affected files, mark their cache entries as unavailable, and update the tree
+            if (e.GetException() is IOException)
+            {
+                HandleUnavailableDirectory(directoryPath);
+            }
+        }
+
         public void StopWatching()
         {
             // It is a coding error if the caller does not cancel in-flight work before calling StopWatching
             Assume.IsTrue(CancellationToken.IsCancellationRequested);
 
-            if (FileSystemWatcher != null)
+            lock (_fswLock)
             {
-                FileSystemWatcher.Renamed -= FileSystemWatcher_OnRenamed;
-                FileSystemWatcher.Deleted -= FileSystemWatcher_OnDeleted;
-                FileSystemWatcher.Created -= FileSystemWatcher_OnCreated;
-                FileSystemWatcher.EnableRaisingEvents = false;
+                foreach (var kvPair in FileSystemWatchers)
+                {
+                    var watcher = kvPair.Value;
 
-                FileSystemWatcher.Dispose();
+                    watcher.Stop();
+                    watcher.Renamed -= FileSystemWatcher_OnRenamed;
+                    watcher.Deleted -= FileSystemWatcher_OnDeleted;
+                    watcher.Created -= FileSystemWatcher_OnCreated;
+                    watcher.Error -= FileSystemWatcher_OnError;
+                    watcher.Dispose();
+                }
 
-                FileSystemWatcher = null;
+                FileSystemWatchers?.Clear();
             }
+
+            HealthMonitor.Stop();
+            HealthMonitor.Dispose();
 
             Cache?.Clear();
         }
 
         public void Dispose()
         {
-            if (FileSystemWatcher != null)
+            StopWatching();
+
+            HealthMonitor?.Dispose();
+            HealthMonitor = null;
+
+            Cache?.Clear();
+        }
+
+        /// <summary>
+        /// Start a <see cref="ManagedFileSystemWatcher"/> for <see cref="directoryPath"/> and tracks the new watcher in <see cref="FileSystemWatchers"/>.
+        /// Does not start a new <see cref="ManagedFileSystemWatcher"/> if one is already running for the directory.
+        ///
+        /// Callers who want to monitor a directory containing a file should use <see cref="FileSystemUtil.GetDirectoryOrRoot"/> to get the directory
+        /// containing the file.
+        /// </summary>
+        /// <param name="directoryPath">The directory to watch.</param>
+        private void WatchDirectory(string directoryPath)
+        {
+            if (directoryPath == null || IsMonitoringDirectory(directoryPath))
             {
-                StopWatching();
+                return;
             }
+
+            var managedFsw = new ManagedFileSystemWatcher(directoryPath, SynchronizingObject);
+
+            managedFsw.Renamed += FileSystemWatcher_OnRenamed;
+            managedFsw.Deleted += FileSystemWatcher_OnDeleted;
+            managedFsw.Created += FileSystemWatcher_OnCreated;
+            managedFsw.Error   += FileSystemWatcher_OnError;
+
+            managedFsw.Start();
+
+            lock (_fswLock)
+            {
+                FileSystemWatchers[directoryPath] = managedFsw;
+            }
+
+            HealthMonitor.AddPath(directoryPath);
+        }
+
+        private void HandleUnavailableDirectory(string directoryPath) 
+        {
+            var cancellationToken = CancellationToken;
+
+            foreach (var cacheKey in Cache.Keys)
+            {
+                if (FileSystemUtil.IsFileInDirectory(directoryPath, cacheKey) && !File.Exists(cacheKey))
+                {
+                    Cache[cacheKey] = false;
+                }
+            }
+
+            BackgroundActionService.AddTask(() =>
+            {
+                if (!cancellationToken.IsCancellationRequested && FileDeletedAction != null)
+                {
+                    FileDeletedAction(directoryPath, cancellationToken);
+                }
+            });
+        }
+
+        private void HandleAvailableDirectory(string directoryPath)
+        {
+            var cancellationToken = CancellationToken;
+
+            foreach (var cacheKey in Cache.Keys)
+            {
+                if (FileSystemUtil.IsFileInDirectory(directoryPath, cacheKey) && File.Exists(cacheKey))
+                {
+                    Cache[cacheKey] = true;
+                }
+            }
+
+            BackgroundActionService.AddTask(() =>
+            {
+                if (!cancellationToken.IsCancellationRequested && FileCreatedAction != null)
+                {
+                    FileCreatedAction(directoryPath, cancellationToken);
+                }
+            });
         }
 
         private void FileSystemWatcher_OnDeleted(object sender, FileSystemEventArgs e)
@@ -284,21 +463,22 @@ namespace pwiz.Skyline.Controls.FilesTree
             if (IgnoreFileName(e.FullPath) || cancellationToken.IsCancellationRequested)
                 return;
 
-            var isDirectory = Directory.Exists(e.FullPath);
-
-            if (isDirectory)
+            // Cannot check whether the changed path was a directory (since it was deleted) so 
+            // start by looking for FullPath in the cache. If not found, check whether FullPath
+            // may have contained items in the cache.
+            if (Cache.ContainsKey(e.FullPath))
+            {
+                Cache[e.FullPath] = false;
+            }
+            else
             {
                 foreach (var cacheKey in Cache.Keys)
                 {
-                    if (IsInDirectory(e.FullPath, cacheKey) && !File.Exists(cacheKey))
+                    if (FileSystemUtil.IsFileInDirectory(e.FullPath, cacheKey) && !File.Exists(cacheKey))
                     {
                         Cache[cacheKey] = false;
                     }
                 }
-            }
-            else
-            {
-                Cache[e.FullPath] = false;
             }
 
             BackgroundActionService.AddTask(() =>
@@ -323,7 +503,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             {
                 foreach (var cacheKey in Cache.Keys)
                 {
-                    if (IsInDirectory(e.FullPath, cacheKey) && File.Exists(cacheKey))
+                    if (FileSystemUtil.IsFileInDirectory(e.FullPath, cacheKey) && File.Exists(cacheKey))
                     {
                         Cache[cacheKey] = true;
                     }
@@ -371,13 +551,13 @@ namespace pwiz.Skyline.Controls.FilesTree
             if (isDirectory)
             {
                 // files in the directory's old name no longer exist at the expected path
-                Cache.Keys.Where(item => IsInDirectory(e.OldFullPath, item)).ForEach(item => Cache[item] = false);
+                Cache.Keys.Where(item => FileSystemUtil.IsFileInDirectory(e.OldFullPath, item)).ForEach(item => Cache[item] = false);
 
                 // files in the directory's new name _might_ exist but could have already been marked missing so 
                 // do a real check whether the file exists
                 foreach (var cacheKey in Cache.Keys)
                 {
-                    if (IsInDirectory(e.FullPath, cacheKey) && File.Exists(cacheKey))
+                    if (FileSystemUtil.IsFileInDirectory(e.FullPath, cacheKey) && File.Exists(cacheKey))
                     {
                         Cache[cacheKey] = true;
                     }
@@ -430,15 +610,20 @@ namespace pwiz.Skyline.Controls.FilesTree
             //
             // (3) Otherwise, foo.txt does not exist
 
+            string path;
+
             // ReSharper disable once ConvertIfStatementToReturnStatement
+            // ReSharper disable once ConvertIfStatementToConditionalTernaryExpression
             if (File.Exists(filePath))
             {
-                return filePath;
+                path = filePath;
             }
             else
             {
-                return PathEx.FindExistingRelativeFile(documentPath, fileName);
+                path = PathEx.FindExistingRelativeFile(documentPath, fileName);
             }
+
+            return path;
         }
 
         // FileSystemWatcher events may reference files we should ignore. For example, .tmp or .bak files
@@ -451,19 +636,6 @@ namespace pwiz.Skyline.Controls.FilesTree
             var extension = Path.GetExtension(filePath);
 
             return FILE_EXTENSION_IGNORE_LIST.Contains(extension);
-        }
-
-        public static bool IsInDirectory(string directoryPath, string childPath)
-        {
-            var fullParentPath = Path.GetFullPath(directoryPath);
-            
-            if(!fullParentPath.EndsWith(Path.DirectorySeparatorChar.ToString()) && 
-               !fullParentPath.EndsWith(Path.AltDirectorySeparatorChar.ToString()))
-            {
-                fullParentPath += Path.DirectorySeparatorChar;
-            }
-
-            return childPath.StartsWith(fullParentPath, StringComparison.OrdinalIgnoreCase);
         }
     }
 }

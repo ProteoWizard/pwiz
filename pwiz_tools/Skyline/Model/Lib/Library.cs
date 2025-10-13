@@ -127,13 +127,16 @@ namespace pwiz.Skyline.Model.Lib
                     if (spec == null || dictLibraries.ContainsKey(spec.Name))
                         continue;
                     var library = LoadLibrary(container, spec);
+                    if (library != null)
+                    {
+                        dictLibraries.Add(spec.Name, library);
+                    }
                     if (library == null || !ReferenceEquals(document.Id, container.Document.Id))
                     {
                         // Loading was cancelled or document changed
                         EndProcessing(document);
                         return false;
                     }
-                    dictLibraries.Add(spec.Name, library);
                 }
 
                 var missingMidasFiles = MidasLibrary.GetMissingFiles(document, libraries.Libraries);
