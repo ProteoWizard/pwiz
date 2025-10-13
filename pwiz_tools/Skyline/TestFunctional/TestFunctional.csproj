@@ -162,7 +162,6 @@
     <Compile Include="AlertDlgTest.cs" />
     <Compile Include="AlignedIdTimesTest.cs" />
     <Compile Include="AlphabeticalReportEditorTest.cs" />
-    <Compile Include="AnnotationsPropertyGridTest.cs" />
     <Compile Include="ApplyPeakToAllTest.cs" />
     <Compile Include="AreaNormalizeOptionTest.cs" />
     <Compile Include="AssociateProteinsParsimonySettingsTest.cs" />

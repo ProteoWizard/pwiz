@@ -1,0 +1,124 @@
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline;
+using pwiz.Skyline.Model.DocSettings;
+using System;
+using System.ComponentModel;
+using System.Linq;
+
+namespace pwiz.SkylineTestUtil
+{
+    /// <summary>
+    /// Utility class for testing PropertyGrid functionality.
+    /// All functions must be called within a RunUI block.
+    /// </summary>
+    public class PropertyGridTestUtil
+    {
+        private const string STRING_ANNOTATION_NAME = "StringAnnotation";
+        private const string NUMBER_ANNOTATION_NAME = "NumberAnnotation";
+        private const string BOOL_ANNOTATION_NAME = "BoolAnnotation";
+        private const string LIST_ANNOTATION_NAME = "ListAnnotation";
+        private const string ANNOTATION_NAME_PREFIX = "annotation_";
+
+        public static void TestEditProperty(SkylineWindow skylineWindow, string propName, object newValue)
+        {
+            var selectedObject = skylineWindow.PropertyGridForm.GetPropertyObject();
+            Assert.IsNotNull(selectedObject);
+            var prop = TypeDescriptor.GetProperties(selectedObject, false)[propName];
+            prop.SetValue(selectedObject, newValue);
+
+            // Test if the change is applied to the document
+            var newSelectedObject = skylineWindow.PropertyGridForm.GetPropertyObject();
+            var newProp = TypeDescriptor.GetProperties(newSelectedObject, false)[propName];
+            Assert.AreEqual(newValue, newProp.GetValue(newSelectedObject));
+
+            // Test if the change is seen in the UI
+            var gridItem = skylineWindow.PropertyGridForm.GetGridItemByPropName(propName);
+            Assert.IsNotNull(gridItem);
+            Assert.AreEqual(newValue, gridItem.Value);
+        }
+
+        public static void TestAddAnnotations(SkylineWindow skylineWindow, AnnotationDef.AnnotationTarget target)
+        {
+            // Define four annotation definitions for replicates: string, number, bool, value list
+            var annotationDefs = new[]
+            {
+                new AnnotationDef(
+                    STRING_ANNOTATION_NAME,
+                    AnnotationDef.AnnotationTargetSet.Singleton(target),
+                    AnnotationDef.AnnotationType.text,
+                    Array.Empty<string>()),
+
+                new AnnotationDef(
+                    NUMBER_ANNOTATION_NAME,
+                    AnnotationDef.AnnotationTargetSet.Singleton(target),
+                    AnnotationDef.AnnotationType.number,
+                    Array.Empty<string>()),
+
+                new AnnotationDef(
+                    BOOL_ANNOTATION_NAME,
+                    AnnotationDef.AnnotationTargetSet.Singleton(target),
+                    AnnotationDef.AnnotationType.true_false,
+                    Array.Empty<string>()),
+
+                new AnnotationDef(
+                    LIST_ANNOTATION_NAME,
+                    AnnotationDef.AnnotationTargetSet.Singleton(target),
+                    AnnotationDef.AnnotationType.value_list,
+                    new[] { "A", "B", "C" })
+            };
+
+            var doc = skylineWindow.Document;
+            var newSettings = doc.Settings.ChangeDataSettings(
+                doc.Settings.DataSettings.ChangeAnnotationDefs(annotationDefs));
+            skylineWindow.ModifyDocument($"Add {target.ToString()} annotation definitions", d => d.ChangeSettings(newSettings));
+
+            var defs = skylineWindow.Document.Settings.DataSettings.AnnotationDefs
+                .Where(def => def.AnnotationTargets.Contains(target)).ToList();
+            var defString = defs.FirstOrDefault(def => def.Name == STRING_ANNOTATION_NAME);
+            var defNumber = defs.FirstOrDefault(def => def.Name == NUMBER_ANNOTATION_NAME);
+            var defBool = defs.FirstOrDefault(def => def.Name == BOOL_ANNOTATION_NAME);
+            var defList = defs.FirstOrDefault(def => def.Name == LIST_ANNOTATION_NAME);
+
+            Assert.IsNotNull(defString);
+            Assert.IsNotNull(defNumber);
+            Assert.IsNotNull(defBool);
+            Assert.IsNotNull(defList);
+        }
+
+        // edit annotations of currently selected property object and test if the changes are applied to the document
+        // assumes the annotation definitions already exist, e.g. by calling TestAddAnnotations
+        public static void TestEditAnnotations(SkylineWindow skylineWindow)
+        {
+            const string stringEditedValue = "EditedString";
+            const double numberEditedValue = 123.45;
+            const bool boolEditedValue = false;
+            const string listEditedValue = "C";
+
+            var defs = skylineWindow.Document.Settings.DataSettings.AnnotationDefs;
+            var defString = defs.FirstOrDefault(def => def.Name == STRING_ANNOTATION_NAME);
+            var defNumber = defs.FirstOrDefault(def => def.Name == NUMBER_ANNOTATION_NAME);
+            var defBool = defs.FirstOrDefault(def => def.Name == BOOL_ANNOTATION_NAME);
+            var defList = defs.FirstOrDefault(def => def.Name == LIST_ANNOTATION_NAME);
+
+            Assert.IsNotNull(defString);
+            Assert.IsNotNull(defNumber);
+            Assert.IsNotNull(defBool);
+            Assert.IsNotNull(defList);
+
+            // Edit annotation properties through the PropertyGrid
+            Assert.IsNotNull(skylineWindow.PropertyGridForm);
+            
+            TestEditProperty(skylineWindow,ANNOTATION_NAME_PREFIX + STRING_ANNOTATION_NAME, stringEditedValue);
+            TestEditProperty(skylineWindow, ANNOTATION_NAME_PREFIX + NUMBER_ANNOTATION_NAME, numberEditedValue);
+            TestEditProperty(skylineWindow, ANNOTATION_NAME_PREFIX + BOOL_ANNOTATION_NAME, boolEditedValue);
+            TestEditProperty(skylineWindow, ANNOTATION_NAME_PREFIX + LIST_ANNOTATION_NAME, listEditedValue);
+
+            // edits should change annotations of the selected object internally
+            var selectedObject = skylineWindow.PropertyGridForm.GetPropertyObject();
+            Assert.AreEqual(stringEditedValue, selectedObject.GetAnnotation(defString));
+            Assert.AreEqual(numberEditedValue, selectedObject.GetAnnotation(defNumber));
+            Assert.AreEqual(boolEditedValue, selectedObject.GetAnnotation(defBool));
+            Assert.AreEqual(listEditedValue, selectedObject.GetAnnotation(defList));
+        }
+    }
+}

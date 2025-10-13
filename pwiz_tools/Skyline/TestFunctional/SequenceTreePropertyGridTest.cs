@@ -17,11 +17,13 @@
  * limitations under the License.
  */
 
-using System.ComponentModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.SkylineTestUtil;
+using System.ComponentModel;
 using Peptide = pwiz.Skyline.Model.Databinding.Entities.Peptide;
 
 namespace pwiz.SkylineTestFunctional
@@ -29,6 +31,10 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class SequenceTreePropertyGridTest : AbstractFunctionalTest
     {
+        private const int PEPTIDE_EXPECTED_PROP_NUM = 14;
+        private const string SEQUENCE_PROP_NAME = "Sequence";
+        private const string NOTE_PROP_NAME = "Note";
+
         [TestMethod]
         public void TestSequenceTreePropertyGrid()
         {
@@ -40,17 +46,13 @@ namespace pwiz.SkylineTestFunctional
         {
             VerifySetup();
 
-            TestCurrentSelection();
+            TestSelectedNodeProperties();
 
-            TestChangeSelection();
+            TestAnnotationProperties();
 
             TestEditProperty();
 
-            // Destroy the property form to avoid test freezing
-            RunUI(() =>
-            {
-                SkylineWindow.DestroyPropertyGridForm();
-            });
+            CloseForms();
         }
 
         private void VerifySetup()
@@ -71,32 +73,68 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(() => SkylineWindow.PropertyGridFormIsVisible);
         }
 
-        private static void TestCurrentSelection()
+        private static void TestSelectedNodeProperties()
         {
+            // Get selected node and ensure it is a peptide
             DocNode selectedDocNode = null;
             RunUI(() =>
             {
                 selectedDocNode = ((SrmTreeNode)SkylineWindow.SequenceTree.SelectedNode).Model;
             });
             Assert.IsTrue(selectedDocNode is PeptideDocNode);
+            var selectedObject = SkylineWindow.PropertyGridForm.GetPropertyObject();
+            Assert.IsTrue(selectedObject is Peptide);
+            var props = TypeDescriptor.GetProperties(selectedObject);
 
-            var propertyGrid = SkylineWindow.PropertyGridForm;
-            Assert.IsTrue(propertyGrid.GetPropertyObject() is Peptide);
+            // Check that sequence property matches value in selected node
+            Assert.AreEqual(((PeptideDocNode)selectedDocNode).Peptide.Sequence, props[SEQUENCE_PROP_NAME].GetValue(selectedObject));
 
-            var props = TypeDescriptor.GetProperties(propertyGrid.GetPropertyObject());
-            Assert.AreEqual(((PeptideDocNode)selectedDocNode).Peptide.Sequence, props["Sequence"]);
+            // smoke test check total number of properties
+            Assert.AreEqual(PEPTIDE_EXPECTED_PROP_NUM, props.Count);
 
-
+            // Test localization of property grid property display names
+            var nameProp = props[SEQUENCE_PROP_NAME];
+            Assert.IsNotNull(nameProp);
+            Assert.AreEqual(nameProp.Name, SEQUENCE_PROP_NAME);
+            Assert.AreEqual(selectedObject.GetResourceManager().GetString(nameProp.Name), nameProp.DisplayName);
         }
 
-        private static void TestChangeSelection()
+        private static void TestAnnotationProperties()
         {
+            // Add annotation definitions for peptides
+            RunUI(() => { PropertyGridTestUtil.TestAddAnnotations(SkylineWindow, AnnotationDef.AnnotationTarget.peptide); });
 
+            // Get selected node and ensure it is a peptide
+            var selectedObject = SkylineWindow.PropertyGridForm.GetPropertyObject();
+            Assert.IsTrue(selectedObject is Peptide);
+
+            // Test if sum of original properties and new annotation definition properties appear
+            var props = TypeDescriptor.GetProperties(selectedObject, false);
+            Assert.AreEqual(PEPTIDE_EXPECTED_PROP_NUM + SkylineWindow.Document.Settings.DataSettings.AnnotationDefs.Count, props.Count);
+
+            // Test editing the annotation properties
+            RunUI(() => { PropertyGridTestUtil.TestEditAnnotations(SkylineWindow); });
         }
 
         private static void TestEditProperty()
         {
+            // Get selected node and ensure it is a peptide
+            var selectedObject = SkylineWindow.PropertyGridForm.GetPropertyObject();
+            Assert.IsTrue(selectedObject is Peptide);
 
+            // Edit the Name property and verify the change was made on the object and UI
+            RunUI(() => { PropertyGridTestUtil.TestEditProperty(SkylineWindow, NOTE_PROP_NAME, "EditedNote"); });
+        }
+
+        private static void CloseForms()
+        {
+            var sequenceTreeForm = FindOpenForm<SequenceTreeForm>();
+            Assert.IsNotNull(sequenceTreeForm);
+            OkDialog(sequenceTreeForm, sequenceTreeForm.Close);
+
+            var propertyGridForm = FindOpenForm<PropertyGridForm>();
+            Assert.IsNotNull(propertyGridForm);
+            OkDialog(propertyGridForm, propertyGridForm.Close);
         }
     }
 }

@@ -18,28 +18,19 @@
  */
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Files;
 using pwiz.SkylineTestUtil;
-using System;
 using System.ComponentModel;
-using System.Linq;
-using System.Windows.Forms;
-using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.FilesTree;
 
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
     public class FilesTreePropertyGridTest : AbstractFunctionalTest
     {
-        // Both 10, but have different props summing to that
-        internal const int REP_FILE_PROP_NUM = 5;
-
-        private const string STRING_ANNOTATION_NAME = "StringAnnotation";
-        private const string NUMBER_ANNOTATION_NAME = "NumberAnnotation";
-        private const string BOOL_ANNOTATION_NAME = "BoolAnnotation";
-        private const string LIST_ANNOTATION_NAME = "ListAnnotation";
-        private const string ANNOTATION_NAME_PREFIX = "annotation_";
+        internal const int REPLICATE_EXPECTED_PROP_NUM = 5;
         private const string NAME_PROP_NAME = "Name";
 
         [TestMethod]
@@ -54,16 +45,13 @@ namespace pwiz.SkylineTestFunctional
         {
             VerifySetup();
 
-            TestSelectedFileNodeProperties();
+            TestSelectedNodeProperties();
 
             TestAnnotationProperties();
 
-            TestEditProperties();
+            TestEditProperty();
 
-            TestEditPropertiesUI();
-            var propertyGridForm = FindOpenForm<PropertyGridForm>();
-            Assert.IsNotNull(propertyGridForm);
-            OkDialog(propertyGridForm, propertyGridForm.Close);
+            CloseForms();
         }
 
         private void VerifySetup()
@@ -82,25 +70,23 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(() => SkylineWindow.PropertyGridFormIsVisible);
         }
 
-        private static void TestSelectedFileNodeProperties()
+        private static void TestSelectedNodeProperties()
         {
             // test selecting a replicate node
             var replicateFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
             var replicateNode = SkylineWindow.FilesTree.File<Replicate>(replicateFolder);
             Assert.IsNotNull(replicateNode);
-
             RunUI(() =>
             {
                 SkylineWindow.FilesTreeForm.FilesTree.SelectNodeWithoutResettingSelection(replicateNode);
                 SkylineWindow.FocusPropertyProvider(SkylineWindow.FilesTreeForm);
             });
-
             var selectedObject = SkylineWindow.PropertyGridForm?.GetPropertyObject();
             Assert.IsNotNull(selectedObject);
 
+            // smoke test check total number of properties
             var props = TypeDescriptor.GetProperties(selectedObject, false);
-            // only non-null properties end up in the property sheet
-            Assert.AreEqual(REP_FILE_PROP_NUM, props.Count);
+            Assert.AreEqual(REPLICATE_EXPECTED_PROP_NUM, props.Count);
 
             // test globalizedPropertyDescriptor property for localization
             var nameProp = props[NAME_PROP_NAME];
@@ -111,185 +97,30 @@ namespace pwiz.SkylineTestFunctional
 
         private static void TestAnnotationProperties()
         {
+            // Add annotation definitions for replicates
+            RunUI(() => { PropertyGridTestUtil.TestAddAnnotations(SkylineWindow, AnnotationDef.AnnotationTarget.replicate); });
+
+            // Select replicate node
             var replicateFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
             var replicateNode = SkylineWindow.FilesTree.File<Replicate>(replicateFolder);
             Assert.IsNotNull(replicateNode);
-
-            // Add annotation definitions for replicates
-            AddAnnotations((Replicate)replicateNode.Model);
-
-            // Re-select the replicate node to verify that the new annotation properties appear
-            replicateNode = SkylineWindow.FilesTree.File<Replicate>(replicateFolder);
-            Assert.IsNotNull(replicateNode);
-
             RunUI(() =>
             {
                 SkylineWindow.FilesTreeForm.FilesTree.SelectNodeWithoutResettingSelection(replicateNode);
                 SkylineWindow.FocusPropertyProvider(SkylineWindow.FilesTreeForm);
             });
-
             var selectedObject = SkylineWindow.PropertyGridForm?.GetPropertyObject();
             Assert.IsNotNull(selectedObject);
-
-            var props = TypeDescriptor.GetProperties(selectedObject, false);
-            // Test if sum of original properties and new annotation definition properties appear
-            Assert.AreEqual(REP_FILE_PROP_NUM + SkylineWindow.Document.Settings.DataSettings.AnnotationDefs.Count, props.Count);
-        }
-
-        private static void AddAnnotations(Replicate replicate)
-        {
-            const string stringAnnotationValue = "TestValue";
-            const double numberAnnotationValue = 42;
-            const bool boolAnnotationValue = true;
-            const string listAnnotationValue = "B";
-
-            // Define four annotation definitions for replicates: string, number, bool, value list
-            var replicateAnnotationDefs = new[]
-            {
-                new AnnotationDef(
-                    STRING_ANNOTATION_NAME,
-                    AnnotationDef.AnnotationTargetSet.Singleton(
-                        AnnotationDef.AnnotationTarget.replicate),
-                    AnnotationDef.AnnotationType.text,
-                    Array.Empty<string>()),
-
-                new AnnotationDef(
-                    NUMBER_ANNOTATION_NAME,
-                    AnnotationDef.AnnotationTargetSet.Singleton(
-                        AnnotationDef.AnnotationTarget.replicate),
-                    AnnotationDef.AnnotationType.number,
-                    Array.Empty<string>()),
-
-                new AnnotationDef(
-                    BOOL_ANNOTATION_NAME,
-                    AnnotationDef.AnnotationTargetSet.Singleton(
-                        AnnotationDef.AnnotationTarget.replicate),
-                    AnnotationDef.AnnotationType.true_false,
-                    Array.Empty<string>()),
-
-                new AnnotationDef(
-                    LIST_ANNOTATION_NAME,
-                    AnnotationDef.AnnotationTargetSet.Singleton(
-                        AnnotationDef.AnnotationTarget.replicate),
-                    AnnotationDef.AnnotationType.value_list,
-                    new[] { "A", "B", "C" })
-            };
-
-            // Add annotation definitions to the document
-            RunUI(() =>
-            {
-                var doc = SkylineWindow.Document;
-                var newSettings = doc.Settings.ChangeDataSettings(
-                    doc.Settings.DataSettings.ChangeAnnotationDefs(replicateAnnotationDefs));
-                SkylineWindow.ModifyDocument("Add replicate annotation definitions", d => d.ChangeSettings(newSettings));
-            });
-
-            var defs = SkylineWindow.Document.Settings.DataSettings.AnnotationDefs;
-            var defString = defs.FirstOrDefault(def => def.Name == STRING_ANNOTATION_NAME);
-            var defNumber = defs.FirstOrDefault(def => def.Name == NUMBER_ANNOTATION_NAME);
-            var defBool = defs.FirstOrDefault(def => def.Name == BOOL_ANNOTATION_NAME);
-            var defList = defs.FirstOrDefault(def => def.Name == LIST_ANNOTATION_NAME);
-
-            Assert.IsNotNull(defString);
-            Assert.IsNotNull(defNumber);
-            Assert.IsNotNull(defBool);
-            Assert.IsNotNull(defList);
-
-            // Apply annotation values to the first replicate using Replicate.EditAnnotation
-            RunUI(() =>
-            {
-                using var monitor = new SrmSettingsChangeMonitor(null, "Edit replicate annotations", SkylineWindow);
-
-                var newDoc = Replicate.EditAnnotation(SkylineWindow.Document, monitor, replicate, defString, stringAnnotationValue);
-                newDoc = Replicate.EditAnnotation(newDoc.Document, monitor, replicate, defNumber, numberAnnotationValue);
-                newDoc = Replicate.EditAnnotation(newDoc.Document, monitor, replicate, defBool, boolAnnotationValue);
-                newDoc = Replicate.EditAnnotation(newDoc.Document, monitor, replicate, defList, listAnnotationValue);
-
-                SkylineWindow.ModifyDocument("Set replicate annotation values", _ => newDoc.Document);
-
-                SkylineWindow.SaveDocument();
-            });
-
-            // Verify that the annotation values were applied correctly to document
-            var doc = SkylineWindow.Document;
-            var chromSet = doc.MeasuredResults.Chromatograms[0];
-            var annotations = chromSet.Annotations;
-            Assert.AreEqual(stringAnnotationValue, annotations.GetAnnotation(defString));
-            Assert.AreEqual(numberAnnotationValue, annotations.GetAnnotation(defNumber));
-            Assert.AreEqual(boolAnnotationValue, annotations.GetAnnotation(defBool));
-            Assert.AreEqual(listAnnotationValue, annotations.GetAnnotation(defList));
-        }
-
-        private static void TestEditProperties()
-        {
-            const string stringEditedValue = "EditedString";
-            const double numberEditedValue = 123.45;
-            const bool boolEditedValue = false;
-            const string listEditedValue = "C";
-
-            var replicateFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
-            var replicateNode = SkylineWindow.FilesTree.File<Replicate>(replicateFolder);
-            Assert.IsNotNull(replicateNode);
-
-            // Select the replicate node so its properties appear in the property sheet
-            RunUI(() =>
-            {
-                SkylineWindow.ShowPropertyGridForm(true);
-                SkylineWindow.FilesTreeForm.FilesTree.SelectNodeWithoutResettingSelection(replicateNode);
-                SkylineWindow.FocusPropertyProvider(SkylineWindow.FilesTreeForm);
-            });
-
-            var defs = SkylineWindow.Document.Settings.DataSettings.AnnotationDefs;
-            var defString = defs.FirstOrDefault(def => def.Name == STRING_ANNOTATION_NAME);
-            var defNumber = defs.FirstOrDefault(def => def.Name == NUMBER_ANNOTATION_NAME);
-            var defBool = defs.FirstOrDefault(def => def.Name == BOOL_ANNOTATION_NAME);
-            var defList = defs.FirstOrDefault(def => def.Name == LIST_ANNOTATION_NAME);
-
-            Assert.IsNotNull(defString);
-            Assert.IsNotNull(defNumber);
-            Assert.IsNotNull(defBool);
-            Assert.IsNotNull(defList);
-
-            // Edit annotation properties through the PropertyGrid
-            Assert.IsNotNull(SkylineWindow.PropertyGridForm);
-
-            var selectedObject = SkylineWindow.PropertyGridForm.GetPropertyObject();
-            Assert.IsNotNull(selectedObject);
-            var replicateStringProp = TypeDescriptor.GetProperties(selectedObject, false)[ANNOTATION_NAME_PREFIX + STRING_ANNOTATION_NAME];
-            RunUI(() =>
-            {
-                replicateStringProp?.SetValue(selectedObject, stringEditedValue);
-            });
-            selectedObject = SkylineWindow.PropertyGridForm.GetPropertyObject();
-            var replicateNumberProp = TypeDescriptor.GetProperties(selectedObject, false)[ANNOTATION_NAME_PREFIX + NUMBER_ANNOTATION_NAME];
-            RunUI(() =>
-            {
-                replicateNumberProp?.SetValue(selectedObject, numberEditedValue);
-            });
-            selectedObject = SkylineWindow.PropertyGridForm.GetPropertyObject();
-            var replicateBoolProp = TypeDescriptor.GetProperties(selectedObject, false)[ANNOTATION_NAME_PREFIX + BOOL_ANNOTATION_NAME];
-            RunUI(() =>
-            {
-                replicateBoolProp?.SetValue(selectedObject, boolEditedValue);
-            });
-            selectedObject = SkylineWindow.PropertyGridForm.GetPropertyObject();
-            var replicateListProp = TypeDescriptor.GetProperties(selectedObject, false)[ANNOTATION_NAME_PREFIX + LIST_ANNOTATION_NAME];
-            RunUI(() =>
-            {
-                replicateListProp?.SetValue(selectedObject, listEditedValue);
-            });
-            var doc = SkylineWindow.Document;
-            var chromSetId = replicateNode.Model.IdentityPath.GetIdentity(0);
-            doc.MeasuredResults.TryGetChromatogramSet(chromSetId.GlobalIndex, out var chromSet, out var _);
-            var annotations = chromSet.Annotations;
-            Assert.AreEqual(stringEditedValue, annotations.GetAnnotation(defString));
-            Assert.AreEqual(numberEditedValue, annotations.GetAnnotation(defNumber));
-            Assert.AreEqual(boolEditedValue, annotations.GetAnnotation(defBool));
-            Assert.AreEqual(listEditedValue, annotations.GetAnnotation(defList));
             
+            // Test if sum of original properties and new annotation definition properties appear
+            var props = TypeDescriptor.GetProperties(selectedObject, false);
+            Assert.AreEqual(REPLICATE_EXPECTED_PROP_NUM + SkylineWindow.Document.Settings.DataSettings.AnnotationDefs.Count, props.Count);
+
+            // Test editing annotation properties
+            RunUI(() => { PropertyGridTestUtil.TestEditAnnotations(SkylineWindow); });
         }
 
-        private static void TestEditPropertiesUI()
+        private static void TestEditProperty()
         {
             var replicateFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
             var replicateNode = SkylineWindow.FilesTree.File<Replicate>(replicateFolder);
@@ -303,24 +134,19 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.FocusPropertyProvider(SkylineWindow.FilesTreeForm);
             });
 
-            // find griditem associate with Name property
-            var selectedObject = SkylineWindow.PropertyGridForm.GetPropertyObject();
-            var nameGridItem = SkylineWindow.PropertyGridForm.GetGridItemByPropName(NAME_PROP_NAME);
-            Assert.IsNotNull(nameGridItem);
-            var nameGridItemValue = nameGridItem.Value;
-            Assert.IsTrue(nameGridItemValue is string);
-            var nameValue = (string)nameGridItemValue;
-            Assert.AreEqual(replicateNode.Name, nameValue);
+            // Edit the Name property and verify the change was made on the object and UI
+            RunUI(() => { PropertyGridTestUtil.TestEditProperty(SkylineWindow, NAME_PROP_NAME, "EditedName"); });
+        }
 
-            // Edit the Name property through the PropertyGrid UI
-            const string newName = "EditedName";
-            RunUI(() =>
-            {
-                nameGridItem.PropertyDescriptor?.SetValue(selectedObject, newName);
-            });
-            nameGridItem = SkylineWindow.PropertyGridForm.GetGridItemByPropName(NAME_PROP_NAME);
-            Assert.IsNotNull(nameGridItem);
-            Assert.AreEqual(nameGridItem.Value, newName);
+        private static void CloseForms()
+        {
+            var filesTreeForm = FindOpenForm<FilesTreeForm>();
+            Assert.IsNotNull(filesTreeForm);
+            OkDialog(filesTreeForm, filesTreeForm.Close);
+
+            var propertyGridForm = FindOpenForm<PropertyGridForm>();
+            Assert.IsNotNull(propertyGridForm);
+            OkDialog(propertyGridForm, propertyGridForm.Close);
         }
     }
 }
