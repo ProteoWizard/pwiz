@@ -204,12 +204,10 @@ namespace pwiz.SkylineTestFunctional
         {
             var pythonInstaller = FormatPackageInstallerBothTypes(true, false, false, false);
             // Click OK to start download - will be canceled by test
-            RunDlg<MultiButtonMsgDlg>(pythonInstaller.OkDialog, installMsgDlg => installMsgDlg.OkDialog());
-            // pythonInstaller.Invoke((Action)pythonInstaller.OkDialog);
+            pythonInstaller.Invoke((Action)pythonInstaller.OkDialog);
             // Form should remain open after cancellation, allowing user to retry or cancel
             // User can now click OK again to retry, or Cancel to exit
-            OkDialog(pythonInstaller, pythonInstaller.CancelButton.PerformClick);
-            WaitForClosedForm(pythonInstaller);
+            OkDialog(pythonInstaller, () => Cancel(pythonInstaller));
         }
 
         // Test failing the package download
@@ -223,7 +221,7 @@ namespace pwiz.SkylineTestFunctional
                                                   TextUtil.LineSeparate(packages)), messageDlg.Message));
             OkDialog(messageDlg, messageDlg.OkDialog);
             // Form should remain open after error, allowing user to retry or cancel
-            OkDialog(pythonInstaller, pythonInstaller.CancelButton.PerformClick);
+            OkDialog(pythonInstaller, () => Cancel(pythonInstaller));
         }
 
         // Test that tool installation works properly when no packages are selected
@@ -397,7 +395,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => Assert.AreEqual(Resources.PythonInstaller_InstallPackages_Package_Installation_was_not_completed__Canceling_tool_installation_, messageDlg.Message));
             OkDialog(messageDlg, messageDlg.OkDialog);
             // Form should remain open after error, allowing user to retry or cancel
-            OkDialog(pythonInstaller, pythonInstaller.CancelButton.PerformClick);
+            OkDialog(pythonInstaller, () => Cancel(pythonInstaller));
         }
 
         // Test successfully installing packages from executables only

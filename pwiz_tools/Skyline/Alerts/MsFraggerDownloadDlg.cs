@@ -150,12 +150,20 @@ namespace pwiz.Skyline.Alerts
 
             string resultString = string.Empty;
             IProgressStatus status = new ProgressStatus(AlertsResources.MsFraggerDownloadDlg_RequestVerificationCode_Contacting_MS_Fragger_download_server);
-            downloadProgressDlg.PerformWork(this, 50, broker =>
+            try
             {
-                using var httpClient = new HttpClientWithProgress(broker, status);
-                var resultBytes = httpClient.UploadValues(VERIFY_URL, VERIFY_METHOD, postData);
-                resultString = Encoding.UTF8.GetString(resultBytes);
-            });
+                downloadProgressDlg.PerformWork(this, 50, broker =>
+                {
+                    using var httpClient = new HttpClientWithProgress(broker, status);
+                    var resultBytes = httpClient.UploadValues(VERIFY_URL, VERIFY_METHOD, postData);
+                    resultString = Encoding.UTF8.GetString(resultBytes);
+                });
+            }
+            catch (Exception ex)
+            {
+                ExceptionUtil.DisplayOrReportException(this, ex);
+                return string.Empty;
+            }
             return resultString;
         }
 
@@ -170,51 +178,62 @@ namespace pwiz.Skyline.Alerts
                 {
                     var msFraggerDownloadInfo = MsFraggerSearchEngine.MsFraggerDownloadInfo;
                     msFraggerDownloadInfo.DownloadUrl = DOWNLOAD_URL_FOR_FUNCTIONAL_TESTS;
-                    downloadProgressDlg.PerformWork(this, 50, pm => SimpleFileDownloader.DownloadRequiredFiles(new[] { msFraggerDownloadInfo }, pm));
+                    try
+                    {
+                        downloadProgressDlg.PerformWork(this, 50, pm => SimpleFileDownloader.DownloadRequiredFiles(new[] { msFraggerDownloadInfo }, pm));
+                    }
+                    catch (Exception ex)
+                    {
+                        ExceptionUtil.DisplayOrReportException(this, ex);
+                        return false;
+                    }
                     // If the user canceled the dialog, treat as cancellation
                     return !downloadProgressDlg.IsCanceled;
                 }
 
                 var status = new ProgressStatus(message);
-                var statusRet = downloadProgressDlg.PerformWork(this, 50, broker =>
+                try
                 {
-                    using var httpClient = new HttpClientWithProgress(broker, status);
-                    string downloadUrl = string.Format(DOWNLOAD_URL_WITH_TOKEN, tbVerificationCode.Text);
-                    var msFraggerZipBytes = httpClient.DownloadData(downloadUrl);
-
-                    // check if downloaded bytes are actually a zip file
-                    if (!ZipFile.IsZipFile(new MemoryStream(msFraggerZipBytes), false))
+                    var statusRet = downloadProgressDlg.PerformWork(this, 50, broker =>
                     {
-                        var resultString = Encoding.UTF8.GetString(msFraggerZipBytes);
-                            broker.UpdateProgress(new ProgressStatus().ChangeErrorException(
-                                new InvalidOperationException(string.Format(@"{0}{1}{1}{2}",
-                                    Resources.TestToolStoreClient_GetToolZipFile_Error_downloading_tool,
-                                    Environment.NewLine, resultString))));
-                        return;
-                    }
+                        using var httpClient = new HttpClientWithProgress(broker, status);
+                        string downloadUrl = string.Format(DOWNLOAD_URL_WITH_TOKEN, tbVerificationCode.Text);
+                        var msFraggerZipBytes = httpClient.DownloadData(downloadUrl);
 
-                    var installPath = MsFraggerSearchEngine.MsFraggerDirectory;
-                    var downloadFilename = Path.Combine(installPath, MsFraggerSearchEngine.MSFRAGGER_FILENAME + @".zip");
-                    using (var fileSaver = new FileSaver(downloadFilename))
-                    {
-                        File.WriteAllBytes(fileSaver.SafeName, msFraggerZipBytes);
-                        fileSaver.Commit();
-                    }
+                        // check if downloaded bytes are actually a zip file
+                        if (!ZipFile.IsZipFile(new MemoryStream(msFraggerZipBytes), false))
+                        {
+                            var resultString = Encoding.UTF8.GetString(msFraggerZipBytes);
+                                broker.UpdateProgress(new ProgressStatus().ChangeErrorException(
+                                    new InvalidOperationException(string.Format(@"{0}{1}{1}{2}",
+                                        Resources.TestToolStoreClient_GetToolZipFile_Error_downloading_tool,
+                                        Environment.NewLine, resultString))));
+                            return;
+                        }
 
-                    Directory.CreateDirectory(installPath);
-                    using (var zipFile = new ZipFile(downloadFilename))
-                    {
-                        zipFile.ExtractAll(installPath, ExtractExistingFileAction.OverwriteSilently);
-                    }
-                    FileEx.SafeDelete(downloadFilename);
-                });
+                        var installPath = MsFraggerSearchEngine.MsFraggerDirectory;
+                        var downloadFilename = Path.Combine(installPath, MsFraggerSearchEngine.MSFRAGGER_FILENAME + @".zip");
+                        using (var fileSaver = new FileSaver(downloadFilename))
+                        {
+                            File.WriteAllBytes(fileSaver.SafeName, msFraggerZipBytes);
+                            fileSaver.Commit();
+                        }
 
-                if (statusRet.IsError)
+                        Directory.CreateDirectory(installPath);
+                        using (var zipFile = new ZipFile(downloadFilename))
+                        {
+                            zipFile.ExtractAll(installPath, ExtractExistingFileAction.OverwriteSilently);
+                        }
+                        FileEx.SafeDelete(downloadFilename);
+                    });
+
+                    return !statusRet.IsCanceled;
+                }
+                catch (Exception ex)
                 {
-                    MessageDlg.Show(this, statusRet.ErrorException.Message);
+                    ExceptionUtil.DisplayOrReportException(this, ex);
                     return false;
                 }
-                return !statusRet.IsCanceled;
             }
         }
 
@@ -240,6 +259,12 @@ namespace pwiz.Skyline.Alerts
         public void ClickRequestVerificationCode()
         {
             var verificationResultHtml = RequestVerificationCode();
+            
+            // If RequestVerificationCode() returned empty string, it means there was an error
+            // and the error message was already shown to the user
+            if (string.IsNullOrEmpty(verificationResultHtml))
+                return;
+                
             lblVerificationCode.Enabled = tbVerificationCode.Enabled = true;
 
             const string errorClass = "alert-danger"; // CSS class indicating an error in the HTML, e.g. "Please use institutional email address"

@@ -221,14 +221,29 @@ All source files should include the standard header with copyright and license i
 
 ### CRITICAL: No async/await keywords
 - **DO NOT use `async`/`await` keywords** in C# code
-- Use `AsyncUtil.RunAsync()` and `CommonAsyncUtil.RunAsync()` for background operations
+- Use `ActionUtil.RunAsync()` for background operations in Skyline code
+- Use `CommonActionUtil.RunAsync()` only in Common/CommonUtil libraries (no Skyline dependencies)
 - Use `Control.Invoke()` and `Control.BeginInvoke()` to return to UI thread
 - See `DocumentationViewer.cs` for example implementation pattern
+
+### Choosing the right RunAsync
+**In Skyline code (`pwiz_tools/Skyline/`):**
+- **Use `ActionUtil.RunAsync()`** from `pwiz.Skyline.Util.Extensions`
+- Provides proper localization/translation support for resource strings
+- Required for code that accesses RESX files during background operations
+- Add `using pwiz.Skyline.Util.Extensions;`
+
+**In Common/CommonUtil libraries:**
+- **Use `CommonActionUtil.RunAsync()`** from `pwiz.Common.SystemUtil`
+- Cannot depend on Skyline-specific types
+- Add `using pwiz.Common.SystemUtil;`
+
+Note: These two implementations are not yet fully interchangeable. Prefer `ActionUtil` in Skyline code to ensure correct localization behavior during tests.
 
 ### Background operation pattern
 ```csharp
 // Background operation with UI callback
-CommonActionUtil.RunAsync(() =>
+ActionUtil.RunAsync(() =>
 {
     try
     {

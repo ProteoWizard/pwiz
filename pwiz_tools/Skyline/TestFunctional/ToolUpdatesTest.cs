@@ -20,11 +20,11 @@ using System;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
-using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
@@ -517,9 +517,9 @@ namespace pwiz.SkylineTestFunctional
             return _unpackZipTool.Invoke(pathToZip, unpackSupport);
         }
 
-        public string GetToolZipFile(ILongWaitBroker waitBroker, string packageIdentifier, string directory)
+        public string GetToolZipFile(IProgressMonitor progressMonitor, IProgressStatus progressStatus, string packageIdentifier, string directory)
         {
-            return _client.GetToolZipFile(waitBroker, packageIdentifier, directory);
+            return _client.GetToolZipFile(progressMonitor, progressStatus, packageIdentifier, directory);
         }
     }
 

@@ -2499,8 +2499,8 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   <data name="RefineDlg_RefineDlg_Products" xml:space="preserve">
     <value>プロダクト</value>
   </data>
-  <data name="ConfigureToolsDlg_GetZipFromWeb_Error_connecting_to_the_Tool_Store___0_" xml:space="preserve">
-    <value>ツールストアへの接続エラー：{0}</value>
+  <data name="ConfigureToolsDlg_GetZipFromWeb_Error_connecting_to_the_Tool_Store_" xml:space="preserve">
+    <value>ツールストアへの接続エラー：</value>
   </data>
   <data name="PeptideToMoleculeText_Molecule_Lists" xml:space="preserve">
     <value>分子リスト</value>

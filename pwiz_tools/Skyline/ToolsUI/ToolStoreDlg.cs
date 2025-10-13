@@ -18,21 +18,20 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Http.Headers;
-using System.Reflection;
 using System.Windows.Forms;
 using Ionic.Zip;
 using JetBrains.Annotations;
 using Newtonsoft.Json;
-using pwiz.Skyline.Alerts;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.ToolsUI
 {
@@ -162,23 +161,22 @@ namespace pwiz.Skyline.ToolsUI
             try
             {
                 string identifier = _tools[listBoxTools.SelectedIndex].Identifier;
+                var message = string.Format(ToolsUIResources.ToolStoreDlg_DownloadSelectedTool_Downloading__0_, _tools[listBoxTools.SelectedIndex].Name);
+                var progressStatus = new ProgressStatus(message);
+                IProgressStatus status;
                 using (var dlg = new LongWaitDlg())
                 {
-                    dlg.ProgressValue = 0;
-                    dlg.Message = string.Format(ToolsUIResources.ToolStoreDlg_DownloadSelectedTool_Downloading__0_, _tools[listBoxTools.SelectedIndex].Name);
-                    dlg.PerformWork(this, 500, progressMonitor => DownloadPath = _toolStoreClient.GetToolZipFile(progressMonitor, identifier, Path.GetTempPath()));
-                    if (!dlg.IsCanceled)
-                        DialogResult = DialogResult.OK;
+                    status = dlg.PerformWork(this, 500, progressMonitor =>
+                    {
+                        DownloadPath = _toolStoreClient.GetToolZipFile(progressMonitor, progressStatus, identifier, Path.GetTempPath());
+                    });
                 }
+                if (!status.IsCanceled)
+                    DialogResult = DialogResult.OK;
             }
-            catch (TargetInvocationException ex)
+            catch (Exception ex)
             {
-                if (ex.InnerException is ToolExecutionException || ex.InnerException is WebException)
-                    MessageDlg.ShowException(this, ex);
-                else
-                {
-                    throw;
-                }
+                ExceptionUtil.DisplayOrReportException(this, ex);
             }
         }
 
@@ -220,13 +218,16 @@ namespace pwiz.Skyline.ToolsUI
         IList<ToolStoreItem> GetToolStoreItems();
 
         /// <summary>
-        /// Downloads the tool zip file associated with the given packageIdentifer. In particular,
-        /// the function is required to support the ILongWaitBroker by making the download process asynchronous, and
-        /// listening for the waitBroker's cancellation. If the waitBroker is cancelled, this method must return
-        /// promptly.
+        /// Downloads the tool zip file associated with the given packageIdentifer.
+        /// Uses IProgressMonitor for progress reporting and cancellation support.
+        /// If the monitor is cancelled, this method must return promptly.
         /// </summary>
+        /// <param name="progressMonitor">Progress monitor for reporting download progress and handling cancellation</param>
+        /// <param name="progressStatus">Initial progress status with message to display during download</param>
+        /// <param name="packageIdentifier">Unique identifier for the tool package to download</param>
+        /// <param name="directory">Directory path where the downloaded zip file should be saved</param>
         /// <returns>The path to the downloaded zip tool, contained in the specified directory.</returns>
-        string GetToolZipFile(ILongWaitBroker waitBroker, string packageIdentifier, string directory);
+        string GetToolZipFile(IProgressMonitor progressMonitor, IProgressStatus progressStatus, string packageIdentifier, string directory);
         
         /// <summary>
         /// Returns true if the given package (identified by its version), has an update available. The
@@ -319,7 +320,7 @@ namespace pwiz.Skyline.ToolsUI
             return tools;
         }
 
-        public string GetToolZipFile(ILongWaitBroker waitBroker, string packageIdentifier, string directory)
+        public string GetToolZipFile(IProgressMonitor progressMonitor, IProgressStatus progressStatus, string packageIdentifier, string directory)
         {
             if (FailDownload)
                 throw new ToolExecutionException(Resources.TestToolStoreClient_GetToolZipFile_Error_downloading_tool);
@@ -380,39 +381,21 @@ namespace pwiz.Skyline.ToolsUI
             return JsonConvert.DeserializeObject<ToolStoreItem[]>(GetToolsJson());
         }
 
-        public string GetToolZipFile(ILongWaitBroker waitBroker, string packageIdentifier, string directory)
+        public string GetToolZipFile(IProgressMonitor progressMonitor, IProgressStatus progressStatus, string packageIdentifier, string directory)
         {
-            var webClient = new WebClient();
+            using var httpClient = new HttpClientWithProgress(progressMonitor, progressStatus);
             var uri = new UriBuilder(TOOL_STORE_URI)
             {
                 Path = DOWNLOAD_TOOL_URL,
                 Query = @"lsid=" + Uri.EscapeDataString(packageIdentifier)
             };
-            byte[] toolZip = webClient.DownloadData(uri.Uri.AbsoluteUri);
-            string contentDispositionString = webClient.ResponseHeaders.Get(@"Content-Disposition");
-            string downloadedFile = null;
-            ContentDispositionHeaderValue.TryParse(contentDispositionString, out var contentDispositionHeaderValue);
-            try
-            {
-                if (contentDispositionHeaderValue?.FileNameStar != null)
-                {
-                    downloadedFile = Path.Combine(directory, contentDispositionHeaderValue.FileNameStar);
-                }
-                else if (contentDispositionHeaderValue?.FileName != null)
-                {
-                    downloadedFile = Path.Combine(directory, contentDispositionHeaderValue.FileName);
-                }
-            }
-            catch (Exception)
-            {
-                // ignore
-            }
-
-            if (downloadedFile == null)
-            {
-                // Something went wrong trying to decide the filename. Fall back to using a temp file name.
-                downloadedFile = FileStreamManager.Default.GetTempFileName(directory, @"Sky");
-            }
+            
+            // Download the tool zip file with progress reporting and cancellation support
+            byte[] toolZip = httpClient.DownloadData(uri.Uri);
+            
+            // Use a temp filename since we can't get Content-Disposition without direct HttpClient access
+            // This is acceptable since the tool installation code extracts the zip and doesn't rely on the original filename
+            string downloadedFile = FileStreamManager.Default.GetTempFileName(directory, @"Sky");
             File.WriteAllBytes(downloadedFile, toolZip);
             return downloadedFile;
         }
@@ -432,8 +415,8 @@ namespace pwiz.Skyline.ToolsUI
 
         protected string GetToolsJson()
         {
-            WebClient webClient = new WebClient();
-            return webClient.DownloadString(TOOL_STORE_URI + GET_TOOLS_URL);
+            using var httpClient = new HttpClientWithProgress(new SilentProgressMonitor());
+            return httpClient.DownloadString(TOOL_STORE_URI + GET_TOOLS_URL);
         }
     }
 
@@ -519,9 +502,30 @@ namespace pwiz.Skyline.ToolsUI
             {
                 IconDownloading = true;
                 var iconUri = new Uri(WebToolStoreClient.TOOL_STORE_URI + iconUrl);
-                var webClient = new WebClient();
-                webClient.DownloadDataCompleted += DownloadIconDone;
-                webClient.DownloadDataAsync(iconUri);
+                
+                // Download icon asynchronously on background thread
+                ActionUtil.RunAsync(() =>
+                {
+                    try
+                    {
+                        using var httpClient = new HttpClientWithProgress(new SilentProgressMonitor());
+                        byte[] iconData = httpClient.DownloadData(iconUri.AbsoluteUri);
+                        
+                        using (MemoryStream ms = new MemoryStream(iconData))
+                        {
+                            ToolImage = Image.FromStream(ms);
+                        }
+                        IconDownloading = false;
+                        if (IconLoadComplete != null)
+                            IconLoadComplete();
+                    }
+                    catch (Exception exception)
+                    {
+                        IconDownloading = false;
+                        // Ignore but log to debug console in debug builds
+                        Debug.WriteLine($@"Failed to download tool icon: {exception.Message}");
+                    }
+                });
             }
             Installed = ToolStoreUtil.IsInstalled(identifier);
             IsMostRecentVersion = ToolStoreUtil.IsMostRecentVersion(identifier, version);
@@ -531,28 +535,6 @@ namespace pwiz.Skyline.ToolsUI
                     Query = @"name=" + Uri.EscapeDataString(name)
                 };
             FilePath = uri.Uri.AbsoluteUri;
-        }
-
-        protected void DownloadIconDone(object sender, DownloadDataCompletedEventArgs downloadDataCompletedEventArgs)
-        {
-            try
-            {
-                if (downloadDataCompletedEventArgs.Error != null || downloadDataCompletedEventArgs.Cancelled)
-                {
-                    return;
-                }
-                using (MemoryStream ms = new MemoryStream(downloadDataCompletedEventArgs.Result))
-                {
-                    ToolImage = Image.FromStream(ms);
-                }
-                IconDownloading = false;
-                if (IconLoadComplete != null)
-                    IconLoadComplete();
-            }
-            catch (Exception exception)
-            {
-                Program.ReportException(exception);
-            }
         }
     }
 

@@ -19,10 +19,10 @@
  */
 
 using System;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -43,7 +43,7 @@ namespace pwiz.SkylineTestUtil
             if (CancelDownload)
                 throw new OperationCanceledException();
             if (!DownloadSuccess)
-                throw new Exception(DOWNLOAD_FAILED_MESSAGE);
+                throw new UserMessageException(DOWNLOAD_FAILED_MESSAGE);
         }
 
         public void Dispose()
@@ -66,7 +66,7 @@ namespace pwiz.SkylineTestUtil
         {
             if (!UserOkRunAsAdministrator)
             {
-                throw new Win32Exception(Resources.TestSkylineProcessRunner_RunProcess_The_operation_was_canceled_by_the_user_);
+                throw new UserMessageException(Resources.TestSkylineProcessRunner_RunProcess_The_operation_was_canceled_by_the_user_);
             }
             if (!ConnectSuccess)
                 throw new IOException(Resources.TestNamedPipeProcessRunner_RunProcess_Error_running_process);

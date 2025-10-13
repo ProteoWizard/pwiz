@@ -28,6 +28,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -75,7 +76,7 @@ namespace pwiz.SkylineTestFunctional
                     FailToConnectMessage = errorMessage
                 };
             var messageDlg = ShowDialog<MessageDlg>(configureToolsDlg.AddFromWeb);
-            Assert.AreEqual(string.Format(Resources.ConfigureToolsDlg_GetZipFromWeb_Error_connecting_to_the_Tool_Store___0_, errorMessage), messageDlg.Message);
+            Assert.AreEqual(TextUtil.LineSeparate(Resources.ConfigureToolsDlg_GetZipFromWeb_Error_connecting_to_the_Tool_Store_, errorMessage), messageDlg.Message);
             OkDialog(messageDlg, messageDlg.OkDialog);
             OkDialog(configureToolsDlg, configureToolsDlg.OkDialog);
         }

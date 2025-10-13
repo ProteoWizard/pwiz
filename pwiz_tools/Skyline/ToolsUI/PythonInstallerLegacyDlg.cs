@@ -22,7 +22,6 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -161,7 +160,7 @@ namespace pwiz.Skyline.ToolsUI
             }
             catch (Exception ex)
             {
-                MessageDlg.ShowException(this, ex);
+                ExceptionUtil.DisplayOrReportException(this, ex);
                 return false; // Stay on form, allow retry
             }
         }
@@ -209,11 +208,14 @@ namespace pwiz.Skyline.ToolsUI
             try
             {
                 // download packages
+                IProgressStatus status;
                 using (var waitDlg = new LongWaitDlg())
                 {
                     waitDlg.ProgressValue = 0;
-                    waitDlg.PerformWork(this, 500, longWaitBroker => packagePaths = DownloadPackages(longWaitBroker, downloadablePackages));
+                    status = waitDlg.PerformWork(this, 500, longWaitBroker => packagePaths = DownloadPackages(longWaitBroker, downloadablePackages));
                 }
+                if (status.IsCanceled)
+                    return false;
 
                 // separate packages
                 ICollection<string> exePaths = new Collection<string>();
@@ -275,14 +277,10 @@ namespace pwiz.Skyline.ToolsUI
                 MessageDlg.Show(this, Resources.PythonInstaller_GetPackages_Package_installation_completed_); 
                 return true;
             }
-            catch (TargetInvocationException ex)
+            catch (Exception ex)
             {
-                if (ex.InnerException is ToolExecutionException)
-                {
-                    MessageDlg.ShowException(this, ex);
-                    return false;
-                }
-                throw;
+                ExceptionUtil.DisplayOrReportException(this, ex);
+                return false;
             }
         }
 
@@ -408,10 +406,13 @@ namespace pwiz.Skyline.ToolsUI
                 IProgressStatus status;
                 using (var dlg = new LongWaitDlg())
                 {
-                    dlg.ProgressValue = 0;
                     // Short wait, because this can't possible happen fast enough to avoid
                     // showing progress, except in testing
-                    status = dlg.PerformWork(this, 50, DownloadPip);
+                    status = dlg.PerformWork(this, 50, progressMonitor =>
+                    {
+                        progressMonitor.UpdateProgress(new ProgressStatus(ToolsResources.PythonInstaller_GetPythonTask_Downloading_the_get_pip_py_script));
+                        DownloadPip(progressMonitor);
+                    });
                 }
                 if (status.IsCanceled)
                     return false; // Stay on form, allow retry
@@ -424,7 +425,7 @@ namespace pwiz.Skyline.ToolsUI
             }
             catch (Exception ex)
             {
-                MessageDlg.ShowException(this, ex);
+                ExceptionUtil.DisplayOrReportException(this, ex);
                 return false; // Stay on form, allow retry
             }
             return true;

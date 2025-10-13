@@ -219,6 +219,7 @@
     <Compile Include="SystemUtil\CommonActionUtil.cs" />
     <Compile Include="SystemUtil\TreeViewStateRestorer.cs" />
     <Compile Include="SystemUtil\TryHelper.cs" />
+    <Compile Include="SystemUtil\UserMessageException.cs" />
     <Compile Include="SystemUtil\ValueCache.cs" />
     <Compile Include="Collections\ValueSet.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -267,7 +268,7 @@
     <EmbeddedResource Include="CommonResources\MessageResources.ja.resx">
       <DependentUpon>MessageResources.resx</DependentUpon>
       <SubType>Designer</SubType>
-    </EmbeddedResource>    
+    </EmbeddedResource>
     <EmbeddedResource Include="CommonResources\MessageResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>MessageResources.Designer.cs</LastGenOutput>
@@ -276,7 +277,7 @@
     <EmbeddedResource Include="CommonResources\MessageResources.zh-CHS.resx">
       <DependentUpon>MessageResources.resx</DependentUpon>
       <SubType>Designer</SubType>
-    </EmbeddedResource>    
+    </EmbeddedResource>
     <EmbeddedResource Include="GUI\GuiMessages.ja.resx">
       <DependentUpon>GuiMessages.resx</DependentUpon>
       <SubType>Designer</SubType>

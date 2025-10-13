@@ -21,9 +21,9 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Reflection;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Tools;
@@ -152,7 +152,18 @@ namespace pwiz.Skyline.ToolsUI
                 var individualDir = Directory.CreateDirectory(Path.Combine(ToolDir.FullName, tool._packageName));
                 try
                 {
-                    tool.FilePath = _updateHelper.GetToolZipFile(waitBroker, tool._packageIdentifer, individualDir.FullName);
+                    var message = string.Format(ToolsUIResources.ToolStoreDlg_DownloadSelectedTool_Downloading__0_, tool._packageName);
+                    var progressStatus = new ProgressStatus(message);
+                    waitBroker.ProgressValue = 0;
+                    waitBroker.Message = message;
+                    
+                    // Convert ILongWaitBroker to IProgressMonitor for the download
+                    var progressMonitor = new ProgressWaitBroker(pm =>
+                    {
+                        tool.FilePath = _updateHelper.GetToolZipFile(pm, progressStatus, tool._packageIdentifer, individualDir.FullName);
+                    });
+                    progressMonitor.PerformWork(waitBroker);
+                    
                     successfulDownloads.Add(tool);
                 }
                 catch (ToolExecutionException)
@@ -161,7 +172,8 @@ namespace pwiz.Skyline.ToolsUI
                 }
                 catch (TargetInvocationException ex)
                 {
-                    if (ex.InnerException is WebException)
+                    // HttpClientWithProgress throws IOException for network issues (not WebException)
+                    if (ex.InnerException is IOException)
                         failedDownloads.Add(tool._packageName);
                     else
                         throw;
@@ -348,7 +360,7 @@ namespace pwiz.Skyline.ToolsUI
     public interface IToolUpdateHelper
     {
         ToolInstaller.UnzipToolReturnAccumulator UnpackZipTool(string pathToZip, IUnpackZipToolSupport unpackSupport);
-        string GetToolZipFile(ILongWaitBroker waitBroker, string packageIdentifier, string directory);
+        string GetToolZipFile(IProgressMonitor progressMonitor, IProgressStatus progressStatus, string packageIdentifier, string directory);
     }
 
     public class ToolUpdateHelper : IToolUpdateHelper
@@ -358,10 +370,10 @@ namespace pwiz.Skyline.ToolsUI
             return ToolInstaller.UnpackZipTool(pathToZip, unpackSupport);
         }
 
-        public string GetToolZipFile(ILongWaitBroker waitBroker, string packageIdentifier, string directory)
+        public string GetToolZipFile(IProgressMonitor progressMonitor, IProgressStatus progressStatus, string packageIdentifier, string directory)
         {
             var client = ToolStoreUtil.CreateClient();
-            return client.GetToolZipFile(waitBroker, packageIdentifier, directory);
+            return client.GetToolZipFile(progressMonitor, progressStatus, packageIdentifier, directory);
         }
     }
 

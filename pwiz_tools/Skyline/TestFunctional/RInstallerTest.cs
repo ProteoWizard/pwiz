@@ -142,7 +142,7 @@ namespace pwiz.SkylineTestFunctional
             rInstaller.Invoke((Action) rInstaller.OkDialog);
             // Form should remain open after cancellation, allowing user to retry or cancel
             // User can now click OK again to retry, or Cancel to exit
-            OkDialog(rInstaller, rInstaller.CancelButton.PerformClick);
+            OkDialog(rInstaller, () => Cancel(rInstaller));
         }
 
         // Test R download success && install success
@@ -162,7 +162,7 @@ namespace pwiz.SkylineTestFunctional
             var messageDlg = ShowDialog<MessageDlg>(rInstaller.OkDialog);
             RunUI(() => Assert.AreEqual(Resources.RInstaller_InstallR_R_installation_was_not_completed__Cancelling_tool_installation_, messageDlg.Message));
             OkDialog(messageDlg, messageDlg.OkDialog);
-            WaitForClosedForm(rInstaller);
+            OkDialog(rInstaller, () => Cancel(rInstaller));
         }
 
         // Test R download failure
@@ -173,7 +173,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => Assert.AreEqual(TestAsynchronousDownloadClient.DOWNLOAD_FAILED_MESSAGE, messageDlg.Message));
             OkDialog(messageDlg, messageDlg.OkDialog);
             // Form should remain open after error, allowing user to retry or cancel
-            OkDialog(rInstaller, rInstaller.CancelButton.PerformClick);
+            OkDialog(rInstaller, () => Cancel(rInstaller));
         }
 
         // helper method for setting up the R installer form to support a number of possible installation outcomes
@@ -211,7 +211,7 @@ namespace pwiz.SkylineTestFunctional
                                                                   string.Empty,
                                                                   Resources.TestNamedPipeProcessRunner_RunProcess_Error_running_process), messageDlg.Message));
                 OkDialog(messageDlg, messageDlg.OkDialog);
-                WaitForClosedForm(rInstaller);
+                OkDialog(rInstaller, () => Cancel(rInstaller));
             }
         }
 
@@ -225,7 +225,7 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() => Assert.AreEqual(Resources.RInstaller_InstallPackages_Unknown_Error_installing_packages__Output_logged_to_the_Immediate_Window_, messageDlg.Message));
                 OkDialog(messageDlg, messageDlg.OkDialog);
                 Assert.IsTrue(textWriter.ToString().Contains(textToWrite));
-                WaitForClosedForm(rInstaller);
+                OkDialog(rInstaller, () => Cancel(rInstaller));
             }
         }
 
@@ -239,7 +239,7 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() => Assert.AreEqual(Resources.RInstaller_InstallPackages_Error__Package_installation_did_not_complete__Output_logged_to_the_Immediate_Window_, messageDlg.Message));
                 OkDialog(messageDlg, messageDlg.OkDialog);
                 Assert.IsTrue(textWriter.ToString().Contains(textToWrite));
-                WaitForClosedForm(rInstaller);
+                OkDialog(rInstaller, () => Cancel(rInstaller));
             }
         }
 
@@ -249,7 +249,7 @@ namespace pwiz.SkylineTestFunctional
             var messageDlg = ShowDialog<MessageDlg>(rInstaller.OkDialog);
             RunUI(() => Assert.AreEqual(Resources.TestSkylineProcessRunner_RunProcess_The_operation_was_canceled_by_the_user_, messageDlg.Message));
             OkDialog(messageDlg, messageDlg.OkDialog);
-            WaitForClosedForm(rInstaller);
+            OkDialog(rInstaller, () => Cancel(rInstaller));
         }
 
         // Test for package install failure
@@ -271,7 +271,7 @@ namespace pwiz.SkylineTestFunctional
             string outText = stringWriter.ToString();
             Assert.IsTrue(outText.Contains(errorText));
             OkDialog(messageDlg, messageDlg.OkDialog);
-            WaitForClosedForm(rInstaller);
+            OkDialog(rInstaller, () => Cancel(rInstaller));
         }
 
         // Test no internet connection.
@@ -284,7 +284,7 @@ namespace pwiz.SkylineTestFunctional
                     MessageResources.HttpClientWithProgress_MapHttpException_No_network_connection_detected__Please_check_your_internet_connection_and_try_again_),
                 messageDlg.Message));
             OkDialog(messageDlg, messageDlg.OkDialog);
-            WaitForClosedForm(rInstaller);
+            OkDialog(rInstaller, () => Cancel(rInstaller));
         }
 
         // Test package install success

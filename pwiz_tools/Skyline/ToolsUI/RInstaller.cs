@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
 using Microsoft.Win32;
@@ -38,7 +37,7 @@ namespace pwiz.Skyline.ToolsUI
     public partial class RInstaller : FormEx
     {
         private readonly string _version;
-        private readonly bool _installed;
+        private bool _installed;  // Not readonly - updated when R installation succeeds
         private readonly TextWriter _writer;
         private string PathToInstallScript { get; set; }
         private ICollection<ToolPackage> PackagesToInstall { get; set; }
@@ -118,11 +117,13 @@ namespace pwiz.Skyline.ToolsUI
 
             if ((_installed || GetR()) && (PackagesToInstall.Count == 0 || GetPackages()))
             {
+                // Installation succeeded - close the dialog
                 DialogResult = DialogResult.Yes;
             }
             else
             {
-                DialogResult = DialogResult.No;
+                // Installation failed or was canceled - re-enable the form so user can retry
+                Enabled = true;
             }
         }
 
@@ -133,11 +134,13 @@ namespace pwiz.Skyline.ToolsUI
                 IProgressStatus status;
                 using (var dlg = new LongWaitDlg())
                 {
-                    dlg.Message = ToolsUIResources.RInstaller_InstallR_Downloading_R;
-                    dlg.ProgressValue = 0;
                     // Short wait, because this can't possible happen fast enough to avoid
                     // showing progress, except in testing
-                    status = dlg.PerformWork(this, 50, DownloadR);
+                    status = dlg.PerformWork(this, 50, progressMonitor =>
+                    {
+                        progressMonitor.UpdateProgress(new ProgressStatus(ToolsUIResources.RInstaller_InstallR_Downloading_R));
+                        DownloadR(progressMonitor);
+                    });
                 }
                 if (status.IsCanceled)
                     return false; // Stay on form, allow retry
@@ -148,6 +151,9 @@ namespace pwiz.Skyline.ToolsUI
                     dlg.PerformWork(this, 50, InstallR);
                 }
                 MessageDlg.Show(this, Resources.RInstaller_GetR_R_installation_complete_);
+                
+                // Mark R as installed so we don't try to install it again on retry
+                _installed = true;
             }
             catch (Exception ex)
             {
@@ -216,16 +222,10 @@ namespace pwiz.Skyline.ToolsUI
                     dlg.PerformWork(this, 1000, InstallPackages);
                 }
             }
-            catch(TargetInvocationException ex)
+            catch (Exception ex)
             {
-                //Win32Exception is thrown when the user does not ok Administrative Privileges
-                if (ex.InnerException is ToolExecutionException || ex.InnerException is System.ComponentModel.Win32Exception) 
-                {
-                    MessageDlg.ShowException(this, ex);
-                    return false;
-                }
-                else
-                    throw;
+                ExceptionUtil.DisplayOrReportException(this, ex);
+                return false;
             }
             return true;
         }
@@ -494,10 +494,7 @@ namespace pwiz.Skyline.ToolsUI
             try
             {
                 using var httpClient = new HttpClientWithProgress(new SilentProgressMonitor());
-                var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Head, 
-                    @"https://" + INTERNET_CHECK_SITE);
-                var response = httpClient.HttpClient.SendAsync(request).Result;
-                return response.IsSuccessStatusCode;
+                return httpClient.Head(@"https://" + INTERNET_CHECK_SITE);
             }
             catch (Exception ex)
             {

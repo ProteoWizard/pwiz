@@ -24,7 +24,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading;
@@ -72,7 +71,8 @@ namespace pwiz.Common.SystemUtil
         }
 
         /// <summary>
-        /// Downloads a string from the specified URI with progress reporting and cancellation support.
+        /// Downloads a string from the specified URI with cancellation support.
+        /// For small responses only. Use DownloadData() for large files with progress reporting.
         /// </summary>
         public string DownloadString(string uri)
         {
@@ -80,13 +80,14 @@ namespace pwiz.Common.SystemUtil
         }
 
         /// <summary>
-        /// Downloads a string from the specified URI with progress reporting and cancellation support.
+        /// Downloads a string from the specified URI with cancellation support.
+        /// For small responses only. Use DownloadData() for large files with progress reporting.
         /// </summary>
         public string DownloadString(Uri uri)
         {
             var response = GetResponse(uri);
             response.EnsureSuccessStatusCode();
-            return response.Content.ReadAsStringAsync().Result;
+            return WithExceptionHandling(uri, () => response.Content.ReadAsStringAsync().Result);
         }
 
         /// <summary>
@@ -125,7 +126,28 @@ namespace pwiz.Common.SystemUtil
         }
 
         /// <summary>
+        /// Performs a HEAD request to the specified URI and returns true if successful.
+        /// Useful for checking if a resource exists without downloading the full content.
+        /// </summary>
+        public bool Head(string uri)
+        {
+            return Head(new Uri(uri));
+        }
+
+        /// <summary>
+        /// Performs a HEAD request to the specified URI and returns true if successful.
+        /// Useful for checking if a resource exists without downloading the full content.
+        /// </summary>
+        public bool Head(Uri uri)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Head, uri);
+            var response = SendRequest(request);
+            return response.IsSuccessStatusCode;
+        }
+
+        /// <summary>
         /// Uploads form data to the specified URI and returns the response as a string.
+        /// For small requests/responses only. Does not report progress on upload or download.
         /// </summary>
         public string UploadString(string uri, string method, string data)
         {
@@ -134,6 +156,7 @@ namespace pwiz.Common.SystemUtil
 
         /// <summary>
         /// Uploads form data to the specified URI and returns the response as a string.
+        /// For small requests/responses only. Does not report progress on upload or download.
         /// </summary>
         public string UploadString(Uri uri, string method, string data)
         {
@@ -142,11 +165,12 @@ namespace pwiz.Common.SystemUtil
 
             var response = SendRequest(request);
             response.EnsureSuccessStatusCode();
-            return response.Content.ReadAsStringAsync().Result;
+            return WithExceptionHandling(uri, () => response.Content.ReadAsStringAsync().Result);
         }
 
         /// <summary>
         /// Uploads form data to the specified URI and returns the response as byte array.
+        /// For small requests/responses only. Does not report progress on upload or download.
         /// </summary>
         public byte[] UploadValues(string uri, string method, NameValueCollection data)
         {
@@ -155,6 +179,7 @@ namespace pwiz.Common.SystemUtil
 
         /// <summary>
         /// Uploads form data to the specified URI and returns the response as byte array.
+        /// For small requests/responses only. Does not report progress on upload or download.
         /// </summary>
         public byte[] UploadValues(Uri uri, string method, NameValueCollection data)
         {
@@ -165,7 +190,21 @@ namespace pwiz.Common.SystemUtil
 
             var response = SendRequest(request);
             response.EnsureSuccessStatusCode();
-            return response.Content.ReadAsByteArrayAsync().Result;
+            return WithExceptionHandling(uri, () => response.Content.ReadAsByteArrayAsync().Result);
+        }
+
+        /// <summary>
+        /// Gets the cancellation token from the progress monitor, or None if no monitor is available.
+        /// </summary>
+        private CancellationToken CancellationToken
+        {
+            get
+            {
+                if (_progressMonitor is SilentProgressMonitor spm)
+                    return spm.CancellationToken;
+                // IProgressMonitor doesn't expose CancellationToken directly; use None and rely on IsCanceled checks
+                return CancellationToken.None;
+            }
         }
 
         /// <summary>
@@ -215,42 +254,12 @@ namespace pwiz.Common.SystemUtil
         }
 
         /// <summary>
-        /// Gets the underlying HttpClient for advanced usage.
-        /// </summary>
-        public HttpClient HttpClient => _httpClient;
-
-        /// <summary>
-        /// Gets the headers collection for the underlying HttpClient.
-        /// </summary>
-        public HttpRequestHeaders Headers => _httpClient.DefaultRequestHeaders;
-
-        /// <summary>
-        /// Gets the cancellation token from the progress monitor, or None if no monitor is available.
-        /// </summary>
-        private CancellationToken CancellationToken
-        {
-            get
-            {
-                if (_progressMonitor is SilentProgressMonitor spm)
-                    return spm.CancellationToken;
-                // IProgressMonitor doesn't expose CancellationToken directly; use None and rely on IsCanceled checks
-                return CancellationToken.None;
-            }
-        }
-
-        /// <summary>
         /// Gets a response from the specified URI with default completion option.
         /// </summary>
         private HttpResponseMessage GetResponse(Uri uri)
         {
-            try
-            {
-                return _httpClient.GetAsync(uri, CancellationToken).Result;
-            }
-            catch (Exception ex)
-            {
-                throw MapHttpException(ex, uri);
-            }
+            return WithExceptionHandling(uri,
+                () => _httpClient.GetAsync(uri, CancellationToken).Result);
         }
 
         /// <summary>
@@ -258,14 +267,8 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         private HttpResponseMessage GetResponseHeadersRead(Uri uri)
         {
-            try
-            {
-                return _httpClient.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead, CancellationToken).Result;
-            }
-            catch (Exception ex)
-            {
-                throw MapHttpException(ex, uri);
-            }
+            return WithExceptionHandling(uri,
+                () => _httpClient.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead, CancellationToken).Result);
         }
 
         /// <summary>
@@ -273,13 +276,24 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         private HttpResponseMessage SendRequest(HttpRequestMessage request)
         {
+            return WithExceptionHandling(request.RequestUri,
+                () => _httpClient.SendAsync(request, CancellationToken).Result);
+        }
+
+        public static Exception TestFailure;
+        
+        private TRet WithExceptionHandling<TRet>(Uri uri, Func<TRet> action)
+        {
             try
             {
-                return _httpClient.SendAsync(request, CancellationToken).Result;
+                if (TestFailure != null)
+                    throw TestFailure;
+                
+                return action();
             }
             catch (Exception ex)
             {
-                throw MapHttpException(ex, request.RequestUri);
+                throw MapHttpException(ex, uri);
             }
         }
 

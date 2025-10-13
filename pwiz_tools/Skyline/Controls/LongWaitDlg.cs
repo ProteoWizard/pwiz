@@ -199,7 +199,7 @@ namespace pwiz.Skyline.Controls
 
                 if (x != null)
                 {
-                    Helpers.WrapAndThrowException(x);
+                    ExceptionUtil.WrapAndThrowException(x);
                 }
             }
         }
@@ -280,18 +280,24 @@ namespace pwiz.Skyline.Controls
             if (!_cancellationTokenSource.IsCancellationRequested)
             {
                 var runningTime = DateTime.UtcNow.Subtract(_startTime);
-                // Show complete status before returning.
-                progressBar.Value = _progressValue = 100;
-                UpdateLabelMessage();
-                // Display the final complete status for one second, or 10% of the time the job ran for,
-                // whichever is shorter
-                int finalDelayTime = Math.Min(1000, (int) (runningTime.TotalMilliseconds/10));
-                if (finalDelayTime > 0)
+                
+                // Only show 100% progress if the operation completed successfully (no exception)
+                if (_exception == null)
                 {
-                    timerClose.Interval = finalDelayTime;
-                    timerClose.Enabled = true;
-                    return;
+                    // Show complete status before returning.
+                    progressBar.Value = _progressValue = 100;
+                    UpdateLabelMessage();
+                    // Display the final complete status for one second, or 10% of the time the job ran for,
+                    // whichever is shorter
+                    int finalDelayTime = Math.Min(1000, (int) (runningTime.TotalMilliseconds/10));
+                    if (finalDelayTime > 0)
+                    {
+                        timerClose.Interval = finalDelayTime;
+                        timerClose.Enabled = true;
+                        return;
+                    }
                 }
+                // If there was an exception, don't show 100% progress - just close immediately
             }
             Close();
         }
@@ -385,6 +391,5 @@ namespace pwiz.Skyline.Controls
                 _performWork();
             }
         }
-
     }
 }
