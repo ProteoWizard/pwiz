@@ -240,5 +240,10 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return document.ChangePeak(identityPath, resultFile.Replicate.Name,
                 resultFile.ChromFileInfo.FilePath, null, retentionTime, UserSet.TRUE);
         }
+
+        public PrecursorResult GetPrecursorResult()
+        {
+            return _precursorResult;
+        }
     }
 }
