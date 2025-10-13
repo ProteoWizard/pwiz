@@ -464,11 +464,20 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public static ViewInfo GetDefaultViewInfo(ColumnDescriptor columnDescriptor)
         {
-            var defaultReports = new DefaultReports(((SkylineDataSchema) columnDescriptor.DataSchema).Document);
-            ViewSpec viewSpec = new ViewSpec().SetRowType(columnDescriptor.PropertyType)
-                .SetColumns(defaultReports.GetDefaultColumns(columnDescriptor.PropertyType)
-                    .Select(pp => new ColumnSpec(pp)));
-            viewSpec = viewSpec.SetSublistId(GetReplicateSublist(columnDescriptor.PropertyType));
+            var builtInReports = new BuiltInReports(((SkylineDataSchema)columnDescriptor.DataSchema).Document);
+            var columns = builtInReports.GetDefaultColumns(columnDescriptor.PropertyType);
+            ViewSpec viewSpec;
+            if (columns == null)
+            {
+                viewSpec = GetDefaultViewSpec(columnDescriptor);
+            }
+            else
+            {
+                viewSpec = new ViewSpec().SetRowType(columnDescriptor.PropertyType)
+                    .SetColumns(columns.Select(pp => new ColumnSpec(pp)));
+                viewSpec = viewSpec.SetSublistId(GetReplicateSublist(columnDescriptor.PropertyType));
+            }
+
             return new ViewInfo(columnDescriptor, viewSpec).ChangeViewGroup(ViewGroup.BUILT_IN);
         }
 

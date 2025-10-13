@@ -19,24 +19,26 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Controls.Databinding
 {
-    public class DefaultReports
+    public class BuiltInReports
     {
-        public DefaultReports(Model.SrmDocument document)
+        public BuiltInReports(Model.SrmDocument document)
         {
             Document = document;
             HasCustomIons = document.CustomMolecules.Any();
-            HasOnlyCustomIons = HasCustomIons && document.Peptides.Any();
+            HasOnlyCustomIons = HasCustomIons && !document.Peptides.Any();
         }
         public Model.SrmDocument Document { get; }
         public bool HasCustomIons { get; }
         public bool HasOnlyCustomIons { get; }
 
+        [CanBeNull]
         public IEnumerable<PropertyPath> GetDefaultColumns(Type rowType)
         {
             AnnotationDef.AnnotationTarget? annotationTarget = null;
@@ -157,7 +159,7 @@ namespace pwiz.Skyline.Controls.Databinding
                         Property(nameof(Peptide.MoleculeFormula))
                     });
                 }
-
+                propertyPaths.Add(Property(nameof(Peptide.StandardType)));
                 if (!HasOnlyCustomIons)
                 {
                     propertyPaths.AddRange(new[]
@@ -167,7 +169,11 @@ namespace pwiz.Skyline.Controls.Databinding
                         Property(nameof(Peptide.MissedCleavages)),
                     });
                 }
-
+                propertyPaths.AddRange(new []
+                {
+                    Property(nameof(Peptide.PredictedRetentionTime)),
+                    Property(nameof(Peptide.AverageMeasuredRetentionTime))
+                });
                 if (HasCustomIons)
                 {
                     propertyPaths.AddRange(new[]
@@ -176,6 +182,7 @@ namespace pwiz.Skyline.Controls.Databinding
                         Property(nameof(Peptide.ExplicitRetentionTimeWindow))
                     });
                 }
+                propertyPaths.Add(Property(nameof(Peptide.Note)));
             }
             else if (rowType == typeof(Precursor))
             {
@@ -255,6 +262,10 @@ namespace pwiz.Skyline.Controls.Databinding
                     Property(nameof(Replicate.SampleType)),
                     Property(nameof(Replicate.AnalyteConcentration))
                 });
+            }
+            else
+            {
+                return null;
             }
 
             if (annotationTarget.HasValue)
