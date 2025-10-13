@@ -104,14 +104,14 @@ namespace pwiz.Skyline.Controls.GroupComparison
             var srmSettings = GroupComparisonModel.Document.Settings;
             var groupComparisonDef = GroupComparisonModel.GroupComparisonDef;
             var controlReplicateValue = groupComparisonDef.GetControlReplicateValue(srmSettings);
-            ReplaceComboItems(comboControlAnnotation, ListReplicateAnnotations(), controlReplicateValue);
+            var availableReplicateValues = ListReplicateAnnotations().ToList();
+            ReplaceComboItems(comboControlAnnotation, availableReplicateValues, controlReplicateValue);
             var controlValues = ListControlValues();
-            var controlGroupIdentifier = GroupIdentifier.MakeGroupIdentifier(controlReplicateValue?.ParsePersistedValue(groupComparisonDef.ControlValue));
+            var controlGroupIdentifier = groupComparisonDef.GetControlGroupIdentifier(controlReplicateValue);
             ReplaceComboItems(comboControlValue, controlValues, controlGroupIdentifier);
             var caseValues = controlValues.Except(new []{controlGroupIdentifier}).Prepend(GroupIdentifier.EMPTY).Distinct().ToList();
-            ReplaceComboItems(comboCaseValue, caseValues, GroupIdentifier.MakeGroupIdentifier(controlReplicateValue?.ParsePersistedValue(groupComparisonDef.CaseValue)));
-            ReplaceComboItems(comboIdentityAnnotation, new ReplicateValue[] { null }.Concat(ListReplicateAnnotations()),
-                groupComparisonDef.GetIdentityReplicateValue(srmSettings));
+            ReplaceComboItems(comboCaseValue, caseValues, groupComparisonDef.GetCaseGroupIdentifier(controlReplicateValue) ?? GroupIdentifier.EMPTY);
+            ReplaceComboItems(comboIdentityAnnotation, availableReplicateValues.Prepend(null), groupComparisonDef.GetIdentityReplicateValue(srmSettings));
             ReplaceComboItems(comboNormalizationMethod, ListNormalizeOptions(), MakeNormalizationItem(groupComparisonDef.NormalizationMethod));
             ReplaceComboItems(comboSummaryMethod, SummarizationMethod.ListSummarizationMethods(), groupComparisonDef.SummarizationMethod);
             tbxConfidenceLevel.Text = groupComparisonDef.ConfidenceLevelTimes100.ToString(CultureInfo.CurrentCulture);
@@ -447,6 +447,11 @@ namespace pwiz.Skyline.Controls.GroupComparison
             var itemObjects = items.Select(item => (object)item ?? string.Empty).ToList();
             var selectedObject = (object) selectedItem ?? string.Empty;
             int newSelectedIndex = itemObjects.IndexOf(selectedObject);
+            if (newSelectedIndex < 0 && !ReferenceEquals(selectedItem, null))
+            {
+                itemObjects.Insert(0, selectedItem);
+                newSelectedIndex = 0;
+            }
             if (newSelectedIndex == comboBox.SelectedIndex && itemObjects.SequenceEqual(comboBox.Items.Cast<object>()))
             {
                 return;

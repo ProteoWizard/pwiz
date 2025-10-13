@@ -63,6 +63,21 @@ namespace pwiz.Skyline.Model.GroupComparison
             }
             return ReplicateValue.FromPersistedString(settings, ControlAnnotation);
         }
+
+        public GroupIdentifier GetControlGroupIdentifier(ReplicateValue controlReplicateValue)
+        {
+            return GroupIdentifier.MakeGroupIdentifier(controlReplicateValue?.ParsePersistedValue(ControlValue));
+        }
+
+        public GroupIdentifier? GetCaseGroupIdentifier(ReplicateValue controlReplicateValue)
+        {
+            if (string.IsNullOrEmpty(CaseValue))
+            {
+                return null;
+            }
+            return GroupIdentifier.MakeGroupIdentifier(controlReplicateValue?.ParsePersistedValue(CaseValue));
+        }
+        
         public GroupComparisonDef ChangeControlAnnotation(string value)
         {
             return ChangeProp(ImClone(this), im => im.ControlAnnotation = value);
