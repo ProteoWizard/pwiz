@@ -41,6 +41,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public string ToPersistedString()
         {
+            if (PropertyPath.Parent.IsRoot)
+            {
+                return PropertyPath.Name;
+            }
             return PropertyPath.ToString();
         }
 

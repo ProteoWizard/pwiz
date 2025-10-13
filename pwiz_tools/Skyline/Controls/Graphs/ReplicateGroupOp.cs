@@ -70,7 +70,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             ReplicateValue replicateValue = null;
             string annotationName = Settings.Default.GroupByReplicateAnnotation;
-            if (null != annotationName)
+            if (!string.IsNullOrEmpty(annotationName))
             {
                 replicateValue = ReplicateValue.GetGroupableReplicateValues(document)
                     .FirstOrDefault(value => value.ToPersistedString() == annotationName);

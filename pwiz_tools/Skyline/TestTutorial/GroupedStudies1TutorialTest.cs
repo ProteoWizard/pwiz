@@ -1448,14 +1448,14 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 editGroupComparisonDlg.TextBoxName.Text = comparisonName;
-                SelectItem(editGroupComparisonDlg.ComboControlAnnotation, controlAnnotation);
+                SelectComboItem(editGroupComparisonDlg.ComboControlAnnotation, controlAnnotation);
             });
             WaitForConditionUI(2000, () => editGroupComparisonDlg.ComboControlValue.FindStringExact(controlValue) >= 0);
             RunUI(() =>
             {
-                SelectItem(editGroupComparisonDlg.ComboControlValue, controlValue);
-                SelectItem(editGroupComparisonDlg.ComboCaseValue, caseValue);
-                SelectItem(editGroupComparisonDlg.ComboIdentityAnnotation, identityAnnotation);
+                SelectComboItem(editGroupComparisonDlg.ComboControlValue, controlValue);
+                SelectComboItem(editGroupComparisonDlg.ComboCaseValue, caseValue);
+                SelectComboItem(editGroupComparisonDlg.ComboIdentityAnnotation, identityAnnotation);
                 editGroupComparisonDlg.NormalizeOption = NormalizeOption.GLOBAL_STANDARDS;
                 editGroupComparisonDlg.TextBoxConfidenceLevel.Text = 99.ToString(CultureInfo.CurrentCulture);
                 editGroupComparisonDlg.RadioScopePerProtein.Checked = true;
@@ -1577,9 +1577,9 @@ namespace pwiz.SkylineTestTutorial
 
             WaitForConditionUI(() => foldChangeGrid.DataboundGridControl.IsComplete);
             var settingsForm = ShowDialog<EditGroupComparisonDlg>(foldChangeGrid.ShowChangeSettings);
-            RunUI(() => SelectItem(settingsForm.ComboIdentityAnnotation, ""));
+            RunUI(() => SelectComboItem(settingsForm.ComboIdentityAnnotation, ""));
             WaitForConditionUI(() => 37 == foldChangeGrid.DataboundGridControl.RowCount);
-            RunUI(() => SelectItem(settingsForm.ComboIdentityAnnotation, "SubjectId"));
+            RunUI(() => SelectComboItem(settingsForm.ComboIdentityAnnotation, "SubjectId"));
             RunUI(() =>
             {
                 string folderName = Path.GetDirectoryName(SkylineWindow.DocumentFilePath);
@@ -1724,13 +1724,6 @@ namespace pwiz.SkylineTestTutorial
             Assert.AreEqual(24, expected.Length);
             return AllReplicates.Zip(expected, (name, expect) => new {name, expect})
                 .ToDictionary(x => x.name, x => x.expect);
-        }
-
-        private void SelectItem(ComboBox comboBox, string value)
-        {
-            int index = comboBox.FindStringExact(value);
-            Assert.AreNotEqual(-1, index);
-            comboBox.SelectedIndex = index;;
         }
     }
 }
