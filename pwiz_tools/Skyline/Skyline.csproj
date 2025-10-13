@@ -204,6 +204,7 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Controls\Databinding\DefaultReports.cs" />
     <Compile Include="Menus\KeyboardShortcutDocumentation.cs" />
   </ItemGroup>
   <ItemGroup>
