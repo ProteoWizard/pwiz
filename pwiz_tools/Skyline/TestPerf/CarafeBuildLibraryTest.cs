@@ -144,8 +144,8 @@ namespace TestPerf
         }
         private void LongTest() 
         {
-            DirectoryEx.SafeDelete(TestContext.GetTestPath(@"TestCarafeBuildLibrary\"));
-            Directory.CreateDirectory(TestContext.GetTestPath(@"TestCarafeBuildLibrary\"));
+            // DirectoryEx.SafeDelete(TestContext.GetTestPath(@"TestCarafeBuildLibrary\"));
+            Directory.CreateDirectory(TestFilesDir.GetTestPath(@"TestCarafeBuildLibrary\"));
 
             OpenDocument(TestFilesDir.GetTestPath(SkyTestFile));
 
@@ -165,6 +165,8 @@ namespace TestPerf
             if (_testLibraries.Contains(TestLibrary.LibraryTunedBySkylineIrt))
             {
                 builtLibraryBySkyIrt = CarafeBuildLibrary(TestLibrary.LibraryTunedBySkylineIrt, MzMLFile, "", SkyFineTuneFile, BuildLibraryDlg.BuildLibraryTargetOptions.currentSkylineDocument, BuildLibraryDlg.LearningOptions.another_doc, TestFilesDir.GetTestPath(@"cpu_test_res_fine_tuned_bySky_iRT.blib"), PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD, IrtStandard.BIOGNOSYS_11);
+                var addRtStdDlg = WaitForOpenForm<AddIrtStandardsToDocumentDlg>();
+                OkDialog(addRtStdDlg, addRtStdDlg.CancelDialog);
             }
 
             var fileHash = PythonInstallerUtil.GetMD5FileHash(PythonInstaller.PythonEmbeddablePackageDownloadPath);
@@ -172,9 +174,6 @@ namespace TestPerf
             if (IsRecordMode)
                 Console.WriteLine($@"Computed PythonEmbeddableHash: {fileHash}");
             Assert.AreEqual(Settings.Default.PythonEmbeddableHash, fileHash);
-
-            var addRtStdDlg = WaitForOpenForm<AddIrtStandardsToDocumentDlg>();
-            OkDialog(addRtStdDlg, addRtStdDlg.CancelDialog);
 
             var spectralLibraryViewer = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
             RunUI(() =>
@@ -254,7 +253,7 @@ namespace TestPerf
             RunUI(() =>
             {
                 buildLibraryDlg.LibraryName = "Carafe" + testLibrary;
-                buildLibraryDlg.LibraryPath = TestFilesDir.GetTestPath(TestContext.GetTestPath(@"TestCarafeBuildLibrary" + testLibrary + ".blib"));
+                buildLibraryDlg.LibraryPath = TestFilesDir.GetTestPath(@"TestCarafeBuildLibrary\" + testLibrary + ".blib");
                 buildLibraryDlg.ComboBuildLibraryTarget = buildTarget;
                 buildLibraryDlg.ComboLearnFrom = learnFrom;
                 buildLibraryDlg.Carafe = true;
@@ -310,7 +309,6 @@ namespace TestPerf
                 var addRtPredDlg = WaitForOpenForm<AddRetentionTimePredictorDlg>();
                 OkDialog(addRtPredDlg, addRtPredDlg.OkDialog);
             }
-            WaitForClosedForm<BuildLibraryDlg>();
 
             const int waitTime = 30 * 60 * 1000;
             WaitForCondition(waitTime, () => buildLibraryDlgFinished || null != FindOpenForm<MessageDlg>());
