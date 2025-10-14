@@ -32,30 +32,29 @@ namespace pwiz.Skyline.Controls
 {
     public partial class SequenceTreeForm : DockableFormEx, IPropertyProvider
     {
-        public SequenceTreeForm(IDocumentUIContainer documentContainer, bool restoringState)
+        public SequenceTreeForm(SkylineWindow skylineWindow, bool restoringState)
         {
-            SkylineWindow = (SkylineWindow)documentContainer;
+            SkylineWindow = skylineWindow;
             InitializeComponent();
             _defaultTabText = TabText;
             sequenceTree.LockDefaultExpansion = restoringState;
-            sequenceTree.InitializeTree(documentContainer);
+            sequenceTree.InitializeTree(skylineWindow);
             sequenceTree.LockDefaultExpansion = false;
-            if (documentContainer.DocumentUI != null)
-                UpdateResultsUI(documentContainer.DocumentUI.Settings, null);
+            if (skylineWindow.DocumentUI != null)
+                UpdateResultsUI(skylineWindow.DocumentUI.Settings, null);
             sequenceTree.AfterSelect += SequenceTree_AfterSelect;
         }
 
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public SkylineWindow SkylineWindow { get; }
+        private SkylineWindow SkylineWindow { get; }
 
         #region IPropertyProvider Implementation
 
         public SkylineObject GetPropertyObject()
         {
             var dataSchema = new SkylineWindowDataSchema(SkylineWindow);
-            var identityPath = SequenceTree.SelectedPath;
-            return SequenceTree.SelectedNodeSrmTreeNode?.Model.PropertyObjectInstancer(dataSchema, identityPath);
+            return SequenceTree.SelectedNodeSrmTreeNode?.PropertyObjectInstancer(dataSchema);
         }
 
         #endregion

@@ -16,22 +16,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.Windows.Forms;
-using System.Drawing.Imaging;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
+using System.Linq;
+using System.Windows.Forms;
 
 namespace pwiz.Skyline.Controls.SeqNode
 {
@@ -88,6 +90,10 @@ namespace pwiz.Skyline.Controls.SeqNode
                 OnModelChanged();
             }
         }
+
+        // Provide a way to instantiate the PropertyObject for this model
+        public virtual Func<SkylineDataSchema, SkylineObject> PropertyObjectInstancer => 
+            dataSchema => null;
 
         public void UpdateState()
         {

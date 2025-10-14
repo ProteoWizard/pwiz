@@ -415,7 +415,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             var selectedNode = FilesTree.SelectedNodeFTN;
             var dataSchema = new SkylineWindowDataSchema(SkylineWindow);
             var identityPath = selectedNode?.Model.IdentityPath;
-            return selectedNode?.Model.PropertyObjectInstancer(dataSchema, identityPath);
+            return selectedNode?.Model.PropertyObjectInstancer(dataSchema);
         }
 
         #endregion

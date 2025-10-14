@@ -78,7 +78,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNotNull(replicateNode);
             RunUI(() =>
             {
-                SkylineWindow.FilesTreeForm.FilesTree.SelectNodeWithoutResettingSelection(replicateNode);
+                SkylineWindow.FilesTreeForm.FilesTree.SelectNode(replicateNode, true);
                 SkylineWindow.FocusPropertyProvider(SkylineWindow.FilesTreeForm);
             });
             var selectedObject = SkylineWindow.PropertyGridForm?.GetPropertyObject();
@@ -106,7 +106,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNotNull(replicateNode);
             RunUI(() =>
             {
-                SkylineWindow.FilesTreeForm.FilesTree.SelectNodeWithoutResettingSelection(replicateNode);
+                SkylineWindow.FilesTreeForm.FilesTree.SelectNode(replicateNode, true);
                 SkylineWindow.FocusPropertyProvider(SkylineWindow.FilesTreeForm);
             });
             var selectedObject = SkylineWindow.PropertyGridForm?.GetPropertyObject();
@@ -130,7 +130,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 SkylineWindow.ShowPropertyGridForm(true);
-                SkylineWindow.FilesTreeForm.FilesTree.SelectNodeWithoutResettingSelection(replicateNode);
+                SkylineWindow.FilesTreeForm.FilesTree.SelectNode(replicateNode, true);
                 SkylineWindow.FocusPropertyProvider(SkylineWindow.FilesTreeForm);
             });
 

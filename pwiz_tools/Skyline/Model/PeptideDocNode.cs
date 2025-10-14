@@ -103,9 +103,6 @@ namespace pwiz.Skyline.Model
             ExplicitMods?.VerifyNoLegacyData();
         }
 
-        public override Func<SkylineDataSchema, IdentityPath, SkylineObject> PropertyObjectInstancer =>
-            (dataSchema, identityPath) => new Databinding.Entities.Peptide(dataSchema, identityPath);
-
         public override string AuditLogText
         {
             get

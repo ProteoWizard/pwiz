@@ -38,7 +38,7 @@ namespace pwiz.Skyline.Controls
             ((IDocumentUIContainer)SkylineWindow).ListenUI(SkylineWindow_OnUiDocumentChanged);
         }
 
-        public SkylineWindow SkylineWindow { get; }
+        private SkylineWindow SkylineWindow { get; }
 
         public void SetPropertyObject(SkylineObject properties)
         {

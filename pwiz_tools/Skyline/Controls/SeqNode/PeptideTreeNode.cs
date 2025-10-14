@@ -16,6 +16,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -24,12 +32,6 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
-using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls.SeqNode
 {
@@ -56,6 +58,9 @@ namespace pwiz.Skyline.Controls.SeqNode
         {
 
         }
+
+        public override Func<SkylineDataSchema, SkylineObject> PropertyObjectInstancer =>
+            dataSchema => new pwiz.Skyline.Model.Databinding.Entities.Peptide(dataSchema, Path);
 
         public PeptideDocNode DocNode => (PeptideDocNode)Model;
         public PeptideGroupDocNode PepGroupNode => ((PeptideGroupTreeNode)Parent)?.DocNode;
@@ -589,7 +594,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             var table = new TableDesc();
             using (RenderTools rt = new RenderTools())
             {
-                Peptide peptide = nodePep.Peptide;
+                var peptide = nodePep.Peptide;
                 SizeF size;
                 if (peptide.IsCustomMolecule)
                 {
