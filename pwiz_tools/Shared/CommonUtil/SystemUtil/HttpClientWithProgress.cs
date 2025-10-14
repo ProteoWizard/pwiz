@@ -200,8 +200,8 @@ namespace pwiz.Common.SystemUtil
         {
             get
             {
-                if (_progressMonitor is SilentProgressMonitor spm)
-                    return spm.CancellationToken;
+                if (_progressMonitor is IProgressMonitorWithCancellationToken pm)
+                    return pm.CancellationToken;
                 // IProgressMonitor doesn't expose CancellationToken directly; use None and rely on IsCanceled checks
                 return CancellationToken.None;
             }
