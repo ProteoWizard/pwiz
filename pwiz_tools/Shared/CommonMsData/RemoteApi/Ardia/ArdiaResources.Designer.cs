@@ -80,6 +80,294 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to New Folder.
+        /// </summary>
+        public static string CreateFolder_DefaultFolderName {
+            get {
+                return ResourceManager.GetString("CreateFolder_DefaultFolderName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to create folder &apos;{0}&apos;. A problem occurred communicating with the server..
+        /// </summary>
+        public static string CreateFolder_Error {
+            get {
+                return ResourceManager.GetString("CreateFolder_Error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to create folder &apos;{0}&apos;. Do you have permission to create a folder in &apos;{1}&apos;?.
+        /// </summary>
+        public static string CreateFolder_Error_Forbidden {
+            get {
+                return ResourceManager.GetString("CreateFolder_Error_Forbidden", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Folder names cannot be blank..
+        /// </summary>
+        public static string CreateFolder_InputValidationError_BlankName {
+            get {
+                return ResourceManager.GetString("CreateFolder_InputValidationError_BlankName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to create folder &apos;{0}&apos;. An item with that name already exists..
+        /// </summary>
+        public static string CreateFolder_InputValidationError_FileAlreadyExists {
+            get {
+                return ResourceManager.GetString("CreateFolder_InputValidationError_FileAlreadyExists", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Folder names cannot include any of these characters {0}..
+        /// </summary>
+        public static string CreateFolder_InputValidationError_IllegalCharacter {
+            get {
+                return ResourceManager.GetString("CreateFolder_InputValidationError_IllegalCharacter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Successfully created folder &apos;{0}&apos;..
+        /// </summary>
+        public static string CreateFolder_Success {
+            get {
+                return ResourceManager.GetString("CreateFolder_Success", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Create folder.
+        /// </summary>
+        public static string CreateFolder_Title {
+            get {
+                return ResourceManager.GetString("CreateFolder_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to delete folder &apos;{0}&apos;. A problem occurred communicating with the server..
+        /// </summary>
+        public static string DeleteFolder_Error {
+            get {
+                return ResourceManager.GetString("DeleteFolder_Error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error detail: .
+        /// </summary>
+        public static string Error_Detail {
+            get {
+                return ResourceManager.GetString("Error_Detail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File Name: {0}.
+        /// </summary>
+        public static string Error_FileName {
+            get {
+                return ResourceManager.GetString("Error_FileName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File Path: {0}.
+        /// </summary>
+        public static string Error_FilePath {
+            get {
+                return ResourceManager.GetString("Error_FilePath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Host: {0}.
+        /// </summary>
+        public static string Error_Host {
+            get {
+                return ResourceManager.GetString("Error_Host", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A problem occurred communicating with Ardia. Check your Ardia connection on the Remote Accounts tab under Skyline&apos;s Tools &gt; Options menu and try again..
+        /// </summary>
+        public static string Error_InvalidToken {
+            get {
+                return ResourceManager.GetString("Error_InvalidToken", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Path: {0}.
+        /// </summary>
+        public static string Error_Path {
+            get {
+                return ResourceManager.GetString("Error_Path", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A problem occurred communicating with Ardia. Check the network connection..
+        /// </summary>
+        public static string Error_ProblemCommunicatingWithServer {
+            get {
+                return ResourceManager.GetString("Error_ProblemCommunicatingWithServer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Size (bytes): {0}.
+        /// </summary>
+        public static string Error_Size {
+            get {
+                return ResourceManager.GetString("Error_Size", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Code: {0} ({1}).
+        /// </summary>
+        public static string Error_StatusCode {
+            get {
+                return ResourceManager.GetString("Error_StatusCode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unexpected error code..
+        /// </summary>
+        public static string Error_StatusCode_Unexpected {
+            get {
+                return ResourceManager.GetString("Error_StatusCode_Unexpected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Upload ID: {0}.
+        /// </summary>
+        public static string Error_UploadId {
+            get {
+                return ResourceManager.GetString("Error_UploadId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Available Storage: Unlimited.
+        /// </summary>
+        public static string FileUpload_AvailableFreeSpace_Unlimited {
+            get {
+                return ResourceManager.GetString("FileUpload_AvailableFreeSpace_Unlimited", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Available Storage: {0}.
+        /// </summary>
+        public static string FileUpload_AvailableFreeSpace_WithSize {
+            get {
+                return ResourceManager.GetString("FileUpload_AvailableFreeSpace_WithSize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to publish the document. A problem occurred communicating with the server..
+        /// </summary>
+        public static string FileUpload_Error {
+            get {
+                return ResourceManager.GetString("FileUpload_Error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to publish the document. The document is larger than the available storage space on the server..
+        /// </summary>
+        public static string FileUpload_Error_DocumentTooLargeForServer {
+            get {
+                return ResourceManager.GetString("FileUpload_Error_DocumentTooLargeForServer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ardia Folders:.
+        /// </summary>
+        public static string FileUpload_ServerFolders {
+            get {
+                return ResourceManager.GetString("FileUpload_ServerFolders", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Completed upload. Creating document..
+        /// </summary>
+        public static string FileUpload_Status_CreatingDocument {
+            get {
+                return ResourceManager.GetString("FileUpload_Status_CreatingDocument", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0:N0}% complete. Uploaded {1:N0} of {2:N0} MB..
+        /// </summary>
+        public static string FileUpload_Status_ProgressWithSize {
+            get {
+                return ResourceManager.GetString("FileUpload_Status_ProgressWithSize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Successfully uploaded the document to Ardia..
+        /// </summary>
+        public static string FileUpload_Success {
+            get {
+                return ResourceManager.GetString("FileUpload_Success", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error getting document &apos;{0}&apos;. A problem occurred communicating with the server..
+        /// </summary>
+        public static string GetDocument_Error {
+            get {
+                return ResourceManager.GetString("GetDocument_Error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to open &apos;{0}&apos;. A problem occurred communicating with the server..
+        /// </summary>
+        public static string OpenFolder_Error_Folder {
+            get {
+                return ResourceManager.GetString("OpenFolder_Error_Folder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to open folders on the Ardia server &apos;{0}&apos;. A problem occurred communicating with the server..
+        /// </summary>
+        public static string OpenFolder_Error_Server {
+            get {
+                return ResourceManager.GetString("OpenFolder_Error_Server", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Opening folder {0}.
+        /// </summary>
+        public static string OpenFolder_Title {
+            get {
+                return ResourceManager.GetString("OpenFolder_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cannot find account for username {0} and server {1}..
         /// </summary>
         public static string UnifiUrl_OpenMsDataFile_Cannot_find_account_for_username__0__and_server__1__ {

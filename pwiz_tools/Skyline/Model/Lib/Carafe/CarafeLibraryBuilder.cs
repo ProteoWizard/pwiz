@@ -32,7 +32,6 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
-using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
@@ -126,35 +125,29 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             {
                 {
                     new ModificationType(
-                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 4).ID.Value,
-                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 4).Name,
-                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 4).Formula,
-                        PredictionSupport.FRAG_RT_ONLY)
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 4),
+                        PredictionSupport.fragmentation)
                 },
                 {
                     new ModificationType(
-                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 21).ID.Value,
-                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 21).Name,
-                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 21).Formula,
-                        PredictionSupport.FRAGMENTATION)
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 21),
+                        PredictionSupport.fragmentation)
                 },
                 {
                     new ModificationType(
-                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 35).ID.Value,
-                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 35).Name,
-                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 35).Formula,
-                        PredictionSupport.FRAG_RT_ONLY)
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 35),
+                        PredictionSupport.fragmentation)
                 },
                 {
                     new ModificationType(
-                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 121).ID.Value,
-                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 121).Name,
-                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 121).Formula,
-                        PredictionSupport.FRAGMENTATION)
+                        UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == 121),
+                        PredictionSupport.fragmentation)
                 }
 
             };
 
+        protected override string ToolName => CARAFE;
+        protected override LibraryBuilderModificationSupport LibraryBuilderModificationSupport { get; }
         public LibrarySpec LibrarySpec { get; private set; }
 
         public static string PythonVersion => Settings.Default.PythonEmbeddableVersion;
@@ -189,8 +182,6 @@ namespace pwiz.Skyline.Model.Lib.Carafe
         private string CarafeJarFileName => CarafeFileBaseName + DOT_JAR;
 
         private static string AlphapeptdeepDiaRepo = @"https://codeload.github.com/wenbostar/alphapeptdeep_dia/zip/refs/tags/v1.0";
-        protected override string ToolName => CARAFE;
-
         public static PythonInstaller CreatePythonInstaller(TextWriter writer)
         {
             var packages = new[]
@@ -256,8 +247,6 @@ namespace pwiz.Skyline.Model.Lib.Carafe
         public static IDictionary<string, AbstractDdaSearchEngine.Setting> DataParameters { get; private set; }
         public static IDictionary<string, AbstractDdaSearchEngine.Setting> ModelParameters { get; private set; }
         public static IDictionary<string, AbstractDdaSearchEngine.Setting> LibraryParameters { get; private set; }
-
-        protected override LibraryBuilderModificationSupport libraryBuilderModificationSupport { get; }
 
         private IList<ArgumentAndValue> CommandArguments =>
             new List<ArgumentAndValue>
@@ -441,114 +430,6 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             return Path.GetFileName(ExperimentDataFilePath);
         }
 
-        public override string GetWarning()
-        {
-            var warningModSupports = GetWarningMods();
-
-            var noMs2SupportWarningMods = warningModSupports.Where(kvp => kvp.Value.Fragmentation == false).Select(kvp => kvp.Key).ToList();
-            var noRtSupportWarningMods = warningModSupports.Where(kvp => kvp.Value.RetentionTime == false).Select(kvp => kvp.Key).ToList();
-            var noCcsSupportWarningMods = warningModSupports.Where(kvp => kvp.Value.Ccs == false).Select(kvp => kvp.Key).ToList();
-
-            if (noMs2SupportWarningMods.Count == 0 && noRtSupportWarningMods.Count == 0 && noCcsSupportWarningMods.Count == 0)
-                return null;
-
-            string warningModString;
-            if (noMs2SupportWarningMods.Count > 0)
-            {
-                warningModString = string.Join(Environment.NewLine, noMs2SupportWarningMods.Select(w => w.Indent(1)));
-                return string.Format(ModelResources.Alphapeptdeep_Warn_unknown_modification,
-                    warningModString);
-            }
-
-            if (noRtSupportWarningMods.Count > 0)
-            {
-                warningModString = string.Join(Environment.NewLine, noRtSupportWarningMods.Select(w => w.Indent(1)));
-                return string.Format(ModelResources.Carafe_Warn_limited_modification,
-                    warningModString);
-            }
-            return String.Empty;
-        }
-
-        protected internal override PredictionSupport ValidateSequenceModifications(ModifiedSequence modifiedSequence, out string mods, out string modSites)
-        {
-            var modsBuilder = new StringBuilder();
-            var modSitesBuilder = new StringBuilder();
-
-            // The list returned below is probably always short enough that determining
-            // if it contains a modification would not be greatly improved by caching a set
-            // for use here instead of the list.
-            var warningModSupports = GetWarningMods();
-            var noMs2SupportWarningMods = warningModSupports.Where(kvp => kvp.Value.Fragmentation == false).Select(kvp => kvp.Key).ToList();
-            var noRtSupportWarningMods = warningModSupports.Where(kvp => kvp.Value.RetentionTime == false).Select(kvp => kvp.Key).ToList();
-            
-            bool ms2SupportedMod = true;
-            bool rtSupportedMod = true;
-            
-            var setMs2Unsupported = new HashSet<string>();
-            var setRtUnsupported = new HashSet<string>();
-
-            for (var i = 0; i < modifiedSequence.ExplicitMods.Count; i++)
-            {
-                var mod = modifiedSequence.ExplicitMods[i];
-                if (mod.UnimodId == null)
-                {
-                    if (!setMs2Unsupported.Contains(mod.Name))
-                    {
-                        var msg = string.Format(ModelsResources.BuildPrecursorTable_UnsupportedModification, modifiedSequence, mod.Name, ToolName);
-                        Messages.WriteAsyncUserMessage(msg);
-                        ms2SupportedMod = false;
-                        rtSupportedMod = false;
-                        setMs2Unsupported.Add(mod.Name);
-                    }
-                    continue;
-                }
-
-                var unimodIdWithName = mod.UnimodIdWithName;
-                if (noMs2SupportWarningMods.Contains(mod.Name))
-                {
-                    if (!setMs2Unsupported.Contains(mod.Name))
-                    {
-                        var msg = string.Format(ModelsResources.BuildPrecursorTable_Unimod_limited_Modification, modifiedSequence, mod.Name, unimodIdWithName, ToolName);
-                        Messages.WriteAsyncUserMessage(msg);
-                        ms2SupportedMod = false;
-                        rtSupportedMod = false;
-                        setMs2Unsupported.Add(mod.Name);
-                    }
-
-                    continue;
-                }
-
-                unimodIdWithName = mod.UnimodIdWithName;
-                if (noRtSupportWarningMods.Contains(mod.Name))
-                {
-                    if (!setRtUnsupported.Contains(mod.Name))
-                    {
-                        var msg = string.Format(ModelsResources.BuildPrecursorTable_Unimod_limited_Modification, modifiedSequence, mod.Name, unimodIdWithName, ToolName);
-                        Messages.WriteAsyncUserMessage(msg);
-                        rtSupportedMod = false;
-                        setRtUnsupported.Add(mod.Name);
-                    }
-
-                }
-
-                var modNames = UniModData.UNI_MOD_DATA.Where(m => unimodIdWithName.Contains(m.Name)).ToArray();
-                Assume.IsTrue(modNames.Length != 0);    // The warningMods test above should guarantee the mod is supported
-                string modName = GetModName(new ModificationType(modNames.Single().ID.Value, modNames.Single().Name, modNames.Single().Formula), modifiedSequence.GetUnmodifiedSequence(), mod.IndexAA);
-                modsBuilder.Append(modName);
-                modSitesBuilder.Append((mod.IndexAA + 1).ToString()); // + 1 because alphapeptdeep mod_site number starts from 1 as the first amino acid
-                if (i != modifiedSequence.ExplicitMods.Count - 1)
-                {
-                    modsBuilder.Append(TextUtil.SEMICOLON);
-                    modSitesBuilder.Append(TextUtil.SEMICOLON);
-                }
-            }
-
-            mods = modsBuilder.ToString();
-            modSites = modSitesBuilder.ToString();
-
-            return new PredictionSupport(ms2SupportedMod, rtSupportedMod, false);
-        }
-
         protected override IEnumerable<string> GetHeaderColumnNames(bool training)
         {
             if (!training)
@@ -690,7 +571,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
                 CarafeLibraryBuilder.LibraryParameters == null)
                 CarafeLibraryBuilder.CarafeDefaultSettings();
 
-            libraryBuilderModificationSupport = new LibraryBuilderModificationSupport(MODEL_SUPPORTED_UNIMODS);
+            LibraryBuilderModificationSupport = new LibraryBuilderModificationSupport(MODEL_SUPPORTED_UNIMODS);
         }
 
         public CarafeLibraryBuilder(
@@ -718,7 +599,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             EnsureWorkDir(Path.GetDirectoryName(libOutPath), PREFIX_WORKDIR);
             Directory.CreateDirectory(JavaDir);
             Directory.CreateDirectory(CarafeJavaDir);
-            libraryBuilderModificationSupport = new LibraryBuilderModificationSupport(MODEL_SUPPORTED_UNIMODS);
+            LibraryBuilderModificationSupport = new LibraryBuilderModificationSupport(MODEL_SUPPORTED_UNIMODS);
         }
 
         public bool BuildLibrary(IProgressMonitor progress)

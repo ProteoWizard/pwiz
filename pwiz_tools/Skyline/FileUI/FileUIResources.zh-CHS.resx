@@ -583,6 +583,9 @@
   <data name="PublishDocumentDlg_PublishDocumentDlgLoad_Go_to_Tools___Options___Panorama_tab_to_update_the_username_and_password_" xml:space="preserve">
     <value>转到工具&gt;选项&gt;Panorama 选项卡，更新用户名和密码。</value>
   </data>
+  <data name="PublishDocumentDlg_Panorama_ServerFolders" xml:space="preserve">
+    <value>Panorama 文件夹：</value>
+  </data>
   <data name="PublishDocumentDlg_UploadSharedZipFile_Error_obtaining_server_information" xml:space="preserve">
     <value>获取服务器信息出错。</value>
   </data>

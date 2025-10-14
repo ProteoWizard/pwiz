@@ -964,7 +964,6 @@ namespace pwiz.Skyline.Model.Lib
                     throw new Exception(FormatErrorMessage(x), x);
                 }
             }
-
             // Close any streams that got opened
             foreach (var pooledStream in ReadStreams)
                 pooledStream.CloseStream();

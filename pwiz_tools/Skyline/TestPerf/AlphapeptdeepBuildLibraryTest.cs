@@ -270,7 +270,7 @@ namespace TestPerf
 
             var limitedModelAlert = WaitForOpenForm<AlertDlg>();
             Assert.AreEqual(string.Format(ModelResources.Alphapeptdeep_Warn_limited_modification, @"Phospho (ST)".Indent(1)), limitedModelAlert.Message);
-            limitedModelAlert.OkDialog();
+            OkDialog(limitedModelAlert, limitedModelAlert.OkDialog);
             if (iRTtype != null)
             {
                 VerifyAddIrts(WaitForOpenForm<AddIrtPeptidesDlg>());

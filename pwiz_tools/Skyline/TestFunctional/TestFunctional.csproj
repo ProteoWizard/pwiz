@@ -187,6 +187,7 @@
     <Compile Include="DocumentGridExportTest.cs" />
     <Compile Include="DocumentGridUndoTest.cs" />
     <Compile Include="EditablePivotTest.cs" />
+    <Compile Include="ManagingSearchToolsTest.cs" />
     <Compile Include="EditNeutralLossesTest.cs" />
     <Compile Include="EncyclopeDiaLibraryMatchTest.cs" />
     <Compile Include="EncyclopeDiaPeptidesWithNoSignalTest.cs" />
@@ -201,6 +202,7 @@
     <Compile Include="InteractiveCommandLineToolTest.cs" />
     <Compile Include="IrtCalibrationTest.cs" />
     <Compile Include="InternationalFilenamesTest.cs" />
+    <Compile Include="KeyboardShortcutHelpTest.cs" />
     <Compile Include="LegacyIgnoreSimTest.cs" />
     <Compile Include="LegacyOptimizationStepTest.cs" />
     <Compile Include="LegacyScoringModelTest.cs" />
@@ -209,11 +211,13 @@
     <Compile Include="LogScaleAxisTest.cs" />
     <Compile Include="MedianNormalizationTest.cs" />
     <Compile Include="MessageBoxHelperTest.cs" />
+    <Compile Include="MinimizeWithEmptyFilesTest.cs" />
     <Compile Include="MinimizeIrtTest.cs" />
     <Compile Include="EADZIonsTest.cs" />
     <Compile Include="MissingOptStepsTest.cs" />
     <Compile Include="MixedSrmPrmTest.cs" />
     <Compile Include="Ms1SpectrumFilterTest.cs" />
+    <Compile Include="MultiInjectCandidatePeakTest.cs" />
     <Compile Include="MultiInjectionReplicatesTest.cs" />
     <Compile Include="MultiInjectReplicatePivotTest.cs" />
     <Compile Include="MultiInjectRescoreTest.cs" />

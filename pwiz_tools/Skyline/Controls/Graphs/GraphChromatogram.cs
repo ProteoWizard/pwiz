@@ -33,6 +33,7 @@ using pwiz.Common.SystemUtil.Caching;
 using pwiz.CommonMsData;
 using pwiz.MSGraph;
 using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Menus;
 using pwiz.Skyline.Model;
@@ -671,6 +672,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         var nodeTran = (TransitionDocNode) nodeGroup.Children[j];
                         var nodeTranCurrent = (TransitionDocNode) nodeGroupCurrent.Children[j];
+                        if (nodeTran.Results == null || nodeTranCurrent.Results == null)
+                            return false;
                         if (nodeTran.Results.Count <= _chromIndex ||
                             nodeTranCurrent.Results.Count <= _chromIndex ||
                             !Equals(nodeTran.Results[_chromIndex], nodeTranCurrent.Results[_chromIndex]))
@@ -682,7 +685,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         /// <summary>
-        /// Gets the set of chomatogram info for the selected file of the groups.
+        /// Gets the set of chromatogram info for the selected file of the groups.
         /// </summary>
         public ChromatogramGroupInfo[] ChromGroupInfos
         {
@@ -795,12 +798,16 @@ namespace pwiz.Skyline.Controls.Graphs
             if (_dontSyncSelectedFile)
                 return;
 
-            var panes = FormUtil.OpenForms.OfType<GraphSummary>().SelectMany(g => g.GraphPanes).OfType<SummaryReplicateGraphPane>();
-
-            foreach (var pane in panes)
+            var openForms = FormUtil.OpenForms;
+            foreach (var pane in openForms.OfType<GraphSummary>().SelectMany(g => g.GraphPanes).OfType<SummaryReplicateGraphPane>())
             {  
                 var item = comboFiles.SelectedItem.ToString();
                 pane.SetSelectedFile(item);
+            }
+
+            foreach (var candidatePeakForm in FormUtil.OpenForms.OfType<CandidatePeakForm>())
+            {
+                candidatePeakForm.QueueUpdateRowSource();
             }
         }
 

@@ -146,6 +146,33 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         public ResultFileAlignments ResultFileAlignments { get; private set; } = ResultFileAlignments.EMPTY;
 
+        public bool Equivalent(DocumentRetentionTimes other)
+        {
+            if (Equals(other))
+            {
+                return true;
+            }
+
+            var thisUnloaded = UnloadLibraries();
+            var otherUnloaded = other.UnloadLibraries();
+            if (Equals(thisUnloaded, otherUnloaded))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        private DocumentRetentionTimes UnloadLibraries()
+        {
+            return ChangeProp(ImClone(this), im =>
+            {
+                im._libraryAlignments = _libraryAlignments.ToDictionary(kvp => kvp.Key,
+                    kvp => new LibraryAlignmentValue(null, kvp.Value.Alignments));
+                im._deserializedAlignmentFunctions ??= CollectionUtil.SafeToDictionary(im.ResultFileAlignments.GetAlignmentFunctions());
+                im.ResultFileAlignments = ResultFileAlignments.EMPTY;
+            });
+        }
         #region Object Overrides
         public bool Equals(DocumentRetentionTimes other)
         {
@@ -153,7 +180,8 @@ namespace pwiz.Skyline.Model.RetentionTimes
             if (ReferenceEquals(this, other)) return true;
             return CollectionUtil.EqualsDeep(_libraryAlignments, other._libraryAlignments)
                    && Equals(ResultFileAlignments, other.ResultFileAlignments)
-                   && Equals(MedianDocumentRetentionTimes, other.MedianDocumentRetentionTimes);
+                   && Equals(MedianDocumentRetentionTimes, other.MedianDocumentRetentionTimes)
+                   && CollectionUtil.EqualsDeep(_deserializedAlignmentFunctions, other._deserializedAlignmentFunctions);
 
         }
 

@@ -526,6 +526,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap ArdiaIcon {
+            get {
+                object obj = ResourceManager.GetObject("ArdiaIcon", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} must contain a decimal value..
         /// </summary>
         public static string AreaChartPropertyDlg_ValidateDotpDecimal__0__must_contain_a_decimal_value {
