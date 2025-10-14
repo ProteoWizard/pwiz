@@ -275,7 +275,7 @@ namespace pwiz.Skyline.Model
     public class GlobalizedPropertyDescriptor : PropertyDescriptor
     {
         private const string DESCRIPTION_PREFIX = @"Description_";
-        private const string CATEGORY_PREFIX = @"Category_";
+        protected const string CATEGORY_PREFIX = @"Category_";
 
         private readonly ResourceManager _resourceManager;
         private readonly PropertyDescriptor _basePropertyDescriptor;
@@ -357,24 +357,34 @@ namespace pwiz.Skyline.Model
     public class PropertyGridPropertyDescriptor : GlobalizedPropertyDescriptor
     {
         private readonly PropertyDescriptor _basePropertyDescriptor;
-
         private readonly ResourceManager _resourceManager;
-        private readonly string _invariantDisplayName;
+
+        private string _invariantDisplayName;
+        private string _category;
 
         // Since many property grid object setters don't actually change the value, just the document, need to store actual value for display
         private object _displayValue;
 
-        public PropertyGridPropertyDescriptor(PropertyDescriptor basePropertyDescriptor, ResourceManager resourceManager, string invariantDisplayName = null)
+        public PropertyGridPropertyDescriptor(PropertyDescriptor basePropertyDescriptor, ResourceManager resourceManager)
             : base(basePropertyDescriptor, resourceManager)
         {
-            Assume.IsNotNull(resourceManager);
-
             _basePropertyDescriptor = basePropertyDescriptor;
             _resourceManager = resourceManager;
-            _invariantDisplayName = invariantDisplayName;
         }
 
-        public override string DisplayName => _invariantDisplayName ?? _resourceManager.GetString(_basePropertyDescriptor.Name);
+        public void SetDisplayName(string displayName)
+        {
+            _invariantDisplayName = displayName;
+        }
+
+        public void SetCategory(string category)
+        {
+            _category = category;
+        }
+
+        public override string DisplayName => _invariantDisplayName ?? _resourceManager?.GetString(_basePropertyDescriptor.Name) ?? _basePropertyDescriptor.Name;
+
+        public override string Category => _category != null ? _resourceManager.GetString(CATEGORY_PREFIX + _category) : base.Category;
 
         public override object GetValue(object component)
         {

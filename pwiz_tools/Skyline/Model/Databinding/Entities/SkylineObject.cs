@@ -23,6 +23,7 @@ using System.Linq;
 using System.Resources;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.ElementLocators;
 using AttributeCollection = System.ComponentModel.AttributeCollection;
@@ -100,23 +101,54 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         #region PropertyGrid Support
 
-        public virtual ResourceManager GetResourceManager() => null;
+        protected virtual ResourceManager GetResourceManager() => null;
 
         protected virtual bool PropertyFilter(PropertyDescriptor prop) =>
-            GetResourceManager()?.GetString(prop.Name) != null || prop is AnnotationPropertyDescriptor;
+            prop != null;
 
-        protected virtual PropertyGridPropertyDescriptor PropertyTransform(PropertyDescriptor prop) =>
-            new PropertyGridPropertyDescriptor(prop, GetResourceManager(),
-                prop is AnnotationPropertyDescriptor annotationProperty ? annotationProperty.DisplayName : null);
+        protected virtual PropertyGridPropertyDescriptor PropertyTransform(PropertyDescriptor prop)
+        {
+            var transformed = new PropertyGridPropertyDescriptor(prop, GetResourceManager());
+            if (prop is AnnotationPropertyDescriptor annotationProperty)
+                // annotations need invariant display name as they are user-defined and have no localized resource
+                transformed.SetDisplayName(annotationProperty.DisplayName);
+            else
+                // for non-annotation properties, set category to name of this object
+                transformed.SetCategory(GetType().Name);
+            return transformed;
+        }
+
+        // Override to provide a property to use as the alias for the root object, e.g. Sequence for Peptide
+        protected virtual PropertyDescriptor GetRootAliasProperty() => null;
 
         #endregion
+
+        // assumes path is depth 1 or null (for root)
+        private PropertyDescriptor GetPropertyDescriptorFromPath(PropertyPath path)
+        {
+            // if root path used as property, must defer to object to tell what to display.
+            // For example, Peptide uses Sequence as its "root" property and is displayed as "Peptide"
+            if (path.Name == null && GetRootAliasProperty() != null)
+                return GetRootAliasProperty();
+
+            return TypeDescriptor.GetProperties(GetType())[path.Name ?? string.Empty];
+        }
 
         #region ICustomTypeDescriptor Implementation
 
         public PropertyDescriptorCollection GetProperties(Attribute[] attributes)
         {
-            var allProps = _dataSchema.GetPropertyDescriptors(GetType());
-            var filteredProps = allProps.Where(PropertyFilter);
+            // Get default displayed props
+            var propertyPaths = new BuiltInReports(_dataSchema.Document).GetDefaultColumns(GetType());
+            if (propertyPaths == null) return new PropertyDescriptorCollection(new PropertyDescriptor[]{});
+            var allProps = propertyPaths.Select(GetPropertyDescriptorFromPath);
+            var filteredProps = allProps.Where(PropertyFilter).ToList();
+
+            // Add applicable annotation props
+            var annotationProps = _dataSchema.GetAnnotations(GetType()).ToList();
+            filteredProps.AddRange(annotationProps);
+
+            // Convert to PropertyGridPropertyDescriptor
             var transformedProps = filteredProps.Select(PropertyTransform);
             return new PropertyDescriptorCollection(transformedProps.Cast<PropertyDescriptor>().ToArray());
         }
