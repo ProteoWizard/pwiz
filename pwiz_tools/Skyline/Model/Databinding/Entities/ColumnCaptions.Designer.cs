@@ -673,6 +673,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Constant Neutral Loss.
+        /// </summary>
+        public static string ConstantNeutralLoss {
+            get {
+                return ResourceManager.GetString("ConstantNeutralLoss", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Count Truncated.
         /// </summary>
         public static string CountTruncated {
