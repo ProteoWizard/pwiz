@@ -18,14 +18,14 @@
  */
 
 using Microsoft.Win32;
+using pwiz.Common.Collections;
+using pwiz.Skyline.Util.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using pwiz.Common.Collections;
-using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model
 {
@@ -306,17 +306,25 @@ namespace pwiz.Skyline.Model
             if (parentKey == null)
                 return null;
             var subKeyNames = Services.GetSubKeyNames(parentKey);
+            string maxName = null;
+            double? maxValue = null;
             foreach (var name in subKeyNames)
             {
                 double versionNum;
                 if (double.TryParse(name, NumberStyles.Float, CultureInfo.InvariantCulture, out versionNum))
                 {
-                    version = versionNum;
-                    return Services.OpenSubKey(parentKey, name);
+                    if (!maxValue.HasValue || maxValue.Value < versionNum)
+                    {
+                        maxValue = versionNum;
+                        maxName = name;
+                    }
                 }
             }
 
-            return null;
+            if (!maxValue.HasValue)
+                return null;
+            version = maxValue;
+            return Services.OpenSubKey(parentKey, maxName);
         }
     }
 }

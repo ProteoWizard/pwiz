@@ -109,7 +109,12 @@ namespace pwiz.CommonMsData
     {
         public static MsDataFilePath ParseUri(string url)
         {
-            return new MsDataFilePath(SampleHelp.GetPathFilePart(url),
+            var filePath = SampleHelp.GetPathFilePart(url);
+            if (ReferenceEquals(filePath, url))
+            {
+                return new MsDataFilePath(filePath);
+            }
+            return new MsDataFilePath(filePath,
                 SampleHelp.GetPathSampleNamePart(url),
                 SampleHelp.GetPathSampleIndexPart(url),
                 SampleHelp.GetLockmassParameters(url),

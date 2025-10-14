@@ -91,14 +91,32 @@ namespace pwiz.SkylineTest.MSstats.Averaging
                 var xValues = new List<double>();
                 var yValues = new List<double>();
                 var protein = new Protein(skylineDataSchema, new IdentityPath(moleculeGroup.PeptideGroup));
-                foreach (var proteinResult in protein.Results.Values)
+                foreach (var proteinResultEntry in protein.Results)
                 {
+                    var resultKey = proteinResultEntry.Key;
+                    var proteinResult = proteinResultEntry.Value;
                     var abundance = proteinResult.Abundance?.Strict;
                     if (!abundance.HasValue)
                     {
                         continue;
                     }
 
+                    // Verify that the protein abundance is calculated as the sum of transition areas
+                    var delta = abundance.Value / 10000;
+                    var sumOfTransitionArea = protein.Peptides
+                        .Sum(peptide => peptide.Precursors
+                            .Sum(precursor => precursor.Transitions
+                                .Where(transition => transition.Results.ContainsKey(resultKey))
+                                .Sum(transition => transition.Results[resultKey].Area)));
+                    Assert.IsNotNull(sumOfTransitionArea);
+                    Assert.AreEqual(sumOfTransitionArea.Value, abundance.Value, delta);
+                    var sumOfPrecursorTotalArea = protein.Peptides
+                        .Sum(peptide => peptide.Precursors
+                            .Where(precursor => precursor.Results.ContainsKey(resultKey))
+                            .Sum(precursor => precursor.Results[resultKey].TotalArea));
+                    Assert.IsNotNull(sumOfPrecursorTotalArea);
+                    Assert.AreEqual(sumOfPrecursorTotalArea.Value, abundance.Value, delta);
+                    
                     var condition = proteinResult.Replicate.ChromatogramSet.Annotations.GetAnnotation("Condition");
                     if (condition == "Healthy")
                     {

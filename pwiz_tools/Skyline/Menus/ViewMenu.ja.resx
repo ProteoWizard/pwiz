@@ -196,10 +196,6 @@
   </data>
   <data name="viewModificationsMenuItem.Text" xml:space="preserve">
     <value>修飾(&amp;M)</value>
-    <comment>Needs Review:English text changed
-Old English:Modifications
-Current English:&amp;Modifications
-Old Localized:修飾</comment>
   </data>
   <data name="textZoomToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>180, 22</value>
@@ -267,10 +263,6 @@ Old Localized:修飾</comment>
   </data>
   <data name="documentGridMenuItem.Text" xml:space="preserve">
     <value>ドキュメントグリッド(&amp;D)</value>
-    <comment>Needs Review:English text changed
-Old English:Document &amp;Grid
-Current English:&amp;Document Grid
-Old Localized:ドキュメントグリッド(&amp;G)</comment>
   </data>
   <data name="auditLogMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Alt+4</value>
@@ -337,10 +329,6 @@ Old Localized:ドキュメントグリッド(&amp;G)</comment>
   </data>
   <data name="spectrumGridMenuItem.Text" xml:space="preserve">
     <value>スペクトラムグリッド(&amp;S)</value>
-    <comment>Needs Review:English text changed
-Old English:Spectrum Grid
-Current English:&amp;Spectrum Grid
-Old Localized:スペクトルグリッド</comment>
   </data>
   <data name="librariesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>180, 22</value>
@@ -733,7 +721,11 @@ Old Localized:スペクトルグリッド</comment>
     <value>180, 22</value>
   </data>
   <data name="retentionTimesMenuItem.Text" xml:space="preserve">
-    <value>保持時間(&amp;T)</value>
+    <value>Retention T&amp;imes</value>
+    <comment>Needs Review:English text changed
+Old English:Retention &amp;Times
+Current English:Retention T&amp;imes
+Old Localized:保持時間(&amp;T)</comment>
   </data>
   <data name="replicateComparisonMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>F8</value>
@@ -757,7 +749,11 @@ Old Localized:スペクトルグリッド</comment>
     <value>228, 22</value>
   </data>
   <data name="regressionMenuItem.Text" xml:space="preserve">
-    <value>回帰(&amp;R)</value>
+    <value>R&amp;egression</value>
+    <comment>Needs Review:English text changed
+Old English:&amp;Regression
+Current English:R&amp;egression
+Old Localized:回帰(&amp;R)</comment>
   </data>
   <data name="scoreToRunMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>142, 22</value>

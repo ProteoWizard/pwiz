@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="keyboardShortcutsHelpMenuItem.Text" xml:space="preserve">
+    <value>&amp;Keyboard Shortcuts</value>
+  </data>
   <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
@@ -1393,7 +1396,7 @@
     <value>200, 22</value>
   </data>
   <data name="startPageMenuItem.Text" xml:space="preserve">
-    <value>Sta&amp;rt...</value>
+    <value>S&amp;tart...</value>
   </data>
   <data name="newMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Fuchsia</value>
@@ -1470,6 +1473,15 @@
   <data name="publishMenuItem.Text" xml:space="preserve">
     <value>&amp;Upload to Panorama...</value>
   </data>
+  <data name="ardiaPublishMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Fuchsia</value>
+  </data>
+  <data name="ardiaPublishMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>200, 22</value>
+  </data>
+  <data name="ardiaPublishMenuItem.Text" xml:space="preserve">
+    <value>Uploa&amp;d to Ardia...</value>
+  </data>
   <data name="toolStripSeparator2.Size" type="System.Drawing.Size, System.Drawing">
     <value>197, 6</value>
   </data>
@@ -1495,7 +1507,7 @@
     <value>200, 22</value>
   </data>
   <data name="searchStripMenuItem.Text" xml:space="preserve">
-    <value>&amp;Search</value>
+    <value>Sea&amp;rch</value>
   </data>
   <data name="importResultsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>170, 22</value>
@@ -1763,6 +1775,12 @@
   </data>
   <data name="configureToolsMenuItem.Text" xml:space="preserve">
     <value>&amp;External Tools...</value>
+  </data>
+  <data name="searchToolsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="searchToolsMenuItem.Text" xml:space="preserve">
+    <value>&amp;Search Tools...</value>
   </data>
   <data name="toolStripSeparator46.Size" type="System.Drawing.Size, System.Drawing">
     <value>175, 6</value>
@@ -3399,6 +3417,12 @@
   <data name="&gt;&gt;publishMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;ardiaPublishMenuItem.Name" xml:space="preserve">
+    <value>ardiaPublishMenuItem</value>
+  </data>
+  <data name="&gt;&gt;ardiaPublishMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;toolStripSeparator2.Name" xml:space="preserve">
     <value>toolStripSeparator2</value>
   </data>
@@ -4106,6 +4130,12 @@
   </data>
   <data name="&gt;&gt;detectionsToolStripSeparator3.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;searchToolsMenuItem.Name" xml:space="preserve">
+    <value>searchToolsMenuItem</value>
+  </data>
+  <data name="&gt;&gt;searchToolsMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>SkylineWindow</value>

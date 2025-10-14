@@ -176,6 +176,15 @@ namespace pwiz.Skyline.Model.Results {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Loading {0}.
+        /// </summary>
+        public static string ChromatogramManager_LoadBackground_Loading__0_ {
+            get {
+                return ResourceManager.GetString("ChromatogramManager_LoadBackground_Loading__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Attempting to save results info for a file that cannot be found..
         /// </summary>
         public static string ChromatogramSet_GetOrdinalSaveId_Attempting_to_save_results_info_for_a_file_that_cannot_be_found {
@@ -721,6 +730,15 @@ namespace pwiz.Skyline.Model.Results {
             get {
                 return ResourceManager.GetString("SpectrumFilter_CalcDiaIsolationValues_Unable_to_determine_isolation_width_for_the" +
                         "_scan_targeted_at__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No isolation window found in {0} for precursor {1} (m/z={2} im={3}).
+        /// </summary>
+        public static string SpectrumFilter_No_Isolation_Window_Found_For_Precursor_ {
+            get {
+                return ResourceManager.GetString("SpectrumFilter_No_Isolation_Window_Found_For_Precursor_", resourceCulture);
             }
         }
         

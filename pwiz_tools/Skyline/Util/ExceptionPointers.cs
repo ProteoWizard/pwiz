@@ -21,6 +21,7 @@ using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
+using JetBrains.Annotations;
 
 namespace pwiz.Skyline.Util
 {
@@ -111,6 +112,7 @@ namespace pwiz.Skyline.Util
         public IntPtr[] ExceptionInformation;
     }
 
+    [UsedImplicitly(ImplicitUseTargetFlags.Members)]
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct CONTEXT_RECORD
     {

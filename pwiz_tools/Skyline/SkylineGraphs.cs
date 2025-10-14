@@ -16,14 +16,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
@@ -32,29 +24,40 @@ using pwiz.Common.SystemUtil.Caching;
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Controls.Databinding;
-using pwiz.Skyline.Controls.Graphs;
-using pwiz.Skyline.Controls.SeqNode;
-using pwiz.Skyline.EditUI;
-using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.DocSettings.Extensions;
-using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.AuditLog;
 using pwiz.Skyline.Controls.Clustering;
+using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.Graphs.Calibration;
 using pwiz.Skyline.Controls.GroupComparison;
+using pwiz.Skyline.Controls.SeqNode;
+using pwiz.Skyline.EditUI;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
-using ZedGraph;
 using pwiz.Skyline.Util.Extensions;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Drawing;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+using System.Xml;
+using pwiz.Skyline.Controls.Lists;
+using ZedGraph;
 using PeptideDocNode = pwiz.Skyline.Model.PeptideDocNode;
 using User32 = pwiz.Common.SystemUtil.PInvoke.User32;
 
@@ -82,7 +85,6 @@ namespace pwiz.Skyline
         public static int MAX_GRAPH_CHROM = 100; // Never show more than this many chromatograms, lest we hit the Windows handle limit
         private readonly List<GraphChromatogram> _listGraphChrom = new List<GraphChromatogram>(); // List order is MRU, with oldest in position 0
         private bool _inGraphUpdate;
-        private ChromFileInfoId _alignToFile;
         private bool _alignToPrediction;
 
         public RTGraphController RTGraphController
@@ -481,6 +483,10 @@ namespace pwiz.Skyline
         {
             using (new DockPanelLayoutLock(dockPanel, true))
             {
+                if (Program.SkylineOffscreen)
+                {
+                    layoutStream = MoveLayoutOffScreen(layoutStream);
+                }
                 LoadLayoutLocked(layoutStream);
             }
         }
@@ -532,6 +538,40 @@ namespace pwiz.Skyline
             }
 
             EnsureFloatingWindowsVisible();
+        }
+
+        /// <summary>
+        /// Change the "Bounds" attribute of the "FloatingWindow" elements in the .sky.view file
+        /// to a point offscreen.
+        /// </summary>
+        private static MemoryStream MoveLayoutOffScreen(Stream layoutStream)
+        {
+            const string attrBounds = @"Bounds";
+            var xd = new XmlDocument();
+            xd.Load(layoutStream);
+            var rectangleConverter = new RectangleConverter();
+            foreach (XmlElement el in xd.SelectNodes(@"//FloatingWindow")!)
+            {
+                var strBounds = el.GetAttribute(attrBounds);
+                if (!string.IsNullOrEmpty(strBounds))
+                {
+                    if (rectangleConverter.ConvertFromInvariantString(el.GetAttribute(attrBounds)) 
+                        is Rectangle rectBounds)
+                    {
+                        var newBounds = new Rectangle(GetOffscreenPoint(), rectBounds.Size);
+                        el.SetAttribute(attrBounds, rectangleConverter.ConvertToInvariantString(newBounds));
+                    }
+                }
+            }
+
+            var memoryStream = new MemoryStream();
+            var xmlTextWriter = new XmlTextWriter(memoryStream, Encoding.UTF8)
+            {
+                Formatting = Formatting.Indented
+            };
+            xd.Save(xmlTextWriter);
+            memoryStream.Position = 0;
+            return memoryStream;
         }
 
         public void DestroyAllChromatogramsGraph()
@@ -664,6 +704,10 @@ namespace pwiz.Skyline
             if (Equals(persistentString, typeof(AuditLogForm).ToString()))
             {
                 return _auditLogForm ?? CreateAuditLogForm();
+            }
+            if (persistentString.StartsWith(typeof(ListGridForm).ToString()))
+            {
+                return CreateListForm(ListGridForm.GetListName(persistentString));
             }
             if (Equals(persistentString, typeof(ImmediateWindow).ToString()))
             {
@@ -799,23 +843,9 @@ namespace pwiz.Skyline
             }
         }
 
-        public ChromFileInfoId AlignToFile
-        {
-            get { return _alignToFile; }
-            set 
-            { 
-                if (ReferenceEquals(value, AlignToFile))
-                {
-                    return;
-                }
-                _alignToFile = value;
-                UpdateGraphPanes();
-            }
-        }
-
         public bool AlignToRtPrediction
         {
-            get { return null == AlignToFile && _alignToPrediction; }
+            get { return _alignToPrediction; }
             set
             {
                 if (value == AlignToRtPrediction)
@@ -823,30 +853,15 @@ namespace pwiz.Skyline
                     return;
                 }
                 _alignToPrediction = value;
-                if (_alignToPrediction)
-                {
-                    _alignToFile = null;
-                }
                 UpdateGraphPanes();
             }
         }
 
         public GraphValues.IRetentionTimeTransformOp GetRetentionTimeTransformOperation()
         {
-            if (null != AlignToFile)
-            {
-                return GraphValues.AlignToFileOp.GetAlignmentToFile(AlignToFile, Document.Settings);
-            }
             if (AlignToRtPrediction)
             {
-                // Only align to regressions that are auto-calculated.  Otherwise,
-                // conversion will be the same for all replicates, making this just
-                // a linear unit conversion
-                var predictRT = Document.Settings.PeptideSettings.Prediction.RetentionTime;
-                if (predictRT != null && predictRT.IsAutoCalculated)
-                {
-                    return new GraphValues.RegressionUnconversion(predictRT);
-                }
+                return new GraphValues.RetentionTimeAlignmentTransformOp(Document.Settings);
             }
             return null;
         }
@@ -1616,6 +1631,12 @@ namespace pwiz.Skyline
             UpdateChromGraphs();
         }
 
+        public void ShowExemplaryPeak(bool show)
+        {
+            Settings.Default.ShowExemplaryPeakBounds = show;
+            UpdateChromGraphs();
+        }
+
         public void SetShowRetentionTimes(ShowRTChrom showRTChrom)
         {
             Settings.Default.ShowRetentionTimesEnum = showRTChrom.ToString();
@@ -2372,7 +2393,7 @@ namespace pwiz.Skyline
             var thisEnd = change.EndTime.MeasuredTime;
             if (transformOp != null)
             {
-                transformOp.TryGetRegressionFunction(thisFile, out var regressionThis);
+                transformOp.TryGetRegressionFunction(change.FilePath, out var regressionThis);
                 if (regressionThis != null)
                 {
                     thisStart = regressionThis.GetY(thisStart);
@@ -2403,9 +2424,9 @@ namespace pwiz.Skyline
                     var start = thisStart;
                     var end = thisEnd;
 
-                    if (transformOp != null && !ReferenceEquals(AlignToFile, info.FileId))
+                    if (transformOp != null)
                     {
-                        transformOp.TryGetRegressionFunction(info.FileId, out var regression);
+                        transformOp.TryGetRegressionFunction(info.FilePath, out var regression);
                         if (regression != null)
                         {
                             start = regression.GetX(thisStart);
@@ -2846,6 +2867,7 @@ namespace pwiz.Skyline
                     {
                         linearRegressionContextMenuItem,
                         kernelDensityEstimationContextMenuItem,
+                        logRegressionContextMenuItem,
                         loessContextMenuItem
                     });
                 }
@@ -3370,28 +3392,35 @@ namespace pwiz.Skyline
                 chooseCalculatorContextMenuItem.DropDownItems.RemoveAt(0);
 
             //If no calculator has been picked for use in the graph, get the best one.
-            var autoItem = new ToolStripMenuItem(SkylineResources.SkylineWindow_SetupCalculatorChooser_Auto, null, delegate { ChooseCalculator(string.Empty); })
-                               {
-                                   Checked = string.IsNullOrEmpty(Settings.Default.RTCalculatorName)
-                               };
+            var autoItem = new ToolStripMenuItem(SkylineResources.SkylineWindow_SetupCalculatorChooser_Auto, null,
+                delegate { ChooseCalculator(string.Empty); })
+            {
+                Checked = string.IsNullOrEmpty(Settings.Default.RTCalculatorName)
+            };
             chooseCalculatorContextMenuItem.DropDownItems.Insert(0, autoItem);
 
             int i = 0;
-            foreach (var calculator in Settings.Default.RTScoreCalculatorList)
+            var document = DocumentUI;
+            foreach (var optionVariable in RtCalculatorOption.GetOptions(document))
             {
-                string calculatorName = calculator.Name;
-                var menuItem = new ToolStripMenuItem(calculatorName, null, delegate { ChooseCalculator(calculatorName);})
+                var option = optionVariable;
+                var menuItem = new ToolStripMenuItem(option.DisplayName, null, delegate { ChooseCalculator(option); })
                 {
-                    Checked = Equals(calculatorName, Settings.Default.RTCalculatorName)
+                    Checked = Equals(option, Settings.Default.RtCalculatorOption)
                 };
                 chooseCalculatorContextMenuItem.DropDownItems.Insert(i++, menuItem);
             }
         }
 
-        public void ChooseCalculator(string calculatorName)
+        public void ChooseCalculator(RtCalculatorOption option)
         {
-            Settings.Default.RTCalculatorName = calculatorName;
+            Settings.Default.RtCalculatorOption = option;
             UpdateRetentionTimeGraph();
+        }
+
+        public void ChooseCalculator(string irtCalc)
+        {
+            ChooseCalculator(new RtCalculatorOption.Irt(irtCalc));
         }
 
         private void addCalculatorContextMenuItem_Click(object sender, EventArgs e)
@@ -3473,42 +3502,15 @@ namespace pwiz.Skyline
             var predictRT = Document.Settings.PeptideSettings.Prediction.RetentionTime;
             if (predictRT != null && predictRT.IsAutoCalculated)
             {
-                var menuItem = new ToolStripMenuItem(string.Format(Resources.SkylineWindow_ShowCalculatorScoreFormat, predictRT.Calculator.Name), null, 
-                    (sender, eventArgs)=>AlignToRtPrediction=!AlignToRtPrediction)
-                    {
-                        Checked = AlignToRtPrediction,
-                    };
+                var menuItem = new ToolStripMenuItem(
+                    string.Format(Resources.SkylineWindow_ShowCalculatorScoreFormat, predictRT.Calculator.Name), null,
+                    (sender, eventArgs) => AlignToRtPrediction = !AlignToRtPrediction)
+                {
+                    Checked = AlignToRtPrediction,
+                };
                 items.Insert(iInsert++, menuItem);
             }
-            if (null != chromFileInfoId && DocumentUI.Settings.HasResults &&
-                !DocumentUI.Settings.DocumentRetentionTimes.FileAlignments.IsEmpty)
-            {
-                foreach (var chromatogramSet in DocumentUI.Settings.MeasuredResults.Chromatograms)
-                {
-                    var chromFileInfo = chromatogramSet.MSDataFileInfos
-                                                       .FirstOrDefault(
-                                                           chromFileInfoMatch =>
-                                                           ReferenceEquals(chromFileInfoMatch.FileId, chromFileInfoId));
-                    if (null == chromFileInfo)
-                    {
-                        continue;
-                    }
-                    string fileItemName = Path.GetFileNameWithoutExtension(SampleHelp.GetFileName(chromFileInfo.FilePath));
-                    var menuItemText = string.Format(Resources.SkylineWindow_AlignTimesToFileFormat, fileItemName);
-                    var alignToFileItem = new ToolStripMenuItem(menuItemText);
-                    if (ReferenceEquals(chromFileInfoId, AlignToFile))
-                    {
-                        alignToFileItem.Click += (sender, eventArgs) => AlignToFile = null;
-                        alignToFileItem.Checked = true;
-                    }
-                    else
-                    {
-                        alignToFileItem.Click += (sender, eventArgs) => AlignToFile = chromFileInfoId;
-                        alignToFileItem.Checked = false;
-                    }
-                    items.Insert(iInsert++, alignToFileItem);
-                }
-            }
+
             return iInsert;
         }
 

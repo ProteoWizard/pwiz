@@ -866,6 +866,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     var scoreType = IsFeatureDetectionWorkflow
                         ? ScoreType.HardklorIdotp
                         : ScoreType.GenericQValue;
+
                     BuildPepSearchLibControl.Grid.Files = ImportPeptideSearch.SearchEngine.SpectrumFileNames.Select(f =>
                         new BuildLibraryGridView.File(ImportPeptideSearch.SearchEngine.GetSearchResultFilepath(f), scoreType, scoreThreshold));
                     BuildPepSearchLibControl.ImportPeptideSearch.SearchFilenames = BuildPepSearchLibControl.Grid.FilePaths.ToArray();
@@ -914,6 +915,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             CurrentPage = newPage;
             UpdateButtons();
+            UpdateMinimumSize();
         }
 
         private void AddDetectedFeaturesToDocument(IProgressMonitor progressMonitor)
@@ -1175,6 +1177,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     SearchControl.SearchFinished -= SearchControlSearchFinished;
                     break;
             }
+            UpdateMinimumSize();
         }
 
         private void UpdateButtons()
@@ -1197,6 +1200,19 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             btnNext.Text = CurrentPage != LastPage
                 ? PeptideSearchResources.ImportPeptideSearchDlg_ImportPeptideSearchDlg_Next
                 : PeptideSearchResources.ImportPeptideSearchDlg_NextPage_Finish;
+        }
+
+        private void UpdateMinimumSize()
+        {
+            var pageControl = GetPageControl(wizardPagesImportPeptideSearch.SelectedTab);
+            if (pageControl != null && pageControl.MinimumSize.Height > 0)
+            {
+                var outsideHeight = Height - wizardPagesImportPeptideSearch.Height + addModsTitlePanel.Height;
+                var outsideWidth = Width - wizardPagesImportPeptideSearch.Width;
+                MinimumSize = new Size(
+                    pageControl.MinimumSize.Width + outsideWidth,
+                    pageControl.MinimumSize.Height + outsideHeight);
+            }
         }
 
         private bool UpdateModificationSettings()

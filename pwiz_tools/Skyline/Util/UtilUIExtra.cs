@@ -294,7 +294,7 @@ EndSelection:<<<<<<<3
             {
                 foreach (object item in comboBox.Items)
                 {
-                    string valueToMeasure = item.ToString();
+                    string valueToMeasure = comboBox.GetItemText(item);
 
                     int currentWidth = TextRenderer.MeasureText(g, valueToMeasure, comboBox.Font).Width;
                     if (currentWidth > widestWidth)
@@ -316,6 +316,11 @@ EndSelection:<<<<<<<3
         public static string GetCopyErrorMessage()
         {
             return GetOpenClipboardMessage(UtilResources.ClipboardHelper_GetCopyErrorMessage_Failed_setting_data_to_clipboard_);
+        }
+
+        public static string GetGenericClipboardErrorMessage()
+        {
+            return GetOpenClipboardMessage(UtilResources.ClipboardHelper_GetGenericClipboardErrorMessage_Failed_accessing_the_clipboard_);
         }
 
         public static string GetOpenClipboardMessage(string prefix)
@@ -395,6 +400,34 @@ EndSelection:<<<<<<<3
                 MessageDlg.Show(FormUtil.FindTopLevelOwner(owner), GetPasteErrorMessage());
                 return null;
             }
+        }
+
+        public static bool IsCut(Keys keys)
+        {
+            return keys == (Keys.Control | Keys.X) || keys == (Keys.Shift | Keys.Delete);
+        }
+        
+        public static bool IsCopy(Keys keys)
+        {
+            return keys == (Keys.Control | Keys.C) || keys == (Keys.Control | Keys.Insert);
+        }
+
+        public static bool IsPaste(Keys keys)
+        {
+            return keys == (Keys.Control | Keys.V) || keys == (Keys.Shift | Keys.Insert);
+        }
+
+        public static string GetClipboardErrorMessageForKeystroke(Keys keys)
+        {
+            if (IsPaste(keys))
+            {
+                return GetPasteErrorMessage();
+            }
+            if (IsCopy(keys) || IsCut(keys))
+            {
+                return GetCopyErrorMessage();
+            }
+            return GetGenericClipboardErrorMessage();
         }
     }
 }

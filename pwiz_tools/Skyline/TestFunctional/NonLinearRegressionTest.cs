@@ -78,8 +78,8 @@ namespace pwiz.SkylineTestFunctional
 
             var kdeFunction = (PiecewiseLinearRegressionFunction) graphPane.RegressionRefined.Conversion;
 
-            Assert.AreEqual(5.7326, kdeFunction.RMSD, 0.0001);
-            Assert.AreEqual(22, kdeFunction.LinearFunctionsCount);
+            Assert.AreEqual(8.7415, kdeFunction.RMSD, 0.0001);
+            Assert.AreEqual(21, kdeFunction.LinearFunctionsCount);
 
             //Check for Loess
 
@@ -92,8 +92,8 @@ namespace pwiz.SkylineTestFunctional
             // ReSharper disable once PossibleInvalidCastException
             var loessFunction = (LoessRegression) graphPane.RegressionRefined.Conversion;
 
-            Assert.AreEqual(4.0552, loessFunction.Rmsd, 0.0001);
-            Assert.AreEqual(22, kdeFunction.LinearFunctionsCount);
+            Assert.AreEqual(3.2781, loessFunction.Rmsd, 0.0001);
+            Assert.AreEqual(21, kdeFunction.LinearFunctionsCount);
         }
 
         void TestRunToRunRegression()

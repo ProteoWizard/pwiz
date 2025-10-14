@@ -22,11 +22,11 @@ namespace pwiz.SkylineTestUtil
 {
     /// <summary>
     /// Helper methods for testing the Ardia server.
-    /// In order for Ardia tests to be enabled, you must have an environment variable "ARDIA_PASSWORD".
+    /// In order for Ardia tests to be enabled, you must have environment variables "ARDIA_PASSWORD" and "ARDIA_PASSWORD_1ROLE";
     /// </summary>
     public static class ArdiaTestUtil
     {
-        private static string _baseUrl = "https://hyperbridge.cmdtest.thermofisher.com";
+        private const string BASE_URL = "https://ardia-core-int.cmdtest.thermofisher.com/";
 
         public enum AccountType
         {
@@ -45,11 +45,11 @@ namespace pwiz.SkylineTestUtil
             switch (type)
             {
                 case AccountType.MultiRole:
-                    return (ArdiaAccount)ArdiaAccount.DEFAULT.ChangeTestingOnly_NotSerialized_Role("Tester")
+                    return (ArdiaAccount)ArdiaAccount.DEFAULT.ChangeTestingOnly_NotSerialized_Role("SkylineTester")
                         .ChangeTestingOnly_NotSerialized_Username("matt.chambers42@gmail.com")
                         .ChangeTestingOnly_NotSerialized_Password(password)
                         .ChangeUsername("Testing_FAKE_ArdiaUser_MultiRole")
-                        .ChangeServerUrl(_baseUrl);
+                        .ChangeServerUrl(BASE_URL);
 
                 case AccountType.SingleRole:
                     return (ArdiaAccount)ArdiaAccount.DEFAULT
@@ -64,7 +64,7 @@ namespace pwiz.SkylineTestUtil
 
                         .ChangeUsername("Testing_FAKE_ArdiaUser_SingleRole")
 
-                        .ChangeServerUrl(_baseUrl);
+                        .ChangeServerUrl(BASE_URL);
 
                 default:
                     throw new ArgumentOutOfRangeException(nameof(type), type, null);
