@@ -144,7 +144,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         public void OpenLibraryExplorerDialog(TreeNode selectedNode)
         {
-            var model = (SpectralLibrary)((FilesTreeNode)selectedNode).Model;
+            var model = (Model.Files.SpectralLibrary)((FilesTreeNode)selectedNode).Model;
             var libraryName = model.Name;
 
             var index = SkylineWindow.OwnedForms.IndexOf(form => form is ViewLibraryDlg);
@@ -260,7 +260,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 return;
 
             var model = nodes.First().Model;
-            Assume.IsTrue(model is Replicate || model is SpectralLibrary);
+            Assume.IsTrue(model is Replicate || model is Model.Files.SpectralLibrary);
 
             var messages = model is Replicate ? 
                 ValueTuple.Create(FilesTreeResources.FilesTreeForm_Confirm_Remove_Replicate, FilesTreeResources.FilesTreeForm_Confirm_Remove_Replicates, FilesTreeResources.Remove_Replicate) :
@@ -286,10 +286,10 @@ namespace pwiz.Skyline.Controls.FilesTree
                         var deletedModels = nodes.Select(item => item.Model).OfType<Replicate>().Cast<FileModel>().ToList();
                         modifiedDoc = Replicate.Delete(originalDoc, monitor, deletedModels);
                     }
-                    else if (model is SpectralLibrary)
+                    else if (model is Model.Files.SpectralLibrary)
                     {
                         var deletedModels = nodes.Select(item => item.Model).ToList();
-                        modifiedDoc = SpectralLibrary.Delete(originalDoc, monitor, deletedModels);
+                        modifiedDoc = Model.Files.SpectralLibrary.Delete(originalDoc, monitor, deletedModels);
                     }
                 });
 
@@ -358,9 +358,9 @@ namespace pwiz.Skyline.Controls.FilesTree
                         {
                             modifiedDoc = Replicate.Rearrange(originalDoc, monitor, draggedModels, dropNode.Model, moveType);
                         }
-                        else if (primaryDraggedNode.Model is SpectralLibrary)
+                        else if (primaryDraggedNode.Model is Model.Files.SpectralLibrary)
                         {
-                            modifiedDoc = SpectralLibrary.Rearrange(originalDoc, monitor, draggedModels, dropNode.Model, moveType);
+                            modifiedDoc = Model.Files.SpectralLibrary.Rearrange(originalDoc, monitor, draggedModels, dropNode.Model, moveType);
                         }
                     });
 
@@ -414,7 +414,6 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             var selectedNode = FilesTree.SelectedNodeFTN;
             var dataSchema = new SkylineWindowDataSchema(SkylineWindow);
-            var identityPath = selectedNode?.Model.IdentityPath;
             return selectedNode?.Model.PropertyObjectInstancer(dataSchema);
         }
 
@@ -463,7 +462,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 case SpectralLibrariesFolder _:
                     libraryExplorerMenuItem.Visible = true;
                     return;
-                case SpectralLibrary _:
+                case Model.Files.SpectralLibrary _:
                     openLibraryInLibraryExplorerMenuItem.Visible = true;
                     break;
                 case SkylineAuditLog _:
@@ -496,7 +495,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 case SkylineAuditLog _:
                     OpenAuditLog();
                     break;
-                case SpectralLibrary _:
+                case Model.Files.SpectralLibrary _:
                     OpenLibraryExplorerDialog(filesTreeNode); 
                     break;
                 case ReplicateSampleFile _:
