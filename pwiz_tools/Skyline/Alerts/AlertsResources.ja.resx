@@ -324,4 +324,10 @@
   <data name="ArdiaLoginDlg_CoreWebView2OnNavigationCompleted_AfterNavigateToLoginURL_Load_Login_page_failed_with_HTTP_status_code__0__Login_Page_URL___1_" xml:space="preserve">
     <value>ログインページを読み込めませんでした。HTTPステータスコードは{0}です。クライアント登録コードが無効な可能性があります。新しいクライアント登録コードをサーバーから受信した直後であるため、不具合の可能性があります。ログインページURL: {1}</value>
   </data>
+  <data name="MsFraggerDownloadDlg_btnRequestVerificationCode_Click_Check_your_email" xml:space="preserve">
+    <value>Check your email for the verification code and copy it into the box.
+
+If you don't get an email, double-check your email address or click "More Info" for troubleshooting.</value>
+    <comment>Needs Review:Missing translation</comment>
+  </data>
 </root>

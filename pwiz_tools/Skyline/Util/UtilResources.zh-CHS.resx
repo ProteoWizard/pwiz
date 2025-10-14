@@ -181,12 +181,6 @@
   <data name="DataGridViewPasteHandler_TryConvertValue_Error_converting___0___to_required_type___1_" xml:space="preserve">
     <value>将“{0}”转化为所需类型出错：{1}</value>
   </data>
-  <data name="DataSourceUtil_GetWiffSubPaths_An_error_occurred_attempting_to_read_sample_information_from_the_file__0__" xml:space="preserve">
-    <value>尝试从文件{0}中读取样品信息出现错误。</value>
-  </data>
-  <data name="DataSourceUtil_GetWiffSubPaths_The_file_may_be_corrupted_missing_or_the_correct_libraries_may_not_be_installed" xml:space="preserve">
-    <value>文件可能已损坏或丢失，或者正确的库可能未安装。</value>
-  </data>
   <data name="DirectoryEx_DirectoryCopy_Source_directory_does_not_exist_or_could_not_be_found__" xml:space="preserve">
     <value>源目录不存在或无法找到：</value>
   </data>
