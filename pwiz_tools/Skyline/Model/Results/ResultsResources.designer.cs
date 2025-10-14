@@ -102,6 +102,15 @@ namespace pwiz.Skyline.Model.Results {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Annotation: .
+        /// </summary>
+        public static string Annotation_DisambiguationPrefix_Annotation__ {
+            get {
+                return ResourceManager.GetString("Annotation_DisambiguationPrefix_Annotation__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Expected sorted data.
         /// </summary>
         public static string Block_VerifySort_Expected_sorted_data {
@@ -642,6 +651,15 @@ namespace pwiz.Skyline.Model.Results {
         public static string PeptideChromDataSets_MergePeakGroups_Unexpected_null_peak_list {
             get {
                 return ResourceManager.GetString("PeptideChromDataSets_MergePeakGroups_Unexpected_null_peak_list", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Property: .
+        /// </summary>
+        public static string Property_DisambiguationPrefix_Property__ {
+            get {
+                return ResourceManager.GetString("Property_DisambiguationPrefix_Property__", resourceCulture);
             }
         }
         

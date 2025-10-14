@@ -19,6 +19,7 @@
 using System.ComponentModel;
 using System.Linq;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Controls.Graphs

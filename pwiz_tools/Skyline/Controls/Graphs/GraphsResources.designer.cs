@@ -223,15 +223,6 @@ namespace pwiz.Skyline.Controls.Graphs {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Annotation: .
-        /// </summary>
-        public static string Annotation_DisambiguationPrefix_Annotation__ {
-            get {
-                return ResourceManager.GetString("Annotation_DisambiguationPrefix_Annotation__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to {0} cutoff value must be greater or equal than 0. and lesser or equal than 1..
         /// </summary>
         public static string AreaChartPropertyDlg_ValidateDotpRange__0__must_be_betwen_0_and_1 {
@@ -1524,15 +1515,6 @@ namespace pwiz.Skyline.Controls.Graphs {
         public static string PeptideRegressionTipProvider_RenderTip_Peptide {
             get {
                 return ResourceManager.GetString("PeptideRegressionTipProvider_RenderTip_Peptide", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Property: .
-        /// </summary>
-        public static string Property_DisambiguationPrefix_Property__ {
-            get {
-                return ResourceManager.GetString("Property_DisambiguationPrefix_Property__", resourceCulture);
             }
         }
         

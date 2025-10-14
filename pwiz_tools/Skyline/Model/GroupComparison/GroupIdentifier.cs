@@ -18,9 +18,6 @@
  */
 
 using System;
-using System.Globalization;
-using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model.Hibernate;
 
 namespace pwiz.Skyline.Model.GroupComparison
 {

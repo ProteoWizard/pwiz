@@ -16,21 +16,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using pwiz.Common.DataBinding;
-using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Databinding.Entities;
-using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
-using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
-using pwiz.Skyline.Model.Results;
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using pwiz.Common.DataBinding;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
+using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
 using pwiz.Skyline.Model.GroupComparison;
 
-namespace pwiz.Skyline.Controls.Graphs
+namespace pwiz.Skyline.Model.Results
 {
     public abstract class ReplicateValue : Immutable
     {
@@ -172,7 +171,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             protected override string DisambiguationPrefix
             {
-                get { return GraphsResources.Annotation_DisambiguationPrefix_Annotation__; }
+                get { return ResultsResources.Annotation_DisambiguationPrefix_Annotation__; }
             }
 
             protected bool Equals(Annotation other)
@@ -303,7 +302,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             protected override string DisambiguationPrefix
             {
-                get { return GraphsResources.Property_DisambiguationPrefix_Property__; }
+                get { return ResultsResources.Property_DisambiguationPrefix_Property__; }
             }
 
             protected bool Equals(Property other)
