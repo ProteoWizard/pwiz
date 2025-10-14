@@ -89,20 +89,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public ResultFile File { get { return GetResultFile(); }}
     }
 
-    public class MultiPeptideResult : MultiResult<Peptide, PeptideResult>
-    {
-        public MultiPeptideResult(SkylineDataSchema dataSchema, IEnumerable<Peptide> peptides, ResultFileKey resultKey)
-            : base(dataSchema, peptides, resultKey)
-        {
-            
-        }
-
-        protected override IEnumerable<PeptideResult> GetResults(Peptide docNode)
-        {
-            return FindResults(docNode.Results, GetResultFile());
-        }
-    }
-
     [AnnotationTarget(AnnotationDef.AnnotationTarget.precursor_result)]
     public class MultiPrecursorResult : MultiResult<Precursor, PrecursorResult>
     {
