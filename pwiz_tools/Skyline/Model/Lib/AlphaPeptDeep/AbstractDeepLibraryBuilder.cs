@@ -277,7 +277,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         {
             return mod.AlphaNameWithAminoAcid(unmodifiedSequence, modIndexAA);
         }
-        public string GetWarning()
+        public virtual string GetWarning()
         {
             var warningModSupports = GetWarningMods();
             if (warningModSupports.IsNullOrEmpty())

@@ -148,6 +148,13 @@ namespace pwiz.Skyline.Model.Lib.Carafe
 
         protected override string ToolName => CARAFE;
         protected override LibraryBuilderModificationSupport LibraryBuilderModificationSupport { get; }
+
+        public override string GetWarning()
+        {
+            // Do not warn about unsupported modifications because the message only suggests using Carafe.
+            return string.Empty;
+        }
+
         public LibrarySpec LibrarySpec { get; private set; }
 
         public static string PythonVersion => Settings.Default.PythonEmbeddableVersion;

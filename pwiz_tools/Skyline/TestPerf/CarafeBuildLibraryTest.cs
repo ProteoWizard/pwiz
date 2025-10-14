@@ -49,7 +49,7 @@ namespace TestPerf
         /// <summary>
         /// When true Python installation is forced by deleting any old installation
         /// </summary>
-        private bool IsCleanPythonMode => true;
+        private bool IsCleanPythonMode => false;
 
         private bool RunExtendedTest => true;
 
@@ -67,7 +67,6 @@ namespace TestPerf
 
         public string LogOutput => TestContext.GetTestResultsPath("TestConsole.log");
         private const string TESTDATA_FILE = @"CarafeBuildLibraryTestSmall.zip";
-        private const string TESTDATA_DIR = @"TestPerf";
 
         private string _toolName = CarafeLibraryBuilder.CARAFE;
         private string _pythonVersion = CarafeLibraryBuilder.PythonVersion;
@@ -95,14 +94,8 @@ namespace TestPerf
             if (IsCleanPythonMode)
                 AssertEx.IsTrue(PythonInstaller.DeleteToolsPythonDirectory());
 
-            string currentDirectory = Directory.GetCurrentDirectory();
-            Directory.CreateDirectory(TESTDATA_DIR);
-            TestFilesZipPaths = new[]
-            {
-                GetPerfTestDataURL($@"{TESTDATA_FILE}")
-            };
-
-            FreshenTestDataDownloads();
+            TestFilesZip = GetPerfTestDataURL(TESTDATA_FILE);
+            TestFilesPersistent = new[] { "Lumos_8mz_staggered_reCID_human_small" };
 
             var originalInstallationState = PythonInstaller.SimulatedInstallationState;
             try
@@ -195,11 +188,7 @@ namespace TestPerf
             const string libraryWithIrt = "CarafeLibraryWithIrt";
             const string answerWithIrt = "with_iRT/predict_transformed.speclib.tsv";
 
-            var peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
-
-            var simulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT; // Simulates not having Nvidia library but having the GPU
-
-            var builtLibraryBySky = CarafeBuildLibrary(peptideSettings, LibraryTunedBySky, LibraryPathTunedBySky, MzMLFile, "", SkyFineTuneFile, BuildLibraryDlg.BuildLibraryTargetOptions.currentSkylineDocument, BuildLibraryDlg.LearningOptions.another_doc, TestFilesDir.GetTestPath(@"cpu_test_res_fine_tuned_bySky.blib"), simulatedInstallationState);
+            var builtLibraryBySky = CarafeBuildLibrary(LibraryTunedBySky, LibraryPathTunedBySky, MzMLFile, "", SkyFineTuneFile, BuildLibraryDlg.BuildLibraryTargetOptions.currentSkylineDocument, BuildLibraryDlg.LearningOptions.another_doc, TestFilesDir.GetTestPath(@"cpu_test_res_fine_tuned_bySky.blib"), PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT);
 
             // var builtLibraryBySkyIrt = CarafeBuildLibrary(peptideSettings, LibraryTunedBySkyIrt, LibraryPathTunedBySkyIrt, MzMLFile, "", SkyFineTuneFile, BuildLibraryDlg.BuildLibraryTargetOptions.currentSkylineDocument, BuildLibraryDlg.LearningOptions.another_doc, TestFilesDir.GetTestPath(@"test_res_fine_tuned_bySky_iRT.blib"), simulatedInstallationState, IrtStandard.BIOGNOSYS_11);
 
@@ -265,19 +254,12 @@ namespace TestPerf
             const string libraryWithIrt = "CarafeLibraryWithIrt";
             const string answerWithIrt = "with_iRT/predict_transformed.speclib.tsv";
 
-            var peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
-            
-            var simulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT; // Simulates not having Nvidia library but having the GPU
-            var builtLibraryBySky = CarafeBuildLibrary(peptideSettings, LibraryTunedBySky, LibraryPathTunedBySky, MzMLFile, "", SkyFineTuneFile, BuildLibraryDlg.BuildLibraryTargetOptions.currentSkylineDocument, BuildLibraryDlg.LearningOptions.another_doc, TestFilesDir.GetTestPath(@"cpu_test_res_fine_tuned_bySky.blib"), simulatedInstallationState);
+          
+            var builtLibraryBySky = CarafeBuildLibrary(LibraryTunedBySky, LibraryPathTunedBySky, MzMLFile, "", SkyFineTuneFile, BuildLibraryDlg.BuildLibraryTargetOptions.currentSkylineDocument, BuildLibraryDlg.LearningOptions.another_doc, TestFilesDir.GetTestPath(@"cpu_test_res_fine_tuned_bySky.blib"), PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT);
         
-            peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
-            
-            simulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD; // Simulates not having Nvidia GPU
-            var builtLibraryByDiann = CarafeBuildLibrary(peptideSettings, LibraryTunedByDiann, LibraryPathTunedByDiann, MzMLFile, "", DiannFineTuneFile, BuildLibraryDlg.BuildLibraryTargetOptions.currentSkylineDocument,BuildLibraryDlg.LearningOptions.diann_report, TestFilesDir.GetTestPath(@"cpu_test_res_fine_tuned_byDiann.blib"), simulatedInstallationState);
+            var builtLibraryByDiann = CarafeBuildLibrary(LibraryTunedByDiann, LibraryPathTunedByDiann, MzMLFile, "", DiannFineTuneFile, BuildLibraryDlg.BuildLibraryTargetOptions.currentSkylineDocument,BuildLibraryDlg.LearningOptions.diann_report, TestFilesDir.GetTestPath(@"cpu_test_res_fine_tuned_byDiann.blib"), PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD);
 
-            peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
-
-            var builtLibraryBySkyIrt = CarafeBuildLibrary(peptideSettings, LibraryTunedBySkyIrt, LibraryPathTunedBySkyIrt, MzMLFile, "", SkyFineTuneFile, BuildLibraryDlg.BuildLibraryTargetOptions.currentSkylineDocument, BuildLibraryDlg.LearningOptions.another_doc, TestFilesDir.GetTestPath(@"cpu_test_res_fine_tuned_bySky_iRT.blib"), simulatedInstallationState, IrtStandard.BIOGNOSYS_11);
+            var builtLibraryBySkyIrt = CarafeBuildLibrary(LibraryTunedBySkyIrt, LibraryPathTunedBySkyIrt, MzMLFile, "", SkyFineTuneFile, BuildLibraryDlg.BuildLibraryTargetOptions.currentSkylineDocument, BuildLibraryDlg.LearningOptions.another_doc, TestFilesDir.GetTestPath(@"cpu_test_res_fine_tuned_bySky_iRT.blib"), PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD, IrtStandard.BIOGNOSYS_11);
             
             var fileHash = PythonInstallerUtil.GetMD5FileHash(PythonInstaller.PythonEmbeddablePackageDownloadPath);
 
@@ -331,7 +313,6 @@ namespace TestPerf
         /// <summary>
         /// Test goes through building of a Library by Carafe with or without iRT.  Returns path to library built/
         /// </summary>
-        /// <param name="peptideSettings">Open PeptideSettingsUI Dialog object</param>
         /// <param name="libraryName">Name of the library to build</param>
         /// <param name="libraryPath">Path of the library to build</param>
         /// <param name="buildTarget">Build library target peptides, current document peptides (or FASTA database if current doc is blank)</param>
@@ -342,13 +323,14 @@ namespace TestPerf
         /// <param name="mzMLFile">MS/MS Data file path</param>
         /// <param name="proteinDatabase">Protein FASTA database</param>
         /// <param name="fineTuneFile">fine tuning file path</param>
-        private string CarafeBuildLibrary(PeptideSettingsUI peptideSettings, string libraryName,
+        private string CarafeBuildLibrary(string libraryName,
             string libraryPath, string mzMLFile, string proteinDatabase, string fineTuneFile,
             BuildLibraryDlg.BuildLibraryTargetOptions buildTarget, BuildLibraryDlg.LearningOptions learnFrom,
             string answerFile,
-            PythonInstaller.eSimulatedInstallationState simulatedInstallationState =
-                PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT, IrtStandard iRTtype = null)
+            PythonInstaller.eSimulatedInstallationState simulatedInstallationState, IrtStandard iRTtype = null)
         {
+            var peptideSettings = ShowDialog<PeptideSettingsUI>(() =>
+                SkylineWindow.ShowPeptideSettingsUI(PeptideSettingsUI.TABS.Library));
             bool buildLibraryDlgFinished = false;
             var buildLibraryDlg = ShowDialog<BuildLibraryDlg> (() =>
             {
@@ -417,8 +399,15 @@ namespace TestPerf
             }
             WaitForClosedForm<BuildLibraryDlg>();
 
-            //Wait up to 30 minutes because this is slow on CPU
-            WaitForCondition(30 * 60 * 1000, () => buildLibraryDlgFinished);
+            const int waitTime = 30 * 60 * 1000;
+            WaitForCondition(waitTime, () => buildLibraryDlgFinished || null != FindOpenForm<MessageDlg>());
+            var messageDlg = FindOpenForm<MessageDlg>();
+            if (messageDlg != null)
+            {
+                Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment, messageDlg.Message);
+                OkDialog(messageDlg, messageDlg.OkDialog);
+            }
+            WaitForCondition(waitTime, () => buildLibraryDlgFinished);
 
             var carafeLibraryBuilder = (CarafeLibraryBuilder)buildLibraryDlg.Builder;
             string builtLibraryPath = carafeLibraryBuilder.CarafeOutputLibraryFilePath;
