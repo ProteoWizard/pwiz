@@ -54,7 +54,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         #region PropertyGrid Support
 
-        protected override ResourceManager GetResourceManager() => PropertyGridDocNodeResources.ResourceManager;
+        public override ResourceManager GetResourceManager() => PropertyGridDocNodeResources.ResourceManager;
 
         protected override PropertyDescriptor GetRootAliasProperty() => TypeDescriptor.GetProperties(GetType())[nameof(Sequence)];
 

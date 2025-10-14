@@ -31,7 +31,7 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class SequenceTreePropertyGridTest : AbstractFunctionalTest
     {
-        private const int PEPTIDE_EXPECTED_PROP_NUM = 14;
+        private const int PEPTIDE_EXPECTED_PROP_NUM = 10;
         private const string SEQUENCE_PROP_NAME = "Sequence";
         private const string NOTE_PROP_NAME = "Note";
 

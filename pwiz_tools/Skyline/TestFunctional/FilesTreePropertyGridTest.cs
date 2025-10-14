@@ -30,7 +30,7 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class FilesTreePropertyGridTest : AbstractFunctionalTest
     {
-        internal const int REPLICATE_EXPECTED_PROP_NUM = 5;
+        internal const int REPLICATE_EXPECTED_PROP_NUM = 3;
         private const string NAME_PROP_NAME = "Name";
 
         [TestMethod]

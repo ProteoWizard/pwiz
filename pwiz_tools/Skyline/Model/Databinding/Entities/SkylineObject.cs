@@ -101,7 +101,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         #region PropertyGrid Support
 
-        protected virtual ResourceManager GetResourceManager() => null;
+        public virtual ResourceManager GetResourceManager() => null;
 
         protected virtual bool PropertyFilter(PropertyDescriptor prop) =>
             prop != null;
