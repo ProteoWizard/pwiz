@@ -92,7 +92,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         }
 
         // Provide a way to instantiate the PropertyObject for this model
-        public virtual Func<SkylineDataSchema, SkylineObject> PropertyObjectInstancer => 
+        public virtual Func<SkylineDataSchema, RootSkylineObject> PropertyObjectInstancer => 
             dataSchema => null;
 
         public void UpdateState()

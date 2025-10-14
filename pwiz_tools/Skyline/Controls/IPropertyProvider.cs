@@ -23,6 +23,6 @@ namespace pwiz.Skyline.Controls
 {
     public interface IPropertyProvider
     {
-        public SkylineObject GetPropertyObject();
+        public RootSkylineObject GetPropertyObject();
     }
 }

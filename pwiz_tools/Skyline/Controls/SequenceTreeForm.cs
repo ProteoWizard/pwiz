@@ -51,7 +51,7 @@ namespace pwiz.Skyline.Controls
 
         #region IPropertyProvider Implementation
 
-        public SkylineObject GetPropertyObject()
+        public RootSkylineObject GetPropertyObject()
         {
             var dataSchema = new SkylineWindowDataSchema(SkylineWindow);
             return SequenceTree.SelectedNodeSrmTreeNode?.PropertyObjectInstancer(dataSchema);

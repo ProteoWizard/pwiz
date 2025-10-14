@@ -29,7 +29,7 @@ using AttributeCollection = System.ComponentModel.AttributeCollection;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
-    public abstract class SkylineObject : ICustomTypeDescriptor
+    public abstract class SkylineObject
     {
         [Browsable(false)]
         public SkylineDataSchema DataSchema
@@ -79,6 +79,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 columnCaption.GetCaption(DataSchemaLocalizer.INVARIANT));
             return new EditDescription(columnCaption, auditLogParseString, GetElementRef(), value);
         }
+    }
+
+    /// <summary>
+    /// <see cref="SkylineObject" /> which holds onto a reference to the <see cref="SkylineDataSchema"/>
+    /// and returns it in <see cref="GetDataSchema"/>.
+    /// </summary>
+    public class RootSkylineObject : SkylineObject, ICustomTypeDescriptor
+    {
+        private SkylineDataSchema _dataSchema;
+        public RootSkylineObject(SkylineDataSchema dataSchema)
+        {
+            _dataSchema = dataSchema;
+        }
+
+        protected override SkylineDataSchema GetDataSchema()
+        {
+            return _dataSchema;
+        }
 
         #region PropertyGrid Support
 
@@ -90,14 +108,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         protected virtual PropertyGridPropertyDescriptor PropertyTransform(PropertyDescriptor prop) =>
             new PropertyGridPropertyDescriptor(prop, GetResourceManager(),
                 prop is AnnotationPropertyDescriptor annotationProperty ? annotationProperty.DisplayName : null);
-        
+
         #endregion
 
         #region ICustomTypeDescriptor Implementation
 
         public PropertyDescriptorCollection GetProperties(Attribute[] attributes)
         {
-            var allProps = DataSchema.GetPropertyDescriptors(GetType());
+            var allProps = _dataSchema.GetPropertyDescriptors(GetType());
             var filteredProps = allProps.Where(PropertyFilter);
             var transformedProps = filteredProps.Select(PropertyTransform);
             return new PropertyDescriptorCollection(transformedProps.Cast<PropertyDescriptor>().ToArray());
@@ -126,23 +144,5 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public object GetPropertyOwner(PropertyDescriptor pd) => this;
 
         #endregion
-    }
-
-    /// <summary>
-    /// <see cref="SkylineObject" /> which holds onto a reference to the <see cref="SkylineDataSchema"/>
-    /// and returns it in <see cref="GetDataSchema"/>.
-    /// </summary>
-    public class RootSkylineObject : SkylineObject
-    {
-        private SkylineDataSchema _dataSchema;
-        public RootSkylineObject(SkylineDataSchema dataSchema)
-        {
-            _dataSchema = dataSchema;
-        }
-
-        protected override SkylineDataSchema GetDataSchema()
-        {
-            return _dataSchema;
-        }
     }
 }

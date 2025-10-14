@@ -85,8 +85,6 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public string Note { get { return Annotations.Note;} }
 
-        public virtual Func<SkylineDataSchema, IdentityPath, SkylineObject> PropertyObjectInstancer => (dataSchema, identityPath) => null;
-
         /// <summary>
         /// Creates a new copy of this node with a new copy of its ID.
         /// </summary>

@@ -17,12 +17,9 @@
  * limitations under the License.
  */
 
-using System;
-using pwiz.Common.Collections;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Util;
-using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -40,16 +37,16 @@ namespace pwiz.Skyline.Controls
 
         private SkylineWindow SkylineWindow { get; }
 
-        public void SetPropertyObject(SkylineObject properties)
+        public void SetPropertyObject(RootSkylineObject properties)
         {
             propertyGrid.SelectedObject = properties;
             propertyGrid.ExpandAllGridItems();
             propertyGrid.Refresh();
         }
 
-        public SkylineObject GetPropertyObject()
+        public RootSkylineObject GetPropertyObject()
         {
-            return propertyGrid.SelectedObject as SkylineObject;
+            return propertyGrid.SelectedObject as RootSkylineObject;
         }
 
         private void SkylineWindow_OnUiDocumentChanged(object sender, DocumentChangedEventArgs e)

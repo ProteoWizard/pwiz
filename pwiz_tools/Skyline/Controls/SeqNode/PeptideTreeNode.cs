@@ -59,7 +59,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         }
 
-        public override Func<SkylineDataSchema, SkylineObject> PropertyObjectInstancer =>
+        public override Func<SkylineDataSchema, RootSkylineObject> PropertyObjectInstancer =>
             dataSchema => new pwiz.Skyline.Model.Databinding.Entities.Peptide(dataSchema, Path);
 
         public PeptideDocNode DocNode => (PeptideDocNode)Model;

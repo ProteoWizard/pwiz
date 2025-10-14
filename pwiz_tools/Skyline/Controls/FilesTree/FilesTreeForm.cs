@@ -410,7 +410,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         #region IPropertyProvider implementation
 
-        public SkylineObject GetPropertyObject()
+        public RootSkylineObject GetPropertyObject()
         {
             var selectedNode = FilesTree.SelectedNodeFTN;
             var dataSchema = new SkylineWindowDataSchema(SkylineWindow);
