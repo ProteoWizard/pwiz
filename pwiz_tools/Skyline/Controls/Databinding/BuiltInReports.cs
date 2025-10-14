@@ -38,6 +38,10 @@ namespace pwiz.Skyline.Controls.Databinding
         public bool HasCustomIons { get; }
         public bool HasOnlyCustomIons { get; }
 
+        /// <summary>
+        /// Returns the list of columns that should be shown on a report with rows of the specified type.
+        /// Returns null if this class does not know anything about that type of rows.
+        /// </summary>
         [CanBeNull]
         public IEnumerable<PropertyPath> GetDefaultColumns(Type rowType)
         {
