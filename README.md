@@ -78,6 +78,15 @@ Full setup and troubleshooting guide: [How to Build Skyline](https://skyline.ms/
 
 Skyline C# coding conventions: see `STYLEGUIDE.md`.
 
+### Threading Guidelines
+
+The project avoids `async`/`await` and .NET Task support in favor of deterministic threading:
+
+- **Use `CommonActionUtil.RunAsync()`** (in Shared projects) or `ActionUtil.RunAsync()` (in Skyline) instead of `Task.Run()` or `async`/`await`
+- **Avoid .NET thread pool** - Use allocated threads for more deterministic behavior and easier debugging
+- **Prefer synchronous operations** on background threads when possible
+- **Thread marshaling** - Use `Invoke()` for UI thread operations from background threads
+
 Executables note: Projects under `pwiz_tools/Skyline/Executables` are separate solutions (most build stand‑alone EXEs or developer tools, some ship with Skyline). They are not built by `Skyline.sln`, but should generally follow the same coding conventions unless a local project override is required. See the Tool Store: https://skyline.ms/tools.url
 
 EditorConfig: Repository-wide `.editorconfig` enforces core C# naming/formatting so separate solutions (including `pwiz_tools/Skyline/Executables`) inherit consistent style in Visual Studio.
