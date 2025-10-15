@@ -61,6 +61,12 @@ namespace pwiz.SkylineTestFunctional
             TestDownloadDataSuccess();
             TestDownloadFileSuccess();
             
+            // Category: Progress reporting tests
+            TestDownloadProgressReporting();
+            
+            // Category: Cancellation tests
+            TestDownloadCancellationViaButton();
+            
             TestSuccessCase();
         }
 
@@ -230,6 +236,106 @@ namespace pwiz.SkylineTestFunctional
                 var fileContent = File.ReadAllText(testFilePath);
                 Assert.AreEqual(mockData, fileContent);
             });
+        }
+
+        private static void TestDownloadProgressReporting()
+        {
+            // 20KB mock data = ~3 chunks of 8192 bytes each (for multiple progress updates)
+            var mockData = new byte[20 * 1024];
+            for (int i = 0; i < mockData.Length; i++)
+                mockData[i] = (byte)(i % 256);
+            
+            int progressCallbackCount = 0;
+            var behavior = new HttpClientTestBehavior
+            {
+                MockResponseData = mockData,
+                SimulateProgress = true,
+                OnProgressCallback = () => progressCallbackCount++
+            };
+            
+            using var helper = new HttpClientTestHelper(behavior);
+            
+            RunUI(() =>
+            {
+                using var dlg = new LongWaitDlg();
+                var status = dlg.PerformWork(SkylineWindow, 0, progressMonitor =>
+                {
+                    using var httpClient = new HttpClientWithProgress(progressMonitor);
+                    var result = httpClient.DownloadData("http://example.com/test.dat");
+                    
+                    // Verify data was downloaded correctly
+                    Assert.AreEqual(mockData.Length, result.Length);
+                });
+                
+                Assert.IsFalse(status.IsCanceled);
+                
+                // Verify progress was reported multiple times (proves chunked reading works)
+                // With 20KB and 8192-byte chunks, we expect at least 2 progress callbacks
+                Assert.IsTrue(progressCallbackCount >= 2, 
+                    $"Expected at least 2 progress callbacks for {mockData.Length} bytes, got {progressCallbackCount}");
+            });
+        }
+
+        private static void TestDownloadCancellationViaButton()
+        {
+            // 50KB mock data to ensure we're mid-download when canceling
+            var mockData = new byte[50 * 1024];
+            for (int i = 0; i < mockData.Length; i++)
+                mockData[i] = (byte)(i % 256);
+            
+            LongWaitDlg capturedDlg = null;
+            bool cancelButtonClicked = false;
+            
+            var behavior = new HttpClientTestBehavior
+            {
+                MockResponseData = mockData,
+                SimulateProgress = true,
+                OnProgressCallback = () =>
+                {
+                    // Click Cancel button after first chunk is read
+                    if (!cancelButtonClicked && capturedDlg != null)
+                    {
+                        cancelButtonClicked = true;
+                        RunUI(capturedDlg.CancelDialog);
+                    }
+                }
+            };
+            
+            using var helper = new HttpClientTestHelper(behavior);
+            
+            RunUI(() =>
+            {
+                using var dlg = new LongWaitDlg();
+                capturedDlg = dlg;
+                
+                bool operationCanceledExceptionThrown = false;
+                var status = dlg.PerformWork(SkylineWindow, 0, progressMonitor =>
+                {
+                    using var httpClient = new HttpClientWithProgress(progressMonitor);
+                    
+                    // This should throw OperationCanceledException when cancel is detected
+                    try
+                    {
+                        httpClient.DownloadData("http://example.com/large.dat");
+                        Assert.Fail("Expected OperationCanceledException to be thrown when user cancels");
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        // Expected - operation was canceled by user
+                        operationCanceledExceptionThrown = true;
+                    }
+                });
+                
+                // Verify cancellation was detected
+                Assert.IsTrue(status.IsCanceled, "Status should indicate cancellation");
+                Assert.IsTrue(cancelButtonClicked, "Cancel button should have been clicked");
+                Assert.IsTrue(operationCanceledExceptionThrown, "OperationCanceledException should have been thrown");
+            });
+            
+            // Verify no MessageDlg was shown - user-initiated cancellation should be silent
+            // If a MessageDlg were shown, WaitForOpenForm would find it
+            Assert.IsNull(TryWaitForOpenForm<MessageDlg>(50, () =>
+                FindOpenForm<LongWaitDlg>() == null));
         }
 
         private static void TestSuccessCase()
