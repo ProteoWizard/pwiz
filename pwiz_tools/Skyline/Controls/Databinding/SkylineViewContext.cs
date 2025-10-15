@@ -462,224 +462,22 @@ namespace pwiz.Skyline.Controls.Databinding
             return false;
         }
 
-        // ReSharper disable LocalizableElement
         public static ViewInfo GetDefaultViewInfo(ColumnDescriptor columnDescriptor)
         {
-            ViewSpec viewSpec = GetDefaultViewSpec(columnDescriptor);
-            bool addAnnotations = false;
-            if (columnDescriptor.PropertyType == typeof (TransitionResult))
+            var builtInReports = new BuiltInReports(((SkylineDataSchema)columnDescriptor.DataSchema).Document);
+            var columns = builtInReports.GetDefaultColumns(columnDescriptor.PropertyType);
+            ViewSpec viewSpec;
+            if (columns == null)
             {
-                viewSpec = viewSpec.SetColumns(new[]
-                {
-                    new ColumnSpec().SetName("PrecursorResult.PeptideResult.ResultFile.Replicate"),
-                    new ColumnSpec().SetName("Note"),
-                    new ColumnSpec().SetName("RetentionTime"),
-                    new ColumnSpec().SetName("Fwhm"),
-                    new ColumnSpec().SetName("StartTime"),
-                    new ColumnSpec().SetName("EndTime"),
-                    new ColumnSpec().SetName("Area"),
-                    new ColumnSpec().SetName("Background"),
-                    new ColumnSpec().SetName("AreaRatio"),
-                    new ColumnSpec().SetName("Height"),
-                    new ColumnSpec().SetName("PeakRank"),
-                });
-                addAnnotations = true;
-            } 
-            else if (columnDescriptor.PropertyType == typeof (PrecursorResult))
-            {
-                viewSpec = viewSpec.SetColumns(new[]
-                {
-                    new ColumnSpec().SetName("PeptideResult.ResultFile.Replicate"),
-                    new ColumnSpec().SetName("Note"), 
-                    new ColumnSpec().SetName("PrecursorPeakFoundRatio"),
-                    new ColumnSpec().SetName("BestRetentionTime"),
-                    new ColumnSpec().SetName("MaxFwhm"),
-                    new ColumnSpec().SetName("MinStartTime"),
-                    new ColumnSpec().SetName("MaxEndTime"),
-                    new ColumnSpec().SetName("TotalArea"),
-                    new ColumnSpec().SetName("TotalBackground"),
-                    new ColumnSpec().SetName("TotalAreaRatio"),
-                    new ColumnSpec().SetName("MaxHeight"),
-                    new ColumnSpec().SetName("LibraryDotProduct"),
-                    new ColumnSpec().SetName("IsotopeDotProduct"),
-                });
-                addAnnotations = true;
-            }
-            else if (columnDescriptor.PropertyType == typeof (PeptideResult))
-            {
-                viewSpec = viewSpec.SetColumns(new[]
-                {
-                    new ColumnSpec().SetName("ResultFile.Replicate"),
-                    new ColumnSpec().SetName("PeptidePeakFoundRatio"), 
-                    new ColumnSpec().SetName("PeptideRetentionTime"), 
-                    new ColumnSpec().SetName("RatioToStandard"), 
-                });
-                
-                var skylineDataSchema = (SkylineDataSchema)columnDescriptor.DataSchema;
-                PropertyPath propertyPathReplicate = PropertyPath.Parse("ResultFile.Replicate");
-                viewSpec = viewSpec.SetColumns(viewSpec.Columns.Concat(
-                    skylineDataSchema.GetAnnotations(typeof (Replicate))
-                        .Select(pd => new ColumnSpec(propertyPathReplicate.Property(pd.Name))))
-                    );
+                viewSpec = GetDefaultViewSpec(columnDescriptor);
             }
             else
             {
-                var columnsToRemove = new HashSet<PropertyPath> 
-                    {PropertyPath.Root.Property("Locator")};
-                bool addRoot = false;
-                bool docHasCustomIons = ((SkylineDataSchema)columnDescriptor.DataSchema).Document.CustomIonCount != 0;
-                bool docHasOnlyCustomIons = docHasCustomIons && ((SkylineDataSchema)columnDescriptor.DataSchema).Document.PeptideCount == 0;
-                
-                if (columnDescriptor.PropertyType == typeof(Protein))
-                {
-                    columnsToRemove.Add(PropertyPath.Root.Property("Name"));
-                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Protein.AutoSelectPeptides)));
-                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Protein.ProteinSequenceCoverage)));
-                    if (docHasOnlyCustomIons)
-                    {
-                        // Peptide-oriented fields that make no sense in a small molecule context
-                        columnsToRemove.Add(PropertyPath.Root.Property("Accession"));
-                        columnsToRemove.Add(PropertyPath.Root.Property("PreferredName"));
-                        columnsToRemove.Add(PropertyPath.Root.Property("Gene"));
-                        columnsToRemove.Add(PropertyPath.Root.Property("Species"));
-                        columnsToRemove.Add(PropertyPath.Root.Property("Sequence"));
-                    }
-                    addRoot = true;
-                }
-                else if (columnDescriptor.PropertyType == typeof(Model.Databinding.Entities.Peptide))
-                {
-                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Model.Databinding.Entities.Peptide.AutoSelectPrecursors)));
-                    columnsToRemove.Add(PropertyPath.Root.Property("Sequence"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("SequenceLength"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("PreviousAa"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("NextAa"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("RetentionTimeCalculatorScore"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("DocumentLocation"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("ConcentrationMultiplier"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("InternalStandardConcentration"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("CalibrationCurve"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("FiguresOfMerit"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("NormalizationMethod"));
-                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Model.Databinding.Entities.Peptide.AutoSelectPrecursors)));
-                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Model.Databinding.Entities.Peptide.AttributeGroupId)));
-                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Model.Databinding.Entities.Peptide.SurrogateExternalStandard)));
-                    foreach (var prop in MoleculeAccessionNumbers.PREFERRED_ACCESSION_TYPE_ORDER)
-                        columnsToRemove.Add(PropertyPath.Root.Property(prop)); // By default don't show CAS, InChI etc
-                    if (docHasOnlyCustomIons)
-                    {
-                        // Peptide-oriented fields that make no sense in a small molecule context
-                        columnsToRemove.Add(PropertyPath.Root.Property("ModifiedSequence"));
-                        columnsToRemove.Add(PropertyPath.Root.Property(nameof(Model.Databinding.Entities.Peptide.FirstPosition)));
-                        columnsToRemove.Add(PropertyPath.Root.Property(nameof(Model.Databinding.Entities.Peptide.LastPosition)));
-                        columnsToRemove.Add(PropertyPath.Root.Property("MissedCleavages"));
-                    }
-                    if (!docHasCustomIons)
-                    {
-                        columnsToRemove.Add(PropertyPath.Root.Property("MoleculeName"));
-                        columnsToRemove.Add(PropertyPath.Root.Property("MoleculeFormula"));
-                        columnsToRemove.Add(PropertyPath.Root.Property("ExplicitRetentionTime"));
-                        columnsToRemove.Add(PropertyPath.Root.Property("ExplicitRetentionTimeWindow"));
-                    }
-                    addRoot = true;
-                }
-                else if (columnDescriptor.PropertyType == typeof(Precursor))
-                {
-                    if (docHasOnlyCustomIons)
-                    {
-                        columnsToRemove.Add(PropertyPath.Root.Property("ModifiedSequence"));
-                        columnsToRemove.Add(PropertyPath.Root.Property("IsDecoy"));
-                    }
-                    if (!docHasCustomIons)
-                    {
-                        columnsToRemove.Add(PropertyPath.Root.Property("IonName"));
-                        columnsToRemove.Add(PropertyPath.Root.Property("IonFormula"));
-                        columnsToRemove.Add(PropertyPath.Root.Property("NeutralFormula"));
-                        columnsToRemove.Add(PropertyPath.Root.Property("Adduct"));
-                    }
-                    columnsToRemove.Add(PropertyPath.Root.Property("CollisionEnergy"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("ResultSummary"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("NeutralMass"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("TransitionCount"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("DeclusteringPotential"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("LibraryScore1"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("LibraryScore2"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("LibraryScore3"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("IsDecoy"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("DecoyMzShift"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitDriftTimeMsec"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitCollisionalCrossSection"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitIonMobility"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitIonMobilityUnits"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitCompensationVoltage"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("PrecursorConcentration"));
-                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Precursor.AutoSelectTransitions)));
-                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Precursor.TargetQualitativeIonRatio)));
-                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Precursor.LibraryIonMobility)));
-                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Precursor.SpectrumFilter)));
-                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Precursor.ExemplaryPeak)));
-                    addRoot = true;
-                }
-                else if (columnDescriptor.PropertyType == typeof(Model.Databinding.Entities.Transition))
-                {
-                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitCollisionEnergy"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitDriftTimeHighEnergyOffsetMsec"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitIonMobilityHighEnergyOffset"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitCompensationVoltage"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitDeclusteringPotential"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitSLens"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitConeVoltage"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("ResultSummary"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("ProductNeutralMass"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("FragmentIonType"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("FragmentIonOrdinal"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("CleavageAa"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("LossNeutralMass"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("LossFormulas"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("IsDecoy"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("ProductDecoyMzShift"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("IsotopeDistIndex"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("IsotopeDistRank"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("FullScanFilterWidth"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("LibraryRank"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("LibraryIntensity"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("IsotopeDistProportion"));
-
-                    if (docHasOnlyCustomIons)
-                    {
-                        columnsToRemove.Add(PropertyPath.Root.Property("FragmentIon")); // Not interesting - only one product per precursor for small molecules
-                        columnsToRemove.Add(PropertyPath.Root.Property("Losses")); // Doesn't mean anything for non-peptides
-                    }
-                    if (!docHasCustomIons)
-                    {
-                        // Stuff that only applies to small molecules
-                        columnsToRemove.Add(PropertyPath.Root.Property("ProductIonFormula"));
-                        columnsToRemove.Add(PropertyPath.Root.Property("ProductNeutralFormula"));
-                        columnsToRemove.Add(PropertyPath.Root.Property("ProductAdduct"));
-                    }
-                    addRoot = true;
-                }
-                else if (columnDescriptor.PropertyType == typeof(Replicate))
-                {
-                    columnsToRemove.Add(PropertyPath.Root.Property("Name"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("SampleDilutionFactor"));
-                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Replicate.BatchName)));
-                    addRoot = true;
-                }
+                viewSpec = new ViewSpec().SetRowType(columnDescriptor.PropertyType)
+                    .SetColumns(columns.Select(pp => new ColumnSpec(pp)));
                 viewSpec = viewSpec.SetSublistId(GetReplicateSublist(columnDescriptor.PropertyType));
-                if (addRoot)
-                {
-                    viewSpec = viewSpec.SetColumns(new[] { new ColumnSpec(PropertyPath.Root) }.Concat(viewSpec.Columns));
-                }
-                viewSpec = viewSpec.SetColumns(viewSpec.Columns
-                    .Where(columnSpec => !columnsToRemove.Contains(columnSpec.PropertyPath)));
             }
-            if (addAnnotations)
-            {
-                var skylineDataSchema = (SkylineDataSchema) columnDescriptor.DataSchema;
-                viewSpec = viewSpec.SetColumns(viewSpec.Columns.Concat(
-                    skylineDataSchema.GetAnnotations(columnDescriptor.PropertyType)
-                        .Select(pd => new ColumnSpec(PropertyPath.Root.Property(pd.Name)))));
-            }
+
             return new ViewInfo(columnDescriptor, viewSpec).ChangeViewGroup(ViewGroup.BUILT_IN);
         }
 
@@ -687,21 +485,24 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             if (rowType == typeof(SkylineDocument))
             {
-                return PropertyPath.Root.Property("Replicates").LookupAllItems();
+                return PropertyPath.Root.Property(nameof(SkylineDocument.Replicates)).LookupAllItems();
             }
             if (rowType == typeof(Replicate))
             {
-                return PropertyPath.Root.Property("Files").LookupAllItems();
+                return PropertyPath.Root.Property(nameof(Replicate.Files)).LookupAllItems();
             }
-
             if (rowType == typeof(Protein))
             {
-                return PropertyPath.Root.Property(nameof(Protein.Results)).LookupAllItems().Property("Value")
+                return PropertyPath.Root.Property(nameof(Protein.Results)).DictionaryValues()
                     .Property(nameof(Replicate.Files));
             }
-            return PropertyPath.Root.Property("Results").LookupAllItems();
+
+            if (typeof(SkylineDocNode).IsAssignableFrom(rowType))
+            {
+                return PropertyPath.Root.Property(@"Results").LookupAllItems();
+            }
+            return PropertyPath.Root;
         }
-        // ReSharper restore LocalizableElement
 
         public override void ExportViews(Control owner, ViewSpecList viewSpecList)
         {
