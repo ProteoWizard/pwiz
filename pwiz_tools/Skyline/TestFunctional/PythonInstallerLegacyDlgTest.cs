@@ -22,10 +22,12 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
@@ -559,5 +561,29 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(5000, () => form.CancelButton != null);
             form.CancelButton.PerformClick();
         }
+        
+        /// <summary>
+        /// Test implementation of IAsynchronousDownloadClient for unit testing
+        /// </summary>
+        public class TestAsynchronousDownloadClient : IAsynchronousDownloadClient
+        {
+            public const string DOWNLOAD_FAILED_MESSAGE = "Download failed";
+
+            public bool DownloadSuccess { get; set; }
+            public bool CancelDownload { get; set; }
+
+            public void DownloadFileAsyncOrThrow(Uri address, string path)
+            {
+                if (CancelDownload)
+                    throw new OperationCanceledException();
+                if (!DownloadSuccess)
+                    throw new UserMessageException(DOWNLOAD_FAILED_MESSAGE);
+            }
+
+            public void Dispose()
+            {
+            }
+        }
+
     }
 }

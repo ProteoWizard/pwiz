@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Trevor Killeen <killeent .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -177,7 +177,7 @@ namespace pwiz.Skyline.ToolsUI
             DownloadPath = Path.GetTempPath() + exe;
 
             // create the webclient
-            using (var webClient = TestDownloadClient ?? new MultiFileAsynchronousDownloadClient(longWaitBroker, 2))
+            using (var webClient = new MultiFileAsynchronousDownloadClient(longWaitBroker, 2))
             {
                 // First try downloading it as if it is the most recent release of R. The most
                 // recent version is stored in a different location of the CRAN repo than older versions.
@@ -322,7 +322,6 @@ namespace pwiz.Skyline.ToolsUI
         private IPackageInstallHelpers _packageInstallHelpers { get; set; }
 
         public IRunProcess TestRunProcess { get; set; }
-        public IAsynchronousDownloadClient TestDownloadClient { get; set; }
         public ISkylineProcessRunnerWrapper TestSkylineProcessRunnerWrapper { get; set; }   
 
         public string Message

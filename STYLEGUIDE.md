@@ -48,6 +48,119 @@ Additional guidance:
 - Keep names descriptive and intention-revealing; avoid abbreviations.
 - Keep methods small and cohesive; extract helpers as needed (placed after usage as above).
 
+## DRY (Don't Repeat Yourself) - Critical for Long-Term Maintenance
+
+**Skyline has been maintained for over 17 years.** Repetitive code becomes a maintenance nightmare in long-lived projects. We strongly enforce DRY principles.
+
+### Why DRY Matters in Skyline
+- **17+ years of evolution** - Code changes frequently, and repetitive patterns multiply maintenance burden
+- **Large codebase** - Duplication compounds across thousands of files
+- **Multiple developers** - Inconsistent patterns make code harder to understand and modify
+- **Bug fixes** - Must be applied in multiple places, increasing risk of missed locations
+
+### DRY Violations to Avoid
+
+**❌ Bad - Repetitive Setup Code:**
+```csharp
+// Test 1
+private static void TestDownloadSuccess()
+{
+    var packages = new Collection<ToolPackage>();
+    var installer = ShowDialog<RInstaller>(() => InstallProgram(PPC, packages, false));
+    WaitForConditionUI(10 * 1000, () => installer.IsLoaded);
+    RunUI(() => installer.TestRunProcess = new TestRunProcess { ExitCode = 0 });
+    // ... test logic
+}
+
+// Test 2 - DUPLICATED SETUP
+private static void TestDownloadFailure()
+{
+    var packages = new Collection<ToolPackage>();
+    var installer = ShowDialog<RInstaller>(() => InstallProgram(PPC, packages, false));
+    WaitForConditionUI(10 * 1000, () => installer.IsLoaded);
+    RunUI(() => installer.TestRunProcess = new TestRunProcess { ExitCode = 1 });
+    // ... test logic
+}
+```
+
+**✅ Good - DRY with Helper:**
+```csharp
+// Helper method eliminates duplication
+private static RInstaller FormatRInstaller(int installExitCode)
+{
+    var packages = new Collection<ToolPackage>();
+    var installer = ShowDialog<RInstaller>(() => InstallProgram(PPC, packages, false));
+    WaitForConditionUI(10 * 1000, () => installer.IsLoaded);
+    RunUI(() => installer.TestRunProcess = new TestRunProcess { ExitCode = installExitCode });
+    return installer;
+}
+
+// Tests focus on behavior, not setup
+private static void TestDownloadSuccess()
+{
+    var installer = FormatRInstaller(installExitCode: 0);
+    // ... test logic
+}
+
+private static void TestDownloadFailure()
+{
+    var installer = FormatRInstaller(installExitCode: 1);
+    // ... test logic
+}
+```
+
+### DRY Patterns in Skyline
+
+**1. Test Setup Helpers**
+- Extract common dialog setup into helper methods
+- Use parameters to customize behavior (exit codes, connection states, etc.)
+- Place helpers after the tests that use them
+
+**2. Resource String Reconstruction**
+- Reconstruct expected messages from resource strings instead of hardcoding
+- Use `string.Format()` with the same resource strings as production code
+- Ensures tests work in all languages (English, Chinese, Japanese)
+
+**3. Common UI Patterns**
+- Extract repeated UI interaction patterns
+- Use consistent naming for similar operations across different dialogs
+- Create reusable validation methods
+
+**4. Exception Handling**
+- Use centralized exception mapping (`MapHttpException`, `IsProgrammingDefect`)
+- Avoid duplicating exception classification logic
+- Standardize error message construction
+
+### When to Extract Helpers
+
+**Extract when you see:**
+- 3+ lines of identical code across multiple methods
+- Similar patterns with only parameter differences
+- Repeated resource string lookups or formatting
+- Duplicated validation logic
+- Common UI interaction sequences
+
+**Don't extract:**
+- Single-use code (unless it's clearly a future pattern)
+- Trivial one-liners
+- Code that's only similar but not identical
+
+### Maintenance Benefits
+
+**Before DRY:**
+- Change requires editing 8 places
+- Risk of missing locations
+- Inconsistent behavior across similar scenarios
+- Harder to understand overall patterns
+
+**After DRY:**
+- Change requires editing 1 place
+- Impossible to miss locations
+- Consistent behavior guaranteed
+- Clear, focused test logic
+
+**Remember:** In a 17-year-old project, every line of duplicated code is a future maintenance burden. Be ruthless about eliminating repetition.
+
 ## Error handling and diagnostics
 
 ### Debug.WriteLine for diagnostic logging
@@ -304,6 +417,30 @@ When replacing WebClient with HttpClient:
 - Call public methods directly rather than simulating UI clicks
 - Use `AssertEx.Contains()` for string assertions
 - Use resource strings for test assertions to support localization
+
+### Translation-proof test assertions
+**NEVER use English text literals in test assertions** - all UI text is localized to Chinese and Japanese, so English-only assertions will break.
+
+**Bad (will break in localized builds):**
+```csharp
+// ❌ This will fail when UI is in Chinese or Japanese
+StringAssert.Contains(messageDlg.Message, "connection");
+Assert.IsTrue(errorDlg.Message.Contains("not found"));
+```
+
+**Good (translation-proof):**
+```csharp
+// ✅ Reconstruct expected message from resource strings
+var expectedMessage = string.Format(
+    MessageResources.HttpClientWithProgress_MapHttpException_Failed_to_connect_to__0___Please_check_your_network_connection__VPN_proxy__or_firewall_,
+    "cran.r-project.org");
+Assert.AreEqual(expectedMessage, messageDlg.Message);
+```
+
+**Examples from production code:**
+- See `HttpClientWithProgressIntegrationTest.cs` for comprehensive examples
+- Each test reconstructs the expected error message using the same resource strings the production code uses
+- Tests remain valid in all supported languages (English, Chinese, Japanese)
 
 ### Functional test performance
 - **Functional tests have significant overhead** - they must show and destroy a SkylineWindow and often drive the UI

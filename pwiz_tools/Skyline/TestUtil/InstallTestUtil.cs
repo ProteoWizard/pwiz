@@ -18,7 +18,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
@@ -28,29 +27,6 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.SkylineTestUtil
 {
-    /// <summary>
-    /// Test implementation of IAsynchronousDownloadClient for unit testing
-    /// </summary>
-    public class TestAsynchronousDownloadClient : IAsynchronousDownloadClient
-    {
-        public const string DOWNLOAD_FAILED_MESSAGE = "Download failed";
-
-        public bool DownloadSuccess { get; set; }
-        public bool CancelDownload { get; set; }
-
-        public void DownloadFileAsyncOrThrow(Uri address, string path)
-        {
-            if (CancelDownload)
-                throw new OperationCanceledException();
-            if (!DownloadSuccess)
-                throw new UserMessageException(DOWNLOAD_FAILED_MESSAGE);
-        }
-
-        public void Dispose()
-        {
-        }
-    }
-
     /// <summary>
     /// Test implementation of ISkylineProcessRunnerWrapper for unit testing
     /// </summary>

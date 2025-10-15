@@ -296,7 +296,8 @@ namespace pwiz.SkylineTestFunctional
                     if (!cancelButtonClicked && capturedDlg != null)
                     {
                         cancelButtonClicked = true;
-                        RunUI(capturedDlg.CancelDialog);
+                        WaitForConditionUI(() => capturedDlg.IsHandleCreated);
+                        capturedDlg.Invoke((Action) capturedDlg.CancelDialog);
                     }
                 }
             };
