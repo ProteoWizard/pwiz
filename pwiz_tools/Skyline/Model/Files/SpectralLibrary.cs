@@ -55,7 +55,7 @@ namespace pwiz.Skyline.Model.Files
         }
 
         public override Func<SkylineDataSchema, RootSkylineObject> PropertyObjectInstancer =>
-            dataSchema => new Databinding.Entities.SpectralLibrary(dataSchema, IdentityPath);
+            dataSchema => new Databinding.Entities.SpectralLibrary(dataSchema, FilePath);
 
         public static ModifiedDocument Delete(SrmDocument document, SrmSettingsChangeMonitor monitor, List<FileModel> models)
         {

@@ -17,21 +17,46 @@
  * limitations under the License.
  */
 
-using pwiz.Skyline.Model.Files;
+using System;
+using System.ComponentModel;
+using System.Linq;
 using System.Resources;
+using pwiz.Skyline.Model.Files;
+using pwiz.Skyline.Model.Lib;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
     public class SpectralLibrary : RootSkylineObject
     {
-        public SpectralLibrary(SkylineDataSchema dataSchema, IdentityPath identityPath) : base(dataSchema)
-        {
+        private readonly SpectrumSourceFileDetails _fileDetails;
+        private readonly LibrarySpec _librarySpec;
 
+        public SpectralLibrary(SkylineDataSchema dataSchema, string filePath) : base(dataSchema)
+        {
+            _fileDetails = new SpectrumSourceFileDetails(filePath);
+            _librarySpec = dataSchema.Document.Settings.PeptideSettings.Libraries.LibrarySpecs
+                .FirstOrDefault(libSpec => libSpec.FilePath.Equals(filePath));
         }
+
+        public string Name => _librarySpec.Name;
+        public int SpectrumCount => _fileDetails.BestSpectrum;
+        public int MatchedCount => _fileDetails.MatchedSpectrum;
+        public string LibraryType => _librarySpec.GetLibraryTypeName();
 
         #region PropertyGrid Support
 
         public override ResourceManager GetResourceManager() => PropertyGridFileNodeResources.ResourceManager;
+
+        public override PropertyDescriptorCollection GetProperties(Attribute[] attributes)
+        {
+            var baseProps = TypeDescriptor.GetProperties(GetType());
+            var processedProps = (
+                from PropertyDescriptor prop in baseProps
+                select PropertyTransform(prop)
+            ).Cast<PropertyDescriptor>().ToList();
+
+            return new PropertyDescriptorCollection(processedProps.ToArray());
+        }
 
         #endregion
     }

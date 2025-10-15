@@ -121,8 +121,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         // Override to provide a property to use as the alias for the root object, e.g. Sequence for Peptide
         protected virtual PropertyDescriptor GetRootAliasProperty() => null;
 
-        #endregion
-
         // assumes path is depth 1 or null (for root)
         private PropertyDescriptor GetPropertyDescriptorFromPath(PropertyPath path)
         {
@@ -134,9 +132,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return TypeDescriptor.GetProperties(GetType())[path.Name ?? string.Empty];
         }
 
+        #endregion
+
         #region ICustomTypeDescriptor Implementation
 
-        public PropertyDescriptorCollection GetProperties(Attribute[] attributes)
+        public virtual PropertyDescriptorCollection GetProperties(Attribute[] attributes)
         {
             // Get default displayed props
             var propertyPaths = new BuiltInReports(_dataSchema.Document).GetDefaultColumns(GetType());

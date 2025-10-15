@@ -231,4 +231,7 @@
   <data name="Category_Annotations" xml:space="preserve">
     <value>Annotations</value>
   </data>
+  <data name="Category_SpectralLibrary" xml:space="preserve">
+    <value>Spectral Library</value>
+  </data>
 </root>

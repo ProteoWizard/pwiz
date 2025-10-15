@@ -142,6 +142,15 @@ namespace pwiz.Skyline.Model.Files {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Spectral Library.
+        /// </summary>
+        internal static string Category_SpectralLibrary {
+            get {
+                return ResourceManager.GetString("Category_SpectralLibrary", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Timestamp of when this replicate&apos;s MS data collection began.
         /// </summary>
         internal static string Description_AcquisitionTime {
