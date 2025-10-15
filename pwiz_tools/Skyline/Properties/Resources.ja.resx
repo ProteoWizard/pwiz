@@ -1244,9 +1244,6 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   <data name="SpectrumLibraryInfoDlg_SetDetailsText_Matched_spectra" xml:space="preserve">
     <value>一致したスペクトル</value>
   </data>
-  <data name="PeptidesPerProteinDlg_UpdateRemaining_Calculating___" xml:space="preserve">
-    <value>計算中...</value>
-  </data>
   <data name="BuildPeptideSearchLibraryControl_AddIrtLibraryTable_Processing_Retention_Times" xml:space="preserve">
     <value>保持時間を処理しています</value>
   </data>
@@ -2620,9 +2617,6 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   <data name="AlignmentForm_UpdateGraph_Outliers" xml:space="preserve">
     <value>異常値</value>
   </data>
-  <data name="RTLinearRegressionGraphPane_UpdateGraph_Calculating___" xml:space="preserve">
-    <value>計算中...</value>
-  </data>
   <data name="SkylineWindow_ImportFasta_Unexpected_document_change_during_operation" xml:space="preserve">
     <value>操作中の予期しないドキュメントの変更。</value>
   </data>
@@ -2830,9 +2824,6 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   </data>
   <data name="CommandLine_SaveFile_File__0__saved_" xml:space="preserve">
     <value>ファイル{0}が保存されました。</value>
-  </data>
-  <data name="RemoteSession_FetchContents_There_was_an_error_communicating_with_the_server__" xml:space="preserve">
-    <value>サーバーとの通信にエラーが発生しました：</value>
   </data>
   <data name="ImportFastaControl_ImportFasta_Change_digestion_settings" xml:space="preserve">
     <value>消化設定を変更</value>
@@ -3992,5 +3983,8 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   </data>
   <data name="Error" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Error.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ArdiaIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ArdiaIcon.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

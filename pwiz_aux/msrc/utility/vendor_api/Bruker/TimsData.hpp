@@ -152,7 +152,8 @@ public:
     virtual double oneOverK0() const;
     virtual std::pair<double, double> getIonMobilityRange() const; // Gets the measured IM range
 
-    void getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities, bool sortAndJitter) const;
+    void getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities,
+        bool includeIsolationArrays, pwiz::util::BinaryData<double>& isolationWindowStart, pwiz::util::BinaryData<double>& isolationWindowEnd, bool sortAndJitter) const;
     size_t getCombinedSpectrumDataSize() const;
     virtual pwiz::util::IntegerSet getMergedScanNumbers() const;
 
@@ -232,7 +233,8 @@ typedef boost::shared_ptr<TimsSpectrum> TimsSpectrumPtr;
 
 struct PWIZ_API_DECL TimsDataImpl : public CompassData
 {
-    TimsDataImpl(const std::string& rawpath, bool combineIonMobilitySpectra, int preferOnlyMsLevel = 0, bool allowMsMsWithoutPrecursor = true,
+    TimsDataImpl(const std::string& rawpath, bool combineIonMobilitySpectra, int preferOnlyMsLevel = 0, bool allowMsMsWithoutPrecursor = true, bool passEntireDiaPasefFrame = false,
+                 bool includeIsolationArrays = true, // Do/don't include isolation arrays for combined ion mobility
                  const std::vector<chemistry::MzMobilityWindow>& isolationMzFilter = std::vector<chemistry::MzMobilityWindow>());
     virtual ~TimsDataImpl() {}
 
@@ -244,6 +246,14 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
 
     /// returns true if the source is TIMS PASEF data
     virtual bool hasPASEFData() const;
+
+    /// returns true if the source is TIMS diagonal PASEF data (combined spectra will have isolation m/z arrays by default)
+    virtual bool isPassEntireDiaPasefFrame() const;
+
+    // Diagonal PASEF data has isolation m/z that varies with scan number within a frame
+    virtual double getIsolationMzRangeLowByWindowGroup(int windowGroup) const;
+    virtual double getIsolationMzRangeHighByWindowGroup(int windowGroup) const;
+    virtual const vector<int >& getActiveScansByWindowGroup(int windowGroup) const; // for each diaPASEF WindowGroup, a list of scans that are associated with an isolation window
 
     virtual bool canConvertOneOverK0AndCCS() const;
 
@@ -290,6 +300,7 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
     virtual InstrumentSource getInstrumentSource() const;
     virtual std::string getAcquisitionSoftware() const;
     virtual std::string getAcquisitionSoftwareVersion() const;
+    virtual std::string getDiaFrameMsMsWindowsTable() const;
 
     private:
     std::string tdfFilepath_;
@@ -303,17 +314,25 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
     std::string serialNumber_;
     std::string acquisitionDateTime_;
     std::string operatorName_;
+    std::string diaFrameMsMsWindowsTable_;
     bool combineSpectra_;
     bool hasPASEFData_;
     int preferOnlyMsLevel_; // when nonzero, caller only wants spectra at this ms level
     bool allowMsMsWithoutPrecursor_; // when false, PASEF MS2 specta without precursor info will be excluded
     vector<chemistry::MzMobilityWindow> isolationMzFilter_; // when non-empty, only scans from precursors matching one of the included m/zs (i.e. within a precursor isolation window) will be enumerated
+    vector<vector<int>> activeScansByWindowGroup_; // for each diaPASEF WindowGroup, a list of scans that are associated with an isolation window (some isolation schemes have gaps, so caller may not wish to bother with the scans in the gaps)
     vector<vector<double>> oneOverK0ByScanNumberByCalibration_;
+    vector<vector<double>> isolationMzLowByScanNumberByWindowGroup_; // for diaPASEF where isolation m/z varies with scan number within a frame
+    vector<vector<double>> isolationMzHighByScanNumberByWindowGroup_; // for diaPASEF where isolation m/z varies with scan number within a frame
+    vector<double> isolationMzRangeLowByWindowGroup_; // for diagonal PASEF where isolation m/z varies with scan number within a frame
+    vector<double> isolationMzRangeHighByWindowGroup_; // for diagonal PASEF where isolation m/z varies with scan number within a frame
     ChromatogramPtr tic_, ticMs1_, bpc_, bpcMs1_;
 
     int64_t currentFrameId_; // used for cacheing frame contents
+    bool passEntireDiaPasefFrame_; // When true, passing MS2 frames as single chunk (e.g. Diagonal PASEF files, or when requested for normal diaPASEF)
+    bool includeIsolationArrays_; // When true, and passing PASEF as single frame, do/don't populate the isolation arrays
 
-    protected:
+protected:
     friend struct TimsFrame;
     friend struct TimsSpectrum;
     TimsBinaryDataPtr tdfStoragePtr_;

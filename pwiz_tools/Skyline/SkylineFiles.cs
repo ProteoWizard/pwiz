@@ -33,6 +33,8 @@ using pwiz.PanoramaClient;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
+using pwiz.CommonMsData.RemoteApi;
+using pwiz.CommonMsData.RemoteApi.Ardia;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -79,6 +81,9 @@ namespace pwiz.Skyline
             ToolStripMenuItem menu = fileToolStripMenuItem;
             List<string> mruList = Settings.Default.MruList;
             string curDir = Settings.Default.ActiveDirectory;
+
+            // If an ArdiaAccount is registered, include an "Upload to..." menu item
+            ardiaPublishMenuItem.Visible = HasRegisteredArdiaAccount;
 
             int start = menu.DropDownItems.IndexOf(mruBeforeToolStripSeparator) + 1;
             while (!ReferenceEquals(menu.DropDownItems[start], mruAfterToolStripSeparator))
@@ -822,7 +827,7 @@ namespace pwiz.Skyline
                 }
                 catch (Exception e)
                 {
-                    MessageDlg.ShowException(this, e);
+                    MessageDlg.ShowException(parent ?? this, e);
                 }
             }
             else if (!File.Exists(pathCache) &&
@@ -1132,6 +1137,13 @@ namespace pwiz.Skyline
             return false;
         }
 
+        /// <summary>
+        /// Saves the .sky file.
+        /// </summary>
+        /// <param name="fileName">File name to save the .sky file to. If this is different from the current path, the document will be assigned a new GUID</param>
+        /// <param name="includingCacheFile">Whether to also update the .skyd file by copying to a new path and/or removing <see cref="ChromCachedFile"/> entries which are no longer part of the document.
+        /// When saving immediately before a ReScore the .skyd file should not be changed because a new one is about to be created.</param>
+        /// <returns></returns>
         public bool SaveDocument(String fileName, bool includingCacheFile = true)
         {
             if (string.IsNullOrEmpty(DocumentUI.Settings.DataSettings.DocumentGuid) ||
@@ -1199,7 +1211,6 @@ namespace pwiz.Skyline
             {
                 SaveLayout(fileName);
 
-                // CONSIDER: Is this really optional?
                 if (includingCacheFile)
                 {
                     using (var longWaitDlg = new LongWaitDlg(this))
@@ -1293,8 +1304,7 @@ namespace pwiz.Skyline
                 do
                 {
                     docOriginal = Document;
-                    docNew = docOriginal.ChangeSettingsNoDiff(docOriginal.Settings.ChangePeptideLibraries(libraries =>
-                        libraries.ChangeDocumentLibraryPath(newDocFilePath)));                        
+                    docNew = docOriginal.ChangeSettingsNoDiff(docOriginal.Settings.ChangeDocumentLibraryPath(newDocFilePath));                        
                 }
                 while (!SetDocument(docNew, docOriginal));
             }
@@ -1411,7 +1421,7 @@ namespace pwiz.Skyline
             return !Dirty && null != DocumentFilePath ? SavedDocumentFormat : (DocumentFormat?) null;
         }
 
-        public bool ShareDocument(string fileDest, ShareType shareType)
+        public bool ShareDocument(string fileDest, ShareType shareType, bool useFileSaver = true, int zipFileMaxSegmentSize = 0)
         {
             try
             {
@@ -1419,7 +1429,7 @@ namespace pwiz.Skyline
                 using (var longWaitDlg = new LongWaitDlg())
                 {
                     longWaitDlg.Text = SkylineResources.SkylineWindow_ShareDocument_Compressing_Files;
-                    var sharing = new SrmDocumentSharing(DocumentUI, DocumentFilePath, fileDest, shareType);
+                    var sharing = new SrmDocumentSharing(DocumentUI, DocumentFilePath, fileDest, shareType, useFileSaver, zipFileMaxSegmentSize);
                     if (shareType.MustSaveNewDocument)
                     {
                         var tempDocumentPath = Path.Combine(sharing.EnsureTempDir().DirPath,
@@ -3495,6 +3505,80 @@ namespace pwiz.Skyline
             return true;
         }
 
+        public bool HasRegisteredArdiaAccount =>
+            Settings.Default.RemoteAccountList.Any(account => account.AccountType == RemoteAccountType.ARDIA);
+
+        private void ardiaPublishMenuItem_Click(object sender, EventArgs e)
+        {
+            PublishToArdia();
+        }
+
+        // BUG: Removing RemoteAccounts using EditRemoteAccountsDlg may unexpectedly leave registered Ardia accounts intact?
+        // CONSIDER: revisit testing credentials for an Ardia account and prompting for login if needed
+        public void PublishToArdia()
+        {
+            Assume.IsTrue(HasRegisteredArdiaAccount, @"Expected to find a registered Ardia account but found none");
+
+            // Document must be fully loaded before it can be published
+            if (!DocumentUI.IsLoaded)
+            {
+                MessageDlg.Show(this, SkylineResources.SkylineWindow_ShowPublishDlg_The_document_must_be_fully_loaded_before_it_can_be_uploaded_);
+                return;
+            }
+
+            // Document must be saved before it can be published
+            if (string.IsNullOrEmpty(DocumentFilePath))
+            {
+                if (MultiButtonMsgDlg.Show(this, SkylineResources.SkylineWindow_ShowPublishDlg_The_document_must_be_saved_before_it_can_be_uploaded_,
+                        MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+                    return;
+
+                if (!SaveDocumentAs())
+                    return;
+            }
+
+            try
+            {
+                var ardiaAccount = Settings.Default.RemoteAccountList.GetAccountsOfType(RemoteAccountType.ARDIA).Cast<ArdiaAccount>().ToList()[0];
+                var documentFormat = GetFileFormatOnDisk();
+
+                using var publishDlg = new PublishDocumentDlgArdia(this, ardiaAccount, DocumentFilePath, documentFormat);
+                if (publishDlg.ShowDialog(this) == DialogResult.Cancel)
+                {
+                    return;
+                }
+
+                var cacheVersion = SkylineVersion.SupportedForSharing().FirstOrDefault();
+                using var shareTypeDlg = new ShareTypeDlg(Document, DocumentFilePath, GetFileFormatOnDisk(), cacheVersion);
+                if (shareTypeDlg.ShowDialog(this) == DialogResult.Cancel)
+                {
+                    return;
+                }
+
+                var archiveFileName = publishDlg.FileName;
+
+                // CONSIDER: move TemporaryDirectory to CommonMsData so it's available to SrmDocumentArchive
+                // TemporaryDirectory automatically cleans up .zip files uploaded to Ardia
+                using var archiveFileDir = new TemporaryDirectory(null, Path.GetFileNameWithoutExtension(archiveFileName));
+
+                var srmDocumentArchive = SrmDocumentArchive.Create(archiveFileDir.DirPath, archiveFileName);
+
+                var shareType = shareTypeDlg.ShareType;
+                if (ShareDocument(srmDocumentArchive.ArchiveFilePath, shareType, false, publishDlg.MaxPartSize))
+                {
+                    // NB: this must be called *after* ShareDocument so the archive has been created and 1 or more
+                    //     parts are available locally
+                    srmDocumentArchive.Init();
+                    
+                    publishDlg.Upload(this, srmDocumentArchive);
+                }
+            }
+            catch (Exception e)
+            {
+                ExceptionUtil.DisplayOrReportException(this, e);
+            }
+        }
+
         private void publishMenuItem_Click(object sender, EventArgs e)
         {
             ShowPublishDlg(null);
@@ -3627,7 +3711,7 @@ namespace pwiz.Skyline
             var showPublishDocDlg = true;
 
             // if the document has a saved uri prompt user for action, check servers, and permissions, then publish
-            // if something fails in the attempt to publish to the saved uri will bring up the usual PublishDocumentDlg
+            // if something fails in the attempt to publish to the saved uri will bring up the usual PublishDocumentDlgBase
             if (panoramaSavedUri != null && !string.IsNullOrEmpty(panoramaSavedUri.ToString()))
             {
                 showPublishDocDlg = !PublishToSavedUri(publishClient, panoramaSavedUri, fileName, servers);
@@ -3636,7 +3720,7 @@ namespace pwiz.Skyline
             // if no uri was saved to publish to or user chose to view the dialog show the dialog
             if (showPublishDocDlg)
             {
-                using (var publishDocumentDlg = new PublishDocumentDlg(this, servers, fileName, GetFileFormatOnDisk()))
+                using (var publishDocumentDlg = new PublishDocumentDlgPanorama(this, servers, fileName, GetFileFormatOnDisk()))
                 {
                     publishDocumentDlg.PanoramaPublishClient = publishClient;
                     if (publishDocumentDlg.ShowDialog(this) == DialogResult.OK)
@@ -3668,7 +3752,7 @@ namespace pwiz.Skyline
                 return false;
 
             // If we are given a test publish client use that, otherwise create the default client.
-            publishClient ??= PublishDocumentDlg.GetDefaultPublishClient(server);
+            publishClient ??= PublishDocumentDlgPanorama.GetDefaultPublishClient(server);
 
             JToken folders;
             var folderPath = panoramaSavedUri.AbsolutePath;

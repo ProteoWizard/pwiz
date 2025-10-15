@@ -239,8 +239,23 @@ namespace pwiz.Skyline.Alerts
 
         private void btnRequestVerificationCode_Click(object sender, EventArgs e)
         {
+            ClickRequestVerificationCode();
+        }
+        
+        public void ClickRequestVerificationCode()
+        {
             var verificationResultHtml = RequestVerificationCode();
             lblVerificationCode.Enabled = tbVerificationCode.Enabled = true;
+
+            const string errorClass = "alert-danger"; // CSS class indicating an error in the HTML, e.g. "Please use institutional email address"
+            if (verificationResultHtml.Contains(errorClass))
+            {
+                var errorLines = TextUtil.LineSeparate(verificationResultHtml.Split('\n').Where(l => l.Contains(errorClass)));
+                var errorMsg = TextUtil.LineSeparate(AlertsResources.ReportErrorDlg_ReportErrorDlg_An_unexpected_error_has_occurred_as_shown_below, "", errorLines);
+                new AlertDlg(errorMsg, MessageBoxButtons.OK) { DetailMessage = verificationResultHtml }.ShowAndDispose(this);
+                return;
+            }
+            
             new AlertDlg(AlertsResources.MsFraggerDownloadDlg_btnRequestVerificationCode_Click_Check_your_email, MessageBoxButtons.OK)
                 { DetailMessage = verificationResultHtml }.ShowAndDispose(this);
         }

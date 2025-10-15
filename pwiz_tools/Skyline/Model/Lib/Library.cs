@@ -127,13 +127,16 @@ namespace pwiz.Skyline.Model.Lib
                     if (spec == null || dictLibraries.ContainsKey(spec.Name))
                         continue;
                     var library = LoadLibrary(container, spec);
+                    if (library != null)
+                    {
+                        dictLibraries.Add(spec.Name, library);
+                    }
                     if (library == null || !ReferenceEquals(document.Id, container.Document.Id))
                     {
                         // Loading was cancelled or document changed
                         EndProcessing(document);
                         return false;
                     }
-                    dictLibraries.Add(spec.Name, library);
                 }
 
                 var missingMidasFiles = MidasLibrary.GetMissingFiles(document, libraries.Libraries);
@@ -821,7 +824,6 @@ namespace pwiz.Skyline.Model.Lib
             return new double[0];
         }
 
-
         /// <summary>
         /// Attempts to get ion mobility information for a specific
         /// (sequence, charge) pair and file.
@@ -996,6 +998,53 @@ namespace pwiz.Skyline.Model.Lib
         public virtual bool HasExplicitBounds
         {
             get { return false; }
+        }
+
+        public Dictionary<Target, double> GetMedianRetentionTimes()
+        {
+            var allRetentionTimes = GetAllRetentionTimes(null);
+            if (allRetentionTimes == null)
+            {
+                return null;
+            }
+
+            if (!allRetentionTimes.SelectMany(dict => dict.Values).Distinct().Skip(1).Any())
+            {
+                // If all the retention times are the same, then return null
+                return null;
+            }
+
+            return allRetentionTimes.SelectMany(dict => dict).GroupBy(kvp => kvp.Key, kvp => kvp.Value)
+                .ToDictionary(group => group.Key, MathNet.Numerics.Statistics.Statistics.Median);
+        }
+
+        public virtual Dictionary<Target, double>[] GetAllRetentionTimes(IEnumerable<string> spectrumSourceFiles)
+        {
+            return null;
+        }
+
+        public virtual IList<double>[] GetRetentionTimesWithSequences(IEnumerable<string> spectrumSourceFiles,
+            ICollection<Target> targets)
+        {
+            var result = new List<IList<double>>();
+            foreach (var file in spectrumSourceFiles ?? LibraryFiles)
+            {
+                int? fileIndex = null;
+                result.Add(GetRetentionTimesWithSequences(file, targets, ref fileIndex).ToList());
+            }
+
+            return result.ToArray();
+        }
+
+        public IList<double> GetRetentionTimes(MsDataFileUri fileUri, ICollection<Target> targets)
+        {
+            int index = LibraryFiles.FindIndexOf(fileUri);
+            if (index < 0)
+            {
+                return null;
+            }
+
+            return GetRetentionTimesWithSequences(new[] { LibraryFiles[index] }, targets)?[0];
         }
 
         #region Implementation of IXmlSerializable
@@ -1417,6 +1466,17 @@ namespace pwiz.Skyline.Model.Lib
                 dict.Add(entry.Key, entry.Value.Item2.Min());
             }
             return dict;
+        }
+
+        public static LibraryRetentionTimes FromRetentionTimes(string path, TimeSource timeSource,
+            IDictionary<Target, double> retentionTimes)
+        {
+            if (retentionTimes == null)
+            {
+                return null;
+            }
+            return new LibraryRetentionTimes(path,
+                retentionTimes.ToDictionary(kvp => kvp.Key, kvp => Tuple.Create(timeSource, new[] { kvp.Value })));
         }
     }
 

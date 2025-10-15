@@ -348,9 +348,9 @@
     <value>Missing details for {0} at line {1}, this entry will be ignored</value>
   </data>
   <data name="BiblioSpecLiteLibrary_ReadFromDatabase_Reading_entries_from__0__library" xml:space="preserve">
-	  <value>Reading entries from {0} library</value>
+    <value>Reading entries from {0} library</value>
   </data>
   <data name="BiblioSpecLiteLibrary_ReadFromDatabase_Reading_retention_times_from__0_" xml:space="preserve">
-	  <value>Reading retention times from {0}</value>
+    <value>Reading retention times from {0}</value>
   </data>
 </root>

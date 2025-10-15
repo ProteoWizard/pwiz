@@ -20,10 +20,12 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
+using pwiz.Common.PeakFinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
@@ -34,6 +36,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
@@ -234,6 +237,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        [ChildDisplayName("Original{0}")]
+        [Format(Formats.RETENTION_TIME)]
+        public ScoredPeakValue OriginalPeak {
+            get
+            {
+                return ScoredPeakValue.FromScoredPeak(ChromInfo.OriginalPeak);
+            }
+        }
+
+        [ChildDisplayName("Reintegrated{0}")]
+        [Format(Formats.RETENTION_TIME)]
+        public ScoredPeakValue ReintegratedPeak
+        {
+            get
+            {
+                return ScoredPeakValue.FromScoredPeak(ChromInfo.ReintegratedPeak);
+            }
+        }
 
         [InvariantDisplayName("PrecursorReplicateNote")]
         [Importable]
@@ -280,6 +301,18 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public PeptideResult PeptideResult 
         {
             get { return _peptideResult = _peptideResult ?? new PeptideResult(Precursor.Peptide, GetResultFile()); }
+        }
+
+        [ChildDisplayName("Imputed{0}")]
+        [Format(Formats.RETENTION_TIME)]
+        public ImputedPeakBounds ImputedPeak
+        {
+            get
+            {
+                return ImputedPeakBounds.FromPeakBounds(DataSchema.PeakBoundaryImputer
+                    .GetImputedPeakQuick(PeptideResult.Peptide.DocNode,
+                        GetResultFile().Replicate.ChromatogramSet, GetResultFile().ChromFileInfo.FilePath)?.PeakBounds);
+            }
         }
 
         [InvariantDisplayName("PrecursorResultLocator")]
@@ -359,8 +392,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return null;
             }
             float tolerance = (float) SrmDocument.Settings.TransitionSettings.Instrument.MzMatchTolerance;
-            var ms1Chromatograms = new List<TimeIntensities>();
-            var fragmentChromatograms = new List<TimeIntensities>();
+            var chromatogramInfos = new List<ChromatogramInfo>();
             foreach (var transitionDocNode in Precursor.DocNode.Transitions)
             {
                 var transitionChromInfo = GetResultFile().FindChromInfo(transitionDocNode.Results);
@@ -376,21 +408,19 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 {
                     continue;
                 }
+                chromatogramInfos.Add(chromatogramInfo);
+            }
 
-                var timeIntensities = timeIntensitiesGroup.TransitionTimeIntensities[chromatogramInfo.TransitionIndex];
-
-                if (chromatogramInfo.Source == ChromSource.ms1)
-                {
-                    ms1Chromatograms.Add(timeIntensities);
-                }
-                else if (chromatogramInfo.Source == ChromSource.fragment)
-                {
-                    fragmentChromatograms.Add(timeIntensities);
-                }
+            var chromatogramsBySource = chromatogramInfos.ToLookup(
+                chromInfo => chromInfo.Source, chromInfo => timeIntensitiesGroup.TransitionTimeIntensities[chromInfo.TransitionIndex]);
+            var ms1Chromatograms = chromatogramsBySource[ChromSource.sim].ToList();
+            if (ms1Chromatograms.Count == 0)
+            {
+                ms1Chromatograms = chromatogramsBySource[ChromSource.ms1].ToList();
             }
 
             return Tuple.Create(GetIonMetrics(resultFileMetadata, ms1Chromatograms),
-                GetIonMetrics(resultFileMetadata, fragmentChromatograms));
+                GetIonMetrics(resultFileMetadata, chromatogramsBySource[ChromSource.fragment].ToList()));
         }
 
         private LcPeakIonMetrics GetIonMetrics(ResultFileMetaData resultFileMetadata, IList<TimeIntensities> chromatograms)
@@ -532,6 +562,42 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
 
             return truncatedArea / totalArea;
+        }
+
+        
+        public class ImputedPeakBounds : IFormattable
+        {
+            public ImputedPeakBounds(double startTime, double endTime)
+            {
+                StartTime = startTime;
+                EndTime = endTime;
+            }
+
+            [Format(Formats.RETENTION_TIME)]
+            public double StartTime { get; }
+            [Format(Formats.RETENTION_TIME)]
+            public double EndTime { get; }
+
+            public string ToString(string format, IFormatProvider formatProvider)
+            {
+                return string.Format(EntitiesResources.CandidatePeakGroup_ToString___0___1__,
+                    StartTime.ToString(format, formatProvider), EndTime.ToString(format, formatProvider));
+            }
+
+            public static ImputedPeakBounds FromPeakBounds(PeakBounds peakBounds)
+            {
+                if (peakBounds == null)
+                {
+                    return null;
+                }
+
+                return new ImputedPeakBounds(peakBounds.StartTime, peakBounds.EndTime);
+            }
+
+            public override string ToString()
+            {
+                return ToString(null, CultureInfo.CurrentCulture);
+            }
         }
     }
 }

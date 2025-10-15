@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -24,6 +25,7 @@ using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Clustering;
 using pwiz.Common.DataBinding.Controls;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Databinding
 {
@@ -46,6 +48,11 @@ namespace pwiz.Skyline.Controls.Databinding
             OnKeyUp(keyEventArgs);
         }
 
+        public void ClickCurrentCell()
+        {
+            OnCellContentClick(new DataGridViewCellEventArgs(CurrentCell.ColumnIndex, CurrentCell.RowIndex));
+        }
+
         protected override IEnumerable<PropertyDescriptor> GetColumnsToHide(ReportResults reportResults)
         {
             var baseColumns = base.GetColumnsToHide(reportResults);
@@ -61,6 +68,19 @@ namespace pwiz.Skyline.Controls.Databinding
             }
             return baseColumns.Concat(replicatePivotColumns.GetReplicateColumnGroups()
                 .SelectMany(group => group.Where(replicatePivotColumns.IsConstantColumn)));
+        }
+
+        protected override bool ProcessDataGridViewKey(KeyEventArgs e)
+        {
+            try
+            {
+                return base.ProcessDataGridViewKey(e);
+            }
+            catch (Exception exception)
+            {
+                ExceptionUtil.HandleProcessKeyException(this, exception, e.KeyData);
+                return true;
+            }
         }
     }
 }

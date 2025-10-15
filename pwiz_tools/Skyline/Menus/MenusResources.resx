@@ -332,4 +332,134 @@ To be ready to train a peak scoring model effectively, follow these steps:
   <data name="RefineMenu_ShowGenerateDecoysDlg_Add_Decoys" xml:space="preserve">
     <value>Add Decoys</value>
   </data>
+  <data name="EditMenu_ImputePeakBoundaries_" xml:space="preserve">
+    <value>No imputations options have been chosen for this document.
+Go to the Prediction tab in Peptide Settings to choose some imputation options.</value>
+  </data>
+  <data name="EditMenu_ImputePeakBoundaries_Imputing_peak_boundaries" xml:space="preserve">
+    <value>Imputing peak boundaries</value>
+  </data>
+  <data name="EditMenu_ImputePeakBoundaries_Imputed_peak_boundaries" xml:space="preserve">
+    <value>Imputed peak boundaries</value>
+  </data>
+  <data name="RefineMenu_ShowReintegrateDialog_Waiting_for_document_to_finish_loading" xml:space="preserve">
+    <value>Waiting for document to finish loading</value>
+  </data>
+  <data name="Keyboard_Shortcuts_Title" xml:space="preserve">
+    <value>Keyboard Shortcuts</value>
+  </data>
+  <data name="Keyboard_Shortcuts_Header_Menu" xml:space="preserve">
+    <value>Menu</value>
+  </data>
+  <data name="Keyboard_Shortcuts_Header_Shortcut" xml:space="preserve">
+    <value>Shortcut</value>
+  </data>
+  <data name="KeyboardShortcutDocumentation_GenerateKeyboardShortcutHtml_Keyboard_Shortcuts" xml:space="preserve">
+    <value>Keyboard Shortcuts</value>
+  </data>
+  <data name="Keyboard_Shortcuts_Table_Title" xml:space="preserve">
+    <value>Keyboard Shortcuts</value>
+  </data>
+  <data name="Keyboard_Mnemonics_Table_Title" xml:space="preserve">
+    <value>Menu Mnemonics</value>
+  </data>
+  <data name="Keyboard_Mnemonics_Header_Menu" xml:space="preserve">
+    <value>Menu</value>
+  </data>
+  <data name="Keyboard_Mnemonics_Header_Mnemonic" xml:space="preserve">
+    <value>Mnemonic</value>
+  </data>
+  <data name="Keyboard_Shortcuts_Explanation_Intro" xml:space="preserve">
+    <value>Skyline provides two types of keyboard access to menu commands:</value>
+  </data>
+  <data name="Keyboard_Shortcuts_Explanation_Shortcuts" xml:space="preserve">
+    <value>Keyboard Shortcuts are single-stroke key combinations (like Ctrl+N) that can be used to perform menu actions directly. These shortcuts are displayed to the right of the menu text on the menus themselves.</value>
+  </data>
+  <data name="Keyboard_Shortcuts_Explanation_Mnemonics" xml:space="preserve">
+    <value>Mnemonics are underlined letters in menu text that become visible when you press the Alt key. You can use these letters to navigate menus using the keyboard, or learn the complete keystroke sequences to access any menu command without using the mouse.</value>
+  </data>
+  <data name="Keyboard_GridView_Table_Title" xml:space="preserve">
+    <value>GridView Controls</value>
+  </data>
+  <data name="Keyboard_GridView_Header_Action" xml:space="preserve">
+    <value>Action</value>
+  </data>
+  <data name="GridView_Action_EnterEditMode" xml:space="preserve">
+    <value>Enter edit mode in cell</value>
+  </data>
+  <data name="GridView_Action_SelectAll" xml:space="preserve">
+    <value>Select all</value>
+  </data>
+  <data name="GridView_Action_MoveToEndOfColumn" xml:space="preserve">
+    <value>Move to end of column</value>
+  </data>
+  <data name="GridView_Action_SelectToEndOfColumn" xml:space="preserve">
+    <value>Select to end of column</value>
+  </data>
+  <data name="GridView_Action_FillDown" xml:space="preserve">
+    <value>Fill down (Excel-style)</value>
+  </data>
+  <data name="GridView_Action_FillRight" xml:space="preserve">
+    <value>Fill right (Excel-style)</value>
+  </data>
+  <data name="GridView_Action_MoveToBeginningOfColumn" xml:space="preserve">
+    <value>Move to beginning of column</value>
+  </data>
+  <data name="GridView_Action_SelectToBeginningOfColumn" xml:space="preserve">
+    <value>Select to beginning of column</value>
+  </data>
+  <data name="GridView_Action_MoveToBeginningOfRow" xml:space="preserve">
+    <value>Move to beginning of row</value>
+  </data>
+  <data name="GridView_Action_SelectToBeginningOfRow" xml:space="preserve">
+    <value>Select to beginning of row</value>
+  </data>
+  <data name="GridView_Action_MoveToEndOfRow" xml:space="preserve">
+    <value>Move to end of row</value>
+  </data>
+  <data name="GridView_Action_SelectToEndOfRow" xml:space="preserve">
+    <value>Select to end of row</value>
+  </data>
+  <data name="GridView_Action_CancelEditMode" xml:space="preserve">
+    <value>Cancel edit mode</value>
+  </data>
+  <data name="GridView_Action_ConfirmEditMoveDown" xml:space="preserve">
+    <value>Confirm edit and move down</value>
+  </data>
+  <data name="GridView_Action_ConfirmEditMoveRight" xml:space="preserve">
+    <value>Confirm edit and move right</value>
+  </data>
+  <data name="GridView_Action_ConfirmEditMoveLeft" xml:space="preserve">
+    <value>Confirm edit and move left</value>
+  </data>
+  <data name="GridView_Action_MoveUpOneCell" xml:space="preserve">
+    <value>Move up one cell</value>
+  </data>
+  <data name="GridView_Action_MoveDownOneCell" xml:space="preserve">
+    <value>Move down one cell</value>
+  </data>
+  <data name="GridView_Action_MoveLeftOneCell" xml:space="preserve">
+    <value>Move left one cell</value>
+  </data>
+  <data name="GridView_Action_MoveRightOneCell" xml:space="preserve">
+    <value>Move right one cell</value>
+  </data>
+  <data name="GridView_Action_MoveToFirstCellInRow" xml:space="preserve">
+    <value>Move to first cell in row</value>
+  </data>
+  <data name="GridView_Action_MoveToLastCellInRow" xml:space="preserve">
+    <value>Move to last cell in row</value>
+  </data>
+  <data name="GridView_Action_MoveToFirstCellInGrid" xml:space="preserve">
+    <value>Move to first cell in grid</value>
+  </data>
+  <data name="GridView_Action_MoveToLastCellInGrid" xml:space="preserve">
+    <value>Move to last cell in grid</value>
+  </data>
+  <data name="GridView_Action_ClearCell" xml:space="preserve">
+    <value>Clear cell (or enter edit mode)</value>
+  </data>
+  <data name="GridView_Action_SelectRow" xml:space="preserve">
+    <value>Select row</value>
+  </data>
 </root>

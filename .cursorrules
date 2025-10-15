@@ -1,0 +1,115 @@
+# Cursor project orientation for ProteoWizard (pwiz)
+# 
+# This file provides Cursor-specific behavior guidance.
+# For detailed coding conventions, style guidelines, and testing patterns,
+# see STYLEGUIDE.md - the comprehensive style guide used by all AI tools.
+
+[project]
+name = "ProteoWizard (pwiz)"
+description = "C++ libraries and tools for proteomics; native builds via MSVC/GCC and Boost.Build"
+primary_languages = ["C++", "C#", "Jam", "Batch", "Shell"]
+
+[on_open]
+message = "Use quickbuild.bat on Windows to build. Do not introduce new build systems. Respect existing indentation and avoid unrelated reformatting."
+
+[paths]
+code_roots = [
+  "pwiz/",
+  "pwiz_tools/",
+  "pwiz_aux/",
+]
+third_party = ["libraries/"]
+outputs = [
+  "build-nt-x86/msvc-release-x86_64/",
+]
+
+entry_points = [
+  "quickbuild.bat",
+  "quickbuild.sh",
+  "pwiz.sln",
+  "pwiz_tools/Skyline/Skyline.sln",
+  "bs.bat",
+  "doc/index.html",
+]
+
+[rules]
+- Prefer `quickbuild.bat` on Windows; pass non-interactive flags where applicable.
+- Keep code style intact: do not reformat unrelated files; preserve tabs/spaces.
+- When adding sources, update the appropriate Jamfile or Visual Studio project.
+- Use existing vendor libraries from `libraries/`; do not fetch replacements.
+- For documentation, add concise notes to `README.md` and `doc/`.
+
+[skyline]
+primary_solution = "pwiz_tools/Skyline/Skyline.sln"
+requires_full_repo_checkout = true
+full_build_command = "bs.bat"  # Calls pwiz_tools\\build-skyline.bat with vendor license acceptance
+shared_dependencies = [
+  "pwiz_tools/Shared",
+]
+docs = [
+  "https://skyline.ms/wiki/home/software/Skyline/page.view?name=HowToBuildSkylineTip",
+]
+
+[assistant_behaviors]
+- Provide minimal, actionable explanations.
+- Use fenced code blocks only for relevant snippets or commands.
+- Default to read-only discovery before edits; then apply focused edits.
+
+[build_and_testing]
+- LLM agents CANNOT build or run this project directly.
+- Build and test operations must be performed by the developer using Visual Studio.
+- When code changes are made, request that the developer build and test the changes.
+- Do not attempt to run quickbuild.bat, bs.bat, or any build commands.
+- Do not attempt to run tests or execute the application.
+
+[file_headers]
+standard_header = """
+/*
+ * Original author: [Author Name] <[email] .at. [domain]>,
+ *                  [Affiliation]
+ * AI assistance: Cursor (Claude Sonnet 4) <cursor .at. anysphere.co>
+ *
+ * Copyright [Year] University of Washington - Seattle, WA
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+"""
+ai_attribution = {
+  required = "Always include AI assistance line when code is created or significantly modified with AI tools"
+  format = "Cursor ([model names]) <cursor .at. anysphere.co>"
+  position = "After original author, before copyright"
+  email_format = "Use .at. format to avoid spam harvesting"
+  multiple_models = "List all models used if multiple AI systems contributed significantly"
+}
+
+[testing]
+# See STYLEGUIDE.md for comprehensive testing guidelines
+reference = "STYLEGUIDE.md"
+
+[style_skyline_csharp]
+# See STYLEGUIDE.md for comprehensive C# coding conventions
+reference = "STYLEGUIDE.md"
+docs = [
+  "STYLEGUIDE.md"
+]
+
+[localization]
+# See STYLEGUIDE.md for detailed localization guidelines
+reference = "STYLEGUIDE.md"
+
+[ui_guidelines]
+# See STYLEGUIDE.md for detailed UI guidelines
+reference = "STYLEGUIDE.md"
+
+[executables]
+note = "Projects under pwiz_tools/Skyline/Executables are separate solutions (stand-alone tools and utilities). Not built by Skyline.sln; prefer Skyline conventions unless local overrides are required."
