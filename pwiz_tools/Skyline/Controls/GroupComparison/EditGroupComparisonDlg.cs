@@ -365,7 +365,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             {
                 return;
             }
-            GroupComparisonDef = GroupComparisonDef.ChangeControlValue(SerializeGroupIdentifier(comboCaseValue.SelectedItem as GroupIdentifier?));
+            GroupComparisonDef = GroupComparisonDef.ChangeCaseValue(SerializeGroupIdentifier(comboCaseValue.SelectedItem as GroupIdentifier?));
         }
 
         protected void comboIdentityAnnotation_SelectedIndexChanged(object sender, EventArgs e)
