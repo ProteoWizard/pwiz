@@ -41,15 +41,15 @@ namespace pwiz.Skyline.Menus
             sb.AppendLine(@"<meta charset=""utf-8"">");
             sb.AppendLine(DocumentationGenerator.GetStyleSheetHtml());
             sb.AppendLine("</head><body>");
-            sb.AppendLine("<h2>").Append(HtmlEncode(MenusResources.Keyboard_Shortcuts_Title)).Append("</h2>");
+            sb.Append("<h2>").Append(HtmlEncode(MenusResources.Keyboard_Shortcuts_Title)).AppendLine("</h2>");
 
             // Add explanatory text
-            sb.AppendLine("<p>").Append(HtmlEncode(MenusResources.Keyboard_Shortcuts_Explanation_Intro)).Append("</p>");
+            sb.Append("<p>").Append(HtmlEncode(MenusResources.Keyboard_Shortcuts_Explanation_Intro)).AppendLine("</p>");
             sb.AppendLine("<ul>");
-            sb.AppendLine("<li><strong>").Append(MenusResources.Keyboard_Shortcuts_Table_Title).Append("</strong> ")
-                .Append(HtmlEncode(MenusResources.Keyboard_Shortcuts_Explanation_Shortcuts)).Append("</li>");
-            sb.AppendLine("<li><strong>").Append(MenusResources.Keyboard_Mnemonics_Table_Title).Append("</strong> ")
-                .Append(HtmlEncode(MenusResources.Keyboard_Shortcuts_Explanation_Mnemonics)).Append("</li>");
+            sb.Append("<li><strong>").Append(MenusResources.Keyboard_Shortcuts_Table_Title).Append("</strong> ")
+                .Append(HtmlEncode(MenusResources.Keyboard_Shortcuts_Explanation_Shortcuts)).AppendLine("</li>");
+            sb.Append("<li><strong>").Append(MenusResources.Keyboard_Mnemonics_Table_Title).Append("</strong> ")
+                .Append(HtmlEncode(MenusResources.Keyboard_Shortcuts_Explanation_Mnemonics)).AppendLine("</li>");
             sb.AppendLine("</ul>");
 
             // Keyboard shortcuts table
