@@ -142,6 +142,26 @@ namespace pwiz.Common.CommonResources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Access to {0} was denied (HTTP 401). Authentication may be required..
+        /// </summary>
+        public static string HttpClientWithProgress_MapHttpException_Access_to__0__was_denied__HTTP_401___Authentication_may_be_required_ {
+            get {
+                return ResourceManager.GetString("HttpClientWithProgress_MapHttpException_Access_to__0__was_denied__HTTP_401___Authe" +
+                        "ntication_may_be_required_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Access to {0} was forbidden (HTTP 403). You may not have permission to access this resource..
+        /// </summary>
+        public static string HttpClientWithProgress_MapHttpException_Access_to__0__was_forbidden__HTTP_403___You_may_not_have_permission_to_access_this_resource_ {
+            get {
+                return ResourceManager.GetString("HttpClientWithProgress_MapHttpException_Access_to__0__was_forbidden__HTTP_403___Yo" +
+                        "u_may_not_have_permission_to_access_this_resource_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to connect to {0}. Please check your network connection, VPN/proxy, or firewall..
         /// </summary>
         public static string HttpClientWithProgress_MapHttpException_Failed_to_connect_to__0___Please_check_your_network_connection__VPN_proxy__or_firewall_ {
@@ -197,6 +217,46 @@ namespace pwiz.Common.CommonResources {
             get {
                 return ResourceManager.GetString("HttpClientWithProgress_MapHttpException_The_request_to__0__timed_out__Please_try_" +
                         "again_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The requested resource at {0} was not found (HTTP 404). Please verify the URL..
+        /// </summary>
+        public static string HttpClientWithProgress_MapHttpException_The_requested_resource_at__0__was_not_found__HTTP_404___Please_verify_the_URL_ {
+            get {
+                return ResourceManager.GetString("HttpClientWithProgress_MapHttpException_The_requested_resource_at__0__was_not_fou" +
+                        "nd__HTTP_404___Please_verify_the_URL_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The server {0} encountered an internal error (HTTP 500). Please try again later or contact the server administrator..
+        /// </summary>
+        public static string HttpClientWithProgress_MapHttpException_The_server__0__encountered_an_internal_error__HTTP_500___Please_try_again_later_or_contact_the_server_administrator_ {
+            get {
+                return ResourceManager.GetString("HttpClientWithProgress_MapHttpException_The_server__0__encountered_an_internal_er" +
+                        "ror__HTTP_500___Please_try_again_later_or_contact_the_server_administrator_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The server {0} returned an error (HTTP {1}). Please try again or contact support..
+        /// </summary>
+        public static string HttpClientWithProgress_MapHttpException_The_server__0__returned_an_error__HTTP__1____Please_try_again_or_contact_support_ {
+            get {
+                return ResourceManager.GetString("HttpClientWithProgress_MapHttpException_The_server__0__returned_an_error__HTTP__1" +
+                        "____Please_try_again_or_contact_support_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Too many requests to {0} (HTTP 429). Please wait before trying again..
+        /// </summary>
+        public static string HttpClientWithProgress_MapHttpException_Too_many_requests_to__0___HTTP_429___Please_wait_before_trying_again_ {
+            get {
+                return ResourceManager.GetString("HttpClientWithProgress_MapHttpException_Too_many_requests_to__0___HTTP_429___Plea" +
+                        "se_wait_before_trying_again_", resourceCulture);
             }
         }
         

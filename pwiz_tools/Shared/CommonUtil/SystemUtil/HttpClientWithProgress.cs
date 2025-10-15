@@ -85,9 +85,9 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         public string DownloadString(Uri uri)
         {
-            var response = GetResponse(uri);
-            response.EnsureSuccessStatusCode();
-            return WithExceptionHandling(uri, () => response.Content.ReadAsStringAsync().Result);
+            using var memoryStream = new MemoryStream();
+            DownloadToStream(uri, memoryStream);
+            return Encoding.UTF8.GetString(memoryStream.GetBuffer(), 0, (int)memoryStream.Length);
         }
 
         /// <summary>
@@ -164,7 +164,6 @@ namespace pwiz.Common.SystemUtil
             var request = new HttpRequestMessage(new HttpMethod(method), uri) { Content = content };
 
             var response = SendRequest(request);
-            response.EnsureSuccessStatusCode();
             return WithExceptionHandling(uri, () => response.Content.ReadAsStringAsync().Result);
         }
 
@@ -189,7 +188,6 @@ namespace pwiz.Common.SystemUtil
             var request = new HttpRequestMessage(new HttpMethod(method), uri) { Content = formContent };
 
             var response = SendRequest(request);
-            response.EnsureSuccessStatusCode();
             return WithExceptionHandling(uri, () => response.Content.ReadAsByteArrayAsync().Result);
         }
 
@@ -212,13 +210,38 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         private void DownloadToStream(Uri uri, Stream outputStream)
         {
+            // Check if we should use a mock response stream for testing
+            Stream contentStream;
+            long totalBytes;
+            
+            if (TestBehavior != null)
+            {
+                contentStream = TestBehavior.GetMockResponseStream(uri, out totalBytes);
+                if (contentStream != null)
+                {
+                    // Use mock stream for testing
+                    using (contentStream)
+                    {
+                        DownloadFromStream(contentStream, outputStream, totalBytes, uri);
+                    }
+                    return;
+                }
+            }
+
+            // Normal path: get response from network
             var response = GetResponseHeadersRead(uri);
-            response.EnsureSuccessStatusCode();
+            totalBytes = response.Content.Headers.ContentLength ?? 0;
+            contentStream = response.Content.ReadAsStreamAsync().Result;
+            
+            using (contentStream)
+            {
+                DownloadFromStream(contentStream, outputStream, totalBytes, uri);
+            }
+        }
 
-            var totalBytes = response.Content.Headers.ContentLength ?? 0;
+        private void DownloadFromStream(Stream contentStream, Stream outputStream, long totalBytes, Uri uri)
+        {
             var downloadedBytes = 0L;
-
-            using var contentStream = response.Content.ReadAsStreamAsync().Result;
             var buffer = new byte[8192];
 
             while (true)
@@ -254,12 +277,12 @@ namespace pwiz.Common.SystemUtil
         }
 
         /// <summary>
-        /// Gets a response from the specified URI with default completion option.
+        /// Sends an HTTP request with cancellation support.
         /// </summary>
-        private HttpResponseMessage GetResponse(Uri uri)
+        private HttpResponseMessage SendRequest(HttpRequestMessage request)
         {
-            return WithExceptionHandling(uri,
-                () => _httpClient.GetAsync(uri, CancellationToken).Result);
+            return WithExceptionHandling(request.RequestUri,
+                () => _httpClient.SendAsync(request, CancellationToken).Result);
         }
 
         /// <summary>
@@ -271,25 +294,63 @@ namespace pwiz.Common.SystemUtil
                 () => _httpClient.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead, CancellationToken).Result);
         }
 
+        public static IHttpClientTestBehavior TestBehavior;
+
         /// <summary>
-        /// Sends an HTTP request with cancellation support.
+        /// Interface for controlling HttpClientWithProgress behavior during testing.
+        /// Allows simulation of failures, mock responses, and progress/cancellation scenarios
+        /// without making actual network requests.
         /// </summary>
-        private HttpResponseMessage SendRequest(HttpRequestMessage request)
+        public interface IHttpClientTestBehavior
         {
-            return WithExceptionHandling(request.RequestUri,
-                () => _httpClient.SendAsync(request, CancellationToken).Result);
+            /// <summary>
+            /// Exception to throw when simulating a failure, or null for success.
+            /// </summary>
+            Exception FailureException { get; }
+
+            /// <summary>
+            /// Gets a mock response stream for testing download operations.
+            /// Returns null to use the actual network response.
+            /// </summary>
+            /// <param name="uri">The URI being requested</param>
+            /// <param name="contentLength">Output parameter for the content length (for progress reporting)</param>
+            /// <returns>A stream containing mock response data, or null to use actual network</returns>
+            Stream GetMockResponseStream(Uri uri, out long contentLength);
         }
 
-        public static Exception TestFailure;
+        public class NoNetworkTestException : Exception
+        {
+            public NoNetworkTestException()
+                : base(@"Network adapter disabling simulated")
+            {
+            }
+        }
         
         private TRet WithExceptionHandling<TRet>(Uri uri, Func<TRet> action)
         {
             try
             {
-                if (TestFailure != null)
-                    throw TestFailure;
+                if (TestBehavior?.FailureException != null)
+                    throw TestBehavior.FailureException;
                 
                 return action();
+            }
+            catch (Exception ex)
+            {
+                throw MapHttpException(ex, uri);
+            }
+        }
+
+        private HttpResponseMessage WithExceptionHandling(Uri uri, Func<HttpResponseMessage> getResponse)
+        {
+            try
+            {
+                if (TestBehavior?.FailureException != null)
+                    throw TestBehavior.FailureException;
+                
+                var response = getResponse();
+                response.EnsureSuccessStatusCode();
+                return response;
             }
             catch (Exception ex)
             {
@@ -311,12 +372,54 @@ namespace pwiz.Common.SystemUtil
             if (root is TimeoutException)
                 return new IOException(string.Format(MessageResources.HttpClientWithProgress_MapHttpException_The_request_to__0__timed_out__Please_try_again_, uri), root);
 
-            if (!NetworkInterface.GetIsNetworkAvailable())
+            if (root is NoNetworkTestException || !NetworkInterface.GetIsNetworkAvailable())
                 return new IOException(MessageResources.HttpClientWithProgress_MapHttpException_No_network_connection_detected__Please_check_your_internet_connection_and_try_again_, root);
 
             if (root is HttpRequestException httpEx)
             {
                 string server = uri?.Host ?? MessageResources.HttpClientWithProgress_MapHttpException_server;
+                
+                // Check if this is an HTTP status code error from EnsureSuccessStatusCode()
+                if (httpEx.Message.Contains("Response status code does not indicate success"))
+                {
+                    // Extract status code from message like "Response status code does not indicate success: 404 (Not Found)"
+                    var match = System.Text.RegularExpressions.Regex.Match(httpEx.Message, @"(\d{3})\s*\(([^)]+)\)");
+                    if (match.Success)
+                    {
+                        var statusCode = int.Parse(match.Groups[1].Value);
+                        var reasonPhrase = match.Groups[2].Value;
+                        
+                        // Use full URI for user context, but preserve the original HttpRequestException
+                        // with status code details in the inner exception chain for troubleshooting
+                        string uriString = uri?.ToString() ?? server;
+                        string message;
+                        switch (statusCode)
+                        {
+                            case 404:
+                                message = string.Format(MessageResources.HttpClientWithProgress_MapHttpException_The_requested_resource_at__0__was_not_found__HTTP_404___Please_verify_the_URL_, uriString);
+                                break;
+                            case 500:
+                                message = string.Format(MessageResources.HttpClientWithProgress_MapHttpException_The_server__0__encountered_an_internal_error__HTTP_500___Please_try_again_later_or_contact_the_server_administrator_, server);
+                                break;
+                            case 401:
+                                message = string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Access_to__0__was_denied__HTTP_401___Authentication_may_be_required_, uriString);
+                                break;
+                            case 403:
+                                message = string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Access_to__0__was_forbidden__HTTP_403___You_may_not_have_permission_to_access_this_resource_, uriString);
+                                break;
+                            case 429:
+                                message = string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Too_many_requests_to__0___HTTP_429___Please_wait_before_trying_again_, server);
+                                break;
+                            default:
+                                message = string.Format(MessageResources.HttpClientWithProgress_MapHttpException_The_server__0__returned_an_error__HTTP__1____Please_try_again_or_contact_support_, server, statusCode);
+                                break;
+                        }
+                        // Wrap with the original HttpRequestException as inner exception to preserve
+                        // the full status code and reason phrase for detailed troubleshooting
+                        return new IOException(message, root);
+                    }
+                }
+                
                 // DNS resolution failure (e.g., 'The remote name could not be resolved')
                 if (httpEx.InnerException is WebException webEx && webEx.Status == WebExceptionStatus.NameResolutionFailure)
                     return new IOException(string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Failed_to_resolve_host__0___Please_check_your_DNS_settings_or_VPN_proxy_, server), root);
