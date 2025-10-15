@@ -19,25 +19,26 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.FilesTree;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Files;
 using pwiz.SkylineTestUtil;
 using System.ComponentModel;
-using pwiz.Skyline.Controls.FilesTree;
+using System.IO;
 
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
     public class FilesTreePropertyGridTest : AbstractFunctionalTest
     {
-        internal const int REPLICATE_EXPECTED_PROP_NUM = 3;
+        private const int REPLICATE_EXPECTED_PROP_NUM = 3;
         private const string NAME_PROP_NAME = "Name";
 
         [TestMethod]
         public void TestFilesTreePropertyGrid()
         {
-            // These test files are large (90MB) so reuse rather than duplicate
-            TestFilesZip = FilesTreeFormTest.TEST_FILES_ZIP;
+            TestFilesZipPaths = new[] { PropertyGridTestUtil.TEST_FILES_ZIP };
+
             RunFunctionalTest();
         }
 
@@ -56,7 +57,7 @@ namespace pwiz.SkylineTestFunctional
 
         private void VerifySetup()
         {
-            var documentPath = TestFilesDir.GetTestPath(FilesTreeFormTest.RAT_PLASMA_FILE_NAME);
+            var documentPath = Path.Combine(TestFilesDirs[0].FullPath, @"Main", @"test.sky");
             RunUI(() => SkylineWindow.OpenFile(documentPath));
 
             Assert.IsNull(SkylineWindow.PropertyGridForm);
@@ -78,9 +79,10 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNotNull(replicateNode);
             RunUI(() =>
             {
-                SkylineWindow.FilesTreeForm.FilesTree.SelectNode(replicateNode, true);
+                SkylineWindow.FilesTreeForm.FilesTree.SelectedNode = replicateNode;
                 SkylineWindow.FocusPropertyProvider(SkylineWindow.FilesTreeForm);
             });
+
             var selectedObject = SkylineWindow.PropertyGridForm?.GetPropertyObject();
             Assert.IsNotNull(selectedObject);
 

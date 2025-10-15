@@ -3313,6 +3313,8 @@ namespace pwiz.Skyline
 
         #region SequenceTree events
 
+        public SequenceTreeForm SequenceTreeForm => _sequenceTreeForm;
+
         public bool SequenceTreeFormIsVisible
         {
             get { return _sequenceTreeForm != null && _sequenceTreeForm.Visible; }

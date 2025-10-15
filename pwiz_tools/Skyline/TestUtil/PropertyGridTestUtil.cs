@@ -38,6 +38,8 @@ namespace pwiz.SkylineTestUtil
         private const string LIST_ANNOTATION_NAME = "ListAnnotation";
         private const string ANNOTATION_NAME_PREFIX = "annotation_";
 
+        public const string TEST_FILES_ZIP = @"TestFunctional\PropertyGridTest.zip";
+
         public static void TestEditProperty(SkylineWindow skylineWindow, string propName, object newValue)
         {
             var selectedObject = skylineWindow.PropertyGridForm.GetPropertyObject();

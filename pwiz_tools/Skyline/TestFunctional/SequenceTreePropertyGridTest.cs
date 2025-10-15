@@ -20,10 +20,11 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.SeqNode;
-using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.SkylineTestUtil;
 using System.ComponentModel;
+using System.IO;
+using System.Linq;
 using Peptide = pwiz.Skyline.Model.Databinding.Entities.Peptide;
 
 namespace pwiz.SkylineTestFunctional
@@ -38,7 +39,8 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestSequenceTreePropertyGrid()
         {
-            TestFilesZip = SequenceTreeRatioTest.TEST_FILES_ZIP;
+            TestFilesZipPaths = new[] { PropertyGridTestUtil.TEST_FILES_ZIP };
+
             RunFunctionalTest();
         }
 
@@ -57,10 +59,8 @@ namespace pwiz.SkylineTestFunctional
 
         private void VerifySetup()
         {
-            RunUI(() =>
-            {
-                SkylineWindow.OpenFile(TestFilesDir.GetTestPath(SequenceTreeRatioTest.TEST_FILE_NAME));
-            });
+            var documentPath = Path.Combine(TestFilesDirs[0].FullPath, @"Main", @"test.sky");
+            RunUI(() => { SkylineWindow.OpenFile(documentPath); });
 
             Assert.IsNotNull(SkylineWindow.SequenceTree);
             Assert.IsTrue(SkylineWindow.SequenceTreeFormIsVisible);
@@ -75,19 +75,24 @@ namespace pwiz.SkylineTestFunctional
 
         private static void TestSelectedNodeProperties()
         {
-            // Get selected node and ensure it is a peptide
-            DocNode selectedDocNode = null;
+            // select arbitrary peptide node
+            var peptideGroupTreeNode = SkylineWindow.SequenceTree.GetSequenceNodes().FirstOrDefault();
+            Assert.IsNotNull(peptideGroupTreeNode);
+            var peptideTreeNode = peptideGroupTreeNode.Nodes[0] as PeptideTreeNode;
+            Assert.IsNotNull(peptideTreeNode);
             RunUI(() =>
             {
-                selectedDocNode = ((SrmTreeNode)SkylineWindow.SequenceTree.SelectedNode).Model;
+                SkylineWindow.SequenceTree.SelectedNode = peptideTreeNode;
+                SkylineWindow.FocusPropertyProvider(SkylineWindow.SequenceTreeForm);
             });
-            Assert.IsTrue(selectedDocNode is PeptideDocNode);
+
+            // get properties of selected node
             var selectedObject = SkylineWindow.PropertyGridForm.GetPropertyObject();
             Assert.IsTrue(selectedObject is Peptide);
             var props = TypeDescriptor.GetProperties(selectedObject);
 
             // Check that sequence property matches value in selected node
-            Assert.AreEqual(((PeptideDocNode)selectedDocNode).Peptide.Sequence, props[SEQUENCE_PROP_NAME].GetValue(selectedObject));
+            Assert.AreEqual(peptideTreeNode.DocNode.Peptide.Sequence, props[SEQUENCE_PROP_NAME].GetValue(selectedObject));
 
             // smoke test check total number of properties - this failing could just mean another relevant property was added
             Assert.AreEqual(PEPTIDE_EXPECTED_PROP_NUM, props.Count);
