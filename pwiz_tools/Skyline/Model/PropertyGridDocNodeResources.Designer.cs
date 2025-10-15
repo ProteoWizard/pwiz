@@ -81,9 +81,9 @@ namespace pwiz.Skyline.Model {
         /// <summary>
         ///   Looks up a localized string similar to Average Measured Retention Time.
         /// </summary>
-        internal static string AvgMeasuredRetentionTime {
+        internal static string AverageMeasuredRetentionTime {
             get {
-                return ResourceManager.GetString("AvgMeasuredRetentionTime", resourceCulture);
+                return ResourceManager.GetString("AverageMeasuredRetentionTime", resourceCulture);
             }
         }
         
@@ -102,6 +102,15 @@ namespace pwiz.Skyline.Model {
         internal static string Category_Peptide {
             get {
                 return ResourceManager.GetString("Category_Peptide", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Transition.
+        /// </summary>
+        internal static string Category_Transition {
+            get {
+                return ResourceManager.GetString("Category_Transition", resourceCulture);
             }
         }
         

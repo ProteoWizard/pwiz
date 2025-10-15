@@ -144,7 +144,7 @@
   <data name="PredictedRetentionTime" xml:space="preserve">
     <value>Predicted Retention Time</value>
   </data>
-  <data name="AvgMeasuredRetentionTime" xml:space="preserve">
+  <data name="AverageMeasuredRetentionTime" xml:space="preserve">
     <value>Average Measured Retention Time</value>
   </data>
   <data name="StandardType" xml:space="preserve">
@@ -170,5 +170,8 @@
   </data>
   <data name="InternalStandardConcentration" xml:space="preserve">
     <value>Internal Standard Concentration</value>
+  </data>
+  <data name="Category_Transition" xml:space="preserve">
+    <value>Transition</value>
   </data>
 </root>
