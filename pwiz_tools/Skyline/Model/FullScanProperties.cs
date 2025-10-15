@@ -119,6 +119,11 @@ namespace pwiz.Skyline.Model
 
             res.IsCentroided = spectrum.Centroided.ToString(CultureInfo.CurrentCulture);
 
+            if (spectrum.Metadata.ConstantNeutralLoss.HasValue)
+            {
+                res.ConstantNeutralLoss = spectrum.Metadata.ConstantNeutralLoss.Value.ToString(Formats.Mz);
+            }
+
             if (spectrum.WindowGroup > 0)
             {
                 res.WindowGroup = spectrum.WindowGroup.ToString(CultureInfo.CurrentCulture); // For Bruker PASEF MS2
@@ -143,6 +148,7 @@ namespace pwiz.Skyline.Model
         [Category("AcquisitionInfo")] public string ScanId { get; set; }
         [Category("AcquisitionInfo")] public string CE { get; set; }
         [Category("AcquisitionInfo")] public string MSLevel { get; set; }
+        [Category("AcquisitionInfo")] public string ConstantNeutralLoss { get; set; }
         [Category("AcquisitionInfo")] public InstrumentInfo Instrument { get; set; }
         [Category("AcquisitionInfo")] public string DataPoints { get; set; }
         [Category("AcquisitionInfo")] public string MzCount { get; set; }

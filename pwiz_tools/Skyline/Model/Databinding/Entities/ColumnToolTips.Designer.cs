@@ -687,6 +687,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Analyzer offset value for constant neutral loss scan - use a negative value for neutral gain..
+        /// </summary>
+        public static string ConstantNeutralLoss {
+            get {
+                return ResourceManager.GetString("ConstantNeutralLoss", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The number of transitions for a precursor that integrate a peak with a
         ///boundary at either end of the acquisition time range, where intensity at the end is
         ///greater than 25% of the background-subtracted peak height higher than the other extent..

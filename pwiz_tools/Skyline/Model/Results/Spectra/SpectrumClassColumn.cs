@@ -77,10 +77,13 @@ namespace pwiz.Skyline.Model.Results.Spectra
         public static readonly SpectrumClassColumn DissociationMethod = MakeColumn(
             nameof(SpectrumClass.DissociationMethod), GetDissociationMethod);
 
+        public static readonly SpectrumClassColumn ConstantNeutralLoss = MakeColumn(
+            nameof(SpectrumClass.ConstantNeutralLoss), spectrum => spectrum.ConstantNeutralLoss);
+
         public static readonly ImmutableList<SpectrumClassColumn> ALL = ImmutableList.ValueOf(new[]
         {
             Ms1Precursors, Ms2Precursors, ScanDescription, CollisionEnergy, ScanWindowWidth, CompensationVoltage,
-            PresetScanConfiguration, MsLevel, Analyzer, IsolationWindowWidth, DissociationMethod
+            PresetScanConfiguration, MsLevel, Analyzer, IsolationWindowWidth, DissociationMethod, ConstantNeutralLoss
         });
 
         public static readonly ImmutableList<SpectrumClassColumn> MS1 = ImmutableList.ValueOf(new[]

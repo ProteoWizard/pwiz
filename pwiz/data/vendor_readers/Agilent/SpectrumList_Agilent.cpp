@@ -218,6 +218,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
     }
 
     double mzOfInterest = scanRecordPtr->getMZOfInterest();
+    bool isNeutralLossOrGainScan = scanType == MSScanType_NeutralLoss || scanType == MSScanType_NeutralGain;
     if (msLevel > 1 && mzOfInterest > 0)
     {
         Precursor precursor;
@@ -231,6 +232,10 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
             product.isolationWindow.set(MS_isolation_window_target_m_z, mzOfInterest, MS_m_z);
             //product.isolationWindow.set(MS_isolation_window_lower_offset, isolationWidth/2, MS_m_z);
             //product.isolationWindow.set(MS_isolation_window_upper_offset, isolationWidth/2, MS_m_z);
+        }
+        else if (isNeutralLossOrGainScan)
+        {
+            scan.set(MS_analyzer_scan_offset, mzOfInterest, MS_m_z); // Always positive, look at scan type to determine whether it's loss or gain
         }
         else
         {
@@ -367,7 +372,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
     }
 
 
-    if (reportMS2ForAllIonsScan)
+    if (reportMS2ForAllIonsScan || isNeutralLossOrGainScan)
     {
         // claim a target window that encompasses all ions
         Precursor& precursor = result->precursors.back();
@@ -733,6 +738,8 @@ PWIZ_API_DECL void SpectrumList_Agilent::createIndex() const
 			scanTypes & MSScanType_ProductIon ||
 			scanTypes & MSScanType_PrecursorIon ||
             scanTypes & MSScanType_SelectedIon ||
+            scanTypes & MSScanType_NeutralLoss ||
+            scanTypes & MSScanType_NeutralGain ||
             scanTypes & MSScanType_MultipleReaction)
 		{
 

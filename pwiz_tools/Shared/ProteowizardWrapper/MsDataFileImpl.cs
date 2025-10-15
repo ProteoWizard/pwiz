@@ -1397,6 +1397,7 @@ namespace pwiz.ProteowizardWrapper
 
             metadata = metadata.ChangeTotalIonCurrent(GetTotalIonCurrent(spectrum));
             metadata = metadata.ChangeInjectionTime(GetInjectionTime(spectrum));
+            metadata = metadata.ChangeConstantNeutralLoss(GetConstantNeutralLoss(spectrum));
             return metadata;
         }
 
@@ -1654,6 +1655,35 @@ namespace pwiz.ProteowizardWrapper
                 }
             }
             return count == 0 ? (double?) null : total;
+        }
+
+        private double? GetConstantNeutralLoss(Spectrum spectrum) // If return value < 0, it's actually a neutral gain
+        {
+            try
+            {
+                if (spectrum.scanList.empty())
+                {
+                    return null;
+                }
+
+                CVParam paramOffset = spectrum.scanList.scans[0].cvParam(CVID.MS_analyzer_scan_offset);
+                if (paramOffset.empty())
+                {
+                    return null;
+                }
+                
+                CVParam paramScanType = spectrum.scanList.scans[0].cvParam(CVID.MS_constant_neutral_gain_spectrum);
+                if (paramScanType.empty())
+                {
+                    return (double)paramOffset.value; // ConstantNeutralLoss is positive for loss, negative for gain;
+                }
+
+                return  -1.0 * (double)paramOffset.value; // ConstantNeutralLoss is positive for loss, negative for gain
+            }
+            catch (InvalidCastException)
+            {
+                return null;
+            }
         }
 
         private static int GetPresetScanConfiguration(Spectrum spectrum)
