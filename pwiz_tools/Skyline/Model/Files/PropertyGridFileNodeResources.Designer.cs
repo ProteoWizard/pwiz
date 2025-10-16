@@ -421,6 +421,15 @@ namespace pwiz.Skyline.Model.Files {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to There is already a replicate named &apos;{0}&apos;..
+        /// </summary>
+        internal static string ReplicateName_There_is_already_a_replicate_named___0___ {
+            get {
+                return ResourceManager.GetString("ReplicateName_There_is_already_a_replicate_named___0___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Revision.
         /// </summary>
         internal static string Revision {
