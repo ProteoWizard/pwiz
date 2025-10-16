@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Resources;
@@ -32,6 +31,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             var library = dataSchema.Document.Settings.PeptideSettings.Libraries.GetLibrary(name);
             var libSpec = library.CreateSpec(filePath);
             var libDetails = library.LibraryDetails;
+            var libDataFiles = libDetails.DataFiles.ToList();
 
             Name = name;
             LocalFilePath = localFilePath;
@@ -43,9 +43,30 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             Id = libDetails.Id;
             Revision = libDetails.Revision;
             Version = libDetails.Version;
+            DataFiles = libDataFiles.Count;
+
+            // if all data files have the same score type and threshold, use those values, otherwise null
+            ScoreType = null;
+            ScoreThreshold = null;
+            foreach (var kvp in libDataFiles.Where(sourceFileDetail => sourceFileDetail.ScoreThresholds.Any())
+                         .SelectMany(sourceFileDetail => sourceFileDetail.ScoreThresholds))
+            {
+                if (ScoreType == null)
+                {
+                    ScoreType = kvp.Key.ToString();
+                    ScoreThreshold = kvp.Value;
+                }
+                else if (ScoreType != kvp.Key.ToString() || ScoreThreshold != kvp.Value)
+                {
+                    ScoreType = null;
+                    ScoreThreshold = null;
+                    break;
+                }
+            }
         }
 
         public string Name { get; }
+        public int DataFiles { get; }
         public string LibraryType { get; }
         public string FilePath { get; }
         public string LocalFilePath { get; }
@@ -55,13 +76,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public string Id { get; }
         public string Revision { get; }
         public string Version { get; }
-
-        #region PropertyGrid Support
+        public string ScoreType { get; }
+        public double? ScoreThreshold { get; }
 
         public override ResourceManager GetResourceManager() => PropertyGridFileNodeResources.ResourceManager;
 
-        public override PropertyDescriptorCollection GetProperties(Attribute[] attributes) => GetPropertiesReflective();
+        public override PropertyDescriptorCollection GetProperties() => GetPropertiesReflective();
 
-        #endregion
+        protected override bool PropertyFilter(PropertyDescriptor prop)
+        {
+            return base.PropertyFilter(prop) && prop.GetValue(this) != null;
+        }
     }
 }

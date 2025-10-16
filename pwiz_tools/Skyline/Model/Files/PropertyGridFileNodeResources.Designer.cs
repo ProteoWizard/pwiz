@@ -448,6 +448,24 @@ namespace pwiz.Skyline.Model.Files {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Score Threshold.
+        /// </summary>
+        internal static string ScoreThreshold {
+            get {
+                return ResourceManager.GetString("ScoreThreshold", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Score Type.
+        /// </summary>
+        internal static string ScoreType {
+            get {
+                return ResourceManager.GetString("ScoreType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Spectrum Count.
         /// </summary>
         internal static string SpectrumCount {

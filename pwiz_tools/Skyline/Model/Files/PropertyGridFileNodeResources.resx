@@ -192,6 +192,12 @@
   <data name="Id" xml:space="preserve">
     <value>Id</value>
   </data>
+  <data name="ScoreType" xml:space="preserve">
+    <value>Score Type</value>
+  </data>
+  <data name="ScoreThreshold" xml:space="preserve">
+    <value>Score Threshold</value>
+  </data>
   <data name="Description_Name" xml:space="preserve">
     <value>Name of the file</value>
   </data>

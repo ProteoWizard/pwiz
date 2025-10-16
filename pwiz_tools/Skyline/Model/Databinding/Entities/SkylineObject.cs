@@ -106,7 +106,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         protected virtual bool PropertyFilter(PropertyDescriptor prop) =>
             prop != null;
 
-        protected virtual PropertyGridPropertyDescriptor PropertyTransform(PropertyDescriptor prop)
+        protected virtual PropertyDescriptor PropertyTransform(PropertyDescriptor prop)
         {
             var transformed = new PropertyGridPropertyDescriptor(prop, GetResourceManager());
             if (prop is AnnotationPropertyDescriptor annotationProperty)
@@ -137,10 +137,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         protected PropertyDescriptorCollection GetPropertiesReflective()
         {
             var baseProps = TypeDescriptor.GetProperties(GetType());
-            var processedProps = (
-                from PropertyDescriptor prop in baseProps
-                select PropertyTransform(prop)
-            ).Cast<PropertyDescriptor>().ToList();
+            var processedProps = from PropertyDescriptor prop in baseProps
+                where PropertyFilter(prop)
+                select PropertyTransform(prop);
 
             return new PropertyDescriptorCollection(processedProps.ToArray());
         }
@@ -149,7 +148,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         #region ICustomTypeDescriptor Implementation
 
-        public virtual PropertyDescriptorCollection GetProperties(Attribute[] attributes)
+        public virtual PropertyDescriptorCollection GetProperties()
         {
             // Get default displayed props
             var propertyPaths = new BuiltInReports(_dataSchema.Document).GetDefaultColumns(GetType());
@@ -163,10 +162,10 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
             // Convert to PropertyGridPropertyDescriptor
             var transformedProps = filteredProps.Select(PropertyTransform);
-            return new PropertyDescriptorCollection(transformedProps.Cast<PropertyDescriptor>().ToArray());
+            return new PropertyDescriptorCollection(transformedProps.ToArray());
         }
 
-        public PropertyDescriptorCollection GetProperties() => GetProperties(null);
+        public PropertyDescriptorCollection GetProperties(Attribute[] attributes) => GetProperties();
 
         public string GetClassName() => TypeDescriptor.GetClassName(this, true);
 
