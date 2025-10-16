@@ -754,6 +754,10 @@ namespace pwiz.Skyline
             {
                 return _immediateWindow ?? CreateImmediateWindow();
             }
+            if (Equals(persistentString, typeof(PropertyGridForm).ToString()))
+            {
+                return _propertyGridForm ?? CreatePropertyGridForm();
+            }
             if (persistentString.StartsWith(typeof(GraphChromatogram).ToString()))
             {
                 if (_listGraphChrom.Count >= MAX_GRAPH_CHROM)

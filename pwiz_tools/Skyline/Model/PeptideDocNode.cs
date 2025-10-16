@@ -24,6 +24,8 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.Crosslinking;
+using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Irt;

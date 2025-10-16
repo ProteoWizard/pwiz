@@ -3,7 +3,7 @@
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
  * Copyright 2012 University of Washington - Seattle, WA
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,25 +21,43 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows.Forms;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Proteome;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls
 {
-    public partial class SequenceTreeForm : DockableFormEx
+    public partial class SequenceTreeForm : DockableFormEx, IPropertyProvider
     {
-        public SequenceTreeForm(IDocumentUIContainer documentContainer, bool restoringState)
+        public SequenceTreeForm(SkylineWindow skylineWindow, bool restoringState)
         {
+            SkylineWindow = skylineWindow;
             InitializeComponent();
             _defaultTabText = TabText;
             sequenceTree.LockDefaultExpansion = restoringState;
-            sequenceTree.InitializeTree(documentContainer);
+            sequenceTree.InitializeTree(skylineWindow);
             sequenceTree.LockDefaultExpansion = false;
-            if (documentContainer.DocumentUI != null)
-                UpdateResultsUI(documentContainer.DocumentUI.Settings, null);
+            if (skylineWindow.DocumentUI != null)
+                UpdateResultsUI(skylineWindow.DocumentUI.Settings, null);
+            sequenceTree.AfterSelect += SequenceTree_AfterSelect;
         }
+
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        private SkylineWindow SkylineWindow { get; }
+
+        #region IPropertyProvider Implementation
+
+        public RootSkylineObject GetPropertyObject()
+        {
+            var dataSchema = new SkylineWindowDataSchema(SkylineWindow);
+            return SequenceTree.SelectedNodeSrmTreeNode?.PropertyObjectInstancer(dataSchema);
+        }
+
+        #endregion
 
         protected override void OnClosing(CancelEventArgs e)
         {
@@ -129,6 +147,11 @@ namespace pwiz.Skyline.Controls
                 UpdateResultsUI(SequenceTree.DocumentContainer.Document.Settings, settingsPrevious);
                 _updateDocPrevious = null;
             }
+        }
+
+        private void SequenceTree_AfterSelect(object sender, TreeViewEventArgs e)
+        {
+            SkylineWindow.PropertyProviderSelectionChanged(this);
         }
 
         private void toolBarResults_Resize(object sender, EventArgs e)

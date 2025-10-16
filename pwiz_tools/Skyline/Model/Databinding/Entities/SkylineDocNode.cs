@@ -193,6 +193,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             ChangeDocNode(EditDescription.SetAnnotation(annotationDef, value),
                 docNode => (TDocNode) docNode.ChangeAnnotations(docNode.Annotations.ChangeAnnotation(annotationDef, value)));
         }
+
         public override string ToString()
         {
             return DocNode.ToString();

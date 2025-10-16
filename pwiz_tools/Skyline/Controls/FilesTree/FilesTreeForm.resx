@@ -357,4 +357,16 @@
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.DockableFormEx, Skyline-daily, Version=24.1.1.449, Culture=neutral, PublicKeyToken=null</value>
   </data>
+  <data name="&gt;&gt;openPropertiesViewMenuItem.Name" xml:space="preserve">
+    <value>openPropertiesViewMenuItem</value>
+  </data>
+  <data name="&gt;&gt;openPropertiesViewMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="openPropertiesViewMenuItem.Size" xml:space="preserve">
+    <value>201,22</value>
+  </data>
+  <data name="openPropertiesViewMenuItem.Text" xml:space="preserve">
+    <value>Properties</value>
+  </data>
 </root>

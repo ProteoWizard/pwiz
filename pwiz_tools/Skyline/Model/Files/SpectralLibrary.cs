@@ -14,12 +14,15 @@
  * limitations under the License.
  */
 
-using System.Collections.Generic;
-using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace pwiz.Skyline.Model.Files
 {
@@ -50,6 +53,9 @@ namespace pwiz.Skyline.Model.Files
         {
             return document.Settings.PeptideSettings.Libraries.FindLibrarySpec(library.IdentityPath.GetIdentity(0));
         }
+
+        public override Func<SkylineDataSchema, RootSkylineObject> PropertyObjectInstancer =>
+            dataSchema => new Databinding.Entities.SpectralLibrary(dataSchema, IdentityPath);
 
         public static ModifiedDocument Delete(SrmDocument document, SrmSettingsChangeMonitor monitor, List<FileModel> models)
         {

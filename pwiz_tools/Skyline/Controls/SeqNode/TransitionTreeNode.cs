@@ -16,15 +16,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
-using System.Diagnostics;
-using System.Drawing;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using System;
+using System.Diagnostics;
+using System.Drawing;
 
 namespace pwiz.Skyline.Controls.SeqNode
 {
@@ -48,6 +50,15 @@ namespace pwiz.Skyline.Controls.SeqNode
         public TransitionTreeNode(SequenceTree tree, TransitionDocNode ion)
             : base(tree, ion)
         {
+        }
+
+        public override Func<SkylineDataSchema, RootSkylineObject> PropertyObjectInstancer
+        {
+            get
+            {
+                var h = Heading;
+                return dataSchema => new pwiz.Skyline.Model.Databinding.Entities.Transition(dataSchema, Path);
+            }
         }
 
         public TransitionDocNode DocNode => (TransitionDocNode)Model;
@@ -166,7 +177,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public static string GetLabel(TransitionDocNode nodeTran, string resultsText)
         {
-            Transition tran = nodeTran.Transition;
+            var tran = nodeTran.Transition;
             string labelPrefix;
             const string labelPrefixSpacer = " - ";
             if (nodeTran.ComplexFragmentIon.IsCrosslinked)
@@ -175,7 +186,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             }
             else if (tran.IsPrecursor())
             {
-                labelPrefix = nodeTran.FragmentIonName + Transition.GetMassIndexText(tran.MassIndex) + labelPrefixSpacer;
+                labelPrefix = nodeTran.FragmentIonName + Skyline.Model.Transition.GetMassIndexText(tran.MassIndex) + labelPrefixSpacer;
             }
             else if (tran.IsCustom())
             {
@@ -196,7 +207,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 return string.Format(@"{0}{1}{2}{3}",
                                      labelPrefix,
                                      GetMzLabel(nodeTran),
-                                     Transition.GetChargeIndicator(tran.Adduct),
+                                     Skyline.Model.Transition.GetChargeIndicator(tran.Adduct),
                                      resultsText);
             }
             
@@ -207,7 +218,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             return string.Format(@"{0}{1}{2} ({3}){4}",
                                  labelPrefix,
                                  GetMzLabel(nodeTran),
-                                 Transition.GetChargeIndicator(tran.Adduct),
+                                 Skyline.Model.Transition.GetChargeIndicator(tran.Adduct),
                                  rank,
                                  resultsText);
         }
@@ -217,7 +228,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             int? massShift = nodeTran.Transition.DecoyMassShift;
             double shift = SequenceMassCalc.GetPeptideInterval(massShift);
             return string.Format(@"{0:F04}{1}", nodeTran.Mz - shift,
-                Transition.GetDecoyText(massShift));
+                Skyline.Model.Transition.GetDecoyText(massShift));
         }
 
         #region Implementation of ITipProvider

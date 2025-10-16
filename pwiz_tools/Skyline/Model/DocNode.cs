@@ -22,6 +22,8 @@ using System.Diagnostics;
 using System.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
+using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
@@ -117,7 +119,7 @@ namespace pwiz.Skyline.Model
         /// <returns>New instance</returns>
         public DocNode ChangeAnnotations(Annotations annotations)
         {
-            return ChangeProp(ImClone(this), im => im.Annotations = annotations);            
+            return ChangeProp(ImClone(this), im => im.Annotations = annotations);
         }
 
         /// <summary>

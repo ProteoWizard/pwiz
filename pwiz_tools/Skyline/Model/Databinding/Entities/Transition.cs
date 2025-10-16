@@ -19,8 +19,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
+using System.Resources;
 using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.Crosslinking;
@@ -44,6 +46,17 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             _precursor = new Lazy<Precursor>(() => new Precursor(DataSchema, IdentityPath.Parent));
             _results = CachedValue.Create(DataSchema, MakeResults);
         }
+
+        #region PropertyGrid Support
+
+        public override ResourceManager GetResourceManager() => PropertyGridDocNodeResources.ResourceManager;
+
+        protected override PropertyDescriptor GetRootAliasProperty() => TypeDescriptor.GetProperties(GetType())[nameof(Name)];
+
+        #endregion
+
+        public string Name => DocNode.Transition.ToString();
+    
 
         [HideWhen(AncestorOfType = typeof(Precursor))]
         public Precursor Precursor

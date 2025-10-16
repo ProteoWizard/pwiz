@@ -19,10 +19,14 @@
 
 using System;
 using System.ComponentModel;
+using System.Linq;
+using System.Resources;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.ElementLocators;
+using AttributeCollection = System.ComponentModel.AttributeCollection;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
@@ -82,7 +86,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     /// <see cref="SkylineObject" /> which holds onto a reference to the <see cref="SkylineDataSchema"/>
     /// and returns it in <see cref="GetDataSchema"/>.
     /// </summary>
-    public class RootSkylineObject : SkylineObject
+    public class RootSkylineObject : SkylineObject, ICustomTypeDescriptor
     {
         private SkylineDataSchema _dataSchema;
         public RootSkylineObject(SkylineDataSchema dataSchema)
@@ -94,5 +98,83 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             return _dataSchema;
         }
+
+        #region PropertyGrid Support
+
+        public virtual ResourceManager GetResourceManager() => null;
+
+        protected virtual bool PropertyFilter(PropertyDescriptor prop) =>
+            prop != null;
+
+        protected virtual PropertyGridPropertyDescriptor PropertyTransform(PropertyDescriptor prop)
+        {
+            var transformed = new PropertyGridPropertyDescriptor(prop, GetResourceManager());
+            if (prop is AnnotationPropertyDescriptor annotationProperty)
+                // annotations need invariant display name as they are user-defined and have no localized resource
+                transformed.SetDisplayName(annotationProperty.DisplayName);
+            else
+                // for non-annotation properties, set category to name of this object
+                transformed.SetCategory(GetType().Name);
+            return transformed;
+        }
+
+        // Override to provide a property to use as the alias for the root object, e.g. Sequence for Peptide
+        protected virtual PropertyDescriptor GetRootAliasProperty() => null;
+
+        #endregion
+
+        // assumes path is depth 1 or null (for root)
+        private PropertyDescriptor GetPropertyDescriptorFromPath(PropertyPath path)
+        {
+            // if root path used as property, must defer to object to tell what to display.
+            // For example, Peptide uses Sequence as its "root" property and is displayed as "Peptide"
+            if (path.Name == null && GetRootAliasProperty() != null)
+                return GetRootAliasProperty();
+
+            return TypeDescriptor.GetProperties(GetType())[path.Name ?? string.Empty];
+        }
+
+        #region ICustomTypeDescriptor Implementation
+
+        public PropertyDescriptorCollection GetProperties(Attribute[] attributes)
+        {
+            // Get default displayed props
+            var propertyPaths = new BuiltInReports(_dataSchema.Document).GetDefaultColumns(GetType());
+            if (propertyPaths == null) return new PropertyDescriptorCollection(new PropertyDescriptor[]{});
+            var allProps = propertyPaths.Select(GetPropertyDescriptorFromPath);
+            var filteredProps = allProps.Where(PropertyFilter).ToList();
+
+            // Add applicable annotation props
+            var annotationProps = _dataSchema.GetAnnotations(GetType()).ToList();
+            filteredProps.AddRange(annotationProps);
+
+            // Convert to PropertyGridPropertyDescriptor
+            var transformedProps = filteredProps.Select(PropertyTransform);
+            return new PropertyDescriptorCollection(transformedProps.Cast<PropertyDescriptor>().ToArray());
+        }
+
+        public PropertyDescriptorCollection GetProperties() => GetProperties(null);
+
+        public string GetClassName() => TypeDescriptor.GetClassName(this, true);
+
+        public AttributeCollection GetAttributes() => TypeDescriptor.GetAttributes(this, true);
+
+        public string GetComponentName() => TypeDescriptor.GetComponentName(this, true);
+
+        public TypeConverter GetConverter() => TypeDescriptor.GetConverter(this, true);
+
+        public EventDescriptor GetDefaultEvent() => TypeDescriptor.GetDefaultEvent(this, true);
+
+        public PropertyDescriptor GetDefaultProperty() => TypeDescriptor.GetDefaultProperty(this, true);
+
+        public object GetEditor(Type editorBaseType) => TypeDescriptor.GetEditor(this, editorBaseType, true);
+
+        public EventDescriptorCollection GetEvents(Attribute[] attributes) => TypeDescriptor.GetEvents(this, attributes, true);
+
+        public EventDescriptorCollection GetEvents() => TypeDescriptor.GetEvents(this, true);
+
+        public object GetPropertyOwner(PropertyDescriptor pd) => this;
+
+        #endregion
     }
 }
