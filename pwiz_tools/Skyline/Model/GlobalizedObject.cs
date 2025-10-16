@@ -388,15 +388,20 @@ namespace pwiz.Skyline.Model
 
         public override object GetValue(object component)
         {
-            if (_displayValue != null) return _displayValue;
-
-            return _basePropertyDescriptor.GetValue(component) ?? string.Empty;
+            return _displayValue ??= _basePropertyDescriptor.GetValue(component) ?? string.Empty;
         }
 
         public override void SetValue(object component, object value)
         {
-            _basePropertyDescriptor.SetValue(component, value);
-            _displayValue = value;
+            try
+            {
+                _basePropertyDescriptor.SetValue(component, value);
+                _displayValue = value;
+            }
+            catch (ArgumentException e)
+            {
+                _basePropertyDescriptor.SetValue(component, _displayValue);
+            }
         }
 
         public override TypeConverter Converter
