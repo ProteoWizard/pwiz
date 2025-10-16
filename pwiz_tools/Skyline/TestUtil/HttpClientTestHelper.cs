@@ -23,6 +23,7 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Controls;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -120,6 +121,15 @@ namespace pwiz.SkylineTestUtil
         public static HttpClientTestHelper SimulateCancellation()
         {
             var cancelEx = new OperationCanceledException();
+            return new HttpClientTestHelper(cancelEx);
+        }
+
+        /// <summary>
+        /// Simulates operation cancellation via a click exception treated as a user click
+        /// </summary>
+        public static HttpClientTestHelper SimulateCancellationClickWithException()
+        {
+            var cancelEx = new LongWaitDlg.CancelClickedTestException();
             return new HttpClientTestHelper(cancelEx);
         }
 

@@ -1763,6 +1763,27 @@ namespace pwiz.Skyline.Util
                 exception.Message);
             Program.ReportException(new ApplicationException(message, exception));
         }
+
+        /// <summary>
+        /// Test an exception for whether it is or contains an exception type, either in
+        /// an <see cref="AggregateException"/> or the Exception.InnerException chain.
+        /// </summary>
+        /// <typeparam name="TEx">The exception type to test for, e.g. <see cref="OperationCanceledException"/></typeparam>
+        /// <param name="ex">The root exception to inspect</param>
+        /// <returns>True if the exception type is found</returns>
+        public static bool HasException<TEx>(this Exception ex)
+        {
+            if (ex is AggregateException exAggregate)
+                return exAggregate.InnerExceptions.Contains(exSub => exSub.HasException<TEx>());
+            while (ex != null)
+            {
+                if (ex is TEx)
+                    return true;
+                ex = ex.InnerException;
+            }
+
+            return false;
+        }
     }
 
     public class Alarms

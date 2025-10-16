@@ -191,7 +191,7 @@ namespace pwiz.Skyline.Controls
 
                 if (IsCanceled && null != x)
                 {
-                    if (x is OperationCanceledException || x.InnerException is OperationCanceledException)
+                    if (x.HasException<OperationCanceledException>())
                     {
                         x = null;
                     }
@@ -202,6 +202,15 @@ namespace pwiz.Skyline.Controls
                     ExceptionUtil.WrapAndThrowException(x);
                 }
             }
+        }
+
+        /// <summary>
+        /// A type of <see cref="OperationCanceledException"/> that simulates a user clicking
+        /// the Cancel button in the <see cref="LongWaitDlg"/> so that the form goes away silently
+        /// without throwing the exception.
+        /// </summary>
+        public class CancelClickedTestException : OperationCanceledException
+        {
         }
 
         /// <summary>
@@ -255,6 +264,10 @@ namespace pwiz.Skyline.Controls
             }
             catch (Exception x)
             {
+                // Simulate a cancel click if the exception thrown has the right type
+                if (x.HasException<CancelClickedTestException>())
+                    _cancellationTokenSource.Cancel();
+                
                 _exception = x;
             }
             finally

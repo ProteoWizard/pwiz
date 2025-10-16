@@ -46,6 +46,7 @@ namespace pwiz.SkylineTestFunctional
             TestTimeoutHandling();
             TestConnectionLossHandling();
             TestCancellationHandling();
+            TestCancellationClickByException();
             TestNoNetworkInterfaceHandling();
             
             // Category: HTTP status code tests
@@ -108,6 +109,29 @@ namespace pwiz.SkylineTestFunctional
         {
             using var helper = HttpClientTestHelper.SimulateCancellation();
             ValidateDownloadStringFailure<OperationCanceledException>(new OperationCanceledException().Message);
+        }
+        
+        private static void TestCancellationClickByException()
+        {
+            using var helper = HttpClientTestHelper.SimulateCancellationClickWithException();
+            RunUI(() =>
+            {
+                using var waitDlg = new LongWaitDlg();
+                try
+                {
+                    var uri = new Uri("http://canceled.example.com");
+                    var status = waitDlg.PerformWork(SkylineWindow, 0, progressMonitor => {
+                        using var httpClient = new HttpClientWithProgress(progressMonitor);
+                        httpClient.DownloadString(uri);
+                    });
+                    // Expecting a canceled status without an exception
+                    Assert.IsTrue(status.IsCanceled);
+                }
+                catch (Exception x)
+                {
+                    Assert.Fail($"Unexpected exception thrown {x.Message}");
+                }
+            });
         }
 
         private static void TestNoNetworkInterfaceHandling()

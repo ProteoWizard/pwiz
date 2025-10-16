@@ -3,6 +3,8 @@
 # This file provides Cursor-specific behavior guidance.
 # For detailed coding conventions, style guidelines, and testing patterns,
 # see STYLEGUIDE.md - the comprehensive style guide used by all AI tools.
+# For project context, common gotchas, and architectural patterns,
+# see MEMORY.md - essential context for AI tools working on this project.
 
 [project]
 name = "ProteoWizard (pwiz)"
@@ -38,6 +40,7 @@ entry_points = [
 - When adding sources, update the appropriate Jamfile or Visual Studio project.
 - Use existing vendor libraries from `libraries/`; do not fetch replacements.
 - For documentation, add concise notes to `README.md` and `doc/`.
+- Project conventions: See MEMORY.md for essential project context and common gotchas.
 
 [skyline]
 primary_solution = "pwiz_tools/Skyline/Skyline.sln"
