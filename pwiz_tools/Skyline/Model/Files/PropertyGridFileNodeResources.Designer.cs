@@ -61,7 +61,7 @@ namespace pwiz.Skyline.Model.Files {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Acquisition time.
+        ///   Looks up a localized string similar to Acquisition Time.
         /// </summary>
         internal static string AcquisitionTime {
             get {
@@ -331,6 +331,15 @@ namespace pwiz.Skyline.Model.Files {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Id.
+        /// </summary>
+        internal static string Id {
+            get {
+                return ResourceManager.GetString("Id", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Instrument.
         /// </summary>
         internal static string Instrument {
@@ -345,6 +354,24 @@ namespace pwiz.Skyline.Model.Files {
         internal static string Ionization {
             get {
                 return ResourceManager.GetString("Ionization", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Library Type.
+        /// </summary>
+        internal static string LibraryType {
+            get {
+                return ResourceManager.GetString("LibraryType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Local File Path.
+        /// </summary>
+        internal static string LocalFilePath {
+            get {
+                return ResourceManager.GetString("LocalFilePath", resourceCulture);
             }
         }
         
@@ -394,6 +421,15 @@ namespace pwiz.Skyline.Model.Files {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Revision.
+        /// </summary>
+        internal static string Revision {
+            get {
+                return ResourceManager.GetString("Revision", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Sample Dilution Factor.
         /// </summary>
         internal static string SampleDilutionFactor {
@@ -408,6 +444,42 @@ namespace pwiz.Skyline.Model.Files {
         internal static string SampleType {
             get {
                 return ResourceManager.GetString("SampleType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Spectrum Count.
+        /// </summary>
+        internal static string SpectrumCount {
+            get {
+                return ResourceManager.GetString("SpectrumCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Total Psm Count.
+        /// </summary>
+        internal static string TotalPsmCount {
+            get {
+                return ResourceManager.GetString("TotalPsmCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unique Peptide Count.
+        /// </summary>
+        internal static string UniquePeptideCount {
+            get {
+                return ResourceManager.GetString("UniquePeptideCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Version.
+        /// </summary>
+        internal static string Version {
+            get {
+                return ResourceManager.GetString("Version", resourceCulture);
             }
         }
     }

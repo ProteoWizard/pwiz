@@ -92,8 +92,8 @@ namespace pwiz.Skyline.Model.Files
         public override string ToString() => @$"{GetType().Name}: " + (Name ?? string.Empty);
 
         // Provide a way to instantiate the PropertyObject for this model
-        public virtual Func<SkylineDataSchema, RootSkylineObject> PropertyObjectInstancer => 
-            dataSchema => null;
+        public virtual Func<SkylineDataSchema, string, RootSkylineObject> PropertyObjectInstancer => 
+            (dataSchema, localFilePath) => null;
 
         /// <summary>
         /// Use this to decide whether the file represented by this model is ready to be monitored. A model may not be ready if:

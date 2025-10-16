@@ -54,8 +54,8 @@ namespace pwiz.Skyline.Model.Files
             return document.Settings.PeptideSettings.Libraries.FindLibrarySpec(library.IdentityPath.GetIdentity(0));
         }
 
-        public override Func<SkylineDataSchema, RootSkylineObject> PropertyObjectInstancer =>
-            dataSchema => new Databinding.Entities.SpectralLibrary(dataSchema, FilePath);
+        public override Func<SkylineDataSchema, string, RootSkylineObject> PropertyObjectInstancer =>
+            (dataSchema, localFilePath) => new Databinding.Entities.SpectralLibrary(dataSchema, Name, FilePath, localFilePath);
 
         public static ModifiedDocument Delete(SrmDocument document, SrmSettingsChangeMonitor monitor, List<FileModel> models)
         {

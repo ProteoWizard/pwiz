@@ -132,6 +132,19 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return TypeDescriptor.GetProperties(GetType())[path.Name ?? string.Empty];
         }
 
+        // version of GetProperties that simply collects all properties on the object and does the standard transform.
+        // used for data objects not present in the document grid, where GetDefaultColumns would return an empty list.
+        protected PropertyDescriptorCollection GetPropertiesReflective()
+        {
+            var baseProps = TypeDescriptor.GetProperties(GetType());
+            var processedProps = (
+                from PropertyDescriptor prop in baseProps
+                select PropertyTransform(prop)
+            ).Cast<PropertyDescriptor>().ToList();
+
+            return new PropertyDescriptorCollection(processedProps.ToArray());
+        }
+
         #endregion
 
         #region ICustomTypeDescriptor Implementation

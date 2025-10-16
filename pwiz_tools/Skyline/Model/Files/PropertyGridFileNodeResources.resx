@@ -166,7 +166,31 @@
     <value>Instrument</value>
   </data>
   <data name="AcquisitionTime" xml:space="preserve">
-    <value>Acquisition time</value>
+    <value>Acquisition Time</value>
+  </data>
+  <data name="LibraryType" xml:space="preserve">
+    <value>Library Type</value>
+  </data>
+  <data name="LocalFilePath" xml:space="preserve">
+    <value>Local File Path</value>
+  </data>
+  <data name="SpectrumCount" xml:space="preserve">
+    <value>Spectrum Count</value>
+  </data>
+  <data name="TotalPsmCount" xml:space="preserve">
+    <value>Total Psm Count</value>
+  </data>
+  <data name="UniquePeptideCount" xml:space="preserve">
+    <value>Unique Peptide Count</value>
+  </data>
+  <data name="Revision" xml:space="preserve">
+    <value>Revision</value>
+  </data>
+  <data name="Version" xml:space="preserve">
+    <value>Version</value>
+  </data>
+  <data name="Id" xml:space="preserve">
+    <value>Id</value>
   </data>
   <data name="Description_Name" xml:space="preserve">
     <value>Name of the file</value>

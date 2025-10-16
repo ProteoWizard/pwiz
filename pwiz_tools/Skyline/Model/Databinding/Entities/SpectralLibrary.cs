@@ -22,41 +22,45 @@ using System.ComponentModel;
 using System.Linq;
 using System.Resources;
 using pwiz.Skyline.Model.Files;
-using pwiz.Skyline.Model.Lib;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
     public class SpectralLibrary : RootSkylineObject
     {
-        private readonly SpectrumSourceFileDetails _fileDetails;
-        private readonly LibrarySpec _librarySpec;
-
-        public SpectralLibrary(SkylineDataSchema dataSchema, string filePath) : base(dataSchema)
+        public SpectralLibrary(SkylineDataSchema dataSchema, string name, string filePath, string localFilePath) : base(dataSchema)
         {
-            _fileDetails = new SpectrumSourceFileDetails(filePath);
-            _librarySpec = dataSchema.Document.Settings.PeptideSettings.Libraries.LibrarySpecs
-                .FirstOrDefault(libSpec => libSpec.FilePath.Equals(filePath));
+            var library = dataSchema.Document.Settings.PeptideSettings.Libraries.GetLibrary(name);
+            var libSpec = library.CreateSpec(filePath);
+            var libDetails = library.LibraryDetails;
+
+            Name = name;
+            LocalFilePath = localFilePath;
+            LibraryType = libSpec.GetLibraryTypeName();
+            FilePath = libSpec.FilePath;
+            SpectrumCount = libDetails.SpectrumCount;
+            TotalPsmCount = libDetails.TotalPsmCount;
+            UniquePeptideCount = libDetails.UniquePeptideCount;
+            Id = libDetails.Id;
+            Revision = libDetails.Revision;
+            Version = libDetails.Version;
         }
 
-        public string Name => _librarySpec.Name;
-        public int SpectrumCount => _fileDetails.BestSpectrum;
-        public int MatchedCount => _fileDetails.MatchedSpectrum;
-        public string LibraryType => _librarySpec.GetLibraryTypeName();
+        public string Name { get; }
+        public string LibraryType { get; }
+        public string FilePath { get; }
+        public string LocalFilePath { get; }
+        public int SpectrumCount { get; }
+        public int TotalPsmCount { get; }
+        public int UniquePeptideCount { get; }
+        public string Id { get; }
+        public string Revision { get; }
+        public string Version { get; }
 
         #region PropertyGrid Support
 
         public override ResourceManager GetResourceManager() => PropertyGridFileNodeResources.ResourceManager;
 
-        public override PropertyDescriptorCollection GetProperties(Attribute[] attributes)
-        {
-            var baseProps = TypeDescriptor.GetProperties(GetType());
-            var processedProps = (
-                from PropertyDescriptor prop in baseProps
-                select PropertyTransform(prop)
-            ).Cast<PropertyDescriptor>().ToList();
-
-            return new PropertyDescriptorCollection(processedProps.ToArray());
-        }
+        public override PropertyDescriptorCollection GetProperties(Attribute[] attributes) => GetPropertiesReflective();
 
         #endregion
     }

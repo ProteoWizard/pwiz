@@ -60,8 +60,8 @@ namespace pwiz.Skyline.Model.Files
             return chromSet;
         }
 
-        public override Func<SkylineDataSchema, RootSkylineObject> PropertyObjectInstancer =>
-            dataSchema =>
+        public override Func<SkylineDataSchema, string, RootSkylineObject> PropertyObjectInstancer =>
+            (dataSchema, localFilePath) =>
             {
                 var chromSetId = IdentityPath.GetIdentity(0);
                 dataSchema.Document.MeasuredResults.TryGetChromatogramSet(chromSetId.GlobalIndex, out _, out var index);
