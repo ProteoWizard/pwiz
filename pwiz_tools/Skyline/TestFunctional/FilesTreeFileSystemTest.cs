@@ -102,6 +102,17 @@ namespace pwiz.SkylineTestFunctional
 
             Assert.IsTrue(ReferenceEquals(fileSystemService, SkylineWindow.FilesTree.FileSystemService));
 
+            // Import replicate in Main\..\SiblingDirectory03\ChildDirectory01\ChildDirectory02\
+            sampleFilePath = Path.Combine(TestFilesDirs[0].FullPath, @"SiblingDirectory03", @"ChildDirectory01", @"ChildDirectory02", @"small-03-child-directory-02.mzml");
+            ImportResultsFile(sampleFilePath);
+            WaitForFilesTree();
+
+            Assert.AreEqual(FileSystemType.local_file_system, fileSystemService.FileSystemType);
+            Assert.AreEqual(5, fileSystemService.MonitoredDirectories().Count);
+            Assert.IsTrue(fileSystemService.MonitoredDirectories().Contains(DirForPath(sampleFilePath)));
+
+            Assert.IsTrue(ReferenceEquals(fileSystemService, SkylineWindow.FilesTree.FileSystemService));
+
             { // Delete sample file in subdirectory
                 var fileName = Path.Combine(TestFilesDirs[0].FullPath, @"SiblingDirectory02", @"small-04-sibling-directory02.mzml");
                 File.Delete(fileName);
@@ -144,7 +155,7 @@ namespace pwiz.SkylineTestFunctional
             { // Rename subdirectory 
                 var dirName = Path.Combine(TestFilesDirs[0].FullPath, @"SiblingDirectory01");
                 Directory.Move(dirName, dirName + @"RENAME");
-                ((LocalStorageService)SkylineWindow.FilesTree.FileSystemService.Delegate).TriggerAvailabilityMonitor();
+                ((LocalFileSystemService)SkylineWindow.FilesTree.FileSystemService.Delegate).TriggerAvailabilityMonitor();
                 Thread.Sleep(250); // Wait briefly for the availability monitor to trigger
                 WaitForFilesTree();
 
@@ -156,7 +167,7 @@ namespace pwiz.SkylineTestFunctional
                 }
 
                 Directory.Move(dirName + @"RENAME", dirName);
-                ((LocalStorageService)SkylineWindow.FilesTree.FileSystemService.Delegate).TriggerAvailabilityMonitor();
+                ((LocalFileSystemService)SkylineWindow.FilesTree.FileSystemService.Delegate).TriggerAvailabilityMonitor();
                 Thread.Sleep(250); // Wait briefly for the availability monitor to trigger
                 WaitForFilesTree();
 
@@ -166,6 +177,21 @@ namespace pwiz.SkylineTestFunctional
                     Assert.AreEqual(FileState.available, node.FileState);
                 }
             }
+
+            // { // Delete parent directory - tests (1) FileSystemHealthMonitor and (2) error handling in ManagedFileSystemWatcher
+            //     var dirName = Path.Combine(TestFilesDirs[0].FullPath, @"SiblingDirectory03", @"ChildDirectory01");
+            //     Directory.Move(dirName, dirName + @"RENAME");
+            //     ((LocalFileSystemService)SkylineWindow.FilesTree.FileSystemService.Delegate).TriggerAvailabilityMonitor();
+            //     Thread.Sleep(250); // Wait briefly for the availability monitor to trigger
+            //     WaitForFilesTree();
+            //
+            //     var filesTreeNodes = FindNodesForDir(dirName);
+            //     foreach (var node in filesTreeNodes)
+            //     {
+            //         Assert.IsFalse(fileSystemService.IsFileAvailable(node.LocalFilePath));
+            //         Assert.AreEqual(FileState.missing, node.FileState);
+            //     }
+            // }
         }
 
         private static string DirForPath(string fullPath)

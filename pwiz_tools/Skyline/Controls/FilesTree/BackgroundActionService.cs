@@ -21,19 +21,14 @@ using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Controls.FilesTree
 {
-    internal class BackgroundActionService : IDisposable
+    public class BackgroundActionService : IDisposable
     {
-        internal static BackgroundActionService Create(Control synchronizingObject)
-        {
-            return new BackgroundActionService(synchronizingObject);
-        }
-
         private QueueWorker<Action> _workQueue;
         private int _pendingActionCount;
 
         // CONSIDER: Should this take a CancellationToken? Would be nice to centralize cancellation checks before executing actions queued
         //           for processing on a background / UI thread.
-        private BackgroundActionService(Control synchronizingObject)
+        public BackgroundActionService(Control synchronizingObject)
         {
             Assume.IsNotNull(synchronizingObject);
 
@@ -44,7 +39,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             _workQueue.RunAsync(threadCount, @"BackgroundActionService: system for background processing of FilesTree related work");
         }
 
-        internal Control SynchronizingObject { get; }
+        private Control SynchronizingObject { get; }
         internal bool IsComplete => _pendingActionCount == 0;
 
         /// <summary>

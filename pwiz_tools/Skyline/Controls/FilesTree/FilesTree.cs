@@ -53,8 +53,9 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             _cancellationTokenSource = new CancellationTokenSource();
 
-            BackgroundActionService = BackgroundActionService.Create(this);
-            FileSystemService = FileSystemService.Create(this, BackgroundActionService);
+            BackgroundActionService = new BackgroundActionService(this);
+
+            FileSystemService = new FileSystemService(this, BackgroundActionService);
             FileSystemService.FileDeletedAction += FileDeleted;
             FileSystemService.FileCreatedAction += FileCreated;
             FileSystemService.FileRenamedAction += FileRenamed;
@@ -118,7 +119,11 @@ namespace pwiz.Skyline.Controls.FilesTree
                 Root.Nodes.Cast<FilesTreeNode>().FirstOrDefault(filesTreeNode => filesTreeNode.Model is T);
         }
 
-        public void SelectNodeWithoutResettingSelection(FilesTreeNode node)
+        /// <summary>
+        /// Selects a node without triggering the event <see cref="TreeView.OnAfterSelect"/>. Used to re-select nodes after drag-and-drop.
+        /// </summary>
+        /// <param name="node">Node to select.</param>
+        internal void SelectNodeWithoutResettingSelection(FilesTreeNode node)
         {
             _inhibitOnAfterSelect = true;
             SelectedNode = node;
@@ -227,7 +232,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             {
                 EndUpdateMS();
 
-                // Root should always be expanded.
+                // Root should always be expanded. Do this outside BeginUpdate / EndUpdate.
                 if (Nodes.Count > 0 && !Nodes[0].IsExpanded)
                 {
                     Root.Expand();
