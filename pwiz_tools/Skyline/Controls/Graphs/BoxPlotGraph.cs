@@ -28,8 +28,6 @@ using pwiz.Common.DataBinding.Controls;
 using pwiz.Skyline.Controls.Clustering;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Databinding;
-using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
@@ -40,7 +38,8 @@ namespace pwiz.Skyline.Controls.Graphs
     public partial class BoxPlotGraph : DataboundGraph
     {
         private ReplicateValue _groupByValue;
-        private static Color DefaultBarColor = Color.Blue;
+        private Normalization? _normalizationValue;
+        private static Color DefaultBarColor = Color.LightGreen;
 
         public BoxPlotGraph()
         {
@@ -139,7 +138,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     var replicateName = SkylineWindow.Document.Settings.MeasuredResults?.Chromatograms[kvp.Key].Name;
                     var x = labelToIndex[replicateName];
-                    var d = BoxPlotDataUtil.buildBoxPlotData(kvp.Value.ToArray(), replicateName);
+                    var d = BoxPlotDataUtil.buildBoxPlotData(kvp.Value.ToArray(), replicateName, dataSet.Values.Select(list => list.ToArray()).ToArray(), _normalizationValue);
                     boxPlotData.Add(d);
                     var pointPair = BoxPlotBarItem.MakePointPair(x, d.Q3, d.Q1, d.Median, d.Max, d.Min, d.Outliers);
                     points2.Add(pointPair);
@@ -190,7 +189,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         var chromatogramSet = SkylineWindow.Document.Settings.MeasuredResults?.Chromatograms[replicateIndex];
                         var replicateName = chromatogramSet.Name;
                         var x = labelToIndex[replicateName];
-                        var d = BoxPlotDataUtil.buildBoxPlotData(kvp.Value.ToArray(), replicateName);
+                        var d = BoxPlotDataUtil.buildBoxPlotData(kvp.Value.ToArray(), replicateName, dataSet.Values.Select(list => list.ToArray()).ToArray(), _normalizationValue);
                         boxPlotData.Add(d);
                         pointsArray[x] = BoxPlotBarItem.MakePointPair(x, d.Q3, d.Q1, d.Median, d.Max, d.Min, d.Outliers);
                     }
@@ -242,21 +241,6 @@ namespace pwiz.Skyline.Controls.Graphs
 
             return replicateDataPoints;
         }
-
-        private Replicate GetReplicate(SkylineDataSchema skylineDataSchema, PivotKey pivotKey, ReplicatePivotColumns replicatePivotColumns)
-        {
-            var resultKey = replicatePivotColumns.GetResultKey(pivotKey);
-            if (resultKey == null)
-            {
-                return null;
-            }
-
-            var resultKeyWithoutFileIndex = new ResultKey(resultKey.ReplicateName, resultKey.ReplicateIndex, 0);
-            Replicate replicate = null;
-            skylineDataSchema?.ReplicateList.TryGetValue(resultKeyWithoutFileIndex, out replicate);
-            return replicate;
-        }
-
         private void zedGraphControl1_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
         {
             var groupingMenuName = "groupingMenu";
@@ -304,12 +288,63 @@ namespace pwiz.Skyline.Controls.Graphs
                     UpdateGraph();
                 };
             }
+
+            var normalizationMenuName = "normalizationMenuName";
+            var normalizationMenu = menuStrip.Items
+                .OfType<ToolStripMenuItem>()
+                .FirstOrDefault(i => i.Name == normalizationMenuName);
+
+            if (normalizationMenu == null)
+            {
+                normalizationMenu = new ToolStripMenuItem("Normalized To");
+                menuStrip.Items.Add(normalizationMenu);
+            }
+            else
+            {
+                normalizationMenu.DropDownItems.Clear();
+            }
+
+            foreach (var normalization in Enum.GetValues(typeof(Normalization)))
+            {
+                var normalizeItem = new ToolStripMenuItem(normalization.ToString())
+                {
+                    CheckOnClick = true,
+                    Checked = normalization.Equals(_normalizationValue)
+                };
+                normalizationMenu.DropDownItems.Add(normalizeItem);
+                normalizeItem.Click += (s, e) =>
+                {
+                    foreach (ToolStripMenuItem item in groupingMenu.DropDownItems)
+                    {
+                        item.Checked = false;
+                    }
+
+                    if (normalization.Equals(_normalizationValue))
+                    {
+                        normalizeItem.Checked = false;
+                        _normalizationValue = null;
+                    }
+                    else
+                    {
+                        normalizeItem.Checked = true;
+                        _normalizationValue = (Normalization)normalization;
+                    }
+                    UpdateGraph();
+                };
+            }
+
+
             ZedGraphHelper.BuildContextMenu(sender, menuStrip, true);
         }
 
         public override void RefreshData()
         {
             UpdateGraph();
+        }
+
+        public enum Normalization
+        {
+            Median
         }
     }
 }

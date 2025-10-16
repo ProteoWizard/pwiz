@@ -23,6 +23,7 @@ using pwiz.Common.Graph;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
+using Google.Protobuf.WellKnownTypes;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
@@ -152,6 +153,13 @@ namespace pwiz.Skyline.Controls.Graphs
             Outliers = outliers;
         }
 
+        //Label = label;
+        //Min = min;
+        //Q1 = q1;
+        //Median = median;
+        //Q3 = q3;
+        //Max = max;
+        //Outliers = outliers;
         public double Median { get; private set; }
 
         public double Min { get; private set; }
@@ -225,7 +233,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
     public class BoxPlotDataUtil
     {
-        public static BoxPlotData buildBoxPlotData(double[] dataPoints, string label)
+        public static BoxPlotData buildBoxPlotData(double[] dataPoints, string label, double[][] allDataPoints, BoxPlotGraph.Normalization? normalization)
         {
             var log2Values = dataPoints
                 .Select(v => Math.Log(v + 1, 2))
@@ -235,6 +243,21 @@ namespace pwiz.Skyline.Controls.Graphs
             if (log2Values.IsNullOrEmpty())
             {
                 return null;
+            }
+            
+
+            if (BoxPlotGraph.Normalization.Median.Equals(normalization))
+            {
+                var currentMedian = Median(log2Values);
+                var allLog2values = allDataPoints
+                    .SelectMany(arr => arr)
+                    .Select(v => Math.Log(v + 1, 2))
+                    .OrderBy(v => v)
+                    .ToList();
+                var allDataPointsMedian = Median(allLog2values);
+                
+                //log2Values = log2Values.Select(value => (value * allDataPointsMedian) / (median)).ToList();
+                log2Values = log2Values.Select(value => value * (allDataPointsMedian / currentMedian)).ToList();
             }
 
             int count = log2Values.Count;
