@@ -225,6 +225,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Product of the intensity and the injection time of the spectrum with the highest extracted ion intensity.
+        /// </summary>
+        public static string ApexTransitionIonCount {
+            get {
+                return ResourceManager.GetString("ApexTransitionIonCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Area under the curve (AUC), minus background, for the transition peak..
         /// </summary>
         public static string Area {
@@ -1771,6 +1780,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string LcPeakTotalIonCurrentAreaMS1 {
             get {
                 return ResourceManager.GetString("LcPeakTotalIonCurrentAreaMS1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sum of the products of the intensities and the injection times of the MS2 spectra between the peak integration boundaries.
+        /// </summary>
+        public static string LcPeakTransitionIonCount {
+            get {
+                return ResourceManager.GetString("LcPeakTransitionIonCount", resourceCulture);
             }
         }
         
@@ -4534,6 +4552,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string TransitionCount {
             get {
                 return ResourceManager.GetString("TransitionCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Values related to the number of ions in the mass spectrometer.
+        /// </summary>
+        public static string TransitionIonMetrics {
+            get {
+                return ResourceManager.GetString("TransitionIonMetrics", resourceCulture);
             }
         }
         

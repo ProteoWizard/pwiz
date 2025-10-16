@@ -425,6 +425,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         private LcPeakIonMetrics GetIonMetrics(ResultFileMetaData resultFileMetadata, IList<TimeIntensities> chromatograms)
         {
+            return GetPeakIonMetrics(resultFileMetadata, ChromInfo.StartRetentionTime.Value,
+                ChromInfo.EndRetentionTime.Value, chromatograms);
+        }
+
+        public static LcPeakIonMetrics GetPeakIonMetrics(ResultFileMetaData resultFileMetadata, float startTime,
+            float endTime, IList<TimeIntensities> chromatograms)
+        {
             var scanIndexes = chromatograms.FirstOrDefault()?.ScanIds;
             if (scanIndexes == null)
             {
@@ -437,7 +444,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return null;
             }
 
-            int iStart = CollectionUtil.BinarySearch(times, ChromInfo.StartRetentionTime.Value);
+            int iStart = CollectionUtil.BinarySearch(times, startTime);
             if (iStart < 0)
             {
                 iStart = Math.Max(0, ~iStart - 1);
@@ -460,17 +467,17 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
 
                 var totalIonCurrent = spectrumMetadata.TotalIonCurrent.GetValueOrDefault();
-                ticIntensities.Add((float) totalIonCurrent);
-                if (time > MaxEndTime)
+                ticIntensities.Add((float)totalIonCurrent);
+                if (time > endTime)
                 {
                     break;
                 }
 
-                if (time < MinStartTime)
+                if (time < startTime)
                 {
                     continue;
                 }
-                
+
                 double intensity = 0;
                 foreach (var chromatogramInfo in chromatograms)
                 {
@@ -480,7 +487,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 double? injectionTimeSeconds = spectrumMetadata.InjectionTime / 1000;
                 double? ionCount = intensity * injectionTimeSeconds;
                 double? spectrumIonCount = totalIonCurrent * injectionTimeSeconds;
-                
+
                 if (apexIntensity == null || intensity > apexIntensity.Value)
                 {
                     apexAnalyteIonCount = ionCount;
@@ -502,7 +509,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             if (ticTimes.Count != 0)
             {
                 var ticTimeIntensities = new TimeIntensities(ticTimes, ticIntensities);
-                var chromPeak = ChromPeak.IntegrateWithoutBackground(ticTimeIntensities, (float)MinStartTime, (float)MaxEndTime, 0, null);
+                var chromPeak = ChromPeak.IntegrateWithoutBackground(ticTimeIntensities, startTime, endTime, 0, null);
                 Assume.AreEqual(0f, chromPeak.BackgroundArea);
                 lcPeakIonMetrics = lcPeakIonMetrics.ChangeTotalIonCurrentArea(chromPeak.Area);
             }
@@ -519,6 +526,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
 
             return lcPeakIonMetrics;
+
         }
 
         private double? CalculateProportionTruncated()

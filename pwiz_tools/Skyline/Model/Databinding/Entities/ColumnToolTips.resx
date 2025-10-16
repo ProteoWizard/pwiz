@@ -153,6 +153,9 @@ If more than one analyzer was used, the names of the analyzers will be separated
   <data name="ApexTotalIonCountMS1">
     <value>Product of the total precursor intensity and the injection time of the MS1 spectrum with the highest precursor intensity</value>
   </data>
+  <data name="ApexTransitionIonCount">
+    <value>Product of the intensity and the injection time of the spectrum with the highest extracted ion intensity</value>
+  </data>
   <data name="Area">
     <value>Area under the curve (AUC), minus background, for the transition peak.</value>
   </data>
@@ -695,6 +698,9 @@ containing protein sequence, or #N/A if no protein sequence is available</value>
   </data>
   <data name="LcPeakTotalIonCurrentAreaMS1">
     <value>Integral of the total ion current of the MS1 spectra between the peak integration boundaries</value>
+  </data>
+  <data name="LcPeakTransitionIonCount">
+    <value>Sum of the products of the intensities and the injection times of the MS2 spectra between the peak integration boundaries</value>
   </data>
   <data name="LibraryCollisionCrossSection">
     <value>The collision cross section for the precursor from the ion mobility library</value>
@@ -1693,6 +1699,9 @@ particular precursor</value>
   </data>
   <data name="TransitionCount">
     <value>Number of transitions under this precursor.</value>
+  </data>
+  <data name="TransitionIonMetrics">
+    <value>Values related to the number of ions in the mass spectrometer</value>
   </data>
   <data name="TransitionIsDecoy">
     <value>True if this is a decoy transition</value>
