@@ -844,7 +844,7 @@ namespace pwiz.Skyline.Model
             {
                 seqBuilder.AppendTransition(info, irt, explicitRT, libraryIntensity, productMz, note, lineText, lineNum);
             }
-            catch (InvalidDataException x)
+            catch (Exception x) when (!ExceptionUtil.IsProgrammingDefect(x))
             {
                 throw new LineColNumberedIoException(x.Message, lineNum, -1, x);
             }

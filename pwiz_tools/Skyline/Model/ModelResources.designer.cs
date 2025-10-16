@@ -203,6 +203,25 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to In &quot;{0}&quot;: {1}.
+        /// </summary>
+        public static string AbstractModificationMatcher_CreateDocNodeFromSettings_In___0_____1_ {
+            get {
+                return ResourceManager.GetString("AbstractModificationMatcher_CreateDocNodeFromSettings_In___0_____1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to In entry &quot;{0}&quot; of &quot;{1}&quot;: {2}.
+        /// </summary>
+        public static string AbstractModificationMatcher_CreateDocNodeFromSettings_In_entry___0___of___1_____2_ {
+            get {
+                return ResourceManager.GetString("AbstractModificationMatcher_CreateDocNodeFromSettings_In_entry___0___of___1_____2" +
+                        "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The following modifications could not be interpreted..
         /// </summary>
         public static string AbstractModificationMatcher_UninterpretedMods_The_following_modifications_could_not_be_interpreted {
