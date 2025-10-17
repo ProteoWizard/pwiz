@@ -52,8 +52,6 @@ namespace TestPerf
         /// </summary>
         private bool IsCleanPythonMode => false;
 
-        private bool RunExtendedTest => true;
-
         private bool DisableLongPathsRegistry => false;
 
         /// <summary>
@@ -67,7 +65,7 @@ namespace TestPerf
         protected override bool IsRecordMode => false;
 
         public string LogOutput => TestContext.GetTestResultsPath("TestConsole.log");
-        private const string TESTDATA_FILE = @"CarafeBuildLibraryTestSmall.zip";
+        private const string TESTDATA_FILE = @"CarafeBuildLibraryTest.zip";
 
         private string _toolName = CarafeLibraryBuilder.CARAFE;
         private string _pythonVersion = CarafeLibraryBuilder.PythonVersion;
@@ -108,7 +106,7 @@ namespace TestPerf
                 AssertEx.IsTrue(PythonInstaller.DeleteToolsPythonDirectory());
 
             TestFilesZip = GetPerfTestDataURL(TESTDATA_FILE);
-            TestFilesPersistent = new[] { "Lumos_8mz_staggered_reCID_human_small" };
+            TestFilesPersistent = new[] { "rawdata" };
 
             var originalInstallationState = PythonInstaller.SimulatedInstallationState;
             try
@@ -131,7 +129,7 @@ namespace TestPerf
         }
         private HashSet<TestLibrary> _testLibraries;
         string DiannFineTuneFile => TestFilesDir.GetTestPath(@"report.tsv");
-        string MzMLFile => TestFilesDir.GetTestPath(@"Lumos_8mz_staggered_reCID_human_small\Crucios_20240320_CH_15_HeLa_CID_27NCE_01.mzML");
+        string MzMLFile => TestFilesDir.GetTestPath(@"rawdata\Crucios_20240320_CH_15_HeLa_CID_27NCE_01.mzML");
         private string SkyFineTuneFile => SkyTestFile;
         private string SkyTestFile => TestFilesDir.GetTestPath(@"Lumos_8mz_staggered_reCID_human_small\Lumos_8mz_staggered_reCID_human.sky");
 
@@ -144,7 +142,6 @@ namespace TestPerf
         }
         private void LongTest() 
         {
-            // DirectoryEx.SafeDelete(TestContext.GetTestPath(@"TestCarafeBuildLibrary\"));
             Directory.CreateDirectory(TestFilesDir.GetTestPath(@"TestCarafeBuildLibrary\"));
 
             OpenDocument(TestFilesDir.GetTestPath(SkyTestFile));
@@ -154,17 +151,17 @@ namespace TestPerf
             string builtLibraryBySkyIrt = null;
             if (_testLibraries.Contains(TestLibrary.LibraryTunedBySkyline))
             {
-                builtLibraryBySky = CarafeBuildLibrary(TestLibrary.LibraryTunedBySkyline, MzMLFile, "", SkyFineTuneFile, BuildLibraryDlg.BuildLibraryTargetOptions.currentSkylineDocument, BuildLibraryDlg.LearningOptions.another_doc, TestFilesDir.GetTestPath(@"cpu_test_res_fine_tuned_bySky.blib"), PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT);
+                builtLibraryBySky = CarafeBuildLibrary(TestLibrary.LibraryTunedBySkyline, MzMLFile, "", SkyFineTuneFile, BuildLibraryDlg.BuildLibraryTargetOptions.currentSkylineDocument, BuildLibraryDlg.LearningOptions.another_doc, PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT);
             }
 
             if (_testLibraries.Contains(TestLibrary.LibraryTunedByDiann))
             {
-                builtLibraryByDiann = CarafeBuildLibrary(TestLibrary.LibraryTunedByDiann, MzMLFile, "", DiannFineTuneFile, BuildLibraryDlg.BuildLibraryTargetOptions.currentSkylineDocument, BuildLibraryDlg.LearningOptions.diann_report, TestFilesDir.GetTestPath(@"cpu_test_res_fine_tuned_byDiann.blib"), PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD);
+                builtLibraryByDiann = CarafeBuildLibrary(TestLibrary.LibraryTunedByDiann, MzMLFile, "", DiannFineTuneFile, BuildLibraryDlg.BuildLibraryTargetOptions.currentSkylineDocument, BuildLibraryDlg.LearningOptions.diann_report, PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD);
             }
 
             if (_testLibraries.Contains(TestLibrary.LibraryTunedBySkylineIrt))
             {
-                builtLibraryBySkyIrt = CarafeBuildLibrary(TestLibrary.LibraryTunedBySkylineIrt, MzMLFile, "", SkyFineTuneFile, BuildLibraryDlg.BuildLibraryTargetOptions.currentSkylineDocument, BuildLibraryDlg.LearningOptions.another_doc, TestFilesDir.GetTestPath(@"cpu_test_res_fine_tuned_bySky_iRT.blib"), PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD, IrtStandard.BIOGNOSYS_11);
+                builtLibraryBySkyIrt = CarafeBuildLibrary(TestLibrary.LibraryTunedBySkylineIrt, MzMLFile, "", SkyFineTuneFile, BuildLibraryDlg.BuildLibraryTargetOptions.currentSkylineDocument, BuildLibraryDlg.LearningOptions.another_doc, PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD, IrtStandard.BIOGNOSYS_11);
                 var addRtStdDlg = WaitForOpenForm<AddIrtStandardsToDocumentDlg>();
                 OkDialog(addRtStdDlg, addRtStdDlg.CancelDialog);
             }
@@ -198,29 +195,28 @@ namespace TestPerf
 
             if (_testLibraries.Contains(TestLibrary.LibraryTunedBySkylineIrt))
             {
-                var expected = LibrarySpec.CreateFromPath("answer", TestFilesDir.GetTestPath(@"cpu_test_res_fine_tuned_bySky_iRT.blib"));
-                var result = LibrarySpec.CreateFromPath("testBuilt", builtLibraryBySkyIrt);
-                //            AssertEx.LibraryEquivalent(expected, result, MZ_TOLERANCE, INTENSITY_TOLERANCE);
-                AssertEx.LibraryEquivalentCosineAngle(expected, result, MZ_TOLERANCE, MIN_COSINE_ANGLE);
+                ValidateLibraryResult("cpu_test_res_fine_tuned_bySky_iRT.blib", builtLibraryBySkyIrt);
             }
 
             if (_testLibraries.Contains(TestLibrary.LibraryTunedByDiann))
             {
-                var expected = LibrarySpec.CreateFromPath("answer", TestFilesDir.GetTestPath(@"cpu_test_res_fine_tuned_byDiann.blib"));
-                var result = LibrarySpec.CreateFromPath("testBuilt", builtLibraryByDiann);
-                //            AssertEx.LibraryEquivalent(expected, result, MZ_TOLERANCE, INTENSITY_TOLERANCE);
-                AssertEx.LibraryEquivalentCosineAngle(expected, result, MZ_TOLERANCE, MIN_COSINE_ANGLE);
+                ValidateLibraryResult("cpu_test_res_fine_tuned_byDiann.blib", builtLibraryByDiann);
             }
 
             if (_testLibraries.Contains(TestLibrary.LibraryTunedBySkyline))
             {
-                var expected = LibrarySpec.CreateFromPath("answer", TestFilesDir.GetTestPath(@"cpu_test_res_fine_tuned_bySky.blib"));
-                var result = LibrarySpec.CreateFromPath("testBuilt", builtLibraryBySky);
-                //            AssertEx.LibraryEquivalent(expected, result, MZ_TOLERANCE, INTENSITY_TOLERANCE);
-                AssertEx.LibraryEquivalentCosineAngle(expected, result, MZ_TOLERANCE, MIN_COSINE_ANGLE);
+                ValidateLibraryResult("cpu_test_res_fine_tuned_bySky.blib", builtLibraryBySky);
             }
 
             TestFilesDir.CheckForFileLocks(TestFilesDir.FullPath);
+        }
+
+        private void ValidateLibraryResult(string expectedFile, string resultPath)
+        {
+            var expected = LibrarySpec.CreateFromPath("answer",
+                TestFilesDir.GetTestPath(Path.Combine("expected", expectedFile)));
+            var result = LibrarySpec.CreateFromPath("testBuilt", resultPath);
+            AssertEx.LibraryEquivalentCosineAngle(expected, result, MZ_TOLERANCE, MIN_COSINE_ANGLE);
         }
 
         /// <summary>
@@ -229,7 +225,6 @@ namespace TestPerf
         /// <param name="testLibrary">Enum value for library</param>
         /// <param name="buildTarget">Build library target peptides, current document peptides (or FASTA database if current doc is blank)</param>
         /// <param name="learnFrom">Source of fine tuning document</param>
-        /// <param name="answerFile">Answer sheet in the test</param>
         /// <param name="simulatedInstallationState">Python Simulated State helps determine whether user is offered Nvidia install</param>
         /// <param name="iRTtype">iRT standard type</param>
         /// <param name="mzMLFile">MS/MS Data file path</param>
@@ -238,7 +233,6 @@ namespace TestPerf
         private string CarafeBuildLibrary(TestLibrary testLibrary,
             string mzMLFile, string proteinDatabase, string fineTuneFile,
             BuildLibraryDlg.BuildLibraryTargetOptions buildTarget, BuildLibraryDlg.LearningOptions learnFrom,
-            string answerFile,
             PythonInstaller.eSimulatedInstallationState simulatedInstallationState, IrtStandard iRTtype = null)
         {
             var peptideSettings = ShowDialog<PeptideSettingsUI>(() =>
@@ -249,7 +243,6 @@ namespace TestPerf
                 peptideSettings.ShowBuildLibraryDlg();
                 buildLibraryDlgFinished = true;
             });
-            // PauseTest();
             RunUI(() =>
             {
                 buildLibraryDlg.LibraryName = "Carafe" + testLibrary;
@@ -271,7 +264,6 @@ namespace TestPerf
                 if (proteinDatabase == "" && learnFrom == BuildLibraryDlg.LearningOptions.another_doc)
                     buildLibraryDlg.LoadTrainingDocument(fineTuneFile);
             });
-            //PauseTest();
             Assert.AreEqual(buildLibraryDlg.ButtonNextText, @"Finish");
             Assert.IsTrue(buildLibraryDlg.ButtonNextEnabled);
             // Test the control path where Python needs installation and is
@@ -322,26 +314,8 @@ namespace TestPerf
 
             var carafeLibraryBuilder = (CarafeLibraryBuilder)buildLibraryDlg.Builder;
             string builtLibraryPath = carafeLibraryBuilder.CarafeOutputLibraryFilePath;
-
-            WaitForCondition(() => File.Exists(builtLibraryPath));
-            WaitForCondition(() =>
-            {
-                try
-                {
-                    using (FileStream fs = File.Open(builtLibraryPath, FileMode.Open, FileAccess.Read, FileShare.None))
-                    {
-                        return true; // File is accessible and not locked
-                    }
-                }
-                catch (Exception)
-                {
-                    // ignored
-                }
-
-                return false;
-            });
-            WaitForClosedForm<LongWaitDlg>();
-
+            AssertEx.FileExists(builtLibraryPath);
+            Assert.IsNull(FindOpenForm<LongWaitDlg>());
             OkDialog(peptideSettings, peptideSettings.OkDialog);
 
             return builtLibraryPath;
@@ -385,11 +359,7 @@ namespace TestPerf
         /// <param name="buildLibraryDlg">Build Library dialog</param>
         public void TestCancelPython(BuildLibraryDlg buildLibraryDlg)
         {
-            if (IsVerboseMode)
-            {
-                Console.WriteLine();
-                Console.WriteLine(@"TestCarafeBuildLibrary: Start TestCancelPython() test ... ");
-            }
+            VerboseLog("TestCarafeBuildLibrary: Start TestCancelPython() test ... ");
             // Test the control path where Python is not installed, and the user is prompted to deal with admin access
             PythonInstaller.SimulatedInstallationState =
                 PythonInstaller.eSimulatedInstallationState.NAIVE; // Simulates not having the needed registry settings
@@ -410,14 +380,12 @@ namespace TestPerf
                 needAdminDlg.Message);
 
             CancelDialog(needAdminDlg, needAdminDlg.CancelDialog);
-            if (IsVerboseMode)
-                Console.WriteLine(@"TestCarafeBuildLibrary: Finish TestCancelPython() test ... ");
+            VerboseLog("TestCarafeBuildLibrary: Finish TestCancelPython() test ... ");
         }
 
         public MessageDlg TestNvidiaInstallPython(BuildLibraryDlg buildLibraryDlg)
         {
-            if (IsVerboseMode)
-                Console.WriteLine(@"TestCarafeBuildLibrary: Start TestNvidiaInstallPython() test ... ");
+            VerboseLog("TestCarafeBuildLibrary: Start TestNvidiaInstallPython() test ... ");
             // Test the control path where Nvidia Card is Available and Nvidia Libraries are not installed, and the user is prompted to deal with Nvidia
             // Test for LongPaths not set and admin
             if (PythonInstaller.IsRunningElevated() && !PythonInstaller.ValidateEnableLongpaths())
@@ -468,8 +436,7 @@ namespace TestPerf
                 return null;
 
             var pythonConfirm = WaitForOpenForm<MessageDlg>(WAIT_TIME * 4); // 12 minutes - successful completion message
-            if (IsVerboseMode)
-                Console.WriteLine(@"TestCarafeBuildLibrary: Finish TestNvidiaInstallPython() test ... ");
+            VerboseLog("TestCarafeBuildLibrary: Finish TestNvidiaInstallPython() test ... ");
             return pythonConfirm;
         }
 
@@ -548,6 +515,14 @@ namespace TestPerf
 
             Assert.AreEqual(expectMsg, confirmDlg.Message);
             confirmDlg.OkDialog();
+        }
+
+        private void VerboseLog(string message)
+        {
+            if (IsVerboseMode)
+            {
+                Console.WriteLine(message);
+            }
         }
     }
 }
