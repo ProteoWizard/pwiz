@@ -602,6 +602,15 @@ namespace pwiz.Skyline.Model.Lib {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to understand entry &quot;{0}&quot; starting at line {1}.
+        /// </summary>
+        public static string NistLibraryBase_ParseName_Failed_to_understand_entry___0___starting_at_line__1_ {
+            get {
+                return ResourceManager.GetString("NistLibraryBase_ParseName_Failed_to_understand_entry___0___starting_at_line__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failure trying to read peaks.
         /// </summary>
         public static string NistLibraryBase_ReadSpectrum_Failure_trying_to_read_peaks {
