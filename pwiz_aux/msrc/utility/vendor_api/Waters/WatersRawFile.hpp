@@ -551,7 +551,7 @@ struct PWIZ_API_DECL RawData
             }
             if (workingSonarFunctionIndex_ < 0)
             {
-                throw std::runtime_error("[MassLynxRaw::FindSonarFunction] could not identify any function index for SONAR mz-to-bin conversion");
+                throw std::runtime_error("[MassLynxRaw::FindSonarFunction] could not identify any function index for SONAR mz-to-bin conversion (_sonar.inf calibration file missing or corrupt?)");
             }
         }
     }
