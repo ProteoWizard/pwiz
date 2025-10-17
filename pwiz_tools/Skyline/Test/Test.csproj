@@ -178,6 +178,7 @@
     <Compile Include="ChromatogramGroupIdsTest.cs" />
     <Compile Include="CmdLineAssociateProteinsTest.cs" />
     <Compile Include="CommandLineThermoMethodTest.cs" />
+    <Compile Include="HelpDocumentationContentTest.cs" />
     <Compile Include="ElibQuantifiableTransitionTest.cs" />
     <Compile Include="EncryptedTokenTest.cs" />
     <Compile Include="ErrorIfPersistentFilesDirModifiedTest.cs" />
