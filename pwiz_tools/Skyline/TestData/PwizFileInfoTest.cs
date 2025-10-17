@@ -75,7 +75,7 @@ namespace pwiz.SkylineTestData
 
             // Shimadzu TOF file (.lcd file)
             VerifyInstrumentInfo(TestFilesDir.GetTestPath("10nmol_Negative_MS_ID_ON_055" + ExtensionTestContext.ExtShimadzuRaw),
-                "Shimadzu instrument model", "electrospray ionization", "quadrupole/quadrupole/time-of-flight", "microchannel plate detector");
+                "Shimadzu Scientific Instruments instrument model", "electrospray ionization", "quadrupole/quadrupole/time-of-flight", "microchannel plate detector");
 
             // Thermo .raw|mzML file
             foreach (

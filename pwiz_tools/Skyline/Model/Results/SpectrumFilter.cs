@@ -360,11 +360,6 @@ namespace pwiz.Skyline.Model.Results
                     spectrumFilterPair.AddChromKeys(listChromKeyFilterIds);
                 }
 
-                if (gce != null)
-                {
-                    listChromKeyFilterIds.AddRange(gce.ListChromKeys());
-                }
-
                 _productChromKeys = listChromKeyFilterIds.ToArray();
 
                 // Sort a copy of the filter pairs by maximum retention time so that we can detect when
@@ -490,7 +485,6 @@ namespace pwiz.Skyline.Model.Results
                         }
                     }
                 }
-
             }
 
             InitIonMobilityAndRTLimits();
