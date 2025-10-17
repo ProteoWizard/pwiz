@@ -352,6 +352,7 @@ project pwiz
         <toolset>msvc:<cxxflags>/wd4456                 # warning: declaration of 'type' hides previous local declaration
         <toolset>msvc:<cxxflags>/wd4459                 # warning: declaration of 'type' hides global declaration
         <toolset>msvc:<cxxflags>/wd4458                 # warning: declaration of 'type' hides class member
+        <toolset>msvc:<cxxflags>/utf-8                  # treat all files as UTF-8
         <toolset>msvc,<debug-symbols>off:<linkflags>"/OPT:REF,ICF"
         <toolset>msvc,<toolset-msvc:version>12.0:<define>_HAS_TR1
         <toolset>msvc,<toolset-msvc:version>14.0:<define>_HAS_TR1
