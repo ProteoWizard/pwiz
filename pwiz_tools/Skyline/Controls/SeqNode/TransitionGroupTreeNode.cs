@@ -173,8 +173,8 @@ namespace pwiz.Skyline.Controls.SeqNode
         
         public static string DisplayText(TransitionGroupDocNode nodeGroup, DisplaySettings settings)
         {
-            string displayText = GetLabel(nodeGroup.TransitionGroup, nodeGroup.PrecursorMz,
-                GetResultsText(settings, nodeGroup));
+            string displayText = nodeGroup.TransitionGroup.GetLabel(
+                nodeGroup.PrecursorMz, GetResultsText(settings, nodeGroup));
             if (!nodeGroup.SpectrumClassFilter.IsEmpty)
             {
                 displayText = TextUtil.SpaceSeparate(displayText, nodeGroup.SpectrumClassFilter.GetAbbreviatedText());

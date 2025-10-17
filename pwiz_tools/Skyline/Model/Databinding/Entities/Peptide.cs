@@ -24,7 +24,6 @@ using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.DataBinding;
-using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
@@ -51,7 +50,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [OneToMany(ForeignKey = "Peptide")]
-        [HideWhen(AncestorOfType = typeof(FoldChangeBindingSource.FoldChangeRow))]
+        [HideWhen(AncestorOfType = typeof(FoldChangeRow))]
         public IList<Precursor> Precursors
         {
             get
@@ -63,7 +62,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [ProteomicDisplayName("PeptideResults")]
         [InvariantDisplayName("MoleculeResults")]
         [OneToMany(ForeignKey = "Peptide")]
-        [HideWhen(AncestorOfType = typeof(FoldChangeBindingSource.FoldChangeRow))]
+        [HideWhen(AncestorOfType = typeof(FoldChangeRow))]
         public IDictionary<ResultKey, PeptideResult> Results
         {
             get { return _cachedValues.GetValue2(this); }
@@ -84,7 +83,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return new PeptideDocNode(new Model.Peptide(null, @"X", null, null, 0));
         }
 
-        [HideWhen(AncestorsOfAnyOfTheseTypes = new []{typeof(Protein),typeof(FoldChangeBindingSource.FoldChangeRow)})]
+        [HideWhen(AncestorsOfAnyOfTheseTypes = new []{typeof(Protein),typeof(FoldChangeRow)})]
         [InvariantDisplayName("MoleculeList", ExceptInUiMode = UiModes.PROTEOMIC)]
         public Protein Protein
         {
@@ -431,21 +430,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 var calibrationCurve = curveFitter.GetCalibrationCurveMetrics();
                 return new LinkValue<CalibrationCurveMetrics>(calibrationCurve, (sender, args) =>
                 {
-                    if (null == DataSchema.SkylineWindow)
-                    {
-                        return;
-                    }
-                    DataSchema.SkylineWindow.SelectedPath = IdentityPath;
-                    var calibrationForm = DataSchema.SkylineWindow.ShowCalibrationForm();
-                    if (calibrationForm != null)
-                    {
-                        if (DocNode.HasPrecursorConcentrations &&
-                            Settings.Default.CalibrationCurveOptions.SingleBatch)
-                        {
-                            Settings.Default.CalibrationCurveOptions = Settings.Default.CalibrationCurveOptions.ChangeSingleBatch(false);
-                            calibrationForm.UpdateUI(false);
-                        }
-                    }
+                    DataSchema.ShowCalibrationCurve(this);
                 });
             }
         }

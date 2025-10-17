@@ -613,6 +613,15 @@ namespace pwiz.Skyline.Model.Databinding
             }
         }
 
+        public virtual void SelectDocNode(IdentityPath identityPath)
+        {
+            
+        }
+
+        public virtual void ShowCalibrationCurve(Model.Databinding.Entities.Peptide peptide)
+        {
+        }
+
         private class BatchChangesState
         {
             public BatchChangesState(SrmDocument originalDocument, IUndoState undoState)

@@ -25,7 +25,6 @@ using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
-using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.ElementLocators;
@@ -47,7 +46,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [OneToMany(ForeignKey = "Protein")]
-        [HideWhen(AncestorOfType = typeof(FoldChangeBindingSource.FoldChangeRow))]
+        [HideWhen(AncestorOfType = typeof(FoldChangeRow))]
         [InvariantDisplayName("Molecules", ExceptInUiMode = UiModes.PROTEOMIC)]
         public IList<Peptide> Peptides
         {

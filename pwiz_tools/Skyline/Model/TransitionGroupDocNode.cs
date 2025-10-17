@@ -3419,7 +3419,7 @@ namespace pwiz.Skyline.Model
 
         public override string AuditLogText
         {
-            get { return TransitionGroupTreeNode.GetLabel(TransitionGroup, PrecursorMz, string.Empty); }
+            get { return TransitionGroup.GetLabel(PrecursorMz, string.Empty); }
         }
     }
 }

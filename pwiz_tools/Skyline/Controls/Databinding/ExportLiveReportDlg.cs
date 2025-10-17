@@ -16,18 +16,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Controls.Editor;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Threading;
 using System.Windows.Forms;
-using pwiz.Common.DataBinding;
-using pwiz.Common.DataBinding.Controls.Editor;
-using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Databinding;
-using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Databinding
 {
@@ -40,6 +42,7 @@ namespace pwiz.Skyline.Controls.Databinding
         private const int indexFirstImage = 2;
         private readonly SkylineWindow _skylineWindow;
         private DocumentGridViewContext _viewContext;
+        private RowFactories _rowFactories;
 
         public ExportLiveReportDlg(SkylineWindow skylineWindow)
         {
@@ -85,6 +88,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 imageList1.Images.Add(Resources.Folder);
                 imageList1.Images.Add(Resources.Blank);
                 imageList1.Images.AddRange(_viewContext.GetImageList());
+                _rowFactories = new RowFactories(CancellationToken.None, _viewContext.SkylineDataSchema);
                 Repopulate();
             }
         }
@@ -113,17 +117,30 @@ namespace pwiz.Skyline.Controls.Databinding
        
         private bool ExportReport(string filename, char separator)
         {
-            var viewContext = GetViewContext(true);
-            var viewInfo = viewContext.GetViewInfo(SelectedViewName);
-            if (null == viewInfo)
+            var fileSaver = new FileSaver(filename, true);
+            if (!fileSaver.CanSave(this))
             {
                 return false;
             }
-            if (null == filename)
+
+            using (var stream = File.OpenWrite(fileSaver.SafeName))
             {
-                return viewContext.Export(this, viewInfo);
+                using var writer = new StreamWriter(stream);
+                using var longWaitDlg = new LongWaitDlg();
+                longWaitDlg.Text = DatabindingResources.ExportReportDlg_ExportReport_Generating_Report;
+                IProgressStatus status = new ProgressStatus(DatabindingResources.ExportReportDlg_ExportReport_Building_report);
+                longWaitDlg.PerformWork(this, 1500, progressMonitor =>
+                {
+                    progressMonitor.UpdateProgress(status);
+                    var rowFactories =
+                        RowFactories.GetRowFactories(longWaitDlg.CancellationToken, GetSkylineDataSchema(true));
+                    
+                    rowFactories.ExportReport(writer, SelectedViewName.Value, separator, progressMonitor, ref status);
+                });
             }
-            return viewContext.ExportToFile(this, viewInfo, filename, separator);
+
+            fileSaver.Commit();
+            return true;
         }
 
         private void Repopulate()
@@ -140,11 +157,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 groupNode.SelectedImageIndex = groupNode.ImageIndex = indexImageFolder;
                 foreach (var viewSpec in _viewContext.GetViewSpecList(group.Id).ViewSpecs)
                 {
-                    if (!_viewContext.CanDisplayView(viewSpec))
-                    {
-                        continue;
-                    }
-                    if (null == _viewContext.GetViewInfo(group, viewSpec))
+                    if (!_rowFactories.HasFactory(viewSpec.RowSource))
                     {
                         continue;
                     }
@@ -174,19 +187,24 @@ namespace pwiz.Skyline.Controls.Databinding
             UpdateButtons();
         }
 
-        private SkylineViewContext GetViewContext(bool clone)
+        private SkylineDataSchema GetSkylineDataSchema(bool clone)
         {
-            SkylineDataSchema dataSchema;
             if (clone)
             {
                 var documentContainer = new MemoryDocumentContainer();
                 documentContainer.SetDocument(_skylineWindow.DocumentUI, documentContainer.Document);
-                dataSchema = new SkylineDataSchema(documentContainer, GetDataSchemaLocalizer());
+                return new SkylineDataSchema(documentContainer, GetDataSchemaLocalizer());
             }
             else
             {
-                dataSchema = new SkylineWindowDataSchema(_skylineWindow, GetDataSchemaLocalizer());
+                return new SkylineWindowDataSchema(_skylineWindow, GetDataSchemaLocalizer());
             }
+
+        }
+
+        private SkylineViewContext GetViewContext()
+        {
+            SkylineDataSchema dataSchema = GetSkylineDataSchema(false);
             return new DocumentGridViewContext(dataSchema) {EnablePreview = true};
         }
 
@@ -212,7 +230,7 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public void ShowPreview()
         {
-            var viewContext = GetViewContext(false);
+            var viewContext = GetViewContext();
             var viewInfo = viewContext.GetViewInfo(SelectedViewName);
             var form = new DocumentGridForm(viewContext)
             {
@@ -231,7 +249,7 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public void EditList()
         {
-            using (var manageViewsForm = new ManageViewsForm(GetViewContext(false)))
+            using (var manageViewsForm = new ManageViewsForm(GetViewContext()))
             {
                 manageViewsForm.ShowDialog(this);
             } 
