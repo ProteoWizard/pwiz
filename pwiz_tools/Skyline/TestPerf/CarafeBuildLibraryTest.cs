@@ -82,15 +82,27 @@ namespace TestPerf
         }
 
         [TestMethod]
-        public void TestCarafeBuildLibrary()
+        public void TestCarafeBuildLibraryAll()
         {
             TestCarafeBuildLibrary(Enum.GetValues(typeof(TestLibrary)).Cast<TestLibrary>().ToArray());
         }
 
         [TestMethod]
-        public void TestCarafeBuildLibraryShort()
+        public void TestCarafeBuildLibraryTunedBySkyline()
         {
             TestCarafeBuildLibrary(TestLibrary.LibraryTunedBySkyline);
+        }
+
+        [TestMethod]
+        public void TestCarafeBuildLibraryTunedByDiann()
+        {
+            TestCarafeBuildLibrary(TestLibrary.LibraryTunedByDiann);
+        }
+
+        [TestMethod]
+        public void TestCarafeBuildLibraryIrt()
+        {
+            TestCarafeBuildLibrary(TestLibrary.LibraryTunedBySkylineIrt);
         }
 
         private void TestCarafeBuildLibrary(params TestLibrary[] libraryNames)
@@ -162,8 +174,6 @@ namespace TestPerf
             if (_testLibraries.Contains(TestLibrary.LibraryTunedBySkylineIrt))
             {
                 builtLibraryBySkyIrt = CarafeBuildLibrary(TestLibrary.LibraryTunedBySkylineIrt, MzMLFile, "", SkyFineTuneFile, BuildLibraryDlg.BuildLibraryTargetOptions.currentSkylineDocument, BuildLibraryDlg.LearningOptions.another_doc, PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD, IrtStandard.BIOGNOSYS_11);
-                var addRtStdDlg = WaitForOpenForm<AddIrtStandardsToDocumentDlg>();
-                OkDialog(addRtStdDlg, addRtStdDlg.CancelDialog);
             }
 
             var fileHash = PythonInstallerUtil.GetMD5FileHash(PythonInstaller.PythonEmbeddablePackageDownloadPath);
@@ -317,7 +327,11 @@ namespace TestPerf
             AssertEx.FileExists(builtLibraryPath);
             Assert.IsNull(FindOpenForm<LongWaitDlg>());
             OkDialog(peptideSettings, peptideSettings.OkDialog);
-
+            if (iRTtype != null)
+            {
+                var addRtStdDlg = WaitForOpenForm<AddIrtStandardsToDocumentDlg>();
+                OkDialog(addRtStdDlg, addRtStdDlg.CancelDialog);
+            }
             return builtLibraryPath;
         }
 
