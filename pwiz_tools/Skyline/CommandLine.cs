@@ -2643,6 +2643,11 @@ namespace pwiz.Skyline
                         _out.WriteLine(SkylineResources.CommandLine_ReintegratePeaks_Error__Unknown_peak_scoring_model___0__);
                         return false;
                     }
+                    if (Equals(scoringModel, LegacyScoringModel.DEFAULT_UNTRAINED_MODEL))
+                    {
+                        scoringModel = LegacyScoringModel.DEFAULT_MODEL;
+                    }
+
                     modelAndFeatures = new ModelAndFeatures(scoringModel, null);
                 }
 

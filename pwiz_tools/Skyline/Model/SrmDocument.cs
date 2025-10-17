@@ -1179,15 +1179,9 @@ namespace pwiz.Skyline.Model
                 .Any(mods => mods.Modifications.Count > 0);
             if (!hasHeavyModifications && HasSmallMolecules)
             {
-                foreach (var molecule in Molecules)
-                {
-                    if (molecule.TransitionGroups.Any(group =>
-                        !ReferenceEquals(group.TransitionGroup.LabelType, IsotopeLabelType.light)))
-                    {
-                        hasHeavyModifications = true;
-                        break;
-                    }
-                }
+                hasHeavyModifications = Molecules
+                    .SelectMany(mol => mol?.TransitionGroups ?? Array.Empty<TransitionGroupDocNode>())
+                    .Any(group => !ReferenceEquals(group.TransitionGroup.LabelType, IsotopeLabelType.light));
             }
             if (hasHeavyModifications == settings.PeptideSettings.Modifications.HasHeavyModifications)
             {
