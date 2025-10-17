@@ -1058,10 +1058,15 @@ namespace pwiz.Skyline.Util
                         return QUADRUPLY_PROTONATED;
                     case 5:
                         return QUINTUPLY_PROTONATED;
-                    case -1:
-                        return Adduct.FromStringAssumeProtonated(@"[M-H]");
                 }
-                return Adduct.FromStringAssumeProtonated($@"[M{charge:+#;-#;0,CultureInfo.InvariantCulture}H]");
+                var str = (charge==-1) ? @"[M-H]" : $@"[M{charge:+#;-#;0,CultureInfo.InvariantCulture}H]"; // So we don't get "[M-1H]"
+                if (_knownAdducts[(int)ADDUCT_TYPE.proteomic].TryGetValue(str, out var adduct))
+                {
+                    return adduct;
+                }
+                adduct = new Adduct(charge, true);
+                _knownAdducts[(int)ADDUCT_TYPE.proteomic][str] = adduct;
+                return adduct;
             }
             else if (type == ADDUCT_TYPE.non_proteomic)
             {

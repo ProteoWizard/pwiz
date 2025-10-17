@@ -775,6 +775,7 @@ namespace pwiz.Skyline.Model.Lib
 // ReSharper disable LocalizableElement
         private static readonly string NAME = "Name:";
         private static readonly RegexOptions NOCASE = RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled;
+        // TODO: Handle n and c terminal notation e.g. "Name: n[43]ALAVLALLSLSGLEAIQR/5" or "Name: AACDEFGHIKc[17]/3"
         private static readonly Regex REGEX_NAME = new Regex(@"^(?i:Name):\s*([A-Z()\[\]0-9]+)/(\d)", RegexOptions.CultureInvariant | RegexOptions.Compiled); // NIST libraries can contain M(O) and SpectraST M[16] TODO: Spectrast also has c- and n-term mods but we reject such entries for now - see example in TestLibraryExplorer
         private static readonly Regex REGEX_NUM_PEAKS = new Regex(@"^(?:Num ?Peaks|number of peaks):\s*(\d+)", NOCASE);  // NIST uses "Num peaks" and SpectraST "NumPeaks" and mzVault does its own thing
         private static readonly string COMMENT = "Comment:";
@@ -866,7 +867,7 @@ namespace pwiz.Skyline.Model.Lib
                     line = HandleMzVaultLineVariant(line, out _);
 
                     // Read until name line
-                    if (!ParseName(line, out var isPeptide, out var sequence, out var charge))
+                    if (!ParseName(line, lineCount, out var isPeptide, out var sequence, out var charge))
                     {
                         continue;
                     }
@@ -1285,7 +1286,7 @@ namespace pwiz.Skyline.Model.Lib
             return false;
         }
 
-        private static bool ParseName(string line, out bool isPeptide, out string sequence, out int charge)
+        private static bool ParseName(string line, long lineCount, out bool isPeptide, out string sequence, out int charge)
         {
             isPeptide = true;
             charge = 0;
@@ -1297,12 +1298,19 @@ namespace pwiz.Skyline.Model.Lib
             Match match = REGEX_NAME.Match(line);
             if (!match.Success)
             {
-                isPeptide = false;
-                match = REGEX_NAME_SMALLMOL.Match(line);
+                // TODO: Handle n and c terminal notation e.g. "Name: n[43]ALAVLALLSLSGLEAIQR/5" or "Name: AACDEFGHIKc[17]/3"
+                if (!REGEX_NAME.Match(line.Replace(@"n[",@"[").Replace(@"c[", @"[")).Success)
+                {
+                    // Try to recognize as small molecule
+                    isPeptide = false;
+                    match = REGEX_NAME_SMALLMOL.Match(line);
+                }
             }
 
             if (!match.Success)
             {
+                // Formerly silent, now we at least put up a non-blocking message
+                Messages.WriteAsyncUserMessage(LibResources.NistLibraryBase_ParseName_Failed_to_understand_entry___0___starting_at_line__1_, line, lineCount);
                 return false;
             }
 
@@ -1310,6 +1318,8 @@ namespace pwiz.Skyline.Model.Lib
             if (isPeptide)
             {
                 charge = int.Parse(match.Groups[2].Value, CultureInfo.InvariantCulture);
+                // TODO: Handle n and c terminal notation e.g. "Name: n[43]ALAVLALLSLSGLEAIQR/5" or "Name: AACDEFGHIKc[17]/3"
+                // sequence = sequence.Replace(@"n[", @"[").Replace(@"c[", @"[");
             }
             return true;
         }

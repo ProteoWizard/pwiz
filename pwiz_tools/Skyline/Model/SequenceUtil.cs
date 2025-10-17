@@ -1252,7 +1252,7 @@ namespace pwiz.Skyline.Model
 
         public static ParsedMolecule GetHeavyFormula(ParsedMolecule formula, LabelAtoms labelAtoms)
         {
-            if (labelAtoms == LabelAtoms.None)
+            if (labelAtoms == LabelAtoms.None || formula == null)
             {
                 return formula;
             }
