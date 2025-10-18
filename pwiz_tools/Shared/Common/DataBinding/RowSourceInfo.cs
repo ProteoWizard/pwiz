@@ -8,7 +8,7 @@ namespace pwiz.Common.DataBinding
     {
         private IRowSource _rows;
         public RowSourceInfo(IRowSource rows, ViewInfo viewInfo)
-            : this(viewInfo.ParentColumn.PropertyType, rows, new[] { viewInfo })
+            : this(viewInfo.ParentColumn.PropertyType, rows, new[] { viewInfo }, viewInfo.ViewSpec.RowSource, viewInfo.ParentColumn.PropertyType.Name)
         {
         }
 

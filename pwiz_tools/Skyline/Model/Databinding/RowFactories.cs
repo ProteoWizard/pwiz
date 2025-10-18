@@ -1,7 +1,5 @@
-﻿using NHibernate.Impl;
-using pwiz.Common.DataBinding;
+﻿using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
-using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.GroupComparison;
@@ -23,8 +21,6 @@ namespace pwiz.Skyline.Model.Databinding
         {
             CancellationToken = cancellationToken;
             DataSchema = dataSchema;
-            RegisterFactory(ListProteins);
-            RegisterFactory(ListPeptides);
         }
         
         public SkylineDataSchema DataSchema { get; }
@@ -135,8 +131,8 @@ namespace pwiz.Skyline.Model.Databinding
             RegisterFactory(ListPrecursorResults);
             RegisterFactory(ListTransitionResults);
             var foldChangeRowFactory = new FoldChangeRowFactory(DataSchema);
-            RegisterFactory(foldChangeRowFactory.GetAllFoldChangeRows);
-            RegisterFactory(foldChangeRowFactory.GetAllFoldChangeDetailRows);
+            RegisterFactory(FoldChangeRow.ROW_SOURCE_NAME, foldChangeRowFactory.GetAllFoldChangeRows);
+            RegisterFactory(FoldChangeDetailRow.ROW_SOURCE_NAME, foldChangeRowFactory.GetAllFoldChangeDetailRows);
         }
 
         public static RowFactories GetRowFactories(CancellationToken cancellationToken, SkylineDataSchema dataSchema)
@@ -180,7 +176,7 @@ namespace pwiz.Skyline.Model.Databinding
             var dsvWriter = new DsvWriter(DataSchema.DataSchemaLocalizer.FormatProvider,
                 DataSchema.DataSchemaLocalizer.Language,
                 separator);
-            var rowItemExporter = new RowItemExporter(DataSchema, dsvWriter);
+            var rowItemExporter = new RowItemExporter(DataSchema.DataSchemaLocalizer, dsvWriter);
             rowItemExporter.Export(progressMonitor, ref status, writer, rowItemEnumerator);
             writer.Flush();
             progressMonitor.UpdateProgress(status = status.Complete());

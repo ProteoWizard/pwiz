@@ -1144,7 +1144,7 @@ namespace TestPerf
             RunUI(() =>
             {
                 var foldChangeRows = foldChangeGrid.FoldChangeBindingSource.GetBindingListSource().Cast<RowItem>()
-                    .Select(rowItem => (FoldChangeBindingSource.FoldChangeRow)rowItem.Value).ToList();
+                    .Select(rowItem => (FoldChangeRow)rowItem.Value).ToList();
                 float[] actualValues = foldChangeRows.Select(foldChangeResult => (float) foldChangeResult.FoldChangeResult.FoldChange).ToArray();
                 if (IsRecordMode)
                 {

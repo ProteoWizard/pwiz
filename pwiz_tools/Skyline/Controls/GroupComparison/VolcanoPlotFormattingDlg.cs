@@ -25,6 +25,7 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
@@ -46,7 +47,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private readonly DataGridViewComboBoxColumn _pointSizeCombo;
 
         public VolcanoPlotFormattingDlg(FoldChangeVolcanoPlot volcanoPlot, IList<MatchRgbHexColor> colorRows,
-            FoldChangeBindingSource.FoldChangeRow[] foldChangeRows, Action<IEnumerable<MatchRgbHexColor>> updateGraph) : 
+            FoldChangeRow[] foldChangeRows, Action<IEnumerable<MatchRgbHexColor>> updateGraph) : 
             this(true, colorRows, foldChangeRows, updateGraph, 
                 volcanoPlot.PerProtein, volcanoPlot.Document)
         {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.DataAnalysis;
 using pwiz.Common.DataAnalysis.Matrices;
-using pwiz.Skyline.Controls.GroupComparison;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
 
@@ -88,7 +88,7 @@ namespace pwiz.Skyline.Model
         }
 
         public static List<int> IndicesBelowCutoff(double adjustedPValueCutoff, double foldChangeCutoff, 
-            double msLevel, FoldChangeBindingSource.FoldChangeRow[] foldChangeRows = null, GroupComparisonRow[] groupComparisonRows = null)
+            double msLevel, FoldChangeRow[] foldChangeRows = null, GroupComparisonRow[] groupComparisonRows = null)
         {
             GroupComparisonRow[] rows;
             if (foldChangeRows != null)

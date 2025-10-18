@@ -31,6 +31,10 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public IEnumerable<FoldChangeRow> GetFoldChangeRows(GroupComparisonResults groupComparisonResults)
         {
+            if (groupComparisonResults == null)
+            {
+                return Array.Empty<FoldChangeRow>();
+            }
             return GetFoldChangeRows(groupComparisonResults.GroupComparer.ComparisonDef,
                 groupComparisonResults.ResultRows);
         }
@@ -117,9 +121,9 @@ namespace pwiz.Skyline.Model.GroupComparison
             foreach (var proteinResults in resultTuples.GroupBy(tuple =>
                          ReferenceValue.Of(tuple.Item2.Selector.Protein.PeptideGroup)))
             {
-                var protein = new Databinding.Entities.Protein(DataSchema, new IdentityPath(proteinResults.Key));
+                var protein = new Protein(DataSchema, new IdentityPath(proteinResults.Key));
                 foreach (var peptideResults in proteinResults.GroupBy(tuple =>
-                             ReferenceValue.Of(tuple.Item2.Selector.Peptide.Peptide)))
+                             ReferenceValue.Of(tuple.Item2.Selector.Peptide?.Peptide)))
                 {
                     Databinding.Entities.Peptide peptide = null;
                     if (peptideResults.Key.Value != null)

@@ -20,7 +20,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 return new DocumentGridReplicatePivotColumns(itemProperties);
             }
 
-            if (rowType == typeof(FoldChangeBindingSource.FoldChangeDetailRow))
+            if (rowType == typeof(FoldChangeDetailRow))
             {
                 return new FoldChangeReplicatePivotColumns(itemProperties);
             }
@@ -241,22 +241,22 @@ namespace pwiz.Skyline.Controls.Databinding
         private class FoldChangeReplicatePivotColumns : ReplicatePivotColumns
         {
             private static readonly PropertyPath PROPERTY_PATH_REPLICATE_ABUNDANCES = PropertyPath.Root
-                .Property(nameof(FoldChangeBindingSource.AbstractFoldChangeRow.ReplicateAbundances))
+                .Property(nameof(AbstractFoldChangeRow.ReplicateAbundances))
                 .LookupAllItems();
 
             private static readonly PropertyPath PROPERTY_PATH_REPLICATE_ABUNDANCES_VALUES = PropertyPath.Root
-                .Property(nameof(FoldChangeBindingSource.AbstractFoldChangeRow.ReplicateAbundances))
+                .Property(nameof(AbstractFoldChangeRow.ReplicateAbundances))
                 .DictionaryValues();
 
 
             private static readonly PropertyPath PROPERTY_PATH_REPLICATE =
-                PROPERTY_PATH_REPLICATE_ABUNDANCES_VALUES.Property(nameof(FoldChangeBindingSource.ReplicateRow.Replicate));
+                PROPERTY_PATH_REPLICATE_ABUNDANCES_VALUES.Property(nameof(ReplicateRow.Replicate));
 
             private static readonly PropertyPath PROPERTY_PATH_REPLICATE_SAMPLE_IDENTITY =
-                PROPERTY_PATH_REPLICATE_ABUNDANCES_VALUES.Property(nameof(FoldChangeBindingSource.ReplicateRow.ReplicateSampleIdentity));
+                PROPERTY_PATH_REPLICATE_ABUNDANCES_VALUES.Property(nameof(ReplicateRow.ReplicateSampleIdentity));
 
             private static readonly PropertyPath PROPERTY_PATH_REPLICATE_GROUP =
-                PROPERTY_PATH_REPLICATE_ABUNDANCES_VALUES.Property(nameof(FoldChangeBindingSource.ReplicateRow.ReplicateGroup));
+                PROPERTY_PATH_REPLICATE_ABUNDANCES_VALUES.Property(nameof(ReplicateRow.ReplicateGroup));
             public FoldChangeReplicatePivotColumns(ItemProperties itemProperties) : base(itemProperties)
             {
                 ReplicatePropertyPath = PROPERTY_PATH_REPLICATE;

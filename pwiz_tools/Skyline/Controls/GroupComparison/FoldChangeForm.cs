@@ -26,6 +26,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -283,12 +284,12 @@ namespace pwiz.Skyline.Controls.GroupComparison
             Program.MainWindow.ShowGroupComparisonWindow(_groupComparisonName);
         }
 
-        protected IEnumerable<FoldChangeBindingSource.FoldChangeRow> GetFoldChangeRows(
+        protected IEnumerable<FoldChangeRow> GetFoldChangeRows(
             BindingListSource bindingListSource)
         {
             return bindingListSource.OfType<RowItem>()
                 .Select(rowItem => rowItem.Value)
-                .OfType<FoldChangeBindingSource.AbstractFoldChangeRow>()
+                .OfType<AbstractFoldChangeRow>()
                 .SelectMany(row => row.GetFoldChangeRows());
         }
 
