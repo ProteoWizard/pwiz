@@ -1,5 +1,5 @@
 ﻿/*
- * Author: David Shteynberg <dshteyn .at. proteinms.net>,
+ * Author: David Shteynberg <dshteynberg .at. gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
  * Copyright 2025 University of Washington - Seattle, WA
@@ -36,13 +36,18 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
     public abstract class AbstractDeepLibraryBuilder : ILibraryBuildWarning
     {
         private DateTime _nowTime = DateTime.Now;
-        
-        protected AbstractDeepLibraryBuilder(SrmDocument document, IrtStandard irtStandard)
+
+        protected AbstractDeepLibraryBuilder(SrmDocument document, IrtStandard irtStandard) : this(document, null, irtStandard)
         {
-            Document = document;
-            IrtStandard = irtStandard;
         }
 
+        protected AbstractDeepLibraryBuilder(SrmDocument document, SrmDocument trainingDocument, IrtStandard irtStandard)
+        {
+            Document = document;
+            TrainingDocument = trainingDocument;
+            IrtStandard = irtStandard;
+            DefaultTestDevice = DeviceTypes.cpu;
+        }
         public SrmDocument Document { get; private set; }
 
         public SrmDocument TrainingDocument { get; private set; }
@@ -57,6 +62,18 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         public string TimeStamp => _nowTime.ToString(@"yyyy-MM-dd_HH-mm-ss");
 
         public string WorkDir { get; private set; }
+
+        public enum DeviceTypes
+        {
+            gpu,
+            cpu
+        };
+
+        public static DeviceTypes DefaultTestDevice
+        {
+            get;
+            protected set;
+        }
 
         public void EnsureWorkDir(string path, string tool)
         {
@@ -260,8 +277,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         {
             return mod.AlphaNameWithAminoAcid(unmodifiedSequence, modIndexAA);
         }
-
-        public string GetWarning()
+        public virtual string GetWarning()
         {
             var warningModSupports = GetWarningMods();
             if (warningModSupports.IsNullOrEmpty())
