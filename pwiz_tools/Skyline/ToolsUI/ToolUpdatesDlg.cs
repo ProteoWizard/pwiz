@@ -66,7 +66,7 @@ namespace pwiz.Skyline.ToolsUI
             }
 
             // populate the checklistbox with the tools package names
-            checkedListBoxTools.Items.AddRange(_tools.Select(pair => pair.Key._packageName).Cast<Object>().ToArray());
+            checkedListBoxTools.Items.AddRange(_tools.Select(pair => pair.Key.PackageName).Cast<Object>().ToArray());
 
             // set all tools to checked
             for (int i = 0; i < checkedListBoxTools.Items.Count; i++)
@@ -99,17 +99,20 @@ namespace pwiz.Skyline.ToolsUI
             checkedListBoxTools.Enabled = btnUpdate.Enabled = btnExit.Enabled = false;
             checkedListBoxTools.Height += progressBar.Top - btnUpdate.Top;
             progressBar.Enabled = progressBar.Visible = labelOperation.Enabled = labelOperation.Visible = true;
-            
-            var toolsToUpdate = GetToolsToUpdate();
-            progressBar.Value = 50;
-            InstallUpdates(toolsToUpdate);
+
+            var toolsToUpdate = new List<ToolUpdateInfo>();
+            if (DownloadToolsToUpdate(toolsToUpdate))
+            {
+                progressBar.Value = 50;
+                InstallUpdates(toolsToUpdate);
+            }
         }
 
         /// <summary>
         /// Uses an <see cref="IToolStoreClient"/> to download (zip files) for each of the tools selected in the form's checklistbox.
         /// Returns a collection of tools to be updated. 
         /// </summary>
-        private ICollection<ToolUpdateInfo> GetToolsToUpdate()
+        private bool DownloadToolsToUpdate(ICollection<ToolUpdateInfo> successfulDownloads)
         {
             labelOperation.Text = ToolsUIResources.ToolUpdatesDlg_GetTools_Downloading_Updates;
             var toolsToDownload = new Collection<ToolUpdateInfo>();
@@ -120,76 +123,101 @@ namespace pwiz.Skyline.ToolsUI
                 toolsToDownload.Add(toolList[index]);
             }
 
-            ICollection<ToolUpdateInfo> successfulDownloads = null;
-            ICollection<string> failedDownloads = null;
-
-            using (var dlg = new LongWaitDlg())
+            ICollection<ToolUpdateFailure> failedDownloads = new List<ToolUpdateFailure>();
+            
+            try
             {
-                dlg.Message = ToolsUIResources.ToolUpdatesDlg_GetToolsToUpdate_Downloading_Updates;
-                dlg.PerformWork(this, 1000,
-                                longWaitBroker =>
-                                DownloadTools(longWaitBroker, toolsToDownload, out successfulDownloads,
-                                                out failedDownloads));
+                using (var dlg = new LongWaitDlg())
+                {
+                    dlg.Message = ToolsUIResources.ToolUpdatesDlg_GetToolsToUpdate_Downloading_Updates;
+                    var status = dlg.PerformWork(this, 1000, pm =>
+                        DownloadTools(pm, toolsToDownload, successfulDownloads, failedDownloads));
+
+                    DisplayDownloadSummary(failedDownloads);
+                    if (status.IsCanceled)
+                        return false;
+                }
+
+            }
+            catch (Exception e)
+            {
+                ExceptionUtil.DisplayOrReportException(this, e);
+                return false;
             }
 
-            DisplayDownloadSummary(failedDownloads);
-            return successfulDownloads;
+            return true;
         }
 
         private DirectoryInfo ToolDir { get; set; }
 
-        private void DownloadTools(ILongWaitBroker waitBroker,
-                                   IEnumerable<ToolUpdateInfo> tools,
-                                   out ICollection<ToolUpdateInfo> successfulDownloads,
-                                   out ICollection<string> failedDownloads)
+        private void DownloadTools(IProgressMonitor pm,
+                                   ICollection<ToolUpdateInfo> tools,
+                                   ICollection<ToolUpdateInfo> successfulDownloads,
+                                   ICollection<ToolUpdateFailure> failedDownloads)
         {
-            successfulDownloads = new Collection<ToolUpdateInfo>();
-            failedDownloads = new Collection<string>();
             ToolDir = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), @"ToolDir"));
-
+            IProgressStatus status = new ProgressStatus().ChangeSegments(0, tools.Count);
             foreach (var tool in tools)
             {
-                var individualDir = Directory.CreateDirectory(Path.Combine(ToolDir.FullName, tool._packageName));
+                if (pm.IsCanceled)
+                    throw new OperationCanceledException();
+                
+                var individualDir = Directory.CreateDirectory(Path.Combine(ToolDir.FullName, tool.PackageName));
                 try
                 {
-                    var message = string.Format(ToolsUIResources.ToolStoreDlg_DownloadSelectedTool_Downloading__0_, tool._packageName);
-                    var progressStatus = new ProgressStatus(message);
-                    waitBroker.ProgressValue = 0;
-                    waitBroker.Message = message;
-                    
-                    // Convert ILongWaitBroker to IProgressMonitor for the download
-                    var progressMonitor = new ProgressWaitBroker(pm =>
-                    {
-                        tool.FilePath = _updateHelper.GetToolZipFile(pm, progressStatus, tool._packageIdentifer, individualDir.FullName);
-                    });
-                    progressMonitor.PerformWork(waitBroker);
+                    var message = string.Format(ToolsUIResources.ToolStoreDlg_DownloadSelectedTool_Downloading__0_, tool.PackageName);
+                    status = status.ChangeMessage(message);
+
+                    tool.FilePath =
+                        _updateHelper.GetToolZipFile(pm, status, tool.PackageIdentifer, individualDir.FullName);
+
+                    status = status.NextSegment();
                     
                     successfulDownloads.Add(tool);
                 }
-                catch (ToolExecutionException)
+                catch (OperationCanceledException)
                 {
-                    failedDownloads.Add(tool._packageName);
+                    throw;
                 }
-                catch (TargetInvocationException ex)
+                catch (Exception ex)
                 {
-                    // HttpClientWithProgress throws IOException for network issues (not WebException)
-                    if (ex.InnerException is IOException)
-                        failedDownloads.Add(tool._packageName);
-                    else
+                    if (ExceptionUtil.IsProgrammingDefect(ex))
                         throw;
+                    failedDownloads.Add(new ToolUpdateFailure(tool, ex));
                 }
             }
         }
 
-        private void DisplayDownloadSummary(ICollection<string> failedDownloads)
+        private void DisplayDownloadSummary(ICollection<ToolUpdateFailure> failedDownloads)
         {
-            if (failedDownloads != null && failedDownloads.Count != 0)
-            {
-                string message = TextUtil.LineSeparate(Resources.ToolUpdatesDlg_DisplayDownloadSummary_Failed_to_download_updates_for_the_following_packages,
-                        string.Empty, TextUtil.LineSeparate(failedDownloads));
+            if (failedDownloads == null || failedDownloads.Count == 0)
+                return;
 
-                MessageDlg.Show(this, message);
+            // Check if all failures have the same error message (e.g., network failure)
+            var distinctMessages = failedDownloads.Select(f => f.Exception.Message).Distinct().ToList();
+            
+            string message;
+            if (distinctMessages.Count == 1)
+            {
+                // All failed with same error - list names, show common error at bottom
+                message = TextUtil.LineSeparate(
+                    Resources.ToolUpdatesDlg_DisplayDownloadSummary_Failed_to_download_updates_for_the_following_packages,
+                    string.Empty,
+                    TextUtil.LineSeparate(failedDownloads.Select(f => f.Tool.PackageName)),
+                    string.Empty,
+                    distinctMessages[0]);
             }
+            else
+            {
+                // Different errors - show "ToolName: Error" format
+                message = TextUtil.LineSeparate(
+                    Resources.ToolUpdatesDlg_DisplayDownloadSummary_Failed_to_download_updates_for_the_following_packages,
+                    string.Empty,
+                    TextUtil.LineSeparate(failedDownloads.Select(f => 
+                        FormatFailureMessage(f.Tool.PackageName, f.Exception.Message))));
+            }
+
+            MessageDlg.Show(this, message);
         }
 
         private void InstallUpdates(ICollection<ToolUpdateInfo> tools)
@@ -204,44 +232,44 @@ namespace pwiz.Skyline.ToolsUI
                 {
                     labelOperation.Text =
                         string.Format(ToolsUIResources.ToolUpdatesDlg_InstallUpdates_Installing_updates_to__0_,
-                                      tool._packageName);
+                                      tool.PackageName);
 
                     var toolList = ToolList.CopyTools(Settings.Default.ToolList);
-                    bool exceptionThrown = false;
                     ToolInstaller.UnzipToolReturnAccumulator result = null;
                     try
                     {
                         result = _updateHelper.UnpackZipTool(tool.FilePath, new ToolInstallUI.InstallZipToolHelper(this, _parent.InstallProgram));
+
+                        if (result == null)
+                            failedUpdates.Add(tool.PackageName, Resources.ToolUpdatesDlg_InstallUpdates_User_cancelled_installation);
                     }
                     catch (ToolExecutionException x)
                     {
-                        failedUpdates.Add(tool._packageName, x.Message);
-                        exceptionThrown = true;
+                        failedUpdates.Add(tool.PackageName, x.Message);
                     }
                     catch (IOException x)
                     {
-                        failedUpdates.Add(tool._packageName,
+                        failedUpdates.Add(tool.PackageName,
                                           TextUtil.LineSeparate(string.Format(Resources.ConfigureToolsDlg_UnpackZipTool_Failed_attempting_to_extract_the_tool_from__0_,
                                                   Path.GetFileName(tool.FilePath)), x.Message));
-                        exceptionThrown = true;
                     }
 
                     progressBar.Value = Convert.ToInt32((((((double)++installCount) / tools.Count) * 100) / 2) + 50);
 
                     if (result == null)
-                    {
-                        // user cancelled
-                        if (!exceptionThrown)
-                            failedUpdates.Add(tool._packageName, Resources.ToolUpdatesDlg_InstallUpdates_User_cancelled_installation);
-
-                        // reset tool list
-                        Settings.Default.ToolList = toolList;
                         continue;
-                    }
 
-                    // tool was successfully updated
-                    result.MessagesThrown.ForEach(message => MessageDlg.Show(this, message));
-                    successfulUpdates.Add(tool._packageName);
+                    if (result.MessagesThrown.Count > 0)
+                    {
+                        // ZIP extracted but no valid tools found - treat as failure
+                        var errorMessage = TextUtil.LineSeparate(result.MessagesThrown);
+                        failedUpdates.Add(tool.PackageName, errorMessage);
+                    }
+                    else
+                    {
+                        // tool was successfully updated
+                        successfulUpdates.Add(tool.PackageName);
+                    }
                 }
 
                 // clean-up
@@ -323,15 +351,15 @@ namespace pwiz.Skyline.ToolsUI
     /// </summary>
     public class ToolUpdateInfo
     {
-        public readonly string _packageIdentifer;
-        public readonly string _packageName;
+        public string PackageIdentifer { get; }
+        public string PackageName { get; }
 
         public string FilePath { get; set; }
 
         public ToolUpdateInfo(string packageIdentifer, string packageName, string filePath = null)
         {
-            _packageIdentifer = packageIdentifer;
-            _packageName = packageName;
+            PackageIdentifer = packageIdentifer;
+            PackageName = packageName;
 
             FilePath = filePath;
         }
@@ -345,16 +373,28 @@ namespace pwiz.Skyline.ToolsUI
             ToolUpdateInfo other = obj as ToolUpdateInfo;
             if (other == null)
                 return false;
-            return Equals(_packageIdentifer, other._packageIdentifer) &&
-                   Equals(_packageName, other._packageName);
+            return Equals(PackageIdentifer, other.PackageIdentifer) &&
+                   Equals(PackageName, other.PackageName);
         }
 
         public override int GetHashCode()
         {
-            return _packageIdentifer.GetHashCode() + _packageName.GetHashCode();
+            return PackageIdentifer.GetHashCode() + PackageName.GetHashCode();
         }
 
         #endregion
+    }
+
+    internal class ToolUpdateFailure
+    {
+        public ToolUpdateInfo Tool { get; }
+        public Exception Exception { get; }
+
+        public ToolUpdateFailure(ToolUpdateInfo tool, Exception exception)
+        {
+            Tool = tool;
+            Exception = exception;
+        }
     }
 
     public interface IToolUpdateHelper

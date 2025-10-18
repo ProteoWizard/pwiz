@@ -23,7 +23,6 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
-using Ionic.Zip;
 using JetBrains.Annotations;
 using Newtonsoft.Json;
 using pwiz.Common.SystemUtil;
@@ -37,7 +36,8 @@ namespace pwiz.Skyline.ToolsUI
 {
     public partial class ToolStoreDlg : FormEx
     {
-        private readonly IToolStoreClient _toolStoreClient;
+        private IToolStoreClient _toolStoreClient;
+
         private readonly IList<ToolStoreItem> _tools;
         
         public ToolStoreDlg(IToolStoreClient toolStoreClient, IList<ToolStoreItem> tools)
@@ -48,6 +48,11 @@ namespace pwiz.Skyline.ToolsUI
             InitializeComponent();
 
             Icon = Resources.Skyline;
+        }
+        
+        public IToolStoreClient ToolStoreClient
+        {
+            set => _toolStoreClient = value;
         }
 
         private void ToolStore_Load(object sender, EventArgs e)
@@ -234,130 +239,6 @@ namespace pwiz.Skyline.ToolsUI
         /// version is the string representation of the version installed
         /// </summary>
         bool IsToolUpdateAvailable(string identifier, Version version);
-    }
-
-    public class TestToolStoreClient : IToolStoreClient
-    {
-        private readonly DirectoryInfo _toolDir;
-        
-        public TestToolStoreClient(string toolDirPath)
-        {
-            _toolDir = new DirectoryInfo(toolDirPath);
-        }
-
-        private IList<ToolStoreItem> ToolStoreItems { get; set; }
-        private static readonly string[] IMAGE_EXTENSIONS = {@".jpg", @".png", @".bmp"};
-
-        public IList<ToolStoreItem> GetToolStoreItems()
-        {
-            if (FailToConnect)
-                throw new ToolExecutionException(FailToConnectMessage);
-            
-            if (ToolStoreItems != null)
-                return ToolStoreItems;
-            
-            var tools = new List<ToolStoreItem>();
-            if (_toolDir == null)
-                return tools;
-            foreach (var toolDir in _toolDir.GetFiles())
-            {                
-                if (toolDir == null || string.IsNullOrEmpty(toolDir.DirectoryName))
-                    continue;
-
-                string fileName = Path.GetFileNameWithoutExtension(toolDir.Name);
-                string path = Path.Combine(toolDir.DirectoryName, fileName);
-                using (new TemporaryDirectory(path))
-                {
-                    using (var zipFile = new ZipFile(toolDir.FullName))
-                    {
-                        // extract files
-                        zipFile.ExtractAll(path, ExtractExistingFileAction.OverwriteSilently);
-                        
-                        var toolInf = new DirectoryInfo(Path.Combine(path, ToolInstaller.TOOL_INF));
-                        if (!Directory.Exists(toolInf.FullName))
-                            continue;
-
-                        if (!toolInf.GetFiles(ToolInstaller.INFO_PROPERTIES).Any())
-                            continue;
-
-                        var pictures = toolInf.GetFiles().Where(info => IMAGE_EXTENSIONS.Contains(info.Extension)).ToList();
-                        Image toolImage = ToolStoreUtil.DefaultImage;
-                        if (pictures.Count != 0)
-                        {
-                            // try and read in the image
-                            try
-                            {
-                                using (var stream = new FileStream(pictures.First().FullName, FileMode.Open, FileAccess.Read))
-                                {
-                                    toolImage = Image.FromStream(stream);
-                                }
-                            }
-// ReSharper disable EmptyGeneralCatchClause
-                            catch (Exception)
-// ReSharper restore EmptyGeneralCatchClause
-                            {
-                                // if anything goes wrong -- just use the default image :)
-                            }
-                        }
-
-                        ExternalToolProperties readin;
-                        try
-                        {
-                            readin = new ExternalToolProperties(Path.Combine(toolInf.FullName, ToolInstaller.INFO_PROPERTIES));
-                        }
-                        catch (Exception)
-                        {
-                            continue;
-                        }
-
-                        tools.Add(new ToolStoreItem(readin.Name, readin.Author, readin.Provider, readin.Version,
-                                                    readin.Description, readin.Identifier, toolImage, toolDir.FullName));
-                    }
-                } 
-            }
-            // sort toollist by name
-            tools.Sort(((item, storeItem) => String.Compare(item.Name, storeItem.Name, StringComparison.Ordinal)));
-            return tools;
-        }
-
-        public string GetToolZipFile(IProgressMonitor progressMonitor, IProgressStatus progressStatus, string packageIdentifier, string directory)
-        {
-            if (FailDownload)
-                throw new ToolExecutionException(Resources.TestToolStoreClient_GetToolZipFile_Error_downloading_tool);
-
-            if (TestDownloadPath != null)
-                return TestDownloadPath;
-
-            foreach (var item in ToolStoreItems ?? GetToolStoreItems())
-            {
-                if (item.Identifier.Equals(packageIdentifier))
-                {
-                    string fileName = Path.GetFileName(item.FilePath);
-                    if (fileName == null)
-                        throw new ToolExecutionException(Resources.TestToolStoreClient_GetToolZipFile_Error_downloading_tool);
-                    
-                    string path = Path.Combine(directory, fileName);
-                    File.Copy(item.FilePath, path, true);
-                    return path;
-                }
-            }
-
-            throw new ToolExecutionException(ToolsUIResources.TestToolStoreClient_GetToolZipFile_Cannot_find_a_file_with_that_identifier_);
-        }
-
-        public bool IsToolUpdateAvailable(string identifier, Version version)
-        {
-            if (ToolStoreItems == null)
-                ToolStoreItems = GetToolStoreItems();
-
-            var tool = ToolStoreItems.FirstOrDefault(item => item.Identifier.Equals(identifier));
-            return tool != null && version < new Version(tool.Version);
-        }
-
-        public bool FailToConnect { get; set; }
-        public string FailToConnectMessage { get; set; }
-        public bool FailDownload { get; set; }
-        public string TestDownloadPath { get; set; }
     }
 
     public class WebToolStoreClient : IToolStoreClient

@@ -70,15 +70,6 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: {0}.
-        /// </summary>
-        public static string ActionTutorial_DownloadTutorials_Error__0_ {
-            get {
-                return ResourceManager.GetString("ActionTutorial_DownloadTutorials_Error__0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to An error occurred while trying to display the document &apos;{0}&apos;. 
         ///There might be something wrong with default web browser on this computer..
         /// </summary>

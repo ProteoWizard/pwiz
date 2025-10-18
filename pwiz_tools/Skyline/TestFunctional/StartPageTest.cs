@@ -24,12 +24,14 @@ using System.Linq;
 using System.Net.Http;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.CommonResources;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -310,7 +312,7 @@ namespace pwiz.SkylineTestFunctional
     /// Checks that the Import Peptide Search action works correctly.
     /// </summary>
     [TestClass]
-    public class StartPageShowPathChooser : AbstractFunctionalTest
+    public class StartPageShowPathChooser : AbstractFunctionalTestEx
     {
         [TestMethod]
         public void TestStartPageShowPathChooser()
@@ -326,11 +328,61 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             var startPage = WaitForOpenForm<StartPage>();
-            var pathChooser = ShowDialog<PathChooserDlg>(()=>startPage
-                .TestTutorialAction());
-            OkDialog(pathChooser, pathChooser.Dispose);
+            
+            // Original test - just show PathChooserDlg then cancel
+            var pathChooser = ShowDialog<PathChooserDlg>(startPage.TestTutorialAction);
+            OkDialog(pathChooser, pathChooser.CancelDialog);
             RunUI(() => startPage.DoAction(skylineWindow => true));
+
             WaitForOpenForm<SkylineWindow>();
+
+            // Test tutorial download with network failures and cancellation
+            TestTutorialDownloadNetworkFailures();
+        }
+
+        private void TestTutorialDownloadNetworkFailures()
+        {
+            // Test user cancellation
+            // using (HttpClientTestHelper.SimulateCancellation()) // To prove this fails
+            using (HttpClientTestHelper.SimulateCancellationClickWithException())
+            {
+                TestTutorialDownloadNetworkFailure();
+            }
+
+            // Test network failure - no network interface
+            using (HttpClientTestHelper.SimulateNoNetworkInterface())
+            {
+                TestTutorialDownloadNetworkFailure(
+                    MessageResources.HttpClientWithProgress_MapHttpException_No_network_connection_detected__Please_check_your_internet_connection_and_try_again_);
+            }
+
+            // Test connection loss during download
+            using (HttpClientTestHelper.SimulateConnectionLoss())
+            {
+                TestTutorialDownloadNetworkFailure(
+                    MessageResources.HttpClientWithProgress_MapHttpException_The_connection_was_lost_during_download__Please_check_your_internet_connection_and_try_again_);
+            }
+        }
+
+        private void TestTutorialDownloadNetworkFailure(string expectedMessage = null)
+        {
+            string testTutorialDir = TestContext.GetTestResultsPath("TestTutorial");
+            DirectoryEx.SafeDelete(testTutorialDir);
+
+            var startPage = ShowDialog<StartPage>(SkylineWindow.OpenStartPageTutorial);
+            var pathChooser = ShowDialog<PathChooserDlg>(startPage.TestTutorialAction);
+            RunUI(() => pathChooser.ExtractionPath = testTutorialDir);
+            if (string.IsNullOrEmpty(expectedMessage))
+            {
+                TestCancellationWithoutMessageDlg(pathChooser.OkDialog);
+            }
+            else
+            {
+                TestMessageDlgShown(pathChooser.OkDialog, expectedMessage);
+            }
+
+            // These forms just go away in these failure cases
+            WaitForConditionUI(() => FindOpenForm<StartPage>() == null && FindOpenForm<PathChooserDlg>() == null);
         }
     }
 

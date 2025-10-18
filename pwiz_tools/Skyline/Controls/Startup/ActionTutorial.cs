@@ -62,7 +62,7 @@ namespace pwiz.Skyline.Controls.Startup
 
         private string GetTempPath()
         {
-            return Path.Combine(TempPath, Path.GetFileName(ExtractPath) ?? string.Empty);
+            return Path.Combine(TempPath, (Path.GetFileName(ExtractPath) ?? string.Empty) + StartPage.EXT_TUTORIAL_FILES);
         }
 
         public void LongWaitDlgAction(SkylineWindow skylineWindow)
@@ -79,6 +79,7 @@ namespace pwiz.Skyline.Controls.Startup
                         return;
                     }
                 }
+
                 using (var longWaitDlg = new LongWaitDlg())
                 {
                     longWaitDlg.Text = StartupResources.ActionTutorial_LongWaitDlgAction_Extracting_Tutorial_Zip_File_in_the_same_directory_;
@@ -87,7 +88,12 @@ namespace pwiz.Skyline.Controls.Startup
             }
             catch (Exception exception)
             {
-                MessageDlg.ShowWithException(Program.MainWindow, string.Format(StartupResources.ActionTutorial_DownloadTutorials_Error__0_, exception.Message), exception);
+                ExceptionUtil.DisplayOrReportException(Program.MainWindow, exception);
+            }
+            finally
+            {
+                // Attempt to get rid of the temp ZIP file
+                FileEx.SafeDelete(GetTempPath(), true);
             }
         }
 

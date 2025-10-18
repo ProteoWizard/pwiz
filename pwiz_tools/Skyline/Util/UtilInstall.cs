@@ -334,7 +334,7 @@ namespace pwiz.Skyline.Util
             return true;
         }
 
-        private static string GetCachedDownloadsDirectory()
+        public static string GetCachedDownloadsDirectory()
         {
             return Path.Combine(ToolDescriptionHelpers.GetSkylineInstallationPath(), @"CachedDownloadsForTests");
         }

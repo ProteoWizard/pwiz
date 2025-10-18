@@ -249,7 +249,7 @@ namespace pwiz.Common.SystemUtil
                 int bytesRead;
                 try
                 {
-                    bytesRead = ReadWithTimeout(contentStream, buffer, ReadTimeoutMilliseconds, uri);
+                    bytesRead = ReadChunk(contentStream, buffer, uri);
                 }
                 catch (Exception ex)
                 {
@@ -446,10 +446,10 @@ namespace pwiz.Common.SystemUtil
             return root;
         }
 
-        private static int ReadWithTimeout(Stream stream, byte[] buffer, int timeoutMs, Uri uri)
+        private int ReadChunk(Stream stream, byte[] buffer, Uri uri)
         {
-            var readTask = stream.ReadAsync(buffer, 0, buffer.Length);
-            var completed = Task.WaitAny(readTask, Task.Delay(timeoutMs));
+            var readTask = stream.ReadAsync(buffer, 0, buffer.Length, CancellationToken);
+            var completed = Task.WaitAny(readTask, Task.Delay(ReadTimeoutMilliseconds, CancellationToken));
             if (completed != 0)
                 throw new TimeoutException(string.Format(MessageResources.HttpClientWithProgress_ReadWithTimeout_The_read_operation_timed_out_while_downloading_from__0__, uri));
             return readTask.Result;

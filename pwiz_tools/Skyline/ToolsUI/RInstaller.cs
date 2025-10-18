@@ -238,7 +238,8 @@ namespace pwiz.Skyline.ToolsUI
             if (PackagesToInstall.Count == 0)
                 return;
 
-            if (!PackageInstallHelpers.CheckForInternetConnection(out string checkedSite, out string errorMessage))
+            const string checkedSite = RUtil.INTERNET_CHECK_SITE;
+            if (!RUtil.CheckForInternetConnection(out var errorMessage))
             {
                 var failureMessage = GetInternetConnectionForPackagesFailureMessage(checkedSite, errorMessage);
                 throw new ToolExecutionException(failureMessage);
@@ -311,7 +312,6 @@ namespace pwiz.Skyline.ToolsUI
         {
             ICollection<ToolPackage> WhichPackagesToInstall(ICollection<ToolPackage> packages, string pathToR);
             string FindRProgramPath(string rVersion);
-            bool CheckForInternetConnection(out string site, out string errorMessage);
         } 
 
         public IPackageInstallHelpers PackageInstallHelpers
@@ -346,12 +346,6 @@ namespace pwiz.Skyline.ToolsUI
         public string FindRProgramPath(string rVersion)
         {
             return RUtil.FindRProgramPath(rVersion);
-        }
-
-        public bool CheckForInternetConnection(out string site, out string errorMessage)
-        {
-            site = RUtil.INTERNET_CHECK_SITE;
-            return RUtil.CheckForInternetConnection(out errorMessage);
         }
     }
 

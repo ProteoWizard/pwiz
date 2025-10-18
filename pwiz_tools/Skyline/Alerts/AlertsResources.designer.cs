@@ -599,15 +599,6 @@ namespace pwiz.Skyline.Alerts {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Downloading required files....
-        /// </summary>
-        public static string SimpleFileDownloaderDlg_Show_Downloading_required_files___ {
-            get {
-                return ResourceManager.GetString("SimpleFileDownloaderDlg_Show_Downloading_required_files___", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to The following file is required. Do you want to download it?.
         /// </summary>
         public static string SimpleFileDownloaderDlg_Show_The_following_file_is_required__Do_you_want_to_download_it_ {
