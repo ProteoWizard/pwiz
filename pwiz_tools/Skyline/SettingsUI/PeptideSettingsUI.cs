@@ -2266,8 +2266,7 @@ namespace pwiz.Skyline.SettingsUI
 
             var tooltipLines = new List<string>
             {
-                TextUtil.LineSeparate("Choose the retention time alignment strategy for mapping the retention times of MS/MS IDs from libraries to result files in the document,",
-                    "and between result files in the document for peak boundary imputation.")
+                SettingsUIResources.PeptideSettingsUI_UpdateAlignmentDropdown_Tooltip
             };
             var items = new List<KeyValuePair<string, AlignmentTargetSpec>>();
             

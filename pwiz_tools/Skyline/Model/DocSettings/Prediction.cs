@@ -1196,14 +1196,6 @@ namespace pwiz.Skyline.Model.DocSettings
             return null;
         }
 
-        public virtual string AxisTitle
-        {
-            get
-            {
-                return string.Format("{0} Score", Name);
-            }
-        }
-
         #region Implementation of IXmlSerializable
 
         /// <summary>

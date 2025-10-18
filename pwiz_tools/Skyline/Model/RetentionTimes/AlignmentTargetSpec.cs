@@ -21,7 +21,6 @@ using pwiz.Skyline.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
@@ -205,7 +204,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 }
 
                 var defaultSpec = defaultOption?.ToAlignmentTargetSpec() ?? None;
-                return TextUtil.SpaceSeparate(defaultSpec.GetLabel(peptideSettings), "(default)");
+                return TextUtil.SpaceSeparate(defaultSpec.GetLabel(peptideSettings), RetentionTimesResources.AlignmentTargetSpec_GetLabel__default_);
             }
 
             if (Type == Library.Type)
@@ -236,14 +235,14 @@ namespace pwiz.Skyline.Model.RetentionTimes
         {
             if (Type == None.Type)
             {
-                return "Retention time values will be unchanged when mapping between runs";
+                return RetentionTimesResources.AlignmentTargetSpec_GetTooltip_Retention_time_values_will_be_unchanged_when_mapping_between_runs;
             }
 
             if (Type == Default.Type)
             {
                 if (!RtCalculatorOption.TryGetDefault(peptideSettings, out var defaultOption))
                 {
-                    return "Use the retention time calculator if there is one or the first library";
+                    return RetentionTimesResources.AlignmentTargetSpec_GetTooltip_Use_the_retention_time_calculator_if_there_is_one_or_the_first_library;
                 }
 
                 var defaultSpec = defaultOption?.ToAlignmentTargetSpec() ?? None;
@@ -255,7 +254,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 var calculator = peptideSettings.Prediction.RetentionTime?.Calculator;
                 if (calculator == null)
                 {
-                    return "Invalid";
+                    return RetentionTimesResources.AlignmentTargetSpec_GetTooltip_Invalid;
                 }
 
                 if (calculator is RCalcIrt rCalcIrt)
@@ -265,37 +264,37 @@ namespace pwiz.Skyline.Model.RetentionTimes
                     {
                         if (documentType == SrmDocument.DOCUMENT_TYPE.proteomic)
                         {
-                            return string.Format("{0} regression against {1} standard peptides in calculator {2}",
+                            return string.Format(RetentionTimesResources.AlignmentTargetSpec_GetTooltip__0__regression_against__1__standard_peptides_in_calculator__2_,
                                 rCalcIrt.RegressionType, standardCount, rCalcIrt.Name);
                         }
                         else
                         {
-                            return string.Format("{0} regression against {1} standard molecules in calculator {2}",
+                            return string.Format(RetentionTimesResources.AlignmentTargetSpec_GetTooltip__0__regression_against__1__standard_molecules_in_calculator__2_,
                                 rCalcIrt.RegressionType, standardCount, rCalcIrt.Name);
                         }
                     }
 
                     if (documentType == SrmDocument.DOCUMENT_TYPE.proteomic)
                     {
-                        return string.Format("{0} regression against all peptides in calculator {1}",
+                        return string.Format(RetentionTimesResources.AlignmentTargetSpec_GetTooltip__0__regression_against_all_peptides_in_calculator__1_,
                             rCalcIrt.RegressionType, rCalcIrt.Name);
                     }
 
-                    return string.Format("{0} regression against all molecules in calculator {1}",
+                    return string.Format(RetentionTimesResources.AlignmentTargetSpec_GetTooltip__0__regression_against_all_molecules_in_calculator__1_,
                         rCalcIrt.RegressionType, rCalcIrt.Name);
                 }
             }
 
             if (Type == Library.Type)
             {
-                return string.Format("{0} regression against median retention times from library {1}",
+                return string.Format(RetentionTimesResources.AlignmentTargetSpec_GetTooltip__0__regression_against_median_retention_times_from_library__1_,
                     IrtRegressionType.LOWESS, Name);
             }
 
             if (Type == ChromatogramPeaks.Type)
             {
                 return string.Format(
-                    "{0} regression against median chromatogram peak apex times across replicate in this document",
+                    RetentionTimesResources.AlignmentTargetSpec_GetTooltip__0__regression_against_median_chromatogram_peak_apex_times_across_replicate_in_this_document,
                     IrtRegressionType.LOWESS);
             }
 
