@@ -2622,6 +2622,16 @@ namespace pwiz.Skyline.SettingsUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Choose the retention time alignment strategy for mapping the retention times of MS/MS IDs from libraries to result files in the document,
+        ///and between result files in the document for peak boundary imputation..
+        /// </summary>
+        public static string PeptideSettingsUI_UpdateAlignmentDropdown_Tooltip {
+            get {
+                return ResourceManager.GetString("PeptideSettingsUI_UpdateAlignmentDropdown_Tooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to load background proteome {0}..
         /// </summary>
         public static string PeptideSettingsUI_ValidateNewSettings_Failed_to_load_background_proteome__0__ {
