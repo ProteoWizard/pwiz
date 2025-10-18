@@ -23,7 +23,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Xml.Linq;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;

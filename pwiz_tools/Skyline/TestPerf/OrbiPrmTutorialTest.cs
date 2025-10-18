@@ -1066,10 +1066,10 @@ namespace TestPerf
             WaitForConditionUI(2000, () => editGroupComparisonDlg.ComboControlValue.Items.Contains(controlValue));
             RunUI(() =>
             {
-                editGroupComparisonDlg.ComboControlValue.SelectedItem = controlValue;
-                editGroupComparisonDlg.ComboCaseValue.SelectedItem = caseValue;
+                SelectComboItem(editGroupComparisonDlg.ComboControlValue, controlValue);
+                SelectComboItem(editGroupComparisonDlg.ComboCaseValue, caseValue);
                 Assert.IsTrue(editGroupComparisonDlg.ComboCaseValue.Items.Contains(caseValue));
-                editGroupComparisonDlg.ComboIdentityAnnotation.SelectedItem = identityAnnotation;
+                SelectComboItem(editGroupComparisonDlg.ComboIdentityAnnotation, identityAnnotation);
                 Assert.IsTrue(editGroupComparisonDlg.ComboIdentityAnnotation.Items.Contains(identityAnnotation));
                 editGroupComparisonDlg.NormalizeOption =
                     NormalizeOption.FromNormalizationMethod(NormalizationMethod.FromIsotopeLabelTypeName("heavy"));

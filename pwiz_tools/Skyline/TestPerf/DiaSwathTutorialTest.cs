@@ -1137,14 +1137,14 @@ namespace TestPerf
             RunUI(() =>
             {
                 editGroupComparisonDlg.TextBoxName.Text = groupComparisonName;
-                editGroupComparisonDlg.ComboControlAnnotation.SelectedItem = @"Condition";
+                SelectComboItem(editGroupComparisonDlg.ComboControlAnnotation, "Condition");
             });
             WaitForConditionUI(() => editGroupComparisonDlg.ComboControlValue.Items.Count > 0);
             RunUI(() =>
             {
-                editGroupComparisonDlg.ComboControlValue.SelectedItem = "A";
-                editGroupComparisonDlg.ComboCaseValue.SelectedItem = "B";
-                editGroupComparisonDlg.ComboIdentityAnnotation.SelectedItem = "BioReplicate";   // Irrelevant
+                SelectComboItem(editGroupComparisonDlg.ComboControlValue, "A");
+                SelectComboItem(editGroupComparisonDlg.ComboCaseValue, "B");
+                SelectComboItem(editGroupComparisonDlg.ComboIdentityAnnotation, "BioReplicate");   // Irrelevant
                 editGroupComparisonDlg.ShowAdvanced(true);
                 editGroupComparisonDlg.TextBoxQValueCutoff.Text = (0.01).ToString(CultureInfo.CurrentCulture);
             });

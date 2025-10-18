@@ -23,7 +23,6 @@ using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
@@ -453,11 +452,6 @@ namespace pwiz.Skyline.Controls.GroupComparison
             var itemObjects = items.Select(item => (object)item ?? string.Empty).ToList();
             var selectedObject = (object) selectedItem ?? string.Empty;
             int newSelectedIndex = itemObjects.IndexOf(selectedObject);
-            if (newSelectedIndex < 0 && !ReferenceEquals(selectedItem, null))
-            {
-                itemObjects.Insert(0, selectedItem);
-                newSelectedIndex = 0;
-            }
             if (newSelectedIndex == comboBox.SelectedIndex && itemObjects.SequenceEqual(comboBox.Items.Cast<object>()))
             {
                 return;

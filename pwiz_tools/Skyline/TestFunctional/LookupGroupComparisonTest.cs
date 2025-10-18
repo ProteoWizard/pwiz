@@ -61,7 +61,7 @@ namespace pwiz.SkylineTestFunctional
                     SelectComboItem(editGroupComparisonDlg.ComboControlAnnotation, " Condition");
                     SelectComboItem(editGroupComparisonDlg.ComboIdentityAnnotation, " Name");
                 });
-                WaitForConditionUI(() => editGroupComparisonDlg.ComboControlValue.Items.Count > 1);
+                WaitForConditionUI(() => editGroupComparisonDlg.ComboControlValue.Items.Count > 0);
                 RunUI(() =>
                 {
                     SelectComboItem(editGroupComparisonDlg.ComboControlValue, "Healthy");
@@ -150,7 +150,7 @@ namespace pwiz.SkylineTestFunctional
                     SelectComboItem(editGroupComparisonDlg.ComboIdentityAnnotation, ColumnCaptions.AnalyteConcentration);
                     editGroupComparisonDlg.RadioScopePerProtein.Checked = true;
                 });
-                WaitForConditionUI(() => editGroupComparisonDlg.ComboControlValue.Items.Count > 1);
+                WaitForConditionUI(() => editGroupComparisonDlg.ComboControlValue.Items.Count > 0);
                 RunUI(() =>
                 {
                     SelectComboItem(editGroupComparisonDlg.ComboControlValue, SampleType.BLANK.ToString());
