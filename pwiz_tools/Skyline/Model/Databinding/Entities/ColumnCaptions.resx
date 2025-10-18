@@ -531,6 +531,9 @@
   <data name="Group">
     <value>Group</value>
   </data>
+  <data name="GroupComparison">
+    <value>Group Comparison</value>
+  </data>
   <data name="Height">
     <value>Height</value>
   </data>

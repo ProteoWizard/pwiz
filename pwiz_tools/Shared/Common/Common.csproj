@@ -172,7 +172,7 @@
     <Compile Include="DataBinding\Attributes\DataGridViewColumnTypeAttribute.cs" />
     <Compile Include="DataBinding\Attributes\FormatAttribute.cs" />
     <Compile Include="DataBinding\Attributes\OneToManyAttribute.cs" />
-    <Compile Include="DataBinding\Attributes\RowSourceNameAttribute.cs" />
+    <Compile Include="DataBinding\Attributes\RowSourceAttribute.cs" />
     <Compile Include="DataBinding\Attributes\UiModeAttribute.cs" />
     <Compile Include="DataBinding\Attributes\HiddenAttribute.cs" />
     <Compile Include="DataBinding\CaptionedValues.cs" />

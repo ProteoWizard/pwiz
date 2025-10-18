@@ -1303,6 +1303,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Group Comparison.
+        /// </summary>
+        public static string GroupComparison {
+            get {
+                return ResourceManager.GetString("GroupComparison", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Height.
         /// </summary>
         public static string Height {

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.DataBinding;
-using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.Databinding.Entities;
@@ -236,7 +235,7 @@ namespace pwiz.Skyline.Controls.Databinding
 
 
         /// <summary>
-        /// For <see cref="FoldChangeBindingSource.FoldChangeDetailRow"/> rows.
+        /// For <see cref="FoldChangeDetailRow"/> rows.
         /// </summary>
         private class FoldChangeReplicatePivotColumns : ReplicatePivotColumns
         {

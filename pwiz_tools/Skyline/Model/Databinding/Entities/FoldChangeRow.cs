@@ -42,7 +42,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
     }
 
-    [RowSourceName(ROW_SOURCE_NAME)]
+    [RowSource(ROW_SOURCE_NAME)]
     public class FoldChangeRow : AbstractFoldChangeRow
     {
         public const string ROW_SOURCE_NAME = "pwiz.Skyline.Controls.GroupComparison.FoldChangeBindingSource.FoldChangeRow";
@@ -65,7 +65,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
        
     }
 
-    [RowSourceName(ROW_SOURCE_NAME)]
+    [RowSource(ROW_SOURCE_NAME)]
     public class FoldChangeDetailRow : AbstractFoldChangeRow
     {
         public const string ROW_SOURCE_NAME =

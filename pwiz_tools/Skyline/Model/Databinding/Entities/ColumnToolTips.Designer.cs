@@ -1330,6 +1330,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Name of the group comparison.
+        /// </summary>
+        public static string GroupComparison {
+            get {
+                return ResourceManager.GetString("GroupComparison", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The maximum intensity of the points between the transition peak integration
         ///boundaries..
         /// </summary>

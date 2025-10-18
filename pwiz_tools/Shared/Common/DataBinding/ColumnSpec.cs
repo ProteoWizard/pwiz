@@ -507,8 +507,8 @@ namespace pwiz.Common.DataBinding
         }
         public static string GetRowSourceName(Type type)
         {
-            foreach (RowSourceNameAttribute rowSourceNameAttribute in type.GetCustomAttributes(
-                         typeof(RowSourceNameAttribute), true))
+            foreach (RowSourceAttribute rowSourceNameAttribute in type.GetCustomAttributes(
+                         typeof(RowSourceAttribute), true))
             {
                 return rowSourceNameAttribute.Name;
             }

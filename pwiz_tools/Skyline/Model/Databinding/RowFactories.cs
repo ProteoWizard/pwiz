@@ -16,7 +16,6 @@ namespace pwiz.Skyline.Model.Databinding
     public class RowFactories
     {
         private Dictionary<string, Factory> _factoriesByName = new Dictionary<string, Factory>();
-        private Dictionary<Type, Factory> _factoriesByType = new Dictionary<Type, Factory>();
         public RowFactories(CancellationToken cancellationToken, SkylineDataSchema dataSchema)
         {
             CancellationToken = cancellationToken;
@@ -87,7 +86,6 @@ namespace pwiz.Skyline.Model.Databinding
         {
             var factory = new Factory(name, typeof(T), listItemsFunc);
             _factoriesByName.Add(name, factory);
-            _factoriesByType.Add(typeof(T), factory);
         }
 
         public bool HasFactory(string rowSourceName)
@@ -130,9 +128,11 @@ namespace pwiz.Skyline.Model.Databinding
             RegisterFactory(ListPeptideResults);
             RegisterFactory(ListPrecursorResults);
             RegisterFactory(ListTransitionResults);
-            var foldChangeRowFactory = new FoldChangeRowFactory(DataSchema);
+            var foldChangeRowFactory = new FoldChangeRowFactory(CancellationToken, DataSchema);
             RegisterFactory(foldChangeRowFactory.GetAllFoldChangeRows);
             RegisterFactory(foldChangeRowFactory.GetAllFoldChangeDetailRows);
+            var candidatePeakGroupFactory = new CandidatePeakGroupFactory(CancellationToken, DataSchema);
+            RegisterFactory(candidatePeakGroupFactory.GetAllCandidatePeakGroups);
         }
 
         public static RowFactories GetRowFactories(CancellationToken cancellationToken, SkylineDataSchema dataSchema)
