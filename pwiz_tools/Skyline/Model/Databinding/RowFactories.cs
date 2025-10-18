@@ -80,7 +80,7 @@ namespace pwiz.Skyline.Model.Databinding
 
         public void RegisterFactory<T>(Func<IEnumerable<T>> listItemsFunc)
         {
-            RegisterFactory(typeof(T).FullName, listItemsFunc);
+            RegisterFactory(ViewSpec.GetRowSourceName(typeof(T)), listItemsFunc);
         }
 
         public void RegisterFactory<T>(string name, Func<IEnumerable<T>> listItemsFunc)
@@ -131,8 +131,8 @@ namespace pwiz.Skyline.Model.Databinding
             RegisterFactory(ListPrecursorResults);
             RegisterFactory(ListTransitionResults);
             var foldChangeRowFactory = new FoldChangeRowFactory(DataSchema);
-            RegisterFactory(FoldChangeRow.ROW_SOURCE_NAME, foldChangeRowFactory.GetAllFoldChangeRows);
-            RegisterFactory(FoldChangeDetailRow.ROW_SOURCE_NAME, foldChangeRowFactory.GetAllFoldChangeDetailRows);
+            RegisterFactory(foldChangeRowFactory.GetAllFoldChangeRows);
+            RegisterFactory(foldChangeRowFactory.GetAllFoldChangeDetailRows);
         }
 
         public static RowFactories GetRowFactories(CancellationToken cancellationToken, SkylineDataSchema dataSchema)

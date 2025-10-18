@@ -53,7 +53,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         public IEnumerable<FoldChangeDetailRow> GetFoldChangeDetailRows(IEnumerable<FoldChangeRow> foldChangeRows)
         {
             foreach (var grouping in foldChangeRows.GroupBy(row =>
-                         Tuple.Create(row.Protein, row.Peptide, row.IsotopeLabelType, row.MsLevel)))
+                         Tuple.Create(row.GetGroupComparisonDef(), row.Protein, row.Peptide, row.IsotopeLabelType, row.MsLevel)))
             {
                 var foldChangeResults = grouping.ToDictionary(row => row.Group, row => row.FoldChangeResult);
                 var runAbundances = new Dictionary<Replicate, ReplicateRow>();
@@ -63,7 +63,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 }
 
                 yield return new FoldChangeDetailRow(grouping.Key.Item1, grouping.Key.Item2, grouping.Key.Item3,
-                    grouping.Key.Item4, foldChangeResults, runAbundances);
+                    grouping.Key.Item4, grouping.Key.Item5, foldChangeResults, runAbundances);
             }
         }
 
@@ -146,7 +146,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                             replicateRows.Add(replicate, replicateRow);
                         }
 
-                        var foldChangeRow = new FoldChangeRow(protein, peptide, selector.LabelType, selector.MsLevel,
+                        var foldChangeRow = new FoldChangeRow(groupComparisonDef, protein, peptide, selector.LabelType, selector.MsLevel,
                             selector.GroupIdentifier, resultRow.Item2.ReplicateCount, resultRow.Item3, replicateRows);
                         foldChangeRows[resultRow.Item1] = foldChangeRow;
                     }
@@ -154,12 +154,6 @@ namespace pwiz.Skyline.Model.GroupComparison
             }
 
             return foldChangeRows;
-        }
-
-        public void Register(RowFactories rowFactories)
-        {
-            rowFactories.RegisterFactory(FoldChangeRow.ROW_SOURCE_NAME, GetAllFoldChangeRows);
-            rowFactories.RegisterFactory(FoldChangeDetailRow.ROW_SOURCE_NAME, GetAllFoldChangeDetailRows);
         }
     }
 }

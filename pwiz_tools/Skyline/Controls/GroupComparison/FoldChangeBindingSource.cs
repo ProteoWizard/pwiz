@@ -196,7 +196,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
             var viewSpec = new ViewSpec()
                 .SetName(AbstractViewContext.DefaultViewName)
-                .SetRowSource(FoldChangeRow.ROW_SOURCE_NAME)
+                .SetRowType(typeof(FoldChangeRow))
                 .SetColumns(columns.Select(col => new ColumnSpec(col)));
             return viewSpec;
         }

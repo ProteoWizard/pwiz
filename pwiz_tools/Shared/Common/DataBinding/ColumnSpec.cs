@@ -16,6 +16,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using pwiz.Common.Collections;
+using pwiz.Common.DataBinding.Attributes;
+using pwiz.Common.SystemUtil;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -23,8 +26,6 @@ using System.ComponentModel;
 using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
-using pwiz.Common.Collections;
-using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding
 {
@@ -342,7 +343,7 @@ namespace pwiz.Common.DataBinding
 
         public ViewSpec SetRowType(Type type)
         {
-            return SetRowSource(type.FullName);
+            return SetRowSource(GetRowSourceName(type));
         }
 
         public string UiMode { get; private set; }
@@ -504,6 +505,15 @@ namespace pwiz.Common.DataBinding
         {
             return Name;
         }
+        public static string GetRowSourceName(Type type)
+        {
+            foreach (RowSourceNameAttribute rowSourceNameAttribute in type.GetCustomAttributes(
+                         typeof(RowSourceNameAttribute), true))
+            {
+                return rowSourceNameAttribute.Name;
+            }
 
+            return type.FullName;
+        }
     }
 }

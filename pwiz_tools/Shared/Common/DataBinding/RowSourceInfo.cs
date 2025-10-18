@@ -12,7 +12,7 @@ namespace pwiz.Common.DataBinding
         {
         }
 
-        public RowSourceInfo(Type rowType, IRowSource rows, IEnumerable<ViewInfo> views) : this(rowType, rows, views, rowType.FullName, rowType.Name)
+        public RowSourceInfo(Type rowType, IRowSource rows, IEnumerable<ViewInfo> views) : this(rowType, rows, views, ViewSpec.GetRowSourceName(rowType), rowType.Name)
         {
         }
 
