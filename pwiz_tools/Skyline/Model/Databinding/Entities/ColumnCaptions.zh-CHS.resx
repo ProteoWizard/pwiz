@@ -948,6 +948,9 @@
   <data name="OptStep">
     <value>最优步骤</value>
   </data>
+  <data name="OriginalPeak">
+    <value>初始峰</value>
+  </data>
   <data name="PeakGroupEndTime">
     <value>峰组结束时间</value>
   </data>

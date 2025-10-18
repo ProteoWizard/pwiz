@@ -236,6 +236,15 @@ namespace pwiz.Skyline.Model.RetentionTimes {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Updating retention time alignment.
+        /// </summary>
+        internal static string RetentionTimeManager_PerformNextAlignment_Updating_retention_time_alignment {
+            get {
+                return ResourceManager.GetString("RetentionTimeManager_PerformNextAlignment_Updating_retention_time_alignment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Performing replicate retention time alignments.
         /// </summary>
         internal static string RetentionTimeManager_UpdateResultFileAlignments_Performing_replicate_retention_time_alignments {

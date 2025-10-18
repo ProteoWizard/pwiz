@@ -1367,7 +1367,7 @@
     <value>usercontrolIonMobilityFiltering</value>
   </data>
   <data name="&gt;&gt;usercontrolIonMobilityFiltering.Type" xml:space="preserve">
-    <value>pwiz.Skyline.SettingsUI.IonMobility.IonMobilityFilteringUserControl, Skyline, Version=1.0.0.0 Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.SettingsUI.IonMobility.IonMobilityFilteringUserControl, Skyline-daily, Version=25.1.1.209, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;usercontrolIonMobilityFiltering.Parent" xml:space="preserve">
     <value>$this</value>
@@ -1383,6 +1383,9 @@
   </data>
   <data name="$this.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
+  </data>
+  <data name="$this.MinimumSize" type="System.Drawing.Size, System.Drawing">
+    <value>385, 425</value>
   </data>
   <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
     <value>385, 675</value>

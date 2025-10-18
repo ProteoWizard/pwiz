@@ -148,4 +148,7 @@
   <data name="PcaPlot_UpdateGraph_Principal_Component__0_" xml:space="preserve">
     <value>主成分{0}</value>
   </data>
+  <data name="HeatMapGraph_HeatMapGraph_Calculating___" xml:space="preserve">
+    <value>計算中...</value>
+  </data>
 </root>

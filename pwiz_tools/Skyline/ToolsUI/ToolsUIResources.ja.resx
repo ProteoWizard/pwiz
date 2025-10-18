@@ -117,7 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="ConfigureToolsDlg_AddFromFile_Cancel" xml:space="preserve">
     <value>キャンセル</value>
   </data>
@@ -259,18 +258,6 @@
   <data name="LibrarySpec_CreateFromPath_Unrecognized_library_type_at__0_" xml:space="preserve">
     <value>{0}で認識されていないライブラリタイプ</value>
   </data>
-  <data name="PythonInstaller_GetPackages_Installing_Packages" xml:space="preserve">
-    <value>パッケージのインストール</value>
-  </data>
-  <data name="PythonInstaller_GetPip_Installing_Pip" xml:space="preserve">
-    <value>Pipのインストール中</value>
-  </data>
-  <data name="PythonInstaller_GetPython_Installing_Python" xml:space="preserve">
-    <value>Pythonのインストール</value>
-  </data>
-  <data name="PythonInstaller_InstallPackages_Install" xml:space="preserve">
-    <value>インストール</value>
-  </data>
   <data name="RInstaller_GetPAckages_Installing_Packages" xml:space="preserve">
     <value>パッケージのインストール</value>
   </data>
@@ -367,5 +354,8 @@
   </data>
   <data name="EditRemoteAccountDlg_TestArdiaAccount_Login_was_canceled" xml:space="preserve">
     <value>ログインがキャンセルされました</value>
+  </data>
+  <data name="EditSearchToolDlg_OkDialog_The_file__0__does_not_exist_" xml:space="preserve">
+    <value>ファイル{0}は存在しません。</value>
   </data>
 </root>

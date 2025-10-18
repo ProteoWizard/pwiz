@@ -148,12 +148,13 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(errorDlg);
 
             // test bad path error
+            const string badFileName = "msfragger.not";
             RunUI(() =>
             {
-                editToolDlg.ToolPath = "msfragger.not";
+                editToolDlg.ToolPath = badFileName;
             });
             errorDlg = ShowDialog<MessageDlg>(editToolDlg.OkDialog);
-            Assert.AreEqual("The file msfragger.not does not exist.", errorDlg.Message);
+            Assert.AreEqual(string.Format(ToolsUIResources.EditSearchToolDlg_OkDialog_The_file__0__does_not_exist_, badFileName), errorDlg.Message);
             OkDialog(errorDlg);
             
             CancelDialog(editToolDlg);

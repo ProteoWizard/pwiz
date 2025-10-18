@@ -653,10 +653,6 @@
   </data>
   <data name="label13.Text" xml:space="preserve">
     <value>高级过滤(&amp;V):</value>
-    <comment>Needs Review:English text changed
-Old English:Time &amp;window:
-Current English:Ad&amp;vanced filtering:
-Old Localized:时间窗口(&amp;W)：</comment>
   </data>
   <data name="&gt;&gt;label13.Name" xml:space="preserve">
     <value>label13</value>
