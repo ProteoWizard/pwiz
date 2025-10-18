@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using pwiz.Skyline.Model.Hibernate;
 
 namespace pwiz.Skyline.Model.Databinding
 {
@@ -175,7 +176,14 @@ namespace pwiz.Skyline.Model.Databinding
             var rowItemEnumerator = RowItemEnumerator.FromBindingListSource(bindingListSource);
             var dsvWriter = new DsvWriter(DataSchema.DataSchemaLocalizer.FormatProvider,
                 DataSchema.DataSchemaLocalizer.Language,
-                separator);
+                separator)
+            {
+                ColumnFormats = rowItemEnumerator.ColumnFormats
+            };
+            if (ReferenceEquals(DataSchema.DataSchemaLocalizer, DataSchemaLocalizer.INVARIANT))
+            {
+                dsvWriter.NumberFormatOverride = Formats.RoundTrip;
+            }
             var rowItemExporter = new RowItemExporter(DataSchema.DataSchemaLocalizer, dsvWriter);
             rowItemExporter.Export(progressMonitor, ref status, writer, rowItemEnumerator);
             writer.Flush();

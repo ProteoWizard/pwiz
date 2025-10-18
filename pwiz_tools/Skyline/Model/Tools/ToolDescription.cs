@@ -440,7 +440,7 @@ namespace pwiz.Skyline.Model.Tools
             var container = new MemoryDocumentContainer();
             container.SetDocument(doc, container.Document);
             var dataSchema = new SkylineDataSchema(container, DataSchemaLocalizer.INVARIANT);
-            var rowFactories = new RowFactories(CancellationToken.None, dataSchema);
+            var rowFactories = RowFactories.GetRowFactories(CancellationToken.None, dataSchema);
             IProgressStatus status =
                 new ProgressStatus(string.Format(Resources.ReportSpec_ReportToCsvString_Exporting__0__report,
                     reportTitle));
