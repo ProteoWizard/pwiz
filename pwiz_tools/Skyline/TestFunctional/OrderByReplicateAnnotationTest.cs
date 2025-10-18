@@ -99,19 +99,6 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsFalse(ticMenuItem.Checked);
                 ticMenuItem.PerformClick();
             });
-            // The "Order By" menu item should hidden when grouping by anything
-            RunUI(() =>
-            {
-                ShowContextMenu(peakAreaGraph);
-                Assert.IsFalse(SkylineWindow.ReplicateOrderContextMenuItem.Visible);
-                var orderReplicatesByDocumentMenuItem = (ToolStripMenuItem)SkylineWindow.ReplicateOrderContextMenuItem.DropDownItems[0];
-                Assert.IsFalse(orderReplicatesByDocumentMenuItem.Checked);
-                var ticMenuItem = SkylineWindow.ReplicateGroupByContextMenuItem.DropDownItems
-                    .OfType<ToolStripMenuItem>().FirstOrDefault(item => item.Text == @"TotalIonCurrent");
-                Assert.IsNotNull(ticMenuItem);
-                Assert.IsTrue(ticMenuItem.Checked);
-                HideContextMenu(peakAreaGraph);
-            });
             // Remove the TotalIonCurrent annotation from the document
             RunDlg<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog, dlg =>
             {

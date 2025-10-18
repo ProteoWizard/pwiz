@@ -4205,32 +4205,26 @@ namespace pwiz.Skyline
         {
             ReplicateValue currentGroupBy = ReplicateValue.FromPersistedString(DocumentUI.Settings, SummaryReplicateGraphPane.GroupByReplicateAnnotation);
             var groupByValues = ReplicateValue.GetGroupableReplicateValues(DocumentUI).ToArray();
-            if (groupByValues.Length == 0)
-                currentGroupBy = null;
 
-            // If not grouped by an annotation, show the order-by menuitem
-            if (currentGroupBy == null)
+            var orderByReplicateAnnotationDef = groupByValues.FirstOrDefault(
+                value => SummaryReplicateGraphPane.OrderByReplicateAnnotation == value.ToPersistedString());
+            menuStrip.Items.Insert(iInsert++, replicateOrderContextMenuItem);
+            replicateOrderContextMenuItem.DropDownItems.Clear();
+            replicateOrderContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
             {
-                var orderByReplicateAnnotationDef = groupByValues.FirstOrDefault(
-                    value => SummaryReplicateGraphPane.OrderByReplicateAnnotation == value.ToPersistedString());
-                menuStrip.Items.Insert(iInsert++, replicateOrderContextMenuItem);
-                replicateOrderContextMenuItem.DropDownItems.Clear();
-                replicateOrderContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                    {
-                        replicateOrderDocumentContextMenuItem,
-                        replicateOrderAcqTimeContextMenuItem
-                    });
-                replicateOrderDocumentContextMenuItem.Checked
-                    = null == orderByReplicateAnnotationDef &&
-                      SummaryReplicateOrder.document == SummaryReplicateGraphPane.ReplicateOrder;
-                replicateOrderAcqTimeContextMenuItem.Checked
-                    = null == orderByReplicateAnnotationDef &&
-                      SummaryReplicateOrder.time == SummaryReplicateGraphPane.ReplicateOrder;
-                foreach (var replicateValue in groupByValues)
-                {
-                    replicateOrderContextMenuItem.DropDownItems.Add(OrderByReplicateAnnotationMenuItem(
-                        replicateValue, SummaryReplicateGraphPane.OrderByReplicateAnnotation));
-                }
+                replicateOrderDocumentContextMenuItem,
+                replicateOrderAcqTimeContextMenuItem
+            });
+            replicateOrderDocumentContextMenuItem.Checked
+                = null == orderByReplicateAnnotationDef &&
+                  SummaryReplicateOrder.document == SummaryReplicateGraphPane.ReplicateOrder;
+            replicateOrderAcqTimeContextMenuItem.Checked
+                = null == orderByReplicateAnnotationDef &&
+                  SummaryReplicateOrder.time == SummaryReplicateGraphPane.ReplicateOrder;
+            foreach (var replicateValue in groupByValues)
+            {
+                replicateOrderContextMenuItem.DropDownItems.Add(OrderByReplicateAnnotationMenuItem(
+                    replicateValue, SummaryReplicateGraphPane.OrderByReplicateAnnotation));
             }
             
             if (groupByValues.Length > 0)

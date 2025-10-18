@@ -388,48 +388,26 @@ namespace pwiz.SkylineTestUtil
             return def;
         }
 
-        public GroupComparisonDef CreateGroupComparison(string name, string controlGroupAnnotation, string controlGroupValue, string compareValue)
+        public GroupComparisonDef CreateGroupComparison(string name, string controlGroupAnnotation, string controlGroupValue, string compareValue, string identityAnnotation = null)
         {
             var dialog = ShowDialog<EditGroupComparisonDlg>(SkylineWindow.AddGroupComparison);
 
             RunUI(() =>
             {
                 dialog.TextBoxName.Text = name;
-                dialog.ComboControlAnnotation.SelectedItem = controlGroupAnnotation;
+                SelectComboItem(dialog.ComboControlAnnotation, controlGroupAnnotation);
             });
 
             WaitForConditionUI(() => dialog.ComboControlValue.Items.Count > 0);
 
             RunUI(() =>
             {
-                dialog.ComboControlValue.SelectedItem = controlGroupValue;
-                dialog.ComboCaseValue.SelectedItem = compareValue;
-                dialog.RadioScopePerProtein.Checked = false;
-            });
-
-            OkDialog(dialog, dialog.OkDialog);
-
-            return FindGroupComparison(name);
-        }
-
-        public GroupComparisonDef CreateGroupComparison(string name, string controlGroupAnnotation,
-            string controlGroupValue, string compareValue, string identityAnnotation)
-        {
-            var dialog = ShowDialog<EditGroupComparisonDlg>(SkylineWindow.AddGroupComparison);
-
-            RunUI(() =>
-            {
-                dialog.TextBoxName.Text = name;
-                dialog.ComboControlAnnotation.SelectedItem = controlGroupAnnotation;
-            });
-
-            WaitForConditionUI(() => dialog.ComboControlValue.Items.Count > 0);
-
-            RunUI(() =>
-            {
-                dialog.ComboControlValue.SelectedItem = controlGroupValue;
-                dialog.ComboCaseValue.SelectedItem = compareValue;
-                dialog.ComboIdentityAnnotation.SelectedItem = identityAnnotation;
+                SelectComboItem(dialog.ComboControlValue, controlGroupValue);
+                SelectComboItem(dialog.ComboCaseValue, compareValue);
+                if (identityAnnotation != null)
+                {
+                    SelectComboItem(dialog.ComboIdentityAnnotation, identityAnnotation);
+                }
                 dialog.RadioScopePerProtein.Checked = false;
             });
 

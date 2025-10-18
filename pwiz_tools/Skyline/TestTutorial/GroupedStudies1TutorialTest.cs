@@ -1448,17 +1448,14 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 editGroupComparisonDlg.TextBoxName.Text = comparisonName;
-                Assert.IsTrue(editGroupComparisonDlg.ComboControlAnnotation.Items.Contains(controlAnnotation));
-                editGroupComparisonDlg.ComboControlAnnotation.SelectedItem = controlAnnotation;
+                SelectComboItem(editGroupComparisonDlg.ComboControlAnnotation, controlAnnotation);
             });
-            WaitForConditionUI(2000, () => editGroupComparisonDlg.ComboControlValue.Items.Contains(controlValue));
+            WaitForConditionUI(2000, () => editGroupComparisonDlg.ComboControlValue.FindStringExact(controlValue) >= 0);
             RunUI(() =>
             {
-                editGroupComparisonDlg.ComboControlValue.SelectedItem = controlValue;
-                editGroupComparisonDlg.ComboCaseValue.SelectedItem = caseValue;
-                Assert.IsTrue(editGroupComparisonDlg.ComboCaseValue.Items.Contains(caseValue));
-                editGroupComparisonDlg.ComboIdentityAnnotation.SelectedItem = identityAnnotation;
-                Assert.IsTrue(editGroupComparisonDlg.ComboIdentityAnnotation.Items.Contains(identityAnnotation));
+                SelectComboItem(editGroupComparisonDlg.ComboControlValue, controlValue);
+                SelectComboItem(editGroupComparisonDlg.ComboCaseValue, caseValue);
+                SelectComboItem(editGroupComparisonDlg.ComboIdentityAnnotation, identityAnnotation);
                 editGroupComparisonDlg.NormalizeOption = NormalizeOption.GLOBAL_STANDARDS;
                 editGroupComparisonDlg.TextBoxConfidenceLevel.Text = 99.ToString(CultureInfo.CurrentCulture);
                 editGroupComparisonDlg.RadioScopePerProtein.Checked = true;
@@ -1580,9 +1577,9 @@ namespace pwiz.SkylineTestTutorial
 
             WaitForConditionUI(() => foldChangeGrid.DataboundGridControl.IsComplete);
             var settingsForm = ShowDialog<EditGroupComparisonDlg>(foldChangeGrid.ShowChangeSettings);
-            RunUI(() => settingsForm.ComboIdentityAnnotation.SelectedIndex = 0);
+            RunUI(() => SelectComboItem(settingsForm.ComboIdentityAnnotation, ""));
             WaitForConditionUI(() => 37 == foldChangeGrid.DataboundGridControl.RowCount);
-            RunUI(() => settingsForm.ComboIdentityAnnotation.SelectedItem = "SubjectId");
+            RunUI(() => SelectComboItem(settingsForm.ComboIdentityAnnotation, "SubjectId"));
             RunUI(() =>
             {
                 string folderName = Path.GetDirectoryName(SkylineWindow.DocumentFilePath);

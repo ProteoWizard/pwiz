@@ -169,9 +169,6 @@
   <data name="AllChromatogramsGraph_UpdateStatus_Hide" xml:space="preserve">
     <value>Hide</value>
   </data>
-  <data name="Annotation_DisambiguationPrefix_Annotation__" xml:space="preserve">
-    <value>Annotation: </value>
-  </data>
   <data name="AreaChartPropertyDlg_ValidateDotpRange__0__must_be_betwen_0_and_1" xml:space="preserve">
     <value>{0} cutoff value must be greater or equal than 0. and lesser or equal than 1.</value>
   </data>
@@ -585,9 +582,6 @@ Here are the last 3 errors:
   </data>
   <data name="PeptideRegressionTipProvider_RenderTip_Peptide" xml:space="preserve">
     <value>Peptide</value>
-  </data>
-  <data name="Property_DisambiguationPrefix_Property__" xml:space="preserve">
-    <value>Property: </value>
   </data>
   <data name="RegressionGraphPane_RegressionGraphPane__0___at__1__points_minimum_" xml:space="preserve">
     <value>{0} (at {1} points minimum)</value>
