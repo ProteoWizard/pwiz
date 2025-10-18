@@ -2793,11 +2793,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error connecting to the Tool Store: {0}.
+        ///   Looks up a localized string similar to Error connecting to the Tool Store:.
         /// </summary>
-        public static string ConfigureToolsDlg_GetZipFromWeb_Error_connecting_to_the_Tool_Store___0_ {
+        public static string ConfigureToolsDlg_GetZipFromWeb_Error_connecting_to_the_Tool_Store_ {
             get {
-                return ResourceManager.GetString("ConfigureToolsDlg_GetZipFromWeb_Error_connecting_to_the_Tool_Store___0_", resourceCulture);
+                return ResourceManager.GetString("ConfigureToolsDlg_GetZipFromWeb_Error_connecting_to_the_Tool_Store_", resourceCulture);
             }
         }
         
@@ -6241,16 +6241,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Download canceled..
-        /// </summary>
-        public static string MultiFileAsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled_ {
-            get {
-                return ResourceManager.GetString("MultiFileAsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled" +
-                        "_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Check the Modification tab in the Peptide Settings, the m/z types on the Prediction tab, or the m/z match tolerance on the Instrument tab of the Transition Settings..
         /// </summary>
         public static string MzMatchException_suggestion {
@@ -8031,35 +8021,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Download failed. Check your network connection or contact Skyline developers..
-        /// </summary>
-        public static string PythonInstaller_DownloadPip_Download_failed__Check_your_network_connection_or_contact_Skyline_developers_ {
-            get {
-                return ResourceManager.GetString("PythonInstaller_DownloadPip_Download_failed__Check_your_network_connection_or_con" +
-                        "tact_Skyline_developers_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Check your network connection or contact the tool provider for installation support..
-        /// </summary>
-        public static string PythonInstaller_DownloadPython_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_ {
-            get {
-                return ResourceManager.GetString("PythonInstaller_DownloadPython_Check_your_network_connection_or_contact_the_tool_" +
-                        "provider_for_installation_support_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Download failed..
-        /// </summary>
-        public static string PythonInstaller_DownloadPython_Download_failed_ {
-            get {
-                return ResourceManager.GetString("PythonInstaller_DownloadPython_Download_failed_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Package installation completed..
         /// </summary>
         public static string PythonInstaller_GetPackages_Package_installation_completed_ {
@@ -9069,25 +9030,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Check your network connection or contact the tool provider for installation support..
-        /// </summary>
-        public static string RInstaller_DownloadPackages_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_ {
-            get {
-                return ResourceManager.GetString("RInstaller_DownloadPackages_Check_your_network_connection_or_contact_the_tool_pro" +
-                        "vider_for_installation_support_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Download failed..
-        /// </summary>
-        public static string RInstaller_DownloadR_Download_failed_ {
-            get {
-                return ResourceManager.GetString("RInstaller_DownloadR_Download_failed_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Downloading packages.
         /// </summary>
         public static string RInstaller_GetPackages_Downloading_packages {
@@ -9124,15 +9066,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: No internet connection..
-        /// </summary>
-        public static string RInstaller_InstallPackages_Error__No_internet_connection_ {
-            get {
-                return ResourceManager.GetString("RInstaller_InstallPackages_Error__No_internet_connection_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Error: Package installation did not complete. Output logged to the Immediate Window..
         /// </summary>
         public static string RInstaller_InstallPackages_Error__Package_installation_did_not_complete__Output_logged_to_the_Immediate_Window_ {
@@ -9148,16 +9081,6 @@ namespace pwiz.Skyline.Properties {
         public static string RInstaller_InstallPackages_Error_Installing_Packages {
             get {
                 return ResourceManager.GetString("RInstaller_InstallPackages_Error_Installing_Packages", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Installing R packages requires an internet connection. Please check your connection and try again.
-        /// </summary>
-        public static string RInstaller_InstallPackages_Installing_R_packages_requires_an_internet_connection__Please_check_your_connection_and_try_again {
-            get {
-                return ResourceManager.GetString("RInstaller_InstallPackages_Installing_R_packages_requires_an_internet_connection_" +
-                        "_Please_check_your_connection_and_try_again", resourceCulture);
             }
         }
         

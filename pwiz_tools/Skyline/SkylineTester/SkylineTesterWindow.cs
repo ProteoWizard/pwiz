@@ -273,6 +273,18 @@ namespace SkylineTester
                     return false;
                 }
 
+                // Detect TestRunner completion
+                if (line.StartsWith("Tests finished in "))
+                {
+                    RunUI(() =>
+                    {
+                        // Clear the running test name and reset status
+                        RunningTestName = null;
+                        statusLabel.Text = "Tests completed";
+                    });
+                    return true; // Still show this line in output
+                }
+
                 if (line.StartsWith("...skipped ") ||
                     line.StartsWith("...failed ") ||
                     line.StartsWith("!!! "))

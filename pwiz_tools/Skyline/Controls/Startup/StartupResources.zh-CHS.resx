@@ -121,9 +121,6 @@
   <data name="ActionTutorial_client_DownloadFileCompleted_File_saved_at___0_" xml:space="preserve">
     <value>文件提取至：{0}</value>
   </data>
-  <data name="ActionTutorial_DownloadTutorials_Error__0_" xml:space="preserve">
-    <value>错误{0}</value>
-  </data>
   <data name="ActionTutorial_ExtractTutorial_An_error_occurred_while_trying_to_display_the_document___0____" xml:space="preserve">
     <value>尝试显示文档 '{0}' 时出错。
 这台计算机上的默认 Web 浏览器可能有问题。</value>

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original authors: Eduardo Armendariz <wardough .at. uw.edu>,
  *                   Brendan MacLean <brendanx .at. uw.edu>
  *                   MacCoss Lab, Department of Genome Sciences, UW
@@ -22,7 +22,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
-using System.Net;
+using System.Net.Http;
 using System.Threading;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
@@ -633,9 +633,16 @@ namespace pwiz.SkylineTestUtil
                     case ImageSource.web:
                     default:
                     {
-                        using var webClient = new WebClient();
+                        using var httpClient = new HttpClient();
                         using var fileSaverTemp = new FileSaver(file.Path);  // Temporary. Never saved
-                        webClient.DownloadFile(file.UrlToDownload, fileSaverTemp.SafeName);
+                        var response = httpClient.GetAsync(file.UrlToDownload).Result;
+                        response.EnsureSuccessStatusCode();
+                        using (var contentStream = response.Content.ReadAsStreamAsync().Result)
+                        using (var fileStream = new FileStream(fileSaverTemp.SafeName, FileMode.Create,
+                                   FileAccess.Write, FileShare.None))
+                        {
+                            contentStream.CopyTo(fileStream);
+                        }
                         imageBytes = File.ReadAllBytes(fileSaverTemp.SafeName);
                     }
                         break;

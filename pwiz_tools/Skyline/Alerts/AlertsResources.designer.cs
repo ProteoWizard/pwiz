@@ -503,6 +503,16 @@ namespace pwiz.Skyline.Alerts {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Contacting MS Fragger download server.
+        /// </summary>
+        public static string MsFraggerDownloadDlg_RequestVerificationCode_Contacting_MS_Fragger_download_server {
+            get {
+                return ResourceManager.GetString("MsFraggerDownloadDlg_RequestVerificationCode_Contacting_MS_Fragger_download_serve" +
+                        "r", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Do you want to filter them from the pasted list?.
         /// </summary>
         public static string PasteFilteredPeptidesDlg_Peptides_Do_you_want_to_filter_them_from_the_pasted_list {
@@ -585,15 +595,6 @@ namespace pwiz.Skyline.Alerts {
             get {
                 return ResourceManager.GetString("ShareResultsFilesDlg_LocateMissingFilesFromFolder_Please_select_the_folder_contai" +
                         "ning_the_missing_files_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Downloading required files....
-        /// </summary>
-        public static string SimpleFileDownloaderDlg_Show_Downloading_required_files___ {
-            get {
-                return ResourceManager.GetString("SimpleFileDownloaderDlg_Show_Downloading_required_files___", resourceCulture);
             }
         }
         

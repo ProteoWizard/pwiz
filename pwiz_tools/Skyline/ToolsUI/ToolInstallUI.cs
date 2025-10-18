@@ -21,7 +21,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Reflection;
 using System.Windows.Forms;
 using Newtonsoft.Json;
@@ -31,6 +30,7 @@ using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.ToolsUI
@@ -76,14 +76,20 @@ namespace pwiz.Skyline.ToolsUI
                         InstallZipTool(parent, dlg.DownloadPath, install);
                 }
             }
-            catch (TargetInvocationException x)
+            catch (Exception x)
             {
-                if (x.InnerException is ToolExecutionException || x.InnerException is WebException)
-                    MessageDlg.Show(parent, String.Format(Resources.ConfigureToolsDlg_GetZipFromWeb_Error_connecting_to_the_Tool_Store___0_, x.Message));
-                else if (x.InnerException is JsonReaderException)
-                    MessageDlg.Show(parent, ToolsUIResources.ToolInstallUI_InstallZipFromWeb_The_server_returned_an_invalid_response__It_might_be_down_for_maintenance__Please_check_the_Tool_Store_on_the_skyline_ms_website_);
-                else
-                    throw;
+                // Handle specific user-actionable exceptions that might be wrapped in TargetInvocationException
+                if (x is TargetInvocationException targetEx)
+                {
+                    // JsonReaderException from web service is user-actionable (server maintenance issue)
+                    if (targetEx.InnerException is JsonReaderException)
+                    {
+                        MessageDlg.Show(parent, ToolsUIResources.ToolInstallUI_InstallZipFromWeb_The_server_returned_an_invalid_response__It_might_be_down_for_maintenance__Please_check_the_Tool_Store_on_the_skyline_ms_website_);
+                        return;
+                    }
+                }
+                
+                ExceptionUtil.DisplayOrReportException(parent, x, Resources.ConfigureToolsDlg_GetZipFromWeb_Error_connecting_to_the_Tool_Store_);
             }
         }
 

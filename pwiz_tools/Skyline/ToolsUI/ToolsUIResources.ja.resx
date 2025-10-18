@@ -358,4 +358,10 @@
   <data name="EditSearchToolDlg_OkDialog_The_file__0__does_not_exist_" xml:space="preserve">
     <value>ファイル{0}は存在しません。</value>
   </data>
+  <data name="RInstaller_InstallPackages_Error__No_internet_connection_" xml:space="preserve">
+    <value>エラー： インターネット接続がありません。</value>
+  </data>
+  <data name="RInstaller_InstallPackages_Installing_R_packages_requires_an_internet_connection__Please_check_your_connection_and_try_again" xml:space="preserve">
+    <value>Rパッケージのインストールには、インターネット接続が必要です。インターネット接続を確認してからもう一度お試しください</value>
+  </data>
 </root>

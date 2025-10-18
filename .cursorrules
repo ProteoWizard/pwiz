@@ -3,6 +3,8 @@
 # This file provides Cursor-specific behavior guidance.
 # For detailed coding conventions, style guidelines, and testing patterns,
 # see STYLEGUIDE.md - the comprehensive style guide used by all AI tools.
+# For project context, common gotchas, and architectural patterns,
+# see MEMORY.md - essential context for AI tools working on this project.
 
 [project]
 name = "ProteoWizard (pwiz)"
@@ -38,6 +40,7 @@ entry_points = [
 - When adding sources, update the appropriate Jamfile or Visual Studio project.
 - Use existing vendor libraries from `libraries/`; do not fetch replacements.
 - For documentation, add concise notes to `README.md` and `doc/`.
+- Project conventions: See MEMORY.md for essential project context and common gotchas.
 
 [skyline]
 primary_solution = "pwiz_tools/Skyline/Skyline.sln"
@@ -55,6 +58,10 @@ docs = [
 - Use fenced code blocks only for relevant snippets or commands.
 - Default to read-only discovery before edits; then apply focused edits.
 
+[async_patterns]
+# See STYLEGUIDE.md for comprehensive async/await guidelines
+reference = "STYLEGUIDE.md"
+
 [build_and_testing]
 - LLM agents CANNOT build or run this project directly.
 - Build and test operations must be performed by the developer using Visual Studio.
@@ -63,34 +70,8 @@ docs = [
 - Do not attempt to run tests or execute the application.
 
 [file_headers]
-standard_header = """
-/*
- * Original author: [Author Name] <[email] .at. [domain]>,
- *                  [Affiliation]
- * AI assistance: Cursor (Claude Sonnet 4) <cursor .at. anysphere.co>
- *
- * Copyright [Year] University of Washington - Seattle, WA
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-"""
-ai_attribution = {
-  required = "Always include AI assistance line when code is created or significantly modified with AI tools"
-  format = "Cursor ([model names]) <cursor .at. anysphere.co>"
-  position = "After original author, before copyright"
-  email_format = "Use .at. format to avoid spam harvesting"
-  multiple_models = "List all models used if multiple AI systems contributed significantly"
-}
+# See STYLEGUIDE.md for file header format and AI attribution guidelines
+reference = "STYLEGUIDE.md"
 
 [testing]
 # See STYLEGUIDE.md for comprehensive testing guidelines

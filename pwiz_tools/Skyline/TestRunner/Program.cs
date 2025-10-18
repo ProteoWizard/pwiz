@@ -698,12 +698,20 @@ namespace TestRunner
                 if (!File.Exists(RunTests.ALWAYS_UP_SERVICE_EXE))
                 {
                     using var tmpDir = new TemporaryDirectory();
-                    using var webClient = new WebClient();
-                    string tmpFile = Path.Combine(tmpDir.DirPath, "master.zip");
-                    webClient.DownloadFile("https://github.com/ProteoWizard/AlwaysUpRunner/archive/refs/heads/master.zip", tmpFile);
+                    try
+                    {
+                        using var httpClient = new HttpClientWithProgress(new SilentProgressMonitor());
+                        string tmpFile = Path.Combine(tmpDir.DirPath, "master.zip");
+                        httpClient.DownloadFile("https://github.com/ProteoWizard/AlwaysUpRunner/archive/refs/heads/master.zip", tmpFile);
 
-                    using var alwaysUpRunnerCode = new ZipFile(tmpFile);
-                    alwaysUpRunnerCode.ExtractAll(Path.GetDirectoryName(buildPath)!, ExtractExistingFileAction.OverwriteSilently);
+                        using var alwaysUpRunnerCode = new ZipFile(tmpFile);
+                        alwaysUpRunnerCode.ExtractAll(Path.GetDirectoryName(buildPath)!, ExtractExistingFileAction.OverwriteSilently);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Failed to download AlwaysUpRunner: {ex.Message}");
+                        throw new IOException($"Cannot build Docker image without AlwaysUpRunner. {ex.Message}", ex);
+                    }
 
                     Console.Write("Enter password to extract AlwaysUpCLT_licensed_binaries: ");
                     var pass = commandLineArgs.ArgAsStringOrDefault("alwaysupcltpassword") ?? GetPasswordFromConsole();
