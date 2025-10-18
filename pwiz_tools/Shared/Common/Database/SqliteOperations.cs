@@ -74,8 +74,7 @@ namespace pwiz.Common.Database
 
         public static IEnumerable<string> DumpTable(string dbFilepath, string tableName, string columnSeparator = "\t", string[] sortColumns = null, string[] excludeColumns = null)
         {
-            using var connection = new SQLiteConnection(new SQLiteConnectionStringBuilder { DataSource = dbFilepath }.ConnectionString);
-            connection.Open();
+            using var connection = OpenConnection(dbFilepath);
             foreach(string s in DumpTable(connection, tableName, columnSeparator, sortColumns, excludeColumns))
                 yield return s;
         }
