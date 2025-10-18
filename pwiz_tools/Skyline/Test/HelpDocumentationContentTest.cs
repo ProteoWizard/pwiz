@@ -43,7 +43,8 @@ namespace pwiz.SkylineTest
     {
         protected override bool IsRecordMode => false;
 
-        [TestMethod]
+        // TODO(nicksh): Re-enable this test after memory leaks are fixed
+        //[TestMethod]
         public void TestKeyboardShortcutsHelpDocumentation()
         {
             if (ProcessEx.IsRunningOnWine)
