@@ -236,7 +236,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
             {
                 get
                 {
-                    return string.Format("Median Time from Library {0}", LibraryName);
+                    return string.Format(RetentionTimesResources.Library_AxisTitle_Median_Time_from_Library__0_, LibraryName);
                 }
             }
 
