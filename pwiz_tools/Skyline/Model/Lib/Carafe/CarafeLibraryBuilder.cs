@@ -321,7 +321,9 @@ namespace pwiz.Skyline.Model.Lib.Carafe
 
                 // download java sdk package
                 using var webClient = new MultiFileAsynchronousDownloadClient(progress, 1);
-                webClient.DownloadFileAsyncOrThrow(JavaSdkUri, JavaSdkDownloadPath);
+                if (!webClient.DownloadFileAsync(JavaSdkUri, JavaSdkDownloadPath, out var exception))
+                    throw new Exception(
+                        @"Failed to download java sdk package", exception);
 
                 // unzip java sdk package
                 using var javaSdkZip = ZipFile.Read(JavaSdkDownloadPath);
@@ -337,7 +339,9 @@ namespace pwiz.Skyline.Model.Lib.Carafe
 
                 // download carafe jar package
                 using var webClient = new MultiFileAsynchronousDownloadClient(progress, 1);
-                webClient.DownloadFileAsyncOrThrow(CarafeJarZipDownloadUrl, CarafeJarZipDownloadPath);
+                if (!webClient.DownloadFileAsync(CarafeJarZipDownloadUrl, CarafeJarZipDownloadPath, out var exception))
+                    throw new Exception(
+                        @"Failed to download carafe jar package", exception);
 
                 // unzip carafe jar package
                 using var carafeJarZip = ZipFile.Read(CarafeJarZipDownloadPath);

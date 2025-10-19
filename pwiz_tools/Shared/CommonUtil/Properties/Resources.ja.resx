@@ -124,4 +124,37 @@
   <data name="Units_ppm" xml:space="preserve">
     <value>ppm</value>
   </data>
+  <data name="StreamEx_ReadOrThrow_Failed_reading__0__bytes__Source_may_be_corrupted_" xml:space="preserve">
+    <value>{0}バイトの読み込みに失敗しました。ソースが壊れている可能性があります。</value>
+  </data>
+  <data name="ProcessRunner_Run_Run_command_" xml:space="preserve">
+    <value>実行コマンド：</value>
+  </data>
+  <data name="FileEx_SafeDelete_Path_is_empty" xml:space="preserve">
+    <value>パスが空です</value>
+  </data>
+  <data name="FileEx_SafeDelete_Unable_to_delete_directory___0_" xml:space="preserve">
+    <value>ディレクトリは削除できません：{0}</value>
+  </data>
+  <data name="FileEx_SafeDelete_Path_contains_invalid_characters___0_" xml:space="preserve">
+    <value>パスに無効な文字が含まれています：{0}</value>
+  </data>
+  <data name="FileEx_SafeDelete_Unable_to_delete_file_which_is_in_use___0_" xml:space="preserve">
+    <value>使用中のファイルは削除できません：{0}</value>
+  </data>
+  <data name="FileEx_SafeDelete_Unable_to_delete_read_only_file___0_" xml:space="preserve">
+    <value>読み取り専用ファイルは削除できません：{0}</value>
+  </data>
+  <data name="FileEx_SafeDelete_Insufficient_permission_to_delete_file___0_" xml:space="preserve">
+    <value>ファイルを削除するのに十分な権限がありません：{0}</value>
+  </data>
+  <data name="FileEx_SafeDelete_File_path_is_too_long___0_" xml:space="preserve">
+    <value>ファイルパスが長すぎます：{0}</value>
+  </data>
+  <data name="FileEx_SafeDelete_File_path_is_invalid___0_" xml:space="preserve">
+    <value>ファイルパスが無効です：{0}</value>
+  </data>
+  <data name="FileEx_SafeDelete_Directory_could_not_be_found___0_" xml:space="preserve">
+    <value>ディレクトリを見つけることができませんでした：{0}</value>
+  </data>
 </root>

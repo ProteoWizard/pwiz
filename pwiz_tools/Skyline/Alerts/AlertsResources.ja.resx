@@ -217,6 +217,9 @@
   <data name="ShareResultsFilesDlg_LocateMissingFilesFromFolder_Please_select_the_folder_containing_the_missing_files_" xml:space="preserve">
     <value>欠損しているファイルが含まれているフォルダを選択してください。</value>
   </data>
+  <data name="SimpleFileDownloaderDlg_Show_Downloading_required_files___" xml:space="preserve">
+    <value>必要なファイルをダウンロードしています...</value>
+  </data>
   <data name="SimpleFileDownloaderDlg_Show_The_following_file_is_required__Do_you_want_to_download_it_" xml:space="preserve">
     <value>以下のファイルが必要です。ダウンロードしますか？</value>
   </data>
@@ -326,8 +329,5 @@
 
 If you don't get an email, double-check your email address or click "More Info" for troubleshooting.</value>
     <comment>Needs Review:Missing translation</comment>
-  </data>
-  <data name="TestToolStoreClient_GetToolZipFile_Error_downloading_tool" xml:space="preserve">
-    <value>ツールのダウンロードエラー</value>
   </data>
 </root>

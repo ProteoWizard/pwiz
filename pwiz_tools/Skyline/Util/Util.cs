@@ -1611,6 +1611,31 @@ namespace pwiz.Skyline.Util
             return s.Length <= length ? s : s.Substring(0, length - ELIPSIS.Length) + ELIPSIS;
         }
 
+        // Detect the use of ReSharper code coverage, memory profiling etc, which may affect timing
+        //
+        // Per https://youtrack.jetbrains.com/issue/PROF-1093
+        // "Set JETBRAINS_DPA_AGENT_ENABLE=0 environment variable for user apps started from dotTrace, and JETBRAINS_DPA_AGENT_ENABLE=1
+        // in case of dotCover and dotMemory."
+
+        public static void WrapAndThrowException(Exception x)
+        {
+            // The thrown exception needs to be preserved to preserve
+            // the original stack trace from which it was thrown.  In some cases,
+            // its type must also be preserved, because existing code handles certain
+            // exception types.  If this case threw only TargetInvocationException,
+            // then more frequently the code would just have to have a blanket catch
+            // of the base exception type, which could hide coding errors.
+            if (x is InvalidDataException)
+                throw new InvalidDataException(x.Message, x);
+            if (x is IOException)
+                throw new IOException(x.Message, x);
+            if (x is OperationCanceledException)
+                throw new OperationCanceledException(x.Message, x);
+            if (x is UnauthorizedAccessException)
+                throw new UnauthorizedAccessException(x.Message, x);
+            throw new TargetInvocationException(x.Message, x);            
+        }
+
         public static double? ParseNullableDouble(string s)
         {
             double d;
@@ -1678,45 +1703,17 @@ namespace pwiz.Skyline.Util
         /// from disk.
         /// Exception such as these should be displayed to the user with <see cref="Alerts.ReportErrorDlg"/>
         /// so that they can report them as bugs.
-        /// If you add anything to the list of exceptions, you will want to add it also to
-        /// the WrapAndThrow() function below.
         /// </summary>
         public static bool IsProgrammingDefect(Exception exception)
         {
-            // User-actionable exceptions with friendly messages
             if (exception is InvalidDataException 
                 || exception is IOException 
-                || exception is OperationCanceledException
-                || exception is UnauthorizedAccessException
-                || exception is UserMessageException)  // Covers all custom user-facing exceptions
+                || exception is UnauthorizedAccessException)
             {
                 return false;
             }
 
-            return true;  // Programming defects that should be reported
-        }
-
-
-        public static void WrapAndThrowException(Exception x)
-        {
-            // The thrown exception needs to be preserved to preserve
-            // the original stack trace from which it was thrown.  In some cases,
-            // its type must also be preserved, because existing code handles certain
-            // exception types.  If this case threw only TargetInvocationException,
-            // then more frequently the code would just have to have a blanket catch
-            // of the base exception type, which could hide coding errors.
-            if (x is InvalidDataException)
-                throw new InvalidDataException(x.Message, x);
-            if (x is IOException)
-                throw new IOException(x.Message, x);
-            if (x is OperationCanceledException)
-                throw new OperationCanceledException(x.Message, x);
-            if (x is UnauthorizedAccessException)
-                throw new UnauthorizedAccessException(x.Message, x);
-            if (x is UserMessageException)
-                throw new UserMessageException(x.Message, x);
-            Assume.IsTrue(IsProgrammingDefect(x));  // At least by IsProgrammingDefect's assessment it should be considered a defect
-            throw new TargetInvocationException(x.Message, x);
+            return true;
         }
 
         /// <summary>
@@ -1736,16 +1733,14 @@ namespace pwiz.Skyline.Util
             else
             {
                 string fullMessage = exception.Message;
-                if (!string.IsNullOrEmpty(message))
+                if (string.IsNullOrEmpty(message))
                 {
                     fullMessage = TextUtil.LineSeparate(message, fullMessage);
                 }
                 MessageDlg.ShowWithException(parent, fullMessage, exception);
             }
         }
-
         private const int CLIPBRD_E_CANT_OPEN = unchecked((int)0x800401D0);
-
         /// <summary>
         /// Displays either a friendly error message or an unhandled exception dialog
         /// depending on whether the error is expected. This is meant to be called from an exception handler
@@ -1762,27 +1757,6 @@ namespace pwiz.Skyline.Util
             string message = TextUtil.LineSeparate(string.Format(@"Error processing keystroke '{0}'.", keys),
                 exception.Message);
             Program.ReportException(new ApplicationException(message, exception));
-        }
-
-        /// <summary>
-        /// Test an exception for whether it is or contains an exception type, either in
-        /// an <see cref="AggregateException"/> or the Exception.InnerException chain.
-        /// </summary>
-        /// <typeparam name="TEx">The exception type to test for, e.g. <see cref="OperationCanceledException"/></typeparam>
-        /// <param name="ex">The root exception to inspect</param>
-        /// <returns>True if the exception type is found</returns>
-        public static bool HasException<TEx>(this Exception ex)
-        {
-            if (ex is AggregateException exAggregate)
-                return exAggregate.InnerExceptions.Contains(exSub => exSub.HasException<TEx>());
-            while (ex != null)
-            {
-                if (ex is TEx)
-                    return true;
-                ex = ex.InnerException;
-            }
-
-            return false;
         }
     }
 

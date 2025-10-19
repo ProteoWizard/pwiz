@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>
  *                   MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -22,7 +22,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
+using System.Net;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
@@ -340,16 +340,9 @@ namespace ImageComparer
                     case ImageSource.web:
                     default:
                         {
-                            using var httpClient = new HttpClient();
+                            using var webClient = new WebClient();
                             using var fileSaverTemp = new FileSaver(file.Path);  // Temporary. Never saved
-                            var response = httpClient.GetAsync(file.UrlToDownload).Result;
-                            response.EnsureSuccessStatusCode();
-                            using (var contentStream = response.Content.ReadAsStreamAsync().Result)
-                            using (var fileStream = new FileStream(fileSaverTemp.SafeName, FileMode.Create,
-                                       FileAccess.Write, FileShare.None))
-                            {
-                                contentStream.CopyTo(fileStream);
-                            }
+                            webClient.DownloadFile(file.UrlToDownload, fileSaverTemp.SafeName);
                             imageBytes = File.ReadAllBytes(fileSaverTemp.SafeName);
                         }
                         break;

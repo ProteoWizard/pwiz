@@ -190,7 +190,6 @@
     <Compile Include="DocumentGridExportTest.cs" />
     <Compile Include="DocumentGridUndoTest.cs" />
     <Compile Include="EditablePivotTest.cs" />
-    <Compile Include="HelpDocumentationContentTest.cs" />
     <Compile Include="ManagingSearchToolsTest.cs" />
     <Compile Include="EditNeutralLossesTest.cs" />
     <Compile Include="EncyclopeDiaLibraryMatchTest.cs" />
@@ -287,7 +286,6 @@
     <Compile Include="DuplicateSmallMoleculePrecursorTest.cs" />
     <Compile Include="ExplicitAnalyteConcentrationTest.cs" />
     <Compile Include="GroupComparisonRefineTest.cs" />
-    <Compile Include="HttpClientWithProgressIntegrationTest.cs" />
     <Compile Include="InstrumentMinMaxTimeTest.cs" />
     <Compile Include="InvalidPeptideRankIdTest.cs" />
     <Compile Include="InvalidPeptidesInLibraryTest.cs" />

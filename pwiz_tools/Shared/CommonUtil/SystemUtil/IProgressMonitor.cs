@@ -47,19 +47,8 @@ namespace pwiz.Common.SystemUtil
         bool HasUI { get; }
     }
 
-    /// <summary>
-    /// Extends IProgressMonitor with cancellation support.
-    /// Use this interface when operations need to be cancellable.
-    /// </summary>
-    public interface IProgressMonitorWithCancellationToken : IProgressMonitor
-    {
-        /// <summary>
-        /// Gets the cancellation token for this progress monitor.
-        /// </summary>
-        CancellationToken CancellationToken { get; }
-    }
 
-    public class SilentProgressMonitor : IProgressMonitorWithCancellationToken
+    public class SilentProgressMonitor : IProgressMonitor
     {
         public SilentProgressMonitor() : this(CancellationToken.None) {}
         public SilentProgressMonitor(CancellationToken cancellationToken)

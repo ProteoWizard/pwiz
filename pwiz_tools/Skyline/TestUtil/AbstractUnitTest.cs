@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -28,6 +28,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
 using TestRunnerLib;
 
 // Once-per-application setup information to perform logging with log4net.
@@ -286,13 +287,13 @@ namespace pwiz.SkylineTestUtil
 
                 try
                 {
-                    using var httpClient = new HttpClientWithProgress(new SilentProgressMonitor());
+                    WebClient webClient = new WebClient();
                     using (var fs = new FileSaver(zipFilePath))
                     {
                         var timer = new Stopwatch();
                         Console.Write(@"# Downloading test data file {0}...", zipURL);
                         timer.Start();
-                        httpClient.DownloadFile(zipURL.Split('\\')[0],
+                        webClient.DownloadFile(zipURL.Split('\\')[0],
                             fs.SafeName); // We encode a Chorus anonymous download string as two parts: url\localName
                         Console.Write(@" done. Download time {0} sec ", timer.ElapsedMilliseconds / 1000);
                         fs.Commit();
@@ -301,8 +302,6 @@ namespace pwiz.SkylineTestUtil
                 }
                 catch (Exception x)
                 {
-                    // HttpClientWithProgress already provides detailed error messages (network issues, DNS, proxy, etc.)
-                    // Just preserve the message and add context about which URL failed
                     message += string.Format("Could not download {0}: {1} ", zipURL, x.Message);
                     if (!retry)
                     {

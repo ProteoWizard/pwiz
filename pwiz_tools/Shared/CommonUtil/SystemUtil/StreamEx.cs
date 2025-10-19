@@ -20,7 +20,7 @@
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
-using pwiz.Common.CommonResources;
+using pwiz.Common.Properties;
 
 namespace pwiz.Common.SystemUtil
 {
@@ -55,7 +55,7 @@ namespace pwiz.Common.SystemUtil
         public static void ReadOrThrow(this Stream stream, [In, Out] byte[] buffer, int offset, int count)
         {
             if (count < stream.Read(buffer, offset, count))
-                throw new IOException(string.Format(MessageResources.StreamEx_ReadOrThrow_Failed_reading__0__bytes__Source_may_be_corrupted_, count));
+                throw new IOException(string.Format(Resources.StreamEx_ReadOrThrow_Failed_reading__0__bytes__Source_may_be_corrupted_, count));
         }
 
         public static byte[] ReadBytes(this Stream inStream, int byteCount)

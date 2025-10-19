@@ -104,11 +104,10 @@ namespace pwiz.Skyline.Util
     }
 
     /// <summary>
-    /// Exposes <see cref="IProgressMonitorWithCancellationToken"/> for an action that requires the
-    /// <see cref="IProgressMonitor" /> interface but may benefit from having access to a CancellationToken,
+    /// Exposes <see cref="IProgressMonitor"/> for an action that requires the interface,
     /// given a <see cref="ILongWaitBroker"/>.
     /// </summary>
-    public sealed class ProgressWaitBroker : IProgressMonitorWithCancellationToken
+    public sealed class ProgressWaitBroker : IProgressMonitor
     {
         private readonly Action<IProgressMonitor> _performWork;
         private ILongWaitBroker _broker;

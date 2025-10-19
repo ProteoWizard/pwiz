@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Yuval Boss <yuval .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -18,11 +18,13 @@
  */
 
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Cache;
 using Ionic.Zip;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -47,6 +49,8 @@ namespace pwiz.Skyline.Controls.Startup
             SkyFileLocationInZip = skyFileLocationInZip;
         }
 
+        private ILongWaitBroker WaitBroker { get; set; }
+        private double Progress { get; set; }
         public bool DoStartupAction(SkylineWindow skylineWindow)
         {
             if (skylineWindow.Visible)
@@ -60,9 +64,14 @@ namespace pwiz.Skyline.Controls.Startup
             return true;
         }
 
-        private string GetTempPath()
+        private string getTempPath()
         {
-            return Path.Combine(TempPath, (Path.GetFileName(ExtractPath) ?? string.Empty) + StartPage.EXT_TUTORIAL_FILES);
+            return Path.Combine(TempPath, Path.GetFileName(ExtractPath) ?? string.Empty);
+        }
+
+        private string getExtractPath()
+        {
+            return ExtractPath;
         }
 
         public void LongWaitDlgAction(SkylineWindow skylineWindow)
@@ -73,52 +82,76 @@ namespace pwiz.Skyline.Controls.Startup
                 using (var longWaitDlg = new LongWaitDlg())
                 {
                     longWaitDlg.Text = StartupResources.ActionTutorial_LongWaitDlgAction_Downloading_Tutorial_Zip_File;
-                    var status = longWaitDlg.PerformWork(skylineWindow, 1000, DownloadTutorials);
-                    if (status.IsCanceled)
+                    longWaitDlg.Message = String.Format(
+                        StartupResources
+                            .ActionTutorial_LongWaitDlgAction_Downloading_to___0__1_Tutorial_will_open_in_browser_when_download_is_complete_,
+                        getTempPath(), Environment.NewLine);
+                    longWaitDlg.ProgressValue = 0;
+                    longWaitDlg.PerformWork(skylineWindow, 1000, DownloadTutorials);
+                    if (longWaitDlg.IsCanceled)
                     {
                         return;
                     }
                 }
-
                 using (var longWaitDlg = new LongWaitDlg())
                 {
                     longWaitDlg.Text = StartupResources.ActionTutorial_LongWaitDlgAction_Extracting_Tutorial_Zip_File_in_the_same_directory_;
+                    longWaitDlg.ProgressValue = 0;
                     longWaitDlg.PerformWork(skylineWindow, 1000, ExtractTutorial);
                 }
             }
             catch (Exception exception)
             {
-                ExceptionUtil.DisplayOrReportException(Program.MainWindow, exception);
-            }
-            finally
-            {
-                // Attempt to get rid of the temp ZIP file
-                FileEx.SafeDelete(GetTempPath(), true);
+                MessageDlg.ShowWithException(Program.MainWindow, string.Format(StartupResources.ActionTutorial_DownloadTutorials_Error__0_, exception.Message), exception);
             }
         }
 
         // Download
-        public void DownloadTutorials(IProgressMonitor waitBroker)
+        public void DownloadTutorials(ILongWaitBroker waitBroker)
         {
-            var status = new ProgressStatus(string.Format(
-                StartupResources.ActionTutorial_LongWaitDlgAction_Downloading_to___0__1_Tutorial_will_open_in_browser_when_download_is_complete_,
-                GetTempPath(), Environment.NewLine));
+            WaitBroker = waitBroker;
+            WaitBroker.ProgressValue = Convert.ToInt32(Progress * 100);
+            WebClient client = new WebClient
+            {
+                CachePolicy = new RequestCachePolicy(RequestCacheLevel.NoCacheNoStore),
+            };
+            client.DownloadProgressChanged += client_DownloadProgressChanged;
+            client.DownloadFile(new Uri(TutorialZipFileLocation), getTempPath());
+        }
 
-            using var httpClient = new HttpClientWithProgress(waitBroker, status);
-            httpClient.DownloadFile(TutorialZipFileLocation, GetTempPath());
+        public void client_DownloadProgressChanged(object sender, DownloadProgressChangedEventArgs e)
+        {
+            int percentage = (int) (e.BytesReceived*100/e.TotalBytesToReceive);
+            Progress = percentage;
+            WaitBroker.ProgressValue = percentage;
+        }
+
+        public void client_DownloadFileCompleted(object sender, AsyncCompletedEventArgs e)
+        {
+            Program.MainWindow.BeginInvoke(new Action(() =>
+            {
+                if (e.Error != null)
+                {
+                    MessageDlg.ShowWithException(Program.MainWindow,string.Format(StartupResources.ActionTutorial_DownloadTutorials_Error__0_,e.Error), e.Error);
+                }
+                else if(string.IsNullOrEmpty(SkyFileLocationInZip))
+                {
+                    MessageDlg.Show(Program.MainWindow,
+                    string.Format(StartupResources.ActionTutorial_client_DownloadFileCompleted_File_saved_at___0_,getTempPath()));
+                    Process.Start(PdfFileLocation); // Opens Tutorial PDF in users default browser.
+                }
+            }));
         }
 
         // Extract
-        public void ExtractTutorial(IProgressMonitor waitBroker)
+        public void ExtractTutorial(ILongWaitBroker waitBroker)
         {
-            IProgressStatus status = new ProgressStatus(StartupResources.ActionTutorial_LongWaitDlgAction_Extracting_Tutorial_Zip_File_in_the_same_directory_);
-
-            using (ZipFile zip = ZipFile.Read(GetTempPath()))
+            using (ZipFile zip = ZipFile.Read(getTempPath()))
             {
                 ExpectedSize = zip.Entries.Sum(entry => entry.UncompressedSize);
 
-                zip.ExtractProgress += (s,e) => TutorialFile_ExtractProgress(s,e, waitBroker, ref status);
-                var extractDir = ExtractPath;
+                zip.ExtractProgress += (s,e) => TutorialFile_ExtractProgress(s,e, waitBroker);
+                var extractDir = getExtractPath();
                 var skyFileToOpen = Path.Combine(extractDir ?? string.Empty, SkyFileLocationInZip);
                 foreach (var entry in zip.Entries.ToList())
                 {
@@ -138,10 +171,8 @@ namespace pwiz.Skyline.Controls.Startup
                     }
                     catch (Exception)
                     {
-                        if (waitBroker.IsCanceled)
-                            break;
-                        
-                        throw;
+                        if (!waitBroker.IsCanceled)
+                            throw;
                     }
                 }
                 var hasSkylineFile = !string.IsNullOrEmpty(SkyFileLocationInZip) && !string.IsNullOrEmpty(ExtractPath);
@@ -153,19 +184,6 @@ namespace pwiz.Skyline.Controls.Startup
                     }
                     else
                     {
-                        if (!string.IsNullOrEmpty(ExtractPath))
-                        {
-                            // Make it convenient for user to locate tutorial files if we haven't already opened anything
-                            Directory.SetCurrentDirectory(ExtractPath);
-                            Settings.Default.LibraryDirectory =
-                                Settings.Default.ActiveDirectory =
-                                    Settings.Default.ExportDirectory =
-                                        Settings.Default.FastaDirectory =
-                                            Settings.Default.LibraryResultsDirectory =
-                                                Settings.Default.ProteomeDbDirectory =
-                                                    ExtractPath;
-                        }
-
                         Program.MainWindow.NewDocument(true);
                     }
                     if (string.IsNullOrEmpty(SkyFileLocationInZip))
@@ -186,10 +204,23 @@ namespace pwiz.Skyline.Controls.Startup
                         MessageDlg.ShowWithException(Program.MainWindow, message, e);
                     }
                 }));
+
+                // Make it convenient for user to locate tutorial files if we haven't already opened anything
+                if (!hasSkylineFile && !string.IsNullOrEmpty(ExtractPath))
+                {
+                    Directory.SetCurrentDirectory(ExtractPath);
+                    Settings.Default.LibraryDirectory =
+                        Settings.Default.ActiveDirectory =
+                            Settings.Default.ExportDirectory =
+                                Settings.Default.FastaDirectory =
+                                    Settings.Default.LibraryResultsDirectory =
+                                            Settings.Default.ProteomeDbDirectory =
+                                                ExtractPath;
+                }
             }
         }
 
-        private void TutorialFile_ExtractProgress(object sender, ExtractProgressEventArgs e, IProgressMonitor waitBroker, ref IProgressStatus status)
+        private void TutorialFile_ExtractProgress(object sender, ExtractProgressEventArgs e, ILongWaitBroker waitBroker)
         {
             if (waitBroker != null)
             {
@@ -201,11 +232,11 @@ namespace pwiz.Skyline.Controls.Startup
 
                 int progressValue = (int)Math.Round((ExtractedSize + e.BytesTransferred) * 100.0 / ExpectedSize);
 
-                if (progressValue != status.PercentComplete)
+                if (progressValue != WaitBroker.ProgressValue)
                 {
-                    waitBroker.UpdateProgress(status = status.ChangePercentComplete(progressValue).ChangeMessage(
-                        string.Format(Resources.SrmDocumentSharing_SrmDocumentSharing_ExtractProgress_Extracting__0__,
-                            e.CurrentEntry.FileName)));
+                    waitBroker.ProgressValue = progressValue;
+                    waitBroker.Message = (string.Format(Resources.SrmDocumentSharing_SrmDocumentSharing_ExtractProgress_Extracting__0__,
+                                                              e.CurrentEntry.FileName));
                 }
             }
         }

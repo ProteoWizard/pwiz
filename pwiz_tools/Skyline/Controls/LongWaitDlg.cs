@@ -191,7 +191,7 @@ namespace pwiz.Skyline.Controls
 
                 if (IsCanceled && null != x)
                 {
-                    if (x.HasException<OperationCanceledException>())
+                    if (x is OperationCanceledException || x.InnerException is OperationCanceledException)
                     {
                         x = null;
                     }
@@ -199,18 +199,9 @@ namespace pwiz.Skyline.Controls
 
                 if (x != null)
                 {
-                    ExceptionUtil.WrapAndThrowException(x);
+                    Helpers.WrapAndThrowException(x);
                 }
             }
-        }
-
-        /// <summary>
-        /// A type of <see cref="OperationCanceledException"/> that simulates a user clicking
-        /// the Cancel button in the <see cref="LongWaitDlg"/> so that the form goes away silently
-        /// without throwing the exception.
-        /// </summary>
-        public class CancelClickedTestException : OperationCanceledException
-        {
         }
 
         /// <summary>
@@ -264,10 +255,6 @@ namespace pwiz.Skyline.Controls
             }
             catch (Exception x)
             {
-                // Simulate a cancel click if the exception thrown has the right type
-                if (x.HasException<CancelClickedTestException>())
-                    _cancellationTokenSource.Cancel();
-                
                 _exception = x;
             }
             finally
@@ -293,24 +280,18 @@ namespace pwiz.Skyline.Controls
             if (!_cancellationTokenSource.IsCancellationRequested)
             {
                 var runningTime = DateTime.UtcNow.Subtract(_startTime);
-                
-                // Only show 100% progress if the operation completed successfully (no exception)
-                if (_exception == null)
+                // Show complete status before returning.
+                progressBar.Value = _progressValue = 100;
+                UpdateLabelMessage();
+                // Display the final complete status for one second, or 10% of the time the job ran for,
+                // whichever is shorter
+                int finalDelayTime = Math.Min(1000, (int) (runningTime.TotalMilliseconds/10));
+                if (finalDelayTime > 0)
                 {
-                    // Show complete status before returning.
-                    progressBar.Value = _progressValue = 100;
-                    UpdateLabelMessage();
-                    // Display the final complete status for one second, or 10% of the time the job ran for,
-                    // whichever is shorter
-                    int finalDelayTime = Math.Min(1000, (int) (runningTime.TotalMilliseconds/10));
-                    if (finalDelayTime > 0)
-                    {
-                        timerClose.Interval = finalDelayTime;
-                        timerClose.Enabled = true;
-                        return;
-                    }
+                    timerClose.Interval = finalDelayTime;
+                    timerClose.Enabled = true;
+                    return;
                 }
-                // If there was an exception, don't show 100% progress - just close immediately
             }
             Close();
         }
@@ -404,5 +385,6 @@ namespace pwiz.Skyline.Controls
                 _performWork();
             }
         }
+
     }
 }

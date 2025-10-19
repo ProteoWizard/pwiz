@@ -101,7 +101,6 @@
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
     <Reference Include="System.Drawing" />
-    <Reference Include="System.Net.Http" />
     <Reference Include="System.Security" />
     <Reference Include="System.Web" />
     <Reference Include="System.Windows.Forms" />
@@ -149,11 +148,6 @@
     <Compile Include="Collections\RangeList.cs" />
     <Compile Include="Collections\ReadOnlyList.cs" />
     <Compile Include="Collections\StructSerializer.cs" />
-    <Compile Include="CommonResources\MessageResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>MessageResources.resx</DependentUpon>
-    </Compile>
     <Compile Include="GUI\GuiMessages.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -219,7 +213,6 @@
     <Compile Include="SystemUtil\CommonActionUtil.cs" />
     <Compile Include="SystemUtil\TreeViewStateRestorer.cs" />
     <Compile Include="SystemUtil\TryHelper.cs" />
-    <Compile Include="SystemUtil\UserMessageException.cs" />
     <Compile Include="SystemUtil\ValueCache.cs" />
     <Compile Include="Collections\ValueSet.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -231,7 +224,6 @@
     <Compile Include="Collections\IndexedSubList.cs" />
     <Compile Include="SystemUtil\ConcurrencyVisualizer.cs" />
     <Compile Include="SystemUtil\FormUtil.cs" />
-    <Compile Include="SystemUtil\HttpClientWithProgress.cs" />
     <Compile Include="SystemUtil\Immutable.cs" />
     <Compile Include="SystemUtil\IProgressMonitor.cs" />
     <Compile Include="SystemUtil\LocalizationHelper.cs" />
@@ -265,19 +257,6 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="CommonResources\MessageResources.ja.resx">
-      <DependentUpon>MessageResources.resx</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="CommonResources\MessageResources.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>MessageResources.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="CommonResources\MessageResources.zh-CHS.resx">
-      <DependentUpon>MessageResources.resx</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
     <EmbeddedResource Include="GUI\GuiMessages.ja.resx">
       <DependentUpon>GuiMessages.resx</DependentUpon>
       <SubType>Designer</SubType>

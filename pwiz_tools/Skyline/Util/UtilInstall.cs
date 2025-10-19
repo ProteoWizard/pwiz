@@ -20,11 +20,13 @@ using Ionic.Zip;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
 using pwiz.Skyline.Model;
@@ -34,16 +36,23 @@ namespace pwiz.Skyline.Util
     public interface IAsynchronousDownloadClient : IDisposable
     {
         /// <summary>
-        /// Downloads the file and throws on error or cancellation.
+        /// Attempts to download the file located at the specified address to the specified
+        /// file path. This function returns true if the download succeeded.
         /// </summary>
-        void DownloadFileAsyncOrThrow(Uri address, string path);
+        bool DownloadFileAsync(Uri address, string path, out Exception error);
     }
     
     public class MultiFileAsynchronousDownloadClient : IAsynchronousDownloadClient
     {
         private readonly IProgressMonitor _progressMonitor;
         private IProgressStatus _progressStatus;
+        private readonly WebClient _webClient;
+        private int FilesDownloaded { get; set; }
 
+        // indicate aspects of the most recent download
+        private bool DownloadComplete { get; set; }
+        private bool DownloadSucceeded { get; set; }
+        private Exception DownloadError { get; set; }
 
         /// <summary>
         /// The asynchronous download client links a webClient to a LongWaitBroker. It supports
@@ -55,25 +64,66 @@ namespace pwiz.Skyline.Util
         public MultiFileAsynchronousDownloadClient(IProgressMonitor waitBroker, int files)
         {
             _progressMonitor = waitBroker;
-            _progressStatus = new ProgressStatus().ChangeSegments(0, files);
+            _progressStatus = new ProgressStatus();
+            _webClient = new WebClient();
+            FilesDownloaded = 0;
+
+            _webClient.DownloadProgressChanged += (sender, args) =>
+            {
+                _progressMonitor.UpdateProgress(_progressStatus.ChangePercentComplete((int) Math.Min(100, ((((double) FilesDownloaded)/files)*100)
+                                                                                                          + ((1.0/files)*args.ProgressPercentage))));
+            };
+
+            _webClient.DownloadFileCompleted += (sender, args) =>
+                {
+                    FilesDownloaded++;
+                    DownloadError = args.Error;
+                    DownloadSucceeded = (args.Error == null);
+                    DownloadComplete = true;
+                };
         }
 
-
-        public void DownloadFileAsyncOrThrow(Uri address, string path)
+        /// <summary>
+        /// Downloads a file asynchronously
+        /// </summary>
+        /// <param name="address">The Uri of the file to download</param>
+        /// <param name="path">The path to download the file to, including the name of 
+        /// the file, e.g "C:\Users\Trevor\Downloads\example.txt"</param>
+        /// <param name="error">Contains the error if any</param>
+        /// <exception cref="ToolExecutionException">Thrown if the user cancels the download 
+        /// using the instances' LongWaitBroker</exception>
+        /// <returns>True if the download was successful, otherwise false</returns>
+        public bool DownloadFileAsync(Uri address, string path, out Exception error)
         {
-            var file = Regex.Match(address.AbsolutePath, @"[^/]*$");
+            // reset download status
+            DownloadComplete = false;
+            DownloadSucceeded = false;
+
+            Match file = Regex.Match(address.AbsolutePath, @"[^/]*$");
             _progressStatus = _progressStatus.ChangeMessage(string.Format(UtilResources.MultiFileAsynchronousDownloadClient_DownloadFileAsync_Downloading__0_, file));
             _progressMonitor.UpdateProgress(_progressStatus);
+            _webClient.DownloadFileAsync(address, path);
 
-            using var httpClient = new HttpClientWithProgress(_progressMonitor, _progressStatus);
-            httpClient.DownloadFile(address, path);
+            // while downloading, check to see if the user has canceled the operation
+            while (!DownloadComplete)
+            {
+                if (_progressMonitor.UpdateProgress(_progressStatus) == UpdateProgressResponse.cancel)
+                {
+                    _webClient.CancelAsync();
+                    throw new ToolExecutionException(
+                        Resources.MultiFileAsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled_);
+                }
+            }
+
+            error = DownloadError;
+            return DownloadSucceeded;
         }
  
         #region IDisposable Members
 
         public void Dispose()
         {
-            // nothing to dispose currently
+            _webClient.Dispose();
         }
 
         #endregion
@@ -276,7 +326,12 @@ namespace pwiz.Skyline.Util
 
                         using (var fileSaver = new FileSaver(downloadFilename))
                         {
-                            client.DownloadFileAsyncOrThrow(downloadUrl, fileSaver.SafeName);
+                            if (!client.DownloadFileAsync(downloadUrl, fileSaver.SafeName, out var downloadError))
+                            {
+                                throw new Exception(TextUtil.LineSeparate(
+                                    Resources.PythonInstaller_DownloadPip_Download_failed__Check_your_network_connection_or_contact_Skyline_developers_,
+                                    downloadUrl.ToString()), downloadError);
+                            }
                             fileSaver.Commit();
                         }
 
@@ -334,10 +389,30 @@ namespace pwiz.Skyline.Util
             return true;
         }
 
-        public static string GetCachedDownloadsDirectory()
+        private static string GetCachedDownloadsDirectory()
         {
             return Path.Combine(ToolDescriptionHelpers.GetSkylineInstallationPath(), @"CachedDownloadsForTests");
         }
+    }
+
+    // The test Asynchronous Download Client allows us to simulate downloading files from the internet
+    public class TestAsynchronousDownloadClient : IAsynchronousDownloadClient
+    {
+        public bool DownloadSuccess { get; set; }
+        public bool CancelDownload { get; set; }
+
+        public bool DownloadFileAsync(Uri address, string fileName, out Exception error)
+        {
+            error = null;
+            if (CancelDownload)
+                throw new ToolExecutionException(Resources.MultiFileAsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled_);
+            return DownloadSuccess;
+        }
+
+        public void Dispose()
+        {
+        }
+
     }
 
     public interface ISkylineProcessRunnerWrapper
@@ -358,6 +433,27 @@ namespace pwiz.Skyline.Util
 
     // The test Named PipeProcess Runner allows us to simulate running NamedPipeProcessRunner.exe
     // by specifying its return code and whether the pipe connected or not
+    public class TestSkylineProcessRunner : ISkylineProcessRunnerWrapper
+    {
+        public bool ConnectSuccess { get; set; }
+        public bool UserOkRunAsAdministrator { get { return _userOkRunAsAdministrator; } set { _userOkRunAsAdministrator = value; } }
+        private bool _userOkRunAsAdministrator = true; 
+        public int ExitCode { get; set; }
+        public string stringToWriteToWriter { get; set; }
+        
+        public int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer,  bool createNoWindow = false, CancellationToken cancellationToken = default)
+        {
+            if (!UserOkRunAsAdministrator)
+            {
+                throw new System.ComponentModel.Win32Exception(Resources.TestSkylineProcessRunner_RunProcess_The_operation_was_canceled_by_the_user_);
+            }
+            if (!ConnectSuccess)
+                throw new IOException(Resources.TestNamedPipeProcessRunner_RunProcess_Error_running_process);
+            if (!string.IsNullOrEmpty(stringToWriteToWriter))
+                writer.WriteLine(stringToWriteToWriter);
+            return ExitCode;
+        }
+    }
 
     /// <summary>
     /// The IProcessRunner serves as a wrapper class for running a process synchronously
@@ -376,6 +472,34 @@ namespace pwiz.Skyline.Util
         {
             process.Start();
             process.WaitForExit();
+            return process.ExitCode;
+        }
+    }
+
+    // The test Process Runner allows us to simulate the (a)synchronous execution of a Process by specifying
+    // its return code
+    public class TestRunProcess : IRunProcess
+    {
+        public int ExitCode { get; set; }
+
+        public int RunProcess(Process process)
+        {
+            return ExitCode;
+        }
+    }
+
+    public class AsynchronousRunProcess : IRunProcess
+    {   
+        public int RunProcess(Process process)
+        {
+            bool finished = false;
+            process.EnableRaisingEvents = true;
+            process.Exited += (sender, args) => finished = true;
+            process.Start();
+            while (!finished)
+            {
+                // continue
+            }
             return process.ExitCode;
         }
     }

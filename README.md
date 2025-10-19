@@ -87,13 +87,13 @@ The project avoids `async`/`await` and .NET Task support in favor of determinist
 - **Prefer synchronous operations** on background threads when possible
 - **Thread marshaling** - Use `Invoke()` for UI thread operations from background threads
 
-Executables note: Projects under `pwiz_tools/Skyline/Executables` are separate solutions (most build stand-alone EXEs or developer tools, some ship with Skyline). They are not built by `Skyline.sln`, but should generally follow the same coding conventions unless a local project override is required. See the Tool Store: https://skyline.ms/tools.url
+Executables note: Projects under `pwiz_tools/Skyline/Executables` are separate solutions (most build stand‑alone EXEs or developer tools, some ship with Skyline). They are not built by `Skyline.sln`, but should generally follow the same coding conventions unless a local project override is required. See the Tool Store: https://skyline.ms/tools.url
 
 EditorConfig: Repository-wide `.editorconfig` enforces core C# naming/formatting so separate solutions (including `pwiz_tools/Skyline/Executables`) inherit consistent style in Visual Studio.
 
 Notes for AI/code assistants (Cursor):
 
-- Prefer invoking `quickbuild.bat` on Windows; avoid ad-hoc compiler calls
+- Prefer invoking `quickbuild.bat` on Windows; avoid ad‑hoc compiler calls
 - Do not reformat unrelated code; keep original indentation and spacing
 - Use existing Jamfiles/solution instead of introducing new build systems
 - When adding C++ files, update the appropriate Jamfile or Visual Studio project as needed

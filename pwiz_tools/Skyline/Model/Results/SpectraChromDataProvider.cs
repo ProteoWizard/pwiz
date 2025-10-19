@@ -951,7 +951,7 @@ namespace pwiz.Skyline.Model.Results
                         _currentInfo = _pendingInfoList.Take();
                         _currentInfo.SortEvent?.WaitOne();   // Until sorted
                         if (_exception != null)
-                            ExceptionUtil.WrapAndThrowException(_exception);
+                            Helpers.WrapAndThrowException(_exception);
                     }
                     else
                     {
@@ -1343,7 +1343,7 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 // Propagate exception from provider thread.
-                ExceptionUtil.WrapAndThrowException(_exception);
+                Helpers.WrapAndThrowException(_exception);
                 throw _exception;   // Unreachable code, but keeps compiler happy
             }
 

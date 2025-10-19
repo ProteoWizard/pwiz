@@ -23,7 +23,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading;
-using pwiz.Common.CommonResources;
+using pwiz.Common.Properties;
 
 namespace pwiz.Common.SystemUtil
 {
@@ -142,7 +142,7 @@ namespace pwiz.Common.SystemUtil
 
             if (ShowCommandAndArgs)
             {
-                foreach (var msg in new[]{string.Empty, MessageResources.ProcessRunner_Run_Run_command_, cmd, string.Empty, string.Empty})
+                foreach (var msg in new[]{string.Empty, Resources.ProcessRunner_Run_Run_command_, cmd, string.Empty, string.Empty})
                 {
                     if (!string.IsNullOrEmpty(msg))
                     {
