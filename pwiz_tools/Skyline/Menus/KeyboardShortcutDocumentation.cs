@@ -19,13 +19,16 @@
  */
 
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Web;
 using System.Windows.Forms;
+using pwiz.Common.DataBinding.Documentation;
 
 namespace pwiz.Skyline.Menus
 {
+    [SuppressMessage("ReSharper", "LocalizableElement")]
     public static class KeyboardShortcutDocumentation
     {
         public static string GenerateKeyboardShortcutHtml(MenuStrip menuMain)
@@ -34,17 +37,20 @@ namespace pwiz.Skyline.Menus
                 return string.Empty;
 
             var sb = new StringBuilder();
-            sb.Append(@"<html><head><meta charset=""utf-8""></head><body>");
-            sb.Append(@"<h2>").Append(HtmlEncode(MenusResources.Keyboard_Shortcuts_Title)).Append(@"</h2>");
+            sb.AppendLine("<html><head>");
+            sb.AppendLine(@"<meta charset=""utf-8"">");
+            sb.AppendLine(DocumentationGenerator.GetStyleSheetHtml());
+            sb.AppendLine("</head><body>");
+            sb.Append("<h2>").Append(HtmlEncode(MenusResources.Keyboard_Shortcuts_Title)).AppendLine("</h2>");
 
             // Add explanatory text
-            sb.Append(@"<p>").Append(HtmlEncode(MenusResources.Keyboard_Shortcuts_Explanation_Intro)).Append(@"</p>");
-            sb.Append(@"<ul>");
-            sb.Append(@"<li><strong>").Append(MenusResources.Keyboard_Shortcuts_Table_Title).Append(@"</strong> ")
-                .Append(HtmlEncode(MenusResources.Keyboard_Shortcuts_Explanation_Shortcuts)).Append(@"</li>");
-            sb.Append(@"<li><strong>").Append(MenusResources.Keyboard_Mnemonics_Table_Title).Append(@"</strong> ")
-                .Append(HtmlEncode(MenusResources.Keyboard_Shortcuts_Explanation_Mnemonics)).Append(@"</li>");
-            sb.Append(@"</ul>");
+            sb.Append("<p>").Append(HtmlEncode(MenusResources.Keyboard_Shortcuts_Explanation_Intro)).AppendLine("</p>");
+            sb.AppendLine("<ul>");
+            sb.Append("<li><strong>").Append(MenusResources.Keyboard_Shortcuts_Table_Title).Append("</strong> ")
+                .Append(HtmlEncode(MenusResources.Keyboard_Shortcuts_Explanation_Shortcuts)).AppendLine("</li>");
+            sb.Append("<li><strong>").Append(MenusResources.Keyboard_Mnemonics_Table_Title).Append("</strong> ")
+                .Append(HtmlEncode(MenusResources.Keyboard_Shortcuts_Explanation_Mnemonics)).AppendLine("</li>");
+            sb.AppendLine("</ul>");
 
             // Keyboard shortcuts table
             AddShortcutsTable(sb, 
@@ -64,7 +70,7 @@ namespace pwiz.Skyline.Menus
                 MenusResources.Keyboard_GridView_Table_Title, 
                 MenusResources.Keyboard_GridView_Header_Action);
             
-            sb.Append(@"</body></html>");
+            sb.Append("</body></html>");
             return sb.ToString();
         }
 
@@ -73,31 +79,31 @@ namespace pwiz.Skyline.Menus
             string tableTitle, 
             string shortcutColumnHeader)
         {
-            sb.Append(@"<h3>").Append(HtmlEncode(tableTitle)).Append(@"</h3>");
-            sb.Append(@"<table border=""1"" cellspacing=""0"" cellpadding=""4"">");
-            sb.Append(@"<thead><tr>");
+            sb.Append("<h3>").Append(HtmlEncode(tableTitle)).AppendLine("</h3>");
+            sb.AppendLine(@"<table border=""1"" cellspacing=""0"" cellpadding=""4"">");
+            sb.Append("<thead><tr>");
             AddHeader(sb, MenusResources.Keyboard_Shortcuts_Header_Menu);  // Single header for both tables
             AddHeader(sb, shortcutColumnHeader);
-            sb.Append(@"</tr></thead><tbody>");
+            sb.AppendLine("</tr></thead><tbody>");
 
             foreach (var row in rows)
             {
-                sb.Append(@"<tr>");
+                sb.Append("<tr>");
                 AddCell(sb, row.MenuPath);
                 AddCell(sb, row.Shortcut);
-                sb.Append(@"</tr>");
+                sb.AppendLine("</tr>");
             }
-            sb.Append(@"</tbody></table>");
+            sb.AppendLine("</tbody></table>");
         }
 
         private static void AddHeader(StringBuilder sb, string headerText)
         {
-            sb.Append(@"<th>").Append(HtmlEncode(headerText)).Append(@"</th>");
+            sb.Append("<th>").Append(HtmlEncode(headerText)).Append("</th>");
         }
 
         private static void AddCell(StringBuilder sb, string cellText)
         {
-            sb.Append(@"<td>").Append(HtmlEncode(cellText)).Append(@"</td>");
+            sb.Append("<td>").Append(HtmlEncode(cellText)).Append("</td>");
         }
 
         public static List<(string MenuPath, string Shortcut)> GetShortcutRows(MenuStrip menuMain)
@@ -159,7 +165,7 @@ namespace pwiz.Skyline.Menus
         {
             var converter = new KeysConverter();
             var str = converter.ConvertToInvariantString(keys);
-            return str?.Replace(@", ", @"+") ?? string.Empty;
+            return str?.Replace(", ", "+") ?? string.Empty;
         }
 
         private static void AppendMenuItems(List<(string MenuPath, string Shortcut)> rows, string parentPath, ToolStripItemCollection items)
@@ -177,7 +183,7 @@ namespace pwiz.Skyline.Menus
                     continue;
 
                 var text = CleanMenuText(menuItem.Text);
-                var fullPath = string.IsNullOrEmpty(parentPath) ? text : parentPath + @" → " + text;
+                var fullPath = string.IsNullOrEmpty(parentPath) ? text : parentPath + " → " + text;
 
                 // Recurse into children first to build full paths
                 if (menuItem.HasDropDownItems)
@@ -213,7 +219,7 @@ namespace pwiz.Skyline.Menus
                 return string.Empty;
 
             // Remove accelerator ampersands and trailing ellipses
-            return text.Replace(@"&", string.Empty).TrimEnd('…', '.');
+            return text.Replace("&", string.Empty).TrimEnd('…', '.');
         }
 
         private static void AppendMenuItemsForMnemonics(List<(string MenuPath, string Shortcut)> rows, string parentPath, ToolStripItemCollection items)
@@ -231,7 +237,7 @@ namespace pwiz.Skyline.Menus
                     continue;
 
                 var text = CleanMenuText(menuItem.Text);
-                var fullPath = string.IsNullOrEmpty(parentPath) ? text : parentPath + @" → " + text;
+                var fullPath = string.IsNullOrEmpty(parentPath) ? text : parentPath + " → " + text;
 
                 // Recurse into children first to build full paths
                 if (menuItem.HasDropDownItems)
@@ -277,7 +283,7 @@ namespace pwiz.Skyline.Menus
                     current = current.OwnerItem as ToolStripMenuItem;
                 }
 
-                return @"Alt+" + string.Join(@",", mnemonicSequence);
+                return "Alt+" + string.Join(",", mnemonicSequence);
             }
 
             return string.Empty;
