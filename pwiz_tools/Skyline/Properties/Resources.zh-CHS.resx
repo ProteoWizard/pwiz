@@ -239,9 +239,6 @@
   <data name="AssociateProteinsDlg_ApplyChanges_Associated_proteins" xml:space="preserve">
     <value>关联的蛋白质</value>
   </data>
-  <data name="PythonInstaller_DownloadPip_Download_failed__Check_your_network_connection_or_contact_Skyline_developers_" xml:space="preserve">
-    <value>下载失败。检查您的网络连接或联络 Skyline 开发者。</value>
-  </data>
   <data name="SkylineWindow_AddGroupComparison_Add_Fold_Change" xml:space="preserve">
     <value>添加倍数变化</value>
   </data>
@@ -521,9 +518,6 @@
   <data name="CommandLine_ImportResultsFile_Warning__Failed_importing_the_results_file__0____Ignoring___" xml:space="preserve">
     <value>警告：导入结果文件{0}失败。 忽视…</value>
   </data>
-  <data name="TestToolStoreClient_GetToolZipFile_Error_downloading_tool" xml:space="preserve">
-    <value>下载工具出错</value>
-  </data>
   <data name="IonMobilityFinder_ProcessMSLevel_Failed_using_results_to_populate_ion_mobility_library_" xml:space="preserve">
     <value>使用结果填充离子迁移库失败：</value>
   </data>
@@ -653,9 +647,6 @@
   <data name="ResultsGrid_ResultsGrid_Identified" xml:space="preserve">
     <value>已确认的</value>
   </data>
-  <data name="RInstaller_DownloadPackages_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_" xml:space="preserve">
-    <value>检查您的网络连接或联络工具提供商以获得安装支持。</value>
-  </data>
   <data name="EditIonMobilityLibraryDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_charge__Charges_must_be_integer_values_between_1_and__1__" xml:space="preserve">
     <value>值 {0} 不是有效电荷。电荷必须是介于 1 和 {1} 之间的整数。</value>
   </data>
@@ -688,12 +679,6 @@
   </data>
   <data name="PasteDlg_CheckSequence_There_is_no_sequence_for_this_protein" xml:space="preserve">
     <value>无此蛋白质序列</value>
-  </data>
-  <data name="MultiFileAsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled_" xml:space="preserve">
-    <value>下载取消。</value>
-  </data>
-  <data name="ToolUpdatesDlg_DisplayInstallSummary_Failed_to_update_the_following_tools" xml:space="preserve">
-    <value>更新下列工具失败</value>
   </data>
   <data name="ValueOutOfRangeDoubleException_ValueOutOfRangeException_The_value___0___for_the_argument__1__must_be_between__2__and__3__" xml:space="preserve">
     <value>参数 {1} 的值“{0}”必须介于 {2} 和 {3} 之间。</value>
@@ -1474,9 +1459,6 @@
   <data name="PeakBoundaryImporter_Import_Failed_to_read_the_first_line_of_the_file" xml:space="preserve">
     <value>读取文件第一行失败</value>
   </data>
-  <data name="ToolUpdatesDlg_DisplayDownloadSummary_Failed_to_download_updates_for_the_following_packages" xml:space="preserve">
-    <value>未能下载下列软件包的更新</value>
-  </data>
   <data name="DigestSettings_Validate_maximum_missed_cleavages" xml:space="preserve">
     <value>最大遗漏的酶解位点数</value>
   </data>
@@ -1567,9 +1549,6 @@
   </data>
   <data name="ResultsGrid_ResultsGrid_Average_Mass_Error_PPM" xml:space="preserve">
     <value>平均质量误差 PPM</value>
-  </data>
-  <data name="PythonInstaller_DownloadPython_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_" xml:space="preserve">
-    <value>检查您的网络连接或联络工具提供商以获得安装支持。</value>
   </data>
   <data name="EditIonMobilityLibraryDlg_EditIonMobilityLibraryDlg_Adduct" xml:space="preserve">
     <value>加合物</value>
@@ -1988,9 +1967,6 @@
     <value>蛋白质</value>
     <comment>Used in PeptideToMoleculeText.Translate to update strings like "choose a protein" to read "choose a molecule list" when non-peptide documents are in use</comment>
   </data>
-  <data name="RInstaller_InstallPackages_Installing_R_packages_requires_an_internet_connection__Please_check_your_connection_and_try_again" xml:space="preserve">
-    <value>安装 R 软件包需要网络连接。请检查您的连接并重试</value>
-  </data>
   <data name="TransitionGroupDecoy" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\transitiongroupdecoy.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -2089,9 +2065,6 @@
   </data>
   <data name="ConfigureToolsDlg_CheckPassTool_Supported_Types___1_" xml:space="preserve">
     <value>支持类型：{1}</value>
-  </data>
-  <data name="RInstaller_InstallPackages_Error__No_internet_connection_" xml:space="preserve">
-    <value>错误：无网络连接。</value>
   </data>
   <data name="PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units" xml:space="preserve">
     <value>明示离子迁移单位</value>
@@ -2377,26 +2350,17 @@
   <data name="EditIonMobilityLibraryDlg_OkDialog_Do_you_want_to_change_it_" xml:space="preserve">
     <value>是否要更改？</value>
   </data>
-  <data name="RInstaller_DownloadR_Download_failed_" xml:space="preserve">
-    <value>下载失败。</value>
-  </data>
   <data name="CommandLine_AssociateProteins_Failed_to_associate_proteins" xml:space="preserve">
     <value>未能关联蛋白质</value>
   </data>
   <data name="AreaCvToolbarProperties_btnOk_Click_Invalid_CV_cutoff_entered" xml:space="preserve">
     <value>输入的 CV 截止值无效</value>
   </data>
-  <data name="ToolUpdatesDlg_DisplayInstallSummary_Successfully_updated_the_following_tool" xml:space="preserve">
-    <value>成功更新下列工具</value>
-  </data>
   <data name="SkylineWindow_SaveDocument_Saving___" xml:space="preserve">
     <value>保存…</value>
   </data>
   <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name" xml:space="preserve">
     <value>片段名称</value>
-  </data>
-  <data name="PythonInstaller_DownloadPython_Download_failed_" xml:space="preserve">
-    <value>下载失败。</value>
   </data>
   <data name="CommandLine_ImportTool_Error__to_import_a_tool_it_must_have_a_name_and_a_command___Use___tool_add_to_specify_a_name_and_use___tool_command_to_specify_a_command___The_tool_was_not_imported___" xml:space="preserve">
     <value>错误：如要导入工具，则必须含有名称和命令。 使用“--工具-添加”来指定一个名称，并且使用“--工具-命令”来指定一个命令。 工具未导入…</value>
@@ -2523,8 +2487,8 @@
   <data name="RefineDlg_RefineDlg_Products" xml:space="preserve">
     <value>子离子</value>
   </data>
-  <data name="ConfigureToolsDlg_GetZipFromWeb_Error_connecting_to_the_Tool_Store___0_" xml:space="preserve">
-    <value>连接至工具商店出错：{0}</value>
+  <data name="ConfigureToolsDlg_GetZipFromWeb_Error_connecting_to_the_Tool_Store_" xml:space="preserve">
+    <value>连接至工具商店出错：</value>
   </data>
   <data name="PeptideToMoleculeText_Molecule_Lists" xml:space="preserve">
     <value>分子列表</value>
@@ -3724,9 +3688,6 @@
   <data name="ResultsGrid_ResultsGrid_User_Set_Total" xml:space="preserve">
     <value>用户设定总数</value>
   </data>
-  <data name="ToolUpdatesDlg_DisplayInstallSummary_Successfully_updated_the_following_tools" xml:space="preserve">
-    <value>成功更新下列工具</value>
-  </data>
   <data name="RInstaller_InstallPackages_Package_installation_failed__Error_log_output_in_immediate_window_" xml:space="preserve">
     <value>软件包安装失败。在即时窗口中记录输出失败。</value>
   </data>
@@ -3754,9 +3715,6 @@
   </data>
   <data name="CommandArgs_ParseArgsInternal_Warning__The_method_type__0__is_invalid__It_must_be_one_of_the_following___standard____scheduled__or__triggered__" xml:space="preserve">
     <value>警告：方法类型{0}无效。它必须是下列内容之一：“标准”、“预定”或“触发”。</value>
-  </data>
-  <data name="ToolUpdatesDlg_DisplayInstallSummary_Failed_to_update_the_following_tool" xml:space="preserve">
-    <value>更新下列工具失败</value>
   </data>
   <data name="ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_overwrite_or_install_in_parallel_" xml:space="preserve">
     <value>您是否想要覆盖或并行安装？</value>
