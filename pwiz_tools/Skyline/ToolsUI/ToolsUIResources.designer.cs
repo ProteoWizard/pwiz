@@ -944,6 +944,52 @@ namespace pwiz.Skyline.ToolsUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to download updates for the following packages.
+        /// </summary>
+        public static string ToolUpdatesDlg_DisplayDownloadSummary_Failed_to_download_updates_for_the_following_packages {
+            get {
+                return ResourceManager.GetString("ToolUpdatesDlg_DisplayDownloadSummary_Failed_to_download_updates_for_the_followin" +
+                        "g_packages", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to update the following tool.
+        /// </summary>
+        public static string ToolUpdatesDlg_DisplayInstallSummary_Failed_to_update_the_following_tool {
+            get {
+                return ResourceManager.GetString("ToolUpdatesDlg_DisplayInstallSummary_Failed_to_update_the_following_tool", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to update the following tools.
+        /// </summary>
+        public static string ToolUpdatesDlg_DisplayInstallSummary_Failed_to_update_the_following_tools {
+            get {
+                return ResourceManager.GetString("ToolUpdatesDlg_DisplayInstallSummary_Failed_to_update_the_following_tools", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Successfully updated the following tool.
+        /// </summary>
+        public static string ToolUpdatesDlg_DisplayInstallSummary_Successfully_updated_the_following_tool {
+            get {
+                return ResourceManager.GetString("ToolUpdatesDlg_DisplayInstallSummary_Successfully_updated_the_following_tool", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Successfully updated the following tools.
+        /// </summary>
+        public static string ToolUpdatesDlg_DisplayInstallSummary_Successfully_updated_the_following_tools {
+            get {
+                return ResourceManager.GetString("ToolUpdatesDlg_DisplayInstallSummary_Successfully_updated_the_following_tools", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Downloading Updates.
         /// </summary>
         public static string ToolUpdatesDlg_GetTools_Downloading_Updates {

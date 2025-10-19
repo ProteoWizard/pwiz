@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Matt Chambers <matt.chambers42 .at. gmail.com >
  *
  * Copyright 2021 University of Washington - Seattle, WA
@@ -206,7 +206,7 @@ namespace pwiz.Skyline.Alerts
                             var resultString = Encoding.UTF8.GetString(msFraggerZipBytes);
                                 broker.UpdateProgress(new ProgressStatus().ChangeErrorException(
                                     new InvalidOperationException(string.Format(@"{0}{1}{1}{2}",
-                                        Resources.TestToolStoreClient_GetToolZipFile_Error_downloading_tool,
+                                        AlertsResources.TestToolStoreClient_GetToolZipFile_Error_downloading_tool,
                                         Environment.NewLine, resultString))));
                             return;
                         }

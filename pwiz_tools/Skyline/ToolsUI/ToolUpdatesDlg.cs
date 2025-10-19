@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -199,22 +198,21 @@ namespace pwiz.Skyline.ToolsUI
             string message;
             if (distinctMessages.Count == 1)
             {
-                // All failed with same error - list names, show common error at bottom
-                message = TextUtil.LineSeparate(
-                    Resources.ToolUpdatesDlg_DisplayDownloadSummary_Failed_to_download_updates_for_the_following_packages,
-                    string.Empty,
-                    TextUtil.LineSeparate(failedDownloads.Select(f => f.Tool.PackageName)),
-                    string.Empty,
+                // All failed with same error - use multi-tool formatter
+                message = FormatDownloadFailureSummary(
+                    failedDownloads.Select(f => f.Tool.PackageName),
                     distinctMessages[0]);
             }
             else
             {
-                // Different errors - show "ToolName: Error" format
-                message = TextUtil.LineSeparate(
-                    Resources.ToolUpdatesDlg_DisplayDownloadSummary_Failed_to_download_updates_for_the_following_packages,
-                    string.Empty,
-                    TextUtil.LineSeparate(failedDownloads.Select(f => 
-                        FormatFailureMessage(f.Tool.PackageName, f.Exception.Message))));
+                // Different errors - format each tool individually
+                var formattedFailures = failedDownloads.Select(f => 
+                    FormatFailureMessage(f.Tool.PackageName, f.Exception.Message));
+
+                message = failedDownloads.Count == 1
+                    ? FormatDownloadFailureSummary(failedDownloads.First().Tool.PackageName,
+                        failedDownloads.First().Exception.Message)
+                    : FormatDownloadFailureSummary(formattedFailures);
             }
 
             MessageDlg.Show(this, message);
@@ -282,40 +280,133 @@ namespace pwiz.Skyline.ToolsUI
 
         private void DisplayInstallSummary(ICollection<string> successfulUpdates, ICollection<KeyValuePair<string, string>> failedUpdates)
         {
-            string oneUpdate = Resources.ToolUpdatesDlg_DisplayInstallSummary_Successfully_updated_the_following_tool;
-            string multipleUpdates =
-                Resources.ToolUpdatesDlg_DisplayInstallSummary_Successfully_updated_the_following_tools;
-
-            string oneFailure = Resources.ToolUpdatesDlg_DisplayInstallSummary_Failed_to_update_the_following_tool;
-            string multipleFailures =
-                Resources.ToolUpdatesDlg_DisplayInstallSummary_Failed_to_update_the_following_tools;
+            string message;
             
-            string success = TextUtil.LineSeparate(successfulUpdates.Count == 1 ? oneUpdate : multipleUpdates, 
-                                                   string.Empty,
-                                                   TextUtil.LineSeparate(successfulUpdates));
-
-            string failure = TextUtil.LineSeparate(failedUpdates.Count == 1 ? oneFailure : multipleFailures, 
-                                                   string.Empty,
-                                                   TextUtil.LineSeparate(failedUpdates.Select(pair => FormatFailureMessage(pair.Key, pair.Value))));
-
             if (successfulUpdates.Count != 0 && !failedUpdates.Any())
             {
-                MessageDlg.Show(this, success);
+                // Only successes
+                message = successfulUpdates.Count == 1
+                    ? FormatInstallSuccessSummary(successfulUpdates.First())
+                    : FormatInstallSuccessSummary(successfulUpdates);
             } 
-            else if (successfulUpdates.Count == 0 & failedUpdates.Any())
+            else if (successfulUpdates.Count == 0 && failedUpdates.Any())
             {
-                MessageDlg.Show(this, failure);
+                // Only failures
+                var formattedFailures = failedUpdates.Select(pair => FormatFailureMessage(pair.Key, pair.Value));
+                message = failedUpdates.Count == 1
+                    ? FormatInstallFailureSummary(formattedFailures.First())
+                    : FormatInstallFailureSummary(formattedFailures);
             }
             else // both successes and failures
             {
-                MessageDlg.Show(this, TextUtil.LineSeparate(success, string.Empty, failure));
+                message = FormatMixedInstallSummary(
+                    successfulUpdates,
+                    failedUpdates.Select(pair => FormatFailureMessage(pair.Key, pair.Value)));
             }
+
+            MessageDlg.Show(this, message);
         }
 
         public static string FormatFailureMessage(string toolName, string errorMsg)
         {
             return string.Format(@"{0}: {1}", toolName, errorMsg);
         }
+
+        #region Message formatting helpers for testing
+
+        /// <summary>
+        /// Formats download failure summary message for a single tool with single error.
+        /// </summary>
+        public static string FormatDownloadFailureSummary(string toolName, string errorMessage)
+        {
+            return TextUtil.LineSeparate(
+                ToolsUIResources.ToolUpdatesDlg_DisplayDownloadSummary_Failed_to_download_updates_for_the_following_packages,
+                string.Empty,
+                toolName,
+                string.Empty,
+                errorMessage);
+        }
+
+        /// <summary>
+        /// Formats download failure summary message for multiple tools with common error.
+        /// </summary>
+        public static string FormatDownloadFailureSummary(IEnumerable<string> toolNames, string commonErrorMessage)
+        {
+            return TextUtil.LineSeparate(
+                ToolsUIResources.ToolUpdatesDlg_DisplayDownloadSummary_Failed_to_download_updates_for_the_following_packages,
+                string.Empty,
+                TextUtil.LineSeparate(toolNames),
+                string.Empty,
+                commonErrorMessage);
+        }
+
+        /// <summary>
+        /// Formats download failure summary message for multiple tools with individual errors.
+        /// </summary>
+        public static string FormatDownloadFailureSummary(IEnumerable<string> formattedFailureMessages)
+        {
+            return TextUtil.LineSeparate(
+                ToolsUIResources.ToolUpdatesDlg_DisplayDownloadSummary_Failed_to_download_updates_for_the_following_packages,
+                string.Empty,
+                TextUtil.LineSeparate(formattedFailureMessages));
+        }
+
+        /// <summary>
+        /// Formats install success summary message for single tool.
+        /// </summary>
+        public static string FormatInstallSuccessSummary(string toolName)
+        {
+            return TextUtil.LineSeparate(
+                ToolsUIResources.ToolUpdatesDlg_DisplayInstallSummary_Successfully_updated_the_following_tool,
+                string.Empty,
+                toolName);
+        }
+
+        /// <summary>
+        /// Formats install success summary message for multiple tools.
+        /// </summary>
+        public static string FormatInstallSuccessSummary(IEnumerable<string> toolNames)
+        {
+            return TextUtil.LineSeparate(
+                ToolsUIResources.ToolUpdatesDlg_DisplayInstallSummary_Successfully_updated_the_following_tools,
+                string.Empty,
+                TextUtil.LineSeparate(toolNames));
+        }
+
+        /// <summary>
+        /// Formats install failure summary message for single tool with single error.
+        /// </summary>
+        public static string FormatInstallFailureSummary(string formattedFailureMessage)
+        {
+            return TextUtil.LineSeparate(
+                ToolsUIResources.ToolUpdatesDlg_DisplayInstallSummary_Failed_to_update_the_following_tool,
+                string.Empty,
+                formattedFailureMessage);
+        }
+
+        /// <summary>
+        /// Formats install failure summary message for multiple tools with individual errors.
+        /// </summary>
+        public static string FormatInstallFailureSummary(IEnumerable<string> formattedFailureMessages)
+        {
+            return TextUtil.LineSeparate(
+                ToolsUIResources.ToolUpdatesDlg_DisplayInstallSummary_Failed_to_update_the_following_tools,
+                string.Empty,
+                TextUtil.LineSeparate(formattedFailureMessages));
+        }
+
+        /// <summary>
+        /// Formats mixed success/failure summary message.
+        /// </summary>
+        public static string FormatMixedInstallSummary(IEnumerable<string> successfulToolNames, IEnumerable<string> formattedFailureMessages)
+        {
+            return TextUtil.LineSeparate(
+                FormatInstallSuccessSummary(successfulToolNames),
+                string.Empty,
+                FormatInstallFailureSummary(formattedFailureMessages));
+        }
+
+        #endregion
 
         #region Functional test support
 

@@ -51,11 +51,22 @@
   - **Simplified**: Control flow with early `continue` for null results
   - **Result**: Each tool update is independent - partial success preserved
 
-### ✅ Completed - ToolUpdatesTest Enhanced
+### ✅ Completed - ToolUpdatesTest Enhanced with Aggressive DRY
 - [x] Added `TestDownloadCancel()` - Tests user cancellation during download
 - [x] Added `TestMultipleToolDownloadFailures()` - Tests grouped error message format
-- [x] Uses new `TestHttpClientCancellation()` helper from AbstractFunctionalTestEx
-- [x] Validates enhanced error grouping logic (common error at bottom)
+- [x] Created `ToolUpdateTestContext` - IDisposable helper for setup/teardown
+  - Clears tool list before AND after (prevents cascading failures)
+  - Automatically disposes resources
+  - Automatically waits for dialog close
+- [x] Added message formatting helpers to ToolUpdatesDlg (production code)
+  - `FormatDownloadFailureSummary()` - Single and multi-tool overloads
+  - `FormatInstallSuccessSummary()` - Single and multi-tool overloads
+  - `FormatInstallFailureSummary()` - Single and multi-tool overloads
+  - `FormatMixedInstallSummary()` - Success + failure combined
+- [x] Added expected message helpers to HttpClientTestHelper
+  - `GetNoNetworkInterfaceMessage()`, `GetConnectionLossMessage()`, etc.
+  - Centralizes both simulation AND expected message
+- [x] Result: ~40% code reduction, impossible to forget cleanup/disposal
 
 ### 🔄 In Progress - Core Skyline.exe WebClient Migration
 - [ ] Migrate `.skyp` file support (SkypSupport.cs) - used by Skyline.exe

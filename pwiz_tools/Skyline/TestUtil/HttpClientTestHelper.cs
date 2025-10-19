@@ -22,6 +22,7 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using pwiz.Common.CommonResources;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 
@@ -35,6 +36,7 @@ namespace pwiz.SkylineTestUtil
     {
         // ReSharper disable once NotAccessedField.Local
         private readonly HttpClientTestBehavior _behavior;
+        private readonly Exception _simulatedException;
         private readonly HttpClientWithProgress.IHttpClientTestBehavior _originalTestBehavior;
 
         /// <summary>
@@ -53,6 +55,7 @@ namespace pwiz.SkylineTestUtil
         public HttpClientTestHelper(HttpClientTestBehavior behavior)
         {
             _behavior = behavior;
+            _simulatedException = behavior.FailureException;
             
             // Store the original test behavior
             _originalTestBehavior = HttpClientWithProgress.TestBehavior;
@@ -209,6 +212,185 @@ namespace pwiz.SkylineTestUtil
         {
             return SimulateSuccessfulDownload(Encoding.UTF8.GetBytes(mockData), simulateProgress);
         }
+
+        #region Expected message helpers
+
+        /// <summary>
+        /// Gets the expected error message for this simulation based on the exception type.
+        /// </summary>
+        /// <param name="uri">Optional URI for messages that include URL/hostname in the error</param>
+        /// <returns>The expected user-facing error message</returns>
+        public string GetExpectedMessage(Uri uri = null)
+        {
+            if (_simulatedException == null)
+                return null; // Success case, no error message
+            
+            // Check exception type and return appropriate message
+            if (_simulatedException is HttpClientWithProgress.NoNetworkTestException)
+                return GetNoNetworkInterfaceMessage();
+            
+            if (_simulatedException is ConnectionLossException)
+                return GetConnectionLossMessage();
+            
+            if (_simulatedException is LongWaitDlg.CancelClickedTestException)
+                return null; // User cancellation - no message shown
+            
+            if (_simulatedException is OperationCanceledException)
+                return new OperationCanceledException().Message; // System cancellation message
+            
+            if (_simulatedException is TimeoutException)
+                return uri != null ? GetTimeoutMessage(uri) : null;
+            
+            // HttpRequestException - check message for HTTP status codes
+            if (_simulatedException is HttpRequestException httpEx)
+            {
+                if (uri == null)
+                    return null;
+                
+                var message = httpEx.Message;
+                if (message.Contains("404"))
+                    return GetHttp404Message(uri);
+                if (message.Contains("401"))
+                    return GetHttp401Message(uri);
+                if (message.Contains("403"))
+                    return GetHttp403Message(uri);
+                if (message.Contains("500"))
+                    return GetHttp500Message(uri);
+                if (message.Contains("429"))
+                    return GetHttp429Message(uri);
+                if (message.Contains("503"))
+                    return GetHttp503Message(uri);
+                
+                // Check for WebException inner exception
+                if (httpEx.InnerException is WebException webEx)
+                {
+                    if (webEx.Status == WebExceptionStatus.NameResolutionFailure)
+                        return GetDnsFailureMessage(uri);
+                }
+                
+                // Generic connection failure
+                return GetConnectionFailureMessage(uri);
+            }
+            
+            return null;
+        }
+
+        /// <summary>
+        /// Gets the expected error message for no network interface scenario.
+        /// </summary>
+        public static string GetNoNetworkInterfaceMessage()
+        {
+            return MessageResources.HttpClientWithProgress_MapHttpException_No_network_connection_detected__Please_check_your_internet_connection_and_try_again_;
+        }
+
+        /// <summary>
+        /// Gets the expected error message for connection loss scenario.
+        /// </summary>
+        public static string GetConnectionLossMessage()
+        {
+            return MessageResources.HttpClientWithProgress_MapHttpException_The_connection_was_lost_during_download__Please_check_your_internet_connection_and_try_again_;
+        }
+
+        /// <summary>
+        /// Gets the expected error message for connection failure.
+        /// </summary>
+        /// <param name="uri">The URI that failed (uses Host)</param>
+        public static string GetConnectionFailureMessage(Uri uri)
+        {
+            return string.Format(
+                MessageResources.HttpClientWithProgress_MapHttpException_Failed_to_connect_to__0___Please_check_your_network_connection__VPN_proxy__or_firewall_,
+                uri.Host);
+        }
+
+        /// <summary>
+        /// Gets the expected error message for DNS failure.
+        /// </summary>
+        /// <param name="uri">The URI that failed (uses Host)</param>
+        public static string GetDnsFailureMessage(Uri uri)
+        {
+            return string.Format(
+                MessageResources.HttpClientWithProgress_MapHttpException_Failed_to_resolve_host__0___Please_check_your_DNS_settings_or_VPN_proxy_,
+                uri.Host);
+        }
+
+        /// <summary>
+        /// Gets the expected error message for timeout.
+        /// </summary>
+        /// <param name="uri">The URI that timed out (uses full URI)</param>
+        public static string GetTimeoutMessage(Uri uri)
+        {
+            return string.Format(
+                MessageResources.HttpClientWithProgress_MapHttpException_The_request_to__0__timed_out__Please_try_again_,
+                uri);
+        }
+
+        /// <summary>
+        /// Gets the expected error message for HTTP 404 Not Found.
+        /// </summary>
+        /// <param name="uri">The URI that was not found (uses full URI)</param>
+        public static string GetHttp404Message(Uri uri)
+        {
+            return string.Format(
+                MessageResources.HttpClientWithProgress_MapHttpException_The_requested_resource_at__0__was_not_found__HTTP_404___Please_verify_the_URL_,
+                uri);
+        }
+
+        /// <summary>
+        /// Gets the expected error message for HTTP 401 Unauthorized.
+        /// </summary>
+        /// <param name="uri">The URI that denied access (uses full URI)</param>
+        public static string GetHttp401Message(Uri uri)
+        {
+            return string.Format(
+                MessageResources.HttpClientWithProgress_MapHttpException_Access_to__0__was_denied__HTTP_401___Authentication_may_be_required_,
+                uri);
+        }
+
+        /// <summary>
+        /// Gets the expected error message for HTTP 403 Forbidden.
+        /// </summary>
+        /// <param name="uri">The URI that was forbidden (uses full URI)</param>
+        public static string GetHttp403Message(Uri uri)
+        {
+            return string.Format(
+                MessageResources.HttpClientWithProgress_MapHttpException_Access_to__0__was_forbidden__HTTP_403___You_may_not_have_permission_to_access_this_resource_,
+                uri);
+        }
+
+        /// <summary>
+        /// Gets the expected error message for HTTP 500 Internal Server Error.
+        /// </summary>
+        /// <param name="uri">The URI that encountered an error (uses Host)</param>
+        public static string GetHttp500Message(Uri uri)
+        {
+            return string.Format(
+                MessageResources.HttpClientWithProgress_MapHttpException_The_server__0__encountered_an_internal_error__HTTP_500___Please_try_again_later_or_contact_the_server_administrator_,
+                uri.Host);
+        }
+
+        /// <summary>
+        /// Gets the expected error message for HTTP 429 Too Many Requests.
+        /// </summary>
+        /// <param name="uri">The URI that was rate limited (uses Host)</param>
+        public static string GetHttp429Message(Uri uri)
+        {
+            return string.Format(
+                MessageResources.HttpClientWithProgress_MapHttpException_Too_many_requests_to__0___HTTP_429___Please_wait_before_trying_again_,
+                uri.Host);
+        }
+
+        /// <summary>
+        /// Gets the expected error message for HTTP 503 Service Unavailable.
+        /// </summary>
+        /// <param name="uri">The URI that was unavailable (uses Host)</param>
+        public static string GetHttp503Message(Uri uri)
+        {
+            return string.Format(
+                MessageResources.HttpClientWithProgress_MapHttpException_The_server__0__returned_an_error__HTTP__1____Please_try_again_or_contact_support_,
+                uri.Host, 503);
+        }
+
+        #endregion
 
         public void Dispose()
         {

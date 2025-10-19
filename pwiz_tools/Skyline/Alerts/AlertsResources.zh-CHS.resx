@@ -327,4 +327,7 @@
 If you don't get an email, double-check your email address or click "More Info" for troubleshooting.</value>
     <comment>Needs Review:Missing translation</comment>
   </data>
+  <data name="TestToolStoreClient_GetToolZipFile_Error_downloading_tool" xml:space="preserve">
+    <value>下载工具出错</value>
+  </data>
 </root>

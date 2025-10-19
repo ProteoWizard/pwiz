@@ -20,7 +20,6 @@ using System;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.CommonResources;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.Tools;
@@ -86,14 +85,13 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         private static void TestDeselectAll()
         {
-            Settings.Default.ToolList.Add(SAMPLE_TOOL);
-            using var toolsUpdateHelper = FormatUpdateHelper(FormatToolStoreClient());
-            var toolUpdatesDlg = FormatToolUpdatesDlg(false, toolsUpdateHelper, false);
-            var messageDlg = ShowDialog<MessageDlg>(toolUpdatesDlg.OkDialog);
-            Assert.AreEqual(Resources.ToolUpdatesDlg_btnUpdate_Click_Please_select_at_least_one_tool_to_update_, messageDlg.Message);
-            OkDialog(messageDlg, messageDlg.OkDialog);
+            using var context = new ToolUpdateTestContext(new[] { SAMPLE_TOOL });
+            var toolUpdatesDlg = context.ShowToolUpdatesDlg(itemsSelected: false);
+
+            TestMessageDlgShown(toolUpdatesDlg.OkDialog, 
+                Resources.ToolUpdatesDlg_btnUpdate_Click_Please_select_at_least_one_tool_to_update_);
+
             OkDialog(toolUpdatesDlg, toolUpdatesDlg.CancelDialog);
-            Settings.Default.ToolList.Clear();
         }
 
         private static void TestDownload()
@@ -109,18 +107,12 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         private static void TestDownloadFailure()
         {
-            Settings.Default.ToolList.Add(SAMPLE_TOOL);
             using var helper = HttpClientTestHelper.SimulateNoNetworkInterface();
-            using var toolsUpdateHelper = FormatUpdateHelper(ToolStoreUtil.ToolStoreClient);
-            var toolUpdatesDlg = FormatToolUpdatesDlg(true,  toolsUpdateHelper, true);
-            TestMessageDlgShown(toolUpdatesDlg.OkDialog, TextUtil.LineSeparate(
-                Resources.ToolUpdatesDlg_DisplayDownloadSummary_Failed_to_download_updates_for_the_following_packages,
-                string.Empty, 
-                SAMPLE_TOOL.PackageName, 
-                string.Empty, 
-                MessageResources.HttpClientWithProgress_MapHttpException_No_network_connection_detected__Please_check_your_internet_connection_and_try_again_));
-            WaitForClosedForm(toolUpdatesDlg);
-            Settings.Default.ToolList.Clear();
+            using var context = new ToolUpdateTestContext(new[] { SAMPLE_TOOL }, ToolStoreUtil.ToolStoreClient);
+            var toolUpdatesDlg = context.ShowToolUpdatesDlg(testingDownloadOnly: true);
+
+            TestMessageDlgShown(toolUpdatesDlg.OkDialog, 
+                ToolUpdatesDlg.FormatDownloadFailureSummary(SAMPLE_TOOL.PackageName, helper.GetExpectedMessage()));
         }
 
         /// <summary>
@@ -128,16 +120,11 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         private static void TestDownloadCancel()
         {
-            Settings.Default.ToolList.Add(SAMPLE_TOOL);
-            using var toolsUpdateHelper = FormatUpdateHelper(ToolStoreUtil.ToolStoreClient);
-            var toolUpdatesDlg = FormatToolUpdatesDlg(true, toolsUpdateHelper, true);
+            using var context = new ToolUpdateTestContext(new[] { SAMPLE_TOOL }, ToolStoreUtil.ToolStoreClient);
+            var toolUpdatesDlg = context.ShowToolUpdatesDlg(testingDownloadOnly: true);
             
             // Should cancel silently - no MessageDlg shown
             TestHttpClientCancellation(toolUpdatesDlg.OkDialog);
-            
-            // Dialog should close after cancellation
-            WaitForClosedForm(toolUpdatesDlg);
-            Settings.Default.ToolList.Clear();
         }
 
         /// <summary>
@@ -145,11 +132,9 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         private static void TestDownloadSuccess()
         {
-            Settings.Default.ToolList.Add(SAMPLE_TOOL);
-            using var toolsUpdateHelper = FormatUpdateHelper(FormatToolStoreClient());
-            var toolUpdatesDlg = FormatToolUpdatesDlg(true, toolsUpdateHelper, true);
+            using var context = new ToolUpdateTestContext(new[] { SAMPLE_TOOL });
+            var toolUpdatesDlg = context.ShowToolUpdatesDlg(testingDownloadOnly: true);
             OkDialog(toolUpdatesDlg, toolUpdatesDlg.OkDialog);
-            Settings.Default.ToolList.Clear();
         }
 
         /// <summary>
@@ -159,21 +144,15 @@ namespace pwiz.SkylineTestFunctional
         private static void TestMultipleToolDownloadFailures()
         {
             var multipleTools = new[] { SAMPLE_TOOL, NESTED_TOOL_A, NESTED_TOOL_B };
-            Settings.Default.ToolList.AddRange(multipleTools);
             using var helper = HttpClientTestHelper.SimulateNoNetworkInterface();
-            using var toolsUpdateHelper = FormatUpdateHelper(ToolStoreUtil.ToolStoreClient);
-            var toolUpdatesDlg = FormatToolUpdatesDlg(true, toolsUpdateHelper, true);
+            using var context = new ToolUpdateTestContext(multipleTools, ToolStoreUtil.ToolStoreClient);
+            var toolUpdatesDlg = context.ShowToolUpdatesDlg(testingDownloadOnly: true);
             
             // All tools should fail with same network error - message should be grouped
-            TestMessageDlgShown(toolUpdatesDlg.OkDialog, TextUtil.LineSeparate(
-                Resources.ToolUpdatesDlg_DisplayDownloadSummary_Failed_to_download_updates_for_the_following_packages,
-                string.Empty,
-                TextUtil.LineSeparate(multipleTools.Select(t => t.PackageName).Distinct()),
-                string.Empty,
-                MessageResources.HttpClientWithProgress_MapHttpException_No_network_connection_detected__Please_check_your_internet_connection_and_try_again_));
-            
-            WaitForClosedForm(toolUpdatesDlg);
-            Settings.Default.ToolList.Clear();
+            TestMessageDlgShown(toolUpdatesDlg.OkDialog, 
+                ToolUpdatesDlg.FormatDownloadFailureSummary(
+                    multipleTools.Select(t => t.PackageName).Distinct(),
+                    helper.GetExpectedMessage()));
         }
 
         private static void TestUpdate()
@@ -196,22 +175,14 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         private static void TestUpdateFailureIOException()
         {
-            Settings.Default.ToolList.Add(SAMPLE_TOOL);
-            using var toolsUpdateHelper = FormatUpdateHelper(FormatToolStoreClient(),
-                CreateTestInstallFunction(new IOException(EXCEPTION_MESSAGE), false));
-            var toolUpdatesDlg = FormatToolUpdatesDlg(true, toolsUpdateHelper, false);
-            var messageDlg = ShowDialog<MessageDlg>(toolUpdatesDlg.OkDialog);
-            Assert.AreEqual(
-                TextUtil.LineSeparate(
-                    Resources.ToolUpdatesDlg_DisplayInstallSummary_Failed_to_update_the_following_tool, string.Empty,
-                    ToolUpdatesDlg.FormatFailureMessage(SAMPLE_TOOL.PackageName, TextUtil.LineSeparate(
-                        string.Format(
-                            Resources
-                                .ConfigureToolsDlg_UnpackZipTool_Failed_attempting_to_extract_the_tool_from__0_,
-                            string.Empty), EXCEPTION_MESSAGE))), messageDlg.Message);
-            OkDialog(messageDlg, messageDlg.OkDialog);
-            WaitForClosedForm(toolUpdatesDlg);
-            Settings.Default.ToolList.Clear();
+            var expectedErrorMessage = TextUtil.LineSeparate(
+                string.Format(Resources.ConfigureToolsDlg_UnpackZipTool_Failed_attempting_to_extract_the_tool_from__0_, string.Empty), 
+                EXCEPTION_MESSAGE);
+            
+            TestSingleToolInstall(
+                CreateTestInstallFunction(new IOException(EXCEPTION_MESSAGE), false),
+                FormatFailureMessage(SAMPLE_TOOL, expectedErrorMessage),
+                isSuccess: false);
         }
 
         /// <summary>
@@ -219,18 +190,10 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         private static void TestUpdateFailureMessageException()
         {
-            Settings.Default.ToolList.Add(SAMPLE_TOOL);
-            using var toolsUpdateHelper = FormatUpdateHelper(FormatToolStoreClient(),
-                CreateTestInstallFunction(new ToolExecutionException(EXCEPTION_MESSAGE), false));
-            var toolUpdatesDlg = FormatToolUpdatesDlg(true, toolsUpdateHelper, false);
-            var messageDlg = ShowDialog<MessageDlg>(toolUpdatesDlg.OkDialog);
-            Assert.AreEqual(
-                TextUtil.LineSeparate(
-                    Resources.ToolUpdatesDlg_DisplayInstallSummary_Failed_to_update_the_following_tool, string.Empty,
-                    ToolUpdatesDlg.FormatFailureMessage(SAMPLE_TOOL.PackageName, EXCEPTION_MESSAGE)), messageDlg.Message);
-            OkDialog(messageDlg, messageDlg.OkDialog);
-            WaitForClosedForm(toolUpdatesDlg);
-            Settings.Default.ToolList.Clear();
+            TestSingleToolInstall(
+                CreateTestInstallFunction(new ToolExecutionException(EXCEPTION_MESSAGE), false),
+                FormatFailureMessage(SAMPLE_TOOL, EXCEPTION_MESSAGE),
+                isSuccess: false);
         }
 
         /// <summary>
@@ -238,20 +201,10 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         private static void TestUpdateFailureUserCancel()
         {
-            Settings.Default.ToolList.Add(SAMPLE_TOOL);
-            using var toolsUpdateHelper = FormatUpdateHelper(FormatToolStoreClient(),
-                CreateTestInstallFunction(null, true));
-            var toolUpdatesDlg = FormatToolUpdatesDlg(true, toolsUpdateHelper, false);
-            var messageDlg = ShowDialog<MessageDlg>(toolUpdatesDlg.OkDialog);
-            Assert.AreEqual(
-                TextUtil.LineSeparate(
-                    Resources.ToolUpdatesDlg_DisplayInstallSummary_Failed_to_update_the_following_tool, string.Empty,
-                    ToolUpdatesDlg.FormatFailureMessage(SAMPLE_TOOL.PackageName, 
-                        Resources.ToolUpdatesDlg_InstallUpdates_User_cancelled_installation)),
-                messageDlg.Message);
-            OkDialog(messageDlg, messageDlg.OkDialog);
-            WaitForClosedForm(toolUpdatesDlg);
-            Settings.Default.ToolList.Clear();
+            TestSingleToolInstall(
+                CreateTestInstallFunction(null, true),
+                FormatFailureMessage(SAMPLE_TOOL, Resources.ToolUpdatesDlg_InstallUpdates_User_cancelled_installation),
+                isSuccess: false);
         }
 
         /// <summary>
@@ -259,18 +212,82 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         private static void TestUpdateSuccess()
         {
-            Settings.Default.ToolList.Add(SAMPLE_TOOL);
-            using var toolsUpdateHelper = FormatUpdateHelper(FormatToolStoreClient(),
-                CreateTestInstallFunction(null, false));
-            var toolUpdatesDlg = FormatToolUpdatesDlg(true, toolsUpdateHelper, false);
-            var messageDlg = ShowDialog<MessageDlg>(toolUpdatesDlg.OkDialog);
-            Assert.AreEqual(
-                TextUtil.LineSeparate(
-                    Resources.ToolUpdatesDlg_DisplayInstallSummary_Successfully_updated_the_following_tool,
-                    string.Empty, SAMPLE_TOOL.PackageName), messageDlg.Message);
-            OkDialog(messageDlg, messageDlg.OkDialog);
-            WaitForClosedForm(toolUpdatesDlg);
-            Settings.Default.ToolList.Clear();
+            TestSingleToolInstall(
+                CreateTestInstallFunction(null, false),
+                SAMPLE_TOOL.PackageName,
+                isSuccess: true);
+        }
+
+        /// <summary>
+        /// Helper method to test single tool installation with various outcomes.
+        /// Eliminates repetitive setup/teardown code.
+        /// </summary>
+        /// <param name="unpackZipTool">Function to control install behavior (success, failure, cancellation)</param>
+        /// <param name="expectedMessageContent">Expected content in the final message (tool name for success, formatted error for failure)</param>
+        /// <param name="isSuccess">True for success message, false for failure message</param>
+        private static void TestSingleToolInstall(
+            Func<string, IUnpackZipToolSupport, ToolInstaller.UnzipToolReturnAccumulator> unpackZipTool,
+            string expectedMessageContent,
+            bool isSuccess)
+        {
+            using var context = new ToolUpdateTestContext(new[] { SAMPLE_TOOL }, unpackZipTool: unpackZipTool);
+            var toolUpdatesDlg = context.ShowToolUpdatesDlg();
+            
+            var expectedMessage = isSuccess
+                ? ToolUpdatesDlg.FormatInstallSuccessSummary(expectedMessageContent)
+                : ToolUpdatesDlg.FormatInstallFailureSummary(expectedMessageContent);
+            
+            TestMessageDlgShown(toolUpdatesDlg.OkDialog, expectedMessage);
+        }
+
+        /// <summary>
+        /// IDisposable helper for ToolUpdatesTest that handles common setup/teardown.
+        /// Ensures tool list is cleared before and after test, properly disposes resources,
+        /// and waits for ToolUpdatesDlg to close.
+        /// </summary>
+        private class ToolUpdateTestContext : IDisposable
+        {
+            private readonly IToolUpdateHelper _updateHelper;
+            
+            public ToolUpdateTestContext(
+                ToolDescription[] toolsToAdd,
+                IToolStoreClient toolStoreClient = null,
+                Func<string, IUnpackZipToolSupport, ToolInstaller.UnzipToolReturnAccumulator> unpackZipTool = null)
+            {
+                // Clear tool list BEFORE test (prevents cascading failures from previous test failures)
+                Settings.Default.ToolList.Clear();
+                
+                // Add tools for this test
+                if (toolsToAdd != null && toolsToAdd.Length > 0)
+                    Settings.Default.ToolList.AddRange(toolsToAdd);
+                
+                // Create update helper
+                _updateHelper = CreateUpdateHelper(
+                    toolStoreClient ?? CreateToolStoreClient(), 
+                    unpackZipTool);
+            }
+            
+            /// <summary>
+            /// Shows the ToolUpdatesDlg with the configured update helper.
+            /// </summary>
+            /// <param name="itemsSelected">If true, all tools are selected. If false, all tools are deselected.</param>
+            /// <param name="testingDownloadOnly">If true, only tests download phase (skips installation).</param>
+            public ToolUpdatesDlg ShowToolUpdatesDlg(bool itemsSelected = true, bool testingDownloadOnly = false)
+            {
+                return ShowAndInitToolUpdatesDlg(itemsSelected, _updateHelper, testingDownloadOnly);
+            }
+            
+            public void Dispose()
+            {
+                // Wait for ToolUpdatesDlg to close (no-op if already closed)
+                WaitForClosedForm<ToolUpdatesDlg>();
+                
+                // Dispose the update helper (which disposes the tool store client)
+                (_updateHelper as IDisposable)?.Dispose();
+                
+                // Clear tool list AFTER test (cleanup)
+                Settings.Default.ToolList.Clear();
+            }
         }
 
         /// <summary>
@@ -295,22 +312,15 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         private void TestUpdateSingleTool()
         {
-            Settings.Default.ToolList.Add(SAMPLE_TOOL);
-            using var toolsUpdateHelper = FormatUpdateHelper(FormatToolStoreClient(TestFilesDir.FullPath));
-            var toolUpdatesDlg = FormatToolUpdatesDlg(true, toolsUpdateHelper, false);
+            using var context = new ToolUpdateTestContext(new[] { SAMPLE_TOOL }, CreateToolStoreClient(TestFilesDir.FullPath));
+            var toolUpdatesDlg = context.ShowToolUpdatesDlg();
+
             var multiBtnMsgDlg = ShowDialog<MultiButtonMsgDlg>(toolUpdatesDlg.OkDialog);
-            var messageDlg = ShowDialog<MessageDlg>(multiBtnMsgDlg.Btn0Click);
-            Assert.AreEqual(
-                TextUtil.LineSeparate(
-                    Resources.ToolUpdatesDlg_DisplayInstallSummary_Successfully_updated_the_following_tool,
-                    string.Empty, SAMPLE_TOOL.PackageName), messageDlg.Message);
-            foreach (var tool in Settings.Default.ToolList.Where(tool => Equals(tool.PackageIdentifier, SAMPLE_TOOL.PackageIdentifier)))
-            {
-                Assert.IsFalse(tool.UpdateAvailable);
-            }
-            OkDialog(messageDlg, messageDlg.OkDialog);
-            WaitForClosedForm(toolUpdatesDlg);
-            Settings.Default.ToolList.Clear();
+
+            TestMessageDlgShown(multiBtnMsgDlg.Btn0Click, 
+                ToolUpdatesDlg.FormatInstallSuccessSummary(SAMPLE_TOOL.PackageName));
+
+            AssertUpdated(SAMPLE_TOOL);
         }
 
         /// <summary>
@@ -318,23 +328,25 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         private void TestUpdateNestedTool()
         {
-            Settings.Default.ToolList.AddRange(new [] {NESTED_TOOL_A, NESTED_TOOL_B});
-            using var toolsUpdateHelper = FormatUpdateHelper(FormatToolStoreClient(TestFilesDir.FullPath));
-            var toolUpdatesDlg = FormatToolUpdatesDlg(true, toolsUpdateHelper, false);
+            using var context = new ToolUpdateTestContext(new[] { NESTED_TOOL_A, NESTED_TOOL_B }, CreateToolStoreClient(TestFilesDir.FullPath));
+            var toolUpdatesDlg = context.ShowToolUpdatesDlg();
             Assert.AreEqual(1, toolUpdatesDlg.ItemCount);
+
             var multiBtnMsgDlg = ShowDialog<MultiButtonMsgDlg>(toolUpdatesDlg.OkDialog);
-            var messageDlg = ShowDialog<MessageDlg>(multiBtnMsgDlg.Btn0Click);
-            Assert.AreEqual(
-                TextUtil.LineSeparate(
-                    Resources.ToolUpdatesDlg_DisplayInstallSummary_Successfully_updated_the_following_tool,
-                    string.Empty, NESTED_TOOL_A.PackageName), messageDlg.Message);
-            foreach (var tool in Settings.Default.ToolList.Where(tool => Equals(tool.PackageIdentifier, NESTED_TOOL_A.PackageIdentifier)))
+
+            TestMessageDlgShown(multiBtnMsgDlg.Btn0Click, 
+                ToolUpdatesDlg.FormatInstallSuccessSummary(NESTED_TOOL_A.PackageName));
+
+            AssertUpdated(NESTED_TOOL_A);
+        }
+
+        private void AssertUpdated(ToolDescription toolToCheck)
+        {
+            foreach (var tool in Settings.Default.ToolList.Where(tool => Equals(tool.PackageIdentifier, toolToCheck.PackageIdentifier)))
             {
                 Assert.IsFalse(tool.UpdateAvailable);
             }
-            OkDialog(messageDlg, messageDlg.OkDialog);
-            WaitForClosedForm(toolUpdatesDlg);
-            Settings.Default.ToolList.Clear();
+
         }
 
         /// <summary>
@@ -342,18 +354,12 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         private void TestMultipleFailures()
         {
-            var messageDlg = FormatInstallSummaryMessageDlg(false, false);
-            Assert.AreEqual(
-                TextUtil.LineSeparate(
-                    Resources.ToolUpdatesDlg_DisplayInstallSummary_Failed_to_update_the_following_tools, string.Empty,
-                    TextUtil.LineSeparate(
-                        ToolUpdatesDlg.FormatFailureMessage(NESTED_TOOL_A.PackageName, Resources.ToolUpdatesDlg_InstallUpdates_User_cancelled_installation),
-                        ToolUpdatesDlg.FormatFailureMessage(SAMPLE_TOOL.PackageName, Resources.ToolUpdatesDlg_InstallUpdates_User_cancelled_installation))),
-                messageDlg.Message);
-            OkDialog(messageDlg, messageDlg.OkDialog);
-            WaitForClosedForm<ToolUpdatesDlg>();
-            AssertUpdateAvailability(Settings.Default.ToolList, true, true);
-            Settings.Default.ToolList.Clear();
+            TestInstallSummaryMessageDlg(false, false,
+                ToolUpdatesDlg.FormatInstallFailureSummary(new[]
+                {
+                    FormatFailureMessage(NESTED_TOOL_A, Resources.ToolUpdatesDlg_InstallUpdates_User_cancelled_installation),
+                    FormatFailureMessage(SAMPLE_TOOL, Resources.ToolUpdatesDlg_InstallUpdates_User_cancelled_installation)
+                }));
         }
 
         /// <summary>
@@ -361,18 +367,10 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         private void TestOneSuccessOneFailure()
         {
-            var messageDlg = FormatInstallSummaryMessageDlg(false, true);
-            Assert.AreEqual(
-                TextUtil.LineSeparate(
-                    Resources.ToolUpdatesDlg_DisplayInstallSummary_Successfully_updated_the_following_tool, string.Empty,
-                    SAMPLE_TOOL.PackageName, string.Empty,
-                    Resources.ToolUpdatesDlg_DisplayInstallSummary_Failed_to_update_the_following_tool, string.Empty,
-                    ToolUpdatesDlg.FormatFailureMessage(NESTED_TOOL_A.PackageName,
-                                                        Resources.ToolUpdatesDlg_InstallUpdates_User_cancelled_installation)), messageDlg.Message);
-            OkDialog(messageDlg, messageDlg.OkDialog);
-            WaitForClosedForm<ToolUpdatesDlg>();
-            AssertUpdateAvailability(Settings.Default.ToolList, false, true);
-            Settings.Default.ToolList.Clear();
+            TestInstallSummaryMessageDlg(false, true,
+                ToolUpdatesDlg.FormatMixedInstallSummary(
+                    new[] { SAMPLE_TOOL.PackageName },
+                    new[] { FormatFailureMessage(NESTED_TOOL_A, Resources.ToolUpdatesDlg_InstallUpdates_User_cancelled_installation) }));
         }
 
         /// <summary>
@@ -380,15 +378,8 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         private void TestMultipleSuccesses()
         {
-            var messageDlg = FormatInstallSummaryMessageDlg(true, true);
-            Assert.AreEqual(
-                TextUtil.LineSeparate(
-                    Resources.ToolUpdatesDlg_DisplayInstallSummary_Successfully_updated_the_following_tools,
-                    string.Empty, TextUtil.LineSeparate(NESTED_TOOL_A.PackageName, SAMPLE_TOOL.PackageName)), messageDlg.Message);
-            OkDialog(messageDlg, messageDlg.OkDialog);
-            WaitForClosedForm<ToolUpdatesDlg>();
-            AssertUpdateAvailability(Settings.Default.ToolList, false, false);
-            Settings.Default.ToolList.Clear();
+            TestInstallSummaryMessageDlg(true, true,
+                ToolUpdatesDlg.FormatInstallSuccessSummary(new[] { NESTED_TOOL_A.PackageName, SAMPLE_TOOL.PackageName }));
         }
 
         /// <summary>
@@ -399,11 +390,12 @@ namespace pwiz.SkylineTestFunctional
         /// of a user cancellation.</param>
         /// <param name="sampleSuccess">If true, the sample tool will be installed successfully. If false, it will not be installed successfully, because
         /// of a user cancellation.</param>
-        private MessageDlg FormatInstallSummaryMessageDlg(bool nestedSuccess, bool sampleSuccess)
+        /// <param name="message">The message expected to be showing in the summary message dialog</param>
+        private void TestInstallSummaryMessageDlg(bool nestedSuccess, bool sampleSuccess, string message)
         {
-            Settings.Default.ToolList.AddRange(new[] { NESTED_TOOL_A, NESTED_TOOL_B, SAMPLE_TOOL });
-            using var toolsUpdateHelper = FormatUpdateHelper(FormatToolStoreClient(TestFilesDir.GetTestPath("TestOneSuccessOneFailure")));
-            var toolUpdatesDlg = FormatToolUpdatesDlg(true, toolsUpdateHelper, false);
+            using var context = new ToolUpdateTestContext(new[] { NESTED_TOOL_A, NESTED_TOOL_B, SAMPLE_TOOL },
+                CreateToolStoreClient(TestFilesDir.GetTestPath("TestOneSuccessOneFailure")));
+            var toolUpdatesDlg = context.ShowToolUpdatesDlg();
             Assert.AreEqual(2, toolUpdatesDlg.ItemCount);
             var multiBtnMsgDlgNested = ShowDialog<MultiButtonMsgDlg>(toolUpdatesDlg.OkDialog);
             Assert.IsTrue(multiBtnMsgDlgNested.Message.Contains(NESTED_TOOL_A.PackageName));
@@ -425,18 +417,22 @@ namespace pwiz.SkylineTestFunctional
             {
                 OkDialog(multiBtnMsgDlgNested, multiBtnMsgDlgSample.BtnCancelClick);
             }
-            return WaitForOpenForm<MessageDlg>();
+            var messageDlg = WaitForOpenForm<MessageDlg>();
+            Assert.AreEqual(message, messageDlg.Message);
+            OkDialog(messageDlg, messageDlg.OkDialog);
+            WaitForClosedForm<ToolUpdatesDlg>();
+            AssertUpdateAvailability(Settings.Default.ToolList, !nestedSuccess, !sampleSuccess);
         }
 
         /// <summary>
-        /// Asserts that updates are available or not for the sample tool and nested tool, from a given toollist.
+        /// Asserts that updates are available or not for the sample tool and nested tool, from a given <see cref="ToolList"/>>.
         /// </summary>
-        private static void AssertUpdateAvailability(ToolList toolList, bool sampleToolUpdateAvailable, bool nestedToolUpdateAvailable)
+        private static void AssertUpdateAvailability(ToolList toolList, bool nestedToolUpdateAvailable, bool sampleToolUpdateAvailable)
         {
             var sampleTool =
-                 Settings.Default.ToolList.First(description => description.PackageIdentifier.Equals(SAMPLE_TOOL.PackageIdentifier));
+                toolList.First(description => description.PackageIdentifier.Equals(SAMPLE_TOOL.PackageIdentifier));
             var nestedTools =
-                Settings.Default.ToolList.Where(description => description.PackageIdentifier.Equals(NESTED_TOOL_A.PackageIdentifier));
+                toolList.Where(description => description.PackageIdentifier.Equals(NESTED_TOOL_A.PackageIdentifier));
 
             Assert.IsNotNull(sampleTool);
             Assert.IsNotNull(nestedTools);
@@ -448,13 +444,18 @@ namespace pwiz.SkylineTestFunctional
             }
         }
 
+        private static string FormatFailureMessage(ToolDescription toolDescription, string message)
+        {
+            return ToolUpdatesDlg.FormatFailureMessage(toolDescription.PackageName, message);
+        }
+
         /// <summary>
-        /// Formats a ToolUpdatesDlg form for use in testing.
+        /// Shows and initializes a <see cref="ToolUpdatesDlg"/> form for use in testing.
         /// </summary>
-        /// <param name="itemsSelected">If true, this will check all the tools listed in the ToolUpdatesDlg. If false, it will uncheck all of them.</param>
-        /// <param name="updateHelper">The update helper for the ToolUpdatesDlg.</param>
-        /// <param name="testingDownloadOnly">If true, it will only test the DownloadTools function of the ToolUpdatesDlg.</param>
-        private static ToolUpdatesDlg FormatToolUpdatesDlg(bool itemsSelected, IToolUpdateHelper updateHelper, bool testingDownloadOnly)
+        /// <param name="itemsSelected">If true, this will check all the tools listed in the <see cref="ToolUpdatesDlg"/>. If false, it will uncheck all of them.</param>
+        /// <param name="updateHelper">The update helper for the <see cref="ToolUpdatesDlg"/>.</param>
+        /// <param name="testingDownloadOnly">If true, it will only test the DownloadTools function of the <see cref="ToolUpdatesDlg"/>.</param>
+        private static ToolUpdatesDlg ShowAndInitToolUpdatesDlg(bool itemsSelected, IToolUpdateHelper updateHelper, bool testingDownloadOnly)
         {
             var toolUpdatesDlg = ShowDialog<ToolUpdatesDlg>(() => SkylineWindow.ShowToolUpdatesDlg(updateHelper));
             if (itemsSelected)
@@ -466,11 +467,11 @@ namespace pwiz.SkylineTestFunctional
         }
 
         /// <summary>
-        /// Formats a TestToolStoreClient for use in testing.
+        /// Creates a <see cref="TestToolStoreClient"/> for use in testing.
         /// </summary>
         /// <param name="filePath">When using a folder on the local machine as the source for package updates, set this value to the path to that folder. If this value is null,
         /// when the tool calls the GetToolZipFile function of the test client, it will an empty string.</param>
-        private static TestToolStoreClient FormatToolStoreClient(string filePath = null)
+        private static TestToolStoreClient CreateToolStoreClient(string filePath = null)
         {
             return new TestToolStoreClient(filePath ?? Path.GetTempPath())
             {
@@ -503,9 +504,9 @@ namespace pwiz.SkylineTestFunctional
         }
         
         /// <summary>
-        /// Formats a ToolUpdateHelper for testing. If no unpackZipTool function is specified, it uses the default ToolInstaller one.
+        /// Creates a ToolUpdateHelper for testing. If no unpackZipTool function is specified, it uses the default ToolInstaller one.
         /// </summary>
-        private static TestToolUpdateHelper FormatUpdateHelper(IToolStoreClient client,
+        private static TestToolUpdateHelper CreateUpdateHelper(IToolStoreClient client,
                                                             Func<string, IUnpackZipToolSupport, ToolInstaller.UnzipToolReturnAccumulator> unpackZipTool = null)
         {
             return new TestToolUpdateHelper(client, unpackZipTool ?? ToolInstaller.UnpackZipTool);
@@ -570,5 +571,4 @@ namespace pwiz.SkylineTestFunctional
             (_client as IDisposable)?.Dispose();
         }
     }
-
 }

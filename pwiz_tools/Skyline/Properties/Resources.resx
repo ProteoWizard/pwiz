@@ -518,9 +518,6 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="CommandLine_ImportResultsFile_Warning__Failed_importing_the_results_file__0____Ignoring___" xml:space="preserve">
     <value>Warning: Failed importing the results file {0}.  Ignoring...</value>
   </data>
-  <data name="TestToolStoreClient_GetToolZipFile_Error_downloading_tool" xml:space="preserve">
-    <value>Error downloading tool</value>
-  </data>
   <data name="IonMobilityFinder_ProcessMSLevel_Failed_using_results_to_populate_ion_mobility_library_" xml:space="preserve">
     <value>Failed using results to populate ion mobility library:</value>
   </data>
@@ -682,9 +679,6 @@ If your transition list format combines formulas and adducts in a single column 
   </data>
   <data name="PasteDlg_CheckSequence_There_is_no_sequence_for_this_protein" xml:space="preserve">
     <value>There is no sequence for this protein</value>
-  </data>
-  <data name="ToolUpdatesDlg_DisplayInstallSummary_Failed_to_update_the_following_tools" xml:space="preserve">
-    <value>Failed to update the following tools</value>
   </data>
   <data name="ValueOutOfRangeDoubleException_ValueOutOfRangeException_The_value___0___for_the_argument__1__must_be_between__2__and__3__" xml:space="preserve">
     <value>The value '{0}' for the argument {1} must be between {2} and {3}.</value>
@@ -1466,9 +1460,6 @@ Supported values include:
   </data>
   <data name="PeakBoundaryImporter_Import_Failed_to_read_the_first_line_of_the_file" xml:space="preserve">
     <value>Failed to read the first line of the file</value>
-  </data>
-  <data name="ToolUpdatesDlg_DisplayDownloadSummary_Failed_to_download_updates_for_the_following_packages" xml:space="preserve">
-    <value>Failed to download updates for the following packages</value>
   </data>
   <data name="DigestSettings_Validate_maximum_missed_cleavages" xml:space="preserve">
     <value>maximum missed cleavages</value>
@@ -2369,9 +2360,6 @@ Most peptide transition lists can be imported with the "File|Import|Transition L
   </data>
   <data name="AreaCvToolbarProperties_btnOk_Click_Invalid_CV_cutoff_entered" xml:space="preserve">
     <value>Invalid CV cutoff entered</value>
-  </data>
-  <data name="ToolUpdatesDlg_DisplayInstallSummary_Successfully_updated_the_following_tool" xml:space="preserve">
-    <value>Successfully updated the following tool</value>
   </data>
   <data name="SkylineWindow_SaveDocument_Saving___" xml:space="preserve">
     <value>Saving...</value>
@@ -3706,9 +3694,6 @@ Most peptide transition lists can be imported with the "File|Import|Transition L
   <data name="ResultsGrid_ResultsGrid_User_Set_Total" xml:space="preserve">
     <value>User Set Total</value>
   </data>
-  <data name="ToolUpdatesDlg_DisplayInstallSummary_Successfully_updated_the_following_tools" xml:space="preserve">
-    <value>Successfully updated the following tools</value>
-  </data>
   <data name="RInstaller_InstallPackages_Package_installation_failed__Error_log_output_in_immediate_window_" xml:space="preserve">
     <value>Package installation failed. Error log output in immediate window.</value>
   </data>
@@ -3736,9 +3721,6 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   </data>
   <data name="CommandArgs_ParseArgsInternal_Warning__The_method_type__0__is_invalid__It_must_be_one_of_the_following___standard____scheduled__or__triggered__" xml:space="preserve">
     <value>Warning: The method type {0} is invalid. It must be one of the following: "standard", "scheduled" or "triggered".</value>
-  </data>
-  <data name="ToolUpdatesDlg_DisplayInstallSummary_Failed_to_update_the_following_tool" xml:space="preserve">
-    <value>Failed to update the following tool</value>
   </data>
   <data name="ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_overwrite_or_install_in_parallel_" xml:space="preserve">
     <value>Do you wish to overwrite or install in parallel?</value>
