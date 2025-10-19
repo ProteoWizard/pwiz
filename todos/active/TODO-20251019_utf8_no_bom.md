@@ -88,7 +88,14 @@ Modern best practice is **UTF-8 without BOM** for source code. BOM can cause iss
 ### Phase 4: Prevention
 - [ ] Add UTF-8 without BOM guideline to STYLEGUIDE.md
 - [ ] Document Visual Studio configuration for new files
-- [ ] Consider pre-commit hook to prevent BOM reintroduction
+- [x] Add BOM check to CodeInspectionTest.cs
+  - Added `InspectUtf8Bom()` method in CodeInspectionTest.cs
+  - Automatically removes BOM when found (similar to SchemaDocumentsTest)
+  - Checks files by reading first 3 bytes (0xEF, 0xBB, 0xBF)
+  - Excludes auto-generated files: `*.tli`, `*.tlh`
+  - Provides clear error message with list of fixed files
+  - Covers Skyline and Shared directories
+- [ ] Consider pre-commit hook for broader project coverage
 - [ ] Update this TODO with final statistics
 
 ### Phase 5: Cleanup
