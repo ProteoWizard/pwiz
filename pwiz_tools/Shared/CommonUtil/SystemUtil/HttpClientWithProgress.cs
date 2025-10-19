@@ -450,6 +450,10 @@ namespace pwiz.Common.SystemUtil
         {
             var readTask = stream.ReadAsync(buffer, 0, buffer.Length, CancellationToken);
             var completed = Task.WaitAny(readTask, Task.Delay(ReadTimeoutMilliseconds, CancellationToken));
+
+            // Check if cancellation was requested before throwing timeout exception
+            CancellationToken.ThrowIfCancellationRequested();
+
             if (completed != 0)
                 throw new TimeoutException(string.Format(MessageResources.HttpClientWithProgress_ReadWithTimeout_The_read_operation_timed_out_while_downloading_from__0__, uri));
             return readTask.Result;
