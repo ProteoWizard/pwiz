@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-using pwiz.Common.Properties;
 using System;
 using System.ComponentModel;
 using System.IO;
@@ -22,6 +21,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using JetBrains.Annotations;
+using pwiz.Common.CommonResources;
 
 namespace pwiz.Common.SystemUtil.PInvoke
 {
@@ -58,7 +58,7 @@ namespace pwiz.Common.SystemUtil.PInvoke
             if (!CopyFileEx(source, destination, progressRoutine, IntPtr.Zero, ref cancelled, dwCopyFlags))
             {
                 int errorCode = Marshal.GetLastWin32Error();
-                var message = Resources.Kernel32_CopyFileWithProgress_Failed_to_copy___0___to___1__;
+                var message = MessageResources.Kernel32_CopyFileWithProgress_Failed_to_copy___0___to___1__;
                 throw new IOException(message, new Win32Exception(errorCode));
             }
         }
