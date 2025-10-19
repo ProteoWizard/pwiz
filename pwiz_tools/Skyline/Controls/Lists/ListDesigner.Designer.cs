@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.Controls.Lists
+namespace pwiz.Skyline.Controls.Lists
 {
     partial class ListDesigner
     {
