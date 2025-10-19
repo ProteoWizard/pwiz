@@ -1,7 +1,8 @@
-# TODO-utf8_no_bom.md
+# TODO-20251019_utf8_no_bom.md
 
-## Branch Information (Future)
-- **Branch**: Not yet created - will be `Skyline/work/YYYYMMDD_utf8_no_bom`
+## Branch Information
+- **Branch**: `Skyline/work/20251019_utf8_no_bom`
+- **Created**: 2025-10-19
 - **Objective**: Standardize all source files to UTF-8 without BOM
 
 ## Background
