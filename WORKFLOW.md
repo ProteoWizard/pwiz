@@ -25,56 +25,76 @@ This document outlines the Git branch strategy and workflow for the Skyline proj
 ## TODO File System
 
 ### Overview
-The TODO file system enables seamless context management for LLM-assisted development, from initial planning through branch completion.
+The TODO file system enables seamless context management for LLM-assisted development, from initial planning through branch completion and archival.
+
+### TODO Directory Structure
+
+```
+<root>/
+  todos/
+    active/           # Currently being worked on (committed to branch)
+    completed/        # Recently completed (keep 1-3 months for reference)
+    backlog/          # Ready to start, fully planned
+    archive/          # Old completed work (>3 months old or as needed)
+```
 
 ### TODO File Naming Convention
 
 **Format**: `TODO-[YYYYMMDD_]<branch_specifier>.md`
 
 - **Branch specifier**: Lowercase words separated by underscores (matches branch name after date)
-- **No date prefix**: Branch-ready, planning phase, not yet committed to Git
-- **With date prefix**: Active branch, dated with branch creation date, committed to branch
+- **No date prefix**: Branch-ready, planning phase (lives in `todos/backlog/`)
+- **With date prefix**: Active branch, dated with branch creation date (lives in `todos/active/`, committed to branch)
 
 **Examples**:
-- `TODO-utf8_no_bom.md` - Branch-ready, not yet created
-- `TODO-20251015_utf8_no_bom.md` - Active branch created 2025-10-15
-- `TODO-webclient_replacement.md` - Branch-ready backlog item
-- `TODO-20251010_webclient_replacement.md` - Active branch created 2025-10-10
+- `todos/backlog/TODO-utf8_no_bom.md` - Branch-ready, not yet created
+- `todos/active/TODO-20251015_utf8_no_bom.md` - Active branch created 2025-10-15
+- `todos/completed/TODO-20251010_webclient_replacement.md` - Recently merged work
 
 ### TODO File Lifecycle
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ Phase 1: Planning (Not in Git)                             │
+│ Phase 1: Planning (todos/backlog/)                          │
 ├─────────────────────────────────────────────────────────────┤
 │ File: TODO-<branch_specifier>.md                            │
 │ Status: Branch-ready, contains scope and task breakdown     │
-│ Location: Local workspace, not committed                    │
+│ Location: todos/backlog/, committed to master               │
 └─────────────────────────────────────────────────────────────┘
                          │
                          ▼ Create branch
 ┌─────────────────────────────────────────────────────────────┐
-│ Phase 2: Active Development (In Git)                        │
+│ Phase 2: Active Development (todos/active/)                 │
 ├─────────────────────────────────────────────────────────────┤
 │ File: TODO-YYYYMMDD_<branch_specifier>.md                   │
-│ Status: Renamed with date, committed to work branch         │
+│ Status: Renamed with date, moved to active/, on branch      │
 │ Updates: Modified with every commit                         │
 │ Purpose: Track progress, enable LLM context switching       │
 └─────────────────────────────────────────────────────────────┘
                          │
-                         ▼ Work complete
+                         ▼ Work complete, PR merged
 ┌─────────────────────────────────────────────────────────────┐
-│ Phase 3: Pre-Merge Cleanup                                  │
+│ Phase 3: Completed (todos/completed/)                       │
 ├─────────────────────────────────────────────────────────────┤
-│ File: Deleted from branch                                   │
-│ Status: Removed before merging to master                    │
-│ Purpose: Clean merge, no TODO files in master               │
+│ File: Moved to todos/completed/ as final commit on branch   │
+│ Status: Includes completion summary, merged to master       │
+│ Purpose: Documentation, reference for future work           │
+│ Retention: Keep 1-3 months for reference                    │
+└─────────────────────────────────────────────────────────────┘
+                         │
+                         ▼ After 1-3 months
+┌─────────────────────────────────────────────────────────────┐
+│ Phase 4: Archived (todos/archive/)                          │
+├─────────────────────────────────────────────────────────────┤
+│ File: Moved to todos/archive/ or deleted (in Git history)   │
+│ Status: Historical reference only                           │
+│ Purpose: Reduce clutter, preserved in Git forever           │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### TODO File Structure (Branch-Ready)
+### TODO File Structure (Backlog)
 
-For files **without date prefix** (planning phase):
+For files **in todos/backlog/** (planning phase):
 
 ```markdown
 # TODO-<branch_specifier>.md
@@ -108,9 +128,9 @@ How to know work is complete
 Template for LLM to create branch and begin work
 ```
 
-### TODO File Structure (Active Branch)
+### TODO File Structure (Active)
 
-For files **with date prefix** (active branch):
+For files **in todos/active/** (active branch):
 
 ```markdown
 # TODO-YYYYMMDD_<branch_specifier>.md
@@ -140,6 +160,33 @@ Template for seamless context transfer
 
 ## Notes for Future Sessions
 Patterns established, key decisions made
+```
+
+### TODO File Structure (Completed)
+
+For files **in todos/completed/** (after merge):
+
+Add this **final section** before moving to completed/:
+
+```markdown
+## ✅ Completion Summary
+
+**Branch**: `Skyline/work/YYYYMMDD_<branch_specifier>`  
+**PR**: #XXXX  
+**Merged**: YYYY-MM-DD  
+**TeamCity Results**: [Summary of test results]  
+
+**What Was Actually Done**:
+- (Brief summary of actual changes, may differ from plan)
+
+**Unexpected Findings**:
+- (Bugs found, scope changes, lessons learned)
+
+**Follow-up Work Created**:
+- (Links to new TODO files spawned from this work)
+
+**Key Files Modified**:
+- (List of primary files changed)
 ```
 
 ## LLM Tool Guidelines
@@ -174,53 +221,14 @@ Next steps: [what remains to be done]
 Key files: [list of important files]
 Decisions made: [architectural choices]
 
-The TODO file contains full context. Please read it first, then continue with [specific next task].
+The TODO file in todos/active/ contains full context. Please read it first, then continue with [specific next task].
 ```
-
-## TODO File Planning Phase
-
-### Creating Branch-Ready TODO Files
-
-Before creating a branch, you can prepare a TODO file to plan the work:
-
-**File naming**: `TODO-<branch_specifier>.md` (no date prefix)
-
-**Purpose**:
-- Scope the work before committing to a branch
-- Document background and rationale
-- Break down tasks into phases
-- Identify risks and success criteria
-- Enable LLM-assisted branch creation
-
-**Location**: Local workspace, not committed to Git
-
-**Example**: `TODO-utf8_no_bom.md` contains full planning for future UTF-8 standardization work
-
-### LLM-Assisted Branch Creation
-
-When ready to start work on a planned TODO:
-
-**Handoff prompt to LLM**:
-```
-I want to start work on [description] from TODO-<branch_specifier>.md.
-
-Please:
-1. Create branch: Skyline/work/YYYYMMDD_<branch_specifier> (use today's date)
-2. Rename TODO file to include the date
-3. Update the TODO file header with actual branch information
-4. Commit the TODO file to the new branch
-5. Begin Phase 1 of the work
-
-The TODO file contains full context. Let's get started.
-```
-
-The LLM will execute the workflow and begin implementing the first tasks.
 
 ## Branch Lifecycle Workflows
 
-### Workflow 1: Creating Branch from Existing TODO File
+### Workflow 1: Creating Branch from Backlog TODO
 
-When you have a branch-ready TODO file (e.g., `TODO-utf8_no_bom.md`):
+When you have a branch-ready TODO file (e.g., `todos/backlog/TODO-utf8_no_bom.md`):
 
 **Step 1: Create branch**
 ```bash
@@ -229,13 +237,13 @@ git pull origin master
 git checkout -b Skyline/work/20251015_utf8_no_bom  # Use today's date
 ```
 
-**Step 2: Rename TODO file with date**
+**Step 2: Move and rename TODO file with date**
 ```bash
 # On Windows (PowerShell)
-Rename-Item TODO-utf8_no_bom.md TODO-20251015_utf8_no_bom.md
+Move-Item todos\backlog\TODO-utf8_no_bom.md todos\active\TODO-20251015_utf8_no_bom.md
 
 # On Linux/Mac
-mv TODO-utf8_no_bom.md TODO-20251015_utf8_no_bom.md
+mv todos/backlog/TODO-utf8_no_bom.md todos/active/TODO-20251015_utf8_no_bom.md
 ```
 
 **Step 3: Update TODO file header**
@@ -245,8 +253,8 @@ mv TODO-utf8_no_bom.md TODO-20251015_utf8_no_bom.md
 
 **Step 4: Commit TODO to branch**
 ```bash
-git add TODO-20251015_utf8_no_bom.md
-git commit -m "Initial TODO for utf8_no_bom"
+git add todos/
+git commit -m "Start utf8_no_bom work - move TODO to active"
 git push -u origin Skyline/work/20251015_utf8_no_bom
 ```
 
@@ -261,14 +269,14 @@ git pull origin master
 git checkout -b Skyline/work/20251015_new_feature
 ```
 
-**Step 2: Create TODO file**
+**Step 2: Create TODO file in active/**
 ```bash
-# Create TODO-20251015_new_feature.md with structure from template above
+# Create todos/active/TODO-20251015_new_feature.md with structure from template above
 ```
 
 **Step 3: Commit TODO to branch**
 ```bash
-git add TODO-20251015_new_feature.md
+git add todos/active/TODO-20251015_new_feature.md
 git commit -m "Initial TODO for new_feature"
 git push -u origin Skyline/work/20251015_new_feature
 ```
@@ -277,7 +285,7 @@ git push -u origin Skyline/work/20251015_new_feature
 
 ```bash
 # Make code changes
-# Update TODO-YYYYMMDD_description.md (mark tasks complete, update context)
+# Update todos/active/TODO-YYYYMMDD_description.md (mark tasks complete, update context)
 git add .
 git commit -m "Descriptive message of changes"
 git push
@@ -291,38 +299,74 @@ git push
 
 ### Workflow 4: Completing Work and Merging
 
-**Step 1: Final cleanup**
+**Step 1: Final updates to TODO**
 ```bash
-# Run final tests
-# Verify all tasks in TODO are complete
-# Review code for quality
+# Add completion summary to TODO file
+# Document what was actually done, bugs found, follow-up work
+git add todos/active/TODO-YYYYMMDD_description.md
+git commit -m "Add completion summary to TODO"
+git push
 ```
 
-**Step 2: Remove TODO file**
+**Step 2: Move TODO to completed/**
 ```bash
-git rm TODO-YYYYMMDD_description.md
-git commit -m "Remove TODO file before merge"
+# On Windows (PowerShell)
+Move-Item todos\active\TODO-YYYYMMDD_description.md todos\completed\TODO-YYYYMMDD_description.md
+
+# On Linux/Mac
+mv todos/active/TODO-YYYYMMDD_description.md todos/completed/TODO-YYYYMMDD_description.md
+
+git add todos/
+git commit -m "Move TODO to completed - ready for merge"
 git push
 ```
 
 **Step 3: Create pull request**
 - Document all changes and testing in PR description
 - Reference any related issues
+- Link to the completed TODO file for full context
 
-**Step 4: After merge**
+**Step 4: After merge to master**
 ```bash
 git checkout master
 git pull origin master
 git branch -d Skyline/work/YYYYMMDD_description  # Delete local branch
 ```
 
-### Merging to Master
-1. **Create pull request** - Document all changes and testing
-2. **Code review** - Ensure quality and standards compliance
-3. **Merge** - Squash commits for clean history
-4. **Delete branch** - Clean up after successful merge
+**Step 5: Periodic cleanup (monthly or as needed)**
+```bash
+# Move old completed TODOs (>3 months) to archive or delete
+git mv todos/completed/TODO-20240715_old_work.md todos/archive/
+# Or simply delete if no longer needed (preserved in Git history)
+git rm todos/completed/TODO-20240715_old_work.md
+```
+
+### Workflow 5: Creating Backlog TODO (Planning)
+
+When you want to plan future work without creating a branch:
+
+**Step 1: Create TODO in backlog/**
+```bash
+# Create todos/backlog/TODO-new_feature.md with planning structure
+```
+
+**Step 2: Commit to master**
+```bash
+git checkout master
+git add todos/backlog/TODO-new_feature.md
+git commit -m "Add backlog TODO for new_feature planning"
+git push origin master
+```
+
+This makes the planned work visible to the team and LLM tools.
 
 ## Best Practices
+
+### TODO File Management
+- **Backlog TODOs**: Commit to master for visibility, cull items >6 months old
+- **Active TODOs**: Update with every commit, keep context fresh
+- **Completed TODOs**: Retain 1-3 months for reference and knowledge transfer
+- **Archive**: Move or delete old completed work, Git history preserves everything
 
 ### Commit Messages
 - Use clear, descriptive messages
