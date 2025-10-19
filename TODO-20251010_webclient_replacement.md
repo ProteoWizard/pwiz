@@ -51,22 +51,33 @@
   - **Simplified**: Control flow with early `continue` for null results
   - **Result**: Each tool update is independent - partial success preserved
 
-### ✅ Completed - ToolUpdatesTest Enhanced with Aggressive DRY
-- [x] Added `TestDownloadCancel()` - Tests user cancellation during download
-- [x] Added `TestMultipleToolDownloadFailures()` - Tests grouped error message format
-- [x] Created `ToolUpdateTestContext` - IDisposable helper for setup/teardown
-  - Clears tool list before AND after (prevents cascading failures)
-  - Automatically disposes resources
-  - Automatically waits for dialog close
-- [x] Added message formatting helpers to ToolUpdatesDlg (production code)
-  - `FormatDownloadFailureSummary()` - Single and multi-tool overloads
-  - `FormatInstallSuccessSummary()` - Single and multi-tool overloads
-  - `FormatInstallFailureSummary()` - Single and multi-tool overloads
-  - `FormatMixedInstallSummary()` - Success + failure combined
-- [x] Added expected message helpers to HttpClientTestHelper
-  - `GetNoNetworkInterfaceMessage()`, `GetConnectionLossMessage()`, etc.
-  - Centralizes both simulation AND expected message
-- [x] Result: ~40% code reduction, impossible to forget cleanup/disposal
+### ✅ Completed - Comprehensive DRY Refactoring
+- [x] **ToolUpdatesTest** - Added tests and aggressive DRY cleanup
+  - `TestDownloadCancel()` and `TestMultipleToolDownloadFailures()`
+  - `ToolUpdateTestContext` - IDisposable helper (setup/teardown/disposal)
+  - `context.ShowToolUpdatesDlg()` - Encapsulated dialog creation
+  - Result: ~40% code reduction, impossible to forget cleanup
+
+- [x] **Message Formatting Helpers** - Production code and tests use same functions
+  - Added to ToolUpdatesDlg: `FormatDownloadFailureSummary()`, `FormatInstallSuccessSummary()`, etc.
+  - Production `DisplayDownloadSummary()` and `DisplayInstallSummary()` now use these helpers
+  - **True DRY**: Change formatting in one place, both production and tests update
+  
+- [x] **HttpClientTestHelper.GetExpectedMessage()** - Instance method pairs simulation with message
+  - Examines exception type, returns appropriate message
+  - Handles URI extraction (Host vs full Uri)
+  - All test files now use `helper.GetExpectedMessage()` instead of MessageResources
+  - **Single source of truth**: Only HttpClientTestHelper and HttpClientWithProgress know about error messages
+  
+- [x] **Bug fix**: ReadChunk() cancellation - Added `ThrowIfCancellationRequested()` before timeout check
+  - Fixed: User cancellation now throws OperationCanceledException (not TimeoutException)
+  - More responsive cancellation with CancellationToken in ReadAsync()
+  
+- [x] **ValidateDownloadFailure(helper, url)** - Ultimate DRY for test validation
+  - Single line to test any failure scenario: simulation + expected message + URI handling
+  - Reduced test methods from 11 lines → 3 lines (73% reduction)
+  - Removed all MessageResources references from test files
+  - Added guideline to STYLEGUIDE.md: Blank lines should not contain spaces/tabs
 
 ### 🔄 In Progress - Core Skyline.exe WebClient Migration
 - [ ] Migrate `.skyp` file support (SkypSupport.cs) - used by Skyline.exe

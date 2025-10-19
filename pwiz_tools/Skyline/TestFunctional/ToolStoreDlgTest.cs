@@ -24,7 +24,6 @@ using System.IO;
 using System.Linq;
 using Ionic.Zip;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.CommonResources;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.DocSettings;
@@ -76,11 +75,11 @@ namespace pwiz.SkylineTestFunctional
 
             TestHttpClientWithNoNetwork(SkylineWindow.ShowToolStoreDlg, Resources.ConfigureToolsDlg_GetZipFromWeb_Error_connecting_to_the_Tool_Store_);
 
-            using (HttpClientTestHelper.SimulateConnectionLoss())
+            using (var helper = HttpClientTestHelper.SimulateConnectionLoss())
             {
                 var expectedMessage = TextUtil.LineSeparate(
                     Resources.ConfigureToolsDlg_GetZipFromWeb_Error_connecting_to_the_Tool_Store_,
-                    MessageResources.HttpClientWithProgress_MapHttpException_The_connection_was_lost_during_download__Please_check_your_internet_connection_and_try_again_);
+                    helper.GetExpectedMessage());
                 var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
                 TestMessageDlgShown(configureToolsDlg.AddFromWeb, expectedMessage);
                 OkDialog(configureToolsDlg, configureToolsDlg.OkDialog);
@@ -200,14 +199,9 @@ namespace pwiz.SkylineTestFunctional
             
             TestHttpClientCancellation(toolStoreDlg.DownloadSelectedTool);
 
-            using (HttpClientTestHelper.SimulateNoNetworkInterface())
+            using (var helper = HttpClientTestHelper.SimulateNoNetworkInterface())
             {
-                RunDlg<MessageDlg>(toolStoreDlg.DownloadSelectedTool, errorDlg =>
-                {
-                    Assert.AreEqual(MessageResources.HttpClientWithProgress_MapHttpException_No_network_connection_detected__Please_check_your_internet_connection_and_try_again_, errorDlg.Message);
-                    errorDlg.OkDialog();
-
-                });
+                TestMessageDlgShown(toolStoreDlg.DownloadSelectedTool, helper.GetExpectedMessage());
             }
 
             OkDialog(toolStoreDlg, toolStoreDlg.CancelDialog);

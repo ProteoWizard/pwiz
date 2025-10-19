@@ -24,7 +24,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.CommonResources;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Startup;
@@ -343,28 +342,25 @@ namespace pwiz.SkylineTestFunctional
         private void TestTutorialDownloadNetworkFailures()
         {
             // Test user cancellation
-            // using (HttpClientTestHelper.SimulateCancellation()) // To prove this fails
-            using (HttpClientTestHelper.SimulateCancellationClickWithException())
+            using (var helper = HttpClientTestHelper.SimulateCancellationClickWithException())
             {
-                TestTutorialDownloadNetworkFailure();
+                TestTutorialDownloadNetworkFailure(helper);
             }
 
             // Test network failure - no network interface
-            using (HttpClientTestHelper.SimulateNoNetworkInterface())
+            using (var helper = HttpClientTestHelper.SimulateNoNetworkInterface())
             {
-                TestTutorialDownloadNetworkFailure(
-                    MessageResources.HttpClientWithProgress_MapHttpException_No_network_connection_detected__Please_check_your_internet_connection_and_try_again_);
+                TestTutorialDownloadNetworkFailure(helper);
             }
 
             // Test connection loss during download
-            using (HttpClientTestHelper.SimulateConnectionLoss())
+            using (var helper = HttpClientTestHelper.SimulateConnectionLoss())
             {
-                TestTutorialDownloadNetworkFailure(
-                    MessageResources.HttpClientWithProgress_MapHttpException_The_connection_was_lost_during_download__Please_check_your_internet_connection_and_try_again_);
+                TestTutorialDownloadNetworkFailure(helper);
             }
         }
 
-        private void TestTutorialDownloadNetworkFailure(string expectedMessage = null)
+        private void TestTutorialDownloadNetworkFailure(HttpClientTestHelper helper)
         {
             string testTutorialDir = TestContext.GetTestResultsPath("TestTutorial");
             DirectoryEx.SafeDelete(testTutorialDir);
@@ -372,6 +368,8 @@ namespace pwiz.SkylineTestFunctional
             var startPage = ShowDialog<StartPage>(SkylineWindow.OpenStartPageTutorial);
             var pathChooser = ShowDialog<PathChooserDlg>(startPage.TestTutorialAction);
             RunUI(() => pathChooser.ExtractionPath = testTutorialDir);
+            
+            var expectedMessage = helper.GetExpectedMessage();
             if (string.IsNullOrEmpty(expectedMessage))
             {
                 TestCancellationWithoutMessageDlg(pathChooser.OkDialog);

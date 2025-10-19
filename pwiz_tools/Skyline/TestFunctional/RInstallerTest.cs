@@ -24,7 +24,6 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.CommonResources;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
@@ -194,9 +193,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 // Verify we get the expected network connection error message (translation-proof)
-                var expectedMessage = string.Format(
-                    MessageResources.HttpClientWithProgress_MapHttpException_Failed_to_connect_to__0___Please_check_your_network_connection__VPN_proxy__or_firewall_,
-                    "cran.r-project.org");
+                var expectedMessage = helper.GetExpectedMessage(new Uri("https://cran.r-project.org"));
                 Assert.AreEqual(expectedMessage, messageDlg.Message);
             });
             OkDialog(messageDlg, messageDlg.OkDialog);
@@ -310,7 +307,7 @@ namespace pwiz.SkylineTestFunctional
             var messageDlg = ShowDialog<MessageDlg>(rInstaller.OkDialog);
             RunUI(() => Assert.AreEqual(RInstaller.GetInternetConnectionForPackagesFailureMessage(
                     RUtil.INTERNET_CHECK_SITE,
-                    MessageResources.HttpClientWithProgress_MapHttpException_No_network_connection_detected__Please_check_your_internet_connection_and_try_again_),
+                    helper.GetExpectedMessage()),
                 messageDlg.Message));
             OkDialog(messageDlg, messageDlg.OkDialog);
             OkDialog(rInstaller, () => Cancel(rInstaller));

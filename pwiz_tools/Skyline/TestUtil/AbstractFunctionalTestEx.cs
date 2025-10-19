@@ -28,7 +28,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 using DigitalRune.Windows.Docking;
-using pwiz.Common.CommonResources;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.SystemUtil;
@@ -500,13 +499,11 @@ namespace pwiz.SkylineTestUtil
 
         public static void TestHttpClientWithNoNetwork(Action actionToFail, string prefix = null)
         {
-            using (HttpClientTestHelper.SimulateNoNetworkInterface())
-            {
-                var expectedMessage = MessageResources.HttpClientWithProgress_MapHttpException_No_network_connection_detected__Please_check_your_internet_connection_and_try_again_;
-                if (prefix != null)
-                    expectedMessage = TextUtil.LineSeparate(prefix, expectedMessage);
-                TestMessageDlgShown(actionToFail, expectedMessage);
-            }
+            using var helper = HttpClientTestHelper.SimulateNoNetworkInterface();
+            var expectedMessage = helper.GetExpectedMessage();
+            if (prefix != null)
+                expectedMessage = TextUtil.LineSeparate(prefix, expectedMessage);
+            TestMessageDlgShown(actionToFail, expectedMessage);
         }
 
         public static void TestMessageDlgShown(Action actionToShow, string expectedMessage)

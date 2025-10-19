@@ -47,6 +47,7 @@ Additional guidance:
 - Prefer focused edits; do not reformat unrelated code.
 - Keep names descriptive and intention-revealing; avoid abbreviations.
 - Keep methods small and cohesive; extract helpers as needed (placed after usage as above).
+- **Blank lines should be completely empty** - do not include spaces or tabs for indentation on blank lines.
 
 ## Error handling and diagnostics
 

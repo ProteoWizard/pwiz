@@ -18,14 +18,13 @@
  */
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.CommonResources;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 using System;
 using System.IO;
-using pwiz.Skyline.Alerts;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -74,41 +73,31 @@ namespace pwiz.SkylineTestFunctional
         private static void TestDnsFailureHandling()
         {
             using var helper = HttpClientTestHelper.SimulateDnsFailure();
-            var uri = new Uri("http://nonexistent.example.com");
-            ValidateDownloadStringFailure(uri,
-                string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Failed_to_resolve_host__0___Please_check_your_DNS_settings_or_VPN_proxy_,
-                    uri.Host));
+            ValidateDownloadFailure(helper, "http://nonexistent.example.com");
         }
 
         private static void TestConnectionFailureHandling()
         {
             using var helper = HttpClientTestHelper.SimulateConnectionFailure();
-            var uri = new Uri("http://unreachable.example.com");
-            ValidateDownloadStringFailure(uri,
-                string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Failed_to_connect_to__0___Please_check_your_network_connection__VPN_proxy__or_firewall_,
-                    uri.Host));
+            ValidateDownloadFailure(helper, "http://unreachable.example.com");
         }
 
         private static void TestTimeoutHandling()
         {
             using var helper = HttpClientTestHelper.SimulateTimeout();
-            var uri = new Uri("http://slow.example.com");
-            ValidateDownloadStringFailure(uri,
-                string.Format(MessageResources.HttpClientWithProgress_MapHttpException_The_request_to__0__timed_out__Please_try_again_,
-                    uri));
+            ValidateDownloadFailure(helper, "http://slow.example.com");
         }
 
         private static void TestConnectionLossHandling()
         {
             using var helper = HttpClientTestHelper.SimulateConnectionLoss();
-            ValidateDownloadStringFailure(
-                MessageResources.HttpClientWithProgress_MapHttpException_The_connection_was_lost_during_download__Please_check_your_internet_connection_and_try_again_);
+            ValidateDownloadFailure(helper);
         }
 
         private static void TestCancellationHandling()
         {
             using var helper = HttpClientTestHelper.SimulateCancellation();
-            ValidateDownloadStringFailure<OperationCanceledException>(new OperationCanceledException().Message);
+            ValidateDownloadFailure<OperationCanceledException>(helper);
         }
         
         private static void TestCancellationClickByException()
@@ -137,62 +126,43 @@ namespace pwiz.SkylineTestFunctional
         private static void TestNoNetworkInterfaceHandling()
         {
             using var helper = HttpClientTestHelper.SimulateNoNetworkInterface();
-            ValidateDownloadStringFailure(
-                MessageResources.HttpClientWithProgress_MapHttpException_No_network_connection_detected__Please_check_your_internet_connection_and_try_again_);
+            ValidateDownloadFailure(helper);
         }
 
         private static void TestHttp404Handling()
         {
             using var helper = HttpClientTestHelper.SimulateHttp404();
-            var uri = new Uri("http://example.com/notfound");
-            ValidateDownloadStringFailure(uri,
-                string.Format(MessageResources.HttpClientWithProgress_MapHttpException_The_requested_resource_at__0__was_not_found__HTTP_404___Please_verify_the_URL_,
-                    uri));
+            ValidateDownloadFailure(helper, "http://example.com/notfound");
         }
 
         private static void TestHttp401Handling()
         {
             using var helper = HttpClientTestHelper.SimulateHttp401();
-            var uri = new Uri("http://example.com/protected");
-            ValidateDownloadStringFailure(uri,
-                string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Access_to__0__was_denied__HTTP_401___Authentication_may_be_required_,
-                    uri));
+            ValidateDownloadFailure(helper, "http://example.com/protected");
         }
 
         private static void TestHttp403Handling()
         {
             using var helper = HttpClientTestHelper.SimulateHttp403();
-            var uri = new Uri("http://example.com/forbidden");
-            ValidateDownloadStringFailure(uri,
-                string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Access_to__0__was_forbidden__HTTP_403___You_may_not_have_permission_to_access_this_resource_,
-                    uri));
+            ValidateDownloadFailure(helper, "http://example.com/forbidden");
         }
 
         private static void TestHttp500Handling()
         {
             using var helper = HttpClientTestHelper.SimulateHttp500();
-            var uri = new Uri("http://example.com/error");
-            ValidateDownloadStringFailure(uri,
-                string.Format(MessageResources.HttpClientWithProgress_MapHttpException_The_server__0__encountered_an_internal_error__HTTP_500___Please_try_again_later_or_contact_the_server_administrator_,
-                    uri.Host));
+            ValidateDownloadFailure(helper, "http://example.com/error");
         }
 
         private static void TestHttp429Handling()
         {
             using var helper = HttpClientTestHelper.SimulateHttp429();
-            var uri = new Uri("http://example.com/ratelimited");
-            ValidateDownloadStringFailure(uri,
-                string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Too_many_requests_to__0___HTTP_429___Please_wait_before_trying_again_,
-                    uri.Host));
+            ValidateDownloadFailure(helper, "http://example.com/ratelimited");
         }
 
         private static void TestHttpGenericErrorHandling()
         {
             using var helper = HttpClientTestHelper.SimulateHttpError(503, "Service Unavailable");
-            var uri = new Uri("http://example.com/unavailable");
-            ValidateDownloadStringFailure(uri,
-                string.Format(MessageResources.HttpClientWithProgress_MapHttpException_The_server__0__returned_an_error__HTTP__1____Please_try_again_or_contact_support_,
-                    uri.Host, 503));
+            ValidateDownloadFailure(helper, "http://example.com/unavailable");
         }
 
         private static void TestDownloadStringSuccess()
@@ -379,38 +349,28 @@ namespace pwiz.SkylineTestFunctional
         }
 
         /// <summary>
-        /// Helper function to test a failure in HttpClientWithProgress.DownloadString()
-        /// with an IOException containing a constant message.
+        /// Most concise helper - validates download failure using HttpClientTestHelper.
+        /// The helper provides both the simulation and expected message for the IOException type.
         /// </summary>
-        /// <param name="message">The constant message where the requested URI is not part of the validation</param>
-        private static void ValidateDownloadStringFailure(string message)
+        /// <param name="helper">The test helper that provides simulation and expected message</param>
+        /// <param name="urlText">Optional URL string (defaults to "http://example.com")</param>
+        private static void ValidateDownloadFailure(HttpClientTestHelper helper, string urlText = null)
         {
-            var uri = new Uri("http://example.com");
-            ValidateDownloadStringFailure<IOException>(uri, message);
+            ValidateDownloadFailure<IOException>(helper, urlText);
         }
 
         /// <summary>
         /// Helper function to test a failure in HttpClientWithProgress.DownloadString()
-        /// with an IOException containing a message that references the requested URI.
-        /// </summary>
-        /// <param name="uri">The requested URI</param>
-        /// <param name="message">The expected message that refers to the URI</param>
-        private static void ValidateDownloadStringFailure(Uri uri, string message)
-        {
-            ValidateDownloadStringFailure<IOException>(uri, message);
-        }
-
-        /// <summary>
-        /// Helper function to test a failure in HttpClientWithProgress.DownloadString()
-        /// with a type TEx exception containing a constant message.
+        /// with a type TEx exception.
         /// </summary>
         /// <typeparam name="TEx">The expected Exception type thrown</typeparam>
-        /// <param name="message">The expected message that refers to the URI</param>
-        private static void ValidateDownloadStringFailure<TEx>(string message)
+        /// <param name="helper">The test helper that provides simulation and expected message</param>
+        /// <param name="urlText">Optional URL string (defaults to "http://example.com")</param>
+        private static void ValidateDownloadFailure<TEx>(HttpClientTestHelper helper, string urlText = null)
             where TEx : Exception
         {
-            var uri = new Uri("http://example.com");
-            ValidateDownloadStringFailure<TEx>(uri, message);
+            var uri = new Uri(urlText ?? "http://example.com");
+            ValidateDownloadStringFailure<TEx>(uri, helper.GetExpectedMessage(uri));
         }
 
         /// <summary>
