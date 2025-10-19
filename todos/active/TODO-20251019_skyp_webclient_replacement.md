@@ -1,7 +1,8 @@
-# TODO-skyp_webclient_replacement.md
+# TODO-20251019_skyp_webclient_replacement.md
 
-## Branch Information (Future)
-- **Branch**: Not yet created - will be `Skyline/work/YYYYMMDD_skyp_webclient_replacement`
+## Branch Information
+- **Branch**: `Skyline/work/20251019_skyp_webclient_replacement`
+- **Created**: 2025-10-19
 - **Objective**: Migrate `.skyp` file support from WebClient to HttpClient
 
 ## Background
