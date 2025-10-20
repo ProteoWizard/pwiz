@@ -18,11 +18,13 @@
  */
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.FilesTree;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Files;
 using pwiz.SkylineTestUtil;
+using System;
 using System.ComponentModel;
 using System.IO;
 
@@ -46,11 +48,13 @@ namespace pwiz.SkylineTestFunctional
         {
             VerifySetup();
 
-            TestSelectedNodeProperties();
+            TestReplicateProperties();
 
             TestAnnotationProperties();
 
             TestEditProperty();
+
+            TestHandleReplicateNameException();
 
             CloseForms();
         }
@@ -71,7 +75,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(() => SkylineWindow.PropertyGridFormIsVisible);
         }
 
-        private static void TestSelectedNodeProperties()
+        private static void TestReplicateProperties()
         {
             // test selecting a replicate node
             var replicateFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
@@ -124,6 +128,7 @@ namespace pwiz.SkylineTestFunctional
 
         private static void TestEditProperty()
         {
+            // select replicate
             var replicateFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
             var replicateNode = SkylineWindow.FilesTree.File<Replicate>(replicateFolder);
             Assert.IsNotNull(replicateNode);
@@ -136,8 +141,37 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.FocusPropertyProvider(SkylineWindow.FilesTreeForm);
             });
 
-            // Edit the Name property and verify the change was made on the object and UI
+            // Edit the Name property of the selected object and verify the change was made on the object and UI
             RunUI(() => { PropertyGridTestUtil.TestEditProperty(SkylineWindow, NAME_PROP_NAME, "EditedName"); });
+        }
+
+        private static void TestHandleReplicateNameException()
+        {
+            // select replicate
+            var replicateFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
+            var replicateNode = replicateFolder.Nodes[0] as FilesTreeNode;
+            var otherReplicateNode = replicateFolder.Nodes[1] as FilesTreeNode;
+            Assert.IsNotNull(replicateNode);
+            Assert.IsNotNull(otherReplicateNode);
+
+            // attempt to edit the name to the name of another replicate. Should throw an exception.
+            RunUI(() =>
+            {
+                var selectedObject = SkylineWindow.PropertyGridForm.GetPropertyObject();
+                Assert.IsNotNull(selectedObject);
+                var prop = TypeDescriptor.GetProperties(selectedObject, false)[NAME_PROP_NAME];
+                try
+                {
+                    prop.SetValue(selectedObject, otherReplicateNode.Name);
+                    // this should fail, if not, fail the test
+                    Assert.Fail("Setting replicate name to an existing replicate name should throw an exception.");
+                }
+                catch (ArgumentException)
+                {
+                    // Expected exception, verify that the name was not changed
+                    Assert.IsFalse(prop.GetValue(selectedObject)?.Equals(otherReplicateNode.Name) ?? true);
+                }
+            });
         }
 
         private static void CloseForms()

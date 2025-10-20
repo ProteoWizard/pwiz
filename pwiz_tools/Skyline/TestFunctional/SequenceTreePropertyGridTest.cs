@@ -48,7 +48,7 @@ namespace pwiz.SkylineTestFunctional
         {
             VerifySetup();
 
-            TestSelectedNodeProperties();
+            TestPeptideProperties();
 
             TestAnnotationProperties();
 
@@ -73,7 +73,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(() => SkylineWindow.PropertyGridFormIsVisible);
         }
 
-        private static void TestSelectedNodeProperties()
+        private static void TestPeptideProperties()
         {
             // select arbitrary peptide node
             var peptideGroupTreeNode = SkylineWindow.SequenceTree.GetSequenceNodes().FirstOrDefault();
@@ -127,7 +127,7 @@ namespace pwiz.SkylineTestFunctional
             var selectedObject = SkylineWindow.PropertyGridForm.GetPropertyObject();
             Assert.IsTrue(selectedObject is Peptide);
 
-            // Edit the Name property and verify the change was made on the object and UI
+            // Edit the note property of the selected object (peptide) and verify the change was made on the object and UI
             RunUI(() => { PropertyGridTestUtil.TestEditProperty(SkylineWindow, NOTE_PROP_NAME, "EditedNote"); });
         }
 

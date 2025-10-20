@@ -60,7 +60,7 @@ namespace pwiz.SkylineTestUtil
 
         public static void TestAddAnnotations(SkylineWindow skylineWindow, AnnotationDef.AnnotationTarget target)
         {
-            // Define four annotation definitions for replicates: string, number, bool, value list
+            // Define four annotation definitions: string, number, bool, value list
             var annotationDefs = new[]
             {
                 new AnnotationDef(
@@ -107,7 +107,7 @@ namespace pwiz.SkylineTestUtil
         }
 
         // edit annotations of currently selected property object and test if the changes are applied to the document
-        // assumes the annotation definitions already exist, e.g. by calling TestAddAnnotations
+        // assumes the annotation definitions already exist, e.g. by calling TestAddAnnotations on that type of object
         public static void TestEditAnnotations(SkylineWindow skylineWindow)
         {
             const string stringEditedValue = "EditedString";
