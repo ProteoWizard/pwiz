@@ -1448,14 +1448,14 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 editGroupComparisonDlg.TextBoxName.Text = comparisonName;
-                SelectComboItem(editGroupComparisonDlg.ComboControlAnnotation, controlAnnotation);
+                editGroupComparisonDlg.ControlAnnotation = controlAnnotation;
             });
-            WaitForConditionUI(2000, () => editGroupComparisonDlg.ComboControlValue.FindStringExact(controlValue) >= 0);
+            WaitForConditionUI(2000, () => editGroupComparisonDlg.ControlValueOptions.Contains(controlValue));
             RunUI(() =>
             {
-                SelectComboItem(editGroupComparisonDlg.ComboControlValue, controlValue);
-                SelectComboItem(editGroupComparisonDlg.ComboCaseValue, caseValue);
-                SelectComboItem(editGroupComparisonDlg.ComboIdentityAnnotation, identityAnnotation);
+                editGroupComparisonDlg.ControlValue = controlValue;
+                editGroupComparisonDlg.CaseValue = caseValue;
+                editGroupComparisonDlg.IdentityAnnotation = identityAnnotation;
                 editGroupComparisonDlg.NormalizeOption = NormalizeOption.GLOBAL_STANDARDS;
                 editGroupComparisonDlg.TextBoxConfidenceLevel.Text = 99.ToString(CultureInfo.CurrentCulture);
                 editGroupComparisonDlg.RadioScopePerProtein.Checked = true;
@@ -1577,9 +1577,9 @@ namespace pwiz.SkylineTestTutorial
 
             WaitForConditionUI(() => foldChangeGrid.DataboundGridControl.IsComplete);
             var settingsForm = ShowDialog<EditGroupComparisonDlg>(foldChangeGrid.ShowChangeSettings);
-            RunUI(() => SelectComboItem(settingsForm.ComboIdentityAnnotation, ""));
+            RunUI(() => settingsForm.IdentityAnnotation = "");
             WaitForConditionUI(() => 37 == foldChangeGrid.DataboundGridControl.RowCount);
-            RunUI(() => SelectComboItem(settingsForm.ComboIdentityAnnotation, "SubjectId"));
+            RunUI(() => settingsForm.IdentityAnnotation = "SubjectId");
             RunUI(() =>
             {
                 string folderName = Path.GetDirectoryName(SkylineWindow.DocumentFilePath);

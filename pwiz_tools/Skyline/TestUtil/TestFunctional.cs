@@ -3019,14 +3019,6 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        public static void SelectComboItem(ComboBox comboBox, string text)
-        {
-            int index = comboBox.FindStringExact(text);
-            Assert.AreNotEqual(-1, index, "No such item:{0}", text);
-            comboBox.SelectedIndex = index;
-        }
-
-
         #region Modification helpers
 
         public static PeptideSettingsUI ShowPeptideSettings()

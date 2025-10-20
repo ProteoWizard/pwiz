@@ -22,7 +22,9 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
@@ -186,24 +188,32 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 comboNormalizationMethod.SelectedItem = MakeNormalizationItem(value);
             }
         }
-        public ComboBox ComboIdentityAnnotation
-        {
-            get { return comboIdentityAnnotation; }
+
+        public string ControlAnnotation { 
+            get { return comboControlAnnotation.SelectedItem?.ToString(); }
+            set { SelectComboItem(comboControlAnnotation, value); }
         }
 
-        public ComboBox ComboControlValue
+        public string ControlValue
         {
-            get { return comboControlValue; }
+            get { return comboControlValue.SelectedItem?.ToString(); }
+            set { SelectComboItem(comboControlValue, value); }
         }
 
-        public ComboBox ComboControlAnnotation
+        public IEnumerable<string> ControlValueOptions
         {
-            get { return comboControlAnnotation; }
+            get { return ListComboOptions(comboControlValue); }
         }
 
-        public ComboBox ComboCaseValue
+        public string CaseValue
         {
-            get { return comboCaseValue; }
+            get { return comboCaseValue.SelectedItem?.ToString(); }
+            set { SelectComboItem(comboCaseValue, value); }
+        }
+        public string IdentityAnnotation
+        {
+            get { return comboIdentityAnnotation.SelectedItem?.ToString(); }
+            set { SelectComboItem(comboIdentityAnnotation, value); }
         }
 
         public ComboBox ComboSummaryMethod
@@ -219,6 +229,22 @@ namespace pwiz.Skyline.Controls.GroupComparison
         public TextBox TextBoxQValueCutoff
         {
             get { return tbxQValueCutoff; }
+        }
+
+        private void SelectComboItem(ComboBox comboBox, string value)
+        {
+            int index = comboBox.FindStringExact(value);
+            if (index < 0)
+            {
+                throw new ArgumentException(string.Format(@"Invalid option {0}", value));
+            }
+            Assume.AreNotEqual(-1, index);
+            comboBox.SelectedIndex = index;
+        }
+
+        private IEnumerable<string> ListComboOptions(ComboBox comboBox)
+        {
+            return comboBox.Items.Cast<object>().Select(option => option.ToString());
         }
 
         public RadioButton RadioScopePerProtein { get { return radioScopeProtein; } }

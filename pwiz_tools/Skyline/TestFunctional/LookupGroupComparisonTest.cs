@@ -58,13 +58,13 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(()=>
                 {
                     editGroupComparisonDlg.TextBoxName.Text = peptidesByCondition;
-                    SelectComboItem(editGroupComparisonDlg.ComboControlAnnotation, " Condition");
-                    SelectComboItem(editGroupComparisonDlg.ComboIdentityAnnotation, " Name");
+                    editGroupComparisonDlg.ControlAnnotation = " Condition";
+                    editGroupComparisonDlg.IdentityAnnotation = " Name";
                 });
-                WaitForConditionUI(() => editGroupComparisonDlg.ComboControlValue.Items.Count > 0);
+                WaitForConditionUI(() => editGroupComparisonDlg.ControlValueOptions.Any());
                 RunUI(() =>
                 {
-                    SelectComboItem(editGroupComparisonDlg.ComboControlValue, "Healthy");
+                    editGroupComparisonDlg.ControlValue = "Healthy";
                 });
             }, editGroupComparisonDlg=>editGroupComparisonDlg.OkDialog());
             RunUI(()=>SkylineWindow.ShowGroupComparisonWindow(peptidesByCondition));
@@ -146,14 +146,14 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() =>
                 {
                     editGroupComparisonDlg.TextBoxName.Text = proteinsBySampleType;
-                    SelectComboItem(editGroupComparisonDlg.ComboControlAnnotation, ColumnCaptions.SampleType);
-                    SelectComboItem(editGroupComparisonDlg.ComboIdentityAnnotation, ColumnCaptions.AnalyteConcentration);
+                    editGroupComparisonDlg.ControlAnnotation = ColumnCaptions.SampleType;
+                    editGroupComparisonDlg.IdentityAnnotation = ColumnCaptions.AnalyteConcentration;
                     editGroupComparisonDlg.RadioScopePerProtein.Checked = true;
                 });
-                WaitForConditionUI(() => editGroupComparisonDlg.ComboControlValue.Items.Count > 0);
+                WaitForConditionUI(() => editGroupComparisonDlg.ControlValueOptions.Any());
                 RunUI(() =>
                 {
-                    SelectComboItem(editGroupComparisonDlg.ComboControlValue, SampleType.BLANK.ToString());
+                    editGroupComparisonDlg.ControlValue = SampleType.BLANK.ToString();
                 });
             }, editGroupComparisonDlg => editGroupComparisonDlg.OkDialog());
             RunUI(() => SkylineWindow.ShowGroupComparisonWindow(proteinsBySampleType));

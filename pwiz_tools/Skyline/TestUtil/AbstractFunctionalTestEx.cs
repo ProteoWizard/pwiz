@@ -395,18 +395,18 @@ namespace pwiz.SkylineTestUtil
             RunUI(() =>
             {
                 dialog.TextBoxName.Text = name;
-                SelectComboItem(dialog.ComboControlAnnotation, controlGroupAnnotation);
+                dialog.ControlAnnotation = controlGroupAnnotation;
             });
 
-            WaitForConditionUI(() => dialog.ComboControlValue.Items.Count > 0);
+            WaitForConditionUI(() => dialog.ControlValueOptions.Any());
 
             RunUI(() =>
             {
-                SelectComboItem(dialog.ComboControlValue, controlGroupValue);
-                SelectComboItem(dialog.ComboCaseValue, compareValue);
+                dialog.ControlValue = controlGroupValue;
+                dialog.CaseValue = compareValue;
                 if (identityAnnotation != null)
                 {
-                    SelectComboItem(dialog.ComboIdentityAnnotation, identityAnnotation);
+                    dialog.IdentityAnnotation = identityAnnotation;
                 }
                 dialog.RadioScopePerProtein.Checked = false;
             });

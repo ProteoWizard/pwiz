@@ -1060,17 +1060,14 @@ namespace TestPerf
             RunUI(() =>
             {
                 editGroupComparisonDlg.TextBoxName.Text = comparisonName;
-                Assert.IsTrue(editGroupComparisonDlg.ComboControlAnnotation.Items.Contains(controlAnnotation));
-                editGroupComparisonDlg.ComboControlAnnotation.SelectedItem = controlAnnotation;
+                editGroupComparisonDlg.ControlAnnotation = controlAnnotation;
             });
-            WaitForConditionUI(2000, () => editGroupComparisonDlg.ComboControlValue.Items.Contains(controlValue));
+            WaitForConditionUI(2000, () => editGroupComparisonDlg.ControlValueOptions.Contains(controlValue));
             RunUI(() =>
             {
-                SelectComboItem(editGroupComparisonDlg.ComboControlValue, controlValue);
-                SelectComboItem(editGroupComparisonDlg.ComboCaseValue, caseValue);
-                Assert.IsTrue(editGroupComparisonDlg.ComboCaseValue.Items.Contains(caseValue));
-                SelectComboItem(editGroupComparisonDlg.ComboIdentityAnnotation, identityAnnotation);
-                Assert.IsTrue(editGroupComparisonDlg.ComboIdentityAnnotation.Items.Contains(identityAnnotation));
+                editGroupComparisonDlg.ControlValue = controlValue;
+                editGroupComparisonDlg.CaseValue= caseValue;
+                editGroupComparisonDlg.IdentityAnnotation = identityAnnotation;
                 editGroupComparisonDlg.NormalizeOption =
                     NormalizeOption.FromNormalizationMethod(NormalizationMethod.FromIsotopeLabelTypeName("heavy"));
                 editGroupComparisonDlg.TextBoxConfidenceLevel.Text = 95.ToString(CultureInfo.CurrentCulture);
