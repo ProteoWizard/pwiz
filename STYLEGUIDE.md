@@ -40,13 +40,65 @@ Order members to make high-level logic easy to read first:
 
 Additional guidance:
 - Place private helpers after the public methods that use them; keep helpers close to their primary call sites.
-- Avoid “old C” style where helpers appear at the top and the main logic at the bottom.
+- Avoid "old C" style where helpers appear at the top and the main logic at the bottom.
 
 ## General guidelines
 - Match surrounding file style (indentation, spacing, line breaks).
 - Prefer focused edits; do not reformat unrelated code.
 - Keep names descriptive and intention-revealing; avoid abbreviations.
 - Keep methods small and cohesive; extract helpers as needed (placed after usage as above).
+- **Blank lines should be completely empty** - do not include spaces or tabs for indentation on blank lines.
+
+## Error handling and diagnostics
+
+### Debug.WriteLine for diagnostic logging
+Use `Debug.WriteLine()` for diagnostic messages that should only appear during development:
+- Add `using System.Diagnostics;` at the top of the file (do not fully qualify)
+- Use the standard comment: `// Ignore but log to debug console in debug builds`
+- **Always use verbatim string format `$@"..."` instead of `$"..."`** to avoid ReSharper warnings about localizable strings
+- Common scenarios:
+  - Catch blocks where the error is handled but you want diagnostics
+  - Non-critical failures that shouldn't interrupt the user
+  - Information useful for debugging but not for production
+
+Example:
+```csharp
+catch (Exception ex)
+{
+    // Ignore but log to debug console in debug builds
+    Debug.WriteLine($@"Failed to connect: {ex.Message}");
+}
+```
+
+Note: The `$@""` format (verbatim interpolated string) prevents ReSharper from flagging the text as user-visible and requiring localization.
+
+Benefits:
+- Only appears in Debug builds (stripped from Release)
+- Visible in Visual Studio Debug Output window
+- Provides a convenient breakpoint location
+- No performance impact in production
+
+Use alternatives for:
+- `Console.WriteLine()` - Command-line tools only
+- Exception throwing - Critical errors that must be handled
+- Logging frameworks - Production diagnostics that need persistence
+
+### Non-localizable text (debugging only)
+Use `$@""` format for strings not intended for user display to avoid ReSharper localization warnings:
+
+**ToString() for debugging:**
+```csharp
+// Text for debugging only
+public override string ToString() => $@"Connection[Host={_host}, Port={_port}]";
+```
+
+**Exception messages not shown to users:**
+```csharp
+// Exception text for internal diagnostics, not displayed to user
+throw new InvalidOperationException($@"Invalid state: {_currentState}");
+```
+
+Add the comment `// Text for debugging only` or `// Exception text for internal diagnostics, not displayed to user` to document that the string is intentionally non-localized.
 
 ## Naming conventions (mirrors ReSharper rules)
 - Private instance fields: prefix with `_` and use `camelCase` (e.g., `_filePath`).
@@ -60,15 +112,39 @@ Additional guidance:
 - Enum members: `snake_case` (e.g., `not_set`).
 
 ## Whitespace and formatting
-- Tabs are disallowed; use spaces. Do not change existing files’ indentation, but when adding new code use spaces.
+- Tabs are disallowed; use spaces. Do not change existing files' indentation, but when adding new code use spaces.
 - Avoid mixing tabs and spaces. Align with existing file formatting.
+- **Line endings**: Use Windows-style line endings (`\r\n`, CRLF) for all files. This is the standard for Windows development and matches the team's development environment. When creating or modifying files, ensure line endings are `\r\n`, not Unix-style `\n` (LF).
+
+## ASCII vs Unicode characters
+**Strongly prefer ASCII characters over Unicode in all code and documentation files.** Use simple ASCII alternatives whenever possible to avoid encoding issues, improve compatibility, and simplify text editing.
+
+### Required ASCII usage
+- **Hyphens/Dashes**: Use ASCII hyphen-minus `-` (character 45), not em dash (U+2014) or en dash (U+2013)
+- **Quotes**: Use ASCII double quote `"` (character 34) and single quote `'` (character 39), not Unicode quotes like curly quotes
+- **Apostrophes**: Use ASCII single quote `'` (character 39), not Unicode apostrophe (U+2019)
+
+### General guidance
+- When a Unicode symbol has an ASCII or simple text alternative, prefer the ASCII/text version
+  - Example: Use "to" or "->" instead of right arrow (U+2192)
+  - Example: Use "..." instead of ellipsis (U+2026)
+- In code comments and documentation, write out words rather than using Unicode symbols
+- LLMs often default to "typographically correct" Unicode punctuation - avoid this in technical files
+- Exception: Unicode is acceptable when there is no reasonable ASCII alternative and the character is essential to the meaning
+
+### Why ASCII matters
+- **Encoding safety**: ASCII works everywhere without UTF-8 vs Windows-1252 confusion
+- **Git compatibility**: Simpler diffs, fewer merge conflicts
+- **Editor compatibility**: Works in all text editors, terminals, and build tools
+- **Easier to type**: Users can type ASCII characters directly without copy-paste
+- **Search/replace**: ASCII characters are easier to find and replace programmatically
 
 ## Tools
 - We develop with Visual Studio 2022 and ReSharper; aim for warning-free under its inspections.
 - Follow the Skyline build guide for environment setup: https://skyline.ms/wiki/home/software/Skyline/page.view?name=HowToBuildSkylineTip
 
 ## Executables solutions
-Projects under `pwiz_tools/Skyline/Executables` are independent solutions (stand‑alone EXEs, developer tools, or utilities included with Skyline). They are not built by `Skyline.sln`. Prefer the same conventions as Skyline unless a local project requires an override.
+Projects under `pwiz_tools/Skyline/Executables` are independent solutions (stand-alone EXEs, developer tools, or utilities included with Skyline). They are not built by `Skyline.sln`. Prefer the same conventions as Skyline unless a local project requires an override.
 
 EditorConfig
 - All solutions inherit repository-wide `.editorconfig` for C# naming/formatting.
@@ -86,13 +162,6 @@ EditorConfig
   - Example: "Keyboard Shortcuts" → `Keyboard_Shortcuts`; "File > New" → `File_New`.
 - Prefer reusing existing keys when text matches; avoid near-duplicate strings.
 
-### CRITICAL: .resx file workflow
-When adding new resource strings to a .resx file, you MUST also add the corresponding public static string properties to the .Designer.cs file. The compiler will fail with CS0117 errors if the Designer.cs file is not updated.
-
-Example workflow:
-1. Add `<data name="MyNewString" xml:space="preserve"><value>My New String</value></data>` to .resx
-2. Add `public static string MyNewString => ResourceManager.GetString("MyNewString", resourceCulture);` to .Designer.cs
-3. Build to verify no CS0117 errors
 
 ## User interface guidelines
 
@@ -142,6 +211,7 @@ All source files should include the standard header with copyright and license i
 - Existing files: Keep existing `u.washington.edu` format (no need to change)
 - Both formats are acceptable
 
+
 ## Testing guidelines
 
 ### Test project structure
@@ -174,6 +244,30 @@ All source files should include the standard header with copyright and license i
 - Call public methods directly rather than simulating UI clicks
 - Use `AssertEx.Contains()` for string assertions
 - Use resource strings for test assertions to support localization
+
+### Translation-proof test assertions
+**NEVER use English text literals in test assertions** - all UI text is localized to Chinese and Japanese, so English-only assertions will break.
+
+**Bad (will break in localized builds):**
+```csharp
+// ❌ This will fail when UI is in Chinese or Japanese
+StringAssert.Contains(messageDlg.Message, "connection");
+Assert.IsTrue(errorDlg.Message.Contains("not found"));
+```
+
+**Good (translation-proof):**
+```csharp
+// ✅ Reconstruct expected message from resource strings
+var expectedMessage = string.Format(
+    MessageResources.HttpClientWithProgress_MapHttpException_Failed_to_connect_to__0___Please_check_your_network_connection__VPN_proxy__or_firewall_,
+    "cran.r-project.org");
+Assert.AreEqual(expectedMessage, messageDlg.Message);
+```
+
+**Examples from production code:**
+- See `HttpClientWithProgressIntegrationTest.cs` for comprehensive examples
+- Each test reconstructs the expected error message using the same resource strings the production code uses
+- Tests remain valid in all supported languages (English, Chinese, Japanese)
 
 ### Functional test performance
 - **Functional tests have significant overhead** - they must show and destroy a SkylineWindow and often drive the UI

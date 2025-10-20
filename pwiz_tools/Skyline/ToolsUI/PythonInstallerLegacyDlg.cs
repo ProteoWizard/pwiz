@@ -22,7 +22,6 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -126,29 +125,31 @@ namespace pwiz.Skyline.ToolsUI
 
         public void OkDialog()
         {
-            Enabled = false;
-
-            if ((_installed || GetPython()) && (clboxPackages.CheckedIndices.Count == 0 || GetPackages()))
-            {
-                DialogResult = DialogResult.OK;
-            }
-            else
-            {
-                DialogResult = DialogResult.Cancel;
-            }
+            // If there is installation to be done, and it fails or is canceled,
+            // leave the form open. Let the user try again or click Cancel themselves.
+            if (!_installed && !GetPython())
+                return;
+            if (clboxPackages.CheckedIndices.Count != 0 && !GetPackages())
+                return;
+            // Successful installation, close the form with OK result.
+            DialogResult = DialogResult.OK;
         }
 
         private bool GetPython()
         {
             try
             {
+                IProgressStatus status;
                 using (var waitDlg = new LongWaitDlg())
                 {
                     waitDlg.ProgressValue = 0;
                     // Short wait, because this can't possible happen fast enough to avoid
                     // showing progress, except in testing
-                    waitDlg.PerformWork(this, 50, DownloadPython);
+                    status = waitDlg.PerformWork(this, 50, DownloadPython);
                 }
+                if (status.IsCanceled)
+                    return false; // Stay on form, allow retry
+                    
                 using (var waitDlg = new LongWaitDlg(null, false))
                 {
                     waitDlg.Message = ToolsResources.PythonInstaller_GetPython_Installing_Python;
@@ -159,9 +160,9 @@ namespace pwiz.Skyline.ToolsUI
             }
             catch (Exception ex)
             {
-                MessageDlg.ShowWithException(this, (ex.InnerException ?? ex).Message, ex);
+                ExceptionUtil.DisplayOrReportException(this, ex);
+                return false; // Stay on form, allow retry
             }
-            return false;
         }
 
         private string DownloadPath { get; set; }
@@ -179,10 +180,7 @@ namespace pwiz.Skyline.ToolsUI
 
             using (var webClient = TestDownloadClient ?? new MultiFileAsynchronousDownloadClient(waitBroker, 1))
             {
-                if (!webClient.DownloadFileAsync(downloadUri, DownloadPath = Path.GetTempPath() + fileName, out var downloadException))
-                    throw new ToolExecutionException(TextUtil.LineSeparate(
-                        Resources.PythonInstaller_DownloadPython_Download_failed_, 
-                        Resources.PythonInstaller_DownloadPython_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_), downloadException);
+                webClient.DownloadFileAsyncOrThrow(downloadUri, DownloadPath = Path.GetTempPath() + fileName);
             }
         }
 
@@ -210,11 +208,14 @@ namespace pwiz.Skyline.ToolsUI
             try
             {
                 // download packages
+                IProgressStatus status;
                 using (var waitDlg = new LongWaitDlg())
                 {
                     waitDlg.ProgressValue = 0;
-                    waitDlg.PerformWork(this, 500, longWaitBroker => packagePaths = DownloadPackages(longWaitBroker, downloadablePackages));
+                    status = waitDlg.PerformWork(this, 500, longWaitBroker => packagePaths = DownloadPackages(longWaitBroker, downloadablePackages));
                 }
+                if (status.IsCanceled)
+                    return false;
 
                 // separate packages
                 ICollection<string> exePaths = new Collection<string>();
@@ -250,16 +251,21 @@ namespace pwiz.Skyline.ToolsUI
                             this,
                             Resources.PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_Python_package_manager_Pip_to_install_packages_from_source__Click_install_to_begin_the_installation_process_,
                             ToolsResources.PythonInstaller_InstallPackages_Install);
-                        if (result == DialogResult.OK && GetPip())
+                        if (result != DialogResult.OK)
                         {
-                            pipPath = PythonUtil.GetPipPath(_version);
-                            MessageDlg.Show(this, Resources.PythonInstaller_InstallPackages_Pip_installation_complete_);
-                        }
-                        else
-                        {
+                            // User clicked Cancel on the "Install pip?" dialog - they declined to install pip
                             MessageDlg.Show(this, Resources.PythonInstaller_InstallPackages_Python_package_installation_cannot_continue__Canceling_tool_installation_);
                             return false;
                         }
+                        if (!GetPip())
+                        {
+                            // GetPip() failed or was canceled
+                            // Error dialog already shown by GetPip() if there was an error
+                            // No need to show additional message for cancellation
+                            return false;
+                        }
+                        pipPath = PythonUtil.GetPipPath(_version);
+                        MessageDlg.Show(this, Resources.PythonInstaller_InstallPackages_Pip_installation_complete_);
                     }
 
                     using (var waitDlg = new LongWaitDlg(null, false))
@@ -271,14 +277,10 @@ namespace pwiz.Skyline.ToolsUI
                 MessageDlg.Show(this, Resources.PythonInstaller_GetPackages_Package_installation_completed_); 
                 return true;
             }
-            catch (TargetInvocationException ex)
+            catch (Exception ex)
             {
-                if (ex.InnerException is ToolExecutionException)
-                {
-                    MessageDlg.ShowException(this, ex);
-                    return false;
-                }
-                throw;
+                ExceptionUtil.DisplayOrReportException(this, ex);
+                return false;
             }
         }
 
@@ -309,19 +311,22 @@ namespace pwiz.Skyline.ToolsUI
                 {
                     Match file = Regex.Match(package, @"[^/]*$");
                     string downloadPath = Path.GetTempPath() + file;
-                    if (webClient.DownloadFileAsync(new Uri(package), downloadPath, out var downloadException))
+                    try
                     {
+                        webClient.DownloadFileAsyncOrThrow(new Uri(package), downloadPath);
                         downloadPaths.Add(downloadPath);
                     }
-                    else
+                    catch (OperationCanceledException)
+                    {
+                        // Don't collect cancellation as a failure, just propagate immediately
+                        throw;
+                    }
+                    catch (Exception ex)
                     {
                         failedDownloads.Add(package);
-                        if (downloadException != null)
-                        {
-                            downloadExceptions.Add(downloadException);
-                        }
+                        downloadExceptions.Add(ex);
                     }
-                }        
+                }
             }
 
             if (failedDownloads.Count != 0)
@@ -343,9 +348,7 @@ namespace pwiz.Skyline.ToolsUI
                         TextUtil.LineSeparate(
                             Resources.PythonInstaller_DownloadPackages_Failed_to_download_the_following_packages_,
                             string.Empty,
-                            TextUtil.LineSeparate(failedDownloads),
-                            string.Empty,
-                            Resources.PythonInstaller_DownloadPython_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_), cause);
+                            TextUtil.LineSeparate(failedDownloads)), cause);
             }
             return downloadPaths;
         }
@@ -400,27 +403,30 @@ namespace pwiz.Skyline.ToolsUI
         {   
             try
             {
+                IProgressStatus status;
                 using (var dlg = new LongWaitDlg())
                 {
-                    dlg.ProgressValue = 0;
                     // Short wait, because this can't possible happen fast enough to avoid
                     // showing progress, except in testing
-                    dlg.PerformWork(this, 50, DownloadPip);
+                    status = dlg.PerformWork(this, 50, progressMonitor =>
+                    {
+                        progressMonitor.UpdateProgress(new ProgressStatus(ToolsResources.PythonInstaller_GetPythonTask_Downloading_the_get_pip_py_script));
+                        DownloadPip(progressMonitor);
+                    });
                 }
+                if (status.IsCanceled)
+                    return false; // Stay on form, allow retry
+                    
                 using (var dlg = new LongWaitDlg(null, false))
                 {
                     dlg.Message = ToolsResources.PythonInstaller_GetPip_Installing_Pip;
                     dlg.PerformWork(this, 50, InstallPip);
                 }
             }
-            catch (TargetInvocationException ex)
+            catch (Exception ex)
             {
-                if (ex.InnerException is ToolExecutionException)
-                {
-                    MessageDlg.ShowException(this, ex);
-                    return false;
-                }
-                throw;
+                ExceptionUtil.DisplayOrReportException(this, ex);
+                return false; // Stay on form, allow retry
             }
             return true;
         }
@@ -443,12 +449,8 @@ namespace pwiz.Skyline.ToolsUI
 
             using (var webClient = TestPipDownloadClient ?? new MultiFileAsynchronousDownloadClient(longWaitBroker, 2))
             {
-                Exception error;
-                if (!webClient.DownloadFileAsync(new Uri(setupToolsScript), SetupToolsPath, out error) ||
-                    !webClient.DownloadFileAsync(new Uri(pipScript), PipPath, out error))
-                {
-                    throw new ToolExecutionException(Resources.PythonInstaller_DownloadPip_Download_failed__Check_your_network_connection_or_contact_Skyline_developers_, error);
-                }
+                webClient.DownloadFileAsyncOrThrow(new Uri(setupToolsScript), SetupToolsPath);
+                webClient.DownloadFileAsyncOrThrow(new Uri(pipScript), PipPath);
             }
         }
 
