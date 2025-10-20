@@ -75,21 +75,17 @@ namespace pwiz.SkylineTestFunctional
 
         private static void TestPeptideProperties()
         {
-            // select arbitrary peptide node
+            // select peptide node
             var peptideGroupTreeNode = SkylineWindow.SequenceTree.GetSequenceNodes().FirstOrDefault();
             Assert.IsNotNull(peptideGroupTreeNode);
             var peptideTreeNode = peptideGroupTreeNode.Nodes[0] as PeptideTreeNode;
             Assert.IsNotNull(peptideTreeNode);
-            RunUI(() =>
-            {
-                SkylineWindow.SequenceTree.SelectedNode = peptideTreeNode;
-                SkylineWindow.FocusPropertyProvider(SkylineWindow.SequenceTreeForm);
-            });
+            RunUI(() => { SkylineWindow.SequenceTree.SelectedNode = peptideTreeNode; });
 
             // get properties of selected node
             var selectedObject = SkylineWindow.PropertyGridForm.GetPropertyObject();
             Assert.IsTrue(selectedObject is Peptide);
-            var props = TypeDescriptor.GetProperties(selectedObject);
+            var props = TypeDescriptor.GetProperties(selectedObject, false);
 
             // Check that sequence property matches value in selected node
             Assert.AreEqual(peptideTreeNode.DocNode.Peptide.Sequence, props[SEQUENCE_PROP_NAME].GetValue(selectedObject));
@@ -106,14 +102,22 @@ namespace pwiz.SkylineTestFunctional
 
         private static void TestAnnotationProperties()
         {
-            // Add annotation definitions for peptides
-            RunUI(() => { PropertyGridTestUtil.TestAddAnnotations(SkylineWindow, AnnotationDef.AnnotationTarget.peptide); });
-
+            // select peptide node
+            var peptideGroupTreeNode = SkylineWindow.SequenceTree.GetSequenceNodes().FirstOrDefault();
+            Assert.IsNotNull(peptideGroupTreeNode);
+            var peptideTreeNode = peptideGroupTreeNode.Nodes[0] as PeptideTreeNode;
+            Assert.IsNotNull(peptideTreeNode);
+            RunUI(() => { SkylineWindow.SequenceTree.SelectedNode = peptideTreeNode; });
+            
             // Get selected node and ensure it is a peptide
             var selectedObject = SkylineWindow.PropertyGridForm.GetPropertyObject();
             Assert.IsTrue(selectedObject is Peptide);
 
+            // Add annotation definitions for peptides
+            RunUI(() => { PropertyGridTestUtil.TestAddAnnotations(SkylineWindow, AnnotationDef.AnnotationTarget.peptide); });
+
             // Test if sum of original properties and new annotation definition properties appear
+            selectedObject = SkylineWindow.PropertyGridForm.GetPropertyObject();
             var props = TypeDescriptor.GetProperties(selectedObject, false);
             Assert.AreEqual(PEPTIDE_EXPECTED_PROP_NUM + SkylineWindow.Document.Settings.DataSettings.AnnotationDefs.Count, props.Count);
 
@@ -123,7 +127,12 @@ namespace pwiz.SkylineTestFunctional
 
         private static void TestEditProperty()
         {
-            // Get selected node and ensure it is a peptide
+            // Select Peptide node
+            var peptideGroupTreeNode = SkylineWindow.SequenceTree.GetSequenceNodes().FirstOrDefault();
+            Assert.IsNotNull(peptideGroupTreeNode);
+            var peptideTreeNode = peptideGroupTreeNode.Nodes[0] as PeptideTreeNode;
+            Assert.IsNotNull(peptideTreeNode);
+            RunUI(() => { SkylineWindow.SequenceTree.SelectedNode = peptideTreeNode; });
             var selectedObject = SkylineWindow.PropertyGridForm.GetPropertyObject();
             Assert.IsTrue(selectedObject is Peptide);
 

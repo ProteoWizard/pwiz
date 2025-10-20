@@ -21,6 +21,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Model.DocSettings;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 
@@ -140,6 +141,25 @@ namespace pwiz.SkylineTestUtil
             Assert.AreEqual(numberEditedValue, selectedObject.GetAnnotation(defNumber));
             Assert.AreEqual(boolEditedValue, selectedObject.GetAnnotation(defBool));
             Assert.AreEqual(listEditedValue, selectedObject.GetAnnotation(defList));
+        }
+
+        // Test whether the currently selected object's properties match the given expected values
+        public static void TestExpectedPropertyValues(SkylineWindow skylineWindow, Dictionary<string, object> expectedValues) 
+        {
+            var selectedObject = skylineWindow.PropertyGridForm.GetPropertyObject();
+            Assert.IsNotNull(selectedObject);
+            var props = TypeDescriptor.GetProperties(selectedObject, false);
+            Assert.AreEqual(props.Count, expectedValues.Count, $"Expected {expectedValues.Count} properties on selected object, found {props.Count}");
+            foreach (var kvp in expectedValues)
+            {
+                var propName = kvp.Key;
+                var expectedValue = kvp.Value;
+                var prop = props[propName];
+                Assert.IsNotNull(prop, $"Property '{propName}' not found on selected object.");
+                Assert.AreEqual(prop.PropertyType, expectedValue.GetType(), $"Property '{propName}' type mismatch.");
+                var actualValue = prop.GetValue(selectedObject);
+                Assert.AreEqual(expectedValue, actualValue, $"Property '{propName}' value mismatch.");
+            }
         }
     }
 }

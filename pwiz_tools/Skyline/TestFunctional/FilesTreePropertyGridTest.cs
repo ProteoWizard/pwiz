@@ -18,7 +18,6 @@
  */
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.FilesTree;
 using pwiz.Skyline.Model.DocSettings;
@@ -81,11 +80,7 @@ namespace pwiz.SkylineTestFunctional
             var replicateFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
             var replicateNode = SkylineWindow.FilesTree.File<Replicate>(replicateFolder);
             Assert.IsNotNull(replicateNode);
-            RunUI(() =>
-            {
-                SkylineWindow.FilesTreeForm.FilesTree.SelectedNode = replicateNode;
-                SkylineWindow.FocusPropertyProvider(SkylineWindow.FilesTreeForm);
-            });
+            RunUI(() => { SkylineWindow.FilesTreeForm.FilesTree.SelectedNode = replicateNode; });
 
             var selectedObject = SkylineWindow.PropertyGridForm?.GetPropertyObject();
             Assert.IsNotNull(selectedObject);
@@ -110,11 +105,7 @@ namespace pwiz.SkylineTestFunctional
             var replicateFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
             var replicateNode = SkylineWindow.FilesTree.File<Replicate>(replicateFolder);
             Assert.IsNotNull(replicateNode);
-            RunUI(() =>
-            {
-                SkylineWindow.FilesTreeForm.FilesTree.SelectNode(replicateNode, true);
-                SkylineWindow.FocusPropertyProvider(SkylineWindow.FilesTreeForm);
-            });
+            RunUI(() => { SkylineWindow.FilesTreeForm.FilesTree.SelectedNode = replicateNode; });
             var selectedObject = SkylineWindow.PropertyGridForm?.GetPropertyObject();
             Assert.IsNotNull(selectedObject);
             
@@ -132,14 +123,7 @@ namespace pwiz.SkylineTestFunctional
             var replicateFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
             var replicateNode = SkylineWindow.FilesTree.File<Replicate>(replicateFolder);
             Assert.IsNotNull(replicateNode);
-
-            // Select the replicate node so its properties appear in the property sheet
-            RunUI(() =>
-            {
-                SkylineWindow.ShowPropertyGridForm(true);
-                SkylineWindow.FilesTreeForm.FilesTree.SelectNode(replicateNode, true);
-                SkylineWindow.FocusPropertyProvider(SkylineWindow.FilesTreeForm);
-            });
+            RunUI(() => { SkylineWindow.FilesTreeForm.FilesTree.SelectedNode = replicateNode; });
 
             // Edit the Name property of the selected object and verify the change was made on the object and UI
             RunUI(() => { PropertyGridTestUtil.TestEditProperty(SkylineWindow, NAME_PROP_NAME, "EditedName"); });
@@ -150,8 +134,11 @@ namespace pwiz.SkylineTestFunctional
             // select replicate
             var replicateFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
             var replicateNode = replicateFolder.Nodes[0] as FilesTreeNode;
-            var otherReplicateNode = replicateFolder.Nodes[1] as FilesTreeNode;
             Assert.IsNotNull(replicateNode);
+            RunUI(() => { SkylineWindow.FilesTreeForm.FilesTree.SelectedNode = replicateNode; });
+
+            // get another replicate to use its name for testing
+            var otherReplicateNode = replicateFolder.Nodes[1] as FilesTreeNode;
             Assert.IsNotNull(otherReplicateNode);
 
             // attempt to edit the name to the name of another replicate. Should throw an exception.

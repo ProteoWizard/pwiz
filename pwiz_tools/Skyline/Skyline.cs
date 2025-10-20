@@ -3270,15 +3270,6 @@ namespace pwiz.Skyline
             return _propertyGridForm;
         }
 
-        public void DestroyPropertyGridForm()
-        {
-            if (_propertyGridForm != null)
-            {
-                _propertyGridForm.Close();
-                _propertyGridForm = null;
-            }
-        }
-
         public void FocusPropertyProvider(IPropertyProvider propertyProvider)
         {
             _lastFocusedPropertyProvider = propertyProvider;
