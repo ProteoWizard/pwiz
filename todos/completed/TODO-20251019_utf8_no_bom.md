@@ -70,38 +70,38 @@ Modern best practice is **UTF-8 without BOM** for source code. BOM can cause iss
 - **Files to exclude**: 5 files (.tli/.tlh)
 
 ### Phase 2: Tooling
-- [ ] Create `remove-bom.ps1` script to strip BOM from files
-  - Preserve file timestamps where possible
-  - Handle files in use gracefully
-  - Validate conversion success
-  - Support dry-run mode for testing
-- [ ] Test script on small subset of files
-- [ ] Verify Git diff shows only BOM removal (no content changes)
+- [x] Create `remove-bom.ps1` script to strip BOM from files
+- [x] Test script on small subset of files
+- [x] Verify Git diff shows only BOM removal (no content changes)
 
 ### Phase 3: Conversion
-- [ ] Create test branch and convert subset of files
-- [ ] Build and run tests to verify no regressions
-- [ ] Visual Studio verification - files open correctly
-- [ ] Convert all remaining files
-- [ ] Run full test suite on all platforms
+- [x] Create test branch and convert subset of files
+- [x] Build and run tests to verify no regressions
+- [x] Visual Studio verification - files open correctly
+- [x] Convert all remaining files (3,434 files converted)
+- [x] Run full test suite on all platforms (TeamCity tests passed)
 
 ### Phase 4: Prevention
-- [ ] Add UTF-8 without BOM guideline to STYLEGUIDE.md
-- [ ] Document Visual Studio configuration for new files
-- [x] Add BOM check to CodeInspectionTest.cs
-  - Added `InspectUtf8Bom()` method in CodeInspectionTest.cs
-  - Automatically removes BOM when found (similar to SchemaDocumentsTest)
-  - Checks files by reading first 3 bytes (0xEF, 0xBB, 0xBF)
+- [x] Add `.editorconfig` with `charset = utf-8` to prevent future BOMs
+- [x] Add BOM check to CodeInspectionTest.cs (Skyline-specific)
+  - Added `InspectUtf8Bom()` method
+  - Automatically removes BOM and fails test to alert developers
   - Excludes auto-generated files: `*.tli`, `*.tlh`
-  - Provides clear error message with list of fixed files
-  - Covers Skyline and Shared directories
-- [ ] Consider pre-commit hook for broader project coverage
-- [ ] Update this TODO with final statistics
+  - Excludes bin/, obj/, and Git submodule directories
+- [x] Add `Encoding.UTF8` detection to CodeInspectionTest.cs
+  - Prevents use of `Encoding.UTF8` with file-writing operations
+  - Forces explicit use of `new UTF8Encoding(false)` or `new UTF8Encoding(true)`
+- [x] Fix root cause: Changed 10 instances of `Encoding.UTF8` to `new UTF8Encoding(false)`
+  - 6 `XmlTextWriter` instances (SrmDocument.cs, AuditLogEntry.cs, etc.)
+  - 2 `File.WriteAllText` instances
+  - 1 `DockPanel.SaveAsXml` instance
+  - 1 `StreamWriter` instance
+- [x] Restore BOMs to 6 vendor test data XML files (Agilent instrument format requires BOM)
+- [x] Update this TODO with final statistics
 
 ### Phase 5: Cleanup
-- [ ] Remove `todos/active/files-with-bom.txt` (no longer needed)
-- [ ] Move TODO file to `todos/completed/` before merging
-- [ ] Keep `analyze-bom-git.ps1` and `remove-bom.ps1` for future verification
+- [x] Move TODO file to `todos/completed/` before merging
+- [x] Keep analysis and validation scripts for future use
 
 ## Tools & Scripts
 - **`scripts/misc/analyze-bom-git.ps1`** - Analysis script (keep permanently)
@@ -112,7 +112,7 @@ Modern best practice is **UTF-8 without BOM** for source code. BOM can cause iss
   - Checks against approved list of 11 files allowed to have BOM
   - Returns exit code 0 if compliant, 1 if unexpected BOMs found
   - Ready for use in CI or commit hooks
-- **`todos/active/original-files-with-bom.txt`** - Original list of 3,439 files with BOM (keep for reference)
+- **`todos/completed/original-files-with-bom.txt`** - Original list of 3,439 files with BOM (historical record)
 
 ## Risks & Considerations
 - **Large commit**: May affect hundreds of files
@@ -121,11 +121,38 @@ Modern best practice is **UTF-8 without BOM** for source code. BOM can cause iss
 - **Localization**: Verify `.resx` files handle encoding correctly
 - **Timing**: Coordinate with team to minimize disruption
 
-## Success Criteria
-- All source files standardized to UTF-8 without BOM
-- No build or test failures
-- Guidelines prevent regression
-- Analysis script confirms BOM-free status
+## Final Results (2025-10-20)
+
+**Successfully completed!** ✅
+
+### What Was Accomplished
+- **Removed BOMs from 3,434 source files** (96.2% were pure ASCII, BOM unnecessary)
+- **Preserved BOMs on 11 approved files**:
+  - 5 Visual Studio auto-generated COM type library files (.tli/.tlh)
+  - 6 Agilent vendor data format test files (.d directories)
+- **Fixed root cause**: Changed 10 code locations using `Encoding.UTF8` to explicit `new UTF8Encoding(false)`
+- **Added prevention**: `.editorconfig` + CodeInspectionTest checks prevent BOM reintroduction
+- **All tests passed**: TeamCity CI, Skyline builds, Visual Studio verification
+
+### Character Encoding Analysis
+Analysis of original 3,439 files with BOM revealed:
+- **96.2% (3,308 files)**: Pure ASCII (0-127) - BOM completely unnecessary
+- **3.8% (131 files)**: Extended ASCII (128-255) - might need encoding declaration
+- **0% (0 files)**: Unicode characters (>255) - none required UTF-8
+
+**Conclusion**: Vast majority of BOMs served no purpose; added by Visual Studio default behavior.
+
+### Prevention Mechanisms
+1. **`.editorconfig`**: Project-wide `charset = utf-8` prevents Visual Studio from adding BOMs
+2. **CodeInspectionTest.cs**: Skyline-specific automated BOM detection and removal with test failure
+3. **Encoding.UTF8 ban**: Code inspection prevents problematic `Encoding.UTF8` usage
+4. **Validation script**: `validate-bom-compliance.ps1` checks against approved 11-file list
+
+### Success Criteria - All Met ✅
+- ✅ All source files standardized to UTF-8 without BOM (except 11 approved)
+- ✅ No build or test failures
+- ✅ Guidelines prevent regression (`.editorconfig` + tests)
+- ✅ Analysis script confirms BOM-free status
 
 ## Future Work: CI Integration (Out of Scope for Current Branch)
 
