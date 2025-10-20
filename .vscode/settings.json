@@ -1,0 +1,4 @@
+{
+    "dotnet.preferCSharpExtension": true,
+    "dotnet.defaultSolution": "pwiz_tools/Skyline/Skyline.sln"
+}

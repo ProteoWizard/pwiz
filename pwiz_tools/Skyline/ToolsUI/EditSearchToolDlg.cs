@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Matt Chambers <matt.chambers42 .at. gmail.com>
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -1316,7 +1316,7 @@ namespace pwiz.Skyline
             {
                 if (saverUser.CanSave())
                 {
-                    dockPanel.SaveAsXml(saverUser.SafeName, Encoding.UTF8);
+                    dockPanel.SaveAsXml(saverUser.SafeName, new UTF8Encoding(false)); // UTF-8 without BOM
                     saverUser.Commit();
                 }
             }
