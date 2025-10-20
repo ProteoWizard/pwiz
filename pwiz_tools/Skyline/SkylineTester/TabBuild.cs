@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -143,7 +143,10 @@ namespace SkylineTester
                      csProjFileUrl = GetMasterUrl().Equals(branchUrl)
                         ? "https://raw.githubusercontent.com/ProteoWizard/pwiz/master/pwiz_tools/Skyline/Skyline.csproj"
                         : "https://raw.githubusercontent.com/ProteoWizard/pwiz/" + GetBranchPath(branchUrl) + "/pwiz_tools/Skyline/Skyline.csproj";
-                    var csProjText = (new WebClient()).DownloadString(csProjFileUrl);
+                    using var httpClient = new HttpClient();
+                    var response = httpClient.GetAsync(csProjFileUrl).Result;
+                    response.EnsureSuccessStatusCode();
+                    var csProjText = response.Content.ReadAsStringAsync().Result;
                     var dotNetVersion = csProjText.Split(new[] {"TargetFrameworkVersion"}, StringSplitOptions.None)[1].Split('v')[1].Split(new []{'.'});
                     if ((int.Parse(dotNetVersion[0]) >= 4) && (int.Parse(dotNetVersion[1]) >= 7))
                     {

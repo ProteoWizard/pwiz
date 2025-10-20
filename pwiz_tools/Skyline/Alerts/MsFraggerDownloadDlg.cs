@@ -22,7 +22,6 @@ using System.Collections.Specialized;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -136,7 +135,6 @@ namespace pwiz.Skyline.Alerts
                 return string.Empty;
 
             using var downloadProgressDlg = new LongWaitDlg();
-            using var client = new WebClient();
 
             var postData = new NameValueCollection();
             postData[@"transfer"] = @"academic";
@@ -151,16 +149,21 @@ namespace pwiz.Skyline.Alerts
             postData[@"is_fragpipe"] = @"true";
 
             string resultString = string.Empty;
-            downloadProgressDlg.PerformWork(this, 50, broker =>
+            IProgressStatus status = new ProgressStatus(AlertsResources.MsFraggerDownloadDlg_RequestVerificationCode_Contacting_MS_Fragger_download_server);
+            try
             {
-                var uploadTask = client.UploadValuesTaskAsync(VERIFY_URL, VERIFY_METHOD, postData);
-                uploadTask.Wait(broker.CancellationToken);
-                if (uploadTask.Exception != null)
-                    throw uploadTask.Exception;
-
-                var resultBytes = uploadTask.Result;
-                resultString = Encoding.UTF8.GetString(resultBytes);
-            });
+                downloadProgressDlg.PerformWork(this, 50, broker =>
+                {
+                    using var httpClient = new HttpClientWithProgress(broker, status);
+                    var resultBytes = httpClient.UploadValues(VERIFY_URL, VERIFY_METHOD, postData);
+                    resultString = Encoding.UTF8.GetString(resultBytes);
+                });
+            }
+            catch (Exception ex)
+            {
+                ExceptionUtil.DisplayOrReportException(this, ex);
+                return string.Empty;
+            }
             return resultString;
         }
 
@@ -168,32 +171,43 @@ namespace pwiz.Skyline.Alerts
         {
             using (var downloadProgressDlg = new LongWaitDlg())
             {
-                downloadProgressDlg.Message = string.Format(AlertsResources.MsFraggerDownloadDlg_Download_Downloading_MSFragger__0_, MsFraggerSearchEngine.MSFRAGGER_VERSION);
+                string message = string.Format(AlertsResources.MsFraggerDownloadDlg_Download_Downloading_MSFragger__0_,
+                    MsFraggerSearchEngine.MSFRAGGER_VERSION);
+                downloadProgressDlg.Message = message;
                 if (Program.FunctionalTest && !Program.IsPaused) // original URLs not possible with "verification code" system
                 {
                     var msFraggerDownloadInfo = MsFraggerSearchEngine.MsFraggerDownloadInfo;
                     msFraggerDownloadInfo.DownloadUrl = DOWNLOAD_URL_FOR_FUNCTIONAL_TESTS;
-                    downloadProgressDlg.PerformWork(this, 50, pm => SimpleFileDownloader.DownloadRequiredFiles(new[] { msFraggerDownloadInfo }, pm));
-                    return true;
+                    try
+                    {
+                        downloadProgressDlg.PerformWork(this, 50, pm => SimpleFileDownloader.DownloadRequiredFiles(new[] { msFraggerDownloadInfo }, pm));
+                    }
+                    catch (Exception ex)
+                    {
+                        ExceptionUtil.DisplayOrReportException(this, ex);
+                        return false;
+                    }
+                    // If the user canceled the dialog, treat as cancellation
+                    return !downloadProgressDlg.IsCanceled;
                 }
 
-                using (var client = new WebClient())
+                var status = new ProgressStatus(message);
+                try
                 {
-                    var status = downloadProgressDlg.PerformWork(this, 50, broker =>
+                    var statusRet = downloadProgressDlg.PerformWork(this, 50, broker =>
                     {
-                        client.DownloadProgressChanged += (sender, args) => broker.UpdateProgress(new ProgressStatus().ChangePercentComplete(args.ProgressPercentage));
-
+                        using var httpClient = new HttpClientWithProgress(broker, status);
                         string downloadUrl = string.Format(DOWNLOAD_URL_WITH_TOKEN, tbVerificationCode.Text);
-                        var msFraggerZipBytes = client.DownloadData(downloadUrl);
+                        var msFraggerZipBytes = httpClient.DownloadData(downloadUrl);
 
                         // check if downloaded bytes are actually a zip file
                         if (!ZipFile.IsZipFile(new MemoryStream(msFraggerZipBytes), false))
                         {
                             var resultString = Encoding.UTF8.GetString(msFraggerZipBytes);
-                            broker.UpdateProgress(new ProgressStatus().ChangeErrorException(
-                                new InvalidOperationException(string.Format(@"{0}{1}{1}{2}",
-                                    Resources.TestToolStoreClient_GetToolZipFile_Error_downloading_tool,
-                                    Environment.NewLine, resultString))));
+                                broker.UpdateProgress(new ProgressStatus().ChangeErrorException(
+                                    new InvalidOperationException(string.Format(@"{0}{1}{1}{2}",
+                                        AlertsResources.TestToolStoreClient_GetToolZipFile_Error_downloading_tool,
+                                        Environment.NewLine, resultString))));
                             return;
                         }
 
@@ -213,12 +227,12 @@ namespace pwiz.Skyline.Alerts
                         FileEx.SafeDelete(downloadFilename);
                     });
 
-                    if (status.IsError)
-                    {
-                        MessageDlg.Show(this, status.ErrorException.Message);
-                        return false;
-                    }
-                    return true;
+                    return !statusRet.IsCanceled;
+                }
+                catch (Exception ex)
+                {
+                    ExceptionUtil.DisplayOrReportException(this, ex);
+                    return false;
                 }
             }
         }
@@ -245,6 +259,12 @@ namespace pwiz.Skyline.Alerts
         public void ClickRequestVerificationCode()
         {
             var verificationResultHtml = RequestVerificationCode();
+            
+            // If RequestVerificationCode() returned empty string, it means there was an error
+            // and the error message was already shown to the user
+            if (string.IsNullOrEmpty(verificationResultHtml))
+                return;
+                
             lblVerificationCode.Enabled = tbVerificationCode.Enabled = true;
 
             const string errorClass = "alert-danger"; // CSS class indicating an error in the HTML, e.g. "Please use institutional email address"

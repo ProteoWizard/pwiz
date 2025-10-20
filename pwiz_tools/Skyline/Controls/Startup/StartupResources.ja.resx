@@ -121,9 +121,6 @@
   <data name="ActionTutorial_client_DownloadFileCompleted_File_saved_at___0_" xml:space="preserve">
     <value>ファイルの解凍先：{0}</value>
   </data>
-  <data name="ActionTutorial_DownloadTutorials_Error__0_" xml:space="preserve">
-    <value>エラー{0}</value>
-  </data>
   <data name="ActionTutorial_ExtractTutorial_An_error_occurred_while_trying_to_display_the_document___0____" xml:space="preserve">
     <value>ドキュメント「{0}」表示中にエラーが発生しました。
 このコンピュータ－上のデフォルトのウェブブラウザーに問題がある可能性があります。</value>

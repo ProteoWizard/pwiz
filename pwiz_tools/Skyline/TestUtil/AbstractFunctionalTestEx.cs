@@ -25,18 +25,19 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline.Controls.Graphs;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 using DigitalRune.Windows.Docking;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
+using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.MSGraph;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -49,8 +50,8 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
-using pwiz.Common.SystemUtil;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -472,6 +473,46 @@ namespace pwiz.SkylineTestUtil
         {
             RunUI(() => SkylineWindow.NewDocument(forced));
             WaitForDocumentLoaded();
+        }
+
+        public static void TestHttpClientCancellation(Action actionToCancel)
+        {
+            // This should get canceled silently without showing a MessageDlg.
+            // While it is difficult to test for not showing something without waiting,
+            // if a MessageDlg were shown, that would cause a failure in subsequent tests.
+            using (HttpClientTestHelper.SimulateCancellationClickWithException())
+            {
+                TestCancellationWithoutMessageDlg(actionToCancel);
+            }
+        }
+
+        public static void TestCancellationWithoutMessageDlg(Action actionToCancel)
+        {
+            SkylineWindow.BeginInvoke(actionToCancel);
+            // This wait triggered reliably with a failure that showed a message.
+            // Even if it does not, the test will fail later, but may be more confusing
+            // to debug, which is the reason for adding this assertion.
+            var messageDlg = TryWaitForOpenForm<MessageDlg>(200);
+            Assert.IsNull(messageDlg, string.Format("Unexpected MessageDlg: {0}", messageDlg?.Message));
+        }
+
+
+        public static void TestHttpClientWithNoNetwork(Action actionToFail, string prefix = null)
+        {
+            using var helper = HttpClientTestHelper.SimulateNoNetworkInterface();
+            var expectedMessage = helper.GetExpectedMessage();
+            if (prefix != null)
+                expectedMessage = TextUtil.LineSeparate(prefix, expectedMessage);
+            TestMessageDlgShown(actionToFail, expectedMessage);
+        }
+
+        public static void TestMessageDlgShown(Action actionToShow, string expectedMessage)
+        {
+            RunDlg<MessageDlg>(actionToShow, errorDlg =>
+            {
+                Assert.AreEqual(expectedMessage, errorDlg.Message);
+                errorDlg.OkDialog();
+            });
         }
 
         public class Tool : IDisposable
