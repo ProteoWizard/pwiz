@@ -74,7 +74,7 @@ namespace pwiz.SkylineTestData
                 "Agilent instrument model", "nanoelectrospray", "quadrupole/quadrupole/quadrupole", "electron multiplier");
 
             // Shimadzu TOF file (.lcd file)
-            VerifyInstrumentInfo(TestFilesDir.GetTestPath("10nmol_Negative_MS_ID_ON_055" + ExtensionTestContext.ExtShimadzuRaw),
+            VerifyInstrumentInfo(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Shimadzu, "10nmol_Negative_MS_ID_ON_055" + ExtensionTestContext.ExtShimadzuRaw),
                 "Shimadzu Scientific Instruments instrument model", "electrospray ionization", "quadrupole/quadrupole/time-of-flight", "microchannel plate detector");
 
             // Thermo .raw|mzML file
