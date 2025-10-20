@@ -2248,7 +2248,7 @@ namespace pwiz.Skyline.Model
         public void SerializeToFile(string tempName, string displayName, SkylineVersion skylineVersion, IProgressMonitor progressMonitor)
         {
             string hash;
-            using (var writer = new XmlTextWriter(HashingStream.CreateWriteStream(tempName), Encoding.UTF8))
+            using (var writer = new XmlTextWriter(HashingStream.CreateWriteStream(tempName), new UTF8Encoding(false))) // UTF-8 without BOM
             {
                 writer.Formatting = Formatting.Indented;
                 hash = Serialize(writer, displayName, skylineVersion, progressMonitor);

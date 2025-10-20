@@ -270,7 +270,7 @@ namespace pwiz.Skyline.Alerts
             try
             {
                 xmlSerializer.Serialize(
-                    new StreamWriter(new MaxLengthStream(memoryStream, maxBytes), Encoding.UTF8),
+                    new StreamWriter(new MaxLengthStream(memoryStream, maxBytes), new UTF8Encoding(false)), // UTF-8 without BOM
                     document);
             }
             catch (Exception)

@@ -353,7 +353,7 @@ using SharedBatch.Properties;
                     using (var fileStream = new FileStream(_filePath, FileMode.Append, FileAccess.Write, FileShare.Read))
                     {
                         using (var streamWriter =
-                            new StreamWriter(fileStream, Encoding.UTF8, StreamDefaultBufferSize, true))
+                            new StreamWriter(fileStream, new UTF8Encoding(false), StreamDefaultBufferSize, true)) // UTF-8 without BOM
                         {
                             if (_logBuffer != null && _logBuffer.Length > 0)
                             {

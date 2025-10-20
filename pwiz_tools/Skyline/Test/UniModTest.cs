@@ -137,7 +137,8 @@ namespace pwiz.SkylineTest
             XmlWriterSettings settings = new XmlWriterSettings
             {
                 ConformanceLevel = ConformanceLevel.Fragment,
-                Indent = true
+                Indent = true,
+                Encoding = new System.Text.UTF8Encoding(false) // UTF-8 without BOM
             };
             XmlWriter xmlWriter = XmlWriter.Create(fileStream, settings);
             // Some versions of ReSharper think XmlWriter.Create can return a null, others don't, disable this check to satisfy either

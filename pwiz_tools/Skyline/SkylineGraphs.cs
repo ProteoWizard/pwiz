@@ -565,7 +565,7 @@ namespace pwiz.Skyline
             }
 
             var memoryStream = new MemoryStream();
-            var xmlTextWriter = new XmlTextWriter(memoryStream, Encoding.UTF8)
+            var xmlTextWriter = new XmlTextWriter(memoryStream, new UTF8Encoding(false)) // UTF-8 without BOM
             {
                 Formatting = Formatting.Indented
             };

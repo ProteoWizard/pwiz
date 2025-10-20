@@ -256,7 +256,7 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             using (var fileSaver = new FileSaver(fileName))
             {
-                using (var writer = new XmlTextWriter(fileSaver.SafeName, Encoding.UTF8))
+                using (var writer = new XmlTextWriter(fileSaver.SafeName, new UTF8Encoding(false))) // UTF-8 without BOM
                 {
                     writer.Formatting = Formatting.Indented;
                     WriteToXmlWriter(writer, documentHash);
