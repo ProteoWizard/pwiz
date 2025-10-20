@@ -170,6 +170,7 @@
     <Compile Include="ExampleText.cs" />
     <Compile Include="ExtensionTestContext.cs" />
     <Compile Include="GitFileHelper.cs" />
+    <Compile Include="HttpClientTestHelper.cs" />
     <Compile Include="KoinaTestUtil.cs" />
     <Compile Include="MultiFormActivator.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
@@ -191,6 +192,7 @@
     </Compile>
     <Compile Include="FormSeen.cs" />
     <Compile Include="GridTester.cs" />
+    <Compile Include="InstallTestUtil.cs" />
     <Compile Include="LongWaitDialogCanceler.cs" />
     <Compile Include="MemoryStreamManager.cs" />
     <Compile Include="MovedDirectory.cs" />

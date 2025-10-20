@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Trevor Killeen <killeent .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -64,6 +64,12 @@ namespace pwiz.SkylineTestFunctional
                 TestInstallR();
                 TestInstallPackages();
                 TestStartToFinish();
+
+                // Remove mocked-up and unusable R EXE because it will cause a test failure if left behind
+                var tempDir = Environment.GetEnvironmentVariable(@"TMP");
+                var rPath = Path.Combine(tempDir ?? string.Empty, string.Format($"{R}-{R_VERSION}-win.exe"));
+                AssertEx.FileExists(rPath); // Proof that successful download created this file, though full of garbage bytes
+                File.Delete(rPath);
             }
             catch (Exception)
             {
@@ -136,17 +142,29 @@ namespace pwiz.SkylineTestFunctional
         // Test cancelling the R download
         private static void TestRDownloadCancel()
         {
-            var rInstaller = FormatRInstaller(true, false, false);
+            using var helper = HttpClientTestHelper.SimulateCancellation();
+            var rInstaller = FormatRInstaller(installExitCode: 0);
+            
+            // Click OK to start download - will be canceled by simulated cancellation
             var messageDlg = ShowDialog<MessageDlg>(rInstaller.OkDialog);
-            RunUI(() => Assert.AreEqual(Resources.MultiFileAsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled_, messageDlg.Message));
+            RunUI(() =>
+            {
+                // Message should be the default .NET cancellation message
+                Assert.IsFalse(string.IsNullOrEmpty(messageDlg.Message));
+                Assert.AreEqual(new OperationCanceledException().Message, messageDlg.Message);
+            });
             OkDialog(messageDlg, messageDlg.OkDialog);
-            WaitForClosedForm(rInstaller);
+            // Form should remain open after cancellation, allowing user to retry or cancel
+            // User can now click OK again to retry, or Cancel to exit
+            OkDialog(rInstaller, () => Cancel(rInstaller));
         }
 
         // Test R download success && install success
         private static void TestRDownloadAndInstallSuccess()
         {
-            var rInstaller = FormatRInstaller(false, true, true);
+            using var helper = HttpClientTestHelper.SimulateSuccessfulDownload(new byte[1024]);
+            var rInstaller = FormatRInstaller(installExitCode: 0);
+            
             var messageDlg = ShowDialog<MessageDlg>(rInstaller.OkDialog);
             RunUI(() => Assert.AreEqual(Resources.RInstaller_GetR_R_installation_complete_, messageDlg.Message));
             OkDialog(messageDlg, messageDlg.OkDialog);
@@ -156,36 +174,46 @@ namespace pwiz.SkylineTestFunctional
         // Test R download success && install failure
         private static void TestRDownloadSuccessInstallFailure()
         {
-            var rInstaller = FormatRInstaller(false, true, false);
+            using var helper = HttpClientTestHelper.SimulateSuccessfulDownload(new byte[1024]);
+            var rInstaller = FormatRInstaller(installExitCode: 1);
+            
             var messageDlg = ShowDialog<MessageDlg>(rInstaller.OkDialog);
             RunUI(() => Assert.AreEqual(Resources.RInstaller_InstallR_R_installation_was_not_completed__Cancelling_tool_installation_, messageDlg.Message));
             OkDialog(messageDlg, messageDlg.OkDialog);
-            WaitForClosedForm(rInstaller);
+            OkDialog(rInstaller, () => Cancel(rInstaller));
         }
 
         // Test R download failure
         private static void TestRDownloadFailure()
         {
-            var rInstaller = FormatRInstaller(false, false, false);
+            using var helper = HttpClientTestHelper.SimulateConnectionFailure();
+            var rInstaller = FormatRInstaller(installExitCode: 0);
+            
             var messageDlg = ShowDialog<MessageDlg>(rInstaller.OkDialog);
-            RunUI(() => Assert.AreEqual(TextUtil.LineSeparate(Resources.RInstaller_DownloadR_Download_failed_, Resources.RInstaller_DownloadPackages_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_), messageDlg.Message));
+            RunUI(() =>
+            {
+                // Verify we get the expected network connection error message (translation-proof)
+                var expectedMessage = helper.GetExpectedMessage(new Uri("https://cran.r-project.org"));
+                Assert.AreEqual(expectedMessage, messageDlg.Message);
+            });
             OkDialog(messageDlg, messageDlg.OkDialog);
-            WaitForClosedForm(rInstaller);
+            // Form should remain open after error, allowing user to retry or cancel
+            OkDialog(rInstaller, () => Cancel(rInstaller));
         }
-
-        // helper method for setting up the R installer form to support a number of possible installation outcomes
-        private static RInstaller FormatRInstaller(bool cancelDownload, bool downloadSuccess, bool installSuccess)
+        
+        // Helper method for setting up R installer dialog for R download/install tests
+        private static RInstaller FormatRInstaller(int installExitCode)
         {
             var packages = new Collection<ToolPackage>();
             var rInstaller = ShowDialog<RInstaller>(() => InstallProgram(PPC, packages, false));
             WaitForConditionUI(10 * 1000, () => rInstaller.IsLoaded);
             RunUI(() =>
-                {
-                    rInstaller.TestDownloadClient = new TestAsynchronousDownloadClient { DownloadSuccess = downloadSuccess, CancelDownload = cancelDownload };
-                    rInstaller.TestRunProcess = new TestRunProcess { ExitCode = installSuccess ? 0 : 1 };
-                });
+            {
+                rInstaller.TestRunProcess = new TestRunProcess { ExitCode = installExitCode };
+            });
             return rInstaller;
         }
+
 
         private static void TestInstallPackages()
         {
@@ -208,7 +236,7 @@ namespace pwiz.SkylineTestFunctional
                                                                   string.Empty,
                                                                   Resources.TestNamedPipeProcessRunner_RunProcess_Error_running_process), messageDlg.Message));
                 OkDialog(messageDlg, messageDlg.OkDialog);
-                WaitForClosedForm(rInstaller);
+                OkDialog(rInstaller, () => Cancel(rInstaller));
             }
         }
 
@@ -222,7 +250,7 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() => Assert.AreEqual(Resources.RInstaller_InstallPackages_Unknown_Error_installing_packages__Output_logged_to_the_Immediate_Window_, messageDlg.Message));
                 OkDialog(messageDlg, messageDlg.OkDialog);
                 Assert.IsTrue(textWriter.ToString().Contains(textToWrite));
-                WaitForClosedForm(rInstaller);
+                OkDialog(rInstaller, () => Cancel(rInstaller));
             }
         }
 
@@ -236,7 +264,7 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() => Assert.AreEqual(Resources.RInstaller_InstallPackages_Error__Package_installation_did_not_complete__Output_logged_to_the_Immediate_Window_, messageDlg.Message));
                 OkDialog(messageDlg, messageDlg.OkDialog);
                 Assert.IsTrue(textWriter.ToString().Contains(textToWrite));
-                WaitForClosedForm(rInstaller);
+                OkDialog(rInstaller, () => Cancel(rInstaller));
             }
         }
 
@@ -246,7 +274,7 @@ namespace pwiz.SkylineTestFunctional
             var messageDlg = ShowDialog<MessageDlg>(rInstaller.OkDialog);
             RunUI(() => Assert.AreEqual(Resources.TestSkylineProcessRunner_RunProcess_The_operation_was_canceled_by_the_user_, messageDlg.Message));
             OkDialog(messageDlg, messageDlg.OkDialog);
-            WaitForClosedForm(rInstaller);
+            OkDialog(rInstaller, () => Cancel(rInstaller));
         }
 
         // Test for package install failure
@@ -268,17 +296,21 @@ namespace pwiz.SkylineTestFunctional
             string outText = stringWriter.ToString();
             Assert.IsTrue(outText.Contains(errorText));
             OkDialog(messageDlg, messageDlg.OkDialog);
-            WaitForClosedForm(rInstaller);
+            OkDialog(rInstaller, () => Cancel(rInstaller));
         }
 
         // Test no internet connection.
         private static void TestInternetConnectionFailure()
         {
-            var rInstaller = FormatPackageInstaller(true);
+            using var helper = HttpClientTestHelper.SimulateNoNetworkInterface();
+            var rInstaller = FormatPackageInstaller();
             var messageDlg = ShowDialog<MessageDlg>(rInstaller.OkDialog);
-            RunUI(() => Assert.AreEqual(TextUtil.LineSeparate(Resources.RInstaller_InstallPackages_Error__No_internet_connection_, string.Empty, Resources.RInstaller_InstallPackages_Installing_R_packages_requires_an_internet_connection__Please_check_your_connection_and_try_again), messageDlg.Message));
+            RunUI(() => Assert.AreEqual(RInstaller.GetInternetConnectionForPackagesFailureMessage(
+                    RUtil.INTERNET_CHECK_SITE,
+                    helper.GetExpectedMessage()),
+                messageDlg.Message));
             OkDialog(messageDlg, messageDlg.OkDialog);
-            WaitForClosedForm(rInstaller);
+            OkDialog(rInstaller, () => Cancel(rInstaller));
         }
 
         // Test package install success
@@ -289,17 +321,15 @@ namespace pwiz.SkylineTestFunctional
         }
 
         // helper method for setting up the R installer form to support a number of possible package installation outcomes
-        private static RInstaller FormatPackageInstaller(bool cutoffInternet = false, string stringToWrite = null, ICollection<ToolPackage> missingPackages = null, int packageInstallerExitCode = 0, TextWriter writer = null, bool okAdminPrivledges = true, bool connectionSuccess = true)
+        private static RInstaller FormatPackageInstaller(string stringToWrite = null, ICollection<ToolPackage> missingPackages = null, int packageInstallerExitCode = 0, TextWriter writer = null, bool okAdminPrivledges = true, bool connectionSuccess = true)
         {
             var packages = new Collection<ToolPackage> { PACKAGE_1, PACKAGE_2, PACKAGE_3, PACKAGE_4 };
             var rInstaller = ShowDialog<RInstaller>(() => InstallProgram(PPC, packages, true, writer));
             WaitForConditionUI(10 * 1000, () => rInstaller.IsLoaded);
             RunUI(() =>
             {
-                // R Installation
-                rInstaller.TestDownloadClient = new TestAsynchronousDownloadClient { DownloadSuccess = true, CancelDownload = false };
                 // Package Installation
-                rInstaller.PackageInstallHelpers = new TestPackageInstallationHelper { PackagesToInstall = missingPackages ?? new List<ToolPackage>(), RProgramPath = "testPath.exe", InternetConnectionDoesNotExists = cutoffInternet };
+                rInstaller.PackageInstallHelpers = new TestPackageInstallationHelper { PackagesToInstall = missingPackages ?? new List<ToolPackage>(), RProgramPath = "testPath.exe"};
                 rInstaller.TestSkylineProcessRunnerWrapper = new TestSkylineProcessRunner { stringToWriteToWriter = stringToWrite, ExitCode = packageInstallerExitCode, UserOkRunAsAdministrator = okAdminPrivledges, ConnectSuccess = connectionSuccess };
             });
             return rInstaller;
@@ -308,20 +338,17 @@ namespace pwiz.SkylineTestFunctional
         // Tests the start to finish process of installing both R and associated packages
         private static void TestStartToFinish()
         {
+            using var helper = HttpClientTestHelper.SimulateSuccessfulDownload(new byte[1024]);
+            
             var packages = new Collection<ToolPackage> { PACKAGE_1, PACKAGE_2, PACKAGE_3, PACKAGE_4 };
             var rInstaller = ShowDialog<RInstaller>(() => InstallProgram(PPC, packages, false));
             WaitForConditionUI(10 * 1000, () => rInstaller.IsLoaded);
             RunUI(() =>
-                {
-                    rInstaller.PackageInstallHelpers = new TestPackageInstallationHelper { PackagesToInstall = new List<ToolPackage>() };
-                    rInstaller.TestDownloadClient = new TestAsynchronousDownloadClient
-                        {
-                            CancelDownload = false,
-                            DownloadSuccess = true
-                        };
-                    rInstaller.TestRunProcess = new TestRunProcess { ExitCode = 0 };
-                    rInstaller.TestSkylineProcessRunnerWrapper = new TestSkylineProcessRunner { ConnectSuccess = true, ExitCode = 0, stringToWriteToWriter = string.Empty, UserOkRunAsAdministrator = true };
-                });
+            {
+                rInstaller.PackageInstallHelpers = new TestPackageInstallationHelper { PackagesToInstall = new List<ToolPackage>() };
+                rInstaller.TestRunProcess = new TestRunProcess { ExitCode = 0 };
+                rInstaller.TestSkylineProcessRunnerWrapper = new TestSkylineProcessRunner { ConnectSuccess = true, ExitCode = 0, stringToWriteToWriter = string.Empty, UserOkRunAsAdministrator = true };
+            });
             var downloadRDlg = ShowDialog<MessageDlg>(rInstaller.OkDialog);
             RunUI(() => Assert.AreEqual(Resources.RInstaller_GetR_R_installation_complete_, downloadRDlg.Message));
             OkDialog(downloadRDlg, downloadRDlg.OkDialog);
@@ -349,24 +376,18 @@ namespace pwiz.SkylineTestFunctional
         {
             public ICollection<ToolPackage> PackagesToInstall { private get; set; }
             public string RProgramPath { private get; set; }
-            public bool InternetConnectionDoesNotExists { private get; set; }
 
             public ICollection<ToolPackage> WhichPackagesToInstall(ICollection<ToolPackage> packages, string pathToR)
             {
                 if (PackagesToInstall != null)
                     return PackagesToInstall;
-                else return new List<ToolPackage>();
+                else
+                    return new List<ToolPackage>();
             }
 
             public string FindRProgramPath(string rVersion)
             {
                 return RProgramPath ?? string.Empty;
-            }
-
-            public bool CheckForInternetConnection(out string site)
-            {
-                site = null;
-                return !InternetConnectionDoesNotExists;
             }
         }
     }
