@@ -22,10 +22,6 @@ using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Util;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Model.Files;
-using Replicate = pwiz.Skyline.Model.Databinding.Entities.Replicate;
 
 namespace pwiz.Skyline.Controls
 {
@@ -37,7 +33,6 @@ namespace pwiz.Skyline.Controls
             HideOnClose = true; // Hide the form when closed, but do not dispose it
             SkylineWindow = skylineWindow;
             ((IDocumentUIContainer)SkylineWindow).ListenUI(SkylineWindow_OnUiDocumentChanged);
-            propertyGrid.PropertyValueChanged += PropertyGrid_PropertyValueChanged;
         }
 
         private SkylineWindow SkylineWindow { get; }
@@ -57,29 +52,6 @@ namespace pwiz.Skyline.Controls
         private void SkylineWindow_OnUiDocumentChanged(object sender, DocumentChangedEventArgs e)
         {
             SkylineWindow.UpdatePropertyGrid();
-        }
-
-        private void PropertyGrid_PropertyValueChanged(object sender, PropertyValueChangedEventArgs e)
-        {
-            var descriptor = e.ChangedItem.PropertyDescriptor;
-            // If a replicate Name property was set to be the same as some other replicate, this is invalid.
-            if (propertyGrid.SelectedObject is Replicate replicate && descriptor?.Name == nameof(Replicate.Name))
-            {
-                var newName = descriptor.GetValue(replicate);
-                var currentIndex = replicate.ReplicateIndex;
-
-                // Check if any other replicate has this name
-                if (SkylineWindow.Document.Settings.MeasuredResults.Chromatograms
-                    .Select((chromSet, index) => new { chromSet, index })
-                    .Any(x => x.chromSet.Name == (string)newName && x.index != currentIndex))
-                {
-                    MessageDlg.Show(this, string.Format(PropertyGridFileNodeResources.ReplicateName_There_is_already_a_replicate_named___0___, newName));
-                    // Revert to old value
-                    Assume.IsTrue(descriptor is PropertyGridPropertyDescriptor);
-                    ((PropertyGridPropertyDescriptor)descriptor).SetDisplayValue(propertyGrid.SelectedObject, e.OldValue);
-                    propertyGrid.Refresh();
-                }
-            }
         }
 
         #region Test Support

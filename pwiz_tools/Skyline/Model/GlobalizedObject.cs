@@ -393,24 +393,7 @@ namespace pwiz.Skyline.Model
 
         public override void SetValue(object component, object value)
         {
-            try
-            {
-                _basePropertyDescriptor.SetValue(component, value);
-            }
-            catch (ArgumentException)
-            {
-                // If setting the value fails, just ignore it and don't change the display value.
-                // Invalid values will be caught by PropertyGrid on the PropertyValueChanged event, 
-                // since there is no point after the user hits enter, before SetValue is called, that the value can be validated by PropertyGrid.
-                // This is a limitation of the PropertyGrid.
-            }
-            // change display value if successful or not, PropertyGrid will resolve invalid values and needs to see the new value to check.
-            _displayValue = value;
-        }
-
-        // set the display value without touching the model. Used for correcting invalid values.
-        public void SetDisplayValue(object component, object value)
-        {
+            _basePropertyDescriptor.SetValue(component, value);
             _displayValue = value;
         }
 
