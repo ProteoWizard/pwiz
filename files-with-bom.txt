@@ -1,5 +1,0 @@
-pwiz_aux/msrc/utility/vendor_api/thermo/xrawfile2.tli
-pwiz_tools/Skyline/Executables/BuildMethod/BuildLTQMethod/ltmethod.tlh
-pwiz_tools/Skyline/Executables/BuildMethod/BuildLTQMethod/ltmethod.tli
-pwiz_tools/Skyline/Executables/BuildMethod/BuildTSQEZMethod/tsqezmethod.tlh
-pwiz_tools/Skyline/Executables/BuildMethod/BuildTSQEZMethod/tsqezmethod.tli
