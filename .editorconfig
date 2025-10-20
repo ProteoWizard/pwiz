@@ -1,3 +1,6 @@
+# Top-most EditorConfig file
+root = true
+
 # All files - UTF-8 without BOM
 [*]
 charset = utf-8
