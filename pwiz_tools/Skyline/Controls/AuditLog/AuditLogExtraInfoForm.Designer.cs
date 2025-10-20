@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.Controls.AuditLog
+namespace pwiz.Skyline.Controls.AuditLog
 {
     partial class AuditLogExtraInfoForm
     {

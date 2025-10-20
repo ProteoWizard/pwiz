@@ -1,4 +1,4 @@
-﻿namespace MS1ProbeArgsCollector
+namespace MS1ProbeArgsCollector
 {
     partial class MS1Probe
     {

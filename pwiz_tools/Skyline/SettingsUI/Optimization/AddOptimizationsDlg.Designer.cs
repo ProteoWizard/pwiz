@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.SettingsUI.Optimization
+namespace pwiz.Skyline.SettingsUI.Optimization
 {
     partial class AddOptimizationsDlg
     {

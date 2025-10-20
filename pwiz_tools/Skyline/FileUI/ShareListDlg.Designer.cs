@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.FileUI
+namespace pwiz.Skyline.FileUI
 {
     partial class ShareListDlg<TList, TItem>
     {

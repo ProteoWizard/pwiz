@@ -1,4 +1,4 @@
-﻿namespace ImageComparer
+namespace ImageComparer
 {
     partial class ImageComparerWindow
     {

@@ -226,6 +226,8 @@ The TODO file in todos/active/ contains full context. Please read it first, then
 
 ## Branch Lifecycle Workflows
 
+**IMPORTANT**: All TODO files in `todos/` are Git-tracked. Always use Git commands (`git mv`, `git add`, `git commit`) when creating, moving, or modifying TODO files. Using regular file system operations (PowerShell `Move-Item`, bash `mv`, etc.) will not properly track changes in Git history.
+
 ### Workflow 1: Creating Branch from Backlog TODO
 
 When you have a branch-ready TODO file (e.g., `todos/backlog/TODO-utf8_no_bom.md`):
@@ -237,13 +239,10 @@ git pull origin master
 git checkout -b Skyline/work/20251015_utf8_no_bom  # Use today's date
 ```
 
-**Step 2: Move and rename TODO file with date**
+**Step 2: Move and rename TODO file with Git**
 ```bash
-# On Windows (PowerShell)
-Move-Item todos\backlog\TODO-utf8_no_bom.md todos\active\TODO-20251015_utf8_no_bom.md
-
-# On Linux/Mac
-mv todos/backlog/TODO-utf8_no_bom.md todos/active/TODO-20251015_utf8_no_bom.md
+# IMPORTANT: Use git mv to preserve Git history when moving tracked files
+git mv todos/backlog/TODO-utf8_no_bom.md todos/active/TODO-20251015_utf8_no_bom.md
 ```
 
 **Step 3: Update TODO file header**
@@ -308,15 +307,10 @@ git commit -m "Add completion summary to TODO"
 git push
 ```
 
-**Step 2: Move TODO to completed/**
+**Step 2: Move TODO to completed/ with Git**
 ```bash
-# On Windows (PowerShell)
-Move-Item todos\active\TODO-YYYYMMDD_description.md todos\completed\TODO-YYYYMMDD_description.md
-
-# On Linux/Mac
-mv todos/active/TODO-YYYYMMDD_description.md todos/completed/TODO-YYYYMMDD_description.md
-
-git add todos/
+# IMPORTANT: Use git mv to preserve Git history when moving tracked files
+git mv todos/active/TODO-YYYYMMDD_description.md todos/completed/TODO-YYYYMMDD_description.md
 git commit -m "Move TODO to completed - ready for merge"
 git push
 ```
