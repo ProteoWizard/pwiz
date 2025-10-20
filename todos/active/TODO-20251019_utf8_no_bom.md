@@ -105,8 +105,14 @@ Modern best practice is **UTF-8 without BOM** for source code. BOM can cause iss
 
 ## Tools & Scripts
 - **`scripts/misc/analyze-bom-git.ps1`** - Analysis script (keep permanently)
+  - Now accepts optional `-OutputFile` parameter
+  - No longer creates files-with-bom.txt at root by default
 - **`scripts/misc/remove-bom.ps1`** - BOM removal script (keep permanently)
-- **`todos/active/files-with-bom.txt`** - Complete list of 3,439 files with BOM (REMOVE before completing TODO)
+- **`scripts/misc/validate-bom-compliance.ps1`** - Validation script (keep permanently)
+  - Checks against approved list of 11 files allowed to have BOM
+  - Returns exit code 0 if compliant, 1 if unexpected BOMs found
+  - Ready for use in CI or commit hooks
+- **`todos/active/original-files-with-bom.txt`** - Original list of 3,439 files with BOM (keep for reference)
 
 ## Risks & Considerations
 - **Large commit**: May affect hundreds of files
@@ -120,6 +126,54 @@ Modern best practice is **UTF-8 without BOM** for source code. BOM can cause iss
 - No build or test failures
 - Guidelines prevent regression
 - Analysis script confirms BOM-free status
+
+## Future Work: CI Integration (Out of Scope for Current Branch)
+
+The `validate-bom-compliance.ps1` script is ready for CI integration but requires significant additional work:
+
+**Key Challenge: Cross-Platform Compatibility**
+- ProteoWizard builds on Windows, Linux, and macOS (hence Boost.Build)
+- Current validation script is PowerShell (Windows-only)
+- Any CI integration must work across all three platforms
+- Commit hooks must be cross-platform (bash scripts work everywhere, PowerShell doesn't)
+- This complexity is why we defer to future work with proper planning
+
+Current script provides immediate value for Windows development (where most Skyline work happens), but ProteoWizard-level CI integration requires a proper cross-platform solution.
+
+Consider for future TODO:
+
+### Option 1: Boost.Build/Jam Integration
+Add BOM validation test to pwiz test suite (runs on TeamCity alongside Reader_Agilent_Test, etc.):
+- Create C++ wrapper executable: `scripts/misc/bom-validation-test.cpp`
+  - Calls PowerShell script via `std::system()`
+  - Returns proper exit codes (0 = pass, 1 = fail)
+- Add to appropriate Jamfile.jam (likely `pwiz/utility/misc/Jamfile.jam` or root `Jamroot.jam`)
+  - Use `run-if-exists` rule for Windows-only execution
+  - Example: `run-if-exists bom-validation-test.cpp : : : : bom-validation-test ;`
+- Requires coordination with Boost.Build expert (Matt)
+
+### Option 2: Git Commit Hook
+Simpler alternative for immediate protection:
+- Create `.githooks/pre-commit` template with setup instructions
+- Developers opt-in by running: `git config core.hooksPath .githooks`
+- **Challenge**: Hook must work on Windows, Linux, and macOS
+  - Would need bash script that detects platform
+  - Calls PowerShell on Windows, needs alternate implementation on Unix
+  - Still requires cross-platform solution
+
+### Option 3: GitHub Actions / CI Script
+If project moves to GitHub Actions or similar:
+- Add BOM validation as separate CI job
+- Runs on every PR
+- Fails PR if unexpected BOMs found
+
+**Recommendation**: All options require cross-platform solution. Best approach:
+1. Document the requirement clearly (this TODO)
+2. Create a separate TODO for cross-platform CI integration
+3. Coordinate with Matt (Boost.Build expert) for proper implementation
+4. Consider Python-based solution (works everywhere) instead of PowerShell/bash
+
+For now, the validation script provides value for manual Windows-based verification and documents the approved BOM list.
 
 ## Handoff Prompt for Branch Creation
 

@@ -1,12 +1,16 @@
 # Analyze UTF-8 BOM usage across Git-tracked files only
 # Much faster than scanning entire directory tree
 #
-# Usage: .\analyze-bom-git.ps1
-# Output: Console report + files-with-bom.txt
+# Usage: .\analyze-bom-git.ps1 [-OutputFile <path>]
+# Output: Console report + optional output file
 #
 # This script was created during the webclient_replacement work (Oct 2025)
 # when LLM tools were inadvertently removing BOMs from source files.
 # See todos/backlog/TODO-utf8_no_bom.md for the full standardization plan.
+
+param(
+    [string]$OutputFile = $null  # If not specified, no file will be written
+)
 
 $utf8Bom = @(0xEF, 0xBB, 0xBF)
 
@@ -109,11 +113,13 @@ if ($withBom.Count -gt 0) {
         Write-Host "  ... and $($withBom.Count - 30) more" -ForegroundColor Yellow
     }
     Write-Host ""
-    
-    # Export full list
-    $withBom | Out-File -FilePath "files-with-bom.txt" -Encoding ASCII
-    Write-Host "Full list written to: files-with-bom.txt" -ForegroundColor Cyan
-    Write-Host ""
+
+    # Export full list if output file specified
+    if ($OutputFile) {
+        $withBom | Out-File -FilePath $OutputFile -Encoding ASCII
+        Write-Host "Full list written to: $OutputFile" -ForegroundColor Cyan
+        Write-Host ""
+    }
 }
 
 Write-Host "=== Recommendation ===" -ForegroundColor Cyan
