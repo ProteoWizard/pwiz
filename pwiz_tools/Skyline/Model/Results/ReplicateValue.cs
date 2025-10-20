@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -146,8 +146,17 @@ namespace pwiz.Skyline.Model.Results
             {
                 return null;
             }
-            return GetAllReplicateValues(settings)
-                .FirstOrDefault(value => value.ToPersistedString() == persistedString);
+
+            PropertyPath propertyPath;
+            try
+            {
+                propertyPath = PropertyPath.Parse(persistedString);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+            return GetAllReplicateValues(settings).FirstOrDefault(value => propertyPath.Equals(value.PropertyPath));
         }
 
         public class Annotation : ReplicateValue
