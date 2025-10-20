@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.FileUI.PeptideSearch
+namespace pwiz.Skyline.FileUI.PeptideSearch
 {
     partial class ImportResultsDIAControl
     {

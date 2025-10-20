@@ -1,4 +1,4 @@
-﻿namespace pwiz.Common.GUI
+namespace pwiz.Common.GUI
 {
     partial class CommonAlertDlg
     {

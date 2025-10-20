@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <actions>
   <action id="yuval" text="L10N"></action>
   <insert group-id="ReSharper.Help" position="last">
