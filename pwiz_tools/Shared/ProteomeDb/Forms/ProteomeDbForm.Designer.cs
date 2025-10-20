@@ -1,4 +1,4 @@
-﻿namespace ProteomeDb.Forms
+namespace ProteomeDb.Forms
 {
     partial class ProteomeDbForm
     {

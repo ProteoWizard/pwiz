@@ -1,4 +1,4 @@
-﻿<?xml version="1.0"?>
+<?xml version="1.0"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
    <Product Id="{ProductGuid}"
             Name="BumberDash {version} $(var.AddressModel)-bit"

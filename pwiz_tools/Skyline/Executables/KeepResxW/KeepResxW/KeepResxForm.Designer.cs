@@ -1,4 +1,4 @@
-﻿namespace KeepResxW
+namespace KeepResxW
 {
     partial class KeepResxForm
     {

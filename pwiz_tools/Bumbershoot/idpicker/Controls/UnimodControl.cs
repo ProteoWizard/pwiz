@@ -1,4 +1,4 @@
-﻿//
+//
 // $Id: UnimodControl.cs 374 2012-01-19 20:57:39Z holmanjd $
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); 
