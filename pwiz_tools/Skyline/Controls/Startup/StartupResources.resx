@@ -121,9 +121,6 @@
   <data name="ActionTutorial_client_DownloadFileCompleted_File_saved_at___0_" xml:space="preserve">
     <value>Files extracted to: {0}</value>
   </data>
-  <data name="ActionTutorial_DownloadTutorials_Error__0_" xml:space="preserve">
-    <value>Error {0}</value>
-  </data>
   <data name="ActionTutorial_ExtractTutorial_An_error_occurred_while_trying_to_display_the_document___0____" xml:space="preserve">
     <value>An error occurred while trying to display the document '{0}'. 
 There might be something wrong with default web browser on this computer.</value>
