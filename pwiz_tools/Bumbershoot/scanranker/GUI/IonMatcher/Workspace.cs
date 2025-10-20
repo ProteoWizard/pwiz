@@ -1,4 +1,4 @@
-﻿//
+//
 // $Id: Workspace.cs 29 2010-12-17 16:55:36Z zeqiangma $
 //
 // The contents of this file are subject to the Mozilla Public License

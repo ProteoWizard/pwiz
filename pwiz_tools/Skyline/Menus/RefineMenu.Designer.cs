@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.Menus
+namespace pwiz.Skyline.Menus
 {
     partial class RefineMenu
     {

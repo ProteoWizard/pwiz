@@ -1,4 +1,4 @@
-﻿namespace SkylineNightly
+namespace SkylineNightly
 {
     partial class SkylineNightly
     {
