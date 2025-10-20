@@ -1,8 +1,29 @@
 # TODO: Compress vendor test data directories
 
-**Status:** Backlog
+**Status:** Backlog - **RECONSIDER BEFORE IMPLEMENTING**
 **Priority:** Low
 **Estimated Effort:** Small to Medium (1-2 days)
+
+## ⚠️ Important Feedback from Matt Chambers (PR #3651)
+
+**Historical Context:**
+- Project previously used compressed test data
+- Found it "annoying to update, maintain, and diff"
+- Intentionally moved away from that approach
+
+**Matt's Concerns:**
+1. **Reference mzML files MUST stay uncompressed** - Need plaintext for diffing
+2. **Vendor `.d` directories** - Maybe OK to compress, but questions if it's worth it
+3. **Rare use case** - Only helps with "modify everything in repo" scripts (very unusual)
+4. **Maintenance burden** - Historical experience shows compressed test data is harder to work with
+
+**Key Quote:** "I would definitely want to keep doing that for reference mzMLs. The vendor data itself probably would be ok to put back in tarballs, but I'm not sure it's really necessary or useful except for 'modify everything in the repository' scripts like you've done here, which are exceedingly unusual."
+
+**Recommendation:** Before implementing this TODO, carefully weigh:
+- Historical problems with compressed test data
+- Limited benefit (only helps rare bulk-modification scripts)
+- Matt's strong preference to keep reference mzMLs as plaintext
+- Alternative: Use `.gitattributes` to mark test data as binary (already done)
 
 ## Problem
 
@@ -21,9 +42,14 @@ Test data is stored uncompressed in directories like:
 - `pwiz/data/vendor_readers/Waters/Reader_Waters_Test.data/*.raw/`
 - Similar directories for other vendors
 
-## Proposed Solution
+## Proposed Solution (IF Reconsidered)
 
-Store vendor test data directories in compressed archives (.zip, .7z, or .gz):
+**SCOPE CLARIFICATION based on Matt's feedback:**
+- ✅ **Could compress**: Vendor `.d`/`.raw` directories (instrument data)
+- ❌ **DO NOT compress**: Reference mzML files (need plaintext for diffing)
+- ⚠️ **Question value**: Is preventing rare bulk-modification accidents worth the maintenance burden?
+
+If proceeding, store vendor test data directories in compressed archives (.zip, .7z, or .gz):
 
 1. **Compress test data**
    - One-time compression of existing `.d` and other vendor directories
