@@ -1,4 +1,11 @@
-﻿[*.cs]
+# Top-most EditorConfig file
+root = true
+
+# All files - UTF-8 without BOM
+[*]
+charset = utf-8
+
+[*.cs]
 
 # IDE0011: Add braces
 csharp_prefer_braces = true

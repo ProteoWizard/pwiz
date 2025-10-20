@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Henry Sanford <henrytsanford .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *

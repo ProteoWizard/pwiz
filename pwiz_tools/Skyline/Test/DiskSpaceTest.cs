@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Aaron Banse <abanse .at. uw dot edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *         

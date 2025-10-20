@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Eduardo Armendariz <wardough .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *

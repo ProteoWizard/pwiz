@@ -1,4 +1,4 @@
-﻿//
+//
 // $Id: AnnotationPanels.Designer.cs 1593 2009-12-03 17:21:14Z chambm $
 //
 //

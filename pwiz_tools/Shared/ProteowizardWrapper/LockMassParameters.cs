@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Matt Chambers <matt.chambers42 .at. gmail.com>
  *
  * Copyright 2025 University of Washington - Seattle, WA

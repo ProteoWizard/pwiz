@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -18,45 +18,53 @@
  */
 
 using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Collections;
+using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Documentation;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Menus;
-using pwiz.SkylineTestUtil;
-using System.Globalization;
-using System.IO;
-using pwiz.Common.DataBinding;
-using pwiz.Common.DataBinding.Documentation;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Properties;
+using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTest
+namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
     /// Verifies that the HTML files in the "Documentation\Help" folder contain the same text
     /// as would be displayed on the "Help > Documentation" menu item.
     /// </summary>
     [TestClass]
-    public class HelpDocumentationContentTest : AbstractUnitTestEx
+    public class HelpDocumentationContentTest : AbstractFunctionalTest
     {
         protected override bool IsRecordMode => false;
 
-        // TODO(nicksh): Re-enable this test after memory leaks are fixed
-        //[TestMethod]
+        [TestMethod]
         public void TestKeyboardShortcutsHelpDocumentation()
         {
-            if (ProcessEx.IsRunningOnWine)
-            {
-                return;
-            }
+            RunFunctionalTest();
+        }
+
+        protected override void DoTest()
+        {
             ForEachLanguage(() =>
             {
-                var filePath = Path.Combine(GetDocumentationHelpFolder(), "KeyboardShortcuts.html");
-                var skylineWindow = new SkylineWindow();
-                var html = KeyboardShortcutDocumentation.GenerateKeyboardShortcutHtml(skylineWindow.MainMenuStrip);
-                VerifyFileContents(filePath, html);
+                RunUI(() =>
+                {
+                    var filePath = Path.Combine(GetDocumentationHelpFolder(), "KeyboardShortcuts.html");
+                    ApplyResourcesToSkylineMenus(SkylineWindow);
+                    var html = KeyboardShortcutDocumentation.GenerateKeyboardShortcutHtml(Program.MainWindow.MainMenuStrip);
+                    VerifyFileContents(filePath, html);
+                });
             });
         }
 
@@ -95,7 +103,7 @@ namespace pwiz.SkylineTest
 
         private void ForEachLanguage(Action action)
         {
-            foreach (var language in new []{"en", "ja", "zh-CHS"})
+            foreach (var language in new []{ "en", "ja", "zh-CHS" })
             {
                 var cultureInfo = CultureInfo.GetCultureInfo(language);
                 Assert.IsNotNull(cultureInfo);
@@ -140,6 +148,43 @@ namespace pwiz.SkylineTest
                 AssertEx.FileExists(path, message);
                 AssertEx.NoDiff(expectedContents, actualContents, message);
             }
+        }
+
+        /// <summary>
+        /// Localizes all items on Skyline main menu based on CultureInfo.CurrentUICulture
+        /// </summary>
+        /// <param name="skylineWindow"></param>
+        private static void ApplyResourcesToSkylineMenus(SkylineWindow skylineWindow)
+        {
+            var processedItems = new HashSet<ReferenceValue<ToolStripItem>>();
+            foreach ((ComponentResourceManager resourceManager, IEnumerable<ToolStripItem> items) in GetMenuItems(skylineWindow))
+            {
+                ApplyResources(resourceManager, items, processedItems);
+            }
+        }
+
+        private static void ApplyResources(ComponentResourceManager resourceManager, IEnumerable<ToolStripItem> items,
+            HashSet<ReferenceValue<ToolStripItem>> processedItems)
+        {
+            foreach (var item in items ?? Array.Empty<ToolStripItem>())
+            {
+                if (!processedItems.Add(item))
+                {
+                    continue;
+                }
+                resourceManager.ApplyResources(item, item.Name);
+                ApplyResources(resourceManager, (item as ToolStripDropDownItem)?.DropDownItems.Cast<ToolStripItem>(), processedItems);
+            }
+        }
+
+        private static IEnumerable<Tuple<ComponentResourceManager, IEnumerable<ToolStripItem>>> GetMenuItems(
+            SkylineWindow skylineWindow)
+        {
+            yield return Tuple.Create(new ComponentResourceManager(typeof(RefineMenu)), skylineWindow.RefineMenu.DropDownItems);
+            yield return Tuple.Create(new ComponentResourceManager(typeof(EditMenu)), skylineWindow.EditMenu.DropDownItems);
+            yield return Tuple.Create(new ComponentResourceManager(typeof(ViewMenu)), skylineWindow.ViewMenu.DropDownItems);
+            yield return Tuple.Create(new ComponentResourceManager(typeof(SkylineWindow)),
+                skylineWindow.MainMenuStrip.Items.OfType<ToolStripItem>());
         }
     }
 }
