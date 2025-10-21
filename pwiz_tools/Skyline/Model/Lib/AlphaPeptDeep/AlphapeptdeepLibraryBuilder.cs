@@ -39,7 +39,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
         public ArgumentAndValue(string name, string value, bool quoteValue)
             : this(name, value, DEFAULT_DASH, quoteValue)
-        { }
+        {}
 
         public ArgumentAndValue(string name, string value, string dash = DEFAULT_DASH, bool quoteValue = false)
         {

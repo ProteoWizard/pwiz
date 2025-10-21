@@ -38,31 +38,6 @@ namespace pwiz.SkylineTestUtil
 {
     public static class ResultsUtil
     {
-        /// <summary>
-        /// Copies an Assembly resource to the TestResultsPath folder for use in file operations.
-        /// </summary>
-        /// <param name="classType">Caller class type</param>
-        /// <param name="resourceName">The name of the resource to read the file from</param>
-        /// <param name="testFile">The path to copy the file to</param>
-        /// <returns>The full path to the output file</returns>
-        public static string ResourceToTestFile(Type classType, string resourceName, string testFile)
-        {
-            // First make sure the target folder exists
-            string parentDir = Path.GetDirectoryName(Path.GetFullPath(testFile));
-            if (parentDir != null)
-                Directory.CreateDirectory(parentDir);
-
-            using (var stream = classType.Assembly.GetManifestResourceStream($@"{classType.Namespace}.{resourceName}"))
-            using (var fileStream = new FileStream(testFile, FileMode.Create, FileAccess.Write))
-            {
-                // Copy the resource stream to the file
-                Assert.IsNotNull(stream, $@"Resource '{classType.Namespace}.{resourceName}' not found.");
-                stream.CopyTo(fileStream);
-            }
-
-            return Path.GetFullPath(testFile);
-        }
-
         public static SrmDocument DeserializeDocument(string path)
         {
             try

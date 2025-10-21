@@ -35,9 +35,7 @@ namespace pwiz.Common.SystemUtil
     {
         // Testing overrides
         public static Action<string, object[]> WriteDebugMessage = (message, args) => Trace.TraceInformation(message, args);
-        public static Action<string> WriteDebugMessageUnformatted = (message) => Trace.TraceInformation(message);
         public static Action<string, object[]> WriteUserMessage = (message, args) => Trace.TraceWarning(message, args);
-        public static Action<string> WriteUserMessageUnformatted = (message) => Trace.TraceWarning(message);
 
         public static void WriteAsyncDebugMessage(string message, params object[] args)
         {
@@ -51,16 +49,7 @@ namespace pwiz.Common.SystemUtil
                 WriteDebugMessage(@"{0}", new object[] { message });
             }
         }
-        public static void WriteAsyncDebugMessage(string message)
-        {
-            WriteDebugMessageUnformatted(message);
-        }
-        public static void WriteAsyncUserMessage(string message)
-        {
-            // For Skyline UI, the TraceWarningListener class causes these messages to appear in the
-            // Immediate Window, for commandline they appear in the console.
-            WriteUserMessageUnformatted(message);
-        }
+
         public static void WriteAsyncUserMessage(string message, params object[] args)
         {
             // For Skyline UI, the TraceWarningListener class causes these messages to appear in the

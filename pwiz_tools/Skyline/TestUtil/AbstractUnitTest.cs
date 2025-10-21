@@ -226,7 +226,7 @@ namespace pwiz.SkylineTestUtil
                     {
                         var targetFolder = GetTargetZipFilePath(zipPath, out var zipFilePath);
                         if (!File.Exists(zipFilePath) &&
-                            (!IsPerfTest || RunPerfTests)) // If this is a perf test, skip download unless perf tests are enabled
+                           (!IsPerfTest || RunPerfTests)) // If this is a perf test, skip download unless perf tests are enabled
                         {
                             zipPath = DownloadZipFile(targetFolder, zipPath, zipFilePath);
                             DictZipFileIsKnownCurrent.Add(zipPath, true);

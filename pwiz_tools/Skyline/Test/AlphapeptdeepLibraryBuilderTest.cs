@@ -71,7 +71,7 @@ namespace pwiz.SkylineTest
                 new Peptide("KINGPELVISKINK"),
                 new Peptide("LIVER")
             };
-
+         
             var document = CreateTestSimpleDocument(peptides);
 
             TestGetPrecursorTable(document, SIMPLE_PRECURSOR_TABLE_ANSWER);
@@ -105,7 +105,7 @@ namespace pwiz.SkylineTest
             var precursorTable = builder.GetPrecursorTable(false);
 
             var generatedResult = precursorTable as string[] ?? precursorTable.ToArray();
-
+           
             if (IsRecordMode)
             {
                 File.WriteAllLines(LogOutput, generatedResult);
@@ -435,7 +435,7 @@ namespace pwiz.SkylineTest
                 unsupportedName
             };
 
-            var aceOxMetMod = new StaticMod("Acetyl-Oxidation (N-term-M)", "M", ModTerminus.N, true, "H2C2O2", LabelAtoms.None, RelativeRT.Unknown, null,
+            var aceOxMetMod = new StaticMod("Acetyl-Oxidation (N-term-M)", "M",ModTerminus.N, true, "H2C2O2", LabelAtoms.None, RelativeRT.Unknown, null,
                 null, null, null, "Acetyl-Ox");
             var fakeUnimodAceOxMetMod = new StaticMod("Acetyl-Oxidation (N-term-M)", "M", ModTerminus.N, true, "H2C2O2", LabelAtoms.None, RelativeRT.Unknown, null,
                 null, null, 35, "Acetyl-Ox");
@@ -632,7 +632,7 @@ namespace pwiz.SkylineTest
             for (int i = 0; i < peptideNodes.Length; i++)
             {
                 ExplicitMods mods = null;
-
+                
                 if (expMods != null)
                     mods = expMods[i];
 

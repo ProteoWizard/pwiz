@@ -172,7 +172,6 @@ namespace pwiz.Common.SystemUtil
         /// <param name="path">Path to convert to long-path syntax. This must be a fully qualified path.</param>
         public static string ToLongPath(this string path)
         {
-
             if (path != null && path.StartsWith(PREFIX_LONG_PATH))
                 return path;
 

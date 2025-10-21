@@ -879,6 +879,7 @@ namespace pwiz.Skyline.Util
             catch (Exception) { }
 // ReSharper restore EmptyGeneralCatchClause
         }
+
         public static string GetUniqueName(string dirName)
         {
             return Directory.Exists(dirName)

@@ -1053,13 +1053,13 @@ namespace pwiz.SkylineTestUtil
                 var monitor = new DefaultFileLoadMonitor(new SilentProgressMonitor());
                 expectedLoaded = libraryExpected.LoadLibrary(monitor);
                 actualLoaded = libraryActual.LoadLibrary(monitor);
-
+                
                 Assert.AreEqual(expectedLoaded.SpectrumCount, actualLoaded.SpectrumCount, "spectrum counts not equal");
 
                 var expectedList = expectedLoaded.Keys.ToList();
                 var actualList = actualLoaded.Keys.ToList();
 
-                for (int i = 0; i < expectedList.Count; ++i)
+                for (int i=0; i < expectedList.Count; ++i)
                 {
                     var expected = expectedList[i];
                     var actual = actualList[i];
@@ -1081,24 +1081,6 @@ namespace pwiz.SkylineTestUtil
             {
                 expectedLoaded?.ReadStream.CloseStream();
                 actualLoaded?.ReadStream.CloseStream();
-            }
-        }
-
-        private static void LogSpectrumPeaks(string expectedSpecKey, string actualSpecKey, SpectrumPeaksInfo.MI[] expectedSpectrum,
-            SpectrumPeaksInfo.MI[] actualSpectrum)
-        {
-            Console.WriteLine();
-            Console.WriteLine($@"Expected Spectrum Key Sequence: {expectedSpecKey}");
-            Console.WriteLine($@"Actual Spectrum Key Sequence: {actualSpecKey}");
-            Console.WriteLine(@"Expected Spectrum:");
-            for (int j = 0; j < expectedSpectrum.Length; ++j)
-            {
-                Console.WriteLine(expectedSpectrum[j].ToString());
-            }
-            Console.WriteLine(@"Actual Spectrum:");
-            for (int j = 0; j < actualSpectrum.Length; ++j)
-            {
-                Console.WriteLine(actualSpectrum[j].ToString());
             }
         }
 

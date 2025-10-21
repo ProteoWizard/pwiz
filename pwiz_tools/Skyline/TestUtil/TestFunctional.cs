@@ -2032,8 +2032,6 @@ namespace pwiz.SkylineTestUtil
             WaitForClosedForm(form);
         }
 
-   
-
         /// <summary>
         /// Starts up Skyline, and runs the <see cref="DoTest"/> test method.
         /// </summary>
@@ -2549,7 +2547,7 @@ namespace pwiz.SkylineTestUtil
             {
                 RunUI(() => Clipboard.SetText(clipboardCheckText));
             }
-           
+
             DoTest();
 
             Assert.IsFalse(IsRecordMode, "Set IsRecordMode to false before commit");   // Avoid merging code with record mode left on.

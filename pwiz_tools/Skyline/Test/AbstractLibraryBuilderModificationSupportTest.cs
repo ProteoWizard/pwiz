@@ -29,6 +29,7 @@ namespace pwiz.SkylineTest
     {
         private static readonly List<ModificationType> MODEL_SUPPORTED_MODS =
             new List<ModificationType>
+
             {
                 AbstractDeepLibraryBuilder.GetUniModType(4, PredictionSupport.all), // Carbamidomethyl (C)
                 AbstractDeepLibraryBuilder.GetUniModType(21, PredictionSupport.fragmentation), // Phospho
