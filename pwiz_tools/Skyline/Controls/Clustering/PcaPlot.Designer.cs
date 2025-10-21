@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.Controls.Clustering
+namespace pwiz.Skyline.Controls.Clustering
 {
     partial class PcaPlot
     {

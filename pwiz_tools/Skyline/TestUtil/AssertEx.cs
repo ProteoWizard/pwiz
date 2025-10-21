@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -718,7 +718,7 @@ namespace pwiz.SkylineTestUtil
             XmlSerializer ser = new XmlSerializer(typeof(TObj));
             using (var memStream = new MemoryStream())
             {
-                XmlTextWriter writer = new XmlTextWriter(memStream, Encoding.UTF8);
+                XmlTextWriter writer = new XmlTextWriter(memStream, new UTF8Encoding(false)); // UTF-8 without BOM
                 writer.Formatting = Formatting.Indented;
 
                 try

@@ -1,4 +1,4 @@
-﻿//
+//
 // $Id: DataGridViewProgressBar.cs 276 2011-06-03 20:48:38Z chambm $
 //
 //

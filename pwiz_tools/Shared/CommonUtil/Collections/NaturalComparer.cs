@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Clark Brace <clarkbrace@gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *

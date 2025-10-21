@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Author: David Shteynberg <dshteynberg .at. gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *

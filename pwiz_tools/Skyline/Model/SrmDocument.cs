@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -1154,15 +1154,9 @@ namespace pwiz.Skyline.Model
                 .Any(mods => mods.Modifications.Count > 0);
             if (!hasHeavyModifications && HasSmallMolecules)
             {
-                foreach (var molecule in Molecules)
-                {
-                    if (molecule.TransitionGroups.Any(group =>
-                        !ReferenceEquals(group.TransitionGroup.LabelType, IsotopeLabelType.light)))
-                    {
-                        hasHeavyModifications = true;
-                        break;
-                    }
-                }
+                hasHeavyModifications = Molecules
+                    .SelectMany(mol => mol?.TransitionGroups ?? Array.Empty<TransitionGroupDocNode>())
+                    .Any(group => !ReferenceEquals(group.TransitionGroup.LabelType, IsotopeLabelType.light));
             }
             if (hasHeavyModifications == settings.PeptideSettings.Modifications.HasHeavyModifications)
             {
@@ -2254,7 +2248,7 @@ namespace pwiz.Skyline.Model
         public void SerializeToFile(string tempName, string displayName, SkylineVersion skylineVersion, IProgressMonitor progressMonitor)
         {
             string hash;
-            using (var writer = new XmlTextWriter(HashingStream.CreateWriteStream(tempName), Encoding.UTF8))
+            using (var writer = new XmlTextWriter(HashingStream.CreateWriteStream(tempName), new UTF8Encoding(false))) // UTF-8 without BOM
             {
                 writer.Formatting = Formatting.Indented;
                 hash = Serialize(writer, displayName, skylineVersion, progressMonitor);

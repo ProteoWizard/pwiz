@@ -1,4 +1,4 @@
-﻿namespace SkylineBatch
+namespace SkylineBatch
 {
     partial class MainForm
     {

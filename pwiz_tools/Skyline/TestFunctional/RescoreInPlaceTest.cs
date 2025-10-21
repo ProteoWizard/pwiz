@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -120,7 +120,8 @@ namespace pwiz.SkylineTestFunctional
                 while (!transitionSettingsUiClosed)
                 {
                     SkylineWindow.BeginInvoke(new Action(() => transitionSettingsUi.OkDialog()));
-                    WaitForConditionUI(() => transitionSettingsUiClosed || FindOpenForm<AlertDlg>() != null);
+                    // Transition settings closing can be rejected when the chromatogram import commits during the settings change
+                    TryWaitForConditionUI(200, () => transitionSettingsUiClosed || FindOpenForm<AlertDlg>() != null);
                     AlertDlg alertDlg = FindOpenForm<AlertDlg>();
                     if (alertDlg != null)
                     {

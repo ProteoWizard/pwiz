@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Sophie Pallanck <srpall .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *

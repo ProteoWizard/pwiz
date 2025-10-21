@@ -1,4 +1,4 @@
-﻿namespace SkyGadget
+namespace SkyGadget
 {
     partial class Form1
     {

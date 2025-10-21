@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -204,7 +204,21 @@ namespace pwiz.Skyline
 
             // Begin ToolStore check for updates to currently installed tools, if any
             if (ToolStoreUtil.UpdatableTools(Settings.Default.ToolList).Any())
-                ActionUtil.RunAsync(() => ToolStoreUtil.CheckForUpdates(Settings.Default.ToolList.ToArray()), @"Check for tool updates");
+            {
+                ActionUtil.RunAsync(() => 
+                {
+                    try
+                    {
+                        ToolStoreUtil.CheckForUpdates(Settings.Default.ToolList.ToArray());
+                    }
+                    catch (Exception ex)
+                    {
+                        // Ignore network errors when checking for tool updates in background
+                        // The user will get proper error handling when they explicitly open the Tool Store
+                        Debug.WriteLine($@"Failed to check for tool updates: {ex.Message}");
+                    }
+                }, @"Check for tool updates");
+            }
 
             // Get placement values before changing anything.
             bool maximize = Settings.Default.MainWindowMaximized || Program.DemoMode;

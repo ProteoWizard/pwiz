@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brian Pratt <bspratt .at. proteinms.net>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -1042,10 +1042,8 @@ namespace pwiz.Skyline.Util
 
         public static Adduct FromCharge(int charge, ADDUCT_TYPE type)
         {
-            var assumeProteomic = false;
             if (type == ADDUCT_TYPE.proteomic)
             {
-                assumeProteomic = true;
                 switch (charge)
                 {
                     case 0:
@@ -1061,6 +1059,14 @@ namespace pwiz.Skyline.Util
                     case 5:
                         return QUINTUPLY_PROTONATED;
                 }
+                var str = (charge==-1) ? @"[M-H]" : $@"[M{charge:+#;-#;0,CultureInfo.InvariantCulture}H]"; // So we don't get "[M-1H]"
+                if (_knownAdducts[(int)ADDUCT_TYPE.proteomic].TryGetValue(str, out var adduct))
+                {
+                    return adduct;
+                }
+                adduct = new Adduct(charge, true);
+                _knownAdducts[(int)ADDUCT_TYPE.proteomic][str] = adduct;
+                return adduct;
             }
             else if (type == ADDUCT_TYPE.non_proteomic)
             {
@@ -1081,6 +1087,7 @@ namespace pwiz.Skyline.Util
                     case -3:
                         return M_MINUS_3H;
                 }
+                return Adduct.FromStringAssumeProtonatedNonProteomic($@"[M{charge:+#;-#;0,CultureInfo.InvariantCulture}H]");
             }
             else
             {
@@ -1101,8 +1108,8 @@ namespace pwiz.Skyline.Util
                     case -3:
                         return M_MINUS_3;
                 }
+                return Adduct.FromStringAssumeChargeOnly($@"[M{charge:+#;-#;0,CultureInfo.InvariantCulture}]");
             }
-            return new Adduct(charge, assumeProteomic);
         }
 
         public static Adduct[] ProtonatedFromCharges(params int[] list)
@@ -1566,6 +1573,27 @@ namespace pwiz.Skyline.Util
                 return mass;
             }
             return (mass.IsMonoIsotopic() ? IsotopesIncrementalMonoMass : IsotopesIncrementalAverageMass) + mass; 
+        }
+
+        /// <summary>
+        /// Tries to infer adduct based on given mass and m/z, limited to simple protonated or charge-only adducts
+        /// See also Skyline.Model.TransitionCalc.CalcCharge() which "Calculates the matching charge within a tolerance for a mass, assuming (de)protonation."
+        /// </summary>
+        public static Adduct InferFromMassAndMz(double mass, SignedMz mz)
+        {
+            var roughChargeH = (int)Math.Round(mass / (mz.RawValue - (mz.IsNegative ? -BioMassCalc.MassProton : BioMassCalc.MassProton)));
+            var adductH = Adduct.FromCharge(roughChargeH, ADDUCT_TYPE.non_proteomic);
+            var typedMass = new TypedMass(mass, MassType.Monoisotopic);
+            var errH = Math.Abs(adductH.MzFromNeutralMass(typedMass) - mz.Value);
+            var roughChargeM = (int)Math.Round(mass / mz.RawValue);
+            var adductM = Adduct.FromChargeNoMass(roughChargeM);
+            var errM = Math.Abs(adductM.MzFromNeutralMass(typedMass) - mz.Value);
+            var toler = 0.01 * BioMassCalc.MassProton;
+            if (errM < errH && errM < toler)
+                return adductM;
+            else if (errH < errM && errH < toler)
+                return adductH;
+            return Adduct.EMPTY;
         }
 
         /// <summary>

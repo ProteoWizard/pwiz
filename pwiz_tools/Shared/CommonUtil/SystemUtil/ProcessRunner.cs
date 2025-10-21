@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -24,7 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using pwiz.Common.Properties;
+using pwiz.Common.CommonResources;
 
 namespace pwiz.Common.SystemUtil
 {
@@ -155,7 +155,7 @@ namespace pwiz.Common.SystemUtil
 
             if (ShowCommandAndArgs)
             {
-                foreach (var msg in new[]{string.Empty, Resources.ProcessRunner_Run_Run_command_, cmd, string.Empty, string.Empty})
+                foreach (var msg in new[]{string.Empty, MessageResources.ProcessRunner_Run_Run_command_, cmd, string.Empty, string.Empty})
                 {
                     if (!string.IsNullOrEmpty(msg))
                     {
