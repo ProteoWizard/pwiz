@@ -702,7 +702,7 @@ namespace pwiz.Skyline
         {
             // Not allowed to set the document to null.
             Debug.Assert(docNew != null);
-            if (docNew != null && docNew.DeferSettingsChanges)
+            if (docNew.DeferSettingsChanges)
             {
                 throw new InvalidOperationException();
             }
@@ -3302,7 +3302,7 @@ namespace pwiz.Skyline
                     if (proteomic && !backgroundProteome.IsNone)
                     {
                         int ichPeptideSeparator = labelText.IndexOf(FastaSequence.PEPTIDE_SEQUENCE_SEPARATOR,
-                            StringComparison.Ordinal);
+                                                                    StringComparison.Ordinal);
                         string proteinName;
                         if (ichPeptideSeparator >= 0)
                         {
@@ -3317,7 +3317,6 @@ namespace pwiz.Skyline
                             proteinName = labelText;
                         }
                         fastaSequence = backgroundProteome.GetFastaSequence(proteinName);
-                        
                     }
                     string peptideGroupName = null;
                     string modifyMessage;
