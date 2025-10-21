@@ -146,17 +146,8 @@ namespace pwiz.Skyline.Model.Results
             {
                 return null;
             }
-
-            PropertyPath propertyPath;
-            try
-            {
-                propertyPath = PropertyPath.Parse(persistedString);
-            }
-            catch (Exception)
-            {
-                return null;
-            }
-            return GetAllReplicateValues(settings).FirstOrDefault(value => propertyPath.Equals(value.PropertyPath));
+            return GetAllReplicateValues(settings)
+                .FirstOrDefault(value => value.ToPersistedString() == persistedString);
         }
 
         public class Annotation : ReplicateValue
