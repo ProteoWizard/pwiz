@@ -37,8 +37,6 @@ using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
-using Enum = System.Enum;
-using File = System.IO.File;
 
 [assembly: InternalsVisibleTo("TestPerf")]
 
@@ -516,17 +514,9 @@ namespace pwiz.Skyline.Model.Lib.Carafe
         }
         public static void CarafeDefaultSettings()
         {
-            DataParameters = new Dictionary<string, AbstractDdaSearchEngine.Setting>();
-            foreach (var kvp in DefaultDataParameters)
-                DataParameters[kvp.Key] = new AbstractDdaSearchEngine.Setting(kvp.Value);
-
-            ModelParameters = new Dictionary<string, AbstractDdaSearchEngine.Setting>();
-            foreach (var kvp in DefaultModelParameters)
-                ModelParameters[kvp.Key] = new AbstractDdaSearchEngine.Setting(kvp.Value);
-
-            LibraryParameters = new Dictionary<string, AbstractDdaSearchEngine.Setting>();
-            foreach (var kvp in DefaultLibraryParameters)
-                LibraryParameters[kvp.Key] = new AbstractDdaSearchEngine.Setting(kvp.Value);
+            DataParameters = new Dictionary<string, AbstractDdaSearchEngine.Setting>(DefaultDataParameters);
+            ModelParameters = new Dictionary<string, AbstractDdaSearchEngine.Setting>(DefaultModelParameters);
+            LibraryParameters = new Dictionary<string, AbstractDdaSearchEngine.Setting>(DefaultLibraryParameters);
         } 
 
         public CarafeLibraryBuilder(
@@ -986,8 +976,6 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             );
 
             var cmdBuilder = new StringBuilder();
-            CancellationToken cancelToken = CancellationToken.None;
-
             cmdBuilder.Append(args).Append(SPACE);
 
             string batPath = Path.Combine(WorkDir, @"runCarafe.bat");
