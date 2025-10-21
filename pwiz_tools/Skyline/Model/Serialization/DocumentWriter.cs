@@ -599,7 +599,7 @@ namespace pwiz.Skyline.Model.Serialization
                     writer.WriteAttribute(ATTR.modified_sequence, calcPre.GetModifiedSequence(seq,
                         false)); // formatNarrow = false; We want InvariantCulture, not the local format
                 }
-                Assume.IsTrue(group.PrecursorAdduct.IsProteomic);
+                Assume.IsTrue(group.PrecursorAdduct.IsProteomic, @"expected IsProteomic tag on adduct");
             }
             else
             {
