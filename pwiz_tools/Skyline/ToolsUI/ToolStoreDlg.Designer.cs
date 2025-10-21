@@ -93,6 +93,7 @@ namespace pwiz.Skyline.ToolsUI
             // buttonInstallUpdate
             // 
             resources.ApplyResources(this.buttonInstallUpdate, "buttonInstallUpdate");
+            this.buttonInstallUpdate.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.buttonInstallUpdate.Name = "buttonInstallUpdate";
             this.buttonInstallUpdate.UseVisualStyleBackColor = true;
             this.buttonInstallUpdate.Click += new System.EventHandler(this.buttonInstallUpdate_Click);

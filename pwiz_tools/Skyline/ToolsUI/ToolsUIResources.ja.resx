@@ -358,25 +358,4 @@
   <data name="EditSearchToolDlg_OkDialog_The_file__0__does_not_exist_" xml:space="preserve">
     <value>ファイル{0}は存在しません。</value>
   </data>
-  <data name="RInstaller_InstallPackages_Error__No_internet_connection_" xml:space="preserve">
-    <value>エラー： インターネット接続がありません。</value>
-  </data>
-  <data name="RInstaller_InstallPackages_Installing_R_packages_requires_an_internet_connection__Please_check_your_connection_and_try_again" xml:space="preserve">
-    <value>Rパッケージのインストールには、インターネット接続が必要です。インターネット接続を確認してからもう一度お試しください</value>
-  </data>
-  <data name="ToolUpdatesDlg_DisplayDownloadSummary_Failed_to_download_updates_for_the_following_packages" xml:space="preserve">
-    <value>以下のパッケージのアップデートのダウンロードに失敗しました</value>
-  </data>
-  <data name="ToolUpdatesDlg_DisplayInstallSummary_Failed_to_update_the_following_tool" xml:space="preserve">
-    <value>以下のツールのアップデートに失敗しました</value>
-  </data>
-  <data name="ToolUpdatesDlg_DisplayInstallSummary_Failed_to_update_the_following_tools" xml:space="preserve">
-    <value>以下のツールのアップデートに失敗しました</value>
-  </data>
-  <data name="ToolUpdatesDlg_DisplayInstallSummary_Successfully_updated_the_following_tool" xml:space="preserve">
-    <value>以下のツールが正常にアップデートされました</value>
-  </data>
-  <data name="ToolUpdatesDlg_DisplayInstallSummary_Successfully_updated_the_following_tools" xml:space="preserve">
-    <value>以下のツールが正常にアップデートされました</value>
-  </data>
 </root>

@@ -1581,8 +1581,13 @@ namespace pwiz.Skyline.Model.Lib
         }
     }
 
-    public abstract class LibrarySpec : XmlNamedElement, IHasItemDescription
+    public abstract class LibrarySpec : XmlNamedElement, IHasItemDescription, IFile
     {
+        /// <summary>
+        /// Identity class to allow identity equality on <see cref="LibrarySpec"/>.
+        /// </summary>
+        private sealed class LibrarySpecId : Identity { }
+
         public static readonly PeptideRankId PEP_RANK_COPIES =
             new PeptideRankId(@"Spectrum count", () => LibResources.LibrarySpec_PEP_RANK_COPIES_Spectrum_count);
         public static readonly PeptideRankId PEP_RANK_TOTAL_INTENSITY =
@@ -1614,6 +1619,7 @@ namespace pwiz.Skyline.Model.Lib
         protected LibrarySpec(string name, string path, bool useExplicitPeakBounds = true)
             : base(name)
         {
+            Id = new LibrarySpecId();
             FilePath = path;
             UseExplicitPeakBounds = useExplicitPeakBounds;
         }
@@ -1624,6 +1630,7 @@ namespace pwiz.Skyline.Model.Lib
             get { return AuditLogPath.Create(FilePath); }
         }
 
+        public Identity Id { get; }
         public string FilePath { get; private set; }
 
         /// <summary>
@@ -1698,6 +1705,7 @@ namespace pwiz.Skyline.Model.Lib
         /// </summary>
         protected LibrarySpec()
         {
+            Id = new LibrarySpecId();
         }
 
         private enum ATTR

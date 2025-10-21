@@ -20,7 +20,7 @@
 using System;
 using System.ComponentModel;
 using System.Deployment.Application;
-using System.Diagnostics;
+using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
@@ -372,18 +372,16 @@ namespace pwiz.Skyline
             {
                 try
                 {
-                    using var httpClient = new HttpClientWithProgress(new SilentProgressMonitor());
-                    string applicationPage = httpClient.DownloadString(_applicationDeployment.UpdateLocation);
+                    var webClient = new WebClient();
+                    string applicationPage = webClient.DownloadString(_applicationDeployment.UpdateLocation);
                     // ReSharper disable once LocalizableElement
                     Match match = Regex.Match(applicationPage, "<assemblyIdentity .*version=\"([^\"]*)\"");
                     if (match.Success)
                         return new Version(match.Groups[1].Value);
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
-                    // Ignore but log to debug console in debug builds
-                    // Detailed error from HttpClientWithProgress preserved for diagnostics
-                    Debug.WriteLine($@"Failed to check for updates: {ex.Message}");
+                    // Fall through to returning null
                 }
                 return null;
             }

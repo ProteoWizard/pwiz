@@ -684,7 +684,7 @@ namespace pwiz.Skyline.Controls.Startup
         {
             Assume.IsNotNull(skyFileLocation);
 
-            using var pathChooserDlg = new PathChooserDlg(StartupResources.StartPage_Tutorial__Folder_for_tutorial_files_, skyFileLocation);
+            var pathChooserDlg = new PathChooserDlg(StartupResources.StartPage_Tutorial__Folder_for_tutorial_files_, skyFileLocation);
             if (pathChooserDlg.ShowDialog(this) != DialogResult.OK)
                 return;
 

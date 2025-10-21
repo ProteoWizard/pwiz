@@ -918,8 +918,13 @@ namespace pwiz.Skyline.Model.Tools
         {
             using var webClient = PythonInstaller.TestDownloadClient ?? new MultiFileAsynchronousDownloadClient(progressMonitor, 1);
             using var fileSaver = new FileSaver(PythonInstaller.PythonEmbeddablePackageDownloadPath);
+            
+            if (!webClient.DownloadFileAsync(PythonInstaller.PythonEmbeddablePackageUri, fileSaver.SafeName,
+                    out var downloadException))
+                throw new ToolExecutionException(
+                    ToolsResources.PythonInstaller_Download_failed__Check_your_network_connection_or_contact_Skyline_team_for_help_,
+                    downloadException);
 
-            webClient.DownloadFileAsyncOrThrow(PythonInstaller.PythonEmbeddablePackageUri, fileSaver.SafeName);
             fileSaver.Commit();
         }
     }
@@ -1040,7 +1045,11 @@ namespace pwiz.Skyline.Model.Tools
         private void DoActionWithProgressMonitor(IProgressMonitor progressMonitor)
         {
             using var webClient = PythonInstaller.TestPipDownloadClient ?? new MultiFileAsynchronousDownloadClient(progressMonitor, 1);
-            webClient.DownloadFileAsyncOrThrow(PythonInstaller.GetPipScriptDownloadUri, PythonInstaller.GetPipScriptDownloadPath);
+            if (!webClient.DownloadFileAsync(PythonInstaller.GetPipScriptDownloadUri, PythonInstaller.GetPipScriptDownloadPath, out var downloadException))
+            {
+                throw new ToolExecutionException(
+                    ToolsResources.PythonInstaller_Download_failed__Check_your_network_connection_or_contact_Skyline_team_for_help_, downloadException);
+            }
             PythonInstallerUtil.SignFile(PythonInstaller.GetPipScriptDownloadPath);
         }
     }

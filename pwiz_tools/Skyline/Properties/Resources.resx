@@ -239,6 +239,9 @@ Here are the {0} pairs with multiple entries:
   <data name="AssociateProteinsDlg_ApplyChanges_Associated_proteins" xml:space="preserve">
     <value>Associated proteins</value>
   </data>
+  <data name="PythonInstaller_DownloadPip_Download_failed__Check_your_network_connection_or_contact_Skyline_developers_" xml:space="preserve">
+    <value>Download failed. Check your network connection or contact Skyline developers.</value>
+  </data>
   <data name="SkylineWindow_AddGroupComparison_Add_Fold_Change" xml:space="preserve">
     <value>Add Fold Change</value>
   </data>
@@ -518,6 +521,9 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="CommandLine_ImportResultsFile_Warning__Failed_importing_the_results_file__0____Ignoring___" xml:space="preserve">
     <value>Warning: Failed importing the results file {0}.  Ignoring...</value>
   </data>
+  <data name="TestToolStoreClient_GetToolZipFile_Error_downloading_tool" xml:space="preserve">
+    <value>Error downloading tool</value>
+  </data>
   <data name="IonMobilityFinder_ProcessMSLevel_Failed_using_results_to_populate_ion_mobility_library_" xml:space="preserve">
     <value>Failed using results to populate ion mobility library:</value>
   </data>
@@ -647,6 +653,9 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="ResultsGrid_ResultsGrid_Identified" xml:space="preserve">
     <value>Identified</value>
   </data>
+  <data name="RInstaller_DownloadPackages_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_" xml:space="preserve">
+    <value>Check your network connection or contact the tool provider for installation support.</value>
+  </data>
   <data name="EditIonMobilityLibraryDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_charge__Charges_must_be_integer_values_between_1_and__1__" xml:space="preserve">
     <value>the value {0} is not a valid charge. Charges must be integer values between 1 and {1}.</value>
   </data>
@@ -679,6 +688,12 @@ If your transition list format combines formulas and adducts in a single column 
   </data>
   <data name="PasteDlg_CheckSequence_There_is_no_sequence_for_this_protein" xml:space="preserve">
     <value>There is no sequence for this protein</value>
+  </data>
+  <data name="MultiFileAsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled_" xml:space="preserve">
+    <value>Download canceled.</value>
+  </data>
+  <data name="ToolUpdatesDlg_DisplayInstallSummary_Failed_to_update_the_following_tools" xml:space="preserve">
+    <value>Failed to update the following tools</value>
   </data>
   <data name="ValueOutOfRangeDoubleException_ValueOutOfRangeException_The_value___0___for_the_argument__1__must_be_between__2__and__3__" xml:space="preserve">
     <value>The value '{0}' for the argument {1} must be between {2} and {3}.</value>
@@ -1461,6 +1476,9 @@ Supported values include:
   <data name="PeakBoundaryImporter_Import_Failed_to_read_the_first_line_of_the_file" xml:space="preserve">
     <value>Failed to read the first line of the file</value>
   </data>
+  <data name="ToolUpdatesDlg_DisplayDownloadSummary_Failed_to_download_updates_for_the_following_packages" xml:space="preserve">
+    <value>Failed to download updates for the following packages</value>
+  </data>
   <data name="DigestSettings_Validate_maximum_missed_cleavages" xml:space="preserve">
     <value>maximum missed cleavages</value>
   </data>
@@ -1551,6 +1569,9 @@ Supported values include:
   </data>
   <data name="ResultsGrid_ResultsGrid_Average_Mass_Error_PPM" xml:space="preserve">
     <value>Average Mass Error PPM</value>
+  </data>
+  <data name="PythonInstaller_DownloadPython_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_" xml:space="preserve">
+    <value>Check your network connection or contact the tool provider for installation support.</value>
   </data>
   <data name="EditIonMobilityLibraryDlg_EditIonMobilityLibraryDlg_Adduct" xml:space="preserve">
     <value>Adduct</value>
@@ -1971,6 +1992,9 @@ If you do not have the original files, you may build the library with embedded s
     <value>Protein</value>
     <comment>Used in PeptideToMoleculeText.Translate to update strings like "choose a protein" to read "choose a molecule list" when non-peptide documents are in use</comment>
   </data>
+  <data name="RInstaller_InstallPackages_Installing_R_packages_requires_an_internet_connection__Please_check_your_connection_and_try_again" xml:space="preserve">
+    <value>Installing R packages requires an internet connection. Please check your connection and try again</value>
+  </data>
   <data name="TransitionGroupDecoy" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\transitiongroupdecoy.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -2069,6 +2093,9 @@ If you do not have the original files, you may build the library with embedded s
   </data>
   <data name="ConfigureToolsDlg_CheckPassTool_Supported_Types___1_" xml:space="preserve">
     <value>Supported Types: {1}</value>
+  </data>
+  <data name="RInstaller_InstallPackages_Error__No_internet_connection_" xml:space="preserve">
+    <value>Error: No internet connection.</value>
   </data>
   <data name="PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units" xml:space="preserve">
     <value>Explicit Ion Mobility Units</value>
@@ -2355,17 +2382,26 @@ Most peptide transition lists can be imported with the "File|Import|Transition L
   <data name="EditIonMobilityLibraryDlg_OkDialog_Do_you_want_to_change_it_" xml:space="preserve">
     <value>Do you want to change it?</value>
   </data>
+  <data name="RInstaller_DownloadR_Download_failed_" xml:space="preserve">
+    <value>Download failed.</value>
+  </data>
   <data name="CommandLine_AssociateProteins_Failed_to_associate_proteins" xml:space="preserve">
     <value>Failed to associate proteins</value>
   </data>
   <data name="AreaCvToolbarProperties_btnOk_Click_Invalid_CV_cutoff_entered" xml:space="preserve">
     <value>Invalid CV cutoff entered</value>
   </data>
+  <data name="ToolUpdatesDlg_DisplayInstallSummary_Successfully_updated_the_following_tool" xml:space="preserve">
+    <value>Successfully updated the following tool</value>
+  </data>
   <data name="SkylineWindow_SaveDocument_Saving___" xml:space="preserve">
     <value>Saving...</value>
   </data>
   <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name" xml:space="preserve">
     <value>Fragment Name</value>
+  </data>
+  <data name="PythonInstaller_DownloadPython_Download_failed_" xml:space="preserve">
+    <value>Download failed.</value>
   </data>
   <data name="CommandLine_ImportTool_Error__to_import_a_tool_it_must_have_a_name_and_a_command___Use___tool_add_to_specify_a_name_and_use___tool_command_to_specify_a_command___The_tool_was_not_imported___" xml:space="preserve">
     <value>Error: to import a tool it must have a name and a command.  Use --tool-add to specify a name and use --tool-command to specify a command.  The tool was not imported...</value>
@@ -2492,8 +2528,8 @@ Most peptide transition lists can be imported with the "File|Import|Transition L
   <data name="RefineDlg_RefineDlg_Products" xml:space="preserve">
     <value>Products</value>
   </data>
-  <data name="ConfigureToolsDlg_GetZipFromWeb_Error_connecting_to_the_Tool_Store_" xml:space="preserve">
-    <value>Error connecting to the Tool Store:</value>
+  <data name="ConfigureToolsDlg_GetZipFromWeb_Error_connecting_to_the_Tool_Store___0_" xml:space="preserve">
+    <value>Error connecting to the Tool Store: {0}</value>
   </data>
   <data name="PeptideToMoleculeText_Molecule_Lists" xml:space="preserve">
     <value>Molecule Lists</value>
@@ -3694,6 +3730,9 @@ Most peptide transition lists can be imported with the "File|Import|Transition L
   <data name="ResultsGrid_ResultsGrid_User_Set_Total" xml:space="preserve">
     <value>User Set Total</value>
   </data>
+  <data name="ToolUpdatesDlg_DisplayInstallSummary_Successfully_updated_the_following_tools" xml:space="preserve">
+    <value>Successfully updated the following tools</value>
+  </data>
   <data name="RInstaller_InstallPackages_Package_installation_failed__Error_log_output_in_immediate_window_" xml:space="preserve">
     <value>Package installation failed. Error log output in immediate window.</value>
   </data>
@@ -3721,6 +3760,9 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   </data>
   <data name="CommandArgs_ParseArgsInternal_Warning__The_method_type__0__is_invalid__It_must_be_one_of_the_following___standard____scheduled__or__triggered__" xml:space="preserve">
     <value>Warning: The method type {0} is invalid. It must be one of the following: "standard", "scheduled" or "triggered".</value>
+  </data>
+  <data name="ToolUpdatesDlg_DisplayInstallSummary_Failed_to_update_the_following_tool" xml:space="preserve">
+    <value>Failed to update the following tool</value>
   </data>
   <data name="ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_overwrite_or_install_in_parallel_" xml:space="preserve">
     <value>Do you wish to overwrite or install in parallel?</value>
@@ -3948,8 +3990,29 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="PeptideMod_SetVariable_A_peptide_modification_must_be_added_before_assigning_its_variable_status_" xml:space="preserve">
     <value>A peptide modification must be added before assigning its variable status.</value>
   </data>
+  <data name="FileMissing" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\FileMissing.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="AuditLog" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\AuditLog.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Skyline_FilesTree" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Skyline_FilesTree.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ViewFile" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ViewFile.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="CacheFile" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\CacheFile.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="Error" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Error.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="FolderMissing" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\FolderMissing.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ReplicateMissing" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ReplicateMissing.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="ArdiaIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\ArdiaIcon.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>

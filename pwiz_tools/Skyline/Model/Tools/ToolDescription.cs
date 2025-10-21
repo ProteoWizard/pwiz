@@ -384,13 +384,13 @@ namespace pwiz.Skyline.Model.Tools
     /// <summary>
     /// An exception to be thrown when a WebTool fails to open.
     /// </summary>
-    public class WebToolException : UserMessageException
+    public class WebToolException : Exception
     {
         /// <summary>
         /// Returns an instance of WebToolException.
         /// An exception to be thrown when a WebTool fails to open.
         /// </summary>
-        public WebToolException (string errorMessage, string link) : base(errorMessage)
+        public WebToolException (string errorMessage, string link)
         {
             _link = link;
             _errorMessage = errorMessage;
@@ -410,14 +410,14 @@ namespace pwiz.Skyline.Model.Tools
         }
     }
 
-    public class ToolExecutionException : UserMessageException
+    public class ToolExecutionException : Exception
     {
         public ToolExecutionException(string message) : base(message){}
 
         public ToolExecutionException(string message, Exception innerException) : base(message, innerException){}
     }
 
-    public class ToolDeprecatedException : UserMessageException
+    public class ToolDeprecatedException : Exception
     {
         public ToolDeprecatedException(string message) : base(message) { }
 

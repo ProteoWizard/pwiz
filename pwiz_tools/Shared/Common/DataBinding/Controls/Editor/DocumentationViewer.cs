@@ -18,7 +18,6 @@
  * limitations under the License.
  */
 using System;
-using System.Diagnostics;
 using Microsoft.Web.WebView2.Core;
 using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
@@ -156,15 +155,15 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                     }
                     catch (Exception ex)
                     {
-                        // Ignore but log to debug console in debug builds
-                        Debug.WriteLine($@"Failed to get WebView2 outerHtml: {ex}");
+                        // Log cleanup errors for debugging but don't throw
+                        System.Diagnostics.Debug.WriteLine($@"Failed to get WebView2 outerHtml: {ex}");
                     }
                 });
             }
             catch (Exception ex)
             {
-                // Ignore but log to debug console in debug builds
-                Debug.WriteLine($@"Failed to execute script on WebView2: {ex}");
+                // Log cleanup errors for debugging but don't throw
+                System.Diagnostics.Debug.WriteLine($@"Failed to execute script on WebView2: {ex}");
             }
             return string.Empty;
         }
