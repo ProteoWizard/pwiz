@@ -42,15 +42,13 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            VerifyConstantNeutralLossScans(); // Pre-loaded file with two different Neutral Loss spectrum filters on same precursor mz. Only one of them should hit.
+            VerifyConstantNeutralLossScans(); // Has two different Neutral Loss spectrum filters on same precursor mz. Only one of them should hit.
             VerifyConstantNeutralLossScans(true); // Now do it again but with incorrect CNL value, so nothing matches.
         }
 
         private void VerifyConstantNeutralLossScans(bool provokeFailure = false)
         {
             var docPath = TestFilesDir.GetTestPath(@"ConstantNeutralLossTest.sky");
-            var skydPath = TestFilesDir.GetTestPath(@"ConstantNeutralLossTest.skyd");
-            FileEx.SafeDelete(skydPath); // Remove skyd file so it has to reimport
             if (provokeFailure)
             {
                 var text = File.ReadAllText(docPath).Replace("161.", "165."); // Replace correct CNL value with incorrect one
@@ -60,6 +58,8 @@ namespace pwiz.SkylineTestFunctional
                 FileEx.SafeDelete(skylPath); 
             }
             OpenDocument(docPath);
+            var testData = Path.Combine(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Agilent), @"RS080806_NL_448.2_001.d");
+            ImportResults(testData);
             var doc = WaitForDocumentLoaded();
 
             // If data has not been properly understood as Constant Neutral Loss scans, expected number of peaks will not be found
