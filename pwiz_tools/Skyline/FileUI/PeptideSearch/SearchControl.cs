@@ -260,6 +260,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
+        public bool CanCancel => btnCancel.Enabled;
+
         public void Cancel()
         {
             _cancelToken?.Cancel();
