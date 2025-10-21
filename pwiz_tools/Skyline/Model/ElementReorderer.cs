@@ -80,7 +80,7 @@ namespace pwiz.Skyline.Model
         {
             CancellationToken.ThrowIfCancellationRequested();
             var newOrder = new Dictionary<IdentityPath, int>();
-            foreach (var identityPath in _pathsByParent[IdentityPath.ROOT])
+            foreach (var identityPath in _pathsByParent[parentIdentityPath])
             {
                 newOrder.Add(identityPath, newOrder.Count);
             }
