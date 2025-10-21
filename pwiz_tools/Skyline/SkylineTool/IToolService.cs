@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 
@@ -75,6 +76,8 @@ namespace SkylineTool
         void ImportProperties(string csvText);
         void ImportPeakBoundaries(string csvText);
         string GetSelectedElementLocator(string elementType);
+
+        void ReorderElements(string[] elementLocators);
     }
 
     public interface IDocumentChangeReceiver
