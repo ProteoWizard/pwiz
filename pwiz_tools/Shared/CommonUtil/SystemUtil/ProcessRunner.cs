@@ -25,6 +25,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using pwiz.Common.CommonResources;
+using pwiz.Common.Properties;
 
 namespace pwiz.Common.SystemUtil
 {

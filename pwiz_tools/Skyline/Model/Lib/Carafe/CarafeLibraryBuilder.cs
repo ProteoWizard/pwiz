@@ -885,7 +885,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
 
                 // download carafe jar package
                 using var webClient = new MultiFileAsynchronousDownloadClient(progress, 1);
-                webClient.DownloadFileAsyncOrThrow(CarafeJarZipDownloadUrl, CarafeJarZipDownloadPath);
+                webClient.DownloadFileAsyncOrThrow(CarafeJarZipDownloadUrl(), CarafeJarZipDownloadPath);
 
                 // unzip carafe jar package
                 using var carafeJarZip = ZipFile.Read(CarafeJarZipDownloadPath);
