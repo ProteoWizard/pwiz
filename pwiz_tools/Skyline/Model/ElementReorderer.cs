@@ -57,7 +57,7 @@ namespace pwiz.Skyline.Model
             _allAncestors = new HashSet<IdentityPath>();
             foreach (var grouping in _pathsByParent)
             {
-                for (var ancestor = grouping.Key; ancestor != null; ancestor = ancestor.Parent)
+                for (var ancestor = grouping.Key; ancestor != null && !ancestor.IsRoot; ancestor = ancestor.Parent)
                 {
                     if (!_allAncestors.Add(ancestor))
                     {
@@ -79,10 +79,6 @@ namespace pwiz.Skyline.Model
         private DocNodeParent ReorderChildren(IdentityPath parentIdentityPath, DocNodeParent docNodeParent)
         {
             CancellationToken.ThrowIfCancellationRequested();
-            if (!_allAncestors.Contains(parentIdentityPath))
-            {
-                return docNodeParent;
-            }
             var newOrder = new Dictionary<IdentityPath, int>();
             foreach (var identityPath in _pathsByParent[IdentityPath.ROOT])
             {
@@ -95,7 +91,7 @@ namespace pwiz.Skyline.Model
             {
                 var newChild = child;
                 var identityPath = new IdentityPath(parentIdentityPath, child.Id);
-                if (newChild is DocNodeParent childParent)
+                if (newChild is DocNodeParent childParent && _allAncestors.Contains(identityPath))
                 {
                     newChild = ReorderChildren(identityPath, childParent);
                 }
@@ -114,9 +110,6 @@ namespace pwiz.Skyline.Model
             {
                 return docNodeParent;
             }
-
-            IList<int> myList = new List<int>();
-            myList.Sort();
             return docNodeParent.ChangeChildren(newChildren);
         }
 
