@@ -130,8 +130,8 @@ PWIZ_API_DECL CVID translateAsSpectrumType(MSScanType scanType)
     if (scanType == MSScanType_SelectedIon)         return MS_SIM_spectrum;
     if (scanType == MSScanType_TotalIon)            return MS_SIM_spectrum;
     if (scanType == MSScanType_MultipleReaction)    return MS_SRM_spectrum;
-    if (scanType == MSScanType_NeutralLoss)         return MS_constant_neutral_loss_scan_OBSOLETE;
-    if (scanType == MSScanType_NeutralGain)         return MS_constant_neutral_gain_scan_OBSOLETE;
+    if (scanType == MSScanType_NeutralLoss)         return MS_constant_neutral_loss_spectrum;
+    if (scanType == MSScanType_NeutralGain)         return MS_constant_neutral_gain_spectrum;
     throw runtime_error("[translateAsSpectrumType] Error parsing spectrum type.");
 }
 
