@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -270,7 +270,7 @@ namespace AssortResources
                     var newCode = ResourceFile.ResourceIdentifiers.ReplaceReferences(code, newResourcesName, resourceIdentifiers);
                     if (newCode != code)
                     {
-                        File.WriteAllText(sourceFile, newCode, Encoding.UTF8);
+                        File.WriteAllText(sourceFile, newCode, new UTF8Encoding(false)); // UTF-8 without BOM
                     }
                 }
             }

@@ -1,4 +1,4 @@
-﻿namespace ProteinTurnoverArgCollector
+namespace ProteinTurnoverArgCollector
 {
     partial class ProteinTurnoverUI
     {

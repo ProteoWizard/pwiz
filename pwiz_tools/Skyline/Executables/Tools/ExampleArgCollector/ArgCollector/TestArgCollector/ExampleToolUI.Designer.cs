@@ -1,4 +1,4 @@
-﻿namespace ExampleArgCollector
+namespace ExampleArgCollector
 {
     partial class ExampleToolUI
     {
