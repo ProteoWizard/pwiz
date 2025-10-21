@@ -1003,7 +1003,6 @@ namespace pwiz.Skyline.Model.Lib.Carafe
                     true; // Use SimpleUserMessageWriter to write process output instead of ProgressStatus.ChangeMessage()
                 pr.ExpectedOutputLinesCount = 550;
 
-                pr.EnableRunningTimeMessage = true;
                 pr.Run(psi, string.Empty, progress, ref progressStatus,
                     new FilteredUserMessageWriter(filterStrings), ProcessPriorityClass.BelowNormal, true);
             }

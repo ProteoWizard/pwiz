@@ -1,5 +1,5 @@
 /*
- * Author: David Shteynberg <dshteynberg .at. gmail.com>,
+ * Author: David Shteynberg <dshteyn .at. proteinms.net>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
  * Copyright 2025 University of Washington - Seattle, WA
@@ -23,7 +23,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using pwiz.Common.Collections;
 
 namespace pwiz.Common.SystemUtil
 {
@@ -88,23 +87,13 @@ namespace pwiz.Common.SystemUtil
 
         public override void WriteLine(string line)
         {
-            LastLineRemoved = true;
             // Skip lines that contain any of the filter strings
             if (_filterStrings.Any(line.Contains))
                 return;
-          
             foreach (var replacement in _replacements)
                 line = Regex.Replace(line, replacement.Pattern, replacement.Replacement);
-            //Skip lines made empty by replacement
-            if (line.IsNullOrEmpty())
-                return;
-
-            LastLineRemoved = false;
             Messages.WriteAsyncUserMessage(line);
         }
-
-        public bool LastLineRemoved { get; private set;  }
-        
 
         public override Encoding Encoding => Encoding.Unicode;  // In memory only
     }
