@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: David Shteynberg <dshteynberg .at. gmail.com >
  *
  * Copyright 2025 University of Washington - Seattle, WA
