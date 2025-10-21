@@ -177,6 +177,7 @@
     <Compile Include="ChargedLossesLibraryTest.cs" />
     <Compile Include="ChromatogramExtractionRangeTest.cs" />
     <Compile Include="CleavableCrosslinkTest.cs" />
+    <Compile Include="ConstantNeutralLossTest.cs" />
     <Compile Include="ConstrainNormalizationMethodTest.cs" />
     <Compile Include="CopyProteinGroupTest.cs" />
     <Compile Include="CrosslinkImsTest.cs" />
@@ -575,6 +576,7 @@
     <None Include="ChromGraphTransformTest.zip" />
     <None Include="ChromUITest.zip" />
     <None Include="ConfigureToolsDlgTest.zip" />
+    <None Include="ConstantNeutralLossTest.zip" />
     <None Include="CopyPasteTest.zip" />
     <None Include="CrosslinkImsTest.zip" />
     <None Include="CrosslinkingTest.zip" />
