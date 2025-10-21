@@ -1,4 +1,4 @@
-﻿namespace SkylineTester
+namespace SkylineTester
 {
     partial class DeleteWindow
     {

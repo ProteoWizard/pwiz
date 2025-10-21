@@ -1,4 +1,4 @@
-﻿using pwiz.Common.Collections;
+using pwiz.Common.Collections;
 using System;
 using System.Collections.Concurrent;
 using System.Threading;

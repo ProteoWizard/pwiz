@@ -1,4 +1,4 @@
-﻿using SharedBatch;
+using SharedBatch;
 using System;
 using System.Collections.Immutable;
 using System.IO;

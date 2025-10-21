@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results;

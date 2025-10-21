@@ -1,4 +1,4 @@
-﻿namespace ToolServiceTestHarness
+namespace ToolServiceTestHarness
 {
     partial class ToolServiceTestHarnessForm
     {
