@@ -389,48 +389,26 @@ namespace pwiz.SkylineTestUtil
             return def;
         }
 
-        public GroupComparisonDef CreateGroupComparison(string name, string controlGroupAnnotation, string controlGroupValue, string compareValue)
+        public GroupComparisonDef CreateGroupComparison(string name, string controlGroupAnnotation, string controlGroupValue, string compareValue, string identityAnnotation = null)
         {
             var dialog = ShowDialog<EditGroupComparisonDlg>(SkylineWindow.AddGroupComparison);
 
             RunUI(() =>
             {
                 dialog.TextBoxName.Text = name;
-                dialog.ComboControlAnnotation.SelectedItem = controlGroupAnnotation;
+                dialog.ControlAnnotation = controlGroupAnnotation;
             });
 
-            WaitForConditionUI(() => dialog.ComboControlValue.Items.Count > 0);
+            WaitForConditionUI(() => dialog.ControlValueOptions.Any());
 
             RunUI(() =>
             {
-                dialog.ComboControlValue.SelectedItem = controlGroupValue;
-                dialog.ComboCaseValue.SelectedItem = compareValue;
-                dialog.RadioScopePerProtein.Checked = false;
-            });
-
-            OkDialog(dialog, dialog.OkDialog);
-
-            return FindGroupComparison(name);
-        }
-
-        public GroupComparisonDef CreateGroupComparison(string name, string controlGroupAnnotation,
-            string controlGroupValue, string compareValue, string identityAnnotation)
-        {
-            var dialog = ShowDialog<EditGroupComparisonDlg>(SkylineWindow.AddGroupComparison);
-
-            RunUI(() =>
-            {
-                dialog.TextBoxName.Text = name;
-                dialog.ComboControlAnnotation.SelectedItem = controlGroupAnnotation;
-            });
-
-            WaitForConditionUI(() => dialog.ComboControlValue.Items.Count > 0);
-
-            RunUI(() =>
-            {
-                dialog.ComboControlValue.SelectedItem = controlGroupValue;
-                dialog.ComboCaseValue.SelectedItem = compareValue;
-                dialog.ComboIdentityAnnotation.SelectedItem = identityAnnotation;
+                dialog.ControlValue = controlGroupValue;
+                dialog.CaseValue = compareValue;
+                if (identityAnnotation != null)
+                {
+                    dialog.IdentityAnnotation = identityAnnotation;
+                }
                 dialog.RadioScopePerProtein.Checked = false;
             });
 
