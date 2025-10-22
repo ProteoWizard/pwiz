@@ -2242,8 +2242,16 @@ namespace pwiz.Skyline.SettingsUI
         private void UpdateAlignmentDropdown()
         {
             var peptideSettings = _peptideSettings.ChangeLibraries(GetPeptideLibraries(false) ?? _peptideSettings.Libraries);
-            var options = AlignmentTargetSpec.GetOptions(peptideSettings).ToList();
+            var options = new List<AlignmentTargetSpec>();
             var current = AlignmentTarget ?? peptideSettings.Imputation.AlignmentTarget ?? AlignmentTargetSpec.Default;
+            foreach (var option in AlignmentTargetSpec.GetOptions(peptideSettings))
+            {
+                if (Equals(AlignmentTargetSpec.Default, option) || Equals(current, option) || !option.IsSameAsDefault(peptideSettings))
+                {
+                    options.Add(option);
+                }
+            }
+            
             if (!options.Contains(current))
             {
                 _firstAlignmentOptionInvalid = true;
@@ -2255,12 +2263,28 @@ namespace pwiz.Skyline.SettingsUI
                 _firstAlignmentOptionInvalid = false;
                 pictureBoxRunAlignmentError.Visible = false;
             }
+
+            var tooltipLines = new List<string>
+            {
+                SettingsUIResources.PeptideSettingsUI_UpdateAlignmentDropdown_Tooltip
+            };
+            var items = new List<KeyValuePair<string, AlignmentTargetSpec>>();
+            
+            foreach (var option in options)
+            {
+                items.Add(new KeyValuePair<string, AlignmentTargetSpec>(option.GetLabel(peptideSettings), option));
+                var tooltip = option.GetTooltip(peptideSettings, ModeUI);
+                if (!string.IsNullOrEmpty(tooltip))
+                {
+                    tooltipLines.Add(TextUtil.ColonSeparate(option.GetLabel(peptideSettings), tooltip));
+                }
+            }
             comboRunToRunAlignment.Items.Clear();
-            comboRunToRunAlignment.Items.AddRange(options.Select(option => (object)
-                    new KeyValuePair<string, AlignmentTargetSpec>(option.GetLabel(peptideSettings), option))
-                .ToArray());
+            comboRunToRunAlignment.Items.AddRange(items.Cast<object>().ToArray());
             comboRunToRunAlignment.SelectedIndex = options.IndexOf(current);
             ComboHelper.AutoSizeDropDown(comboRunToRunAlignment);
+            
+            helpTip.SetToolTip(comboRunToRunAlignment, TextUtil.LineSeparate(tooltipLines));
         }
 
         public AlignmentTargetSpec AlignmentTarget
