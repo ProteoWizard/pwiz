@@ -37,6 +37,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using pwiz.BiblioSpec;
 
 namespace pwiz.Skyline.Model
 {
