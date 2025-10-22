@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -29,6 +29,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
@@ -627,7 +628,11 @@ namespace pwiz.Skyline.Util
             sortIndexes = new int[array.Length];
             for (int i = 0; i < array.Length; i++)
                 sortIndexes[i] = i;
-            Array.Sort(array, sortIndexes);
+
+            if (Install.IsRunningOnWine) // Array.Sort seems to have memory corruption issues on Wine, e.g. sorting Bruker IMS data
+                array.Sort(sortIndexes);
+            else
+                Array.Sort(array, sortIndexes);
         }
 
         /// <summary>
