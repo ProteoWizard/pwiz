@@ -101,6 +101,218 @@ rg "SkypSupport\." pwiz_tools/Skyline/ --type cs
 - Test with both small and large `.skyp` files
 - Follow established exception handling patterns
 
+---
+
+## Design Integrity & Encapsulation Notes
+
+The migration to `HttpClientWithProgress` should maintain clear encapsulation boundaries
+and reinforce separation of concerns:
+
+- **Encapsulation Principle**: Exception translation and status-code extraction logic
+  belong entirely within `HttpClientWithProgress`. External callers must not attempt
+  to parse messages or reconstruct internal mapping rules.
+
+- **Rationale**: Duplicating this logic elsewhere creates brittle dependencies on
+  message formats, localizations, and private implementation details.
+  Centralizing the mapping ensures uniform behavior and simplifies testing.
+
+- **Law of Demeter / "Tell, Don’t Ask"**:
+  Callers should ask `HttpClientWithProgress` or its returned exceptions for needed
+  information (e.g., `StatusCode`, `RequestUri`), not probe exception chains manually.
+
+- **Recommended Design Options**:
+  1. Introduce a dedicated `NetworkRequestException` carrying `StatusCode` and `Uri`
+     as optional properties.
+  2. Alternatively, expose a public helper
+     `HttpClientWithProgress.TryGetErrorStatusCode(Exception, out HttpStatusCode)`.
+
+- **Review Guidance**:
+  - Reject any new code that parses exception message strings to infer HTTP status.
+  - Encourage contributors and AI agents to use established helper APIs
+    rather than duplicating logic.
+
+---
+
+## Current Work: NetworkRequestException Refactoring
+
+### Problem Identified
+During initial implementation, `SkypSupport.GetErrorStatusCode()` was parsing exception message strings to extract HTTP status codes:
+```csharp
+// ANTI-PATTERN: Message parsing violates encapsulation
+var message = httpRequestException.Message;
+if (message.Contains("401"))
+    return HttpStatusCode.Unauthorized;
+```
+
+This violates the "Design Integrity & Encapsulation Notes" principles above.
+
+### Solution: NetworkRequestException
+Implementing Option 1 from the design notes - a dedicated exception type that:
+- **Extends IOException** for backward compatibility
+- **Carries StatusCode property** (HttpStatusCode?) for structured access
+- **Carries RequestUri property** (Uri) for context
+- **Thrown by HttpClientWithProgress.MapHttpException()** for HTTP errors
+- **Eliminates all message parsing** in external code
+
+### Implementation Tasks - Phase 1 (Complete)
+- [x] Identify encapsulation violation in SkypSupport.GetErrorStatusCode()
+- [x] Add NetworkRequestException class to HttpClientWithProgress.cs
+- [x] Update MapHttpException to throw NetworkRequestException for HTTP status errors
+- [x] Add AddAuthorizationHeader() API to HttpClientWithProgress
+- [x] Add automatic download size formatting to HttpClientWithProgress
+- [x] Migrate WebDownloadClient to HttpDownloadClient using HttpClientWithProgress
+- [x] Use FileSaver pattern for atomic file operations
+- [x] Simplify exception handling - let exceptions propagate naturally
+- [x] Update SkypTest to use HttpClientTestHelper and HttpStatusCode enum
+- [x] Update WORKFLOW.md with AI agent build/test/ReSharper guidelines
+- [x] Developer: Build, test, and verify SkypTest passes
+
+### Implementation Tasks - Phase 2 (Cleanup - Post-Commit)
+
+**Goal**: Remove unnecessary abstraction layers that don't add value now that WebClient is replaced.
+
+#### Task 1: Remove DownloadClientCreator pattern
+**Why**: Creator pattern was needed for WebClient's async/callback model. HttpClient is simpler - no creator needed.
+
+**Reference**: See `ToolStoreDlg.cs` for the IToolStoreClient pattern with `TestToolStoreClient.INSTANCE`.
+
+**Changes needed**:
+- [ ] Make `IDownloadClient` extend `IDisposable`
+- [ ] Add `public static TestDownloadClient INSTANCE { get; private set; }` to TestDownloadClient
+- [ ] TestDownloadClient constructor: set `INSTANCE = this`
+- [ ] TestDownloadClient.Dispose(): set `INSTANCE = null`
+- [ ] In SkypSupport.Download(), replace:
+  ```csharp
+  var downloadClient = DownloadClientCreator.Create(progressMonitor, progressStatus);
+  ```
+  with:
+  ```csharp
+  using var downloadClient = TestDownloadClient.INSTANCE ??
+      (IDownloadClient)new HttpDownloadClient(progressMonitor, progressStatus);
+  ```
+- [ ] Remove `DownloadClientCreator` class entirely
+- [ ] Remove `SkypSupport.DownloadClientCreator` property
+- [ ] Update tests to use `using var test = new TestDownloadClient(...)` pattern
+
+#### Task 2: Simplify or remove SkypDownloadException
+**Why**: After refactoring, SkypDownloadException is never thrown - it's just two static helper methods.
+
+**Current state**: Only used for `GetErrorStatusCode()` and `GetMessage()` - no actual exceptions thrown.
+
+**Decision**: Move helpers to SkypSupport, delete SkypDownloadException class.
+
+**Changes needed**:
+- [ ] Move `GetErrorStatusCode(Exception e)` to SkypSupport as private static method
+- [ ] Move `GetMessage(SkypFile skyp, Exception ex, HttpStatusCode? statusCode)` to SkypSupport as private static method
+- [ ] Update all call sites from `SkypDownloadException.GetErrorStatusCode()` to just `GetErrorStatusCode()`
+- [ ] Delete entire `SkypDownloadException` class
+- [ ] Delete helper methods like `Unauthorized()`, `Forbidden()` - inline the status code checks
+
+#### Phase 2 Workflow
+- [ ] Developer: Review and commit Phase 1 changes (this commit)
+- [ ] Implement Task 1: Remove DownloadClientCreator
+- [ ] Run SkypTest to verify functionality
+- [ ] Implement Task 2: Simplify SkypDownloadException
+- [ ] Run SkypTest to verify functionality
+- [ ] Run ReSharper > Inspect > Code Issues in Solution
+- [ ] Address any new warnings
+- [ ] Commit Phase 2 cleanup
+
+### Benefits
+- **Type safety**: Use `ex.StatusCode` instead of parsing messages
+- **Localization safe**: No dependency on English error text
+- **Single source of truth**: Status code extraction only in HttpClientWithProgress
+- **Law of Demeter**: Callers ask the exception, don't probe internals
+- **Maintainable**: Changes to error messages won't break status code detection
+
+---
+
+## SkypSupport Migration Design
+
+### Required HttpClientWithProgress API Additions
+
+The `.skyp` download implementation needs two capabilities not yet in `HttpClientWithProgress`:
+
+#### 1. Authorization Header Support
+**Decision: `AddAuthorizationHeader(string authHeaderValue)`**
+- More specific than generic `AddDefaultHeader()` (better encapsulation)
+- Doesn't expose all request headers (security boundary)
+- Doesn't dictate auth scheme (Basic, Bearer, etc.)
+- Caller uses domain-specific helpers: `PanoramaServer.GetBasicAuthHeader(username, password)`
+
+**Why not AddDefaultHeader?**
+- Too broad - exposes implementation details
+- Authorization is the primary use case for authenticated downloads
+- More self-documenting API
+
+#### 2. Download Progress with File Size
+**Decision: Always append download size when `totalBytes > 0`**
+- Format: `"{original message}\n\n{downloaded} / {total}"` (e.g., "5.2 MB / 10.4 MB")
+- Uses `FileSizeFormatProvider` from `pwiz.Common.SystemUtil` (already available)
+- Automatic - no flag needed (can add flag later if needed)
+- Common need for file downloads - better default behavior
+
+**Why automatic instead of flag/callback?**
+- Encapsulation - HttpClientWithProgress owns progress formatting
+- Simpler caller code - no callbacks to wire up
+- Consistent behavior across all file downloads
+
+### Testing Pattern (Established by Previous Migrations)
+
+**Key Insight:** The established pattern from ToolStoreDlg/RInstaller migrations (SHA-1: c9a6a181):
+- **Keep the interface** (`IDownloadClient`, `DownloadClientCreator`) for testability
+- **Test implementation** provides SUCCESS path only (mock data from local files)
+- **Failure testing** uses real production code + `HttpClientTestHelper`
+
+**Why this pattern?**
+- No network access in tests (success OR failure)
+- Production code exercises real `HttpClientWithProgress` in tests
+- `HttpClientTestHelper` intercepts at `HttpClientWithProgress` level to simulate failures
+- Test interface stays simple - just copy local file for success case
+
+**Example Structure:**
+```csharp
+// Production - uses real HttpClientWithProgress
+public class HttpClientDownloadClient : IDownloadClient {
+    public void Download(SkypFile skyp) {
+        using var httpClient = new HttpClientWithProgress(progressMonitor, progressStatus);
+        if (skyp.HasCredentials())
+            httpClient.AddAuthorizationHeader(PanoramaServer.GetBasicAuthHeader(...));
+        httpClient.DownloadFile(skyp.SkylineDocUri, skyp.DownloadPath);
+    }
+}
+
+// Test - SUCCESS path only, copies local file
+public class TestDownloadClient : IDownloadClient {
+    private readonly string _srcPath;
+    public void Download(SkypFile skyp) {
+        File.Copy(_srcPath, skyp.DownloadPath); // Mock success
+    }
+}
+
+// Test - FAILURES use HttpClientTestHelper with real production code
+using (var helper = HttpClientTestHelper.SimulateHttp401()) {
+    var skypSupport = new SkypSupport(SkylineWindow); // Uses real HttpClientDownloadClient
+    errDlg = ShowDialog<AlertDlg>(() => skypSupport.Open(skypPath, existingServers));
+    // Verify error message contains expected 401 error
+}
+```
+
+**What NOT to do:**
+- ❌ Don't make test interface return error codes or exceptions
+- ❌ Don't create TestDownloadClientError401, TestDownloadClientError403, etc.
+- ❌ Don't parse exception messages in tests - use `HttpClientTestHelper.GetExpectedMessage()`
+
+### Implementation Steps
+1. Add `AddAuthorizationHeader(string authHeaderValue)` to HttpClientWithProgress
+2. Add automatic download size formatting to `DownloadFromStream()` in HttpClientWithProgress
+3. Migrate `WebDownloadClient` → `HttpClientDownloadClient` in SkypSupport.cs
+4. Update `TestDownloadClient` to SUCCESS-only pattern (remove ERROR401/ERROR403 constants)
+5. Update SkypTest to use `HttpClientTestHelper` for failure scenarios
+6. Apply `NetworkRequestException` fix to `GetErrorStatusCode()` method
+
+---
+
 ## Success Criteria
 
 ### Functional
@@ -109,6 +321,7 @@ rg "SkypSupport\." pwiz_tools/Skyline/ --type cs
 - [ ] User can cancel download mid-stream
 - [ ] Network errors show user-friendly, localized messages
 - [ ] HTTP status errors (404, 500) handled gracefully
+- [ ] **No message-based parsing logic outside `HttpClientWithProgress`**
 
 ### Testing
 - [ ] Test coverage for all network failure scenarios
@@ -122,6 +335,7 @@ rg "SkypSupport\." pwiz_tools/Skyline/ --type cs
 - [ ] Uses `HttpClientTestHelper` for all test simulations
 - [ ] Maintains DRY principles in test code
 - [ ] Includes XML documentation
+- [ ] Preserves encapsulation boundaries; no external code re-implements internal exception mapping
 - [ ] No regressions in existing `.skyp` functionality
 
 ### No WebClient Remaining
@@ -140,7 +354,7 @@ This is an ideal "quick win" branch - small scope, well-tested infrastructure, c
 ## Handoff Prompt for Branch Creation
 
 ```
-I want to start work on migrating .skyp file support from WebClient to HttpClient, 
+I want to start work on migrating .skyp file support from WebClient to HttpClient,
 as described in todos/backlog/TODO-skyp_webclient_replacement.md.
 
 Please:

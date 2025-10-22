@@ -204,6 +204,60 @@ Add this **final section** before moving to completed/:
 4. **Use DRY principles** - Avoid duplication in long-lived codebase
 5. **Handle exceptions properly** - Use established patterns for error handling
 
+### Build, Test, and Inspection Workflow
+
+**IMPORTANT**: AI agents (Claude Code, Cursor, GitHub Copilot, ChatGPT, etc.) should **NOT** attempt to build or run tests for this large project. Instead, follow this workflow:
+
+#### After Making Code Changes
+1. **Ask the developer to inspect the changes** in Visual Studio 2022
+2. **Ask the developer to build the solution** (Ctrl+Shift+B or F6)
+3. **Ask the developer to run relevant tests** in Test Explorer
+4. **For larger changes: Ask the developer to run ReSharper inspection** (ReSharper > Inspect > Code Issues in Solution)
+
+#### Why This Matters
+- **Large project**: Full Skyline build can take 5-10 minutes even on fast machines
+- **Complex dependencies**: C++ libraries, vendor SDKs, .NET Framework, test data files
+- **Visual Studio integration**: Better error messages, IntelliSense, debugger
+- **Resource intensive**: Builds/tests consume significant CPU/memory/disk
+- **Agent limitations**: Command-line builds have limited context and diagnostics
+- **ReSharper analysis**: Project-wide static analysis catches naming violations, code smells, and style issues
+
+#### What AI Agents Should Do
+✅ **DO**: Generate code, write tests, update files, suggest changes
+✅ **DO**: Explain what needs to be tested and why
+✅ **DO**: Update TODO file with what was changed
+✅ **DO**: Point to specific files/lines for developer review
+✅ **DO**: Wait for developer confirmation before proposing commits for larger changes
+
+❌ **DON'T**: Run msbuild, invoke test runners, attempt full builds
+❌ **DON'T**: Wait for long-running build processes
+❌ **DON'T**: Parse incomplete build output (truncated after 100 lines)
+❌ **DON'T**: Commit or propose commits before developer has reviewed, tested, and run ReSharper inspection
+
+#### Example Developer Handoff
+After making changes, tell the developer:
+
+```
+I've made the following changes:
+1. Added NetworkRequestException to HttpClientWithProgress.cs (lines 468-498)
+2. Updated MapHttpException to throw NetworkRequestException (line 419)
+3. Refactored SkypSupport.GetErrorStatusCode() to use exception properties (lines 207-226)
+
+Please review before committing:
+1. Review the changes in Visual Studio
+2. Build the Skyline solution (Ctrl+Shift+B)
+3. Fix any compilation errors that appear
+4. Run TestFunctional.SkypTest in Test Explorer
+5. Run ReSharper > Inspect > Code Issues in Solution
+6. Address any new warnings in the modified files
+7. Let me know the results so I can help fix any issues
+
+The changes should eliminate message parsing and use structured exception properties instead.
+Once everything passes, I can help prepare the commit message.
+```
+
+This approach leverages the developer's IDE tools while keeping the AI focused on code generation and design.
+
 ### Context Switching
 When switching between LLM tools or sessions:
 
@@ -307,27 +361,47 @@ git commit -m "Add completion summary to TODO"
 git push
 ```
 
-**Step 2: Move TODO to completed/ with Git**
+**Step 2: Create pull request**
+- Document all changes and testing in PR description
+- Reference any related issues
+- Link to the active TODO file for full context
+
+**Step 3: Add PR reference to TODO file**
+
+**IMPORTANT**: TODO files must reference their PR before moving to completed/. This creates a permanent link between the work and its review/discussion.
+
+```markdown
+## Pull Request
+
+**PR**: #1234
+**Merged**: 2025-10-22
+**Status**: Merged to master
+```
+
+Add this section to the TODO file in todos/active/ and commit:
 ```bash
-# IMPORTANT: Use git mv to preserve Git history when moving tracked files
-git mv todos/active/TODO-YYYYMMDD_description.md todos/completed/TODO-YYYYMMDD_description.md
-git commit -m "Move TODO to completed - ready for merge"
+git add todos/active/TODO-YYYYMMDD_description.md
+git commit -m "Add PR #1234 reference to TODO"
 git push
 ```
 
-**Step 3: Create pull request**
-- Document all changes and testing in PR description
-- Reference any related issues
-- Link to the completed TODO file for full context
+**Step 4: Move TODO to completed/ with Git (after PR is merged)**
+```bash
+# IMPORTANT: Use git mv to preserve Git history when moving tracked files
+# NEVER move to completed/ without a PR reference in the TODO file
+git mv todos/active/TODO-YYYYMMDD_description.md todos/completed/TODO-YYYYMMDD_description.md
+git commit -m "Move TODO to completed - PR #1234 merged"
+git push
+```
 
-**Step 4: After merge to master**
+**Step 5: After merge to master**
 ```bash
 git checkout master
 git pull origin master
 git branch -d Skyline/work/YYYYMMDD_description  # Delete local branch
 ```
 
-**Step 5: Periodic cleanup (monthly or as needed)**
+**Step 6: Periodic cleanup (monthly or as needed)**
 ```bash
 # Move old completed TODOs (>3 months) to archive or delete
 git mv todos/completed/TODO-20240715_old_work.md todos/archive/
@@ -359,8 +433,14 @@ This makes the planned work visible to the team and LLM tools.
 ### TODO File Management
 - **Backlog TODOs**: Commit to master for visibility, cull items >6 months old
 - **Active TODOs**: Update with every commit, keep context fresh
-- **Completed TODOs**: Retain 1-3 months for reference and knowledge transfer
+- **Completed TODOs**: Must have PR reference, retain 1-3 months for reference and knowledge transfer
 - **Archive**: Move or delete old completed work, Git history preserves everything
+
+**CRITICAL - Completed TODOs are Historical Records**:
+- ❌ **NEVER modify TODO files in todos/completed/** (they document merged PRs)
+- ✅ All completed TODOs **MUST** have a PR reference before moving to completed/
+- ✅ They serve as a permanent record of decisions, context, and implementation details
+- ✅ If doing follow-up work, create a new TODO that references the completed one
 
 ### Commit Messages
 - Use clear, descriptive messages
