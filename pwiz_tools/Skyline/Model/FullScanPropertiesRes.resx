@@ -319,4 +319,10 @@
   <data name="DissociationMethod" xml:space="preserve">
     <value>Dissociation Method</value>
   </data>
+  <data name="ConstantNeutralLoss" xml:space="preserve">
+    <value>Constant Neutral Loss</value>
+  </data>
+  <data name="Description_ConstantNeutralLoss" xml:space="preserve">
+    <value>Analyzer offset for Constant Neutral Loss spectrum (negative value for constant neutral gain)</value>
+  </data>
 </root>

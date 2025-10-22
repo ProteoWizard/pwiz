@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Matt Chambers <matt.chambers42 .at. gmail.com >
  *
  * Copyright 2020 University of Washington - Seattle, WA
@@ -209,7 +209,7 @@ namespace pwiz.SkylineTestFunctional
         {
             TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
 
-            CleanupDownloadedFiles(CometSearchEngine.FilesToDownload);
+            CleanupDownloadedFiles(TideSearchEngine.FilesToDownload);
 
             TestSettings = new DdaTestSettings
             {
@@ -316,6 +316,8 @@ namespace pwiz.SkylineTestFunctional
         public void TestDdaSearchDependencyErrors()
         {
             TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
+
+            CleanupDownloadedFiles(CometSearchEngine.FilesToDownload);
 
             TestSettings = new DdaTestSettings
             {
@@ -734,7 +736,11 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success);
             
             // Cancel search (but don't close wizard)
-            RunUI(importPeptideSearchDlg.SearchControl.Cancel);
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.SearchControl.CanCancel);  // Avoid a long wait on a cancel that does nothing
+                importPeptideSearchDlg.SearchControl.Cancel();
+            });
             WaitForConditionUI(60000, () => searchSucceeded.HasValue);
 
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()));

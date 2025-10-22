@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -615,7 +615,8 @@ namespace pwiz.Skyline.Model.Lib
             var librarySourceFiles = new List<BiblioLiteSourceInfo>();
             bool hasRetentionTimesTable = SqliteOperations.TableExists(_sqliteConnection.Connection, @"RetentionTimes");
             int segmentCount = hasRetentionTimesTable ? 2 : 1;
-            status = status.ChangeSegments(0, segmentCount).ChangeMessage(string.Format(LibResources.BiblioSpecLiteLibrary_ReadFromDatabase_Reading_entries_from__0__library, Path.GetFileName(FilePath)));
+            var blibFilePath = Path.GetFileName(FilePath);
+            status = status.ChangeSegments(0, segmentCount).ChangeMessage(string.Format(LibResources.BiblioSpecLiteLibrary_ReadFromDatabase_Reading_entries_from__0__library, blibFilePath));
             using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
             {
                 // First get header information
@@ -833,10 +834,13 @@ namespace pwiz.Skyline.Model.Lib
                 return false;
             }
 
+            // Remove and report nonsense entries (e.g. adduct removes more H2O than present in molecule)
+            libraryEntries = FilterInvalidLibraryEntries(ref status, libraryEntries, blibFilePath);
+
             var valueCache = new ValueCache();
             if (hasRetentionTimesTable) // Only a filtered library will have this table
             {
-                status = status.ChangeSegments(1, segmentCount).ChangeMessage(string.Format(LibResources.BiblioSpecLiteLibrary_ReadFromDatabase_Reading_retention_times_from__0_, Path.GetFileName(FilePath)));
+                status = status.ChangeSegments(1, segmentCount).ChangeMessage(string.Format(LibResources.BiblioSpecLiteLibrary_ReadFromDatabase_Reading_retention_times_from__0_, blibFilePath));
                 var retentionTimeReader = new RetentionTimeReader(FilePath, schemaVer);
                 retentionTimeReader.ReadAllRows(loader, ref status, rows);
                 if (loader.IsCanceled)
@@ -872,7 +876,7 @@ namespace pwiz.Skyline.Model.Lib
 
             _librarySourceFiles = librarySourceFiles.ToArray();
             _libraryFiles = new LibraryFiles(_librarySourceFiles.Select(file => file.FilePath));
-            SetLibraryEntries(FilterInvalidLibraryEntries(ref status, libraryEntries.OrderBy(spec=>spec.Id)));
+            SetLibraryEntries(FilterInvalidLibraryEntries(ref status, libraryEntries.OrderBy(spec=>spec.Id), blibFilePath));
             EnsureConnections(sm);
             loader.UpdateProgress(status.ChangeSegments(segmentCount - 1, segmentCount).Complete());
             return true;
