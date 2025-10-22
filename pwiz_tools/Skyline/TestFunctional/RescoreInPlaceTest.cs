@@ -66,7 +66,7 @@ namespace pwiz.SkylineTestFunctional
                 BeginImportResultsFile(filePath);
                 ChangeSettingsUntilDocumentLoaded();
             }
-
+            Console.Out.WriteLine("Rescoring");
             var manageResultsDlg = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
             RunDlg<RescoreResultsDlg>(manageResultsDlg.Rescore, dlg =>
             {
@@ -77,6 +77,7 @@ namespace pwiz.SkylineTestFunctional
 
         private void BeginImportResultsFile(string path)
         {
+            Console.Out.WriteLine("Importing {0}", path);
             RunLongDlg<ImportResultsDlg>(SkylineWindow.ImportResults, importResultsDlg =>
             {
                 RunDlg<OpenDataSourceDialog>(
@@ -117,8 +118,15 @@ namespace pwiz.SkylineTestFunctional
 
                     transitionSettingsUi.MZMatchTolerance = newTolerance;
                 });
+
+                int attempts = 0;
                 while (!transitionSettingsUiClosed)
                 {
+                    attempts++;
+                    if (attempts % 10 == 0)
+                    {
+                        Console.Out.WriteLine("Transition settings dialog not closed after {0} attempts", attempts);
+                    }
                     SkylineWindow.BeginInvoke(new Action(() => transitionSettingsUi.OkDialog()));
                     // Transition settings closing can be rejected when the chromatogram import commits during the settings change
                     TryWaitForConditionUI(200, () => transitionSettingsUiClosed || FindOpenForm<AlertDlg>() != null);
@@ -133,11 +141,16 @@ namespace pwiz.SkylineTestFunctional
                 }
 
                 Thread.Sleep(delay);
+                if (SkylineWindow.Document.IsLoaded)
+                {
+                    break;
+                }
                 // Increase the delay a little each time so that ChromatogramManager has 
                 // more time to complete its work without being interrupted by the transition
                 // settings change
                 delay += 200;
-            } while (!SkylineWindow.Document.IsLoaded);
+                Console.Out.WriteLine("Document not loaded yet. Increasing delay to {0} msec", delay);
+            } while (true);
         }
 
         public static IEnumerable<string> PermuteString(string s)
