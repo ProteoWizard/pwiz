@@ -63,7 +63,8 @@ namespace pwiz.SkylineTest
                                                        TEXT_LIB_FORMULA_PLUS + TEXT_LIB_MINE +
                                                        LIB_TEXT_MONA + LIB_TEXT_MZVAULT +
                                                        LIB_TEXT_RTINSECONDS + TEXT_NIST_PARENTHESIS +
-                                                       LIB_TEXT_NO_ADDUCT + TEXT_RIKEN + TEXT_USING_EXACTMASS_COMMENT);
+                                                       LIB_TEXT_NO_ADDUCT + TEXT_RIKEN + TEXT_USING_EXACTMASS_COMMENT +
+                                                       TEXT_USING_EXACTMASS_ARG);
             var loader = new TestLibraryLoader {StreamManager = streamManager};
             var expectedFragmentAnnotations = new Dictionary<int, List<SpectrumPeakAnnotation>>
             {
@@ -114,6 +115,9 @@ namespace pwiz.SkylineTest
 
             // Check use of "ExactMass" in a comment
             Assert.AreEqual(1, lib2Keys.Count(k => Equals(330.991, k.Target?.Molecule?.MonoisotopicMass.Value ?? 0)));
+
+            // Check use of "ExactMass" in an argument
+            Assert.AreEqual(1, lib2Keys.Count(k => Equals(2912.256, k.Target?.Molecule?.MonoisotopicMass.Value ?? 0)));
 
             // Check use of GC not declaring mass at all
             Assert.AreEqual(1, lib2Keys.Count(k => Equals(NistLibraryBase.DUMMY_GC_ESI_MASS, k.Target?.Molecule?.MonoisotopicMass.Value ?? 0)));
@@ -2008,6 +2012,70 @@ namespace pwiz.SkylineTest
             "335.146851 236.000000\r\n" +
             "346.204071 164.000000\r\n" +
             "426.735748 152.000000\r\n" +
+            "\r\n";
+
+        private const string TEXT_USING_EXACTMASS_ARG = // As in https://chemdata.nist.gov/dokuwiki/doku.php?id=peptidew:lib:newigghsalib  IgG_Glycopeptide _HCD_V1.msp 
+            "Name: TKPREEQYNSTYR_G33100/4/E12\r\n" +
+            "Comment: ID_Score=94.08 Source=NS0,CHO StartMZ=Auto Collision_energy=14.01 NCE=12.0 Inst=QExactive Scan=12646 Charge=4 RT=32.1578 ObservedPrecursorMZ=729.0703 Mz_exact=729.0712 Mz_diff=-0.0009 Dev_ppm=1.26 BasePeak=124585 max2med=23.9 Unassign_all=0.030 Unassigned=0.016 Run2rep=16/84 Run=2014-08-05_24_IgG8670__2D_Fract12_GuanRT_18h_QE_ms10msms_HCD12_Res17k_5ul\r\n" +
+            "ExactMass=2912.256\r\n" +
+            "Num peaks: 57\r\n" +
+            "204.0864\t6931\t\"HexNAc/Dev=1.3\"\r\n" +
+            "205.0897\t241\t\"HexNAci\"\r\n" +
+            "325.9717\t117\t\"\"\r\n" +
+            "338.1698\t130\t\"\"\r\n" +
+            "366.1383\t418\t\"HexNAcHex/Dev=3.2\"\r\n" +
+            "674.9804\t138\t\"\"\r\n" +
+            "729.0735\t135\t\"\"\r\n" +
+            "742.3519\t142\t\"\"\r\n" +
+            "747.3410\t216\t\"P_G21000^3/Dev=5.2\"\r\n" +
+            "747.6796\t574\t\"P_G21000i^3\"\r\n" +
+            "796.0261\t781\t\"P_G21100^3/Dev=6.1\"\r\n" +
+            "796.3538\t774\t\"P_G21100i^3\"\r\n" +
+            "796.6937\t766\t\"P_G21100i^3\"\r\n" +
+            "801.3654\t760\t\"P_G22000^3/Dev=3.7\"\r\n" +
+            "801.6998\t1083\t\"P_G22000i^3\"\r\n" +
+            "802.0424\t399\t\"P_G22000i^3\"\r\n" +
+            "850.0485\t3199\t\"P_G22100^3/Dev=0.0\"\r\n" +
+            "850.3824\t5262\t\"P_G22100i^3\"\r\n" +
+            "850.7149\t3893\t\"P_G22100i^3\"\r\n" +
+            "851.0498\t2954\t\"P_G22100i^3\"\r\n" +
+            "851.3830\t902\t\"P_G22100i^3\"\r\n" +
+            "851.7251\t179\t\"P_G22100i^3\"\r\n" +
+            "855.3832\t570\t\"P_G23000^3/Dev=3.6\"\r\n" +
+            "855.7093\t1025\t\"P_G23000i^3\"\r\n" +
+            "856.0436\t1022\t\"P_G23000i^3\"\r\n" +
+            "856.3839\t168\t\"P_G23000i^3\"\r\n" +
+            "856.7167\t139\t\"P_G23000i^3\"\r\n" +
+            "903.9282\t152\t\"\"\r\n" +
+            "904.0674\t7232\t\"P_G23100^3/Dev=1.4\"\r\n" +
+            "904.3995\t10000\t\"P_G23100i^3\"\r\n" +
+            "904.7333\t6866\t\"P_G23100i^3\"\r\n" +
+            "905.0663\t4541\t\"P_G23100i^3\"\r\n" +
+            "905.4029\t1594\t\"P_G23100i^3\"\r\n" +
+            "905.7382\t446\t\"P_G23100i^3\"\r\n" +
+            "906.0609\t130\t\"P_G23100i^3\"\r\n" +
+            "919.0640\t234\t\"\"\r\n" +
+            "937.9464\t656\t\"P_G10000^2/Dev=1.4\"\r\n" +
+            "938.4535\t627\t\"P_G10000i^2\"\r\n" +
+            "1010.9859\t1044\t\"P_G10100^2/Dev=9.2\"\r\n" +
+            "1011.4749\t1038\t\"P_G10100i^2\"\r\n" +
+            "1011.9875\t627\t\"P_G10100i^2\"\r\n" +
+            "1012.4742\t174\t\"P_G10100i^2\"\r\n" +
+            "1012.9798\t170\t\"P_G10100i^2\"\r\n" +
+            "1112.5083\t195\t\"P_G20100^2/Dev=7.1\"\r\n" +
+            "1113.0183\t402\t\"P_G20100i^2\"\r\n" +
+            "1114.0231\t166\t\"\"\r\n" +
+            "1120.5024\t146\t\"P_G21000^2/Dev=10.0\"\r\n" +
+            "1121.0151\t235\t\"P_G21000i^2\"\r\n" +
+            "1201.5505\t193\t\"\"\r\n" +
+            "1203.0271\t197\t\"\"\r\n" +
+            "1282.5559\t434\t\"P_G23000^2/Dev=8.3\"\r\n" +
+            "1283.0718\t182\t\"P_G23000i^2\"\r\n" +
+            "1283.5687\t428\t\"P_G23000i^2\"\r\n" +
+            "1284.0553\t179\t\"P_G23000i^2\"\r\n" +
+            "1836.4081\t161\t\"\"\r\n" +
+            "2337.8401\t201\t\"\"\r\n" +
+            "2562.6294\t168\t\"\"\r\n" +
             "\r\n";
     }
 }
