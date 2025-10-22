@@ -5,6 +5,11 @@
 - **Created**: 2025-10-19
 - **Objective**: Migrate `.skyp` file support from WebClient to HttpClient
 
+## Pull Request
+**PR**: #3656
+**Status**: Open (TeamCity tests running)
+**Updated**: Merged latest master into PR branch (2025-10-22)
+
 ## Background
 
 ### What are .skyp files?

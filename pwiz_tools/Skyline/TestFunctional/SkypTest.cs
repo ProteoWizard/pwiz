@@ -28,7 +28,6 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
-using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -128,16 +127,22 @@ namespace pwiz.SkylineTestFunctional
             var skyp = SkypFile.Create(skypPath);
             var skyZipName = Path.GetFileName(skyZipPath);
             Assert.AreEqual(TestFilesDir.GetTestPath(skyZipName), skyp.DownloadPath);
-            var skypSupport = new SkypSupport(SkylineWindow)
-            {
-                DownloadClientCreator = new TestDownloadClientCreator(skyZipPath, skyp)
-            };
+
+            var skypSupport = new SkypSupport(SkylineWindow, (monitor, status) => CreateTestDownloadClient(skyZipPath, skyp, monitor, status));
             RunUI(() => skypSupport.Open(skypPath, null));
             WaitForDocumentLoaded();
             var skyZipNoExt = Path.GetFileNameWithoutExtension(skyZipPath);
             var explodedDir = TestFilesDir.GetTestPath(skyZipNoExt);
             Assert.AreEqual(Path.Combine(explodedDir, skyZipNoExt + SrmDocument.EXT), SkylineWindow.DocumentFilePath);
             AssertEx.FileExists(skyp.DownloadPath); // Exploded but also still on disk
+        }
+
+        /// <summary>
+        /// Factory function for creating test download clients - simulates successful downloads from local files
+        /// </summary>
+        private IDownloadClient CreateTestDownloadClient(string srcPath, SkypFile skyp, IProgressMonitor monitor, IProgressStatus status)
+        {
+            return new TestDownloadClient(srcPath, skyp, monitor, status);
         }
 
         private void TestOpenErrorsExtendedSkyp()
@@ -536,25 +541,6 @@ namespace pwiz.SkylineTestFunctional
         {
             Assert.AreEqual(_skyp.DownloadPath, skyp.DownloadPath);
             File.Copy(_srcPath, skyp.SafePath, true);   // Overwrite an empty temp file
-        }
-    }
-
-    internal class TestDownloadClientCreator : DownloadClientCreator
-    {
-        private readonly string _skyZipPath;
-        private readonly SkypFile _skyp;
-
-        public TestDownloadClientCreator(string skyZipPath, SkypFile skyp)
-        {
-            _skyZipPath = skyZipPath;
-            _skyp = skyp;
-        }
-
-        public override IDownloadClient Create(IProgressMonitor progressMonitor, IProgressStatus progressStatus)
-        {
-            // For success case, return test client that copies from local file
-            // For error testing, tests should use the default (real) HttpClientDownloadClient with HttpClientTestHelper
-            return new TestDownloadClient(_skyZipPath, _skyp, progressMonitor, progressStatus);
         }
     }
 

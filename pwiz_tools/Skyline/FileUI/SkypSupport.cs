@@ -33,14 +33,32 @@ namespace pwiz.Skyline.FileUI
 {
     public class SkypSupport
     {
-        private SkylineWindow _skyline;
+        private readonly SkylineWindow _skyline;
+        private readonly Func<IProgressMonitor, IProgressStatus, IDownloadClient> _clientFactory;
 
-        public DownloadClientCreator DownloadClientCreator { private get; set; }
-
+        /// <summary>
+        /// Production constructor - uses HttpDownloadClient for downloads
+        /// </summary>
         public SkypSupport(SkylineWindow skyline)
+            : this(skyline, CreateHttpDownloadClient)
+        {
+        }
+
+        /// <summary>
+        /// Test constructor - accepts custom download client factory for testing
+        /// </summary>
+        public SkypSupport(SkylineWindow skyline, Func<IProgressMonitor, IProgressStatus, IDownloadClient> clientFactory)
         {
             _skyline = skyline;
-            DownloadClientCreator = new DownloadClientCreator();
+            _clientFactory = clientFactory;
+        }
+
+        /// <summary>
+        /// Default factory function for production - creates HttpDownloadClient
+        /// </summary>
+        private static IDownloadClient CreateHttpDownloadClient(IProgressMonitor monitor, IProgressStatus status)
+        {
+            return new HttpDownloadClient(monitor, status);
         }
 
         public bool Open(string skypPath, IEnumerable<Server> servers, FormEx parentWindow = null)
@@ -80,8 +98,8 @@ namespace pwiz.Skyline.FileUI
                 if (ExceptionUtil.IsProgrammingDefect(e))
                     throw;
 
-                var statusCode = SkypDownloadException.GetErrorStatusCode(e);
-                var message = SkypDownloadException.GetMessage(skyp, e, statusCode);
+                var statusCode = GetErrorStatusCode(e);
+                var message = GetMessage(skyp, e, statusCode);
                 
                 if (statusCode is HttpStatusCode.Unauthorized)
                 {
@@ -162,57 +180,9 @@ namespace pwiz.Skyline.FileUI
         }
 
 
-        private void Download(SkypFile skyp, IProgressMonitor progressMonitor)
-        {
-            var progressStatus = new ProgressStatus(string.Format(FileUIResources.SkypSupport_Download_Downloading__0__from__1_, skyp.GetSkylineDocName(), skyp.GetDocUrlNoName()));
-            progressMonitor.UpdateProgress(progressStatus);
+        #region Error Handling Helpers
 
-            var downloadClient = DownloadClientCreator.Create(progressMonitor, progressStatus);
-
-            using var fileSaver = new FileSaver(skyp.DownloadPath);
-            skyp.DownloadTempPath = fileSaver.SafeName;
-            downloadClient.Download(skyp);
-            fileSaver.Commit();
-        }
-    }
-
-    public class SkypDownloadException : Exception
-    {
-        public HttpStatusCode? StatusCode { get; }
-
-        public SkypDownloadException(string message, HttpStatusCode? statusCode, Exception e) : base(message, e)
-        {
-            StatusCode = statusCode;
-        }
-
-        public bool Unauthorized()
-        {
-            return Unauthorized(StatusCode);
-        }
-
-        public static bool Unauthorized(HttpStatusCode? statusCode)
-        {
-            return statusCode is HttpStatusCode.Unauthorized; // 401 -  No credentials provided or invalid credentials
-        }
-
-        public bool Forbidden()
-        {
-            return Forbidden(StatusCode);
-        }
-
-        public static bool Forbidden(HttpStatusCode? statusCode)
-        {
-            return statusCode is HttpStatusCode.Forbidden; // 403 - Valid credentials but not enough permissions
-        }
-
-        public static SkypDownloadException Create(SkypFile skyp, Exception e)
-        {
-            var statusCode = GetErrorStatusCode(e);
-            var message = GetMessage(skyp, e, statusCode);
-            return new SkypDownloadException(message, statusCode, e);
-        }
-
-        public static HttpStatusCode? GetErrorStatusCode(Exception e)
+        private static HttpStatusCode? GetErrorStatusCode(Exception e)
         {
             // Check for NetworkRequestException with structured status code
             // HttpClientWithProgress throws this for HTTP errors with status code as a property
@@ -233,7 +203,7 @@ namespace pwiz.Skyline.FileUI
             return null;
         }
 
-        public static string GetMessage(SkypFile skyp, Exception ex, HttpStatusCode? statusCode)
+        private static string GetMessage(SkypFile skyp, Exception ex, HttpStatusCode? statusCode)
         {
             var message =
                 string.Format(
@@ -245,10 +215,10 @@ namespace pwiz.Skyline.FileUI
                 var exceptionMsg = ex.Message;
                 message = TextUtil.LineSeparate(message, exceptionMsg);
             }
-           
+
             var serverName = skyp.GetServerName();
 
-            if (Unauthorized(statusCode)) // 401 -  No credentials provided or invalid credentials
+            if (statusCode is HttpStatusCode.Unauthorized) // 401 -  No credentials provided or invalid credentials
             {
                 if (skyp.ServerMatch == null)
                 {
@@ -273,7 +243,7 @@ namespace pwiz.Skyline.FileUI
                     message = BuildInvalidCredsMessage(message, serverName);
                 }
             }
-            else if (Forbidden(statusCode)) // 403 - Valid credentials but not enough permissions
+            else if (statusCode is HttpStatusCode.Forbidden) // 403 - Valid credentials but not enough permissions
             {
                 if (skyp.UsernameMismatch() && skyp.ServerMatch != null)
                 {
@@ -307,23 +277,31 @@ namespace pwiz.Skyline.FileUI
             return BuildMessage(true, mainMessage, otherMessages.ToArray());
         }
 
-        private static string BuildMessage(bool addUpdateCredentialsText, string mainMessage, params string[] otherLines)
+        private static string BuildMessage(bool withUpdatePrompt, string mainMessage, params string[] otherLines)
         {
             var allMessages = new List<string> { mainMessage };
-
-            if (otherLines.Length > 0)
-            {
-                allMessages.Add(string.Empty);
-                allMessages.AddRange(otherLines);
-            }
-
-            if (addUpdateCredentialsText)
+            allMessages.AddRange(otherLines);
+            if (withUpdatePrompt)
             {
                 allMessages.Add(string.Empty);
                 allMessages.Add(Resources.SkypDownloadException_GetMessage_Would_you_like_to_update_the_credentials_);
             }
 
             return TextUtil.LineSeparate(allMessages);
+        }
+
+        #endregion
+
+        private void Download(SkypFile skyp, IProgressMonitor progressMonitor)
+        {
+            var progressStatus = new ProgressStatus(string.Format(FileUIResources.SkypSupport_Download_Downloading__0__from__1_, skyp.GetSkylineDocName(), skyp.GetDocUrlNoName()));
+            progressMonitor.UpdateProgress(progressStatus);
+
+            var downloadClient = _clientFactory(progressMonitor, progressStatus);
+            using var fileSaver = new FileSaver(skyp.DownloadPath);
+            skyp.DownloadTempPath = fileSaver.SafeName;
+            downloadClient.Download(skyp);
+            fileSaver.Commit();
         }
     }
 
@@ -358,13 +336,5 @@ namespace pwiz.Skyline.FileUI
     public interface IDownloadClient
     {
         void Download(SkypFile skyp);
-    }
-
-    public class DownloadClientCreator
-    {
-        public virtual IDownloadClient Create(IProgressMonitor progressMonitor, IProgressStatus progressStatus)
-        {
-            return new HttpDownloadClient(progressMonitor, progressStatus);
-        }
     }
 }
