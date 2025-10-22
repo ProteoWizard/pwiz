@@ -22,6 +22,7 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.SkylineTestUtil;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
@@ -33,8 +34,12 @@ namespace pwiz.SkylineTestFunctional
     public class SequenceTreePropertyGridTest : AbstractFunctionalTest
     {
         private const int PEPTIDE_EXPECTED_PROP_NUM = 10;
-        private const string SEQUENCE_PROP_NAME = "Sequence";
         private const string NOTE_PROP_NAME = "Note";
+        private const string SEQUENCE_TREE_EXPECTED_PROPS_PREFIX = "sequence-tree";
+
+        private Dictionary<string, Dictionary<string, string>> _expectedProperties;
+
+        protected override bool IsRecordMode => false;
 
         [TestMethod]
         public void TestSequenceTreePropertyGrid()
@@ -48,10 +53,15 @@ namespace pwiz.SkylineTestFunctional
         {
             VerifySetup();
 
+            _expectedProperties = PropertyGridTestUtil.ReadAllExpectedPropertyValues(SEQUENCE_TREE_EXPECTED_PROPS_PREFIX, IsRecordMode);
+
+            // Test each data object if they display expected properties
             TestPeptideProperties();
 
-            TestAnnotationProperties();
+            if (IsRecordMode) PropertyGridTestUtil.WriteAllExpectedPropertyValues(SEQUENCE_TREE_EXPECTED_PROPS_PREFIX, _expectedProperties);
 
+            // Test annotation properties and editing
+            TestAnnotationProperties();
             TestEditProperty();
 
             CloseForms();
@@ -59,7 +69,7 @@ namespace pwiz.SkylineTestFunctional
 
         private void VerifySetup()
         {
-            var documentPath = Path.Combine(TestFilesDirs[0].FullPath, @"Main", @"test.sky");
+            var documentPath = Path.Combine(TestFilesDirs[0].FullPath, @"Rat_plasma.sky");
             RunUI(() => { SkylineWindow.OpenFile(documentPath); });
 
             Assert.IsNotNull(SkylineWindow.SequenceTree);
@@ -73,7 +83,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(() => SkylineWindow.PropertyGridFormIsVisible);
         }
 
-        private static void TestPeptideProperties()
+        private void TestPeptideProperties()
         {
             // select peptide node
             var peptideGroupTreeNode = SkylineWindow.SequenceTree.GetSequenceNodes().FirstOrDefault();
@@ -82,22 +92,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNotNull(peptideTreeNode);
             RunUI(() => { SkylineWindow.SequenceTree.SelectedNode = peptideTreeNode; });
 
-            // get properties of selected node
-            var selectedObject = SkylineWindow.PropertyGridForm.GetPropertyObject();
-            Assert.IsTrue(selectedObject is Peptide);
-            var props = TypeDescriptor.GetProperties(selectedObject, false);
-
-            // Check that sequence property matches value in selected node
-            Assert.AreEqual(peptideTreeNode.DocNode.Peptide.Sequence, props[SEQUENCE_PROP_NAME].GetValue(selectedObject));
-
-            // smoke test check total number of properties - this failing could just mean another relevant property was added
-            Assert.AreEqual(PEPTIDE_EXPECTED_PROP_NUM, props.Count);
-
-            // Test localization of property grid property display names
-            var nameProp = props[SEQUENCE_PROP_NAME];
-            Assert.IsNotNull(nameProp);
-            Assert.AreEqual(nameProp.Name, SEQUENCE_PROP_NAME);
-            Assert.AreEqual(selectedObject.GetResourceManager().GetString(nameProp.Name), nameProp.DisplayName);
+            PropertyGridTestUtil.LogOrTestExpectedPropertyValues(SkylineWindow, _expectedProperties, nameof(Peptide), IsRecordMode);
         }
 
         private static void TestAnnotationProperties()

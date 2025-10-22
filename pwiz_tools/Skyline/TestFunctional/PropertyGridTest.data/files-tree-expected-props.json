@@ -1,0 +1,20 @@
+{
+  "Replicate": {
+    "Name": "D_102_REP1",
+    "SampleType": "Unknown",
+    "AnalyteConcentration": ""
+  },
+  "SpectralLibrary": {
+    "Name": "Rat (NIST) (Rat_plasma2)",
+    "DataFiles": "0",
+    "LibraryType": "BiblioSpec Library",
+    "FilePath": "C:\\Users\\acban\\proj\\pwiz\\pwiz_tools\\Skyline\\SkylineTester Results\\PropertyGridTest\\rat_consensus_final_true_lib.blib",
+    "LocalFilePath": "C:\\Users\\acban\\proj\\pwiz\\pwiz_tools\\Skyline\\SkylineTester Results\\PropertyGridTest\\rat_consensus_final_true_lib.blib",
+    "SpectrumCount": "49",
+    "TotalPsmCount": "0",
+    "UniquePeptideCount": "49",
+    "Id": "urn:lsid:nist.gov:spectral_libary:bibliospec:minimal:Rat (NIST):e31a6ebc-3279-4477-a406-c88378bddb76:1.0",
+    "Revision": "1",
+    "Version": "0"
+  }
+}

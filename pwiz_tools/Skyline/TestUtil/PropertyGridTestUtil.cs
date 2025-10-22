@@ -23,7 +23,9 @@ using pwiz.Skyline.Model.DocSettings;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
+using Newtonsoft.Json;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -39,18 +41,27 @@ namespace pwiz.SkylineTestUtil
         private const string LIST_ANNOTATION_NAME = "ListAnnotation";
         private const string ANNOTATION_NAME_PREFIX = "annotation_";
 
+        private const string EXPECTED_PROPERTIES_FILE_PATH = @"TestFunctional\PropertyGridTest.data\";
+        private const string JSON_SUFFIX = @"-expected-props.json";
+
         public const string TEST_FILES_ZIP = @"TestFunctional\PropertyGridTest.zip";
+
+        private static PropertyDescriptorCollection GetBrowsableProperties(object obj)
+        {
+            return obj == null ? new PropertyDescriptorCollection(null) 
+                : TypeDescriptor.GetProperties(obj, new Attribute[] { BrowsableAttribute.Yes });
+        }
 
         public static void TestEditProperty(SkylineWindow skylineWindow, string propName, object newValue)
         {
             var selectedObject = skylineWindow.PropertyGridForm.GetPropertyObject();
             Assert.IsNotNull(selectedObject);
-            var prop = TypeDescriptor.GetProperties(selectedObject, false)[propName];
+            var prop = GetBrowsableProperties(selectedObject)[propName];
             prop.SetValue(selectedObject, newValue);
 
             // Test if the change is applied to the document
             var newSelectedObject = skylineWindow.PropertyGridForm.GetPropertyObject();
-            var newProp = TypeDescriptor.GetProperties(newSelectedObject, false)[propName];
+            var newProp = GetBrowsableProperties(newSelectedObject)[propName];
             Assert.AreEqual(newValue, newProp.GetValue(newSelectedObject));
 
             // Test if the change is seen in the UI
@@ -143,23 +154,66 @@ namespace pwiz.SkylineTestUtil
             Assert.AreEqual(listEditedValue, selectedObject.GetAnnotation(defList));
         }
 
+        public static void LogOrTestExpectedPropertyValues(SkylineWindow skylineWindow,
+            Dictionary<string, Dictionary<string, string>> expectedPropertyValues,
+            string propertyObjectTypeKey, bool isRecordMode)
+        {
+            if (isRecordMode)
+            {
+                expectedPropertyValues[propertyObjectTypeKey] = GetExpectedPropertyValues(skylineWindow);
+            }
+            else
+            {
+                TestExpectedPropertyValues(skylineWindow, expectedPropertyValues[propertyObjectTypeKey]);
+            }
+        }
+
         // Test whether the currently selected object's properties match the given expected values
-        public static void TestExpectedPropertyValues(SkylineWindow skylineWindow, Dictionary<string, object> expectedValues) 
+        private static void TestExpectedPropertyValues(SkylineWindow skylineWindow, Dictionary<string, string> expectedPropertyValues) 
         {
             var selectedObject = skylineWindow.PropertyGridForm.GetPropertyObject();
             Assert.IsNotNull(selectedObject);
-            var props = TypeDescriptor.GetProperties(selectedObject, false);
-            Assert.AreEqual(props.Count, expectedValues.Count, $"Expected {expectedValues.Count} properties on selected object, found {props.Count}");
-            foreach (var kvp in expectedValues)
+            var props = GetBrowsableProperties(selectedObject);
+            Assert.AreEqual(props.Count, expectedPropertyValues.Count, $"Expected {expectedPropertyValues.Count} properties on selected object, found {props.Count}");
+            foreach (var kvp in expectedPropertyValues)
             {
                 var propName = kvp.Key;
                 var expectedValue = kvp.Value;
-                var prop = props[propName];
-                Assert.IsNotNull(prop, $"Property '{propName}' not found on selected object.");
-                Assert.AreEqual(prop.PropertyType, expectedValue.GetType(), $"Property '{propName}' type mismatch.");
-                var actualValue = prop.GetValue(selectedObject);
-                Assert.AreEqual(expectedValue, actualValue, $"Property '{propName}' value mismatch.");
+                var gridItem = skylineWindow.PropertyGridForm.GetGridItemByPropName(propName);
+                Assert.IsNotNull(gridItem, $"Property '{propName}' not found on selected object.");
+                Assert.AreEqual(expectedValue, gridItem.Value.ToString(), $"Property '{propName}' value mismatch.");
             }
+        }
+
+        private static Dictionary<string, string> GetExpectedPropertyValues(SkylineWindow skylineWindow)
+        {
+            var selectedObject = skylineWindow.PropertyGridForm.GetPropertyObject();
+            Assert.IsNotNull(selectedObject);
+            var props = GetBrowsableProperties(selectedObject);
+
+            var expectedPropertyValues = new Dictionary<string, string>();
+            foreach (PropertyDescriptor prop in props)
+            {
+                expectedPropertyValues[prop.Name] = prop.GetValue(selectedObject)?.ToString() ?? string.Empty;
+            }
+
+            return expectedPropertyValues;
+        }
+
+        public static Dictionary<string, Dictionary<string, string>> ReadAllExpectedPropertyValues(string prefix, bool isRecordMode)
+        {
+            if (isRecordMode) return new Dictionary<string, Dictionary<string, string>>();
+
+            var filePath = Path.Combine(ExtensionTestContext.GetProjectDirectory(EXPECTED_PROPERTIES_FILE_PATH), prefix + JSON_SUFFIX);
+            Assert.IsTrue(File.Exists(filePath));
+            var json = File.ReadAllText(filePath);
+            return JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, string>>>(json);
+        }
+
+        public static void WriteAllExpectedPropertyValues(string prefix, Dictionary<string, Dictionary<string, string>> expectedProperties) {
+            var filePath = Path.Combine(ExtensionTestContext.GetProjectDirectory(EXPECTED_PROPERTIES_FILE_PATH), prefix + JSON_SUFFIX);
+            var json = JsonConvert.SerializeObject(expectedProperties, Formatting.Indented);
+            File.WriteAllText(filePath, json);
         }
     }
 }
