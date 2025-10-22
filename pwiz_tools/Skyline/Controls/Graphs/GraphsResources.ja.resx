@@ -169,9 +169,6 @@
   <data name="AllChromatogramsGraph_UpdateStatus_Hide" xml:space="preserve">
     <value>隠します</value>
   </data>
-  <data name="Annotation_DisambiguationPrefix_Annotation__" xml:space="preserve">
-    <value>注釈： </value>
-  </data>
   <data name="AreaChartPropertyDlg_ValidateDotpRange__0__must_be_betwen_0_and_1" xml:space="preserve">
     <value>{0}カットオフ値は0に等しいかそれ以上でなければならず、1未満でなければなりません。</value>
   </data>
@@ -585,9 +582,6 @@
   </data>
   <data name="PeptideRegressionTipProvider_RenderTip_Peptide" xml:space="preserve">
     <value>ペプチド</value>
-  </data>
-  <data name="Property_DisambiguationPrefix_Property__" xml:space="preserve">
-    <value>プロパティ： </value>
   </data>
   <data name="RegressionGraphPane_RegressionGraphPane__0___at__1__points_minimum_" xml:space="preserve">
     <value>{0}（最低{1}点）</value>
