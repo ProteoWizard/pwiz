@@ -1210,7 +1210,7 @@ namespace pwiz.Skyline.Model.Lib
                     libraryEntries.Add(info);
                 }
 
-                libraryEntries = FilterInvalidLibraryEntries(ref status, libraryEntries);
+                libraryEntries = FilterInvalidLibraryEntries(ref status, libraryEntries, Path.GetFileName(FilePath));
 
                 long locationHeaders = outStream.Position;
                 foreach (var info in libraryEntries)
