@@ -105,9 +105,18 @@ namespace pwiz.SkylineTest
             coverage.Add(adduct.AsFormula());
         }
 
-        private void TestException(string formula, string adductText)
+        private void TestInvalidDataException(string formula, string adductText)
         {
             AssertEx.ThrowsException<InvalidDataException>(() =>
+            {
+                var adduct = Adduct.FromStringAssumeProtonated(adductText);
+                IonInfo.ApplyAdductToFormula(formula, adduct);
+            });
+        }
+
+        private void TestInvalidChemicalModificationException(string formula, string adductText)
+        {
+            AssertEx.ThrowsException<InvalidChemicalModificationException>(() =>
             {
                 var adduct = Adduct.FromStringAssumeProtonated(adductText);
                 IonInfo.ApplyAdductToFormula(formula, adduct);
@@ -452,19 +461,19 @@ namespace pwiz.SkylineTest
             mz = BioMassCalc.CalculateIonMass(new TypedMass(massHectochlorin, MassType.Monoisotopic), heavy);
             Assert.AreEqual(2 * (massHectochlorin + 1.23456), mz, .001);
 
-            TestException(PENTANE, "zM+2H"); // That "z" doesn't make any sense as a mass multiplier (must be a positive integer)
-            TestException(PENTANE, "-2M+2H"); // That "-2" doesn't make any sense as a mass multiplier (must be a positive integer)
-            TestException("", "+M"); // Meaningless, used to cause an exception in our parser
-            TestException(Hectochlorin, "M3Cl37+H"); // Trying to label more chlorines than exist in the molecule
-            TestException(Hectochlorin, "M-3Cl+H"); // Trying to remove more chlorines than exist in the molecule
-            TestException(PENTANE, "M+foo+H"); // Unknown adduct
-            TestException(PENTANE, "M2Cl37H+H"); // nonsense label ("2Cl37H2" would make sense, but regular H doesn't belong)
-            TestException(PENTANE, "M+2H+"); // Trailing sign - we now understand this as a charge state declaration, but this one doesn't match described charge
-            TestException(PENTANE, "[M-2H]3-"); // Declared charge doesn't match described charge
-            TestException(PENTANE, "[M-]3-"); // Declared charge doesn't match described charge
-            TestException(PENTANE, "[M+]-"); // Declared charge doesn't match described charge
-            TestException(PENTANE, "[M+2]-"); // Declared charge doesn't match described charge
-            TestException(PENTANE, "[M+2]+3"); // Declared charge doesn't match described charge
+            TestInvalidDataException(PENTANE, "zM+2H"); // That "z" doesn't make any sense as a mass multiplier (must be a positive integer)
+            TestInvalidDataException(PENTANE, "-2M+2H"); // That "-2" doesn't make any sense as a mass multiplier (must be a positive integer)
+            TestInvalidDataException("", "+M"); // Meaningless, used to cause an exception in our parser
+            TestInvalidChemicalModificationException(Hectochlorin, "M3Cl37+H"); // Trying to label more chlorines than exist in the molecule
+            TestInvalidChemicalModificationException(Hectochlorin, "M-3Cl+H"); // Trying to remove more chlorines than exist in the molecule
+            TestInvalidDataException(PENTANE, "M+foo+H"); // Unknown adduct
+            TestInvalidDataException(PENTANE, "M2Cl37H+H"); // nonsense label ("2Cl37H2" would make sense, but regular H doesn't belong)
+            TestInvalidDataException(PENTANE, "M+2H+"); // Trailing sign - we now understand this as a charge state declaration, but this one doesn't match described charge
+            TestInvalidDataException(PENTANE, "[M-2H]3-"); // Declared charge doesn't match described charge
+            TestInvalidDataException(PENTANE, "[M-]3-"); // Declared charge doesn't match described charge
+            TestInvalidDataException(PENTANE, "[M+]-"); // Declared charge doesn't match described charge
+            TestInvalidDataException(PENTANE, "[M+2]-"); // Declared charge doesn't match described charge
+            TestInvalidDataException(PENTANE, "[M+2]+3"); // Declared charge doesn't match described charge
 
             // Test label stripping
             Assert.AreEqual("C5H9NO2S", (new IonInfo("C5H9H'3NO2S[M-3H]")).UnlabeledFormula.ToString());

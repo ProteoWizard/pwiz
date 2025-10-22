@@ -66,6 +66,17 @@ namespace pwiz.Skyline.Util
         public IEnumerable<Adduct> Keys { get { return _dict.Keys; } }
     }
 
+    /// <summary>
+    /// Thrown when a loss would remove more atoms than are found in a molecular formula e.g. water loss from C2S5H12 (no oxygen),
+    /// or label would change more atoms than are in the formula e.g. 3C' on C2S5H12
+    /// </summary>
+    public class InvalidChemicalModificationException : IOException
+    {
+        public InvalidChemicalModificationException(string message) : base(message)
+        {
+        }
+    }
+
     public class Adduct : Immutable, IComparable, IEquatable<Adduct>, IAuditLogObject
     {
         private Molecule Composition { get; set; } // The chemical makeup of the adduct - the "2H" part in 4M3Cl37+2H
@@ -1448,7 +1459,7 @@ namespace pwiz.Skyline.Util
                 if (!molecule.IsMassOnly &&
                     count < 0 && !Equals(pair.Key, BioMassCalc.H)) // Treat H loss as a general proton loss
                 {
-                    throw new InvalidDataException(
+                    throw new InvalidChemicalModificationException(
                         string.Format(Resources.Adduct_ApplyToMolecule_Adduct___0___calls_for_removing_more__1__atoms_than_are_found_in_the_molecule__2_,
                             this, pair.Key, molecule.ToString()));
                 }
@@ -1508,7 +1519,7 @@ namespace pwiz.Skyline.Util
                     }
                     else // Can't remove that which is not there
                     {
-                        throw new InvalidDataException(
+                        throw new InvalidChemicalModificationException(
                             string.Format(
                                 UtilResources
                                     .Adduct_ApplyToMolecule_Adduct___0___calls_for_labeling_more__1__atoms_than_are_found_in_the_molecule__2_,
