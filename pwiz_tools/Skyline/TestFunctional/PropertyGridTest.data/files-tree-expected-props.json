@@ -5,15 +5,15 @@
     "AnalyteConcentration": ""
   },
   "SpectralLibrary": {
-    "Name": "Rat (NIST) (Rat_plasma2)",
+    "Name": "NoDatafileExample",
     "DataFiles": "0",
     "LibraryType": "BiblioSpec Library",
-    "FilePath": "C:\\Users\\acban\\proj\\pwiz\\pwiz_tools\\Skyline\\SkylineTester Results\\PropertyGridTest\\rat_consensus_final_true_lib.blib",
-    "LocalFilePath": "C:\\Users\\acban\\proj\\pwiz\\pwiz_tools\\Skyline\\SkylineTester Results\\PropertyGridTest\\rat_consensus_final_true_lib.blib",
-    "SpectrumCount": "49",
+    "FilePath": "C:\\Users\\acban\\proj\\pwiz\\pwiz_tools\\Skyline\\SkylineTester Results\\PropertyGridTest\\rat_cmp_20.blib",
+    "LocalFilePath": "C:\\Users\\acban\\proj\\pwiz\\pwiz_tools\\Skyline\\SkylineTester Results\\PropertyGridTest\\rat_cmp_20.blib",
+    "SpectrumCount": "31",
     "TotalPsmCount": "0",
-    "UniquePeptideCount": "49",
-    "Id": "urn:lsid:nist.gov:spectral_libary:bibliospec:minimal:Rat (NIST):e31a6ebc-3279-4477-a406-c88378bddb76:1.0",
+    "UniquePeptideCount": "31",
+    "Id": "urn:lsid:thegpm.org:spectral_libary:bibliospec:minimal:Rat (GPM):2987adca-f58a-4415-bfb8-5711491950b0:1.0",
     "Revision": "1",
     "Version": "0"
   }

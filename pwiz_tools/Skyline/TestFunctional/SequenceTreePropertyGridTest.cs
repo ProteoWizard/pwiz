@@ -51,7 +51,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            VerifySetup();
+            Setup(Path.Combine(TestFilesDirs[0].FullPath, @"Rat_plasma.sky"));
 
             _expectedProperties = PropertyGridTestUtil.ReadAllExpectedPropertyValues(SEQUENCE_TREE_EXPECTED_PROPS_PREFIX, IsRecordMode);
 
@@ -67,17 +67,12 @@ namespace pwiz.SkylineTestFunctional
             CloseForms();
         }
 
-        private void VerifySetup()
+        private static void Setup(string documentPath)
         {
-            var documentPath = Path.Combine(TestFilesDirs[0].FullPath, @"Rat_plasma.sky");
-            RunUI(() => { SkylineWindow.OpenFile(documentPath); });
+            RunUI(() => SkylineWindow.OpenFile(documentPath));
 
-            Assert.IsNotNull(SkylineWindow.SequenceTree);
-            Assert.IsTrue(SkylineWindow.SequenceTreeFormIsVisible);
-
-            Assert.IsNull(SkylineWindow.PropertyGridForm);
-            Assert.IsFalse(SkylineWindow.PropertyGridFormIsVisible);
-            Assert.IsFalse(SkylineWindow.PropertyGridFormIsActivated);
+            RunUI(() => { SkylineWindow.ShowSequenceTreeForm(true); });
+            WaitForConditionUI(() => SkylineWindow.SequenceTreeFormIsVisible);
 
             RunUI(() => { SkylineWindow.ShowPropertyGridForm(true); });
             WaitForConditionUI(() => SkylineWindow.PropertyGridFormIsVisible);

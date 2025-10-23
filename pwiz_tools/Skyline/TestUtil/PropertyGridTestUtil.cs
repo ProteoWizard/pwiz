@@ -160,7 +160,7 @@ namespace pwiz.SkylineTestUtil
         {
             if (isRecordMode)
             {
-                expectedPropertyValues[propertyObjectTypeKey] = GetExpectedPropertyValues(skylineWindow);
+                expectedPropertyValues[propertyObjectTypeKey] = GetObservedPropertyValues(skylineWindow);
             }
             else
             {
@@ -185,7 +185,7 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        private static Dictionary<string, string> GetExpectedPropertyValues(SkylineWindow skylineWindow)
+        private static Dictionary<string, string> GetObservedPropertyValues(SkylineWindow skylineWindow)
         {
             var selectedObject = skylineWindow.PropertyGridForm.GetPropertyObject();
             Assert.IsNotNull(selectedObject);

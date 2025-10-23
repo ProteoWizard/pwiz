@@ -33,9 +33,9 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class FilesTreePropertyGridTest : AbstractFunctionalTest
     {
-        private const int REPLICATE_EXPECTED_PROP_NUM = 3;
         private const string NAME_PROP_NAME = "Name";
         private const string FILES_TREE_EXPECTED_PROPS_PREFIX = "files-tree";
+        private const string SPECTRAL_LIBRARY_CASE_PROPS_PREFIX = "speclib-with-datafiles";
 
         private Dictionary<string, Dictionary<string, string>> _expectedProperties;
 
@@ -51,14 +51,14 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            VerifySetup();
+            Setup(Path.Combine(TestFilesDirs[0].FullPath, @"Rat_plasma.sky"));
 
             // setup expected properties
             _expectedProperties = PropertyGridTestUtil.ReadAllExpectedPropertyValues(FILES_TREE_EXPECTED_PROPS_PREFIX, IsRecordMode);
 
             // Test each data object if they display expected properties
             TestReplicateProperties();
-            TestSpectralLibraryProperties();
+            TestSpectralLibraryProperties(0);
 
             // In record mode, write out expected properties so they can be compared in future test runs
             if (IsRecordMode) PropertyGridTestUtil.WriteAllExpectedPropertyValues(FILES_TREE_EXPECTED_PROPS_PREFIX, _expectedProperties);
@@ -68,17 +68,17 @@ namespace pwiz.SkylineTestFunctional
             TestEditProperty();
             TestHandleReplicateNameException();
 
+            // Test spectral library with datafiles case
+            _expectedProperties = PropertyGridTestUtil.ReadAllExpectedPropertyValues(SPECTRAL_LIBRARY_CASE_PROPS_PREFIX, IsRecordMode);
+            TestSpectralLibraryProperties(1);
+            if (IsRecordMode) PropertyGridTestUtil.WriteAllExpectedPropertyValues(SPECTRAL_LIBRARY_CASE_PROPS_PREFIX, _expectedProperties);
+
             CloseForms();
         }
 
-        private void VerifySetup()
+        private static void Setup(string documentPath)
         {
-            var documentPath = Path.Combine(TestFilesDirs[0].FullPath, @"Rat_plasma.sky");
             RunUI(() => SkylineWindow.OpenFile(documentPath));
-
-            Assert.IsNull(SkylineWindow.PropertyGridForm);
-            Assert.IsFalse(SkylineWindow.PropertyGridFormIsVisible);
-            Assert.IsFalse(SkylineWindow.PropertyGridFormIsActivated);
 
             RunUI(() => { SkylineWindow.ShowFilesTreeForm(true); });
             WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible);
@@ -98,10 +98,10 @@ namespace pwiz.SkylineTestFunctional
                 nameof(Skyline.Model.Databinding.Entities.Replicate), IsRecordMode);
         }
 
-        private void TestSpectralLibraryProperties()
+        private void TestSpectralLibraryProperties(int specLibIndex)
         {
             var folder = SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>();
-            var spectralLibraryNode = folder.Nodes[0] as FilesTreeNode;
+            var spectralLibraryNode = folder.Nodes[specLibIndex] as FilesTreeNode;
             Assert.IsNotNull(spectralLibraryNode);
             RunUI(() => { SkylineWindow.FilesTreeForm.FilesTree.SelectedNode = spectralLibraryNode; });
 
@@ -109,7 +109,7 @@ namespace pwiz.SkylineTestFunctional
                 nameof(Skyline.Model.Databinding.Entities.SpectralLibrary), IsRecordMode);
         }
 
-        private static void TestAnnotationProperties()
+        private void TestAnnotationProperties()
         {
             // Add annotation definitions for replicates
             RunUI(() => { PropertyGridTestUtil.TestAddAnnotations(SkylineWindow, AnnotationDef.AnnotationTarget.replicate); });
@@ -124,7 +124,9 @@ namespace pwiz.SkylineTestFunctional
             
             // Test if sum of original properties and new annotation definition properties appear
             var props = TypeDescriptor.GetProperties(selectedObject, false);
-            Assert.AreEqual(REPLICATE_EXPECTED_PROP_NUM + SkylineWindow.Document.Settings.DataSettings.AnnotationDefs.Count, props.Count);
+            Assert.AreEqual(props.Count,
+                _expectedProperties[nameof(Skyline.Model.Databinding.Entities.Replicate)].Count 
+                + SkylineWindow.Document.Settings.DataSettings.AnnotationDefs.Count);
 
             // Test editing annotation properties
             RunUI(() => { PropertyGridTestUtil.TestEditAnnotations(SkylineWindow); });
