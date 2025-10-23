@@ -23,6 +23,7 @@ using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
@@ -100,20 +101,17 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         protected void UpdateSettings()
         {
+            var srmSettings = GroupComparisonModel.Document.Settings;
             var groupComparisonDef = GroupComparisonModel.GroupComparisonDef;
-            ReplaceComboItems(comboControlAnnotation, ListReplicateAnnotations(), groupComparisonDef.ControlAnnotation);
-            string[] controlValues = ListControlValues();
-            ReplaceComboItems(comboControlValue, controlValues, groupComparisonDef.ControlValue ?? string.Empty);
-            var caseValues = new HashSet<string>(controlValues) { string.Empty };
-            if (null != groupComparisonDef.ControlValue)
-            {
-                caseValues.Remove(groupComparisonDef.ControlValue);
-            }
-            var sortedCaseValues = caseValues.ToArray();
-            Array.Sort(sortedCaseValues);
-            ReplaceComboItems(comboCaseValue, sortedCaseValues, groupComparisonDef.CaseValue ?? string.Empty);
-            ReplaceComboItems(comboIdentityAnnotation, new[] { string.Empty }.Concat(ListReplicateAnnotations()),
-                groupComparisonDef.IdentityAnnotation);
+            var controlReplicateValue = groupComparisonDef.GetControlReplicateValue(srmSettings);
+            var availableReplicateValues = ListReplicateAnnotations().ToList();
+            ReplaceComboItems(comboControlAnnotation, availableReplicateValues, controlReplicateValue);
+            var controlValues = ListControlValues();
+            var controlGroupIdentifier = groupComparisonDef.GetControlGroupIdentifier(controlReplicateValue);
+            ReplaceComboItems(comboControlValue, controlValues, controlGroupIdentifier);
+            var caseValues = controlValues.Except(new []{controlGroupIdentifier}).Prepend(GroupIdentifier.EMPTY).Distinct().ToList();
+            ReplaceComboItems(comboCaseValue, caseValues, groupComparisonDef.GetCaseGroupIdentifier(controlReplicateValue) ?? GroupIdentifier.EMPTY);
+            ReplaceComboItems(comboIdentityAnnotation, availableReplicateValues.Prepend(null), groupComparisonDef.GetIdentityReplicateValue(srmSettings));
             ReplaceComboItems(comboNormalizationMethod, ListNormalizeOptions(), MakeNormalizationItem(groupComparisonDef.NormalizationMethod));
             ReplaceComboItems(comboSummaryMethod, SummarizationMethod.ListSummarizationMethods(), groupComparisonDef.SummarizationMethod);
             tbxConfidenceLevel.Text = groupComparisonDef.ConfidenceLevelTimes100.ToString(CultureInfo.CurrentCulture);
@@ -189,24 +187,32 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 comboNormalizationMethod.SelectedItem = MakeNormalizationItem(value);
             }
         }
-        public ComboBox ComboIdentityAnnotation
-        {
-            get { return comboIdentityAnnotation; }
+
+        public string ControlAnnotation { 
+            get { return comboControlAnnotation.SelectedItem?.ToString(); }
+            set { SelectComboItem(comboControlAnnotation, value); }
         }
 
-        public ComboBox ComboControlValue
+        public string ControlValue
         {
-            get { return comboControlValue; }
+            get { return comboControlValue.SelectedItem?.ToString(); }
+            set { SelectComboItem(comboControlValue, value); }
         }
 
-        public ComboBox ComboControlAnnotation
+        public IEnumerable<string> ControlValueOptions
         {
-            get { return comboControlAnnotation; }
+            get { return ListComboOptions(comboControlValue); }
         }
 
-        public ComboBox ComboCaseValue
+        public string CaseValue
         {
-            get { return comboCaseValue; }
+            get { return comboCaseValue.SelectedItem?.ToString(); }
+            set { SelectComboItem(comboCaseValue, value); }
+        }
+        public string IdentityAnnotation
+        {
+            get { return comboIdentityAnnotation.SelectedItem?.ToString(); }
+            set { SelectComboItem(comboIdentityAnnotation, value); }
         }
 
         public ComboBox ComboSummaryMethod
@@ -222,6 +228,22 @@ namespace pwiz.Skyline.Controls.GroupComparison
         public TextBox TextBoxQValueCutoff
         {
             get { return tbxQValueCutoff; }
+        }
+
+        private void SelectComboItem(ComboBox comboBox, string value)
+        {
+            int index = comboBox.FindStringExact(value);
+            if (index < 0)
+            {
+                throw new ArgumentException(string.Format(@"Invalid option {0}", value));
+            }
+            Assume.AreNotEqual(-1, index);
+            comboBox.SelectedIndex = index;
+        }
+
+        private IEnumerable<string> ListComboOptions(ComboBox comboBox)
+        {
+            return comboBox.Items.Cast<object>().Select(option => option.ToString());
         }
 
         public RadioButton RadioScopePerProtein { get { return radioScopeProtein; } }
@@ -328,8 +350,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
             {
                 return;
             }
-            GroupComparisonDef = GroupComparisonDef.ChangeControlAnnotation(
-                comboControlAnnotation.SelectedItem as string);
+            GroupComparisonDef = GroupComparisonDef.ChangeControlReplicateValue(
+                comboControlAnnotation.SelectedItem as ReplicateValue);
         }
 
         protected void comboControlValue_SelectedIndexChanged(object sender, EventArgs e)
@@ -338,7 +360,18 @@ namespace pwiz.Skyline.Controls.GroupComparison
             {
                 return;
             }
-            GroupComparisonDef = GroupComparisonDef.ChangeControlValue(comboControlValue.SelectedItem as string);
+
+            var groupComparisonDef = GroupComparisonDef.ChangeControlValue(SerializeGroupIdentifier(comboControlValue.SelectedItem as GroupIdentifier?));
+            if (Equals(groupComparisonDef.ControlValue, groupComparisonDef.CaseValue))
+            {
+                groupComparisonDef = groupComparisonDef.ChangeCaseValue(string.Empty);
+            }
+            GroupComparisonDef = groupComparisonDef;
+        }
+
+        private string SerializeGroupIdentifier(GroupIdentifier? groupIdentifier)
+        {
+            return (comboControlAnnotation.SelectedItem as ReplicateValue)?.Serialize(groupIdentifier);
         }
 
         protected void comboNormalizationMethod_SelectedIndexChanged(object sender, EventArgs e)
@@ -356,12 +389,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             {
                 return;
             }
-            string caseValue = comboCaseValue.SelectedItem as string;
-            if (string.IsNullOrEmpty(caseValue))
-            {
-                caseValue = null;
-            }
-            GroupComparisonDef = GroupComparisonDef.ChangeCaseValue(caseValue);
+            GroupComparisonDef = GroupComparisonDef.ChangeCaseValue(SerializeGroupIdentifier(comboCaseValue.SelectedItem as GroupIdentifier?));
         }
 
         protected void comboIdentityAnnotation_SelectedIndexChanged(object sender, EventArgs e)
@@ -370,19 +398,9 @@ namespace pwiz.Skyline.Controls.GroupComparison
             {
                 return;
             }
-            string identityAnnotation = comboIdentityAnnotation.SelectedItem as string;
-            if (string.IsNullOrEmpty(identityAnnotation))
-            {
-                GroupComparisonDef = GroupComparisonDef
-                    .ChangeIdentityAnnotation(null)
-                    .ChangeAverageTechnicalReplicates(false);
-            }
-            else
-            {
-                GroupComparisonDef = GroupComparisonDef
-                    .ChangeIdentityAnnotation(identityAnnotation)
-                    .ChangeAverageTechnicalReplicates(true);
-            }
+            var identityAnnotation = comboIdentityAnnotation.SelectedItem as ReplicateValue;
+            GroupComparisonDef = GroupComparisonDef.ChangeIdentityReplicateValue(identityAnnotation)
+                .ChangeAverageTechnicalReplicates(identityAnnotation != null);
         }
 
         protected void tbxConfidenceLevel_TextChanged(object sender, EventArgs e)
@@ -434,48 +452,37 @@ namespace pwiz.Skyline.Controls.GroupComparison
             GroupComparisonDef = GroupComparisonDef.ChangeUseZeroForMissingPeaks(((CheckBox) sender).Checked);
         }
 
-        protected IEnumerable<string> ListReplicateAnnotations()
+        protected IEnumerable<ReplicateValue> ListReplicateAnnotations()
         {
-            return GroupComparisonModel.Document.Settings.DataSettings.AnnotationDefs
-                .Where(def => def.AnnotationTargets.Contains(AnnotationDef.AnnotationTarget.replicate))
-                .Select(def => def.Name);
+            return ReplicateValue.GetGroupableReplicateValues(GroupComparisonModel.Document);
         }
 
-        protected string[] ListControlValues()
+        protected GroupIdentifier[] ListControlValues()
         {
             var newSettings = GroupComparisonModel.Document.Settings;
-            var annotationDef = newSettings.DataSettings.AnnotationDefs.FirstOrDefault(
-                def => def.Name == GroupComparisonDef.ControlAnnotation);
-            if (null != annotationDef && newSettings.HasResults)
+            var replicateValue = GroupComparisonDef.GetControlReplicateValue(newSettings);
+            if (null == replicateValue || !newSettings.HasResults)
             {
-                string[] controlValues = newSettings.MeasuredResults.Chromatograms.Select(
-                    chromatogram => chromatogram.Annotations.GetAnnotation(annotationDef.Name) ?? string.Empty)
-                    .Distinct()
-                    .ToArray();
-                Array.Sort(controlValues);
-                return controlValues;
+                return Array.Empty<GroupIdentifier>();
             }
-            return new string[0];
+            var annotationCalculator = new AnnotationCalculator(GroupComparisonModel.Document);
+            return newSettings.MeasuredResults.Chromatograms.Select(chromatogram =>
+                    GroupIdentifier.MakeGroupIdentifier(replicateValue.GetValue(annotationCalculator,
+                        chromatogram)))
+                .Distinct().OrderBy(id=>id).ToArray();
         }
 
         protected void ReplaceComboItems<T>(ComboBox comboBox, IEnumerable<T> items, T selectedItem)
         {
-            var itemObjects = items.Cast<object>().ToArray();
-            int newSelectedIndex = -1;
-            for (int i = 0; i < itemObjects.Length; i++)
-            {
-                if (Equals(selectedItem, itemObjects[i]))
-                {
-                    newSelectedIndex = i;
-                    break;
-                }
-            }
-            if (newSelectedIndex == comboBox.SelectedIndex && ArrayUtil.EqualsDeep(itemObjects, comboBox.Items.Cast<object>().ToArray()))
+            var itemObjects = items.Select(item => (object)item ?? string.Empty).ToList();
+            var selectedObject = (object) selectedItem ?? string.Empty;
+            int newSelectedIndex = itemObjects.IndexOf(selectedObject);
+            if (newSelectedIndex == comboBox.SelectedIndex && itemObjects.SequenceEqual(comboBox.Items.Cast<object>()))
             {
                 return;
             }
             comboBox.Items.Clear();
-            comboBox.Items.AddRange(itemObjects);
+            comboBox.Items.AddRange(itemObjects.ToArray());
             comboBox.SelectedIndex = newSelectedIndex;
         }
 

@@ -1206,4 +1206,10 @@ Would you like to continue?
   <data name="CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for__1_" xml:space="preserve">
     <value>Error: "{0}" is not a valid value for {1}.</value>
   </data>
+  <data name="AbstractModificationMatcher_CreateDocNodeFromSettings_In___0_____1_" xml:space="preserve">
+      <value>In "{0}": {1}</value>
+  </data>
+  <data name="AbstractModificationMatcher_CreateDocNodeFromSettings_In_entry___0___of___1_____2_" xml:space="preserve">
+      <value>In entry "{0}" of "{1}": {2}</value>
+  </data>
 </root>
