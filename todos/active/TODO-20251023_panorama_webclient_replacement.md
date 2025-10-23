@@ -1,7 +1,8 @@
-# TODO-panorama_webclient_replacement.md
+# TODO-20251023_panorama_webclient_replacement.md
 
-## Branch Information (Future)
-- **Branch**: Not yet created - will be `Skyline/work/YYYYMMDD_panorama_webclient_replacement`
+## Branch Information
+- **Branch**: `Skyline/work/20251023_panorama_webclient_replacement`
+- **Created**: 2025-10-23
 - **Objective**: Migrate PanoramaClient from WebClient to HttpClient
 
 ## Background
