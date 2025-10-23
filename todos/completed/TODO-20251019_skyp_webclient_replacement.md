@@ -7,8 +7,9 @@
 
 ## Pull Request
 **PR**: #3656
-**Status**: Open (TeamCity tests running)
-**Updated**: Merged latest master into PR branch (2025-10-22)
+**Merged**: 2025-10-22
+**Status**: Merged to master
+**TeamCity**: All tests passing
 
 ## Background
 
@@ -37,36 +38,36 @@ This work builds directly on the WebClient migration foundation established in t
 
 ## Task Checklist
 
-### Phase 1: Analysis
-- [ ] Read and understand `SkypSupport.cs`
-  - [ ] Identify all WebClient usage points
-  - [ ] Understand download flow and progress reporting
-  - [ ] Check error handling patterns
-  - [ ] Identify all callers in `SkylineWindow` and elsewhere
+### Phase 1: Analysis ✅
+- [x] Read and understand `SkypSupport.cs`
+  - [x] Identify all WebClient usage points
+  - [x] Understand download flow and progress reporting
+  - [x] Check error handling patterns
+  - [x] Identify all callers in `SkylineWindow` and elsewhere
 
-### Phase 2: Migration
-- [ ] Replace WebClient with `HttpClientWithProgress`
-  - [ ] Update download method signatures if needed
-  - [ ] Integrate with existing progress reporting (likely `LongWaitDlg`)
-  - [ ] Ensure proper exception handling with `MapHttpException()`
-  - [ ] Maintain backward compatibility
+### Phase 2: Migration ✅
+- [x] Replace WebClient with `HttpClientWithProgress`
+  - [x] Update download method signatures if needed
+  - [x] Integrate with existing progress reporting (likely `LongWaitDlg`)
+  - [x] Ensure proper exception handling with `MapHttpException()`
+  - [x] Maintain backward compatibility
 
-### Phase 3: Testing
-- [ ] Create test coverage in existing or new test file
-  - [ ] Test successful download of `.skyp` from URL
-  - [ ] Test network failure scenarios using `HttpClientTestHelper`
-  - [ ] Test user cancellation with `CancelClickedTestException`
-  - [ ] Test invalid URLs (HTTP 404, 500, etc.)
-  - [ ] Verify progress reporting works correctly
+### Phase 3: Testing ✅
+- [x] Create test coverage in existing or new test file
+  - [x] Test successful download of `.skyp` from URL
+  - [x] Test network failure scenarios using `HttpClientTestHelper`
+  - [x] Test user cancellation with `CancelClickedTestException`
+  - [x] Test invalid URLs (HTTP 404, 500, etc.)
+  - [x] Verify progress reporting works correctly
 
-### Phase 4: Validation
-- [ ] Manual testing
-  - [ ] Open `.skyp` file from web URL (e.g., tutorial)
-  - [ ] Test with WiFi off (should show network error)
-  - [ ] Test cancellation during download
-  - [ ] Verify error messages are user-friendly
-- [ ] Run full test suite locally in all locales
-- [ ] Verify TeamCity tests pass
+### Phase 4: Validation ✅
+- [x] Manual testing
+  - [x] Open `.skyp` file from web URL (e.g., tutorial)
+  - [x] Test with WiFi off (should show network error)
+  - [x] Test cancellation during download
+  - [x] Verify error messages are user-friendly
+- [x] Run full test suite locally in all locales
+- [x] Verify TeamCity tests pass
 
 ## Tools & Scripts
 
@@ -318,35 +319,35 @@ using (var helper = HttpClientTestHelper.SimulateHttp401()) {
 
 ---
 
-## Success Criteria
+## Success Criteria ✅
 
-### Functional
-- [ ] `.skyp` files download successfully from web URLs
-- [ ] Progress reporting works correctly during download
-- [ ] User can cancel download mid-stream
-- [ ] Network errors show user-friendly, localized messages
-- [ ] HTTP status errors (404, 500) handled gracefully
-- [ ] **No message-based parsing logic outside `HttpClientWithProgress`**
+### Functional ✅
+- [x] `.skyp` files download successfully from web URLs
+- [x] Progress reporting works correctly during download
+- [x] User can cancel download mid-stream
+- [x] Network errors show user-friendly, localized messages
+- [x] HTTP status errors (404, 500) handled gracefully
+- [x] **No message-based parsing logic outside `HttpClientWithProgress`**
 
-### Testing
-- [ ] Test coverage for all network failure scenarios
-- [ ] Test coverage for cancellation
-- [ ] Test coverage for successful download
-- [ ] All tests pass locally in 5 locales (en, zh-CHS, ja, tr, fr)
-- [ ] TeamCity tests pass
+### Testing ✅
+- [x] Test coverage for all network failure scenarios
+- [x] Test coverage for cancellation
+- [x] Test coverage for successful download
+- [x] All tests pass locally in 5 locales (en, zh-CHS, ja, tr, fr)
+- [x] TeamCity tests pass
 
-### Code Quality
-- [ ] Follows established `HttpClientWithProgress` patterns
-- [ ] Uses `HttpClientTestHelper` for all test simulations
-- [ ] Maintains DRY principles in test code
-- [ ] Includes XML documentation
-- [ ] Preserves encapsulation boundaries; no external code re-implements internal exception mapping
-- [ ] No regressions in existing `.skyp` functionality
+### Code Quality ✅
+- [x] Follows established `HttpClientWithProgress` patterns
+- [x] Uses `HttpClientTestHelper` for all test simulations
+- [x] Maintains DRY principles in test code
+- [x] Includes XML documentation
+- [x] Preserves encapsulation boundaries; no external code re-implements internal exception mapping
+- [x] No regressions in existing `.skyp` functionality
 
-### No WebClient Remaining
-- [ ] `SkypSupport.cs` has zero WebClient usage
-- [ ] Core `Skyline.exe` has zero WebClient usage (excluding PanoramaClient)
-- [ ] Ready to add `CodeInspectionTest` for WebClient prohibition (after PanoramaClient migration)
+### No WebClient Remaining ✅
+- [x] `SkypSupport.cs` has zero WebClient usage
+- [x] Core `Skyline.exe` has zero WebClient usage (excluding PanoramaClient)
+- [x] Ready to add `CodeInspectionTest` for WebClient prohibition (after PanoramaClient migration)
 
 ## Estimated Effort
 
@@ -372,6 +373,100 @@ Please:
 
 The TODO file contains full context. Let's make core Skyline.exe WebClient-free!
 ```
+
+---
+
+## ✅ Completion Summary
+
+**Branch**: `Skyline/work/20251019_skyp_webclient_replacement`
+**PR**: #3656
+**Merged**: 2025-10-22
+**TeamCity Results**: All tests passing in all locales (en, zh-CHS, ja, tr, fr)
+
+### What Was Actually Done
+
+**Phase 1: Core Migration**
+- Added `NetworkRequestException` to `HttpClientWithProgress` for structured HTTP error handling
+- Added `AddAuthorizationHeader()` API to `HttpClientWithProgress` for authenticated downloads
+- Added automatic download size formatting to `HttpClientWithProgress` progress messages
+- Migrated `SkypSupport.cs` from `WebClient` to `HttpClientWithProgress`
+- Implemented `HttpDownloadClient` using `HttpClientWithProgress` and `FileSaver` pattern
+- Updated `SkypTest.cs` to use `HttpClientTestHelper` for network failure testing
+- Eliminated all message-parsing anti-patterns using `NetworkRequestException.StatusCode` property
+
+**Phase 2: Code Cleanup**
+- Replaced `DownloadClientCreator` pattern with `Func<>` dependency injection using named factory functions
+- Moved `SkypDownloadException` helper methods to `SkypSupport` as private static methods
+- Deleted `SkypDownloadException` class (~150 lines removed)
+- Simplified dependency injection - no static state, no IDisposable complexity
+
+**Documentation Improvements**
+- Updated `WORKFLOW.md` with AI agent build/test/ReSharper guidelines
+- Created comprehensive `TESTING.md` consolidating all testing documentation:
+  - Test project structure (Test, TestData, TestFunctional, TestConnected, TestTutorial, TestPerf)
+  - Test execution tools (TestRunner, SkylineTester, SkylineNightly, SkylineNightlyShim)
+  - Dependency injection patterns for testing (constructor injection vs static+IDisposable)
+  - AssertEx assertion library documentation
+  - HttpClientTestHelper usage patterns
+  - Translation-proof testing practices
+  - Test performance optimization guidelines
+- Updated `STYLEGUIDE.md` to reference `TESTING.md`
+
+### Key Files Modified
+- `pwiz_tools/Skyline/Common/SystemUtil/HttpClientWithProgress.cs` - Added NetworkRequestException, AddAuthorizationHeader, download size formatting
+- `pwiz_tools/Skyline/FileUI/SkypSupport.cs` - Migrated to HttpClient, simplified dependency injection, removed SkypDownloadException
+- `pwiz_tools/Skyline/FileUI/SkypFile.cs` - Added DownloadTempPath and SafePath properties for FileSaver pattern
+- `pwiz_tools/Skyline/TestFunctional/SkypTest.cs` - Updated to use HttpClientTestHelper and HttpStatusCode enum
+- `WORKFLOW.md` - Added AI agent build/test guidelines
+- `TESTING.md` - New comprehensive testing documentation (created)
+- `STYLEGUIDE.md` - Updated to reference TESTING.md
+
+### Design Decisions
+
+**NetworkRequestException**: Chose dedicated exception type (Option 1 from design notes) over helper method to provide structured access to HTTP status codes and request URIs, eliminating brittle message parsing.
+
+**Dependency Injection Pattern**: Used `Func<>` factory with named static functions instead of creator pattern. This provides clean dependency injection without static mutable state or IDisposable complexity. Named functions (vs lambdas) improve debuggability and discoverability.
+
+**Testing Pattern**: Maintained interface-based testing with SUCCESS-only test implementations. Failures tested via real production code + `HttpClientTestHelper` intercepting at HttpClient level.
+
+**Static+IDisposable Pattern**: Attempted to refactor `ToolStoreUtil.ToolStoreClient` away from static+IDisposable pattern, but discovered this pattern is **appropriate for deep call stack testing** where tests need to intercept at high-level entry points (`SkylineWindow` methods) without polluting every layer with test parameters. Documented this pattern in `TESTING.md` as Pattern 2.
+
+### Unexpected Findings
+
+1. **Call stack depth determines testing pattern**: Shallow call stacks (SkypSupport) benefit from constructor injection. Deep call stacks (ToolStore, HttpClient) benefit from static+IDisposable pattern. Not all static mutable state is bad - it's a legitimate testing pattern when used correctly.
+
+2. **AssertEx underutilized**: Found custom `AssertErrorContains()` wrapper that just calls `AssertEx.Contains()`. Many developers may not be aware of the full `AssertEx` API (FileExists, ThrowsException, Serializable, NoDiff, etc.). Documented comprehensively in `TESTING.md`.
+
+3. **Test project architecture not documented**: No central documentation existed for test project structure (Test, TestData, TestFunctional, TestConnected, TestTutorial, TestPerf) or test execution tools (TestRunner, SkylineTester, SkylineNightly, SkylineNightlyShim). Created `TESTING.md` to fill this gap.
+
+4. **AbstractFunctionalTestEx not clearly distinguished**: Most tests should use `AbstractFunctionalTestEx` for high-level workflow helpers (ImportResultsFile, ShareDocument, etc.) but this wasn't clearly documented. Updated `TESTING.md` to explain the difference from `AbstractFunctionalTest`.
+
+### Benefits Achieved
+
+**For Users:**
+- Consistent progress reporting with download size for .skyp files
+- Cancellation support during .skyp downloads
+- User-friendly, localized error messages
+- Authenticated Panorama .skyp downloads now supported
+
+**For Developers:**
+- No more WebClient in core Skyline.exe (except PanoramaClient)
+- Structured exception handling eliminates message parsing
+- Comprehensive testing documentation in one place
+- Clear guidelines on dependency injection patterns
+- AI agent workflow guidelines prevent build/test confusion
+
+**For Code Quality:**
+- Type-safe HTTP error handling via `NetworkRequestException`
+- Eliminated ~150 lines of duplicate code
+- Simplified dependency injection (no creator pattern overhead)
+- Translation-proof testing patterns documented
+- Encapsulation boundaries preserved
+
+### Follow-up Work Created
+None - all planned work completed.
+
+---
 
 ## Notes
 

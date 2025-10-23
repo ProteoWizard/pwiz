@@ -385,7 +385,45 @@ git commit -m "Add PR #1234 reference to TODO"
 git push
 ```
 
-**Step 4: Move TODO to completed/ with Git (after PR is merged)**
+**Step 4: Prepare for merge (after PR is approved, before merging)**
+
+**Update TODO checkboxes:**
+- Mark all completed tasks as `[x]` in the Task Checklist and Success Criteria sections
+- This creates an accurate historical record of what was accomplished
+- Remove or mark as incomplete any tasks that were planned but not done
+
+**Generate merge summary for GitHub:**
+- Create a brief summary (single screen of text) for the merge commit message
+- Include: Summary, Key Changes, Benefits, Testing status
+- Reference the TODO file for complete details: `See todos/completed/TODO-YYYYMMDD_description.md for complete details.`
+- Keep it concise - the TODO file contains the full context
+
+**Example merge summary template:**
+```markdown
+## PR #XXXX: [Brief title]
+
+### Summary
+[1-2 sentences describing what was done and why]
+
+### Key Changes
+- [Major change 1]
+- [Major change 2]
+- [Major change 3]
+
+### Benefits
+- Users: [User-facing improvements]
+- Developers: [Developer experience improvements]
+- Code Quality: [Quality improvements]
+
+### Testing
+✅ [Test results summary]
+
+See `todos/completed/TODO-YYYYMMDD_description.md` for complete details.
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+**Step 5: Move TODO to completed/ with Git (after PR is merged)**
 ```bash
 # IMPORTANT: Use git mv to preserve Git history when moving tracked files
 # NEVER move to completed/ without a PR reference in the TODO file
@@ -394,14 +432,14 @@ git commit -m "Move TODO to completed - PR #1234 merged"
 git push
 ```
 
-**Step 5: After merge to master**
+**Step 6: After merge to master**
 ```bash
 git checkout master
 git pull origin master
 git branch -d Skyline/work/YYYYMMDD_description  # Delete local branch
 ```
 
-**Step 6: Periodic cleanup (monthly or as needed)**
+**Step 7: Periodic cleanup (monthly or as needed)**
 ```bash
 # Move old completed TODOs (>3 months) to archive or delete
 git mv todos/completed/TODO-20240715_old_work.md todos/archive/
