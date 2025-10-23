@@ -34,7 +34,6 @@ namespace pwiz.SkylineTestUtil
     /// </summary>
     public class HttpClientTestHelper : IDisposable
     {
-        // ReSharper disable once NotAccessedField.Local
         private readonly HttpClientTestBehavior _behavior;
         private readonly Exception _simulatedException;
         private readonly HttpClientWithProgress.IHttpClientTestBehavior _originalTestBehavior;
@@ -211,6 +210,35 @@ namespace pwiz.SkylineTestUtil
         public static HttpClientTestHelper SimulateSuccessfulDownload(string mockData, bool simulateProgress = false)
         {
             return SimulateSuccessfulDownload(Encoding.UTF8.GetBytes(mockData), simulateProgress);
+        }
+
+        /// <summary>
+        /// Creates a test helper that simulates a successful upload without network access.
+        /// Upload operations will write to the provided capture stream instead of network.
+        /// Tests can verify the captured data matches what was uploaded.
+        /// </summary>
+        /// <param name="captureStream">Stream to capture uploaded data for validation. If null, creates a new MemoryStream.</param>
+        /// <param name="simulateProgress">If true, simulates chunked processing for progress reporting tests</param>
+        /// <returns>Test helper with the capture stream available via GetCaptureStream()</returns>
+        public static HttpClientTestHelper SimulateSuccessfulUpload(Stream captureStream = null, bool simulateProgress = false)
+        {
+            captureStream ??= new MemoryStream();
+            var behavior = new HttpClientTestBehavior
+            {
+                MockUploadCaptureStream = captureStream,
+                SimulateProgress = simulateProgress
+            };
+            return new HttpClientTestHelper(behavior);
+        }
+
+        /// <summary>
+        /// Gets the stream that captured uploaded data during a simulated upload.
+        /// Use this to verify the uploaded data matches expectations.
+        /// </summary>
+        /// <returns>The capture stream, or null if not in upload simulation mode</returns>
+        public Stream GetCaptureStream()
+        {
+            return _behavior?.MockUploadCaptureStream;
         }
 
         #region Expected message helpers
@@ -406,8 +434,14 @@ namespace pwiz.SkylineTestUtil
     {
         public Exception FailureException { get; set; }
         public byte[] MockResponseData { get; set; }
+        public Stream MockUploadCaptureStream { get; set; }
         public bool SimulateProgress { get; set; }
         public Action OnProgressCallback { get; set; }
+
+        public Stream GetMockUploadStream(Uri uri)
+        {
+            return MockUploadCaptureStream;
+        }
 
         public Stream GetMockResponseStream(Uri uri, out long contentLength)
         {

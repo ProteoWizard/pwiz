@@ -40,6 +40,7 @@ namespace pwiz.Common.SystemUtil
     public class HttpClientWithProgress : IDisposable
     {
         private readonly HttpClient _httpClient;
+        private readonly CookieContainer _cookieContainer;
         private readonly IProgressMonitor _progressMonitor;
         private IProgressStatus _progressStatus;
         private string _progressMessageWithoutSize; // Base message before download size is appended
@@ -50,7 +51,8 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         /// <param name="progressMonitor">Progress monitor for reporting download progress and handling cancellation</param>
         /// <param name="status">Initial progress status to update with an ID tracked by the progress monitor. If null, creates a new ProgressStatus.</param>
-        public HttpClientWithProgress(IProgressMonitor progressMonitor, IProgressStatus status = null)
+        /// <param name="cookieContainer">Optional cookie container for session management (e.g., Panorama authentication). If null, cookies are not persisted.</param>
+        public HttpClientWithProgress(IProgressMonitor progressMonitor, IProgressStatus status = null, CookieContainer cookieContainer = null)
         {
             // Ensure HttpClient respects system proxy (including PAC) and supports gzip/deflate
             var handler = new HttpClientHandler
@@ -66,6 +68,14 @@ namespace pwiz.Common.SystemUtil
                 handler.Proxy.Credentials = CredentialCache.DefaultCredentials;
             }
 
+            // Configure cookie container for session management (Panorama, authenticated sites)
+            if (cookieContainer != null)
+            {
+                handler.CookieContainer = cookieContainer;
+                handler.UseCookies = true;
+                _cookieContainer = cookieContainer;
+            }
+
             _httpClient = new HttpClient(handler);
             _progressMonitor = progressMonitor;
             _progressStatus = status ?? new ProgressStatus();
@@ -79,6 +89,40 @@ namespace pwiz.Common.SystemUtil
         public void AddAuthorizationHeader(string authHeaderValue)
         {
             _httpClient.DefaultRequestHeaders.Add("Authorization", authHeaderValue);
+        }
+
+        /// <summary>
+        /// Adds a custom header to all requests made by this HttpClient instance.
+        /// Use this for CSRF tokens, API keys, or other custom headers required by the server.
+        /// If the header already exists, it will be removed and replaced with the new value.
+        /// </summary>
+        /// <param name="name">The header name (e.g., "X-LABKEY-CSRF", "X-API-Key")</param>
+        /// <param name="value">The header value</param>
+        public void AddHeader(string name, string value)
+        {
+            // Remove existing header if present
+            if (_httpClient.DefaultRequestHeaders.Contains(name))
+            {
+                _httpClient.DefaultRequestHeaders.Remove(name);
+            }
+            // Add new header
+            _httpClient.DefaultRequestHeaders.Add(name, value);
+        }
+
+        /// <summary>
+        /// Gets a cookie value from the cookie container for a given URI.
+        /// Returns null if no cookie container was provided or if the cookie is not present.
+        /// </summary>
+        /// <param name="uri">The URI to get cookies for (e.g., https://panoramaweb.org/)</param>
+        /// <param name="cookieName">The name of the cookie to retrieve (e.g., "X-LABKEY-CSRF")</param>
+        /// <returns>The cookie value, or null if not found</returns>
+        public string GetCookie(Uri uri, string cookieName)
+        {
+            if (_cookieContainer == null)
+                return null;
+
+            var cookies = _cookieContainer.GetCookies(uri);
+            return cookies[cookieName]?.Value;
         }
 
         /// <summary>
@@ -277,27 +321,46 @@ namespace pwiz.Common.SystemUtil
                 outputStream.Write(buffer, 0, bytesRead);
                 downloadedBytes += bytesRead;
 
-                // Capture base message on first progress update
-                _progressMessageWithoutSize ??= _progressStatus.Message;
-
-                // Report progress with download size appended
-                var messageWithSize = new StringBuilder()
-                    .AppendLine(_progressMessageWithoutSize)
-                    .AppendLine()
-                    .AppendLine(FormatDownloadSize(downloadedBytes, totalBytes)).ToString();
+                var message = GetProgressMessage(totalBytes, downloadedBytes);
 
                 if (totalBytes > 0)
                 {
                     var percentage = (int)(downloadedBytes * 100 / totalBytes);
                     _progressMonitor.UpdateProgress(_progressStatus =
-                        _progressStatus.ChangeMessage(messageWithSize).ChangePercentComplete(percentage));
+                        _progressStatus.ChangeMessage(message).ChangePercentComplete(percentage));
                 }
                 else
                 {
                     _progressMonitor.UpdateProgress(_progressStatus =
-                        _progressStatus.ChangeMessage(messageWithSize));
+                        _progressStatus.ChangeMessage(message));
                 }
             }
+        }
+
+        private string GetProgressMessage(long totalBytes, long downloadedBytes)
+        {
+            // Capture base message on first progress update
+            _progressMessageWithoutSize ??= _progressStatus.Message;
+
+            // Report progress with download size appended
+            return GetProgressMessageWithSize(_progressMessageWithoutSize, downloadedBytes, totalBytes);
+        }
+
+        /// <summary>
+        /// Builds progress message with size information appended.
+        /// Prevents size from being appended repeatedly by using separate base message and size components.
+        /// </summary>
+        /// <param name="baseMessage">The base progress message without size (e.g., "Downloading file.txt")</param>
+        /// <param name="transferredBytes">Number of bytes transferred</param>
+        /// <param name="totalBytes">Total bytes to transfer (0 if unknown)</param>
+        /// <returns>Progress message with size appended in format: "{baseMessage}\n\n{transferred} / {total}"</returns>
+        public static string GetProgressMessageWithSize(string baseMessage, long transferredBytes, long totalBytes)
+        {
+            return new StringBuilder()
+                .AppendLine(baseMessage)
+                .AppendLine()
+                .AppendLine(FormatDownloadSize(transferredBytes, totalBytes))
+                .ToString();
         }
 
         /// <summary>
@@ -355,6 +418,15 @@ namespace pwiz.Common.SystemUtil
             /// <param name="contentLength">Output parameter for the content length (for progress reporting)</param>
             /// <returns>A stream containing mock response data, or null to use actual network</returns>
             Stream GetMockResponseStream(Uri uri, out long contentLength);
+
+            /// <summary>
+            /// Gets a destination stream for testing upload operations.
+            /// Upload data will be written to this stream instead of being sent to the network.
+            /// Returns null to use actual network upload.
+            /// </summary>
+            /// <param name="uri">The URI being uploaded to</param>
+            /// <returns>A stream to capture uploaded data, or null to use actual network</returns>
+            Stream GetMockUploadStream(Uri uri);
         }
 
         public class NoNetworkTestException : Exception
@@ -496,6 +568,167 @@ namespace pwiz.Common.SystemUtil
             if (completed != 0)
                 throw new TimeoutException(string.Format(MessageResources.HttpClientWithProgress_ReadWithTimeout_The_read_operation_timed_out_while_downloading_from__0__, uri));
             return readTask.Result;
+        }
+
+        /// <summary>
+        /// Uploads a file to the specified URI with progress reporting and cancellation support.
+        /// Uses the same chunked upload pattern as downloads for consistency.
+        /// </summary>
+        /// <param name="uri">The URI to upload to</param>
+        /// <param name="method">The HTTP method to use (e.g., "PUT", "POST")</param>
+        /// <param name="fileName">The path to the file to upload</param>
+        public void UploadFile(Uri uri, string method, string fileName)
+        {
+            using var fileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+            UploadFromStream(uri, method, fileStream, Path.GetFileName(fileName));
+        }
+
+        /// <summary>
+        /// Uploads a byte array to the specified URI with progress reporting and cancellation support.
+        /// Uses the same chunked upload pattern as downloads for consistency.
+        /// </summary>
+        /// <param name="uri">The URI to upload to</param>
+        /// <param name="method">The HTTP method to use (e.g., "PUT", "POST")</param>
+        /// <param name="data">The byte array to upload</param>
+        public void UploadData(Uri uri, string method, byte[] data)
+        {
+            using var memoryStream = new MemoryStream(data);
+            UploadFromStream(uri, method, memoryStream);
+        }
+
+        /// <summary>
+        /// Uploads a stream to the specified URI with progress reporting and cancellation support.
+        /// Streams directly from input to network without buffering entire file in memory.
+        /// Progress is reported during the network upload (the expensive operation), not during file read.
+        /// </summary>
+        private void UploadFromStream(Uri uri, string method, Stream inputStream, string fileName = null)
+        {
+            long totalBytes = inputStream.Length;
+
+            // Wrap stream with progress tracking - ProgressStream.Read() will be called by HttpClient
+            // during SendAsync(), reporting progress during the actual NETWORK upload
+            var progressStream = new ProgressStream(inputStream, totalBytes, (uploaded) =>
+            {
+                UpdateUploadProgress(uploaded, totalBytes, uri);
+            });
+
+            // Build the HTTP request (exercises request building code in tests)
+            var request = new HttpRequestMessage(new HttpMethod(method), uri);
+            request.Content = new StreamContent(progressStream);
+            
+            if (!string.IsNullOrEmpty(fileName))
+            {
+                request.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment")
+                {
+                    FileName = fileName
+                };
+            }
+
+            // Send the upload to the network (or simulate for testing)
+            // HttpClient reads from progressStream AS IT UPLOADS, triggering progress callbacks
+            WithExceptionHandling(uri, () =>
+            {
+                // Check if we should capture upload data for testing (bypass actual network send)
+                var mockUploadStream = TestBehavior?.GetMockUploadStream(uri);
+                if (mockUploadStream != null)
+                {
+                    // Testing mode: Read from request content and write to mock stream
+                    // This exercises ProgressStream.Read() and UpdateUploadProgress() just like real uploads
+                    // AND validates that the correct data is being uploaded
+                    var buffer = new byte[8192];
+                    var contentStream = request.Content.ReadAsStreamAsync().Result;
+                    while (true)
+                    {
+                        int bytesRead = contentStream.Read(buffer, 0, buffer.Length);
+                        if (bytesRead <= 0)
+                            break;
+                        mockUploadStream.Write(buffer, 0, bytesRead);
+                    }
+                    // Return success response without actually sending to network
+                    return new HttpResponseMessage(HttpStatusCode.OK);
+                }
+
+                // Normal path: send the request - HttpClient reads from progressStream during upload
+                // Progress is reported during the NETWORK operation, not during file read
+                var response = _httpClient.SendAsync(request, CancellationToken).Result;
+                response.EnsureSuccessStatusCode();
+                return response;
+            });
+        }
+
+        private void UpdateUploadProgress(long uploadedBytes, long totalBytes, Uri uri)
+        {
+            if (_progressMonitor == null)
+                return;
+
+            var message = GetProgressMessage(totalBytes, uploadedBytes);
+
+            if (totalBytes > 0)
+            {
+                var percentage = (int)(uploadedBytes * 100 / totalBytes);
+                _progressMonitor.UpdateProgress(_progressStatus =
+                    _progressStatus.ChangeMessage(message).ChangePercentComplete(percentage));
+            }
+            else
+            {
+                _progressMonitor.UpdateProgress(_progressStatus =
+                    _progressStatus.ChangeMessage(message).ChangePercentComplete(-1));
+            }
+
+            // Check for cancellation during upload
+            if (_progressMonitor.IsCanceled)
+                throw new OperationCanceledException();
+        }
+
+        /// <summary>
+        /// Stream wrapper that reports progress during read operations.
+        /// Used for upload progress tracking - wraps the source stream so that progress
+        /// is reported as HttpClient reads from it during SendAsync().
+        /// Reads are NOT chunked with timeout here because HttpClient controls the read loop.
+        /// Progress tracking and cancellation happen in the callback.
+        /// </summary>
+        private class ProgressStream : Stream
+        {
+            private readonly Stream _innerStream;
+            // ReSharper disable once NotAccessedField.Local
+            private readonly long _totalBytes;  // For debugging
+            private readonly Action<long> _progressCallback;
+            private long _bytesRead;
+
+            public ProgressStream(Stream innerStream, long totalBytes, Action<long> progressCallback)
+            {
+                _innerStream = innerStream;
+                _totalBytes = totalBytes;
+                _progressCallback = progressCallback;
+            }
+
+            public override bool CanRead => _innerStream.CanRead;
+            public override bool CanSeek => _innerStream.CanSeek;
+            public override bool CanWrite => false;
+            public override long Length => _innerStream.Length;
+            public override long Position
+            {
+                get => _innerStream.Position;
+                set => _innerStream.Position = value;
+            }
+
+            public override int Read(byte[] buffer, int offset, int count)
+            {
+                // HttpClient calls this during SendAsync() as it uploads
+                // Read from the inner stream (e.g., FileStream from disk)
+                int bytesRead = _innerStream.Read(buffer, offset, count);
+                _bytesRead += bytesRead;
+                
+                // Report progress - callback will check cancellation
+                _progressCallback?.Invoke(_bytesRead);
+                
+                return bytesRead;
+            }
+
+            public override void Flush() => _innerStream.Flush();
+            public override long Seek(long offset, SeekOrigin origin) => _innerStream.Seek(offset, origin);
+            public override void SetLength(long value) => _innerStream.SetLength(value);
+            public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
         }
 
         public void Dispose()

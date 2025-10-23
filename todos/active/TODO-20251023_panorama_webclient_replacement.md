@@ -105,18 +105,274 @@ LabkeySessionWebClient - Extends WebClient with cookies/CSRF
   - [x] Error handling patterns (`PanoramaServerException`, `LabKeyError`)
   - [x] Progress reporting (`IProgressMonitor` already integrated)
 - [x] Document current behavior and edge cases
-- [ ] **IN PROGRESS:** Detailed code analysis of `WebPanoramaClient` implementation
-- [ ] Identify test coverage gaps
-- [ ] Finalize migration strategy
+- [x] Detailed code analysis of `WebPanoramaClient` implementation
+- [x] Identify test coverage
+- [x] Finalize migration strategy
+
+## Detailed Implementation Analysis
+
+### WebClient Usage Locations
+
+**1. `WebPanoramaClient.ValidateUri()` (lines 584-631)**
+- Simple `WebClient.DownloadString()` for server validation
+- Tries HTTP/HTTPS protocol switching
+- Migration: Use `HttpClientWithProgress.DownloadStringAsync()`
+
+**2. `WebPanoramaClient.DownloadFile()` (lines 773-817)**
+- Uses `LabkeySessionWebClient.DownloadFileAsync()` 
+- Progress events: `DownloadProgressChanged`, `DownloadFileCompleted`
+- Polling loop with `Thread.Sleep(100)` checking `IsCanceled`
+- Formats progress: "Downloading {name}\n\n{downloaded} / {total}"
+- Migration: Use `HttpClientWithProgress.DownloadFileAsync()` (already has progress support)
+
+**3. `WebPanoramaClient.DownloadStringAsync()` (lines 838-864)**
+- Uses `LabkeySessionWebClient.DownloadStringAsync()`
+- Polling loop with `CancellationToken`
+- Migration: Replace with `HttpClientWithProgress.DownloadStringAsync()`
+
+**4. `LabkeySessionWebClient` - Cookie/CSRF Management (PanoramaUtil.cs lines 645-748)**
+- **Cookies:** `CookieContainer` attached in `GetWebRequest()` override
+- **CSRF Token:** 
+  - Retrieved from response cookie `X-LABKEY-CSRF` after first request
+  - Added as header `X-LABKEY-CSRF` on all POST requests
+  - Handles redirect edge case (302) where token appears in request cookies
+  - `GetCsrfTokenFromServer()` - explicit call to ensure token present
+- **Authentication:** Basic auth header added if username/password provided
+- Migration: Need `HttpClientHandler` with `CookieContainer` support
+
+**5. `NonStreamBufferingWebClient` (PanoramaUtil.cs lines 750-784)**
+- Extends `LabkeySessionWebClient`
+- Sets `AllowWriteStreamBuffering = false` for large uploads
+- Sets `Timeout = Timeout.Infinite`
+- Migration: Use `HttpClient.Timeout = Timeout.InfiniteTimeSpan` + streaming upload
+
+**6. `PanoramaRequestHelper` - API Calls (RequestHelper.cs lines 196-310)**
+- Wraps `LabkeySessionWebClient` for GET/POST operations
+- Methods: `DoGet()`, `DoPost()`, `AsyncUploadFile()`
+- Calls `GetCsrfTokenFromServer()` before POST operations
+- Handles `UploadFileAsync` with progress events
+- Migration: Create `HttpPanoramaRequestHelper` using `HttpClientWithProgress`
+
+### Test Coverage Assessment
+
+**Existing Tests:**
+1. **`TestPanoramaClient.cs`** - UI testing (PanoramaFilePicker, PanoramaDirectoryPicker)
+   - Tests navigation, JSON parsing, folder browsing
+   - Uses `TestClientJson` (mock, no network)
+   
+2. **`PanoramaClientPublishTest.cs`** - Publish workflow testing
+   - Tests document upload, folder validation, error handling
+   - Uses mock implementations (`TestLabKeyErrorPanoramaClient`)
+   - **No actual network operations tested**
+
+3. **`PanoramaClientDownloadTest.cs`** (TestConnected)
+   - Tests with **real Panorama server** (panoramaweb.org)
+   - Requires network connection
+   - Tests file downloads, authentication
+
+**Test Coverage Gaps:**
+- ❌ No tests for cookie/session management
+- ❌ No tests for CSRF token retrieval and usage
+- ❌ No tests for upload progress reporting
+- ❌ No tests for download cancellation
+- ❌ No tests for network failures (would break with HttpClientTestHelper)
+- ❌ No tests for HTTP error status codes (401, 403, 404, 500)
+- ✅ Good coverage of API response parsing and error handling
+
+### Migration Approach
+
+**Phase 2A: Extend HttpClientWithProgress**
+1. Add `HttpClientHandler` configuration support:
+   ```csharp
+   public void ConfigureHandler(Action<HttpClientHandler> configureHandler)
+   {
+       // Allow caller to configure CookieContainer, credentials, etc.
+   }
+   ```
+
+2. Add header management methods (already has `AddAuthorizationHeader()`):
+   ```csharp
+   public void AddHeader(string name, string value)  // For CSRF token
+   ```
+
+3. Add streaming upload with progress:
+   ```csharp
+   public Task<HttpResponseMessage> UploadFileAsync(Uri uri, string method, string filePath,
+       IProgress<UploadProgress> progress, CancellationToken cancellationToken)
+   ```
+
+**Phase 2B: Create HttpPanoramaClient**
+- Replace `LabkeySessionWebClient` with `HttpClientWithProgress` wrapper
+- Implement cookie container and CSRF token management
+- Maintain same public API (`IPanoramaClient` interface)
+- Use existing `IProgressMonitor` parameters
+
+**Phase 2C: Migrate Methods One-by-One**
+1. Start: `ValidateUri()` - Simple GET, no sessions
+2. Next: Authentication methods - Cookie handling, CSRF
+3. Then: `DownloadFile()` - Progress reporting
+4. Then: `SendZipFile()` - Upload with progress (most complex)
+5. Finally: `DownloadStringAsync()` and other helpers
+
+**Phase 3: Update RequestHelper**
+- Create `HttpPanoramaRequestHelper` class
+- Replace `PanoramaRequestHelper` usage
+- Maintain `IRequestHelper` interface
+
+**Phase 4: Comprehensive Testing**
+1. Unit tests with `HttpClientTestHelper`:
+   - Network failures
+   - HTTP status codes (401, 403, 404, 500)
+   - CSRF token handling
+   - Cookie persistence
+   - Cancellation scenarios
+   
+2. Integration tests:
+   - Mock Panorama server responses
+   - Upload/download with progress
+   - Session management across multiple requests
+   
+3. Multi-solution smoke tests:
+   - Skyline.exe publish workflow
+   - AutoQC Panorama integration
+   - SkylineBatch Panorama operations
+
+### Key Decisions
+
+**Cookie Management:**
+- Use `HttpClientHandler.CookieContainer` - standard HttpClient pattern
+- Single `CookieContainer` instance per client session
+- Automatic cookie persistence across requests
+
+**CSRF Token:**
+- Retrieve from `Set-Cookie` header after first request
+- Store in client instance
+- Add as custom header on all POST requests
+- Implement `GetCsrfTokenFromServer()` helper
+
+**Progress Reporting:**
+- `DownloadFile()` - Use existing `HttpClientWithProgress` progress
+- `SendZipFile()` - Need streaming upload with progress callback
+- Maintain `IProgressMonitor.UpdateProgress()` pattern
+
+**Async Pattern:**
+- Use `HttpClient.SendAsync()` with `await` internally
+- Expose synchronous API to callers (existing pattern)
+- Use polling loop for cancellation (matches existing code)
+
+### Risks & Mitigation
+
+**Risk: CSRF token redirect edge case**
+- Current code handles 302 redirect where token appears in request cookies
+- Mitigation: Test redirect scenarios thoroughly, maintain same logic
+
+**Risk: Breaking existing workflows**
+- Many parts of Skyline depend on PanoramaClient
+- Mitigation: Maintain exact same public API, incremental migration, comprehensive testing
+
+**Risk: Multi-solution testing**
+- Must work in Skyline, AutoQC, and SkylineBatch
+- Mitigation: Test in all three contexts before merging
+
+**Risk: Performance regression**
+- WebClient async operations are well-optimized
+- Mitigation: Benchmark upload/download speeds, ensure no slowdown
 
 ### Phase 2: HttpClient Migration
-- [ ] Replace WebClient with HttpClient/HttpClientWithProgress
-- [ ] Migrate authentication handling
-- [ ] Migrate file upload with progress reporting
-- [ ] Migrate API calls (GET, POST, etc.)
+
+#### Phase 2A: Extend HttpClientWithProgress ✅ COMPLETE
+- [x] Add cookie container support via constructor parameter
+  - Optional `CookieContainer` parameter for session management
+  - Configures `HttpClientHandler.CookieContainer` and `UseCookies`
+  - Follows same pattern as existing `IProgressStatus` parameter
+- [x] Add generic header and cookie support (no Panorama-specific knowledge)
+  - `AddHeader(string name, string value)` - Generic custom header support
+  - `GetCookie(Uri uri, string cookieName)` - Generic cookie retrieval
+  - Follows same specific API pattern as `AddAuthorizationHeader()`
+  - **LabKey/Panorama specifics stay in PanoramaClient** (e.g., "X-LABKEY-CSRF")
+- [x] Add file upload with progress reporting
+  - `UploadFile(Uri uri, string method, string fileName)` - Upload file with progress
+  - `UploadFromStream()` - Private helper, uses same `WithExceptionHandling` pattern as downloads
+  - Progress reported via `IProgressMonitor` (consistent with download pattern)
+  - Supports cancellation via `CancellationToken`
+  - Uses `ProgressStream` wrapper to track upload progress
+  - **Uses `WithExceptionHandling()` and `MapHttpException()` for consistent error handling**
+- [x] Fix exception handling to match existing patterns
+  - All upload code now uses `WithExceptionHandling()` wrapper
+  - Maps exceptions to user-friendly messages via `MapHttpException()`
+  - Supports `TestBehavior.FailureException` for testing
+- [x] **DRY refactoring: Extract common transfer logic**
+  - Created `TransferStreamWithProgress(inputStream, outputStream, totalBytes, uri)`
+  - Single implementation of chunked reading with progress, cancellation, timeout
+  - Used by both `DownloadFromStream()` and `UploadFromStream()`
+  - Eliminates ~40 lines of duplicate code
+  - Guarantees identical behavior for upload/download
+  - Single place to update chunking, timeout, cancellation logic
+  - **Classic DRY win for long-term maintenance** (see MEMORY.md)
+- [x] **Add tests to HttpClientWithProgressIntegrationTest** ✅ 17 new tests added
+  - Network failure tests (6): DNS, connection, timeout, connection loss, no network, cancellation
+  - HTTP status tests (6): 401, 403, 404, 500, 429, generic (503)
+  - Success tests (2): UploadFile, UploadData
+  - Progress tests (2): Verify chunked upload with progress reporting, regression test for repeated size bug
+  - Cancellation test (1): User clicks Cancel button during upload
+  - **All tests mirror download pattern** - same helpers, same assertions
+- [x] **Extract progress message building to public static method**
+  - Created `GetProgressMessageWithSize(baseMessage, transferred, total)` - public static
+  - Used by `GetProgressMessage()` for both download and upload
+  - Testable: Added `TestProgressMessageDoesNotRepeatSize()` regression test
+  - **Prevents original bug** where size was appended repeatedly (e.g., "1KB\n\n2KB" instead of "2KB")
+  - Makes progress message format consistent and testable
+- [x] **Improve upload testing to validate data integrity**
+  - Changed `IHttpClientTestBehavior.SimulateUploadSuccess` → `GetMockUploadStream(Uri uri)`
+  - Symmetric with `GetMockResponseStream()` for downloads
+  - Upload tests now capture uploaded data and verify it matches source
+  - Tests validate: content correctness, byte-for-byte accuracy, special characters, binary data
+  - Much more robust than just "no exception" testing
+- [x] **Add comprehensive UTF-8 encoding validation**
+  - Updated all success tests (download and upload) with UTF-8 multi-byte characters
+  - Tests include: Latin extended (café), Greek (αβγδ), Cyrillic (Москва), CJK (中文, 日本語), emoji (🔬🧬📊)
+  - Validates 1-byte, 2-byte, 3-byte, and 4-byte UTF-8 sequences
+  - Ensures proper encoding/decoding for international data (critical for PanoramaClient)
+  - Round-trip validation: string → bytes → string for upload tests
+- [x] Verify no linting errors
+- [x] Verify all upload tests added to DoTest() method
+
+**Key Design Decisions:**
+- Cookie container as optional constructor parameter (not exposed property)
+- Generic methods (`AddHeader`, `GetCookie`) keep HttpClientWithProgress low-level and reusable
+- No LabKey/Panorama-specific knowledge in HttpClientWithProgress
+- PanoramaClient will call `AddHeader("X-LABKEY-CSRF", token)` and `GetCookie(uri, "X-LABKEY-CSRF")`
+- Follows established pattern from `AddAuthorizationHeader()`
+- Maintains encapsulation - no direct header/cookie collection exposure
+- **Upload uses same exception handling pattern as downloads** (`WithExceptionHandling`, `MapHttpException`)
+- Upload progress uses same pattern and helper methods as downloads (`FormatDownloadSize`)
+- All methods are synchronous (blocking) with progress callbacks - matches existing pattern
+
+**Methods Added:**
+- Constructor: `CookieContainer` parameter
+- Headers: `AddHeader(name, value)`, `GetCookie(uri, cookieName)`
+- Upload: `UploadFile(uri, method, fileName)`, private `UploadFromStream(uri, method, stream, fileName)`
+
+**Note:** `UploadString()` and `UploadValues()` already exist from previous migrations - no need to add POST methods.
+
+#### Phase 2B: Migrate WebPanoramaClient (Shared/PanoramaClient/)
+- [ ] Replace `LabkeySessionWebClient` (extends WebClient) with HttpClientWithProgress
+- [ ] Migrate `WebPanoramaClient.ValidateUri()` - Server validation
+- [ ] Migrate `WebPanoramaClient.DownloadFile()` - File downloads with progress
+- [ ] Migrate `WebPanoramaClient.SendZipFile()` - File uploads with progress (most complex)
+- [ ] Migrate `LabkeySessionWebClient` cookie/CSRF management
+- [ ] Migrate `PanoramaRequestHelper` to use HttpClientWithProgress
 - [ ] Ensure proper resource disposal (IDisposable patterns)
 - [ ] Update error handling to use `MapHttpException`
 - [ ] Maintain backward compatibility with existing callers
+
+**Multi-Solution Impact:**
+This migration affects:
+- Skyline.exe (full WinForms UI)
+- AutoQC (console app, uses SharedBatch)
+- SkylineBatch (console app, uses SharedBatch)
+
+All use `Shared/PanoramaClient` - one migration serves all three solutions.
 
 ### Phase 3: Testing
 - [ ] Create comprehensive tests using `HttpClientTestHelper`
