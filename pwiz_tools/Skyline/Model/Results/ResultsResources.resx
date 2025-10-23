@@ -350,4 +350,10 @@ It is recommended that you delete this file so that Skyline can create a new fil
   <data name="ChromatogramManager_LoadBackground_Loading__0_" xml:space="preserve">
     <value>Loading {0}</value>
   </data>
+  <data name="Annotation_DisambiguationPrefix_Annotation__" xml:space="preserve">
+    <value>Annotation: </value>
+  </data>
+  <data name="Property_DisambiguationPrefix_Property__" xml:space="preserve">
+    <value>Property: </value>
+  </data>
 </root>
