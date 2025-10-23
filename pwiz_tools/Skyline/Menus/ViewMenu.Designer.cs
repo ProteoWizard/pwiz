@@ -136,6 +136,7 @@
             this.calibrationCurveMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator36 = new System.Windows.Forms.ToolStripSeparator();
             this.viewPropertiesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator63 = new System.Windows.Forms.ToolStripSeparator();
             this.toolBarToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
@@ -158,6 +159,8 @@
             this.userInterfaceToolStripMenuItem,
             this.toolStripSeparator1,
             this.viewFilesMenuItem,
+            this.toolStripSeparator63,
+            this.viewPropertiesMenuItem,
             this.toolStripSeparator41,
             this.liveReportsMenuItem,
             this.librariesMenuItem,
@@ -175,7 +178,6 @@
             this.massErrorsMenuItem,
             this.calibrationCurveMenuItem,
             this.toolStripSeparator36,
-            this.viewPropertiesMenuItem,
             this.toolBarToolStripMenuItem,
             this.statusToolStripMenuItem});
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
@@ -1055,5 +1057,6 @@
         private System.Windows.Forms.ToolStripMenuItem viewFilesMenuItem;
         private System.Windows.Forms.ToolStripMenuItem viewPropertiesMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator63;
     }
 }

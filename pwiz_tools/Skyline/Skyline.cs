@@ -4934,6 +4934,11 @@ namespace pwiz.Skyline
             ViewMenu.ViewMenuDropDownOpening();
         }
 
+        private void propertiesContextMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            ShowPropertyGridForm(true);
+        }
+
         public void SetModifiedSequenceDisplayOption(DisplayModificationOption displayModificationOption)
         {
             DisplayModificationOption.Current = displayModificationOption;
