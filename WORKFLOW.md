@@ -286,12 +286,15 @@ The TODO file in todos/active/ contains full context. Please read it first, then
 
 When you have a branch-ready TODO file (e.g., `todos/backlog/TODO-utf8_no_bom.md`):
 
-**Step 1: Create branch**
+**Step 1: Ensure master is up to date and create branch**
 ```bash
 git checkout master
 git pull origin master
+git submodule update --init --recursive  # Ensure submodules are in sync
 git checkout -b Skyline/work/20251015_utf8_no_bom  # Use today's date
 ```
+
+**Why the submodule update?** The project has Git submodules (e.g., `DocumentConverter`, `BullseyeSharp`) that need to be at the exact commit master expects. Without this step, submodules may show as modified in all your diffs.
 
 **Step 2: Move and rename TODO file with Git**
 ```bash
@@ -315,10 +318,11 @@ git push -u origin Skyline/work/20251015_utf8_no_bom
 
 When starting fresh without a pre-existing TODO:
 
-**Step 1: Create branch**
+**Step 1: Ensure master is up to date and create branch**
 ```bash
 git checkout master
 git pull origin master
+git submodule update --init --recursive  # Ensure submodules are in sync
 git checkout -b Skyline/work/20251015_new_feature
 ```
 
@@ -479,6 +483,29 @@ This makes the planned work visible to the team and LLM tools.
 - ✅ All completed TODOs **MUST** have a PR reference before moving to completed/
 - ✅ They serve as a permanent record of decisions, context, and implementation details
 - ✅ If doing follow-up work, create a new TODO that references the completed one
+
+### Git Submodule Management
+This project has Git submodules (e.g., `DocumentConverter`, `BullseyeSharp`, `Hardklor`) that must stay in sync.
+
+**Manual approach (requires discipline):**
+```bash
+# After every pull or checkout
+git submodule update --init --recursive
+```
+
+**Automatic approach (recommended):**
+```bash
+# One-time configuration - Git will auto-update submodules on pull/checkout
+git config submodule.recurse true
+```
+
+**Why this matters:**
+- Out-of-sync submodules show as "modified" in every `git status` and diff
+- Creates noise and confusion about what actually changed
+- Can cause merge conflicts if not handled properly
+- The `git submodule update` command syncs to the exact commit master expects
+
+**Best practice:** Configure `submodule.recurse true` once in your local repository to avoid manual steps.
 
 ### Commit Messages
 - Use clear, descriptive messages

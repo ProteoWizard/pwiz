@@ -21,19 +21,93 @@ This is a **focused Phase 2** branch specifically for PanoramaClient migration. 
 - ✅ Exception handling patterns standardized
 - ✅ Testing infrastructure (`HttpClientTestHelper`) available
 
+## Architectural Analysis (2025-10-23)
+
+### ✅ Key Findings: Better Than Expected!
+
+**Architecture is well-designed** - Built by junior dev with senior oversight (developer who built `.skyp` support and has deep HTTP/Panorama experience).
+
+**Three-Layer Architecture:**
+```
+Skyline.exe / SkylineBatch / AutoQC (different UI contexts)
+    ↓
+WebPanoramaPublishClient (Skyline/Util/) - Skyline-specific wrapper
+    ↓
+WebPanoramaClient (Shared/PanoramaClient/) - SHARED across all solutions
+    ↓ (uses)
+LabkeySessionWebClient - Extends WebClient with cookies/CSRF
+```
+
+**Critical Discovery: IProgressMonitor Already Integrated!**
+- `IPanoramaClient` interface already accepts `IProgressMonitor` and `IProgressStatus`
+- No API changes needed - internal implementation only
+- `DownloadFile()` and `SendZipFile()` already have progress parameters
+
+**WebClient Usage (5 locations in Shared/PanoramaClient/):**
+1. `WebPanoramaClient.ValidateUri()` - Server validation
+2. `WebPanoramaClient.DownloadFile()` - File downloads with progress
+3. `WebPanoramaClient` methods via `LabkeySessionWebClient`
+4. `LabkeySessionWebClient` - Cookie/session management + CSRF tokens
+5. `NonStreamBufferingWebClient` - Variant for large uploads
+
+**SharedBatch Relationship:**
+- SharedBatch has simplified copy of `LongWaitDlg` for console apps
+- Uses same `IProgressMonitor` interface
+- Lighter weight, suitable for AutoQC/SkylineBatch
+- **No changes needed to SharedBatch** - it just consumes the Shared/PanoramaClient API
+
+### Migration Complexity: Moderate (Not High!)
+
+**Why manageable:**
+- ✅ IProgressMonitor already integrated
+- ✅ Well-defined interfaces (`IPanoramaClient`, `IRequestHelper`)
+- ✅ Shared project location (one codebase)
+- ✅ Existing test infrastructure
+
+**Key challenges:**
+- ⚠️ Cookie/session management (`CookieContainer`)
+- ⚠️ CSRF token handling
+- ⚠️ Async uploads with progress events
+- ⚠️ Multi-solution testing (Skyline, AutoQC, SkylineBatch)
+
+### Migration Strategy
+
+**Phase 1: Extend HttpClientWithProgress**
+- Add cookie container support (use `HttpClientHandler.CookieContainer`)
+- Verify custom header support (already has `AddAuthorizationHeader()`)
+- Add streaming upload with progress callback support
+
+**Phase 2: Migrate WebPanoramaClient Methods (One at a Time)**
+1. Start: `ValidateUri()` - Simple GET request
+2. Next: `DownloadFile()` - Download with progress
+3. Then: `SendZipFile()` - Upload with progress (most complex)
+4. Finally: Authentication/validation methods
+
+**Phase 3: Migrate RequestHelper**
+- `PanoramaRequestHelper` wraps `LabkeySessionWebClient`
+- Needs same cookie/CSRF support
+
+**Phase 4: Multi-Solution Testing**
+- Test in Skyline.exe (WinForms `LongWaitDlg`)
+- Test in AutoQC (SharedBatch console `LongWaitDlg`)
+- Test in SkylineBatch (SharedBatch console `LongWaitDlg`)
+
+### Estimated Effort: 1-2 weeks
+
 ## Task Checklist
 
-### Phase 1: Analysis & Planning
-- [ ] Read and understand `WebPanoramaPublishClient` in `PanoramaPublishUtil.cs`
-- [ ] Identify all WebClient usage patterns:
-  - Authentication flows
-  - File upload mechanisms
-  - API endpoint calls
-  - Error handling patterns
-  - Progress reporting
-- [ ] Document current behavior and edge cases
+### Phase 1: Analysis & Planning ✅
+- [x] Read and understand architecture layers
+- [x] Identify all WebClient usage patterns:
+  - [x] Authentication flows (session cookies, CSRF tokens)
+  - [x] File upload mechanisms (`UploadFileAsync` with progress events)
+  - [x] API endpoint calls (GET, POST via `RequestHelper`)
+  - [x] Error handling patterns (`PanoramaServerException`, `LabKeyError`)
+  - [x] Progress reporting (`IProgressMonitor` already integrated)
+- [x] Document current behavior and edge cases
+- [ ] **IN PROGRESS:** Detailed code analysis of `WebPanoramaClient` implementation
 - [ ] Identify test coverage gaps
-- [ ] Plan migration strategy
+- [ ] Finalize migration strategy
 
 ### Phase 2: HttpClient Migration
 - [ ] Replace WebClient with HttpClient/HttpClientWithProgress
