@@ -345,7 +345,16 @@ namespace TestPerf
             else
             {
                 PythonInstaller.SimulatedInstallationState = simulatedInstallationState;
-                RunUI(buildLibraryDlg.OkWizardPage);
+                SkylineWindow.BeginInvoke(new Action(buildLibraryDlg.OkWizardPage));
+                WaitForConditionUI(() =>
+                    buildLibraryDlgFinished || null != FindOpenForm<MultiButtonMsgDlg>() ||
+                    null != FindOpenForm<AddIrtPeptidesDlg>());
+                var confirmPythonDlg = FindOpenForm<MultiButtonMsgDlg>();
+                if (confirmPythonDlg != null)
+                {
+                    AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required, confirmPythonDlg.Message);
+                    OkDialog(confirmPythonDlg, confirmPythonDlg.OkDialog);
+                }
             }
 
             if (iRTtype != null)

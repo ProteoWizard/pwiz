@@ -26,7 +26,6 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
 using Ionic.Zip;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
