@@ -336,6 +336,17 @@ LabkeySessionWebClient - Extends WebClient with cookies/CSRF
   - Round-trip validation: string → bytes → string for upload tests
 - [x] Verify no linting errors
 - [x] Verify all upload tests added to DoTest() method
+- [x] **Proof of utility:** Refactor `SkypTest.cs` to use `HttpClientTestHelper` with real user entry point
+  - Removed custom test interfaces (`IDownloadClient`, `TestDownloadClient`, `CreateTestDownloadClient`)
+  - Changed tests to use `SkylineWindow.OpenSkypFile()` - the real user entry point
+  - Uses `HttpClientTestHelper.WithMockResponseFile()` for mocking downloads
+  - Validates new `HttpClientTestHelper` APIs work end-to-end in functional tests
+  - Demonstrates simpler testing approach: no custom interfaces, just test seams + real code paths
+- [x] **Proof of utility 2:** Refactor `ToolStoreDlgTest.cs` to use real code path
+  - Extracted `WebToolStoreClient.GetToolZipFileWithProgress()` as public static method
+  - `TestToolStoreClient.GetToolZipFile()` now calls real production code via `HttpClientTestHelper.WithMockResponseFile()`
+  - Tests validated: TestToolStore and TestToolUpdates both pass
+  - API improvement: `WithMockResponseFile()` now takes `Uri` directly (more type-safe, no `.ToString()` conversions)
 
 **Key Design Decisions:**
 - Cookie container as optional constructor parameter (not exposed property)

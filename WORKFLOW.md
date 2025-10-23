@@ -354,6 +354,77 @@ git push
 - Files modified
 - Any blockers or issues encountered
 
+### Workflow 3A: Early Pull Request for TeamCity Validation
+
+For multi-phase branches, create a PR after the first testable unit of work for TeamCity validation and team visibility:
+
+**When to create early PR:**
+- Branch has multiple phases or takes >1 week
+- First phase is complete and testable
+- Want TeamCity validation before proceeding
+- Want team feedback during development
+
+**Step 1: Create PR after first testable phase**
+```bash
+# Phase 1 complete, committed, pushed
+# Create pull request on GitHub
+```
+
+**Step 2: Mark PR as Work-In-Progress**
+- Title: `[WIP] Brief description - Phase N Complete` or use GitHub Draft PR
+- Message: Single screen summary (see template below)
+- Reference the TODO file for complete details
+- Indicate current phase and next steps
+
+**Step 3: Continue development**
+```bash
+# Make Phase 2 changes
+git add .
+git commit -m "Phase 2: Description"
+git push  # Updates the same PR
+```
+
+**Step 4: Update PR as phases complete**
+- Edit PR description to reflect progress
+- Update phase status (Phase 2A ✅, Phase 2B 🔄)
+- Add TeamCity results as they complete
+- Respond to team feedback
+
+**Step 5: Final merge (when all work complete)**
+- Remove [WIP] from title or mark Draft as Ready
+- Update PR description with final summary
+- Follow standard merge workflow (see Workflow 4 below)
+
+**Early PR Message Template:**
+```markdown
+## Summary
+[1-2 sentences: what is being migrated/refactored and why]
+
+**Phase N (this commit):** [What this phase accomplishes]
+
+**Next:** [What Phase N+1 will do]
+
+## Status
+✅ Phase N complete - all tests passing in all locales
+⏳ Awaiting TeamCity validation
+🔄 Phase N+1 in progress
+
+## Testing
+[Brief bullet points of test coverage]
+
+## Impact
+[Which solutions/projects affected, API compatibility notes]
+
+See `todos/active/TODO-YYYYMMDD_description.md` for complete details.
+```
+
+**Benefits of early PR:**
+- TeamCity validates each phase before proceeding
+- Team visibility into in-progress work
+- Early feedback on architecture decisions
+- Clear checkpoints for complex migrations
+- Continuous integration validation throughout development
+
 ### Workflow 4: Completing Work and Merging
 
 **Step 1: Final updates to TODO**

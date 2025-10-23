@@ -400,19 +400,34 @@ namespace pwiz.SkylineTestFunctional
             if (TestDownloadPath != null)
                 return TestDownloadPath;
 
+            // Find the tool zip file path for this identifier
+            var toolZipPath = GetToolZipPath(packageIdentifier);
+            if (toolZipPath == null)
+                throw new ToolExecutionException(ToolsUIResources.TestToolStoreClient_GetToolZipFile_Cannot_find_a_file_with_that_identifier_);
+
+            // Use HttpClientTestHelper to mock the download and call the real production code
+            var uri = new UriBuilder(WebToolStoreClient.TOOL_STORE_URI)
+            {
+                Path = "/skyts/home/downloadTool.view",
+                Query = @"lsid=" + Uri.EscapeDataString(packageIdentifier)
+            };
+
+            using var helper = HttpClientTestHelper.WithMockResponseFile(uri.Uri, toolZipPath);
+            return WebToolStoreClient.GetToolZipFileWithProgress(progressMonitor, progressStatus, packageIdentifier, directory);
+        }
+
+        private string GetToolZipPath(string packageIdentifier)
+        {
             foreach (var item in ToolStoreItems ?? GetToolStoreItems())
             {
                 if (item.Identifier.Equals(packageIdentifier))
                 {
                     Assert.IsNotNull(item.FilePath);
-                    string fileName = Path.GetFileName(item.FilePath);
-                    string path = Path.Combine(directory, fileName);
-                    File.Copy(item.FilePath, path, true);
-                    return path;
+                    return item.FilePath;
                 }
             }
 
-            throw new ToolExecutionException(ToolsUIResources.TestToolStoreClient_GetToolZipFile_Cannot_find_a_file_with_that_identifier_);
+            return null;
         }
 
         public bool IsToolUpdateAvailable(string identifier, Version version)

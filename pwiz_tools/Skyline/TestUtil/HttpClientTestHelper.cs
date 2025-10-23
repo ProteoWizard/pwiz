@@ -18,7 +18,9 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -232,12 +234,106 @@ namespace pwiz.SkylineTestUtil
         }
 
         /// <summary>
+        /// Creates a test helper with mock responses from a dictionary mapping URIs to streams.
+        /// Most flexible option - supports multiple URIs and custom stream types.
+        /// </summary>
+        /// <param name="responses">Dictionary mapping URIs to response streams</param>
+        public static HttpClientTestHelper WithMockResponses(Dictionary<Uri, Stream> responses)
+        {
+            var behavior = new HttpClientTestBehavior
+            {
+                MockResponseMap = responses
+            };
+            return new HttpClientTestHelper(behavior);
+        }
+
+        /// <summary>
+        /// Creates a test helper with mock responses from URL strings to file paths.
+        /// Convenience method for common pattern of serving test data files.
+        /// </summary>
+        /// <param name="urlToFilePath">Dictionary mapping URL strings to file paths</param>
+        public static HttpClientTestHelper WithMockResponseFiles(Dictionary<Uri, string> urlToFilePath)
+        {
+            var streams = urlToFilePath.ToDictionary(
+                kvp => kvp.Key,
+                kvp => (Stream)File.OpenRead(kvp.Value)
+            );
+            return WithMockResponses(streams);
+        }
+
+        /// <summary>
+        /// Creates a test helper with a single mock response file.
+        /// Most concise option for single-file test scenarios.
+        /// </summary>
+        /// <param name="url">The URL to mock</param>
+        /// <param name="filePath">Path to the file containing response data</param>
+        public static HttpClientTestHelper WithMockResponseFile(Uri url, string filePath)
+        {
+            return WithMockResponseFiles(new Dictionary<Uri, string> { { url, filePath } });
+        }
+
+        /// <summary>
+        /// Creates a test helper with a single mock response string.
+        /// Convenience method for inline test data (JSON, XML, etc.).
+        /// </summary>
+        /// <param name="url">The URL to mock</param>
+        /// <param name="data">The response data as a string</param>
+        public static HttpClientTestHelper WithMockResponseString(Uri url, string data)
+        {
+            return WithMockResponses(new Dictionary<Uri, Stream>
+            {
+                { url, new MemoryStream(Encoding.UTF8.GetBytes(data)) }
+            });
+        }
+
+        /// <summary>
+        /// Creates a test helper with mock upload capture streams.
+        /// Upload operations will write to the mapped streams instead of network.
+        /// </summary>
+        /// <param name="uploadCaptures">Dictionary mapping URIs to capture streams</param>
+        public static HttpClientTestHelper WithMockUploadCapture(Dictionary<Uri, Stream> uploadCaptures)
+        {
+            var behavior = new HttpClientTestBehavior
+            {
+                MockUploadMap = uploadCaptures
+            };
+            return new HttpClientTestHelper(behavior);
+        }
+
+        /// <summary>
+        /// Creates a test helper with a single upload capture stream.
+        /// Convenience method for single-upload test scenarios.
+        /// </summary>
+        /// <param name="url">The URL to capture uploads for</param>
+        /// <param name="captureStream">Output parameter - the stream that will capture uploaded data</param>
+        public static HttpClientTestHelper WithUploadCapture(string url, out Stream captureStream)
+        {
+            captureStream = new MemoryStream();
+            return WithMockUploadCapture(new Dictionary<Uri, Stream>
+            {
+                { new Uri(url), captureStream }
+            });
+        }
+
+        /// <summary>
         /// Gets the stream that captured uploaded data during a simulated upload.
         /// Use this to verify the uploaded data matches expectations.
         /// </summary>
         /// <returns>The capture stream, or null if not in upload simulation mode</returns>
         public Stream GetCaptureStream()
         {
+            return _behavior?.MockUploadCaptureStream;
+        }
+
+        /// <summary>
+        /// Gets the captured stream for a specific URI from the upload map.
+        /// Use this when testing multiple uploads to different URIs.
+        /// </summary>
+        /// <param name="uri">The URI to get the capture stream for</param>
+        public Stream GetCaptureStream(Uri uri)
+        {
+            if (_behavior?.MockUploadMap != null && _behavior.MockUploadMap.TryGetValue(uri, out var stream))
+                return stream;
             return _behavior?.MockUploadCaptureStream;
         }
 
@@ -435,16 +531,31 @@ namespace pwiz.SkylineTestUtil
         public Exception FailureException { get; set; }
         public byte[] MockResponseData { get; set; }
         public Stream MockUploadCaptureStream { get; set; }
+        public Dictionary<Uri, Stream> MockResponseMap { get; set; }
+        public Dictionary<Uri, Stream> MockUploadMap { get; set; }
         public bool SimulateProgress { get; set; }
         public Action OnProgressCallback { get; set; }
 
         public Stream GetMockUploadStream(Uri uri)
         {
+            // Check URI map first (more flexible)
+            if (MockUploadMap != null && MockUploadMap.TryGetValue(uri, out var mappedStream))
+                return mappedStream;
+            
+            // Fall back to single capture stream (backward compatible)
             return MockUploadCaptureStream;
         }
 
         public Stream GetMockResponseStream(Uri uri, out long contentLength)
         {
+            // Check URI map first (more flexible, supports multiple URIs)
+            if (MockResponseMap != null && MockResponseMap.TryGetValue(uri, out var mappedStream))
+            {
+                contentLength = mappedStream.CanSeek ? mappedStream.Length : 0;
+                return mappedStream;
+            }
+
+            // Fall back to single response data (backward compatible)
             if (MockResponseData == null)
             {
                 contentLength = 0;

@@ -262,7 +262,13 @@ namespace pwiz.Skyline.ToolsUI
             return JsonConvert.DeserializeObject<ToolStoreItem[]>(GetToolsJson());
         }
 
-        public string GetToolZipFile(IProgressMonitor progressMonitor, IProgressStatus progressStatus, string packageIdentifier, string directory)
+        public string GetToolZipFile(IProgressMonitor progressMonitor, IProgressStatus progressStatus, string packageIdentifier,
+            string directory)
+        {
+            return GetToolZipFileWithProgress(progressMonitor, progressStatus, packageIdentifier, directory);
+        }
+
+        public static string GetToolZipFileWithProgress(IProgressMonitor progressMonitor, IProgressStatus progressStatus, string packageIdentifier, string directory)
         {
             using var httpClient = new HttpClientWithProgress(progressMonitor, progressStatus);
             var uri = new UriBuilder(TOOL_STORE_URI)
