@@ -237,7 +237,7 @@ namespace pwiz.Common.Collections
                             while (this.comparer.Compare(key1, this.keys[index2]) < 0)
                                 --index2;
                         }
-                        catch (IndexOutOfRangeException ex)
+                        catch (IndexOutOfRangeException)
                         {
                             throw new ArgumentException("Arg_BogusIComparer");
                         }
@@ -286,7 +286,7 @@ namespace pwiz.Common.Collections
                 {
                     this.Heapsort(left, right);
                 }
-                catch (IndexOutOfRangeException ex)
+                catch (IndexOutOfRangeException)
                 {
                     throw new ArgumentException("Arg_BogusIComparer");
                 }
