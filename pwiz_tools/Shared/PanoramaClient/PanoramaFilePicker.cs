@@ -141,7 +141,7 @@ namespace pwiz.PanoramaClient
             if ((int)json[@"fileCount"] != 0)
             {
                 var files = json[@"files"];
-                foreach (var file in files)
+                foreach (var file in files!)
                 {
                     var listItem = new string[5];
                     var fileName = (string)file[@"text"];
@@ -157,7 +157,7 @@ namespace pwiz.PanoramaClient
 
 
                         var link = (string)file[@"href"];
-                        link = link.Substring(1);
+                        link = link!.Substring(1);
                         var size = (long)file[@"size"];
                         var sizeObj = new FileSizeFormatProvider();
                         var sizeString = sizeObj.Format(@"fs1", size, sizeObj);
@@ -166,11 +166,11 @@ namespace pwiz.PanoramaClient
                         // We need to use a custom date format and remove the time zone characters
                         // in order to apply an InvariantCulture
                         var date = (string)file[@"creationdate"];
-                        date = date.Remove(20, 4);
+                        date = date!.Remove(20, 4);
                         var format = "ddd MMM dd HH:mm:ss yyyy";
                         DateTime.TryParseExact(date, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out var formattedDate);
                         listItem[4] = formattedDate.ToString(CultureInfo.CurrentCulture);
-                        var fileNode = fileName.EndsWith(EXT) || fileName.EndsWith(ZIP_EXT) ? new ListViewItem(listItem, 1) : new ListViewItem(listItem, 0);
+                        var fileNode = fileName!.EndsWith(EXT) || fileName.EndsWith(ZIP_EXT) ? new ListViewItem(listItem, 1) : new ListViewItem(listItem, 0);
                         fileNode.Tag = size;
                         fileNode.Name = link;
                         listView.Items.Add(fileNode);
@@ -189,13 +189,13 @@ namespace pwiz.PanoramaClient
             _nameDictionary.Clear();
             _sizeDictionary.Clear();
             var rowSize = _sizeInfoJson[@"rows"];
-            foreach (var curRow in rowSize)
+            foreach (var curRow in rowSize!)
             {
                 var runName = (string)curRow[@"FileName"];
                 var curId = (long)curRow[@"Id"];
                 var size = curRow[@"DocumentSize"];
                 _nameDictionary.Add(curId, runName);
-                if (size.Type != JTokenType.Null)
+                if (size!.Type != JTokenType.Null)
                 {
                     var lSize = size.ToObject<long>();
                     _sizeDictionary.Add(curId, lSize);
@@ -222,7 +222,7 @@ namespace pwiz.PanoramaClient
             var rows = json[@"rows"];
             foreach (var row in rows)
             {
-                var rowId = row[@"RowId"].ToString();
+                var rowId = row[@"RowId"]!.ToString();
                 if (rowId.Equals(replacedBy))
                 {
                     result[1] = (string)row[@"Name"];
@@ -243,7 +243,7 @@ namespace pwiz.PanoramaClient
             ModifyListViewCols(hasVersions, showLatestVersion);
             var rows = _runsInfoJson[@"rows"];
 
-            foreach (var row in rows)
+            foreach (var row in rows!)
             {
                 var fileName = (string)row[@"Name"];
                 var id = (long)row[@"File/Id"];

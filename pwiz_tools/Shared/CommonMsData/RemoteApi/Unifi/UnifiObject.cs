@@ -30,11 +30,7 @@ namespace pwiz.CommonMsData.RemoteApi.Unifi
         public static string GetProperty(JObject jobject, string propertyName)
         {
             var property = jobject.Property(propertyName);
-            if (property == null || property.Value == null)
-            {
-                return null;
-            }
-            return property.Value.ToString();
+            return property?.Value.ToString();
         }
 
         public static DateTime? GetDateProperty(JObject jobject, string propertyName)
