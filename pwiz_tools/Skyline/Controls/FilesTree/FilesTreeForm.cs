@@ -26,7 +26,6 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Files;
 using pwiz.Skyline.SettingsUI;
@@ -34,7 +33,7 @@ using pwiz.Skyline.Util;
 using static pwiz.Skyline.Model.Files.FileModel;
 using Debugger = System.Diagnostics.Debugger;
 using Process = System.Diagnostics.Process;
-using Replicate = pwiz.Skyline.Model.Files.Replicate;
+using RootSkylineObject = pwiz.Skyline.Model.Databinding.Entities.RootSkylineObject;
 
 // CONSIDER: using IdentityPath (and DocNode.ReplaceChild) to simplify replicate name changes
 //           But replicates do not have IdentityPath support because ChromatogramSet does not
@@ -144,7 +143,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         public void OpenLibraryExplorerDialog(TreeNode selectedNode)
         {
-            var model = (Model.Files.SpectralLibrary)((FilesTreeNode)selectedNode).Model;
+            var model = (SpectralLibrary)((FilesTreeNode)selectedNode).Model;
             var libraryName = model.Name;
 
             var index = SkylineWindow.OwnedForms.IndexOf(form => form is ViewLibraryDlg);
@@ -260,7 +259,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 return;
 
             var model = nodes.First().Model;
-            Assume.IsTrue(model is Replicate || model is Model.Files.SpectralLibrary);
+            Assume.IsTrue(model is Replicate || model is SpectralLibrary);
 
             var messages = model is Replicate ? 
                 ValueTuple.Create(FilesTreeResources.FilesTreeForm_Confirm_Remove_Replicate, FilesTreeResources.FilesTreeForm_Confirm_Remove_Replicates, FilesTreeResources.Remove_Replicate) :
@@ -286,10 +285,10 @@ namespace pwiz.Skyline.Controls.FilesTree
                         var deletedModels = nodes.Select(item => item.Model).OfType<Replicate>().Cast<FileModel>().ToList();
                         modifiedDoc = Replicate.Delete(originalDoc, monitor, deletedModels);
                     }
-                    else if (model is Model.Files.SpectralLibrary)
+                    else if (model is SpectralLibrary)
                     {
                         var deletedModels = nodes.Select(item => item.Model).ToList();
-                        modifiedDoc = Model.Files.SpectralLibrary.Delete(originalDoc, monitor, deletedModels);
+                        modifiedDoc = SpectralLibrary.Delete(originalDoc, monitor, deletedModels);
                     }
                 });
 
@@ -358,9 +357,9 @@ namespace pwiz.Skyline.Controls.FilesTree
                         {
                             modifiedDoc = Replicate.Rearrange(originalDoc, monitor, draggedModels, dropNode.Model, moveType);
                         }
-                        else if (primaryDraggedNode.Model is Model.Files.SpectralLibrary)
+                        else if (primaryDraggedNode.Model is SpectralLibrary)
                         {
-                            modifiedDoc = Model.Files.SpectralLibrary.Rearrange(originalDoc, monitor, draggedModels, dropNode.Model, moveType);
+                            modifiedDoc = SpectralLibrary.Rearrange(originalDoc, monitor, draggedModels, dropNode.Model, moveType);
                         }
                     });
 
@@ -462,7 +461,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 case SpectralLibrariesFolder _:
                     libraryExplorerMenuItem.Visible = true;
                     return;
-                case Model.Files.SpectralLibrary _:
+                case SpectralLibrary _:
                     openLibraryInLibraryExplorerMenuItem.Visible = true;
                     break;
                 case SkylineAuditLog _:
@@ -495,7 +494,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 case SkylineAuditLog _:
                     OpenAuditLog();
                     break;
-                case Model.Files.SpectralLibrary _:
+                case SpectralLibrary _:
                     OpenLibraryExplorerDialog(filesTreeNode); 
                     break;
                 case ReplicateSampleFile _:

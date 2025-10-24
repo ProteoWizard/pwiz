@@ -151,11 +151,6 @@ namespace pwiz.Skyline.Model
                     return ((Name != null ? Name.GetHashCode() : 0) * 397) ^ (Value != null ? Value.GetHashCode() : 0);
                 }
             }
-
-            public object GetAnnotation()
-            {
-                return AnnotationDef.ParsePersistedString(_value);
-            }
         }
 
         [TrackChildren(ignoreName:true)]

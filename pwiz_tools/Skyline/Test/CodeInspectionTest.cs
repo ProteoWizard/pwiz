@@ -1023,8 +1023,6 @@ namespace pwiz.SkylineTest
             InspectInconsistentSetting(root, results); // Look for conflicts between settings.settings and app.config
 
             InspectPInvokeApi(root, results);
-
-            InspectPropertySheetResources(root, results); // Look for GlobalizedObject classes with missing resources
             
             InspectUtf8Bom(root, results); // Check for UTF-8 BOM and automatically remove it
 

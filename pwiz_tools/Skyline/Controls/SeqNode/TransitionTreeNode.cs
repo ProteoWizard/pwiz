@@ -3,7 +3,7 @@
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
  * Copyright 2009 University of Washington - Seattle, WA
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,6 +16,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System;
+using System.Diagnostics;
+using System.Drawing;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
@@ -24,9 +27,6 @@ using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
-using System;
-using System.Diagnostics;
-using System.Drawing;
 
 namespace pwiz.Skyline.Controls.SeqNode
 {
@@ -52,14 +52,8 @@ namespace pwiz.Skyline.Controls.SeqNode
         {
         }
 
-        public override Func<SkylineDataSchema, RootSkylineObject> PropertyObjectInstancer
-        {
-            get
-            {
-                var h = Heading;
-                return dataSchema => new pwiz.Skyline.Model.Databinding.Entities.Transition(dataSchema, Path);
-            }
-        }
+        public override Func<SkylineDataSchema, RootSkylineObject> PropertyObjectInstancer =>
+            dataSchema => new pwiz.Skyline.Model.Databinding.Entities.Transition(dataSchema, Path);
 
         public TransitionDocNode DocNode => (TransitionDocNode)Model;
         public TransitionGroupDocNode TransitionGroupNode => ((TransitionGroupTreeNode)Parent)?.DocNode;

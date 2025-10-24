@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-using pwiz.Common.Collections;
-using pwiz.Skyline.Model.Databinding;
-using pwiz.Skyline.Model.Databinding.Entities;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using pwiz.Common.Collections;
+using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.Databinding.Entities;
 
 /*
     * rat-plasma.sky

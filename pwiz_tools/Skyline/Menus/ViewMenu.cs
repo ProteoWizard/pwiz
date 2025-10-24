@@ -1096,12 +1096,6 @@ namespace pwiz.Skyline.Menus
                 throw new InvalidOperationException(@"viewPropertiesMenuItem_Click must be triggered by a ToolStripMenuItem");
 
             var isChecked = toolStripMenuItem.Checked;
-
-            ShowPropertiesWindow(isChecked);
-        }
-
-        private void ShowPropertiesWindow(bool isChecked)
-        {
             SkylineWindow.ShowPropertyGridForm(isChecked);
         }
     }

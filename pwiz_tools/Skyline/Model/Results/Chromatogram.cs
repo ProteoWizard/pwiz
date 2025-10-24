@@ -497,13 +497,6 @@ namespace pwiz.Skyline.Model.Results
 
         public Annotations Annotations { get; private set; }
 
-        public ChromatogramSet ChangeAnnotation(AnnotationDef annotationDef, object newValue)
-        {
-            var newAnnotations = Annotations.ChangeAnnotation(annotationDef, newValue);
-            // Use ChangeProp to set the new list
-            return ChangeProp(ImClone(this), im => im.Annotations = newAnnotations);
-        }
-
         public OptimizableRegression OptimizationFunction { get; private set; }
 
         public bool UseForRetentionTimeFilter { get; private set; }
