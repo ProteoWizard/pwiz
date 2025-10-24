@@ -21,8 +21,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
-using System.Net;
 using System.Windows.Forms;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.SystemUtil;
@@ -384,18 +384,23 @@ public class LKContainerBrowser : PanoramaFolderBrowser
             {
                 InitializeTreeServers(server, _listServerFolders);
             }
-            catch (Exception ex)
+            catch (IOException ex)
             {
-                if (ex is WebException || ex is PanoramaServerException)
-                {
-
-                    listErrorServers.Add(new Tuple<PanoramaServer, string>(server, ex.Message ?? string.Empty));
-                }
+                // Network errors are expected when servers are unreachable
+                // NetworkRequestException extends IOException
+                listErrorServers.Add(new Tuple<PanoramaServer, string>(server, ex.Message ?? string.Empty));
             }
+            catch (PanoramaServerException ex)
+            {
+                // Server-specific errors (authentication, permissions, etc.)
+                listErrorServers.Add(new Tuple<PanoramaServer, string>(server, ex.Message ?? string.Empty));
+            }
+            // Let all other exceptions propagate (ArgumentException, NullReferenceException, etc. are programming defects)
         }
         if (listErrorServers.Count > 0)
         {
-            throw new Exception(CommonTextUtil.LineSeparate(Resources.PanoramaFolderBrowser_InitializeServers_Failed_attempting_to_retrieve_information_from_the_following_servers,
+            throw new IOException(CommonTextUtil.LineSeparate(
+                Resources.PanoramaFolderBrowser_InitializeServers_Failed_attempting_to_retrieve_information_from_the_following_servers,
                 string.Empty,
                 ServersToString(listErrorServers)));
         }
@@ -541,7 +546,7 @@ public class WebDavBrowser : PanoramaFolderBrowser
             try
             {
                 query = new Uri(string.Concat(folderInfo.Server.URI, PanoramaUtil.WEBDAV, folderInfo.FolderPath, "?method=json"));
-                using var requestHelper = new PanoramaRequestHelper(new LabkeySessionWebClient(folderInfo.Server));
+                using var requestHelper = new HttpPanoramaRequestHelper(folderInfo.Server);
                 JToken json = requestHelper.Get(query);
                 if ((int)json[@"fileCount"] != 0)
                 {

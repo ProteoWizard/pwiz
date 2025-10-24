@@ -21,6 +21,7 @@ using System;
 using System.Collections.Specialized;
 using System.IO;
 using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -409,6 +410,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 return new LabKeyError("Couldn't create file on server", 500);
             }
+
             public static string GetExpectedError(string tempShareZipFile)
             {
                 var uri = new Uri(new Uri(PANORAMA_SERVER), GetFolderWebdavUrl(PANORAMA_FOLDER).TrimStart('/') + tempShareZipFile);
@@ -418,6 +420,26 @@ namespace pwiz.SkylineTestFunctional
                     .LabKeyError(GetLabKeyError())
                     .Uri(uri)
                     .ToString();
+            }
+
+            public override void DoAsyncFileUpload(Uri address, string method, string fileName)
+            {
+                // For HttpPanoramaRequestHelper, we need to actually throw an exception with the LabKey error
+                // Create a JSON response with the LabKey error
+                var errorJson = new JObject
+                {
+                    ["exception"] = GetLabKeyError().ErrorMessage,
+                    ["status"] = GetLabKeyError().Status
+                };
+                
+                // Throw NetworkRequestException with the error response body
+                // Use the LabKey error message directly - ErrorMessageBuilder will format it
+                throw new NetworkRequestException(
+                    GetLabKeyError().ErrorMessage,
+                    (HttpStatusCode)GetLabKeyError().Status.Value,
+                    address,
+                    new HttpRequestException(GetLabKeyError().ErrorMessage),
+                    errorJson.ToString());
             }
         }
 

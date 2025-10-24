@@ -1019,47 +1019,66 @@ namespace pwiz.Skyline
             {
                 panoramaClient ??= new WebPanoramaClient(curServer.URI, curServer.Username, curServer.Password);
                 using (var fileSaver = new FileSaver(downloadPath))
+                using (var longWaitDlg = new LongWaitDlg())
                 {
-                    using (var longWaitDlg = new LongWaitDlg())
-                    {
-                        longWaitDlg.Text = string.Format(SkylineResources.SkylineWindow_OpenFromPanorama_Downloading_file__0_, fileName);
-                        var progressStatus = longWaitDlg.PerformWork(this, 800,
-                            progressMonitor => panoramaClient.DownloadFile(fileUrl, fileSaver.SafeName, size, fileName,
-                                progressMonitor, new ProgressStatus()));
+                    longWaitDlg.Text = string.Format(SkylineResources.SkylineWindow_OpenFromPanorama_Downloading_file__0_, fileName);
+                    var progressStatus = longWaitDlg.PerformWork(this, 800,
+                        progressMonitor => panoramaClient.DownloadFile(fileUrl, fileSaver.SafeName, size, fileName,
+                            progressMonitor, new ProgressStatus()));
 
-                        if (progressStatus.IsCanceled || progressStatus.IsError)
-                        {
-                            FileEx.SafeDelete(downloadPath, true);
-                            if (progressStatus.IsError)
-                            {
-                                var message = progressStatus.ErrorException.Message;
-                                if (message.Contains(@"404"))
-                                {
-                                    message = Resources.SkylineWindow_DownloadPanoramaFile_File_does_not_exist__It_may_have_been_deleted_on_the_server_;
-                                }
-                                MessageDlg.ShowWithException(this, message, progressStatus.ErrorException);
-                                return false;
-                            }
-                            return false;
+                    // Check for user cancellation (exceptions are handled in catch block)
+                    if (progressStatus.IsCanceled)
+                        return false;
 
-                        }
-                        else
-                        {
-                            fileSaver.Commit();
-                        }
-                        if (longWaitDlg.IsCanceled)
-                            return false;
-                    }
-
+                    fileSaver.Commit();
                 }
 
                 return true;
             }
             catch (Exception e)
             {
-                MessageDlg.ShowException(this, e);
+                if (ExceptionUtil.IsProgrammingDefect(e))
+                    throw;
+                
+                // Check for 404 Not Found - show user-friendly message
+                var statusCode = GetHttpStatusCode(e);
+                if (statusCode == HttpStatusCode.NotFound)
+                {
+                    MessageDlg.ShowWithException(this,
+                        Resources.SkylineWindow_DownloadPanoramaFile_File_does_not_exist__It_may_have_been_deleted_on_the_server_,
+                        e);
+                }
+                else
+                {
+                    MessageDlg.ShowException(this, e);
+                }
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Extracts HTTP status code from exception (NetworkRequestException or legacy WebException).
+        /// Walks inner exception chain to find the status code.
+        /// </summary>
+        private static HttpStatusCode? GetHttpStatusCode(Exception e)
+        {
+            // Check for NetworkRequestException with structured status code
+            // HttpClientWithProgress throws this for HTTP errors
+            if (e is NetworkRequestException netEx)
+                return netEx.StatusCode;
+
+            // Check inner exception chain recursively
+            if (e.InnerException != null)
+                return GetHttpStatusCode(e.InnerException);
+
+            // Legacy WebException support (for any code still using WebClient)
+            if (e is WebException webException && webException.Status == WebExceptionStatus.ProtocolError)
+            {
+                if (webException.Response is HttpWebResponse response)
+                    return response.StatusCode;
+            }
+
+            return null;
         }
 
         private void saveMenuItem_Click(object sender, EventArgs e)

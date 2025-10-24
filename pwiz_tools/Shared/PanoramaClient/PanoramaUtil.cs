@@ -238,6 +238,14 @@ namespace pwiz.PanoramaClient
             return GetIfErrorInResponse(e.Response);
         }
 
+        public static LabKeyError GetErrorFromNetworkRequestException(NetworkRequestException e)
+        {
+            if (e == null || string.IsNullOrEmpty(e.ResponseBody)) return null;
+            
+            // NetworkRequestException may contain a JSON response body with LabKey-specific error details
+            return GetIfErrorInResponse(e.ResponseBody);
+        }
+
         public static LabKeyError GetIfErrorInResponse(JObject jsonResponse)
         {
             if (jsonResponse?[@"exception"] != null)
@@ -446,7 +454,8 @@ namespace pwiz.PanoramaClient
 
         private PanoramaServerException(string message, Exception e) : base(message, e)
         {
-            HttpStatus = ((e as WebException)?.Response as HttpWebResponse)?.StatusCode;
+            HttpStatus = ((e as WebException)?.Response as HttpWebResponse)?.StatusCode 
+                         ?? (e as NetworkRequestException)?.StatusCode;
         }
 
         public static PanoramaServerException Create(string message, Uri uri, string response, Exception e)
@@ -469,6 +478,26 @@ namespace pwiz.PanoramaClient
                 .LabKeyError(getLabKeyError(e)); // Will read the WebException's Response property.
 
             return CreateWithResponseDisposal(errorMessageBuilder.ToString(), e);
+        }
+
+        public static PanoramaServerException CreateWithResponseDisposal(string message, Uri uri, Func<NetworkRequestException, LabKeyError> getLabKeyError, NetworkRequestException e)
+        {
+            var labKeyError = getLabKeyError?.Invoke(e);
+            var errorMessageBuilder = new ErrorMessageBuilder(message)
+                .Uri(uri);
+
+            // Only include the exception message if there's no LabKey error
+            // When there's a LabKey error, it's more specific and we don't want to duplicate with generic exception message
+            if (labKeyError != null)
+            {
+                errorMessageBuilder.LabKeyError(labKeyError);
+            }
+            else
+            {
+                errorMessageBuilder.ExceptionMessage(e.Message);
+            }
+
+            return new PanoramaServerException(errorMessageBuilder.ToString(), e);
         }
 
         private static PanoramaServerException CreateWithResponseDisposal(string message, Uri uri, string response, WebException e)
@@ -634,6 +663,11 @@ namespace pwiz.PanoramaClient
         }
     }
 
+    /// <summary>
+    /// DEPRECATED: Use HttpClientWithProgress instead (always uses UTF-8).
+    /// This class remains for backward compatibility with AutoQC and SkylineBatch executables.
+    /// See TODO-tools_webclient_replacement.md for migration plan.
+    /// </summary>
     public class UTF8WebClient : WebClient
     {
         public UTF8WebClient()
@@ -642,6 +676,12 @@ namespace pwiz.PanoramaClient
         }
     }
 
+    /// <summary>
+    /// DEPRECATED: Use HttpPanoramaRequestHelper instead.
+    /// This class remains for backward compatibility with AutoQC and SkylineBatch executables.
+    /// Manages LabKey Server session cookies and CSRF tokens for WebClient-based operations.
+    /// See TODO-tools_webclient_replacement.md for migration plan.
+    /// </summary>
     public class LabkeySessionWebClient : UTF8WebClient
     {
         private CookieContainer _cookies = new CookieContainer();
@@ -747,6 +787,11 @@ namespace pwiz.PanoramaClient
         }
     }
 
+    /// <summary>
+    /// DEPRECATED: Use HttpPanoramaRequestHelper instead (HttpClientWithProgress doesn't buffer by default).
+    /// This class remains for backward compatibility with AutoQC and SkylineBatch executables.
+    /// See TODO-tools_webclient_replacement.md for migration plan.
+    /// </summary>
     public class NonStreamBufferingWebClient : LabkeySessionWebClient
     {
         public NonStreamBufferingWebClient(PanoramaServer server)

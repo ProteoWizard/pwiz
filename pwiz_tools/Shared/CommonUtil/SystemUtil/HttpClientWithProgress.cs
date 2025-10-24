@@ -52,7 +52,7 @@ namespace pwiz.Common.SystemUtil
         /// <param name="progressMonitor">Progress monitor for reporting download progress and handling cancellation</param>
         /// <param name="status">Initial progress status to update with an ID tracked by the progress monitor. If null, creates a new ProgressStatus.</param>
         /// <param name="cookieContainer">Optional cookie container for session management (e.g., Panorama authentication). If null, cookies are not persisted.</param>
-        public HttpClientWithProgress(IProgressMonitor progressMonitor, IProgressStatus status = null, CookieContainer cookieContainer = null)
+        public HttpClientWithProgress(IProgressMonitor progressMonitor = null, IProgressStatus status = null, CookieContainer cookieContainer = null)
         {
             // Ensure HttpClient respects system proxy (including PAC) and supports gzip/deflate
             var handler = new HttpClientHandler
@@ -75,9 +75,18 @@ namespace pwiz.Common.SystemUtil
                 handler.UseCookies = true;
                 _cookieContainer = cookieContainer;
             }
+            else
+            {
+                // Even without explicit cookie container, enable automatic cookie handling
+                // HttpClientHandler will create its own CookieContainer for this request
+                // This is important for servers like Panorama that require session cookies
+                handler.UseCookies = true;
+            }
 
             _httpClient = new HttpClient(handler);
-            _progressMonitor = progressMonitor;
+            // Default to SilentProgressMonitor if null - maintains non-null invariant
+            // This allows simple callers to pass null while complex callers can use SilentProgressMonitor(cancelToken)
+            _progressMonitor = progressMonitor ?? new SilentProgressMonitor();
             _progressStatus = status ?? new ProgressStatus();
         }
 
@@ -337,10 +346,260 @@ namespace pwiz.Common.SystemUtil
             }
         }
 
+        private int ReadChunk(Stream stream, byte[] buffer, Uri uri)
+        {
+            var readTask = stream.ReadAsync(buffer, 0, buffer.Length, CancellationToken);
+            var completed = Task.WaitAny(readTask, Task.Delay(ReadTimeoutMilliseconds, CancellationToken));
+
+            // Check if cancellation was requested before throwing timeout exception
+            CancellationToken.ThrowIfCancellationRequested();
+
+            if (completed != 0)
+                throw new TimeoutException(string.Format(MessageResources.HttpClientWithProgress_ReadWithTimeout_The_read_operation_timed_out_while_downloading_from__0__, uri));
+            return readTask.Result;
+        }
+
+        /// <summary>
+        /// Sends an HTTP request with cancellation support.
+        /// Used for custom HTTP methods like HEAD, DELETE, MOVE that aren't covered by standard download/upload methods.
+        /// </summary>
+        public HttpResponseMessage SendRequest(HttpRequestMessage request)
+        {
+            return WithExceptionHandling(request.RequestUri,
+                () => _httpClient.SendAsync(request, CancellationToken).Result);
+        }
+
+        /// <summary>
+        /// Gets a response from the specified URI with ResponseHeadersRead completion option for streaming.
+        /// </summary>
+        private HttpResponseMessage GetResponseHeadersRead(Uri uri)
+        {
+            return WithExceptionHandling(uri,
+                () => _httpClient.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead, CancellationToken).Result);
+        }
+
+        /// <summary>
+        /// Uploads a file to the specified URI with progress reporting and cancellation support.
+        /// Uses the same chunked upload pattern as downloads for consistency.
+        /// </summary>
+        /// <param name="uri">The URI to upload to</param>
+        /// <param name="method">The HTTP method to use (e.g., "PUT", "POST")</param>
+        /// <param name="fileName">The path to the file to upload</param>
+        public void UploadFile(Uri uri, string method, string fileName)
+        {
+            using var fileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+            UploadFromStream(uri, method, fileStream, Path.GetFileName(fileName));
+        }
+
+        /// <summary>
+        /// Uploads a file and returns the response body as a string.
+        /// Used when the server response needs to be checked for errors (e.g., LabKey JSON responses).
+        /// </summary>
+        /// <param name="uri">The URI to upload to</param>
+        /// <param name="method">The HTTP method to use (e.g., "PUT", "POST")</param>
+        /// <param name="fileName">The path to the file to upload</param>
+        /// <returns>The response body as a string</returns>
+        public string UploadFileWithResponse(Uri uri, string method, string fileName)
+        {
+            using var fileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+            return UploadFromStreamWithResponse(uri, method, fileStream, Path.GetFileName(fileName));
+        }
+
+        /// <summary>
+        /// Uploads a byte array to the specified URI with progress reporting and cancellation support.
+        /// Uses the same chunked upload pattern as downloads for consistency.
+        /// </summary>
+        /// <param name="uri">The URI to upload to</param>
+        /// <param name="method">The HTTP method to use (e.g., "PUT", "POST")</param>
+        /// <param name="data">The byte array to upload</param>
+        public void UploadData(Uri uri, string method, byte[] data)
+        {
+            using var memoryStream = new MemoryStream(data);
+            UploadFromStream(uri, method, memoryStream);
+        }
+
+
+        /// <summary>
+        /// Uploads a stream and returns the response body.
+        /// Used when the server response needs to be checked for errors (e.g., LabKey JSON responses).
+        /// </summary>
+        private string UploadFromStreamWithResponse(Uri uri, string method, Stream inputStream, string fileName = null)
+        {
+            var response = UploadFromStreamInternal(uri, method, inputStream, fileName);
+            // Read response body for LabKey error checking
+            return response.Content.ReadAsStringAsync().Result;
+        }
+
+        /// <summary>
+        /// Uploads a stream to the specified URI with progress reporting and cancellation support.
+        /// Streams directly from input to network without buffering entire file in memory.
+        /// Progress is reported during the network upload (the expensive operation), not during file read.
+        /// </summary>
+        private void UploadFromStream(Uri uri, string method, Stream inputStream, string fileName = null)
+        {
+            // Discard response - caller doesn't need it
+            UploadFromStreamInternal(uri, method, inputStream, fileName);
+        }
+
+        /// <summary>
+        /// Internal upload implementation that returns the HttpResponseMessage.
+        /// Allows callers to either discard the response or read it for error checking.
+        /// </summary>
+        private HttpResponseMessage UploadFromStreamInternal(Uri uri, string method, Stream inputStream, string fileName = null)
+        {
+            long totalBytes = inputStream.Length;
+
+            // Wrap stream with progress tracking - ProgressStream.Read() will be called by HttpClient
+            // during SendAsync(), reporting progress during the actual NETWORK upload
+            var progressStream = new ProgressStream(inputStream, totalBytes, (uploaded) =>
+            {
+                UpdateUploadProgress(uploaded, totalBytes, uri);
+            });
+
+            // Build the HTTP request (exercises request building code in tests)
+            var request = new HttpRequestMessage(new HttpMethod(method), uri);
+            request.Content = new StreamContent(progressStream);
+
+            if (!string.IsNullOrEmpty(fileName))
+            {
+                request.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment")
+                {
+                    FileName = fileName
+                };
+            }
+
+            // Send the upload to the network (or simulate for testing)
+            // HttpClient reads from progressStream AS IT UPLOADS, triggering progress callbacks
+            return WithExceptionHandling(uri, () =>
+            {
+                // Check if we should capture upload data for testing (bypass actual network send)
+                var mockUploadStream = TestBehavior?.GetMockUploadStream(uri);
+                if (mockUploadStream != null)
+                {
+                    // Testing mode: Read from request content and write to mock stream
+                    // This exercises ProgressStream.Read() and UpdateUploadProgress() just like real uploads
+                    // AND validates that the correct data is being uploaded
+                    var buffer = new byte[8192];
+                    var contentStream = request.Content.ReadAsStreamAsync().Result;
+                    while (true)
+                    {
+                        int bytesRead = contentStream.Read(buffer, 0, buffer.Length);
+                        if (bytesRead <= 0)
+                            break;
+                        mockUploadStream.Write(buffer, 0, bytesRead);
+                    }
+                    // Return success response without actually sending to network
+                    return new HttpResponseMessage(HttpStatusCode.OK);
+                }
+
+                // Normal path: send the request - HttpClient reads from progressStream during upload
+                // Progress is reported during the NETWORK operation, not during file read
+                var response = _httpClient.SendAsync(request, CancellationToken).Result;
+                
+                // Check status code - but don't call EnsureSuccessStatusCode() yet
+                // We need to return the response so caller can read the body
+                if (!response.IsSuccessStatusCode)
+                {
+                    // Read response body for error details before throwing
+                    string responseBody = null;
+                    try
+                    {
+                        responseBody = response.Content.ReadAsStringAsync().Result;
+                    }
+                    catch
+                    {
+                        // Continue without response body
+                    }
+
+                    var statusCode = (int)response.StatusCode;
+                    var reasonPhrase = string.IsNullOrEmpty(response.ReasonPhrase) 
+                        ? response.StatusCode.ToString() 
+                        : response.ReasonPhrase;
+                    var message = $"Response status code does not indicate success: {statusCode} ({reasonPhrase}) for {uri}";
+                    throw new NetworkRequestException(message, response.StatusCode, uri, new HttpRequestException(message), responseBody);
+                }
+                
+                return response;
+            });
+        }
+
+        private void UpdateUploadProgress(long uploadedBytes, long totalBytes, Uri uri)
+        {
+            var message = GetProgressMessage(totalBytes, uploadedBytes);
+
+            if (totalBytes > 0)
+            {
+                var percentage = (int)(uploadedBytes * 100 / totalBytes);
+                _progressMonitor.UpdateProgress(_progressStatus =
+                    _progressStatus.ChangeMessage(message).ChangePercentComplete(percentage));
+            }
+            else
+            {
+                _progressMonitor.UpdateProgress(_progressStatus =
+                    _progressStatus.ChangeMessage(message).ChangePercentComplete(-1));
+            }
+
+            // Check for cancellation during upload
+            if (_progressMonitor.IsCanceled)
+                throw new OperationCanceledException();
+        }
+
+        /// <summary>
+        /// Stream wrapper that reports progress during read operations.
+        /// Used for upload progress tracking - wraps the source stream so that progress
+        /// is reported as HttpClient reads from it during SendAsync().
+        /// Reads are NOT chunked with timeout here because HttpClient controls the read loop.
+        /// Progress tracking and cancellation happen in the callback.
+        /// </summary>
+        private class ProgressStream : Stream
+        {
+            private readonly Stream _innerStream;
+            // ReSharper disable once NotAccessedField.Local
+            private readonly long _totalBytes;  // For debugging
+            private readonly Action<long> _progressCallback;
+            private long _bytesRead;
+
+            public ProgressStream(Stream innerStream, long totalBytes, Action<long> progressCallback)
+            {
+                _innerStream = innerStream;
+                _totalBytes = totalBytes;
+                _progressCallback = progressCallback;
+            }
+
+            public override bool CanRead => _innerStream.CanRead;
+            public override bool CanSeek => _innerStream.CanSeek;
+            public override bool CanWrite => false;
+            public override long Length => _innerStream.Length;
+            public override long Position
+            {
+                get => _innerStream.Position;
+                set => _innerStream.Position = value;
+            }
+
+            public override int Read(byte[] buffer, int offset, int count)
+            {
+                // HttpClient calls this during SendAsync() as it uploads
+                // Read from the inner stream (e.g., FileStream from disk)
+                int bytesRead = _innerStream.Read(buffer, offset, count);
+                _bytesRead += bytesRead;
+
+                // Report progress - callback will check cancellation
+                _progressCallback?.Invoke(_bytesRead);
+
+                return bytesRead;
+            }
+
+            public override void Flush() => _innerStream.Flush();
+            public override long Seek(long offset, SeekOrigin origin) => _innerStream.Seek(offset, origin);
+            public override void SetLength(long value) => _innerStream.SetLength(value);
+            public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+        }
+
         private string GetProgressMessage(long totalBytes, long downloadedBytes)
         {
             // Capture base message on first progress update
-            _progressMessageWithoutSize ??= _progressStatus.Message;
+            // _progressStatus is never null (guaranteed by constructor), but Message could theoretically be null
+            _progressMessageWithoutSize ??= _progressStatus.Message ?? string.Empty;
 
             // Report progress with download size appended
             return GetProgressMessageWithSize(_progressMessageWithoutSize, downloadedBytes, totalBytes);
@@ -376,24 +635,6 @@ namespace pwiz.Common.SystemUtil
                     string.Format(formatProvider, @"{0:fs1}", totalBytes));
             }
             return string.Format(formatProvider, @"{0:fs1}", downloaded);
-        }
-
-        /// <summary>
-        /// Sends an HTTP request with cancellation support.
-        /// </summary>
-        private HttpResponseMessage SendRequest(HttpRequestMessage request)
-        {
-            return WithExceptionHandling(request.RequestUri,
-                () => _httpClient.SendAsync(request, CancellationToken).Result);
-        }
-
-        /// <summary>
-        /// Gets a response from the specified URI with ResponseHeadersRead completion option for streaming.
-        /// </summary>
-        private HttpResponseMessage GetResponseHeadersRead(Uri uri)
-        {
-            return WithExceptionHandling(uri,
-                () => _httpClient.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead, CancellationToken).Result);
         }
 
         public static IHttpClientTestBehavior TestBehavior;
@@ -460,7 +701,33 @@ namespace pwiz.Common.SystemUtil
                     throw TestBehavior.FailureException;
                 
                 var response = getResponse();
-                response.EnsureSuccessStatusCode();
+                
+                // Check status code and capture response body for error details (e.g., LabKey-specific errors)
+                if (!response.IsSuccessStatusCode)
+                {
+                    string responseBody = null;
+                    try
+                    {
+                        // Attempt to read response body for server-specific error details
+                        // This is important for servers like LabKey that include structured error info in responses
+                        responseBody = response.Content.ReadAsStringAsync().Result;
+                    }
+                    catch
+                    {
+                        // If we can't read the response body, continue without it
+                    }
+
+                    // Create an HttpRequestException similar to what EnsureSuccessStatusCode() would throw
+                    var statusCode = (int)response.StatusCode;
+                    var reasonPhrase = string.IsNullOrEmpty(response.ReasonPhrase) 
+                        ? response.StatusCode.ToString() 
+                        : response.ReasonPhrase;
+                    var message = $"Response status code does not indicate success: {statusCode} ({reasonPhrase}) for {uri}";
+                    
+                    // Throw with response body attached for server-specific error extraction
+                    throw new NetworkRequestException(message, response.StatusCode, uri, new HttpRequestException(message), responseBody);
+                }
+                
                 return response;
             }
             catch (Exception ex)
@@ -473,18 +740,32 @@ namespace pwiz.Common.SystemUtil
         {
             var root = ex is AggregateException ae ? ae.Flatten().InnerExceptions.FirstOrDefault() ?? ex : ex;
 
-            // Check for cancellation first (but distinguish between user cancellation and timeout)
-            if (root is TaskCanceledException)
-                return new IOException(string.Format(MessageResources.HttpClientWithProgress_MapHttpException_The_request_to__0__timed_out__Please_try_again_, uri), root);
+            // If we've already created a NetworkRequestException with response body, pass it through
+            if (root is NetworkRequestException)
+                return root;
 
+            // Check for cancellation first (but distinguish between user cancellation and timeout)
+            // TaskCanceledException means timeout
+            if (root is TaskCanceledException)
+                return new NetworkRequestException(
+                    string.Format(MessageResources.HttpClientWithProgress_MapHttpException_The_request_to__0__timed_out__Please_try_again_, uri), 
+                    NetworkFailureType.Timeout, uri, root);
+
+            // OperationCanceledException is user cancellation - pass through unchanged
             if (root is OperationCanceledException)
                 return root;
 
+            // Explicit timeout
             if (root is TimeoutException)
-                return new IOException(string.Format(MessageResources.HttpClientWithProgress_MapHttpException_The_request_to__0__timed_out__Please_try_again_, uri), root);
+                return new NetworkRequestException(
+                    string.Format(MessageResources.HttpClientWithProgress_MapHttpException_The_request_to__0__timed_out__Please_try_again_, uri), 
+                    NetworkFailureType.Timeout, uri, root);
 
+            // No network available
             if (root is NoNetworkTestException || !NetworkInterface.GetIsNetworkAvailable())
-                return new IOException(MessageResources.HttpClientWithProgress_MapHttpException_No_network_connection_detected__Please_check_your_internet_connection_and_try_again_, root);
+                return new NetworkRequestException(
+                    MessageResources.HttpClientWithProgress_MapHttpException_No_network_connection_detected__Please_check_your_internet_connection_and_try_again_, 
+                    NetworkFailureType.NoConnection, uri, root);
 
             if (root is HttpRequestException httpEx)
             {
@@ -502,26 +783,35 @@ namespace pwiz.Common.SystemUtil
                         
                         // Use full URI for user context, but preserve the original HttpRequestException
                         // with status code details in the inner exception chain for troubleshooting
+                        // For resource-specific errors (404, 401, 403), show full URI in user message
+                        // For server errors (500, 429, etc.), show just hostname (more concise)
+                        // Full URI is always available in NetworkRequestException.RequestUri and inner exception
                         string uriString = uri?.ToString() ?? server;
                         string message;
                         switch (statusCode)
                         {
                             case 404:
+                                // Resource-specific: show full URI so user can verify the exact path
                                 message = string.Format(MessageResources.HttpClientWithProgress_MapHttpException_The_requested_resource_at__0__was_not_found__HTTP_404___Please_verify_the_URL_, uriString);
                                 break;
                             case 500:
+                                // Server error: show hostname (problem is server-side, not specific resource)
                                 message = string.Format(MessageResources.HttpClientWithProgress_MapHttpException_The_server__0__encountered_an_internal_error__HTTP_500___Please_try_again_later_or_contact_the_server_administrator_, server);
                                 break;
                             case 401:
+                                // Auth-specific: show full URI so user knows what they're being denied access to
                                 message = string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Access_to__0__was_denied__HTTP_401___Authentication_may_be_required_, uriString);
                                 break;
                             case 403:
+                                // Permission-specific: show full URI so user knows what resource is forbidden
                                 message = string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Access_to__0__was_forbidden__HTTP_403___You_may_not_have_permission_to_access_this_resource_, uriString);
                                 break;
                             case 429:
+                                // Rate limit: show hostname (typically server-wide limit, not resource-specific)
                                 message = string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Too_many_requests_to__0___HTTP_429___Please_wait_before_trying_again_, server);
                                 break;
                             default:
+                                // Generic server error: show hostname
                                 message = string.Format(MessageResources.HttpClientWithProgress_MapHttpException_The_server__0__returned_an_error__HTTP__1____Please_try_again_or_contact_support_, server, statusCode);
                                 break;
                         }
@@ -533,9 +823,14 @@ namespace pwiz.Common.SystemUtil
                 
                 // DNS resolution failure (e.g., 'The remote name could not be resolved')
                 if (httpEx.InnerException is WebException webEx && webEx.Status == WebExceptionStatus.NameResolutionFailure)
-                    return new IOException(string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Failed_to_resolve_host__0___Please_check_your_DNS_settings_or_VPN_proxy_, server), root);
+                    return new NetworkRequestException(
+                        string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Failed_to_resolve_host__0___Please_check_your_DNS_settings_or_VPN_proxy_, server), 
+                        NetworkFailureType.DnsResolution, uri, root);
 
-                return new IOException(string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Failed_to_connect_to__0___Please_check_your_network_connection__VPN_proxy__or_firewall_, server), root);
+                // Generic connection failure (no HTTP response received)
+                return new NetworkRequestException(
+                    string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Failed_to_connect_to__0___Please_check_your_network_connection__VPN_proxy__or_firewall_, server), 
+                    NetworkFailureType.ConnectionFailed, uri, root);
             }
 
             if (root is IOException ioEx)
@@ -550,191 +845,61 @@ namespace pwiz.Common.SystemUtil
                 if (hResult == unchecked((int)0x8007006D) || hResult == unchecked((int)0x8007006E) || 
                     hResult == unchecked((int)0x80070050) || hResult == unchecked((int)0x8007006F))
                 {
-                    return new IOException(MessageResources.HttpClientWithProgress_MapHttpException_The_connection_was_lost_during_download__Please_check_your_internet_connection_and_try_again_, root);
+                    return new NetworkRequestException(
+                        MessageResources.HttpClientWithProgress_MapHttpException_The_connection_was_lost_during_download__Please_check_your_internet_connection_and_try_again_, 
+                        NetworkFailureType.ConnectionLost, uri, root);
                 }
             }
 
             return root;
         }
 
-        private int ReadChunk(Stream stream, byte[] buffer, Uri uri)
-        {
-            var readTask = stream.ReadAsync(buffer, 0, buffer.Length, CancellationToken);
-            var completed = Task.WaitAny(readTask, Task.Delay(ReadTimeoutMilliseconds, CancellationToken));
-
-            // Check if cancellation was requested before throwing timeout exception
-            CancellationToken.ThrowIfCancellationRequested();
-
-            if (completed != 0)
-                throw new TimeoutException(string.Format(MessageResources.HttpClientWithProgress_ReadWithTimeout_The_read_operation_timed_out_while_downloading_from__0__, uri));
-            return readTask.Result;
-        }
-
-        /// <summary>
-        /// Uploads a file to the specified URI with progress reporting and cancellation support.
-        /// Uses the same chunked upload pattern as downloads for consistency.
-        /// </summary>
-        /// <param name="uri">The URI to upload to</param>
-        /// <param name="method">The HTTP method to use (e.g., "PUT", "POST")</param>
-        /// <param name="fileName">The path to the file to upload</param>
-        public void UploadFile(Uri uri, string method, string fileName)
-        {
-            using var fileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
-            UploadFromStream(uri, method, fileStream, Path.GetFileName(fileName));
-        }
-
-        /// <summary>
-        /// Uploads a byte array to the specified URI with progress reporting and cancellation support.
-        /// Uses the same chunked upload pattern as downloads for consistency.
-        /// </summary>
-        /// <param name="uri">The URI to upload to</param>
-        /// <param name="method">The HTTP method to use (e.g., "PUT", "POST")</param>
-        /// <param name="data">The byte array to upload</param>
-        public void UploadData(Uri uri, string method, byte[] data)
-        {
-            using var memoryStream = new MemoryStream(data);
-            UploadFromStream(uri, method, memoryStream);
-        }
-
-        /// <summary>
-        /// Uploads a stream to the specified URI with progress reporting and cancellation support.
-        /// Streams directly from input to network without buffering entire file in memory.
-        /// Progress is reported during the network upload (the expensive operation), not during file read.
-        /// </summary>
-        private void UploadFromStream(Uri uri, string method, Stream inputStream, string fileName = null)
-        {
-            long totalBytes = inputStream.Length;
-
-            // Wrap stream with progress tracking - ProgressStream.Read() will be called by HttpClient
-            // during SendAsync(), reporting progress during the actual NETWORK upload
-            var progressStream = new ProgressStream(inputStream, totalBytes, (uploaded) =>
-            {
-                UpdateUploadProgress(uploaded, totalBytes, uri);
-            });
-
-            // Build the HTTP request (exercises request building code in tests)
-            var request = new HttpRequestMessage(new HttpMethod(method), uri);
-            request.Content = new StreamContent(progressStream);
-            
-            if (!string.IsNullOrEmpty(fileName))
-            {
-                request.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment")
-                {
-                    FileName = fileName
-                };
-            }
-
-            // Send the upload to the network (or simulate for testing)
-            // HttpClient reads from progressStream AS IT UPLOADS, triggering progress callbacks
-            WithExceptionHandling(uri, () =>
-            {
-                // Check if we should capture upload data for testing (bypass actual network send)
-                var mockUploadStream = TestBehavior?.GetMockUploadStream(uri);
-                if (mockUploadStream != null)
-                {
-                    // Testing mode: Read from request content and write to mock stream
-                    // This exercises ProgressStream.Read() and UpdateUploadProgress() just like real uploads
-                    // AND validates that the correct data is being uploaded
-                    var buffer = new byte[8192];
-                    var contentStream = request.Content.ReadAsStreamAsync().Result;
-                    while (true)
-                    {
-                        int bytesRead = contentStream.Read(buffer, 0, buffer.Length);
-                        if (bytesRead <= 0)
-                            break;
-                        mockUploadStream.Write(buffer, 0, bytesRead);
-                    }
-                    // Return success response without actually sending to network
-                    return new HttpResponseMessage(HttpStatusCode.OK);
-                }
-
-                // Normal path: send the request - HttpClient reads from progressStream during upload
-                // Progress is reported during the NETWORK operation, not during file read
-                var response = _httpClient.SendAsync(request, CancellationToken).Result;
-                response.EnsureSuccessStatusCode();
-                return response;
-            });
-        }
-
-        private void UpdateUploadProgress(long uploadedBytes, long totalBytes, Uri uri)
-        {
-            if (_progressMonitor == null)
-                return;
-
-            var message = GetProgressMessage(totalBytes, uploadedBytes);
-
-            if (totalBytes > 0)
-            {
-                var percentage = (int)(uploadedBytes * 100 / totalBytes);
-                _progressMonitor.UpdateProgress(_progressStatus =
-                    _progressStatus.ChangeMessage(message).ChangePercentComplete(percentage));
-            }
-            else
-            {
-                _progressMonitor.UpdateProgress(_progressStatus =
-                    _progressStatus.ChangeMessage(message).ChangePercentComplete(-1));
-            }
-
-            // Check for cancellation during upload
-            if (_progressMonitor.IsCanceled)
-                throw new OperationCanceledException();
-        }
-
-        /// <summary>
-        /// Stream wrapper that reports progress during read operations.
-        /// Used for upload progress tracking - wraps the source stream so that progress
-        /// is reported as HttpClient reads from it during SendAsync().
-        /// Reads are NOT chunked with timeout here because HttpClient controls the read loop.
-        /// Progress tracking and cancellation happen in the callback.
-        /// </summary>
-        private class ProgressStream : Stream
-        {
-            private readonly Stream _innerStream;
-            // ReSharper disable once NotAccessedField.Local
-            private readonly long _totalBytes;  // For debugging
-            private readonly Action<long> _progressCallback;
-            private long _bytesRead;
-
-            public ProgressStream(Stream innerStream, long totalBytes, Action<long> progressCallback)
-            {
-                _innerStream = innerStream;
-                _totalBytes = totalBytes;
-                _progressCallback = progressCallback;
-            }
-
-            public override bool CanRead => _innerStream.CanRead;
-            public override bool CanSeek => _innerStream.CanSeek;
-            public override bool CanWrite => false;
-            public override long Length => _innerStream.Length;
-            public override long Position
-            {
-                get => _innerStream.Position;
-                set => _innerStream.Position = value;
-            }
-
-            public override int Read(byte[] buffer, int offset, int count)
-            {
-                // HttpClient calls this during SendAsync() as it uploads
-                // Read from the inner stream (e.g., FileStream from disk)
-                int bytesRead = _innerStream.Read(buffer, offset, count);
-                _bytesRead += bytesRead;
-                
-                // Report progress - callback will check cancellation
-                _progressCallback?.Invoke(_bytesRead);
-                
-                return bytesRead;
-            }
-
-            public override void Flush() => _innerStream.Flush();
-            public override long Seek(long offset, SeekOrigin origin) => _innerStream.Seek(offset, origin);
-            public override void SetLength(long value) => _innerStream.SetLength(value);
-            public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
-        }
-
         public void Dispose()
         {
             _httpClient?.Dispose();
         }
+    }
+
+    /// <summary>
+    /// Classifies the type of network failure that occurred.
+    /// </summary>
+    public enum NetworkFailureType
+    {
+        /// <summary>
+        /// The server returned an HTTP error status code (e.g., 404, 500, 401).
+        /// StatusCode will be non-null and ResponseBody may contain server-specific error details.
+        /// </summary>
+        HttpError,
+
+        /// <summary>
+        /// DNS resolution failed - the server name could not be resolved to an IP address.
+        /// Check DNS settings, VPN, or verify the server name is correct.
+        /// </summary>
+        DnsResolution,
+
+        /// <summary>
+        /// The request timed out while waiting for the server to respond.
+        /// The server may be slow, overloaded, or the network connection may be poor.
+        /// </summary>
+        Timeout,
+
+        /// <summary>
+        /// No network connection is available.
+        /// The device is not connected to a network or the network adapter is disabled.
+        /// </summary>
+        NoConnection,
+
+        /// <summary>
+        /// Failed to establish a connection to the server.
+        /// The server may be down, unreachable, or blocked by a firewall/proxy.
+        /// </summary>
+        ConnectionFailed,
+
+        /// <summary>
+        /// The connection was lost during the request (e.g., during download/upload).
+        /// The network connection was interrupted after being successfully established.
+        /// </summary>
+        ConnectionLost
     }
 
     /// <summary>
@@ -745,7 +910,13 @@ namespace pwiz.Common.SystemUtil
     public class NetworkRequestException : IOException
     {
         /// <summary>
+        /// The type of network failure that occurred.
+        /// </summary>
+        public NetworkFailureType FailureType { get; }
+
+        /// <summary>
         /// The HTTP status code returned by the server, or null if the failure occurred before receiving a response.
+        /// Non-null only when FailureType is HttpError.
         /// </summary>
         public HttpStatusCode? StatusCode { get; }
 
@@ -755,17 +926,53 @@ namespace pwiz.Common.SystemUtil
         public Uri RequestUri { get; }
 
         /// <summary>
-        /// Creates a new NetworkRequestException with the specified message, status code, URI, and inner exception.
+        /// The response body as a string, if available. Used for extracting server-specific error details.
+        /// Non-null only when FailureType is HttpError and the server returned a response body.
+        /// </summary>
+        public string ResponseBody { get; }
+
+        /// <summary>
+        /// Creates a new NetworkRequestException for HTTP status code errors.
         /// </summary>
         /// <param name="message">User-friendly error message describing what went wrong</param>
-        /// <param name="statusCode">HTTP status code if available, or null for non-HTTP errors</param>
+        /// <param name="statusCode">HTTP status code returned by the server</param>
         /// <param name="requestUri">The URI that was being requested</param>
         /// <param name="innerException">The underlying exception that caused this error</param>
-        public NetworkRequestException(string message, HttpStatusCode? statusCode, Uri requestUri, Exception innerException)
+        /// <param name="responseBody">Optional response body for server-specific error extraction</param>
+        public NetworkRequestException(string message, HttpStatusCode statusCode, Uri requestUri, Exception innerException, string responseBody = null)
             : base(message, innerException)
         {
+            FailureType = NetworkFailureType.HttpError;
             StatusCode = statusCode;
             RequestUri = requestUri;
+            ResponseBody = responseBody;
+        }
+
+        /// <summary>
+        /// Creates a new NetworkRequestException for non-HTTP network failures.
+        /// </summary>
+        /// <param name="message">User-friendly error message describing what went wrong</param>
+        /// <param name="failureType">The type of network failure that occurred</param>
+        /// <param name="requestUri">The URI that was being requested</param>
+        /// <param name="innerException">The underlying exception that caused this error</param>
+        public NetworkRequestException(string message, NetworkFailureType failureType, Uri requestUri, Exception innerException)
+            : base(message, innerException)
+        {
+            if (failureType == NetworkFailureType.HttpError)
+                throw new ArgumentException(@"Use the other constructor for HttpError failures with a status code", nameof(failureType));
+
+            FailureType = failureType;
+            StatusCode = null;
+            RequestUri = requestUri;
+            ResponseBody = null;
+        }
+
+        /// <summary>
+        /// Returns true if this exception represents a DNS resolution failure.
+        /// </summary>
+        public bool IsDnsFailure()
+        {
+            return FailureType == NetworkFailureType.DnsResolution;
         }
     }
 }
