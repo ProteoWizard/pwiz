@@ -1410,6 +1410,7 @@ namespace pwiz.Skyline.FileUI
             if (null != newAccount)
             {
                 Settings.Default.RemoteAccountList.Add(newAccount);
+                _remoteAccounts.Add(newAccount);
             }
         }
 

@@ -123,7 +123,8 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             serverUrl += $@"/?sampleSetId={FolderOrSampleSetId}&injectionId={InjectionId}";
             serverUrl += "&identity=" + Uri.EscapeDataString(account.IdentityServer) + "&scope=" +
                          Uri.EscapeDataString(account.ClientScope) + "&secret=" +
-                         Uri.EscapeDataString(account.ClientSecret);
+                         Uri.EscapeDataString(account.ClientSecret) + "&clientId=" +
+                         Uri.EscapeDataString(account.ClientId);
             // ReSharper restore LocalizableElement
             return serverUrl;
         }

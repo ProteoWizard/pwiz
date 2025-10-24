@@ -481,6 +481,15 @@ namespace pwiz.Skyline.ToolsUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to invalid client id or secret.
+        /// </summary>
+        public static string EditRemoteAccountDlg_TestWatersConnectAccount_invalid_client_id_or_secret {
+            get {
+                return ResourceManager.GetString("EditRemoteAccountDlg_TestWatersConnectAccount_invalid_client_id_or_secret", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid server URL..
         /// </summary>
         public static string EditRemoteAccountDlg_ValidateValues_Invalid_server_URL_ {

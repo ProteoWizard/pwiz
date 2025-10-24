@@ -326,6 +326,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="CommonResources\Copy.bmp" />
+    <Content Include="CommonResources\SuccessMessageIcon.png" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

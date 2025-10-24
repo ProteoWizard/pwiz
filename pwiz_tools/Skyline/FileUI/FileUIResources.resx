@@ -662,10 +662,10 @@ Would you like to remove some or all of this suffix to shorten the names used in
     <value>Unavailable: no matching iRT standards found</value>
   </data>
   <data name="ExportMethodDlg_OkDialog_Instrument_Type_is_Waters_Connect_but_Template_file_is_not" xml:space="preserve">
-    <value>Instrument Type is Waters Connect but Template file is not selected from Waters Connect</value>
+    <value>Instrument Type is waters_connect but Template file is not selected from waters_connect.</value>
   </data>
   <data name="ExportMethodDlg_OkDialog_Selected_folder_is_on_a_different_Waters_Connect_account_than_the_template" xml:space="preserve">
-    <value>Selected folder is on a different Waters Connect account than the template. Please select a folder under the same account.</value>
+    <value>Selected folder is on a different waters_connect account than the template. Please select a folder under the same account.</value>
   </data>
   <data name="OpenFileDialogNEWatersConnectMethod_Select_Template" xml:space="preserve">
     <value>Select Template for {0}</value>
@@ -686,7 +686,7 @@ Would you like to remove some or all of this suffix to shorten the names used in
     <value>Method name:</value>
   </data>
   <data name="WatersConnectSelectMethodFileDialog_ItemSelected_Method__0__does_not_exist" xml:space="preserve">
-    <value>Method {0} does not exist on this Waters Connect server. Please, select an existing method.</value>
+    <value>Method {0} does not exist on this waters_connect server. Please, select an existing method.</value>
   </data>
   <data name="WatersConnectSelectMethodFileDialog_SelectButtonText" xml:space="preserve">
     <value>Select</value>

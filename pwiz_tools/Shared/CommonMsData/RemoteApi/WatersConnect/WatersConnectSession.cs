@@ -126,7 +126,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
         {
             if (response.StatusCode >= HttpStatusCode.BadRequest)
             {
-                var messageBuilder = new StringBuilder(string.Format("Waters Connect server returns an error code: {0}.", response.StatusCode));
+                var messageBuilder = new StringBuilder(string.Format("waters_connect server returns an error code: {0}.", response.StatusCode));
                 if (response.Content != null)
                 {
                     messageBuilder.Append(string.Format("\n {0}", response.Content.ReadAsStringAsync().Result));

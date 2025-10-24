@@ -175,6 +175,7 @@
             // 
             resources.ApplyResources(this.tbxClientSecret, "tbxClientSecret");
             this.tbxClientSecret.Name = "tbxClientSecret";
+            this.tbxClientSecret.UseSystemPasswordChar = true;
             // 
             // lblClientSecret
             // 

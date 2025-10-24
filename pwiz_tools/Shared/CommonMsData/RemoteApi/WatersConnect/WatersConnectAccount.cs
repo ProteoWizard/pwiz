@@ -50,8 +50,9 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
         public static readonly WatersConnectAccount DEFAULT
             = new WatersConnectAccount(@"https://localhost:48444", string.Empty, string.Empty)
             {
-                IdentityServer = @"https://localhost:48333", ClientScope = @"webapi",
-                ClientSecret = @"method-develop_secret",
+                IdentityServer = @"https://localhost:48333",
+                ClientScope = @"webapi",
+                ClientSecret = @"method-develop-secret",
                 ClientId = @"method-develop"
             };
         public static readonly WatersConnectAccount DEV_DEFAULT
@@ -165,7 +166,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
         {
             if (_authenticationTokens.TryGetValue(this, out var tokenCacheEntry) && tokenCacheEntry.ExpirationDateTime > DateTime.UtcNow)
             {
-                    return tokenCacheEntry.TokenResponse;
+                return tokenCacheEntry.TokenResponse;
             }
             // Get mock handler for testing purposes.
             var authHandler = CommonApplicationSettings.HttpMessageHandlerFactory.getMessageHandler(AUTH_HANDLER_NAME, () => new HttpClientHandler());
@@ -189,10 +190,10 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                 AuthenticationException ex;
                 if (newToken.ErrorType == ResponseErrorType.Exception)
                     ex = new AuthenticationException(newToken.Error);
-                else 
+                else
                     ex = new AuthenticationException(string.Format(CultureInfo.CurrentCulture,
-                        @"Failed to authenticate Waters Connect account {0} with error: {1}",
-                        Username, newToken.ErrorDescription));
+                        "Failed to authenticate waters_connect account {0} with error: {1}",
+                        Username, newToken.ErrorDescription ?? newToken.Error));
                 ex.Data[TOKEN_DATA] = newToken.Raw;
                 throw ex;
             }

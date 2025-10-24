@@ -21,7 +21,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
+using System.IO;
 using System.Linq;
+using System.Resources;
 using System.Windows.Forms;
 using pwiz.Common.CommonResources;
 using pwiz.Common.SystemUtil;
@@ -37,9 +39,19 @@ namespace pwiz.Common.GUI
         private const int MAX_HEIGHT = 500;
         private readonly int _originalFormHeight;
         private readonly int _originalMessageHeight;
-        private readonly int _labelPadding;
+        private int _labelPadding;
         private string _message;
         private string _detailMessage;
+
+        public enum MessageIcon
+        {
+            None = MessageBoxIcon.None,
+            Error = MessageBoxIcon.Error,
+            Information = MessageBoxIcon.Information,
+            Question = MessageBoxIcon.Question,
+            Warning = MessageBoxIcon.Warning,
+            Success = 17 // not a standard icon, which so far are always even numbers
+        }
 
         public CommonAlertDlg() : this(@"Alert dialog for Forms designer")
         {
@@ -58,13 +70,14 @@ namespace pwiz.Common.GUI
             toolStrip1.Renderer = new NoBorderSystemRenderer();
         }
 
-        public CommonAlertDlg(string message, MessageBoxButtons messageBoxButtons) : this(message, messageBoxButtons, DialogResult.None)
+        public CommonAlertDlg(string message, MessageBoxButtons messageBoxButtons, MessageIcon messageIcon = MessageIcon.None) : this(message, messageBoxButtons, DialogResult.None, messageIcon)
         {
         }
 
-        public CommonAlertDlg(string message, MessageBoxButtons messageBoxButtons, DialogResult defaultButton) : this(message)
+        public CommonAlertDlg(string message, MessageBoxButtons messageBoxButtons, DialogResult defaultButton, MessageIcon messageIcon = MessageIcon.None) : this(message)
         {
             AddMessageBoxButtons(messageBoxButtons, defaultButton);
+            SetMessageBoxIcon(messageIcon);
         }
 
         public string Message
@@ -199,6 +212,27 @@ namespace pwiz.Common.GUI
             {
                 AcceptButton = acceptButton;
             }
+        }
+
+        private void SetMessageBoxIcon(MessageIcon messageIcon)
+        {
+            if (messageIcon == MessageIcon.None)
+            {
+                iconAndMessageSplitContainer.Panel1Collapsed = true;
+                return;
+            }
+
+            _labelPadding = iconAndMessageSplitContainer.Width - labelMessage.MaximumSize.Width;
+            iconAndMessageSplitContainer.Panel1Collapsed = false;
+            iconPictureBox.Image = messageIcon switch
+            {
+                MessageIcon.Error => SystemIcons.Error.ToBitmap(),
+                MessageIcon.Information => SystemIcons.Information.ToBitmap(),
+                MessageIcon.Question => SystemIcons.Question.ToBitmap(),
+                MessageIcon.Warning => SystemIcons.Warning.ToBitmap(),
+                MessageIcon.Success => Images.SuccessMessageIcon,
+                _ => throw new ArgumentOutOfRangeException(nameof(messageIcon), messageIcon, null)
+            };
         }
 
         /// <summary>

@@ -29,6 +29,7 @@ using System.Windows.Forms;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.Collections;
+using pwiz.Common.GUI;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.CommonMsData.RemoteApi;
@@ -409,8 +410,7 @@ namespace pwiz.Skyline.ToolsUI
                     return false;
                 }
                 var tokenResponse = JObject.Parse((string)ae.Data[WatersConnectAccount.TOKEN_DATA]);
-                string error = tokenResponse[@"error_description"].ToString();
-                MessageDlg.Show(this, TextUtil.LineSeparate(ToolsUIResources.EditRemoteAccountDlg_TestUnifiAccount_An_error_occurred_while_trying_to_authenticate_, error));
+                string error = (tokenResponse[@"error_description"] ?? tokenResponse[@"error"]).ToString();
                 if (tokenResponse[@"error"].ToString() == @"invalid_scope")
                 {
                     tbxClientScope.Focus();
@@ -418,6 +418,7 @@ namespace pwiz.Skyline.ToolsUI
                 else if (tokenResponse[@"error"].ToString() == @"invalid_client")
                 {
                     tbxClientSecret.Focus();
+                    error = ToolsUIResources.EditRemoteAccountDlg_TestWatersConnectAccount_invalid_client_id_or_secret;
                 }
                 else if (tokenResponse[@"error"].ToString() == @"invalid_grant")
                 {
@@ -427,6 +428,7 @@ namespace pwiz.Skyline.ToolsUI
                 {
                     tbxIdentityServer.Focus();
                 }
+                MessageDlg.ShowError(this, TextUtil.LineSeparate(ToolsUIResources.EditRemoteAccountDlg_TestUnifiAccount_An_error_occurred_while_trying_to_authenticate_, error));
                 return false;
             }
             catch (Exception e)
@@ -574,7 +576,7 @@ namespace pwiz.Skyline.ToolsUI
                 }
             }
 
-            MessageDlg.Show(this, ToolsUIResources.EditRemoteAccountDlg_TestSettings_Settings_are_correct);
+            MessageDlg.Show(this, ToolsUIResources.EditRemoteAccountDlg_TestSettings_Settings_are_correct, false, CommonAlertDlg.MessageIcon.Success);
             return true;
         }
 
@@ -582,12 +584,11 @@ namespace pwiz.Skyline.ToolsUI
         {
             var remoteAccount = GetRemoteAccount();
 
-            if (RemoteAccountType.UNIFI.Equals(AccountType))
+            if (RemoteAccountType.UNIFI.Equals(AccountType) || RemoteAccountType.WATERS_CONNECT.Equals(AccountType))
             {
                 if (string.IsNullOrEmpty(remoteAccount.Username))
                 {
-                    MessageDlg.Show(this,
-                        ToolsUIResources.EditRemoteAccountDlg_ValidateValues_Username_cannot_be_blank);
+                    MessageDlg.ShowError(this, ToolsUIResources.EditRemoteAccountDlg_ValidateValues_Username_cannot_be_blank);
                     textUsername.Focus();
                     return false;
                 }
@@ -595,8 +596,8 @@ namespace pwiz.Skyline.ToolsUI
 
             if (string.IsNullOrEmpty(remoteAccount.ServerUrl))
             {
-                MessageDlg.Show(this, ToolsUIResources.EditRemoteAccountDlg_ValidateValues_Server_cannot_be_blank);
-                if (RemoteAccountType.UNIFI.Equals(AccountType))
+                MessageDlg.ShowError(this, ToolsUIResources.EditRemoteAccountDlg_ValidateValues_Server_cannot_be_blank);
+                if (RemoteAccountType.UNIFI.Equals(AccountType) || RemoteAccountType.WATERS_CONNECT.Equals(AccountType))
                 {
                     textServerURL.Focus();
                 }
@@ -610,7 +611,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 if (_existing.Select(existing => existing.GetKey()).Contains(remoteAccount.GetKey()))
                 {
-                    MessageDlg.Show(this, string.Format(ToolsUIResources.EditRemoteAccountDlg_ValidateValues_There_is_already_an_account_defined_for_the_user__0__on_the_server__1_, remoteAccount.Username, remoteAccount.ServerUrl));
+                    MessageDlg.ShowError(this, string.Format(ToolsUIResources.EditRemoteAccountDlg_ValidateValues_There_is_already_an_account_defined_for_the_user__0__on_the_server__1_, remoteAccount.Username, remoteAccount.ServerUrl));
                 }
             }
             try
@@ -618,8 +619,8 @@ namespace pwiz.Skyline.ToolsUI
                 var uri = new Uri(remoteAccount.ServerUrl, UriKind.Absolute);
                 if (uri.Scheme != @"https" && uri.Scheme != @"http")
                 {
-                    MessageDlg.Show(this, ToolsUIResources.EditRemoteAccountDlg_ValidateValues_Server_URL_must_start_with_https____or_http___);
-                    if (RemoteAccountType.UNIFI.Equals(AccountType))
+                    MessageDlg.ShowError(this, ToolsUIResources.EditRemoteAccountDlg_ValidateValues_Server_URL_must_start_with_https____or_http___);
+                    if (RemoteAccountType.UNIFI.Equals(AccountType) || RemoteAccountType.WATERS_CONNECT.Equals(AccountType))
                     {
                         textServerURL.Focus();
                     }
@@ -632,8 +633,8 @@ namespace pwiz.Skyline.ToolsUI
             }
             catch
             {
-                MessageDlg.Show(this, ToolsUIResources.EditRemoteAccountDlg_ValidateValues_Invalid_server_URL_);
-                if (RemoteAccountType.UNIFI.Equals(AccountType))
+                MessageDlg.ShowError(this, ToolsUIResources.EditRemoteAccountDlg_ValidateValues_Invalid_server_URL_);
+                if (RemoteAccountType.UNIFI.Equals(AccountType) || RemoteAccountType.WATERS_CONNECT.Equals(AccountType))
                 {
                     textServerURL.Focus();
                 }

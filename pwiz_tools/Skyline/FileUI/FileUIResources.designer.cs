@@ -526,7 +526,7 @@ namespace pwiz.Skyline.FileUI {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Instrument Type is Waters Connect but Template file is not selected from Waters Connect.
+        ///   Looks up a localized string similar to Instrument Type is waters_connect but Template file is not selected from waters_connect..
         /// </summary>
         public static string ExportMethodDlg_OkDialog_Instrument_Type_is_Waters_Connect_but_Template_file_is_not {
             get {
@@ -592,7 +592,7 @@ namespace pwiz.Skyline.FileUI {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Selected folder is on a different Waters Connect account than the template. Please select a folder under the same account..
+        ///   Looks up a localized string similar to Selected folder is on a different waters_connect account than the template. Please select a folder under the same account..
         /// </summary>
         public static string ExportMethodDlg_OkDialog_Selected_folder_is_on_a_different_Waters_Connect_account_than_the_template {
             get {
@@ -1878,7 +1878,7 @@ namespace pwiz.Skyline.FileUI {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Method {0} does not exist on this Waters Connect server. Please, select an existing method..
+        ///   Looks up a localized string similar to Method {0} does not exist on this waters_connect server. Please, select an existing method..
         /// </summary>
         public static string WatersConnectSelectMethodFileDialog_ItemSelected_Method__0__does_not_exist {
             get {
