@@ -35,7 +35,7 @@ namespace TestPerf
     [TestClass]
     public class CarafeBuildLibraryTutorial : AbstractFunctionalTestEx
     {
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
+        //[TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestCarafeBuildLibraryTutorial()
         {
             // Set true to look at tutorial screenshots.
