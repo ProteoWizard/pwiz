@@ -5,6 +5,11 @@
 - **Created**: 2025-10-19
 - **Objective**: Standardize all source files to UTF-8 without BOM
 
+## Pull Request
+**PR**: #3651
+**Merged**: 2025-10-19
+**Status**: Merged to master
+
 ## Background
 Modern best practice is **UTF-8 without BOM** for source code. BOM can cause issues with:
 - Unix/Linux build tools
