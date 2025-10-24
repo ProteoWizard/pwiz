@@ -1613,6 +1613,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Select Training Document.
+        /// </summary>
+        public static string Select_Training_Document {
+            get {
+                return ResourceManager.GetString("Select_Training_Document", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Do you want to save your current settings before switching?.
         /// </summary>
         public static string SelectSettingsHandler_ToolStripMenuItemClick_Do_you_want_to_save_your_current_settings_before_switching {

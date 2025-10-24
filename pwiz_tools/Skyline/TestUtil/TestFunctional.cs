@@ -286,7 +286,7 @@ namespace pwiz.SkylineTestUtil
             SkylineWindow.DocumentChangedEvent += OnDocumentChangedLogging;
         }
 
-        protected static TDlg ShowDialog<TDlg>(Action act, int millis = -1) where TDlg : Form
+        protected internal static TDlg ShowDialog<TDlg>(Action act, int millis = -1) where TDlg : Form
         {
             var existingDialog = FindOpenForm<TDlg>();
             if (existingDialog != null)
@@ -304,6 +304,29 @@ namespace pwiz.SkylineTestUtil
                 dlg = WaitForOpenForm<TDlg>();
             else
                 dlg = WaitForOpenForm<TDlg>(millis);
+            Assert.IsNotNull(dlg);
+
+            return dlg;
+        }
+
+        /// <summary>
+        /// Like ShowDialog - "expect to see a dialog as a consequence of this action" - but specifically for MultiButtonMsgDlg
+        /// showing specific messages, since it's possible to have more than one MultiButtonMsgDlg open at the same time.
+        /// </summary>
+        /// <param name="act"></param>
+        /// <param name="messageFormat">Can be a formatting string e.g. "Please {0} the {1}" etc </param>
+        /// <param name="millis">timeout</param>
+        /// <returns>MultiButtonMsgDlg found to have the expected string</returns>
+        protected internal static MultiButtonMsgDlg ShowMultiButtonMsgDlg(Action act, string messageFormat, int millis = WAIT_TIME)
+        { 
+            var existingDialog = WaitForMultiButtonMsgDlg(messageFormat, 1);
+            if (existingDialog != null)
+            {
+                Assert.Fail("MultiButtonMsgDlg is already open with the message: " + messageFormat);
+            }
+
+            SkylineBeginInvoke(act);
+            var dlg = WaitForMultiButtonMsgDlg(messageFormat, millis);
             Assert.IsNotNull(dlg);
 
             return dlg;
@@ -409,7 +432,7 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         /// <param name="showDlgAction">Action which causes the dialog to be shown</param>
         /// <param name="exerciseDlgAction">Action which can do some things and then must close the dialog.</param>
-        protected static void RunDlg<TDlg>([InstantHandle] Action showDlgAction,
+        protected internal static void RunDlg<TDlg>([InstantHandle] Action showDlgAction,
             [InstantHandle] [NotNull] Action<TDlg> exerciseDlgAction)
             where TDlg : Form
         {
@@ -432,7 +455,7 @@ namespace pwiz.SkylineTestUtil
         /// <param name="showDlgAction">Action which runs on the UI thread and causes the dialog to be shown</param>
         /// <param name="exerciseDlgAction">Action which runs on the test thread and interacts with the dialog</param>
         /// <param name="closeDlgAction">Action which runs on the UI thread and closes the dialog</param>
-        protected static void RunLongDlg<TDlg>([InstantHandle] Action showDlgAction, [InstantHandle] Action<TDlg> exerciseDlgAction, Action<TDlg> closeDlgAction) where TDlg : Form
+        protected internal static void RunLongDlg<TDlg>([InstantHandle] Action showDlgAction, [InstantHandle] Action<TDlg> exerciseDlgAction, Action<TDlg> closeDlgAction) where TDlg : Form
         {
             bool showDlgActionCompleted = false;
             TDlg dlg = ShowDialog<TDlg>(() =>
