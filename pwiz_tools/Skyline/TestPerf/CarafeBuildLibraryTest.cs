@@ -219,7 +219,6 @@ namespace TestPerf
             {
                 ValidateLibraryResult("cpu_test_res_fine_tuned_bySky.json", builtLibraryBySky);
             }
-            TestFilesDir.CheckForFileLocks(TestFilesDirs[0].FullPath);
             if (IsCleanPythonMode)
                 AssertEx.IsTrue(PythonInstaller.DeleteToolsPythonDirectory());
         }

@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using pwiz.Common.Collections;
@@ -177,6 +178,11 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             ModifiedSequence modifiedSequence, int charge, bool training,
             string modsBuilder, string modSitesBuilder);
 
+        public static string ToTsvLine(params object[] values)
+        {
+            return TextUtil.ToDsvLine(values.Select(ToStringInvariant), TextUtil.SEPARATOR_TSV);
+        }
+
         protected abstract string ToolName { get; }
 
         protected abstract LibraryBuilderModificationSupport LibraryBuilderModificationSupport { get; }
@@ -329,8 +335,34 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
             return warningModSupports;
         }
+        public static ArgumentAndValue MakeArgument(string name, object value)
+        {
+            return new ArgumentAndValue(name, ToStringInvariant(value));
+        }
+
+        protected static string ToStringInvariant(object value)
+        {
+            if (value == null)
+            {
+                return string.Empty;
+            }
+
+            if (value is string stringValue)
+            {
+                return stringValue;
+            }
+
+            if (value is IFormattable formattable)
+            {
+                return formattable.ToString(null, CultureInfo.InvariantCulture);
+            }
+
+            return LocalizationHelper.CallWithCulture(CultureInfo.InvariantCulture, value.ToString);
+        }
+
+
     }
-    
+
     [Flags]
     public enum PredictionSupport { none = 0, fragmentation = 1, retention_time = 2, ccs = 4, all = 7 }
 

@@ -139,8 +139,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         protected override string GetTableRow(PeptideDocNode peptide, ModifiedSequence modifiedSequence,
             int charge, bool training, string modsBuilder, string modSitesBuilder)
         {
-            return new[] { modifiedSequence.GetUnmodifiedSequence(), modsBuilder, modSitesBuilder, charge.ToString() }
-                .ToDsvLine(TextUtil.SEPARATOR_TSV);
+            return ToTsvLine(modifiedSequence.GetUnmodifiedSequence(), modsBuilder, modSitesBuilder, charge);
         }
 
         private string PeptdeepExecutablePath => Path.Combine(ScriptsDir, PEPTDEEP_EXECUTABLE);
@@ -264,46 +263,46 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             {
                 if (arg.Key == ModelResources.AlphaPeptDeep_min_peptide_length_short)
                 {
-                    readyArgs.Add(new ArgumentAndValue(@"library--min_peptide_len", arg.Value.Value.ToString()));
+                    readyArgs.Add(MakeArgument(@"library--min_peptide_len", arg.Value.Value));
                 }
                 else if (arg.Key == ModelResources.AlphaPeptDeep_max_peptide_length_short)
                 {
-                    readyArgs.Add(new ArgumentAndValue(@"library--max_peptide_len", arg.Value.Value.ToString()));
+                    readyArgs.Add(MakeArgument(@"library--max_peptide_len", arg.Value.Value));
                 }
                 else if (arg.Key == ModelResources.AlphaPeptDeep_min_fragment_mz_short)
                 {
-                    readyArgs.Add(new ArgumentAndValue(@"library--output_tsv--min_fragment_mz ", arg.Value.Value.ToString()));
+                    readyArgs.Add(MakeArgument(@"library--output_tsv--min_fragment_mz ", arg.Value.Value));
                 }
                 else if (arg.Key == ModelResources.AlphaPeptDeep_max_fragment_mz_short)
                 {
-                    readyArgs.Add(new ArgumentAndValue(@"library--output_tsv--max_fragment_mz ", arg.Value.Value.ToString()));
+                    readyArgs.Add(MakeArgument(@"library--output_tsv--max_fragment_mz ", arg.Value.Value));
                 }
                 else if (arg.Key == ModelResources.AlphaPeptDeep_min_precursor_charge_short)
                 {
-                    readyArgs.Add(new ArgumentAndValue(@"library--min_precursor_charge ", arg.Value.Value.ToString()));
+                    readyArgs.Add(MakeArgument(@"library--min_precursor_charge ", arg.Value.Value));
                 }
                 else if (arg.Key == ModelResources.AlphaPeptDeep_max_precursor_charge_short)
                 {
-                    readyArgs.Add(new ArgumentAndValue(@"library--max_precursor_charge ", arg.Value.Value.ToString()));
+                    readyArgs.Add(MakeArgument(@"library--max_precursor_charge ", arg.Value.Value));
                 }
                 else if (arg.Key == ModelResources.AlphaPeptDeep_max_fragment_charge_short)
                 {
-                    readyArgs.Add(new ArgumentAndValue(@"library--output_tsv--max_frag_charge ", arg.Value.Value.ToString()));
+                    readyArgs.Add(MakeArgument(@"library--output_tsv--max_frag_charge ", arg.Value.Value));
                 }
                 else if (arg.Key == ModelResources.AlphaPeptDeep_min_relative_intensity_short)
                 {
-                    readyArgs.Add(new ArgumentAndValue(@"library--output_tsv--min_relative_intensity", arg.Value.Value.ToString()));
+                    readyArgs.Add(MakeArgument(@"library--output_tsv--min_relative_intensity", arg.Value.Value));
                 }
                 else if (arg.Key == ModelResources.AlphaPeptDeep_keep_k_highest_peaks_short)
                 {
-                    readyArgs.Add(new ArgumentAndValue(@"library--output_tsv--keep_higest_k_peaks", arg.Value.Value.ToString()));
+                    readyArgs.Add(MakeArgument(@"library--output_tsv--keep_higest_k_peaks", arg.Value.Value));
                 }
                 else if (arg.Key == ModelResources.AlphaPeptDeep_device_short)
                 {
                     if (PythonInstaller.SimulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NONE) 
-                        readyArgs.Add(new ArgumentAndValue(@"torch_device--device_type", arg.Value.Value.ToString()));
+                        readyArgs.Add(MakeArgument(@"torch_device--device_type", arg.Value.Value));
                     else
-                        readyArgs.Add(new ArgumentAndValue(@"torch_device--device_type", DefaultTestDevice.ToString()));
+                        readyArgs.Add(MakeArgument(@"torch_device--device_type", DefaultTestDevice));
                 }
             }
             return readyArgs;
@@ -331,7 +330,6 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             progress.UpdateProgress(progressStatus = progressStatus
                 .ChangeMessage(ModelResources.AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Preparing_settings_file));
 
-            var args = TextUtil.SpaceSeparate(CmdFlowCommandArguments.Select(arg => arg.ToString()));
             // Generate template settings.yaml file
             var pr = new ProcessRunner();
             var psi = new ProcessStartInfo(PeptdeepExecutablePath, $@"{EXPORT_SETTINGS_COMMAND} ""{SettingsFilePath}""")

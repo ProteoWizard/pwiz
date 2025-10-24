@@ -45,16 +45,12 @@ namespace pwiz.Skyline.Model.Lib.Carafe
     {
         public const string CARAFE = @"Carafe";
 
-        internal const string ECHO = @"echo";
         private const string BIN = @"bin";
         private const string INPUT = @"input";
         private const string TRAIN = @"train";
         private const string CARAFE_VERSION = @"1.1.2";
         private const string CARAFE_URI_NAME = @"carafe-";
-        private const string CARAFE_DEV = @"-dev";
         private const string CARAFE_DEV_VERSION = ""; //@"-beta"; //CARAFE_DEV + @"-20250304T224833Z-001";
-        private const string CMD_ARG_C = @"/C";
-        private const string CMD_EXECUTABLE = @"cmd.exe";
         private const string CONDITIONAL_CMD_PROCEEDING_SYMBOL = TextUtil.AMPERSAND + TextUtil.AMPERSAND;
         private const string DOT_JAR = @".jar";
         private const string DOT_ZIP = @".zip";
@@ -70,11 +66,9 @@ namespace pwiz.Skyline.Model.Lib.Carafe
         private const string OUTPUT_LIBRARY_FILE_NAME_CSV = @"test_res_fine_tuned.csv";
 
         private const string SPACE = TextUtil.SPACE;
-        private const string TAB = @"\t";
 
         //Processing folders
         private const string PREFIX_WORKDIR = "Carafe";
-        private const string OUTPUT_SPECTRAL_LIBS = @"output_libs";
 
         // Column names for Carafe
         private const string PRECURSOR = @"Precursor";
@@ -176,7 +170,6 @@ namespace pwiz.Skyline.Model.Lib.Carafe
         private string CarafeJavaDir => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), CARAFE);
         private string UserDir => Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         private DirectoryInfo JavaDirInfo => new DirectoryInfo(JavaDir);
-        private DirectoryInfo CarafeJavaDirInfo => new DirectoryInfo(CarafeJavaDir);
         private string JavaSdkDownloadFileName => @"jdk-21_windows-x64_bin.zip";
         private Uri JavaSdkUri => new Uri(JAVA_SDK_DOWNLOAD_URL + JavaSdkDownloadFileName);
         private string JavaSdkDownloadPath => Path.Combine(JavaDir, JavaSdkDownloadFileName);
@@ -216,8 +209,6 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             return new Uri(CarafeJarZipDownloadUrl() + CarafeJarZipFileName);
         }
 
-        private string CarafeJarZipLocalPath => Path.Combine(UserDir, DOWNLOADS, CarafeJarZipFileName);
-        private Uri CarafeJarZipLocalUri => new Uri(@$"file:///{CarafeJarZipLocalPath}");
         private string CarafeJarZipDownloadPath => Path.Combine(CarafeJavaDir, CarafeJarZipFileName);
 
         private string CarafeOutputLibraryDir => Path.Combine(WorkDir, OUTPUT_LIBRARY);
@@ -255,21 +246,21 @@ namespace pwiz.Skyline.Model.Lib.Carafe
         private IList<ArgumentAndValue> CommandArguments =>
             new List<ArgumentAndValue>
             {
-                new ArgumentAndValue(@"jar", TextUtil.Quote(CarafeJarFilePath), TextUtil.HYPHEN),
-                new ArgumentAndValue(@"ms", TextUtil.Quote(ExperimentDataFilePath), TextUtil.HYPHEN),
-                new ArgumentAndValue(@"o", TextUtil.Quote(CarafeOutputLibraryDir), TextUtil.HYPHEN),
-                new ArgumentAndValue(@"c_ion_min", @"2", TextUtil.HYPHEN),
-                new ArgumentAndValue(@"ez", string.Empty, TextUtil.HYPHEN),
-                new ArgumentAndValue(@"fast", string.Empty, TextUtil.HYPHEN),
-                new ArgumentAndValue(@"lf_frag_n_min", @"2", TextUtil.HYPHEN),
-                new ArgumentAndValue(@"n_ion_min", @"2", TextUtil.HYPHEN),
-                new ArgumentAndValue(@"na", @"0", TextUtil.HYPHEN),
-                new ArgumentAndValue(@"nf", @"4", TextUtil.HYPHEN),
-                new ArgumentAndValue(@"nm", string.Empty, TextUtil.HYPHEN),
-                new ArgumentAndValue(@"seed", @"2000", TextUtil.HYPHEN),
-                new ArgumentAndValue(@"skyline", string.Empty, TextUtil.HYPHEN),
-                new ArgumentAndValue(@"tf", @"all", TextUtil.HYPHEN),
-                new ArgumentAndValue(@"valid", string.Empty, TextUtil.HYPHEN)
+                HyphenArgument(@"jar", CarafeJarFilePath.Quote()),
+                HyphenArgument(@"ms", ExperimentDataFilePath.Quote()),
+                HyphenArgument(@"o", CarafeOutputLibraryDir.Quote()),
+                HyphenArgument(@"c_ion_min", 2),
+                HyphenArgument(@"ez", string.Empty),
+                HyphenArgument(@"fast", string.Empty),
+                HyphenArgument(@"lf_frag_n_min", 2),
+                HyphenArgument(@"n_ion_min", 2),
+                HyphenArgument(@"na", 0),
+                HyphenArgument(@"nf", 4),
+                HyphenArgument(@"nm", string.Empty),
+                HyphenArgument(@"seed", 2000),
+                HyphenArgument(@"skyline", string.Empty),
+                HyphenArgument(@"tf", @"all"),
+                HyphenArgument(@"valid", string.Empty)
             };
 
         public enum ToleranceUnits
@@ -343,7 +334,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
                     { ModelResources.CarafeModel_device_short,  new AbstractDdaSearchEngine.Setting(ModelResources.CarafeModel_device_short, DeviceTypes.gpu.ToString(), Enum.GetNames(typeof(DeviceTypes)),ModelResources.CarafeModel_device_long) }
                 });
 
-        private static Func<string, string, string> BuildSelectedModString = (s1, s2) =>
+        private static string BuildSelectedModString(string s1, string s2)
         {
             var input = "";
 
@@ -366,7 +357,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
                     .Select(s => int.Parse(s)) // Safe to parse after TryParse check
                     .Distinct() // Removes duplicates, preserves order
                     .Select(n => n.ToString()));
-        };
+        }
 
         private static Func<string, bool> ValidateSelectedMods = (value) =>
         {
@@ -464,33 +455,32 @@ namespace pwiz.Skyline.Model.Lib.Carafe
                 return "";
             }
             var precursor = LabelPrecursor(docNode.TransitionGroup, docNode.PrecursorMz, string.Empty);
-            var collisionEnergy = docNode.ExplicitValues.CollisionEnergy != null ? docNode.ExplicitValues.CollisionEnergy.ToString() : @"#N/A";
-            var note = docNode.Annotations.Note != null ? docNode.Annotations.Note : @"#N/A";
-            var libraryName = docNode.LibInfo != null && docNode.LibInfo.LibraryName != null ? docNode.LibInfo.LibraryName : @"#N/A";
-            var libraryType = docNode.LibInfo != null && docNode.LibInfo.LibraryTypeName != null ? docNode.LibInfo.LibraryTypeName : @"#N/A";
-            var libraryScore = docNode.LibInfo != null && docNode.LibInfo.Score != null ? docNode.LibInfo.Score.ToString() : @"#N/A";
+            var collisionEnergy = (object) docNode.ExplicitValues.CollisionEnergy ?? TextUtil.EXCEL_NA;
+            var note = docNode.Annotations.Note;
+            var libraryName = docNode.LibInfo?.LibraryName;
+            var libraryType = docNode.LibInfo?.LibraryTypeName;
+            var libraryScore = (object) docNode.LibInfo?.Score ?? TextUtil.EXCEL_NA;
             var unimodSequence = modifiedSequence.ToString();
-            var best_rt = docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.RetentionTime.ToString();
-            var min_rt = docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.StartRetentionTime.ToString();
-            var max_rt = docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.EndRetentionTime.ToString();
-            string ionmob_ms1 = docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.IonMobilityInfo?.IonMobilityMS1.HasValue == true ?
-                docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.IonMobilityInfo.IonMobilityMS1.ToString() : @"#N/A";
+            var chromInfoBest = docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault();
+            var best_rt = chromInfoBest?.RetentionTime;
+            var min_rt = chromInfoBest?.StartRetentionTime;
+            var max_rt = chromInfoBest?.EndRetentionTime;
+            var ionmob_ms1 = (object) chromInfoBest?.IonMobilityInfo?.IonMobilityMS1 ?? TextUtil.EXCEL_NA;
             var apex_psm = @"unknown"; //docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.Identified
             var filename = GetDataFileName();
 
             if (!training)
-                return new [] { 
-                    precursor, modifiedSequence.GetUnmodifiedSequence(), charge.ToString(), docNode.LabelType.ToString(),
-                    docNode.PrecursorMz.ToString(), unimodSequence, collisionEnergy, note, libraryName, libraryType, libraryScore, modifiedSequence.UnimodIds
-                }.ToDsvLine(TextUtil.SEPARATOR_TSV);
-
-            return new []
             {
-                precursor, modifiedSequence.GetUnmodifiedSequence(), charge.ToString(), docNode.LabelType.ToString(),
-                docNode.PrecursorMz.ToString(), unimodSequence, collisionEnergy,
+                return ToTsvLine(precursor, modifiedSequence.GetUnmodifiedSequence(), charge, docNode.LabelType,
+                    docNode.PrecursorMz, unimodSequence, collisionEnergy, note, libraryName, libraryType, libraryScore,
+                    modifiedSequence.UnimodIds);
+            }
+
+            return ToTsvLine(
+                precursor, modifiedSequence.GetUnmodifiedSequence(), charge, docNode.LabelType,
+                docNode.PrecursorMz, unimodSequence, collisionEnergy,
                 note, libraryName, libraryType, libraryScore, modifiedSequence.UnimodIds,
-                best_rt, min_rt, max_rt, ionmob_ms1, apex_psm, filename, libraryScore
-            }.ToDsvLine(TextUtil.SEPARATOR_TSV);
+                best_rt, min_rt, max_rt, ionmob_ms1, apex_psm, filename, libraryScore);
         }
 
         public static void CarafeDefaultDataSettings()
@@ -624,47 +614,47 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             var readyArgs = new List<ArgumentAndValue>();
             foreach (var arg in CommandArguments)
             {
-                readyArgs.Add(new ArgumentAndValue(arg.Name, arg.Value, TextUtil.HYPHEN));
+                readyArgs.Add(HyphenArgument(arg.Name, arg.Value));
             }
 
             foreach (var dataParam in DataParameters)
             {
                 if (dataParam.Key == ModelResources.CarafeTraining_fdr_short)
                 {
-                    readyArgs.Add(new ArgumentAndValue(@"fdr", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                    readyArgs.Add(HyphenArgument(@"fdr", dataParam.Value.Value));
                 }
                 else if (dataParam.Key == ModelResources.CarafeTraining_ptm_site_prob_short)
                 {
-                    readyArgs.Add(new ArgumentAndValue(@"ptm_site_prob", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                    readyArgs.Add(HyphenArgument(@"ptm_site_prob", dataParam.Value.Value));
                 }
                 else if (dataParam.Key == ModelResources.CarafeTraining_ptm_site_qvalue_short)
                 {
-                    readyArgs.Add(new ArgumentAndValue(@"ptm_site_qvalue", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                    readyArgs.Add(HyphenArgument(@"ptm_site_qvalue", dataParam.Value.Value));
                 }
                 else if (dataParam.Key == ModelResources.CarafeTraining_fragment_ion_mass_tolerance_short)
                 {
-                    readyArgs.Add(new ArgumentAndValue(@"itol", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                    readyArgs.Add(HyphenArgument(@"itol", dataParam.Value.Value));
                 }
                 else if (dataParam.Key == ModelResources.CarafeTraining_fragment_ion_mass_tolerance_units_short)
                 {
-                    readyArgs.Add(new ArgumentAndValue(@"itolu", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                    readyArgs.Add(HyphenArgument(@"itolu", dataParam.Value.Value));
                 }
                 else if (dataParam.Key == ModelResources.CarafeTraining_refine_peak_detection_short)
                 {
                     if (!dataParam.Value.Value.ToString().IsNullOrEmpty() && (bool)dataParam.Value.Value)
-                        readyArgs.Add(new ArgumentAndValue(@"rf", @"", TextUtil.HYPHEN));
+                        readyArgs.Add(HyphenArgument(@"rf", @""));
                 }
                 else if (dataParam.Key == ModelResources.CarafeTraining_RT_window_short)
                 {
-                    readyArgs.Add(new ArgumentAndValue(@"rf_rt_win", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                    readyArgs.Add(HyphenArgument(@"rf_rt_win", dataParam.Value.Value));
                 }
                 else if (dataParam.Key == ModelResources.CarafeTraining_XIC_correlation_short)
                 {
-                    readyArgs.Add(new ArgumentAndValue(@"cor", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                    readyArgs.Add(HyphenArgument(@"cor", dataParam.Value.Value));
                 }
                 else if (dataParam.Key == ModelResources.CarafeTraining_min_fragment_mz_short)
                 {
-                    readyArgs.Add(new ArgumentAndValue(@"min_mz", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                    readyArgs.Add(HyphenArgument(@"min_mz", dataParam.Value.Value));
                 }
             }
 
@@ -672,24 +662,24 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             {
                 if (dataParam.Key == ModelResources.CarafeModel_model_short)
                 {
-                    readyArgs.Add(new ArgumentAndValue(@"mode", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                    readyArgs.Add(HyphenArgument(@"mode", dataParam.Value.Value));
                 }
                 else if (dataParam.Key == ModelResources.CarafeModel_nce_short)
                 {
                     if (!dataParam.Value.Value.ToString().IsNullOrEmpty())
-                        readyArgs.Add(new ArgumentAndValue(@"nce", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                        readyArgs.Add(HyphenArgument(@"nce", dataParam.Value.Value));
                 }
                 else if (dataParam.Key == ModelResources.CarafeModel_instrument_short)
                 {
                     if (!dataParam.Value.Value.ToString().IsNullOrEmpty())
-                        readyArgs.Add(new ArgumentAndValue(@"ms_instrument", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                        readyArgs.Add(HyphenArgument(@"ms_instrument", dataParam.Value.Value));
                 }
                 else if (dataParam.Key == ModelResources.CarafeModel_device_short)
                 {
                     if (PythonInstaller.SimulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NONE)
-                        readyArgs.Add(new ArgumentAndValue(@"device", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                        readyArgs.Add(HyphenArgument(@"device", dataParam.Value.Value));
                     else
-                        readyArgs.Add(new ArgumentAndValue(@"device", DefaultTestDevice.ToString(), TextUtil.HYPHEN));
+                        readyArgs.Add(HyphenArgument(@"device", DefaultTestDevice));
                 }
             }
 
@@ -697,90 +687,92 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             {
                 if (dataParam.Key == ModelResources.CarafeLibrary_enzyme_short)
                 {
-                    if (!dataParam.Value.Value.ToString().IsNullOrEmpty())
-                    {
-                        string[] enz_name = dataParam.Value.Value.ToString().Split(':');
-
-                        readyArgs.Add(new ArgumentAndValue(@"enzyme", enz_name[0], TextUtil.HYPHEN));
-                    }
-
+                    readyArgs.AddRange(IfNotEmpty(HyphenArgument(@"enzyme",
+                        dataParam.Value.Value.ToString().Split(':')[0])));
                 }
                 else if (dataParam.Key == ModelResources.CarafeLibrary_missed_cleavage_short)
                 {
-                    readyArgs.Add(new ArgumentAndValue(@"miss_c", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                    readyArgs.Add(HyphenArgument(@"miss_c", dataParam.Value.Value));
                 }
                 else if (dataParam.Key == ModelResources.CarafeLibrary_fixed_modification_short)
                 {
-                    if (!dataParam.Value.Value.ToString().IsNullOrEmpty())
-                        readyArgs.Add(new ArgumentAndValue(@"fixMod", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                    readyArgs.AddRange(IfNotEmpty(HyphenArgument(@"fixMod", dataParam.Value.Value)));
                 }
                 else if (dataParam.Key == ModelResources.CarafeLibrary_variable_modification_short)
                 {
-                    if (!dataParam.Value.Value.ToString().IsNullOrEmpty())
-                        readyArgs.Add(new ArgumentAndValue(@"varMod", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
-                    else
-                        readyArgs.Add(new ArgumentAndValue(@"varMod", @"0", TextUtil.HYPHEN));
+                    var arg = HyphenArgument(@"varMod", dataParam.Value.Value);
+                    if (string.IsNullOrEmpty(arg.Value))
+                    {
+                        arg = HyphenArgument(@"varMod", 0);
+                    }
+                    readyArgs.Add(arg);
                 }
                 else if (dataParam.Key == ModelResources.CarafeLibrary_max_variable_modification_short)
                 {
-                    readyArgs.Add(new ArgumentAndValue(@"maxVar", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                    readyArgs.Add(HyphenArgument(@"maxVar", dataParam.Value.Value));
                 }
                 else if (dataParam.Key == ModelResources.CarafeLibrary_clip_nterm_methionine_short)
                 {
-                    if (!dataParam.Value.Value.ToString().IsNullOrEmpty() && (bool)dataParam.Value.Value)
-                        readyArgs.Add(new ArgumentAndValue(@"clip_n_m", @"", TextUtil.HYPHEN));
+                    var boolValue = dataParam.Value.Value as bool?;
+                    if (boolValue.HasValue)
+                    {
+                        readyArgs.Add(HyphenArgument(@"clip_n_m", string.Empty));
+                    }
                 }
                 else if (dataParam.Key == ModelResources.CarafeLibrary_min_peptide_length_short)
                 {
-                    readyArgs.Add(new ArgumentAndValue(@"minLength", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                    readyArgs.Add(HyphenArgument(@"minLength", dataParam.Value.Value));
                 }
                 else if (dataParam.Key == ModelResources.CarafeLibrary_max_peptide_length_short)
                 {
-                    readyArgs.Add(new ArgumentAndValue(@"maxLength", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                    readyArgs.Add(HyphenArgument(@"maxLength", dataParam.Value.Value));
                 }
                 else if (dataParam.Key == ModelResources.CarafeLibrary_min_peptide_mz_short)
                 {
-                    readyArgs.Add(new ArgumentAndValue(@"min_pep_mz", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                    readyArgs.Add(HyphenArgument(@"min_pep_mz", dataParam.Value.Value));
                 }
                 else if (dataParam.Key == ModelResources.CarafeLibrary_max_peptide_mz_short)
                 {
-                    readyArgs.Add(new ArgumentAndValue(@"max_pep_mz", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                    readyArgs.Add(HyphenArgument(@"max_pep_mz", dataParam.Value.Value));
                 }
                 else if (dataParam.Key == ModelResources.CarafeLibrary_min_peptide_charge_short)
                 {
-                    readyArgs.Add(new ArgumentAndValue(@"min_pep_charge", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                    readyArgs.Add(HyphenArgument(@"min_pep_charge", dataParam.Value.Value));
                 }
                 else if (dataParam.Key == ModelResources.CarafeLibrary_max_peptide_charge_short)
                 {
-                    readyArgs.Add(new ArgumentAndValue(@"max_pep_charge", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                    readyArgs.Add(HyphenArgument(@"max_pep_charge", dataParam.Value.Value));
                 }
                 else if (dataParam.Key == ModelResources.CarafeLibrary_min_fragment_mz_short)
                 {
-                    readyArgs.Add(new ArgumentAndValue(@"lf_frag_mz_min", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                    readyArgs.Add(HyphenArgument(@"lf_frag_mz_min", dataParam.Value.Value));
                 }
                 else if (dataParam.Key == ModelResources.CarafeLibrary_max_fragment_mz_short)
                 {
-                    readyArgs.Add(new ArgumentAndValue(@"lf_frag_mz_max", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                    readyArgs.Add(HyphenArgument(@"lf_frag_mz_max", dataParam.Value.Value));
                 }
                 else if (dataParam.Key == ModelResources.CarafeLibrary_max_fragment_mz_short)
                 {
-                    readyArgs.Add(new ArgumentAndValue(@"lf_frag_mz_max", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                    readyArgs.Add(HyphenArgument(@"lf_frag_mz_max", dataParam.Value.Value));
                 }
                 else if (dataParam.Key == ModelResources.CarafeLibrary_max_fragment_mz_short)
                 {
-                    readyArgs.Add(new ArgumentAndValue(@"lf_frag_mz_max", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                    readyArgs.Add(HyphenArgument(@"lf_frag_mz_max", dataParam.Value.Value));
                 }
 
                 else if (dataParam.Key == ModelResources.CarafeLibrary_topN_fragments_short)
                 {
-                    readyArgs.Add(new ArgumentAndValue(@"lf_top_n_frag", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                    readyArgs.Add(HyphenArgument(@"lf_top_n_frag", dataParam.Value.Value));
                 }
                 else if (dataParam.Key == ModelResources.CarafeLibrary_library_format_short)
                 {
+                    var value = dataParam.Value.Value.ToString();
                     var format = GetDescription(LibraryFormats.skyline);
-                    if (format != dataParam.Value.Value.ToString())
-                        format += @$",{dataParam.Value.Value.ToString()}";
-                    readyArgs.Add(new ArgumentAndValue(@"lf_type", format, TextUtil.HYPHEN));
+                    if (format != value)
+                    {
+                        format += @"," + value;
+                    }
+                    readyArgs.Add(HyphenArgument(@"lf_type", format));
                 }
             }
 
@@ -788,15 +780,15 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             {
                 if (!DbInputFilePath.IsNullOrEmpty())
                 {
-                    readyArgs.Add(new ArgumentAndValue(@"db", TextUtil.Quote(DbInputFilePath), TextUtil.HYPHEN));
+                    readyArgs.Add(HyphenArgument(@"db", DbInputFilePath.Quote()));
                 }
                 else
                 {
-                    readyArgs.Add(new ArgumentAndValue(@"db", TextUtil.Quote(InputFilePath), TextUtil.HYPHEN));
+                    readyArgs.Add(HyphenArgument(@"db", InputFilePath.Quote()));
                 }
 
-                readyArgs.Add(new ArgumentAndValue(@"i", TextUtil.Quote(TuningFilePath), TextUtil.HYPHEN));
-                readyArgs.Add(new ArgumentAndValue(@"se", @"skyline", TextUtil.HYPHEN));
+                readyArgs.Add(HyphenArgument(@"i", TuningFilePath.Quote()));
+                readyArgs.Add(HyphenArgument(@"se", @"skyline"));
 
                 PreparePrecursorInputFile(progress, ref progressStatus);
                 PrepareTrainingInputFile(progress, ref progressStatus);
@@ -805,28 +797,33 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             {
                 if (!DbInputFilePath.IsNullOrEmpty())
                 {
-                    readyArgs.Add(new ArgumentAndValue(@"db", TextUtil.Quote(DbInputFilePath), TextUtil.HYPHEN));
-                    readyArgs.Add(new ArgumentAndValue(@"i", TextUtil.Quote(TuningFilePath), TextUtil.HYPHEN));
-                    readyArgs.Add(new ArgumentAndValue(@"se", @"DIA-NN", TextUtil.HYPHEN));
+                    readyArgs.Add(HyphenArgument(@"db", DbInputFilePath.Quote()));
+                    readyArgs.Add(HyphenArgument(@"i", TuningFilePath.Quote()));
+                    readyArgs.Add(HyphenArgument(@"se", @"DIA-NN"));
                     PreparePrecursorInputFile(progress, ref progressStatus);
                 }
                 else
                 {
-                    readyArgs.Add(new ArgumentAndValue(@"db", TextUtil.Quote(InputFilePath), TextUtil.HYPHEN));
-                    readyArgs.Add(new ArgumentAndValue(@"i", TextUtil.Quote(TuningFilePath), TextUtil.HYPHEN));
-                    readyArgs.Add(new ArgumentAndValue(@"se", @"DIA-NN", TextUtil.HYPHEN));
+                    readyArgs.Add(HyphenArgument(@"db", InputFilePath.Quote()));
+                    readyArgs.Add(HyphenArgument(@"i", TuningFilePath.Quote()));
+                    readyArgs.Add(HyphenArgument(@"se", @"DIA-NN"));
                     PreparePrecursorInputFile(progress, ref progressStatus);
                 }
             }
             else
             {
-                readyArgs.Add(new ArgumentAndValue(@"db", TextUtil.Quote(DbInputFilePath), TextUtil.HYPHEN));
-                readyArgs.Add(new ArgumentAndValue(@"i", TextUtil.Quote(TuningFilePath), TextUtil.HYPHEN));
-                readyArgs.Add(new ArgumentAndValue(@"se", @"skyline", TextUtil.HYPHEN));
+                readyArgs.Add(HyphenArgument(@"db", DbInputFilePath.Quote()));
+                readyArgs.Add(HyphenArgument(@"i", TuningFilePath.Quote()));
+                readyArgs.Add(HyphenArgument(@"se", @"skyline"));
                 PrepareTrainingInputFile(progress, ref progressStatus);
             }
 
             return readyArgs;
+        }
+
+        private IEnumerable<ArgumentAndValue> IfNotEmpty(params ArgumentAndValue[] args)
+        {
+            return args.Where(arg => !string.IsNullOrEmpty(arg.Value));
         }
 
         private void RunCarafe(IProgressMonitor progress, ref IProgressStatus progressStatus)
@@ -1019,6 +1016,11 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             var dest = LibrarySpec.FilePath;
  
             File.Copy(source, dest);
+        }
+
+        public ArgumentAndValue HyphenArgument(string name, object value)
+        {
+            return new ArgumentAndValue(name, ToStringInvariant(value), HYPHEN);
         }
     }
 }
