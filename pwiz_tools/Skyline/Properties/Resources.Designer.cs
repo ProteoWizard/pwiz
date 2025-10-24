@@ -2909,11 +2909,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed attempting to extract the tool from {0}.
+        ///   Looks up a localized string similar to Failed attempting to extract the tool.
         /// </summary>
-        public static string ConfigureToolsDlg_UnpackZipTool_Failed_attempting_to_extract_the_tool_from__0_ {
+        public static string ConfigureToolsDlg_UnpackZipTool_Failed_attempting_to_extract_the_tool {
             get {
-                return ResourceManager.GetString("ConfigureToolsDlg_UnpackZipTool_Failed_attempting_to_extract_the_tool_from__0_", resourceCulture);
+                return ResourceManager.GetString("ConfigureToolsDlg_UnpackZipTool_Failed_attempting_to_extract_the_tool", resourceCulture);
             }
         }
         

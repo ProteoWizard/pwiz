@@ -268,7 +268,10 @@ namespace pwiz.SkylineTestFunctional
 
         private static void ShowToolStore(IToolStoreClient client)
         {
-            using (var dlg = new ToolStoreDlg(client, client.GetToolStoreItems()))
+            // Dummy install delegate for testing - actual installation tested separately
+            ToolInstallUI.InstallProgram installProgram = (ppc, packages, script) => null;
+
+            using (var dlg = new ToolStoreDlg(client, client.GetToolStoreItems(), installProgram))
             {
                 dlg.ShowDialog(SkylineWindow);
             }
@@ -395,11 +398,8 @@ namespace pwiz.SkylineTestFunctional
             return tools;
         }
 
-        public string GetToolZipFile(IProgressMonitor progressMonitor, IProgressStatus progressStatus, string packageIdentifier, string directory)
+        public void GetToolZipFile(IProgressMonitor progressMonitor, IProgressStatus progressStatus, string packageIdentifier, FileSaver fileSaver)
         {
-            if (TestDownloadPath != null)
-                return TestDownloadPath;
-
             // Find the tool zip file path for this identifier
             var toolZipPath = GetToolZipPath(packageIdentifier);
             if (toolZipPath == null)
@@ -413,7 +413,7 @@ namespace pwiz.SkylineTestFunctional
             };
 
             using var helper = HttpClientTestHelper.WithMockResponseFile(uri.Uri, toolZipPath);
-            return WebToolStoreClient.GetToolZipFileWithProgress(progressMonitor, progressStatus, packageIdentifier, directory);
+            WebToolStoreClient.GetToolZipFileWithProgress(progressMonitor, progressStatus, packageIdentifier, fileSaver);
         }
 
         private string GetToolZipPath(string packageIdentifier)
@@ -438,8 +438,6 @@ namespace pwiz.SkylineTestFunctional
             var tool = ToolStoreItems.FirstOrDefault(item => item.Identifier.Equals(identifier));
             return tool != null && version < new Version(tool.Version);
         }
-
-        public string TestDownloadPath { get; set; }
 
         public void Dispose()
         {
