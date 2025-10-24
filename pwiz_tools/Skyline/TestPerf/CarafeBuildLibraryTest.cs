@@ -324,6 +324,7 @@ namespace TestPerf
             });
             Assert.AreEqual(buildLibraryDlg.ButtonNextText, @"Finish");
             Assert.IsTrue(buildLibraryDlg.ButtonNextEnabled);
+            const int waitTime = 30 * 60 * 1000;
             // Test the control path where Python needs installation and is
             if (simulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT)
             {
@@ -346,7 +347,7 @@ namespace TestPerf
             {
                 PythonInstaller.SimulatedInstallationState = simulatedInstallationState;
                 SkylineWindow.BeginInvoke(new Action(buildLibraryDlg.OkWizardPage));
-                WaitForConditionUI(() =>
+                WaitForConditionUI(waitTime, () =>
                     buildLibraryDlgFinished || null != FindOpenForm<MultiButtonMsgDlg>() ||
                     null != FindOpenForm<AddIrtPeptidesDlg>());
                 var confirmPythonDlg = FindOpenForm<MultiButtonMsgDlg>();
@@ -355,6 +356,13 @@ namespace TestPerf
                     AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required, confirmPythonDlg.Message);
                     OkDialog(confirmPythonDlg, confirmPythonDlg.OkDialog);
                 }
+            }
+            WaitForCondition(waitTime, () => buildLibraryDlgFinished || null != FindOpenForm<MessageDlg>() || iRTtype != null && null != FindOpenForm<AddIrtPeptidesDlg>());
+            var messageDlg = FindOpenForm<MessageDlg>();
+            if (messageDlg != null)
+            {
+                Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment, messageDlg.Message);
+                OkDialog(messageDlg, messageDlg.OkDialog);
             }
 
             if (iRTtype != null)
@@ -369,14 +377,6 @@ namespace TestPerf
                 OkDialog(addRtPredDlg, addRtPredDlg.OkDialog);
             }
 
-            const int waitTime = 30 * 60 * 1000;
-            WaitForCondition(waitTime, () => buildLibraryDlgFinished || null != FindOpenForm<MessageDlg>());
-            var messageDlg = FindOpenForm<MessageDlg>();
-            if (messageDlg != null)
-            {
-                Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment, messageDlg.Message);
-                OkDialog(messageDlg, messageDlg.OkDialog);
-            }
             WaitForCondition(waitTime, () => buildLibraryDlgFinished);
             var carafeLibraryBuilder = (CarafeLibraryBuilder)buildLibraryDlg.Builder;
             string builtLibraryPath = carafeLibraryBuilder.CarafeOutputLibraryFilePath;
