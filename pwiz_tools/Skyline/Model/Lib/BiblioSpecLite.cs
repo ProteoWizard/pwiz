@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -356,10 +356,7 @@ namespace pwiz.Skyline.Model.Lib
         /// </summary>
         public static bool IsRedundantLibrary(string filepath)
         {
-            var connBuilder = new SQLiteConnectionStringBuilder();
-            connBuilder.DataSource = filepath;
-            using var conn = new SQLiteConnection(connBuilder.ConnectionString);
-            conn.Open();
+            using var conn = SqliteOperations.OpenConnection(filepath);
             using var cmd = new SQLiteCommand(@"SELECT name FROM sqlite_master WHERE name = 'RetentionTimes'", conn);
             return cmd.ExecuteScalar() == null;
         }

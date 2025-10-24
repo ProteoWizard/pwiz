@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright 2025 University of Washington - Seattle, WA
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -78,18 +78,18 @@ namespace pwiz.SkylineTestFunctional
 
         protected void TestFileSystemWatcherIgnoreList()
         {
-            Assert.IsTrue(LocalStorageService.IgnoreFileName(@"c:\Users\foobar\file.tmp"));
-            Assert.IsTrue(LocalStorageService.IgnoreFileName(@"c:\Users\foobar\file.bak"));
-            Assert.IsTrue(LocalStorageService.IgnoreFileName(null));
-            Assert.IsTrue(LocalStorageService.IgnoreFileName(string.Empty));
-            Assert.IsTrue(LocalStorageService.IgnoreFileName(@""));
-            Assert.IsTrue(LocalStorageService.IgnoreFileName(@"   "));
+            Assert.IsTrue(LocalFileSystemService.ShouldIgnoreFile(@"c:\Users\foobar\file.tmp"));
+            Assert.IsTrue(LocalFileSystemService.ShouldIgnoreFile(@"c:\Users\foobar\file.bak"));
+            Assert.IsTrue(LocalFileSystemService.ShouldIgnoreFile(null));
+            Assert.IsTrue(LocalFileSystemService.ShouldIgnoreFile(string.Empty));
+            Assert.IsTrue(LocalFileSystemService.ShouldIgnoreFile(@""));
+            Assert.IsTrue(LocalFileSystemService.ShouldIgnoreFile(@"   "));
 
-            Assert.IsFalse(LocalStorageService.IgnoreFileName(@"c:\Users\foobar\file.sky"));
-            Assert.IsFalse(LocalStorageService.IgnoreFileName(@"c:\Users\foobar\file.xls"));
-            Assert.IsFalse(LocalStorageService.IgnoreFileName(@"c:\Users\foobar\file.txt"));
-            Assert.IsFalse(LocalStorageService.IgnoreFileName(@"c:\Users\foobar\file.raw"));
-            Assert.IsFalse(LocalStorageService.IgnoreFileName(@"c:\Users\foobar\file.RAW"));
+            Assert.IsFalse(LocalFileSystemService.ShouldIgnoreFile(@"c:\Users\foobar\file.sky"));
+            Assert.IsFalse(LocalFileSystemService.ShouldIgnoreFile(@"c:\Users\foobar\file.xls"));
+            Assert.IsFalse(LocalFileSystemService.ShouldIgnoreFile(@"c:\Users\foobar\file.txt"));
+            Assert.IsFalse(LocalFileSystemService.ShouldIgnoreFile(@"c:\Users\foobar\file.raw"));
+            Assert.IsFalse(LocalFileSystemService.ShouldIgnoreFile(@"c:\Users\foobar\file.RAW"));
         }
 
         protected void TestFileSystemHelpers()

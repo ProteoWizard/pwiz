@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.Alerts
+namespace pwiz.Skyline.Alerts
 {
     partial class ImportDocResultsDlg
     {

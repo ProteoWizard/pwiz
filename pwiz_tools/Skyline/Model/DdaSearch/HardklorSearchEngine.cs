@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brian Pratt <bspratt .at. uw.edu >
  *
  * Copyright 2022 University of Washington - Seattle, WA

@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OutputParser", "OutputParser\OutputParser.csproj", "{B27473C3-3BAA-439A-A32D-C66CD6EDE840}"
