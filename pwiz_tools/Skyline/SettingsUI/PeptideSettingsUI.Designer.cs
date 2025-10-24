@@ -1,4 +1,4 @@
-﻿using pwiz.Skyline.Properties;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.SettingsUI
 {

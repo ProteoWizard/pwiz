@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright 2025 University of Washington - Seattle, WA
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,8 +24,7 @@ using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 
-// TODO: add a background task that refreshes the state of all items in the cache periodically. For example, when Skyline gains focus
-//       after being minimized or after the user switches from a different application back to Skyline. 
+// TODO: refresh all items in the cache periodically and when Skyline regains focus. Also consider restarting the FileSystemWatchers.
 namespace pwiz.Skyline.Controls.FilesTree
 {
     public enum FileSystemType { local_file_system, none }
@@ -47,11 +46,6 @@ namespace pwiz.Skyline.Controls.FilesTree
 
     public class FileSystemService : IFileSystemService
     {
-        internal static FileSystemService Create(Control synchronizingObject, BackgroundActionService backgroundActionService)
-        {
-            return new FileSystemService(synchronizingObject, backgroundActionService);
-        }
-
         private static readonly IFileSystemService NO_DOCUMENT = new NoOpService();
 
         private readonly Control _synchronizingObject;
@@ -61,12 +55,12 @@ namespace pwiz.Skyline.Controls.FilesTree
         internal event Action<string, CancellationToken> FileCreatedAction;
         internal event Action<string, string, CancellationToken> FileRenamedAction;
 
-        private FileSystemService(Control synchronizingObject, BackgroundActionService backgroundActionService)
+        internal FileSystemService(Control synchronizingObject, BackgroundActionService backgroundActionService)
         {
             _synchronizingObject = synchronizingObject;
             _backgroundActionService = backgroundActionService;
 
-            // Start with the default implementation (NO_DOCUMENT) until Skyline has a document to monitor.
+            // Use the no-op implementation until a document loads.
             Delegate = NO_DOCUMENT;
         }
 
@@ -82,12 +76,14 @@ namespace pwiz.Skyline.Controls.FilesTree
             return Delegate.MonitoredDirectories();
         }
 
-        // CONSIDER: does this need to lock while updating _delegate?
+        /// <summary>
+        /// Start the file system monitor. 
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        // CONSIDER: does this need to lock while updating Delegate?
         public void StartWatching(CancellationToken cancellationToken)
         {
-            // Console.WriteLine($@"===== StartWatching {directoryPath ?? @"in-memory"} {cancellationToken.GetHashCode()}");
-
-            var localStorageService = new LocalStorageService(_synchronizingObject, _backgroundActionService);
+            var localStorageService = new LocalFileSystemService(_synchronizingObject, _backgroundActionService);
             localStorageService.FileDeletedAction += FileDeletedAction;
             localStorageService.FileCreatedAction += FileCreatedAction;
             localStorageService.FileRenamedAction += FileRenamedAction;
@@ -101,14 +97,13 @@ namespace pwiz.Skyline.Controls.FilesTree
             Delegate.LoadFile(localFilePath, filePath, fileName, documentPath, callback);
         }
 
-        // CONSIDER: does this need to lock while updating _delegate?
+        /// <summary>
+        /// Stop monitoring the file system and switch back to the no-op implementation until another Skyline document loads.
+        /// </summary>
+        // CONSIDER: does this need to lock while updating Delegate?
         public void StopWatching()
         {
-            // Console.WriteLine($@"===== StopWatching {MonitoredDirectories ?? @"in-memory"}");
-
             Delegate.StopWatching();
-
-            // Revert to the default NO_DOCUMENT implementation until a document is loaded
             Delegate = NO_DOCUMENT;
         }
 
@@ -118,6 +113,9 @@ namespace pwiz.Skyline.Controls.FilesTree
         }
     }
 
+    /// <summary>
+    /// No-op implementation of the file system monitor used when no Skyline document is loaded - e.g. when looking at Skyline's start page.
+    /// </summary>
     internal class NoOpService : IFileSystemService
     {
         public FileSystemType FileSystemType => FileSystemType.none;
@@ -130,13 +128,17 @@ namespace pwiz.Skyline.Controls.FilesTree
         public void Dispose() { }
     }
 
-    public class LocalStorageService : IFileSystemService
+    /// <summary>
+    /// Implementation of the file system monitor used when a Skyline document is loaded. Usually, the .sky document is
+    /// saved to disk, though File => New creates a Skyline document that exists only in-memory.
+    /// </summary>
+    public class LocalFileSystemService : IFileSystemService
     {
         private static readonly HashSet<string> FILE_EXTENSION_IGNORE_LIST = new HashSet<string> { @".tmp", @".bak" };
 
         private readonly object _fswLock = new object();
 
-        internal LocalStorageService(Control synchronizingObject, BackgroundActionService backgroundActionService)
+        public LocalFileSystemService(Control synchronizingObject, BackgroundActionService backgroundActionService)
         {
             SynchronizingObject = synchronizingObject;
             BackgroundActionService = backgroundActionService;
@@ -310,7 +312,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                     {
                         managedFsw.Pause();
 
-                        HandleUnavailableDirectory(fullPath);
+                        HandleDirectoryUnavailable(fullPath);
                     }
                 }
                 // Directory became available so restart the associated FileSystemWatcher and update the tree
@@ -322,7 +324,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                         {
                             managedFsw.Resume();
 
-                            HandleAvailableDirectory(fullPath);
+                            HandleDirectoryAvailable(fullPath);
                         }
                     }
                 }
@@ -340,7 +342,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             // Likely means the directory is unavailable so find all affected files, mark their cache entries as unavailable, and update the tree
             if (e.GetException() is IOException)
             {
-                HandleUnavailableDirectory(directoryPath);
+                HandleDirectoryUnavailable(directoryPath);
             }
         }
 
@@ -414,7 +416,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             HealthMonitor.AddPath(directoryPath);
         }
 
-        private void HandleUnavailableDirectory(string directoryPath) 
+        private void HandleDirectoryUnavailable(string directoryPath) 
         {
             var cancellationToken = CancellationToken;
 
@@ -435,7 +437,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             });
         }
 
-        private void HandleAvailableDirectory(string directoryPath)
+        private void HandleDirectoryAvailable(string directoryPath)
         {
             var cancellationToken = CancellationToken;
 
@@ -460,7 +462,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             var cancellationToken = CancellationToken;
 
-            if (IgnoreFileName(e.FullPath) || cancellationToken.IsCancellationRequested)
+            if (ShouldIgnoreFile(e.FullPath) || cancellationToken.IsCancellationRequested)
                 return;
 
             // Cannot check whether the changed path was a directory (since it was deleted) so 
@@ -494,7 +496,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             var cancellationToken = CancellationToken;
 
-            if (IgnoreFileName(e.FullPath) || cancellationToken.IsCancellationRequested)
+            if (ShouldIgnoreFile(e.FullPath) || cancellationToken.IsCancellationRequested)
                 return;
 
             var isDirectory = Directory.Exists(e.FullPath);
@@ -532,7 +534,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             // N.B. it's important to only ignore rename events where the new file name's extension is on the ignore list.
             // Otherwise, files that actually exist will be marked as missing in Files Tree without a way to force those
             // nodes to reset their FileState from disk leading to much confusion.
-            if (IgnoreFileName(e.FullPath) || cancellationToken.IsCancellationRequested)
+            if (ShouldIgnoreFile(e.FullPath) || cancellationToken.IsCancellationRequested)
                 return;
 
             var isDirectory = Directory.Exists(e.FullPath);
@@ -593,7 +595,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         // Looks for a file on the file system. Can make one or more calls to File.Exists or Directory.Exists while 
         // checking places Skyline might have stored the file. Should be called from a worker thread to avoid blocking the UI.
         // TODO: what other ways does Skyline use to find files of various types? For example, Chromatogram.GetExistingDataFilePath or other possible locations for spectral libraries
-        internal static string LocateFile(string filePath, string fileName, string documentPath)
+        internal string LocateFile(string filePath, string fileName, string documentPath)
         {
             // Given a file path c:\tmp\foo.txt and document path c:\abc\def\ghi\doc.sky
             //
@@ -628,7 +630,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         // FileSystemWatcher events may reference files we should ignore. For example, .tmp or .bak files
         // created when saving a Skyline document or view file. So, check paths against an ignore list.
-        public static bool IgnoreFileName(string filePath)
+        public static bool ShouldIgnoreFile(string filePath)
         {
             if (string.IsNullOrWhiteSpace(filePath))
                 return true;

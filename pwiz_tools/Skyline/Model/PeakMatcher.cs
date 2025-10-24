@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Kaipo Tamura <kaipot .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -160,7 +160,7 @@ namespace pwiz.Skyline.Model
                         continue;
                     }
 
-                    var bestMatch = GetPeakMatch(doc, chromSet, fileInfo, nodeTranGroup, referenceTarget, referenceMatchData);
+                    var bestMatch = GetPeakMatch(doc, chromSet, fileInfo, peptideDocNode, nodeTranGroup, referenceTarget, referenceMatchData);
                     if (bestMatch != null)
                         doc = bestMatch.ChangePeak(doc, peptideGroup, peptideDocNode, nodeTranGroup, chromSet.Name, fileInfo.FilePath);
                 }
@@ -209,7 +209,7 @@ namespace pwiz.Skyline.Model
             return best;
         }
 
-        private static PeakMatch GetPeakMatch(SrmDocument doc, ChromatogramSet chromSet, IPathContainer fileInfo, TransitionGroupDocNode nodeTranGroup,
+        private static PeakMatch GetPeakMatch(SrmDocument doc, ChromatogramSet chromSet, IPathContainer fileInfo, PeptideDocNode nodePep, TransitionGroupDocNode nodeTranGroup,
             PeakMatchData referenceTarget, IEnumerable<PeakMatchData> referenceMatchData)
         {
             if (referenceTarget == null)
@@ -218,7 +218,7 @@ namespace pwiz.Skyline.Model
             var mzMatchTolerance = (float) doc.Settings.TransitionSettings.Instrument.MzMatchTolerance;
 
             ChromatogramGroupInfo[] loadInfos;
-            if (!nodeTranGroup.HasResults || !doc.Settings.MeasuredResults.TryLoadChromatogram(chromSet, null, nodeTranGroup, mzMatchTolerance, out loadInfos))
+            if (!nodeTranGroup.HasResults || !doc.Settings.MeasuredResults.TryLoadChromatogram(chromSet, nodePep, nodeTranGroup, mzMatchTolerance, out loadInfos))
                 return null;
 
             var chromGroupInfo = loadInfos.FirstOrDefault(info => Equals(info.FilePath, fileInfo.FilePath));

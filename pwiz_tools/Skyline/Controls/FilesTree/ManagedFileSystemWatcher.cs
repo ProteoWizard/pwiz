@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright 2025 University of Washington - Seattle, WA
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -58,7 +58,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             FileSystemWatcher.SynchronizingObject = SynchronizingObject;
             FileSystemWatcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName;
 
-            // FileSystemService does not recursively monitor subdirectories. Instead, FileSystemWatcher instances are
+            // .NET's FileSystemService does not recursively monitor subdirectories. Instead, FileSystemWatcher instances are
             // started for each directory containing files Skyline wants to monitor. This approach is easier to 
             // reason about and avoids the downsides of inadvertently monitoring a large tree of files - for example,
             // if a replicate sample file happens to be imported from C:\ or from the root of a slow network drive.
