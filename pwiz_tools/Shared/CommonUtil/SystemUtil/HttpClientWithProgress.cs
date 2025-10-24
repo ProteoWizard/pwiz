@@ -42,6 +42,7 @@ namespace pwiz.Common.SystemUtil
         private readonly HttpClient _httpClient;
         private readonly IProgressMonitor _progressMonitor;
         private IProgressStatus _progressStatus;
+        private string _progressMessageWithoutSize; // Base message before download size is appended
         private const int ReadTimeoutMilliseconds = 15000; // timeout per chunk to avoid long hangs when network drops
 
         /// <summary>
@@ -68,6 +69,16 @@ namespace pwiz.Common.SystemUtil
             _httpClient = new HttpClient(handler);
             _progressMonitor = progressMonitor;
             _progressStatus = status ?? new ProgressStatus();
+        }
+
+        /// <summary>
+        /// Adds an Authorization header to all requests made by this HttpClient instance.
+        /// Use this for authenticated downloads (e.g., Basic auth, Bearer tokens).
+        /// </summary>
+        /// <param name="authHeaderValue">The authorization header value (e.g., "Basic base64credentials" or "Bearer token")</param>
+        public void AddAuthorizationHeader(string authHeaderValue)
+        {
+            _httpClient.DefaultRequestHeaders.Add("Authorization", authHeaderValue);
         }
 
         /// <summary>
@@ -266,14 +277,42 @@ namespace pwiz.Common.SystemUtil
                 outputStream.Write(buffer, 0, bytesRead);
                 downloadedBytes += bytesRead;
 
-                // Report progress
+                // Capture base message on first progress update
+                _progressMessageWithoutSize ??= _progressStatus.Message;
+
+                // Report progress with download size appended
+                var messageWithSize = new StringBuilder()
+                    .AppendLine(_progressMessageWithoutSize)
+                    .AppendLine()
+                    .AppendLine(FormatDownloadSize(downloadedBytes, totalBytes)).ToString();
+
                 if (totalBytes > 0)
                 {
                     var percentage = (int)(downloadedBytes * 100 / totalBytes);
                     _progressMonitor.UpdateProgress(_progressStatus =
-                        _progressStatus.ChangePercentComplete(percentage));
+                        _progressStatus.ChangeMessage(messageWithSize).ChangePercentComplete(percentage));
+                }
+                else
+                {
+                    _progressMonitor.UpdateProgress(_progressStatus =
+                        _progressStatus.ChangeMessage(messageWithSize));
                 }
             }
+        }
+
+        /// <summary>
+        /// Formats download size for progress display (e.g., "5.2 MB / 10.4 MB" or "5.2 MB").
+        /// </summary>
+        private static string FormatDownloadSize(long downloaded, long totalBytes)
+        {
+            var formatProvider = new FileSizeFormatProvider();
+            if (totalBytes > 0)
+            {
+                return string.Format(@"{0} / {1}",
+                    string.Format(formatProvider, @"{0:fs1}", downloaded),
+                    string.Format(formatProvider, @"{0:fs1}", totalBytes));
+            }
+            return string.Format(formatProvider, @"{0:fs1}", downloaded);
         }
 
         /// <summary>
@@ -414,9 +453,9 @@ namespace pwiz.Common.SystemUtil
                                 message = string.Format(MessageResources.HttpClientWithProgress_MapHttpException_The_server__0__returned_an_error__HTTP__1____Please_try_again_or_contact_support_, server, statusCode);
                                 break;
                         }
-                        // Wrap with the original HttpRequestException as inner exception to preserve
-                        // the full status code and reason phrase for detailed troubleshooting
-                        return new IOException(message, root);
+                        // Wrap with NetworkRequestException to provide structured access to status code
+                        // Preserves original HttpRequestException as inner exception for detailed troubleshooting
+                        return new NetworkRequestException(message, (HttpStatusCode)statusCode, uri, root);
                     }
                 }
                 
@@ -462,6 +501,38 @@ namespace pwiz.Common.SystemUtil
         public void Dispose()
         {
             _httpClient?.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// Exception thrown by HttpClientWithProgress when an HTTP request fails.
+    /// Extends IOException for backward compatibility with existing catch blocks.
+    /// Provides structured access to HTTP status code and request URI without requiring message parsing.
+    /// </summary>
+    public class NetworkRequestException : IOException
+    {
+        /// <summary>
+        /// The HTTP status code returned by the server, or null if the failure occurred before receiving a response.
+        /// </summary>
+        public HttpStatusCode? StatusCode { get; }
+
+        /// <summary>
+        /// The URI that was requested when the error occurred.
+        /// </summary>
+        public Uri RequestUri { get; }
+
+        /// <summary>
+        /// Creates a new NetworkRequestException with the specified message, status code, URI, and inner exception.
+        /// </summary>
+        /// <param name="message">User-friendly error message describing what went wrong</param>
+        /// <param name="statusCode">HTTP status code if available, or null for non-HTTP errors</param>
+        /// <param name="requestUri">The URI that was being requested</param>
+        /// <param name="innerException">The underlying exception that caused this error</param>
+        public NetworkRequestException(string message, HttpStatusCode? statusCode, Uri requestUri, Exception innerException)
+            : base(message, innerException)
+        {
+            StatusCode = statusCode;
+            RequestUri = requestUri;
         }
     }
 }

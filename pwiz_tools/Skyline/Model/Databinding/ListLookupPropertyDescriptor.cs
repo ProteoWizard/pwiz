@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -69,21 +69,8 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 return null;
             }
-            var listData = GetListData();
-            if (listData == null)
-            {
-                return null;
-            }
-            int rowIndex = listData.RowIndexOfPrimaryKey(annotationValue);
 
-            if (rowIndex < 0)
-            {
-                return ListItem.OrphanRecord(_listItemType, annotationValue, !string.IsNullOrEmpty(listData.ListDef.DisplayProperty));
-            }
-            else
-            {
-                return ListItem.ExistingRecord(_listItemType, listData, rowIndex);
-            }
+            return GetListData()?.GetListItem(annotationValue);
         }
 
         public IEnumerable<ListItem> GetListItems(ListData listData)

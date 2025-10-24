@@ -214,64 +214,38 @@ All source files should include the standard header with copyright and license i
 
 ## Testing guidelines
 
-### Test project structure
-- **Unit tests**: `Test` and `TestData` projects
-  - Derive from `AbstractUnitTest` and `AbstractUnitTestEx`
-  - Fast execution, no UI overhead (no SkylineWindow)
-  - **`Test`**: General unit tests, may access file system but no UI
-  - **`TestData`**: Unit tests that work with actual mass spectrometry data files, must access file system
-- **Functional tests**: `TestFunctional`, `TestPerf`, and `TestTutorial` projects
-  - Derive from `AbstractFunctionalTest` and `AbstractFunctionalTestEx`
-  - Require SkylineWindow and UI interaction
-  - Significant overhead due to window creation/destruction and UI driving
+**For comprehensive testing guidelines, see `TESTING.md`** which covers:
+- Test project structure and selection criteria
+- Test execution tools (TestRunner, SkylineTester, SkylineNightly)
+- Dependency injection patterns for testing
+- AssertEx assertion library
+- HttpClientTestHelper for network testing
+- Translation-proof testing practices
+- Test performance optimization
 
-### Test types by project
-- **`TestFunctional`**: Standard functional tests for UI features
-- **`TestPerf`**: Performance tests with large datasets (>100MB)
-  - Run less frequently, only on machines with >100GB free disk space
-  - Test data stored in Downloads folder
-- **`TestTutorial`**: Automated tutorial implementation tests
-  - Implement step-by-step tutorial instructions from `Skyline/Documentation/Tutorials`
-  - Capture automated screenshots for tutorials (e.g., `s-01.png`, `s-02.png`, `cover.png`)
-  - Screenshots stored in language subfolders (`en`, `ja`, `zh-CHS`)
-  - Examples: `TestIrtTutorial` for `Skyline/Documentation/Tutorials/iRT`
+### Quick reference
 
-### Test structure
-- Use `AbstractFunctionalTest` for UI tests that require SkylineWindow
+**Test project selection:**
+- **Test.csproj** - Fast unit tests, no data files, no UI
+- **TestData.csproj** - Unit tests with mass spectrometry data
+- **TestFunctional.csproj** - UI functional tests (most common)
+- **TestConnected.csproj** - Tests requiring network access
+- **TestTutorial.csproj** - Automated tutorial validation with screenshot generation
+- **TestPerf.csproj** - Performance tests with large datasets (>100MB)
+
+**Test structure:**
+- Use `AbstractFunctionalTest` for UI tests
 - Use `RunFunctionalTest()` in test methods, implement `DoTest()` for test logic
-- Use `RunUI()` for UI operations to avoid cross-thread access exceptions
-- Use `ShowDialog<T>()` for modal dialogs instead of `RunUI()` + `WaitForOpenForm()`
-- Call public methods directly rather than simulating UI clicks
-- Use `AssertEx.Contains()` for string assertions
-- Use resource strings for test assertions to support localization
+- Use `RunUI()` for UI operations to avoid cross-thread exceptions
+- Use `ShowDialog<T>()` for modal dialogs
+- Use `AssertEx` methods instead of custom assertion wrappers
+- Consolidate related validations into single test method (avoid per-validation `[TestMethod]` overhead)
 
-### Translation-proof test assertions
-**NEVER use English text literals in test assertions** - all UI text is localized to Chinese and Japanese, so English-only assertions will break.
-
-**Bad (will break in localized builds):**
-```csharp
-// ❌ This will fail when UI is in Chinese or Japanese
-StringAssert.Contains(messageDlg.Message, "connection");
-Assert.IsTrue(errorDlg.Message.Contains("not found"));
-```
-
-**Good (translation-proof):**
-```csharp
-// ✅ Reconstruct expected message from resource strings
-var expectedMessage = string.Format(
-    MessageResources.HttpClientWithProgress_MapHttpException_Failed_to_connect_to__0___Please_check_your_network_connection__VPN_proxy__or_firewall_,
-    "cran.r-project.org");
-Assert.AreEqual(expectedMessage, messageDlg.Message);
-```
-
-**Examples from production code:**
-- See `HttpClientWithProgressIntegrationTest.cs` for comprehensive examples
-- Each test reconstructs the expected error message using the same resource strings the production code uses
-- Tests remain valid in all supported languages (English, Chinese, Japanese)
-
-### Functional test performance
-- **Functional tests have significant overhead** - they must show and destroy a SkylineWindow and often drive the UI
-- This makes them much slower than unit tests that run entirely in memory without file system or network access
-- **Prefer consolidating multiple validations** into a single functional test class with one `[TestMethod]`
-- Use private helper methods within the test class for different validation concerns
-- Avoid creating separate test classes for related functional validations that could share the same SkylineWindow instance
+**Critical testing rules:**
+- ❌ **NEVER** use English text literals in test assertions (breaks localization)
+- ❌ **NEVER** parse exception messages for status codes (use structured properties)
+- ❌ **NEVER** create multiple `[TestMethod]` functional tests for related validations
+- ✅ **ALWAYS** use resource strings for user-visible text validation
+- ✅ **ALWAYS** use `AssertEx.Contains()` instead of `Assert.IsTrue(string.Contains())`
+- ✅ **ALWAYS** use `HttpClientTestHelper.GetExpectedMessage()` for network error validation
+- ✅ **ALWAYS** consolidate functional test validations into private helper methods

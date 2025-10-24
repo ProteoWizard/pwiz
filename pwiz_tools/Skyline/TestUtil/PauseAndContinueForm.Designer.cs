@@ -1,4 +1,4 @@
-﻿namespace pwiz.SkylineTestUtil
+namespace pwiz.SkylineTestUtil
 {
     partial class PauseAndContinueForm
     {

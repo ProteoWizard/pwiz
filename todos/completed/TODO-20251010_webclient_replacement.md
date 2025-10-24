@@ -5,6 +5,11 @@
 - **Created**: 2025-10-10
 - **Objective**: Migrate from WebClient to HttpClient with improved exception handling and testing
 
+## Pull Request
+**PR**: #3636
+**Merged**: 2025-10-19
+**Status**: Merged to master
+
 ## Task Checklist
 
 ### ✅ Completed - HttpClientWithProgress Foundation

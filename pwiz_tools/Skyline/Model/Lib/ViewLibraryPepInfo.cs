@@ -236,8 +236,19 @@ namespace pwiz.Skyline.Model.Lib
         {
             TypedMass massH;
             if (Target != null)
-                massH = settings.GetPrecursorCalc(transitionGroup.TransitionGroup.LabelType, mods)
-                    .GetPrecursorMass(Target);
+            {
+                if (!Target.IsProteomic)
+                {
+                    massH = SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC,
+                        transitionGroup.PrecursorAdduct.ApplyToMolecule(Target.Molecule.ParsedMolecule));
+                    return SequenceMassCalc.PersistentMZ(SequenceMassCalc.GetMZ(massH, transitionGroup.PrecursorAdduct.AdductCharge));
+                }
+                else
+                {
+                    massH = settings.GetPrecursorCalc(transitionGroup.TransitionGroup.LabelType, mods)
+                        .GetPrecursorMass(Target);
+                }
+            }
             else
                 massH = new TypedMass(Key.PrecursorMz ?? 0, MassType.Monoisotopic);
             return SequenceMassCalc.PersistentMZ(SequenceMassCalc.GetMZ(massH, transitionGroup.PrecursorAdduct));

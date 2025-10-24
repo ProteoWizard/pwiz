@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Kaipo Tamura <kaipot .at. uw dot edu>,
  *                  Rita Chupalov <ritach .at. uw dot edu>,
  *                  Brendan MacLean <brendanx .at. uw dot edu>,

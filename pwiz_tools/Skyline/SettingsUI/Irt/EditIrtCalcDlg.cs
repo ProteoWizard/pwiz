@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: John Chilton <jchilton .at. uw.edu>,
  *                  Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW

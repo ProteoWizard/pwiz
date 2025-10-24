@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -16,19 +16,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 
 namespace pwiz.Skyline.Util
 {
     public class TraceWarningListener : TraceListener
     {
         private TextWriter _textWriter;
+
+        private Dictionary<string, long> _recentMessages;
+
         public TraceWarningListener(TextWriter textWriter)
         {
             // N.B. if you want to see DebugMessage.AsynchWrite messages too, add .Information to the flags here 
             Filter = new EventTypeFilter(SourceLevels.Warning); 
             _textWriter = textWriter;
+            _recentMessages = new Dictionary<string, long>();
         }
 
         public override void Write(string message)
@@ -39,6 +47,31 @@ namespace pwiz.Skyline.Util
         public override void WriteLine(string message)
         {
             // Ignore messages which have no TraceEventType
+        }
+
+        private bool IsRepeated(string message)
+        {
+            var now = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+            lock (_recentMessages)
+            {
+                // Clear out any older messages
+                foreach (var staleMessage in _recentMessages.Where(staleMessage => staleMessage.Value + 500 < now).ToArray())
+                {
+                    _recentMessages.Remove(staleMessage.Key);
+                }
+
+                // If this message has been shown recently, don't show it again
+                if (_recentMessages.ContainsKey(message))
+                {
+                    return true;
+                }
+
+                // Be ready to ignore rapidly repeating messages
+                _recentMessages.Add(message, now);
+
+                // Not a recent repeat
+                return false;
+            }
         }
 
         /// <summary>
@@ -54,14 +87,17 @@ namespace pwiz.Skyline.Util
         {
             if (Filter != null && !Filter.ShouldTrace(eventCache, source, eventType, id, format, args, null, null))
                 return;
-            _textWriter.WriteLine(format, args);
+            var message = string.Format(format, args);
+            if (!IsRepeated(message))
+                _textWriter.WriteLine(message);
         }
 
         public override void TraceEvent(TraceEventCache eventCache, string source, TraceEventType eventType, int id, string message)
         {
             if (Filter != null && !Filter.ShouldTrace(eventCache, source, eventType, id, message, null, null, null))
                 return;
-            _textWriter.WriteLine(message);
+            if (!IsRepeated(message))
+                _textWriter.WriteLine(message);
         }
     }
 }
