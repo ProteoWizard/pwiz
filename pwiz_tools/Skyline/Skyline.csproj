@@ -458,6 +458,12 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Controls\Lists\ListViewContext.cs" />
+    <Compile Include="Controls\PropertyGridForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\PropertyGridForm.Designer.cs">
+      <DependentUpon>PropertyGridForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Controls\SeqNode\PeptideFormatter.cs" />
     <Compile Include="Controls\KoinaUIHelpers.cs" />
     <Compile Include="Controls\Spectra\PrecursorClass.cs" />
@@ -546,6 +552,7 @@
     <Compile Include="FileUI\PublishDocumentDlgPanorama.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Model\Databinding\Entities\SpectralLibrary.cs" />
     <Compile Include="Model\DecoyGenerator.cs" />
     <Compile Include="Model\Lib\AlphaPeptDeep\AlphapeptdeepLibraryBuilder.cs" />
     <Compile Include="Model\AuditLog\EnumNames.Designer.cs">
@@ -641,6 +648,22 @@
     <Compile Include="Model\IdPeptideDocNode.cs" />
     <Compile Include="Model\Lib\AlphaPeptDeep\AbstractDeepLibraryBuilder.cs" />
     <Compile Include="Model\Lib\Carafe\CarafeLibraryBuilder.cs" />
+    <Compile Include="Controls\IPropertyProvider.cs" />
+    <Compile Include="Model\Files\PropertyGridFileNodeResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>PropertyGridFileNodeResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\PropertyGridDocNodeResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>PropertyGridDocNodeResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\PropertyGridResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>PropertyGridResources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Model\Proteome\AssociateProteinsResults.cs" />
     <Compile Include="Model\ReintegrateResultsHandler.cs" />
     <Compile Include="Model\Lib\LibraryFiles.cs" />
@@ -2997,6 +3020,10 @@
     <EmbeddedResource Include="Controls\Lists\ListDesigner.zh-CHS.resx">
       <DependentUpon>ListDesigner.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\PropertyGridForm.resx">
+      <DependentUpon>PropertyGridForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\Spectra\SpectrumGridForm.ja.resx">
       <DependentUpon>SpectrumGridForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -3799,6 +3826,19 @@
     <EmbeddedResource Include="Model\FullScanPropertiesRes.zh-CHS.resx">
       <DependentUpon>FullScanPropertiesRes.resx</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Files\PropertyGridFileNodeResources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <SubType>Designer</SubType>
+      <LastGenOutput>PropertyGridFileNodeResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\PropertyGridDocNodeResources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>PropertyGridDocNodeResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\PropertyGridResources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>PropertyGridResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\RetentionTimes\RetentionTimesResources.ja.resx">
       <DependentUpon>RetentionTimesResources.resx</DependentUpon>

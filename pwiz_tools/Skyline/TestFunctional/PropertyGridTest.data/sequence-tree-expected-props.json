@@ -1,0 +1,14 @@
+{
+  "Peptide": {
+    "Sequence": "GILAADESVGSMAK",
+    "Protein": "NP_036629",
+    "ModifiedSequence": "GILAADESVGSMAK",
+    "StandardType": "",
+    "FirstPosition": "29",
+    "LastPosition": "42",
+    "MissedCleavages": "0",
+    "PredictedRetentionTime": "",
+    "AverageMeasuredRetentionTime": "19.9113597869873",
+    "Note": ""
+  }
+}

@@ -175,6 +175,7 @@
     <Compile Include="CandidatePeakTest.cs" />
     <Compile Include="CantReadSkydTest.cs" />
     <Compile Include="ChargedLossesLibraryTest.cs" />
+    <Compile Include="SequenceTreePropertyGridTest.cs" />
     <Compile Include="FilesTreeFileSystemTest.cs" />
     <Compile Include="SkylineWindowEventsTest.cs" />
     <Compile Include="FilesModelTest.cs" />
@@ -263,6 +264,7 @@
     <Compile Include="ToolServiceTestSharedClasses.cs" />
     <Compile Include="EditSpectrumFilterTest.cs" />
     <Compile Include="EncyclopeDiaSearchTest.cs" />
+    <Compile Include="FilesTreePropertyGridTest.cs" />
     <Compile Include="UnalignedRetentionTimesTest.cs" />
     <Compile Include="UnreadableBlibTest.cs" />
     <Compile Include="RemoveSmallMoleculeLabelTypeTest.cs" />

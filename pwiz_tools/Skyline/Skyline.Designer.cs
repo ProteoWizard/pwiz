@@ -39,6 +39,8 @@ namespace pwiz.Skyline
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SkylineWindow));
             this.contextMenuTreeNode = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.propertiesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator62 = new System.Windows.Forms.ToolStripSeparator();
             this.cutContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.copyContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.pasteContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -402,10 +404,18 @@ namespace pwiz.Skyline
             this.editNoteContextMenuItem,
             this.toolStripSeparatorRatios,
             this.ratiosContextMenuItem,
-            this.replicatesTreeContextMenuItem});
+            this.replicatesTreeContextMenuItem,
+            this.toolStripSeparator62,
+            this.propertiesContextMenuItem});
             this.contextMenuTreeNode.Name = "contextMenuTreeNode";
             resources.ApplyResources(this.contextMenuTreeNode, "contextMenuTreeNode");
             this.contextMenuTreeNode.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuTreeNode_Opening);
+            // 
+            // propertiesContextMenuItem
+            // 
+            this.propertiesContextMenuItem.Name = "propertiesContextMenuItem";
+            resources.ApplyResources(this.propertiesContextMenuItem, "propertiesContextMenuItem");
+            this.propertiesContextMenuItem.DropDownOpening += new System.EventHandler(this.propertiesContextMenuItem_DropDownOpening);
             // 
             // cutContextMenuItem
             // 
@@ -2770,6 +2780,8 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripSeparator mruBeforeToolStripSeparator;
         private System.Windows.Forms.ToolStripProgressBar statusProgress;
         private System.Windows.Forms.ContextMenuStrip contextMenuTreeNode;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator62;
+        private System.Windows.Forms.ToolStripMenuItem propertiesContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem cutContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem copyContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem pasteContextMenuItem;

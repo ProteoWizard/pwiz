@@ -107,6 +107,7 @@ namespace pwiz.Skyline
     {
         private SequenceTreeForm _sequenceTreeForm;
         private FilesTreeForm _filesTreeForm;
+        private PropertyGridForm _propertyGridForm;
         private ImmediateWindow _immediateWindow;
 
         private SrmDocument _document;
@@ -204,6 +205,9 @@ namespace pwiz.Skyline
 
             checkForUpdatesMenuItem.Visible =
                 checkForUpdatesSeparator.Visible = ApplicationDeployment.IsNetworkDeployed;
+
+            // Track active content to update what PropertyGrid displays
+            DockPanel.ActiveContentChanged += DockPanel_ActiveContentChanged;
 
             // Begin ToolStore check for updates to currently installed tools, if any
             if (ToolStoreUtil.UpdatableTools(Settings.Default.ToolList).Any())
@@ -1092,6 +1096,9 @@ namespace pwiz.Skyline
                     SequenceTree.KeysOverride = Keys.None;
                     FindNext(true);
                     SequenceTree.UseKeysOverride = false;
+                    return true;
+                case Keys.F4:
+                    ShowPropertyGridForm(show: !(_propertyGridForm is { Visible: true }));
                     return true;
             }
             return base.ProcessCmdKey(ref msg, keyData);
@@ -3229,7 +3236,75 @@ namespace pwiz.Skyline
 
         #endregion
 
+        #region Properties
+
+        public PropertyGridForm PropertyGridForm => _propertyGridForm;
+        public bool PropertyGridFormIsVisible => _propertyGridForm is { Visible: true };
+        public bool PropertyGridFormIsActivated => _propertyGridForm is { IsActivated: true };
+        private IPropertyProvider _lastFocusedPropertyProvider;
+
+        public void ShowPropertyGridForm(bool show, string persistentState = null)
+        {
+            if (show)
+            {
+                _propertyGridForm ??= CreatePropertyGridForm();
+
+                if (_propertyGridForm.DockPanel != null)
+                    _propertyGridForm.Activate();
+                else
+                    _propertyGridForm.Show(dockPanel, DockState.DockRight);
+
+                UpdatePropertyGrid();
+            }
+            else
+            {
+                _propertyGridForm.Hide();
+            }
+        }
+
+        private PropertyGridForm CreatePropertyGridForm()
+        {
+            _propertyGridForm = new PropertyGridForm(this);
+            UpdatePropertyGrid();
+
+            return _propertyGridForm;
+        }
+
+        public void FocusPropertyProvider(IPropertyProvider propertyProvider)
+        {
+            _lastFocusedPropertyProvider = propertyProvider;
+            UpdatePropertyGrid();
+        }
+
+        /// <summary>
+        /// Called when the selection on a property provider has changed. If the property
+        /// provider is the currently focused property provider then update the property sheet.
+        /// </summary>
+        public void PropertyProviderSelectionChanged(IPropertyProvider propertyProvider)
+        {
+            if (ReferenceEquals(_lastFocusedPropertyProvider, propertyProvider))
+            {
+                UpdatePropertyGrid();
+            }
+        }
+
+        public void DockPanel_ActiveContentChanged(object sender, EventArgs e)
+        {
+            if (DockPanel.ActiveContent is IPropertyProvider propertyProvider)
+                FocusPropertyProvider(propertyProvider);
+        }
+
+        public void UpdatePropertyGrid()
+        {
+            if (_propertyGridForm is { Visible: true })
+                _propertyGridForm.SetPropertyObject(_lastFocusedPropertyProvider?.GetPropertyObject());
+        }
+
+        #endregion
+
         #region SequenceTree events
+
+        public SequenceTreeForm SequenceTreeForm => _sequenceTreeForm;
 
         public bool SequenceTreeFormIsVisible
         {
@@ -4857,6 +4932,11 @@ namespace pwiz.Skyline
         private void viewToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             ViewMenu.ViewMenuDropDownOpening();
+        }
+
+        private void propertiesContextMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            ShowPropertyGridForm(true);
         }
 
         public void SetModifiedSequenceDisplayOption(DisplayModificationOption displayModificationOption)

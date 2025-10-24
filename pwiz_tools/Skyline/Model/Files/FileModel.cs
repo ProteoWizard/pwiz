@@ -14,9 +14,12 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using pwiz.Common.Collections;
+using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.Databinding.Entities;
 
 /*
     * rat-plasma.sky
@@ -87,6 +90,10 @@ namespace pwiz.Skyline.Model.Files
         public virtual IList<FileModel> Files => ImmutableList.Empty<FileModel>();
 
         public override string ToString() => @$"{GetType().Name}: " + (Name ?? string.Empty);
+
+        // Provide a way to instantiate the PropertyObject for this model
+        public virtual Func<SkylineDataSchema, string, RootSkylineObject> PropertyObjectInstancer => 
+            (dataSchema, localFilePath) => null;
 
         /// <summary>
         /// Use this to decide whether the file represented by this model is ready to be monitored. A model may not be ready if:

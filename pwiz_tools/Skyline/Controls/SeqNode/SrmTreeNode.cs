@@ -3,7 +3,7 @@
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
  * Copyright 2009 University of Washington - Seattle, WA
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,13 +19,15 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
-using System.Drawing.Imaging;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results;
@@ -88,6 +90,10 @@ namespace pwiz.Skyline.Controls.SeqNode
                 OnModelChanged();
             }
         }
+
+        // Provide a way to instantiate the PropertyObject for this model
+        public virtual Func<SkylineDataSchema, RootSkylineObject> PropertyObjectInstancer => 
+            dataSchema => null;
 
         public void UpdateState()
         {

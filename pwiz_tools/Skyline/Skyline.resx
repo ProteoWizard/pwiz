@@ -145,6 +145,18 @@
   <data name="copyContextMenuItem.Text" xml:space="preserve">
     <value>Copy</value>
   </data>
+  <data name="propertiesContextMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+	  <value>Fuchsia</value>
+  </data>
+  <data name="propertiesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+	  <value>228, 22</value>
+  </data>
+  <data name="propertiesContextMenuItem.Text" xml:space="preserve">
+    <value>Properties</value>
+  </data>
+  <data name="propertiesContextMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
+	  <value>F4</value>
+  </data>
   <data name="pasteContextMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Fuchsia</value>
   </data>
@@ -2245,6 +2257,12 @@
     <value>copyContextMenuItem</value>
   </data>
   <data name="&gt;&gt;copyContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;propertiesContextMenuItem.Name" xml:space="preserve">
+    <value>propertiesContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;propertiesContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;pasteContextMenuItem.Name" xml:space="preserve">

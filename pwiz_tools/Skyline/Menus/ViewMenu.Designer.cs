@@ -135,6 +135,8 @@ namespace pwiz.Skyline.Menus
             this.massErrorHistogram2DMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.calibrationCurveMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator36 = new System.Windows.Forms.ToolStripSeparator();
+            this.viewPropertiesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator63 = new System.Windows.Forms.ToolStripSeparator();
             this.toolBarToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
@@ -157,6 +159,8 @@ namespace pwiz.Skyline.Menus
             this.userInterfaceToolStripMenuItem,
             this.toolStripSeparator1,
             this.viewFilesMenuItem,
+            this.toolStripSeparator63,
+            this.viewPropertiesMenuItem,
             this.toolStripSeparator41,
             this.liveReportsMenuItem,
             this.librariesMenuItem,
@@ -904,6 +908,13 @@ namespace pwiz.Skyline.Menus
             this.toolStripSeparator36.Name = "toolStripSeparator36";
             resources.ApplyResources(this.toolStripSeparator36, "toolStripSeparator36");
             // 
+            // viewPropertiesMenuItem
+            // 
+            this.viewPropertiesMenuItem.CheckOnClick = true;
+            this.viewPropertiesMenuItem.Name = "viewPropertiesMenuItem";
+            resources.ApplyResources(this.viewPropertiesMenuItem, "viewPropertiesMenuItem");
+            this.viewPropertiesMenuItem.Click += new System.EventHandler(this.viewPropertiesMenuItem_Click);
+            // 
             // toolBarToolStripMenuItem
             // 
             this.toolBarToolStripMenuItem.Checked = true;
@@ -1044,6 +1055,8 @@ namespace pwiz.Skyline.Menus
         private System.Windows.Forms.ToolStripMenuItem spectrumGridMenuItem;
         private System.Windows.Forms.ToolStripMenuItem librariesMenuItem;
         private System.Windows.Forms.ToolStripMenuItem viewFilesMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem viewPropertiesMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator63;
     }
 }

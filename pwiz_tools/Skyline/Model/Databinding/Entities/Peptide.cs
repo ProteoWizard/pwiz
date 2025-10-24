@@ -19,8 +19,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Resources;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.DataBinding;
@@ -49,6 +51,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             : base(dataSchema, identityPath)
         {
         }
+
+        #region PropertyGrid Support
+
+        public override ResourceManager GetResourceManager() => PropertyGridDocNodeResources.ResourceManager;
+
+        protected override PropertyDescriptor GetRootAliasProperty() => TypeDescriptor.GetProperties(GetType())[nameof(Sequence)];
+
+        #endregion
 
         [OneToMany(ForeignKey = "Peptide")]
         [HideWhen(AncestorOfType = typeof(FoldChangeBindingSource.FoldChangeRow))]
