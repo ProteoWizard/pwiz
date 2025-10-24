@@ -194,17 +194,17 @@ namespace pwiz.PanoramaClient
                 JToken jStatusResponse = requestHelper.Get(statusUri,
                     Resources
                         .AbstractPanoramaClient_WaitForDocumentImportCompleted_There_was_an_error_getting_the_status_of_the_document_import_pipeline_job_);
-                JToken rows = jStatusResponse[@"rows"];
+                JToken rows = jStatusResponse[@"rows"]!;
                 var row = rows.FirstOrDefault(r => (int)r[@"RowId"] == pipelineJobRowId);
                 if (row == null)
                     continue;
 
-                var jobUrl = new Uri(ServerUri, (string)row[@"_labkeyurl_RowId"]);
+                var jobUrl = new Uri(ServerUri, row.Value<string>(@"_labkeyurl_RowId"));
                 var status = new ImportStatus((string)row[@"Status"]);
                 if (status.IsComplete)
                 {
                     progressMonitor.UpdateProgress(_progressStatus.Complete());
-                    return new Uri(ServerUri, (string)row[@"_labkeyurl_Description"]);
+                    return new Uri(ServerUri, row.Value<string>(@"_labkeyurl_Description"));
                 }
 
                 else if (status.IsCancelled)
@@ -254,8 +254,8 @@ namespace pwiz.PanoramaClient
 
 
             // ID to check import status.
-            var details = importResponse[@"UploadedJobDetails"];
-            return (int)details[0][@"RowId"];
+            var details = importResponse[@"UploadedJobDetails"]!;
+            return (int)details[0]![@"RowId"];
         }
 
         private Uri UploadTempZipFile(string zipFilePath, Uri baseUploadUri, string escapedZipFileName,
