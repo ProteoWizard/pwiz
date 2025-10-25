@@ -21,7 +21,6 @@ using System.IO;
 using System.Net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.PanoramaClient;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -90,11 +89,7 @@ namespace pwiz.SkylineTestFunctional
             // This is a common scenario when downloads are taking too long
             var skypPath = TestFilesDir.GetTestPath("test.skyp");
 
-            TestHttpClientCancellation(() =>
-            {
-                var skypSupport = new SkypSupport(SkylineWindow);
-                skypSupport.Open(skypPath, null);
-            });
+            TestHttpClientCancellation(() => SkylineWindow.OpenSkypFile(skypPath));
 
             // Verify no document was loaded after cancellation
             Assert.IsNull(SkylineWindow.DocumentFilePath);
@@ -108,8 +103,7 @@ namespace pwiz.SkylineTestFunctional
             var skypPath = TestFilesDir.GetTestPath("test.skyp");
 
             using var helper = HttpClientTestHelper.SimulateNoNetworkInterface();
-            var skypSupport = new SkypSupport(SkylineWindow); // Use real HttpClientDownloadClient
-            RunDlg<MessageDlg>(() => skypSupport.Open(skypPath, null), errDlg =>
+            RunDlg<MessageDlg>(() => SkylineWindow.OpenSkypFile(skypPath), errDlg =>
             {
                 AssertEx.Contains(errDlg.Message, helper.GetExpectedMessage());
                 errDlg.OkDialog();
@@ -128,21 +122,14 @@ namespace pwiz.SkylineTestFunctional
             var skyZipName = Path.GetFileName(skyZipPath);
             Assert.AreEqual(TestFilesDir.GetTestPath(skyZipName), skyp.DownloadPath);
 
-            var skypSupport = new SkypSupport(SkylineWindow, (monitor, status) => CreateTestDownloadClient(skyZipPath, skyp, monitor, status));
-            RunUI(() => skypSupport.Open(skypPath, null));
+            // Mock the download using HttpClientTestHelper - simulates successful download from local file
+            using var helper = HttpClientTestHelper.WithMockResponseFile(skyp.SkylineDocUri, skyZipPath);
+            RunUI(() => SkylineWindow.OpenSkypFile(skypPath));
             WaitForDocumentLoaded();
             var skyZipNoExt = Path.GetFileNameWithoutExtension(skyZipPath);
             var explodedDir = TestFilesDir.GetTestPath(skyZipNoExt);
             Assert.AreEqual(Path.Combine(explodedDir, skyZipNoExt + SrmDocument.EXT), SkylineWindow.DocumentFilePath);
             AssertEx.FileExists(skyp.DownloadPath); // Exploded but also still on disk
-        }
-
-        /// <summary>
-        /// Factory function for creating test download clients - simulates successful downloads from local files
-        /// </summary>
-        private IDownloadClient CreateTestDownloadClient(string srcPath, SkypFile skyp, IProgressMonitor monitor, IProgressStatus status)
-        {
-            return new TestDownloadClient(srcPath, skyp, monitor, status);
         }
 
         private void TestOpenErrorsExtendedSkyp()
@@ -295,8 +282,7 @@ namespace pwiz.SkylineTestFunctional
             
             using (var helper = HttpClientTestHelper.SimulateHttp401())
             {
-                var skypSupport = new SkypSupport(SkylineWindow);
-                errDlg = ShowDialog<AlertDlg>(() => skypSupport.Open(skypPath, existingServers));
+                errDlg = ShowDialog<AlertDlg>(() => SkylineWindow.OpenSkypFile(skypPath));
                 string expectedErr =
                     string.Format(
                         Resources
@@ -493,7 +479,6 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNull(skyp1.Size);
             Assert.IsNull(skyp1.DownloadingUser);
 
-
             var skyp2 = SkypFile.CreateForTest(STR_VALID_SKYP_EXTENDED);
             Assert.AreEqual(new Uri(STR_VALID_SKYP_LOCALHOST), skyp2.SkylineDocUri);
             Assert.AreEqual(LOCALHOST, skyp2.GetServerName());
@@ -504,7 +489,6 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(new Uri(STR_VALID_SKYP_LOCALHOST), skyp3.SkylineDocUri);
             Assert.IsFalse(skyp3.Size.HasValue);
             Assert.AreEqual(skyp3.DownloadingUser, "no-name@no-name.edu");
-
         }
 
         private const string STR_EMPTY_SKYP = "";
@@ -519,29 +503,6 @@ namespace pwiz.SkylineTestFunctional
 
         private const string STR_INVALID_SIZE_SKYP3 =
             STR_VALID_SKYP_LOCALHOST + "\n\rFileSize:invalid\n\rDownloadingUser:no-name@no-name.edu";
-    }
-
-    /// <summary>
-    /// Test implementation of IDownloadClient that copies from a local file instead of downloading.
-    /// For testing network failures and cancellation, tests should use the real HttpClientDownloadClient
-    /// with HttpClientTestHelper to simulate failures at the HttpClientWithProgress level.
-    /// </summary>
-    public class TestDownloadClient : IDownloadClient
-    {
-        private readonly string _srcPath;
-        private readonly SkypFile _skyp;
-
-        public TestDownloadClient(string srcFile, SkypFile skyp, IProgressMonitor progressMonitor, IProgressStatus progressStatus)
-        {
-            _srcPath = srcFile;
-            _skyp = skyp;
-        }
-    
-        public void Download(SkypFile skyp)
-        {
-            Assert.AreEqual(_skyp.DownloadPath, skyp.DownloadPath);
-            File.Copy(_srcPath, skyp.SafePath, true);   // Overwrite an empty temp file
-        }
     }
 
     public class AllValidPanoramaClient : BaseTestPanoramaClient

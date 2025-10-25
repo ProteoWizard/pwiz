@@ -62,15 +62,23 @@ namespace SkylineBatchTest
                 currentFolderName = Path.GetFileName(pwizToolsDirectory);
                 pwizToolsDirectory = Path.GetDirectoryName(pwizToolsDirectory);
             }
-            var updatedImportFile = TestUtils.CopyFileFindReplace(rawImportFile, "REPLACE_TEXT", pwizToolsDirectory, AppendToFileName(rawImportFile, "_replaced"));
+
+            // Compose transformations: path replacement + R version replacement
+            string TransformBcfgFile(string line)
+            {
+                var pathReplaced = line.Replace("REPLACE_TEXT", pwizToolsDirectory);
+                return TestUtils.ReplaceRVersionWithCurrent(pathReplaced);
+            };
+            
+            var updatedImportFile = TestUtils.CopyFileWithLineTransform(rawImportFile, TransformBcfgFile, AppendToFileName(rawImportFile, "_replaced"));
             var rawExpectedFile = ExpectedFilePath(version, type);
-            var updatedExpectedFile = TestUtils.CopyFileFindReplace(rawExpectedFile, "REPLACE_TEXT", pwizToolsDirectory, AppendToFileName(rawExpectedFile, "_replaced"));
+            var updatedExpectedFile = TestUtils.CopyFileWithLineTransform(rawExpectedFile, TransformBcfgFile, AppendToFileName(rawExpectedFile, "_replaced"));
             
             // run tests
             CompareImports(updatedImportFile, updatedExpectedFile);
             ImportExportCompare(updatedImportFile, updatedExpectedFile);
 
-            // delete uniqie bcfg files
+            // delete processed bcfg files
             File.Delete(updatedImportFile);
             File.Delete(updatedExpectedFile);
 
@@ -112,9 +120,14 @@ namespace SkylineBatchTest
             for (int index = 0; index < indiciesToSave.Length; index++)
                 indiciesToSave[index] = index;
             
-            var configModifiedLinePattern = new Regex(@"^(  <skylinebatch_config name=.*modified=).*>$");//@"^  <skylinebatch_config name=(.*)[.enabled=(.*)]*modified=.*>$"
+            // Skip comparison of lines that change between test runs (timestamps) or between R installations (versions)
+            var skipPatterns = new List<Regex>
+            {
+                new Regex(@"^(  <skylinebatch_config name=.*modified=).*>$"),  // Config modified timestamp
+                new Regex(@"^(.*<r_script.*version="")[^""]+("".*)$")          // R script version number
+            };
             configManager.State.BaseState.ExportConfigs(filePathActualExport, SkylineBatch.Properties.Settings.Default.XmlVersion, indiciesToSave);
-            TestUtils.CompareFiles(filePathExpectedExport, filePathActualExport, new List<Regex> { configModifiedLinePattern });
+            TestUtils.CompareFiles(filePathExpectedExport, filePathActualExport, skipPatterns);
             File.Delete(filePathActualExport);
         }
 
@@ -124,8 +137,9 @@ namespace SkylineBatchTest
         {
             // test version of expected bcfg files to make sure they import correctly
             var filePath = ExpectedFilePath("21_1_0_312", "complex_test");
+            using var fileSaver = TestUtils.CreateBcfgWithCurrentRVersion(filePath);
             var configManager = new SkylineBatchConfigManager(TestUtils.GetTestLogger());
-            configManager.Import(filePath, null);
+            configManager.Import(fileSaver.SafeName, null);
             var actualConfig = configManager.GetConfig(0);
 
             var expectedTemplate = new SkylineTemplate(null, @"Bruderer.sky.zip",
@@ -187,15 +201,16 @@ namespace SkylineBatchTest
                     string.Empty, TestUtils.GetTestFilePath(string.Empty), "MSstats_Bruderer.R") }};
 
 
+            var rVersion = RInstallations.GetMostRecentInstalledRVersion();
             var expectedReportOne = new ReportInfo("MSstats Input-plus", false, null, new List<Tuple<string, string>>(){
-                new Tuple<string, string>(TestUtils.GetTestFilePath("MSstats_Bruderer.R"), "4.0.3") },
+                new Tuple<string, string>(TestUtils.GetTestFilePath("MSstats_Bruderer.R"), rVersion) },
                 new Dictionary<string, PanoramaFile>() {{ TestUtils.GetTestFilePath("MSstats_Bruderer.R"), new PanoramaFile(
                     new RemoteFileSource("panoramaweb.org MSstats_Bruderer.R", "https://panoramaweb.org/_webdav/Panorama%20Public/2021/MacCoss%20-%202015-Bruderer/%40files/reports/MSstats_Bruderer.R", "alimarsh@mit.edu", "test", false),
                     string.Empty, TestUtils.GetTestFilePath(string.Empty), "MSstats_Bruderer.R") }}, false);
 
             var expectedReportTwo = new ReportInfo("Unique Report", false, TestUtils.GetTestFilePath("UniqueReport.skyr"),
                 new List<Tuple<string, string>>(){
-                new Tuple<string, string>(TestUtils.GetTestFilePath("testScript.R"), "4.0.3") }, new Dictionary<string, PanoramaFile>(), true);
+                new Tuple<string, string>(TestUtils.GetTestFilePath("testScript.R"), rVersion) }, new Dictionary<string, PanoramaFile>(), true);
 
             var expectedReportSettings = new ReportSettings(new List<ReportInfo>() { expectedReportOne, expectedReportTwo });
 

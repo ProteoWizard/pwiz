@@ -486,9 +486,21 @@ namespace pwiz.SkylineTestUtil
 
         public static void TestMessageDlgShown(Action actionToShow, string expectedMessage)
         {
+            TestMessageDlgShown(actionToShow, actualMessage =>
+                Assert.AreEqual(expectedMessage, actualMessage));
+        }
+
+        public static void TestMessageDlgShownContaining(Action actionToShow, params string[] parts)
+        {
+            TestMessageDlgShown(actionToShow, actualMessage =>
+                AssertEx.Contains(actualMessage, parts));
+        }
+
+        public static void TestMessageDlgShown(Action actionToShow, Action<string> validateMessage)
+        {
             RunDlg<MessageDlg>(actionToShow, errorDlg =>
             {
-                Assert.AreEqual(expectedMessage, errorDlg.Message);
+                validateMessage(errorDlg.Message);
                 errorDlg.OkDialog();
             });
         }
