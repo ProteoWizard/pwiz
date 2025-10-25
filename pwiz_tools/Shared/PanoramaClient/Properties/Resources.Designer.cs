@@ -456,15 +456,6 @@ namespace pwiz.PanoramaClient.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized string similar to There was an error getting a CSRF token from the server..
-        /// </summary>
-        public static string PanoramaRequestHelper_Post_There_was_an_error_getting_a_CSRF_token_from_the_server_ {
-            get {
-                return ResourceManager.GetString("PanoramaRequestHelper_Post_There_was_an_error_getting_a_CSRF_token_from_the_serve" +
-                        "r_", resourceCulture);
-            }
-        }
         
         /// <summary>
         ///   Looks up a localized string similar to Could not authenticate user. Response received from server: {0} {1}.

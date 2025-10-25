@@ -381,7 +381,7 @@ namespace pwiz.Common.SystemUtil
         /// <summary>
         /// Gets a response from the specified URI with ResponseHeadersRead completion option for streaming.
         /// </summary>
-        private HttpResponseMessage GetResponseHeadersRead(Uri uri)
+        public HttpResponseMessage GetResponseHeadersRead(Uri uri)
         {
             return WithExceptionHandling(uri,
                 () => _httpClient.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead, CancellationToken).Result);
