@@ -188,6 +188,7 @@
     <Compile Include="LocalizedHtmlTutorialsTest.cs" />
     <Compile Include="LibraryRankedSpectrumInfoTest.cs" />
     <Compile Include="LongPathDirectoryTest.cs" />
+    <Compile Include="MassDistributionTest.cs" />
     <Compile Include="MassListIonsTest.cs" />
     <Compile Include="MatchExpressionTest.cs" />
     <Compile Include="OnDemandFeatureCalculatorTest.cs" />

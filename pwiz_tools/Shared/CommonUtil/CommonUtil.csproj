@@ -115,6 +115,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Chemistry\Alt\MassDistribution.cs" />
+    <Compile Include="Chemistry\WithKeyValuePair\MassDistribution.cs" />
+    <Compile Include="Chemistry\WithValueTuple\MassDistribution.cs" />
     <Compile Include="Collections\DisposableCollection.cs" />
     <Compile Include="Collections\Factor.cs" />
     <Compile Include="Collections\ImmutableListFactory.cs" />
