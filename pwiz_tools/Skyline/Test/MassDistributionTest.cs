@@ -34,6 +34,23 @@ namespace pwiz.SkylineTest
                 pwiz.Common.Chemistry.WithKeyValuePair.MassDistribution.NewInstance(IsotopeAbundances.Default[key], 0, 0));
 
 
+        private static readonly pwiz.Common.Chemistry.JustValueTuple.MassDistribution EmptyJustValueTupleDistribution =
+            new pwiz.Common.Chemistry.JustValueTuple.MassDistribution(0.001, 0.00001);
+        private static readonly Dictionary<string, pwiz.Common.Chemistry.JustValueTuple.MassDistribution> _justValueTupleAbundances =
+            IsotopeAbundances.Default.Keys.ToDictionary(key => key, key =>
+                pwiz.Common.Chemistry.JustValueTuple.MassDistribution.NewInstance(IsotopeAbundances.Default[key], 0, 0));
+
+        private static readonly pwiz.Common.Chemistry.SeparateArrays.MassDistribution EmptySeparateArraysDistribution =
+            new pwiz.Common.Chemistry.SeparateArrays.MassDistribution(0.001, 0.00001);
+        private static readonly Dictionary<string, pwiz.Common.Chemistry.SeparateArrays.MassDistribution> SeparateArraysAbundances =
+            IsotopeAbundances.Default.Keys.ToDictionary(key => key, key =>
+                pwiz.Common.Chemistry.SeparateArrays.MassDistribution.NewInstance(IsotopeAbundances.Default[key], 0, 0));
+        private static readonly pwiz.Common.Chemistry.MassFrequency.MassDistribution EmptyMassFrequencyDistribution =
+            new pwiz.Common.Chemistry.MassFrequency.MassDistribution(0.001, 0.00001);
+        private static readonly Dictionary<string, pwiz.Common.Chemistry.MassFrequency.MassDistribution> MassFrequencyAbundances =
+            IsotopeAbundances.Default.Keys.ToDictionary(key => key, key =>
+                pwiz.Common.Chemistry.MassFrequency.MassDistribution.NewInstance(IsotopeAbundances.Default[key], 0, 0));
+
 
         [TestMethod]
         public void TestMassDistributionSpeed()
@@ -57,6 +74,24 @@ namespace pwiz.SkylineTest
         public void TestKeyValuePairMassDistributionSpeed()
         {
             TimeAction(mol => GetKeyValuePairMassDistribution(mol));
+        }
+
+        [TestMethod]
+        public void TestJustValueTuple()
+        {
+            TimeAction(mol=> GetJustValueTupleMassDistribution(mol));
+        }
+
+        [TestMethod]
+        public void TestSeparateArrays()
+        {
+            TimeAction(mol=> GetSeparateArraysMassDistribution(mol));
+        }
+
+        [TestMethod]
+        public void TestMassFrequency()
+        {
+            TimeAction(mol=>GetMassFrequencyMassDistribution(mol));
         }
 
         private void TimeAction(Action<Molecule> action)
@@ -121,6 +156,43 @@ namespace pwiz.SkylineTest
             foreach (var element in molecule)
             {
                 result = result.Add(EmptyKeyValuePairDistribution.Add(abundances[element.Key]).Multiply(element.Value));
+            }
+
+            return result;
+
+        }
+        private pwiz.Common.Chemistry.JustValueTuple.MassDistribution GetJustValueTupleMassDistribution(Molecule molecule)
+        {
+            var abundances = _justValueTupleAbundances;
+            var result = EmptyJustValueTupleDistribution;
+            foreach (var element in molecule)
+            {
+                result = result.Add(EmptyJustValueTupleDistribution.Add(abundances[element.Key]).Multiply(element.Value));
+            }
+
+            return result;
+
+        }
+        private pwiz.Common.Chemistry.SeparateArrays.MassDistribution GetSeparateArraysMassDistribution(Molecule molecule)
+        {
+            var abundances = SeparateArraysAbundances;
+            var result = EmptySeparateArraysDistribution;
+            foreach (var element in molecule)
+            {
+                result = result.Add(EmptySeparateArraysDistribution.Add(abundances[element.Key]).Multiply(element.Value));
+            }
+
+            return result;
+
+        }
+
+        private pwiz.Common.Chemistry.MassFrequency.MassDistribution GetMassFrequencyMassDistribution(Molecule molecule)
+        {
+            var abundances = MassFrequencyAbundances;
+            var result = EmptyMassFrequencyDistribution;
+            foreach (var element in molecule)
+            {
+                result = result.Add(EmptyMassFrequencyDistribution.Add(abundances[element.Key]).Multiply(element.Value));
             }
 
             return result;
