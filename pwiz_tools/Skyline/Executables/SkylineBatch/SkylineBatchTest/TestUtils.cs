@@ -198,8 +198,42 @@ namespace SkylineBatchTest
 
         public static ReportInfo GetTestReportInfo()
         {
+            var rVersion = RInstallations.GetMostRecentInstalledRVersion();
             return new ReportInfo("UniqueReport", false, GetTestFilePath("UniqueReport.skyr"),
-                new List<Tuple<string, string>> {new Tuple<string, string>(GetTestFilePath("testScript.r"), "4.0.3")}, new Dictionary<string, PanoramaFile>(), false);
+                new List<Tuple<string, string>> {new Tuple<string, string>(GetTestFilePath("testScript.r"), rVersion)}, new Dictionary<string, PanoramaFile>(), false);
+        }
+
+        /// <summary>
+        /// Creates a FileSaver for a temporary copy of a .bcfg file with all R version references
+        /// replaced with the most recent installed R version.
+        /// The caller should dispose the FileSaver when done (auto-cleanup on dispose).
+        /// </summary>
+        public static FileSaver CreateBcfgWithCurrentRVersion(string originalBcfgPath)
+        {
+            var rVersion = RInstallations.GetMostRecentInstalledRVersion();
+            var content = File.ReadAllText(originalBcfgPath);
+            
+            // Replace ONLY R script version references, in both formats:
+            // 1. Newer: <r_script path="..." version="X.Y.Z" ...>
+            // 2. Older: <script_path>(..., X.Y.Z)</script_path>
+            // This avoids replacing xml_version, program version, etc.
+            
+            // Handle newer <r_script> format
+            var updatedContent = Regex.Replace(content, 
+                @"(<r_script [^>]*version="")(\d+\.\d+(\.\d+)?)("")", 
+                match => match.Groups[1].Value + rVersion + match.Groups[4].Value);
+            
+            // Handle older <script_path> format
+            updatedContent = Regex.Replace(updatedContent, 
+                @"(<script_path>\([^,)]+,\s*)(\d+\.\d+(\.\d+)?)(\)</script_path>)", 
+                match => match.Groups[1].Value + rVersion + match.Groups[4].Value);
+            
+            // Create temp file in system temp directory
+            var tempPath = Path.Combine(Path.GetTempPath(), Path.GetFileName(originalBcfgPath));
+            var fileSaver = new FileSaver(tempPath);
+            File.WriteAllText(fileSaver.SafeName, updatedContent);
+            
+            return fileSaver;
         }
 
         public static SkylineSettings GetTestSkylineSettings()
@@ -239,8 +273,9 @@ namespace SkylineBatchTest
                 },  false, false, GetTestFilePath("RefineOutput.sky"));
 
             var reportList = new List<ReportInfo>();
+            var rVersion = RInstallations.GetMostRecentInstalledRVersion();
             var script = new List<Tuple<string, string>>()
-                {new Tuple<string, string>(GetTestFilePath("testScript.R"), "4.0.2")};
+                {new Tuple<string, string>(GetTestFilePath("testScript.R"), rVersion)};
             reportList.Add(new ReportInfo("Unique Report", false, GetTestFilePath("uniqueReport.skyr"), script, new Dictionary<string, PanoramaFile>(), false));
             reportList.Add(new ReportInfo("Another Unique Report", true, GetTestFilePath("uniqueReport.skyr"), script, new Dictionary<string, PanoramaFile>(), true));
             var reports = new ReportSettings(reportList);
