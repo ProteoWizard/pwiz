@@ -115,13 +115,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Chemistry\Alt\MassDistribution.cs" />
-    <Compile Include="Chemistry\IMassDistribution.cs" />
-    <Compile Include="Chemistry\MassFrequency\MassDistribution.cs" />
-    <Compile Include="Chemistry\JustValueTuple\MassDistribution.cs" />
-    <Compile Include="Chemistry\SeparateArrays\MassDistribution.cs" />
-    <Compile Include="Chemistry\WithKeyValuePair\MassDistribution.cs" />
-    <Compile Include="Chemistry\WithValueTuple\MassDistribution.cs" />
+    <Compile Include="Chemistry\MassDistribution.cs" />
     <Compile Include="Collections\DisposableCollection.cs" />
     <Compile Include="Collections\Factor.cs" />
     <Compile Include="Collections\ImmutableListFactory.cs" />
@@ -133,7 +127,6 @@
     <Compile Include="Chemistry\Formula.cs" />
     <Compile Include="Chemistry\IonMobilityValue.cs" />
     <Compile Include="Chemistry\IsotopeAbundances.cs" />
-    <Compile Include="Chemistry\MassDistribution.cs" />
     <Compile Include="Chemistry\Molecule.cs" />
     <Compile Include="Chemistry\MoleculeMassOffset.cs" />
     <Compile Include="Chemistry\MzTolerance.cs" />
