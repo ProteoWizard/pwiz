@@ -30,7 +30,7 @@ namespace pwiz.Common.Chemistry.WithValueTuple
     /// In order to prevent the size of this structure from growing exponentially, there
     /// are MinimumAbundance and MassResolution properties.
     /// </summary>
-    public class MassDistribution : IReadOnlyList<KeyValuePair<double, double>>
+    public class MassDistribution : IReadOnlyList<KeyValuePair<double, double>>, IMassDistribution<MassDistribution>
     {
         private readonly ImmutableList<double> _masses;
         private readonly ImmutableList<double> _frequencies;

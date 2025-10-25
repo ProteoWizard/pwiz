@@ -116,6 +116,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Chemistry\Alt\MassDistribution.cs" />
+    <Compile Include="Chemistry\IMassDistribution.cs" />
     <Compile Include="Chemistry\MassFrequency\MassDistribution.cs" />
     <Compile Include="Chemistry\JustValueTuple\MassDistribution.cs" />
     <Compile Include="Chemistry\SeparateArrays\MassDistribution.cs" />
