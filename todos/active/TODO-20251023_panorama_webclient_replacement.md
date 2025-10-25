@@ -5,36 +5,49 @@
 - **Created**: 2025-10-23
 - **Objective**: Migrate PanoramaClient from WebClient to HttpClient
 
-## Current Status (2025-10-24)
+## Current Status (2025-10-25)
 
-### ✅ Phase 2B Complete - Ready for Initial PR
-- All `WebPanoramaClient` methods migrated from `WebClient` to `HttpClientWithProgress`
-- Created `HttpPanoramaRequestHelper` for API calls (cookie/CSRF management)
-- All Skyline.exe tests passing in all locales (en, zh-CHS, ja, tr, fr)
-- No new ReSharper warnings
-- SkylineBatch and AutoQC both build successfully
-- Added comprehensive `PanoramaClientDownloadTest.TestDownloadErrors()` using `HttpClientTestHelper`
-- Added `FileSaver` documentation to `STYLEGUIDE.md`
-- Created `TODO-normalize_skyp_panorama_client.md` for future error message improvements
+### ✅ Phase 2C Complete: SkylineBatch/AutoQC Testing - ALL TESTS PASSING!
 
-### ⚠️ Blocking Issues Before Merge
-1. **SkylineBatch tests failing** (via ReSharper unit testing)
-   - Likely CI infrastructure gap, not introduced by changes
-   - Need to investigate and fix
-2. **AutoQC tests failing** (via ReSharper unit testing)
-   - Same pattern as SkylineBatch
-   - Need to investigate and fix
-3. **Remove deprecated WebClient code** (not just mark as deprecated)
-   - `UTF8WebClient`, `LabkeySessionWebClient`, `NonStreamBufferingWebClient`
-   - `PanoramaRequestHelper` (replaced by `HttpPanoramaRequestHelper`)
-   - Validate both executables still build and test after removal
+**AutoQC: 100% PASSING** ✅
+- Fixed `Content-Type` header handling for JSON API calls (`UploadString()` overload with content type)
+- Fixed `HttpPanoramaRequestHelper.DoPost()` to respect custom Content-Type headers
+- Updated test expectations for enhanced DNS error messages
+- Added `PANORAMAWEB_USERNAME` environment variable support for safer credential management
+- All AutoQC tests pass with `HttpClientWithProgress`-based `WebPanoramaClient`
+
+**SkylineBatch: 100% PASSING (38/38)** ✅
+- Fixed R registry detection (64-bit registry view, enumerate version subkeys)
+- Made tests robust to R version changes (`RInstallations.GetMostRecentInstalledRVersion()`)
+- Created `TestUtils.ReplaceRVersionWithCurrent()` for dynamic R version replacement in test files
+- Refactored file transformation to DRY `CopyFileWithLineTransform()` pattern (composable transforms)
+- Fixed `ToolUpdateInfo` to properly manage `FileSaver` lifecycle (prevents temp file leaks)
+- Fixed `ToolUpdatesDlg` download location to avoid `CheckToolDirConsistency()` conflict
+- Fixed `CreateBcfgWithCurrentRVersion()` FileSaver path (same directory for relative path resolution)
+- Added `RInstallations.TestRVersions` test seam for running tests without R installed (TeamCity ready)
+- **All 38 tests now passing**, including previous regressions
+
+**Skyline.exe: 100% PASSING** ✅
+- All locales (en, zh-CHS, ja, tr, fr)
+- No ReSharper warnings
+- All migration tests passing
+
+### 🎯 Ready for Phase 2D: Remove Deprecated WebClient Code
+
+**No blocking test issues** - All three solutions at 100%!
 
 ### Next Steps
-1. Commit and push Phase 2B to PR for TeamCity validation
-2. Investigate SkylineBatch/AutoQC test failures (Phase 2C)
-3. Remove all deprecated WebClient code (Phase 2D)
-4. Verify all tests pass across all three solutions
-5. Merge to master once all blocking issues resolved
+1. ✅ ~~SkylineBatch tests~~ - ALL PASSING (38/38)
+2. ✅ ~~AutoQC tests~~ - ALL PASSING
+3. **Remove deprecated WebClient code** (Phase 2D - ready to proceed)
+   - `UTF8WebClient`, `LabkeySessionWebClient`, `NonStreamBufferingWebClient`
+   - `PanoramaRequestHelper` (replaced by `HttpPanoramaRequestHelper`)
+   - Verify all three solutions still build and test after removal
+4. **Manual testing** - Final validation
+5. **Merge to master**
+
+### TeamCity Status
+✅ All changes pushed so far are passing TeamCity tests
 
 ## Background
 This is a **focused Phase 2** branch specifically for PanoramaClient migration. This is separate from the tools migration (`TODO-tools_webclient_replacement.md`) because:

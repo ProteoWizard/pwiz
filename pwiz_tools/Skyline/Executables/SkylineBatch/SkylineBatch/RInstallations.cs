@@ -31,8 +31,21 @@ namespace SkylineBatch
         // Finds and saves information about the computer's R installation locations
         private const string RegistryLocationR = @"SOFTWARE\R-core\R";
 
+        /// <summary>
+        /// Test seam: Set mock R versions for testing without requiring actual R installation.
+        /// Set to non-null dictionary to bypass system R detection.
+        /// </summary>
+        public static Dictionary<string, string> TestRVersions { get; set; }
+
         public static bool FindRDirectory()
         {
+            // Test seam: Use mock R versions if set (bypasses system R detection for testing)
+            if (TestRVersions != null)
+            {
+                Settings.Default.RVersions = TestRVersions;
+                return TestRVersions.Count > 0;
+            }
+
             if (Settings.Default.RDirs == null) Settings.Default.RDirs = new List<string>();
             if (Settings.Default.RDirs.Count == 0)
             {

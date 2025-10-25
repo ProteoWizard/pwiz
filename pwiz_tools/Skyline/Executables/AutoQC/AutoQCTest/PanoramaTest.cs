@@ -30,7 +30,7 @@ namespace AutoQCTest
         {
             // Create a Panorama folder for the test
             var panoramaServerUri = new Uri(TestUtils.PANORAMAWEB);
-            _panoramaClient = new WebPanoramaClient(panoramaServerUri, TestUtils.PANORAMAWEB_USER,
+            _panoramaClient = new WebPanoramaClient(panoramaServerUri, TestUtils.GetPanoramaWebUsername(),
                 TestUtils.GetPanoramaWebPassword());
 
             _testPanoramaFolder = TestUtils.CreatePanoramaWebTestFolder(_panoramaClient, TestUtils.PANORAMAWEB_TEST_FOLDER,
@@ -66,7 +66,7 @@ namespace AutoQCTest
 
             var config = new AutoQcConfig("PanoramaTestConfig", false, DateTime.MinValue, DateTime.MinValue,
                 TestUtils.GetTestMainSettings(testFilesDir.GetTestPath(skyFileName), "folderToWatch", testFilesDir.FullPath),
-                new PanoramaSettings(true, TestUtils.PANORAMAWEB, TestUtils.PANORAMAWEB_USER, 
+                new PanoramaSettings(true, TestUtils.PANORAMAWEB, TestUtils.GetPanoramaWebUsername(), 
                     TestUtils.GetPanoramaWebPassword(), $"{_testPanoramaFolder}"), 
                 skylineSettings);
 
@@ -113,7 +113,7 @@ namespace AutoQCTest
             var labKeyQuery = PanoramaUtil.CallNewInterface(panoramaServerUri, "query", $"{uniqueFolder}",
                 "selectRows", "schemaName=targetedms&queryName=runs", true);
             var requestHelper =
-                new PanoramaRequestHelper(new LabkeySessionWebClient(new PanoramaServer(panoramaServerUri, TestUtils.PANORAMAWEB_USER,
+                new PanoramaRequestHelper(new LabkeySessionWebClient(new PanoramaServer(panoramaServerUri, TestUtils.GetPanoramaWebUsername(),
                     TestUtils.GetPanoramaWebPassword())));
             var startTime = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
             var x = startTime;

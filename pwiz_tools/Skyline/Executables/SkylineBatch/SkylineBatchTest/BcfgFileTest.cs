@@ -62,15 +62,23 @@ namespace SkylineBatchTest
                 currentFolderName = Path.GetFileName(pwizToolsDirectory);
                 pwizToolsDirectory = Path.GetDirectoryName(pwizToolsDirectory);
             }
-            var updatedImportFile = TestUtils.CopyFileFindReplace(rawImportFile, "REPLACE_TEXT", pwizToolsDirectory, AppendToFileName(rawImportFile, "_replaced"));
+
+            // Compose transformations: path replacement + R version replacement
+            string TransformBcfgFile(string line)
+            {
+                var pathReplaced = line.Replace("REPLACE_TEXT", pwizToolsDirectory);
+                return TestUtils.ReplaceRVersionWithCurrent(pathReplaced);
+            };
+            
+            var updatedImportFile = TestUtils.CopyFileWithLineTransform(rawImportFile, TransformBcfgFile, AppendToFileName(rawImportFile, "_replaced"));
             var rawExpectedFile = ExpectedFilePath(version, type);
-            var updatedExpectedFile = TestUtils.CopyFileFindReplace(rawExpectedFile, "REPLACE_TEXT", pwizToolsDirectory, AppendToFileName(rawExpectedFile, "_replaced"));
+            var updatedExpectedFile = TestUtils.CopyFileWithLineTransform(rawExpectedFile, TransformBcfgFile, AppendToFileName(rawExpectedFile, "_replaced"));
             
             // run tests
             CompareImports(updatedImportFile, updatedExpectedFile);
             ImportExportCompare(updatedImportFile, updatedExpectedFile);
 
-            // delete uniqie bcfg files
+            // delete processed bcfg files
             File.Delete(updatedImportFile);
             File.Delete(updatedExpectedFile);
 
@@ -129,8 +137,9 @@ namespace SkylineBatchTest
         {
             // test version of expected bcfg files to make sure they import correctly
             var filePath = ExpectedFilePath("21_1_0_312", "complex_test");
+            using var fileSaver = TestUtils.CreateBcfgWithCurrentRVersion(filePath);
             var configManager = new SkylineBatchConfigManager(TestUtils.GetTestLogger());
-            configManager.Import(filePath, null);
+            configManager.Import(fileSaver.SafeName, null);
             var actualConfig = configManager.GetConfig(0);
 
             var expectedTemplate = new SkylineTemplate(null, @"Bruderer.sky.zip",

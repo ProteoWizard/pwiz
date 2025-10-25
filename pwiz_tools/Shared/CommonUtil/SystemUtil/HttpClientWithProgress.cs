@@ -224,7 +224,16 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         public string UploadString(Uri uri, string method, string data)
         {
-            var content = new StringContent(data, Encoding.UTF8, @"application/x-www-form-urlencoded");
+            return UploadString(uri, method, data, @"application/x-www-form-urlencoded");
+        }
+
+        /// <summary>
+        /// Uploads string data with a specified Content-Type.
+        /// For small requests/responses only. Does not report progress on upload or download.
+        /// </summary>
+        public string UploadString(Uri uri, string method, string data, string contentType)
+        {
+            var content = new StringContent(data, Encoding.UTF8, contentType);
             var request = new HttpRequestMessage(new HttpMethod(method), uri) { Content = content };
 
             var response = SendRequest(request);

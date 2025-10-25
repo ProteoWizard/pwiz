@@ -414,7 +414,17 @@ namespace pwiz.PanoramaClient
                     httpClient.AddHeader(LABKEY_CSRF, _csrfToken);
                 }
 
-                return httpClient.UploadString(uri, PanoramaUtil.FORM_POST, postData);
+                // Check if a custom Content-Type was set (e.g., application/json for API calls)
+                // Note: HttpRequestHeader.ContentType.ToString() returns "ContentType" (no hyphen)
+                // Also check "Content-Type" in case it was added via string overload
+                string contentType = @"application/x-www-form-urlencoded"; // Default for form posts
+                if (_customHeaders.TryGetValue(HttpRequestHeader.ContentType.ToString(), out var customContentType) ||
+                    _customHeaders.TryGetValue("Content-Type", out customContentType))
+                {
+                    contentType = customContentType;
+                }
+
+                return httpClient.UploadString(uri, PanoramaUtil.FORM_POST, postData, contentType);
             }
             catch (NetworkRequestException ex)
             {
@@ -490,9 +500,13 @@ namespace pwiz.PanoramaClient
             }
 
             // Add any custom headers that were set via AddHeader()
+            // Skip Content-Type here - it must be set on HttpContent, not DefaultRequestHeaders
             foreach (var header in _customHeaders)
             {
-                httpClient.AddHeader(header.Key, header.Value);
+                if (header.Key != HttpRequestHeader.ContentType.ToString() && header.Key != "Content-Type")
+                {
+                    httpClient.AddHeader(header.Key, header.Value);
+                }
             }
 
             // Add Accept: application/json if requested
