@@ -115,7 +115,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Chemistry\MassDistribution.cs" />
     <Compile Include="Collections\DisposableCollection.cs" />
     <Compile Include="Collections\Factor.cs" />
     <Compile Include="Collections\ImmutableListFactory.cs" />
@@ -127,6 +126,7 @@
     <Compile Include="Chemistry\Formula.cs" />
     <Compile Include="Chemistry\IonMobilityValue.cs" />
     <Compile Include="Chemistry\IsotopeAbundances.cs" />
+    <Compile Include="Chemistry\MassDistribution.cs" />
     <Compile Include="Chemistry\Molecule.cs" />
     <Compile Include="Chemistry\MoleculeMassOffset.cs" />
     <Compile Include="Chemistry\MzTolerance.cs" />

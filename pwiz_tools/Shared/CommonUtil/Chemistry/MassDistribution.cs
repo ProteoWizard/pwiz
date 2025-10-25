@@ -93,8 +93,7 @@ namespace pwiz.Common.Chemistry
             return Merge(left, right);
         }
 
-        private static MassFrequencyCount Merge(MassFrequencyCount list1,
-            MassFrequencyCount list2)
+        private static MassFrequencyCount Merge(MassFrequencyCount list1, MassFrequencyCount list2)
         {
             int resultCount = 0;
             var resultArray = new(double mass, double frequency)[list1.Count + list2.Count];
@@ -135,7 +134,8 @@ namespace pwiz.Common.Chemistry
                 }
                 else
                 {
-                    resultArray[resultCount] = (list1.MassFrequencies[index1].mass, list1.MassFrequencies[index1].frequency+ list2.MassFrequencies[index2].frequency);
+                    resultArray[resultCount] = (list1.MassFrequencies[index1].mass,
+                        list1.MassFrequencies[index1].frequency + list2.MassFrequencies[index2].frequency);
                 }
                 resultCount++;
                 if (compare <= 0)
