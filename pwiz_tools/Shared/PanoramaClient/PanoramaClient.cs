@@ -772,8 +772,8 @@ namespace pwiz.PanoramaClient
                 httpClient.AddAuthorizationHeader(pServer.AuthHeader);
             }
 
-            // HttpClientWithProgress automatically appends download size to progress messages and handles cancellation
-            httpClient.DownloadFile(new Uri(fileUrl), fileName);
+            // Use the known file size for accurate progress reporting (from .skyp file or Panorama API)
+            httpClient.DownloadFile(new Uri(fileUrl), fileName, fileSize);
         }
 
         public override IRequestHelper GetRequestHelper(bool forPublish = false)

@@ -183,10 +183,14 @@ namespace pwiz.Common.SystemUtil
         /// <summary>
         /// Downloads a file from the specified URI to the specified file path with progress reporting and cancellation support.
         /// </summary>
-        public void DownloadFile(Uri uri, string fileName)
+        /// <param name="uri">The URI to download from</param>
+        /// <param name="fileName">The local file path to save to</param>
+        /// <param name="knownFileSize">Optional known file size in bytes (from .skyp file or Panorama API). 
+        /// If null, will attempt to use Content-Length header. If neither available, shows indeterminate progress.</param>
+        public void DownloadFile(Uri uri, string fileName, long? knownFileSize = null)
         {
             using var fileStream = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None);
-            DownloadToStream(uri, fileStream);
+            DownloadToStream(uri, fileStream, knownFileSize);
         }
 
         /// <summary>
@@ -281,7 +285,10 @@ namespace pwiz.Common.SystemUtil
         /// <summary>
         /// Downloads content from the specified URI to the provided stream with progress reporting and cancellation support.
         /// </summary>
-        private void DownloadToStream(Uri uri, Stream outputStream)
+        /// <param name="uri">The URI to download from</param>
+        /// <param name="outputStream">The <see cref="Stream"/> to download to</param>
+        /// <param name="knownTotalBytes">Optional known file size. If null, uses Content-Length header. If neither available, shows indeterminate progress.</param>
+        private void DownloadToStream(Uri uri, Stream outputStream, long? knownTotalBytes = null)
         {
             // Check if we should use a mock response stream for testing
             Stream contentStream;
@@ -292,7 +299,7 @@ namespace pwiz.Common.SystemUtil
                 contentStream = TestBehavior.GetMockResponseStream(uri, out totalBytes);
                 if (contentStream != null)
                 {
-                    // Use mock stream for testing
+                    // Use mock stream for testing (prefer mock's total bytes over known size)
                     using (contentStream)
                     {
                         DownloadFromStream(contentStream, outputStream, totalBytes, uri);
@@ -303,7 +310,10 @@ namespace pwiz.Common.SystemUtil
 
             // Normal path: get response from network
             var response = GetResponseHeadersRead(uri);
-            totalBytes = response.Content.Headers.ContentLength ?? 0;
+            
+            // Use known size if provided, otherwise try Content-Length header, fallback to 0 (indeterminate)
+            totalBytes = knownTotalBytes ?? response.Content.Headers.ContentLength ?? 0;
+            // totalBytes = 0; // TEST: Uncomment to force marquee progress for unknown file sizes
             contentStream = response.Content.ReadAsStreamAsync().Result;
             
             using (contentStream)
@@ -349,8 +359,9 @@ namespace pwiz.Common.SystemUtil
                 }
                 else
                 {
+                    // Set percent to -1 for indeterminate/marquee progress when total size is unknown
                     _progressMonitor.UpdateProgress(_progressStatus =
-                        _progressStatus.ChangeMessage(message));
+                        _progressStatus.ChangeMessage(message).ChangePercentComplete(-1));
                 }
             }
         }

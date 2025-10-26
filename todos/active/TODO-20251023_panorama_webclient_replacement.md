@@ -5,7 +5,56 @@
 - **Created**: 2025-10-23
 - **Objective**: Migrate PanoramaClient from WebClient to HttpClient
 
-## Current Status (2025-10-25)
+## Current Status (2025-10-26)
+
+### 🔴 CRITICAL REGRESSION - Fixed (awaiting testing)
+
+**Issue #1:** Progress reporting broken when file size is known
+- Progress bar stuck at 0% instead of showing 0% → 100%
+- Total file size not displayed (only downloaded amount shown)
+- Affects: `.skyp` downloads AND Panorama folder browser downloads
+
+**Root Cause #1:** Known file size not being passed to `HttpClientWithProgress`
+- `WebPanoramaClient.DownloadFile()` receives `fileSize` parameter but ignored it
+- `SkypSupport.Download()` has `skyp.Size` available but didn't use it
+- Both paths calling 2-parameter `DownloadFile()` overload instead of 3-parameter
+
+**Fix #1:**
+- ✅ Added `DownloadFile(Uri, string, long knownFileSize)` overload to `HttpClientWithProgress`
+- ✅ Added `DownloadToStream(Uri, Stream, long knownTotalBytes)` private overload
+- ✅ Updated `WebPanoramaClient.DownloadFile()` to pass `fileSize` parameter
+- ✅ Updated `SkypSupport.Download()` to use `skyp.Size` when available
+
+**Issue #2:** No marquee/indeterminate progress when file size unknown
+- Progress bar stuck at 0% instead of showing animated "busy wait" marquee
+- Happens when neither caller nor HTTP `Content-Length` header provide size
+- Upload code was correct, download code was broken
+
+**Root Cause #2:** Missing `ChangePercentComplete(-1)` for unknown file sizes
+- `DownloadFromStream()` only updated message when `totalBytes == 0`
+- Should set `PercentComplete(-1)` to trigger `LongWaitDlg` marquee mode
+- Upload code already had this fix (line 593), download did not (line 398)
+
+**Fix #2:**
+- ✅ Updated `DownloadFromStream()` to call `ChangePercentComplete(-1)` when `totalBytes == 0`
+- ✅ Now matches upload behavior and triggers marquee progress bar
+- ✅ `ProgressStatus` supports `-1` for indeterminate progress (documented in code)
+
+**Testing Status:**
+- ✅ Manual testing COMPLETE - All scenarios verified:
+  - ✅ Known file size (`.skyp` with `FileSize:`) → 0-100% progress + total displayed
+  - ✅ HTTP `Content-Length` header → 0-100% progress + total displayed  
+  - ✅ Unknown file size → Marquee progress + bytes only (tested via commented test code)
+  - ✅ Cancel button → Instant response
+- ✅ No linter errors
+- ✅ Code builds successfully
+- ✅ All three solutions build and run
+
+**Additional Fixes:**
+- ✅ Fixed `PanoramaFolderBrowser.cs` - migrated last `PanoramaRequestHelper` reference to `HttpPanoramaRequestHelper`
+- ✅ Left commented test code in `HttpClientWithProgress.cs` for future marquee testing
+
+**Previous Status (2025-10-25):**
 
 ### ✅ COMPLETE - Ready for Review & Merge (PR #3658)
 

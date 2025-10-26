@@ -277,9 +277,9 @@ namespace pwiz.Skyline.FileUI
                     PanoramaServer.GetBasicAuthHeader(skyp.ServerMatch.Username, skyp.ServerMatch.Password));
             }
 
-            // HttpClientWithProgress automatically appends download size to progress messages
-            // Download to file
-            httpClient.DownloadFile(skyp.SkylineDocUri, skyp.SafePath);
+            // Use the known file size from .skyp file for accurate progress reporting
+            // If not available, HttpClientWithProgress will try Content-Length header
+            httpClient.DownloadFile(skyp.SkylineDocUri, skyp.SafePath, skyp.Size);
             
             fileSaver.Commit();
         }
