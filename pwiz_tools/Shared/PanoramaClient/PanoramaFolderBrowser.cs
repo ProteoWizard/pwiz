@@ -489,11 +489,11 @@ public class LKContainerBrowser : PanoramaFolderBrowser
                     folderNode.ImageIndex = folderNode.SelectedImageIndex = (int)ImageId.labkey;
                 else
                 {
-                    var effectiveValue = (string)moduleProperties[0][@"effectiveValue"];
+                    var effectiveValue = (string)moduleProperties[0]![@"effectiveValue"];
 
                     folderNode.ImageIndex =
                         folderNode.SelectedImageIndex =
-                            (effectiveValue.Equals(@"Library") || effectiveValue.Equals(@"LibraryProtein"))
+                            (effectiveValue!.Equals(@"Library") || effectiveValue.Equals(@"LibraryProtein"))
                                 ? (int)ImageId.chrom_lib
                                 : (int)ImageId.labkey;
                 }
@@ -546,14 +546,14 @@ public class WebDavBrowser : PanoramaFolderBrowser
                 if ((int)json[@"fileCount"] != 0)
                 {
                     var files = json[@"files"];
-                    foreach (var file in files)
+                    foreach (var file in files!)
                     {
                         var fileName = (string)file[@"text"];
                         var isFile = (bool)file[@"leaf"];
                         if (!isFile)
                         {
                             var canRead = (bool)file[@"canRead"];
-                            if (!canRead || fileName.Equals("assaydata"))
+                            if (!canRead || fileName!.Equals("assaydata"))
                             {
                                 continue;
                             }

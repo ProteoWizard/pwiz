@@ -597,7 +597,7 @@ struct PWIZ_API_DECL RawData
                 // Likely just an empty channel - if there's a real problem the folllowing calls will probably throw too
             }
             analogChannelNames[ch] = cp1252toUtf8(AnalogChromatogramReader.GetChannelDescription(ch));
-            analogChannelUnits[ch] = AnalogChromatogramReader.GetChannelUnits(ch);
+            analogChannelUnits[ch] = cp1252toUtf8(AnalogChromatogramReader.GetChannelUnits(ch));
         }
     }
 };
