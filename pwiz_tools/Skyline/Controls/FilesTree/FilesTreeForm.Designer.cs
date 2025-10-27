@@ -78,6 +78,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             this.openAuditLogMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeAllMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.openPropertiesViewMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.debugRefreshTreeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.panel1.SuspendLayout();
             this.filesTreeContextMenu.SuspendLayout();
@@ -111,7 +112,9 @@ namespace pwiz.Skyline.Controls.FilesTree
             this.openAuditLogMenuItem,
             this.removeAllMenuItem,
             this.removeMenuItem,
+            this.openPropertiesViewMenuItem,
             this.debugRefreshTreeMenuItem});
+          
             this.filesTreeContextMenu.Name = "contextMenuStrip1";
             resources.ApplyResources(this.filesTreeContextMenu, "filesTreeContextMenu");
             // 
@@ -164,6 +167,12 @@ namespace pwiz.Skyline.Controls.FilesTree
             resources.ApplyResources(this.removeMenuItem, "removeMenuItem");
             this.removeMenuItem.Click += new System.EventHandler(this.FilesTree_RemoveMenuItem);
             // 
+            // removeMenuItem
+            // 
+            this.openPropertiesViewMenuItem.Name = "openPropertiesViewMenuItem";
+            resources.ApplyResources(this.openPropertiesViewMenuItem, "openPropertiesViewMenuItem");
+            this.openPropertiesViewMenuItem.Click += new System.EventHandler(this.FilesTree_OpenPropertiesViewMenuItem);
+            //
             // debugRefreshTreeMenuItem
             // 
             this.debugRefreshTreeMenuItem.Name = "debugRefreshTreeMenuItem";
@@ -199,6 +208,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         private System.Windows.Forms.ToolStripMenuItem openAuditLogMenuItem;
         private System.Windows.Forms.ToolStripMenuItem removeAllMenuItem;
         private System.Windows.Forms.ToolStripMenuItem removeMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem openPropertiesViewMenuItem;
         private System.Windows.Forms.ToolStripMenuItem debugRefreshTreeMenuItem;
     }
 }

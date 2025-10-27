@@ -915,6 +915,7 @@ namespace pwiz.Skyline.Menus
         {
             viewTargetsMenuItem.Checked = SkylineWindow.SequenceTreeFormIsVisible;
             viewFilesMenuItem.Checked = SkylineWindow.FilesTreeFormIsVisible;
+            viewPropertiesMenuItem.Checked = SkylineWindow.PropertyGridFormIsVisible;
             viewModificationsMenuItem.DropDownItems.Clear();
             var currentOption = DisplayModificationOption.Current;
             foreach (var opt in DisplayModificationOption.All)
@@ -1087,6 +1088,15 @@ namespace pwiz.Skyline.Menus
         private void ShowFilesWindow(bool isChecked)
         {
             SkylineWindow.ShowFilesTreeForm(isChecked);
+        }
+
+        private void viewPropertiesMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!(sender is ToolStripMenuItem toolStripMenuItem))
+                throw new InvalidOperationException(@"viewPropertiesMenuItem_Click must be triggered by a ToolStripMenuItem");
+
+            var isChecked = toolStripMenuItem.Checked;
+            SkylineWindow.ShowPropertyGridForm(isChecked);
         }
     }
 }

@@ -23,6 +23,7 @@ using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -32,6 +33,7 @@ using pwiz.Skyline.Util;
 using static pwiz.Skyline.Model.Files.FileModel;
 using Debugger = System.Diagnostics.Debugger;
 using Process = System.Diagnostics.Process;
+using RootSkylineObject = pwiz.Skyline.Model.Databinding.Entities.RootSkylineObject;
 
 // CONSIDER: using IdentityPath (and DocNode.ReplaceChild) to simplify replicate name changes
 //           But replicates do not have IdentityPath support because ChromatogramSet does not
@@ -39,7 +41,7 @@ using Process = System.Diagnostics.Process;
 // ReSharper disable WrongIndentSize
 namespace pwiz.Skyline.Controls.FilesTree
 {
-    public partial class FilesTreeForm : DockableFormEx, ITipDisplayer
+    public partial class FilesTreeForm : DockableFormEx, ITipDisplayer, IPropertyProvider
     {
         private NodeTip _nodeTip;
         private Panel _dropTargetRemove;
@@ -61,6 +63,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             filesTree.RestoredFromPersistentString = false;
             filesTree.NodeMouseDoubleClick += FilesTree_TreeNodeMouseDoubleClick;
             filesTree.MouseDown += FilesTree_MouseDown;
+            filesTree.AfterSelect += FilesTree_AfterSelect;
             filesTree.MouseMove += FilesTree_MouseMove;
             filesTree.MouseLeave += FilesTree_MouseLeave;
             filesTree.LostFocus += FilesTree_LostFocus;
@@ -404,6 +407,17 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         #endregion
 
+        #region IPropertyProvider implementation
+
+        public RootSkylineObject GetPropertyObject()
+        {
+            var selectedNode = FilesTree.SelectedNodeFTN;
+            var dataSchema = new SkylineWindowDataSchema(SkylineWindow);
+            return selectedNode?.Model.PropertyObjectInstancer(dataSchema, selectedNode.LocalFilePath);
+        }
+
+        #endregion
+
         // TreeNode => Open Context Menu
         private void FilesTree_ContextMenuStrip_Opening(object sender, CancelEventArgs e)
         {
@@ -492,6 +506,11 @@ namespace pwiz.Skyline.Controls.FilesTree
             }
         }
 
+        private void FilesTree_AfterSelect(object sender, TreeViewEventArgs e)
+        {
+            SkylineWindow.PropertyProviderSelectionChanged(this);
+        }
+        
         private void FilesTree_BeforeCollapse(object sender, TreeViewCancelEventArgs e)
         {
             // CONSIDER: change FilesTree UI so the root node is a label and not
@@ -543,6 +562,11 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             var selection = FilesTree.SelectedNodes.Cast<FilesTreeNode>().ToList();
             RemoveSelected(selection);
+        }
+
+        private void FilesTree_OpenPropertiesViewMenuItem(object sender, EventArgs e)
+        {
+            SkylineWindow.ShowPropertyGridForm(true);
         }
 
         // FilesTree => initiate drag-and-drop, hide tooltips 

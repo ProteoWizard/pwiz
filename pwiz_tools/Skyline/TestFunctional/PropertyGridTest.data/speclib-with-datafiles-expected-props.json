@@ -1,0 +1,17 @@
+{
+  "SpectralLibrary": {
+    "Name": "DatafileExample",
+    "DataFiles": "2",
+    "LibraryType": "BiblioSpec Library",
+    "FilePath": "C:\\Users\\acban\\proj\\pwiz\\pwiz_tools\\Skyline\\SkylineTester Results\\PropertyGridTest\\Ms1FilterTutorial.blib",
+    "LocalFilePath": "C:\\Users\\acban\\proj\\pwiz\\pwiz_tools\\Skyline\\SkylineTester Results\\PropertyGridTest\\Ms1FilterTutorial.blib",
+    "SpectrumCount": "552",
+    "TotalPsmCount": "813",
+    "UniquePeptideCount": "537",
+    "Id": "urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:nr:Ms1FilterTutorial",
+    "Revision": "1",
+    "Version": "11",
+    "ScoreType": "ProteinPilot confidence",
+    "ScoreThreshold": "0"
+  }
+}
