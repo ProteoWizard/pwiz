@@ -54,6 +54,16 @@ namespace pwiz.Skyline.Controls
             SkylineWindow.UpdatePropertyGrid();
         }
 
+        private void PropertyGridForm_KeyDown(object sender, KeyEventArgs e)
+        {
+            switch (e.KeyCode)
+            {
+                case Keys.Escape:
+                    SkylineWindow.FocusDocument();
+                    break;
+            }
+        }
+
         #region Test Support
 
         public GridItem GetGridItemByPropName(string name)

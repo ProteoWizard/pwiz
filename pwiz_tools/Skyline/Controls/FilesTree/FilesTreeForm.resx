@@ -369,7 +369,4 @@
   <data name="openPropertiesViewMenuItem.Text" xml:space="preserve">
     <value>Properties</value>
   </data>
-  <data name="openPropertiesViewMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
-	  <value>F4</value>
-  </data>
 </root>

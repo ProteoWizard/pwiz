@@ -38,12 +38,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             LibraryType = libSpec.GetLibraryTypeName();
             FilePath = libSpec.FilePath;
             SpectrumCount = libDetails.SpectrumCount;
-            TotalPsmCount = libDetails.TotalPsmCount;
             UniquePeptideCount = libDetails.UniquePeptideCount;
             Id = libDetails.Id;
             Revision = libDetails.Revision;
             Version = libDetails.Version;
             DataFiles = libDataFiles.Count;
+            if (DataFiles > 0)
+                TotalPsmCount = libDetails.TotalPsmCount;
 
             // if all data files have the same score type and threshold, use those values, otherwise null
             ScoreType = null;
@@ -71,7 +72,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public string FilePath { get; }
         public string LocalFilePath { get; }
         public int SpectrumCount { get; }
-        public int TotalPsmCount { get; }
+        public int? TotalPsmCount { get; }
         public int UniquePeptideCount { get; }
         public string Id { get; }
         public string Revision { get; }

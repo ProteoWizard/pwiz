@@ -1098,7 +1098,7 @@ namespace pwiz.Skyline
                     SequenceTree.UseKeysOverride = false;
                     return true;
                 case Keys.F4:
-                    ShowPropertyGridForm(show: !(_propertyGridForm is { Visible: true }));
+                    ShowPropertyGridForm(show: true);
                     return true;
             }
             return base.ProcessCmdKey(ref msg, keyData);

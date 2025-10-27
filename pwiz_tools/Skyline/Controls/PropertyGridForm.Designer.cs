@@ -43,6 +43,7 @@ namespace pwiz.Skyline.Controls
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.propertyGrid);
             this.Name = "PropertyGridForm";
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.PropertyGridForm_KeyDown);
             this.ResumeLayout(false);
 
         }

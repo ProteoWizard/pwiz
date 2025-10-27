@@ -154,9 +154,6 @@
   <data name="propertiesContextMenuItem.Text" xml:space="preserve">
     <value>Properties</value>
   </data>
-  <data name="propertiesContextMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
-	  <value>F4</value>
-  </data>
   <data name="pasteContextMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Fuchsia</value>
   </data>
