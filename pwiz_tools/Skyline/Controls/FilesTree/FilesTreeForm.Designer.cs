@@ -1,4 +1,4 @@
-﻿
+
 namespace pwiz.Skyline.Controls.FilesTree
 {
     public partial class FilesTreeForm
