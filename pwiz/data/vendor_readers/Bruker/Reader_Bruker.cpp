@@ -223,7 +223,7 @@ void fillInMetadata(const bfs::path& rootpath, MSData& msd, Reader_Bruker_Format
 
 
 PWIZ_API_DECL
-void Reader_Bruker::read(const string& filename,
+void Reader_Bruker::read(const string& filenameIn,
                          const string& head,
                          MSData& result,
                          int runIndex,
@@ -231,6 +231,8 @@ void Reader_Bruker::read(const string& filename,
 {
     if (runIndex != 0)
         throw ReaderFail("[Reader_Bruker::read] multiple runs not supported");
+
+    string filename = get_non_unicode_path(filenameIn); // Try to convert to Windows 8.3 short path if necessary - Bruker reader doesn't like Unicode in filenames
 
     Reader_Bruker_Format format = Bruker::format(filename);
     if (format == Reader_Bruker_Format_Unknown)

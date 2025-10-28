@@ -23,6 +23,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Linq;
 using pwiz.Common.SystemUtil.PInvoke;
+using System.Text;
 
 namespace pwiz.Common.SystemUtil
 {
@@ -105,7 +106,7 @@ namespace pwiz.Common.SystemUtil
         /// <summary>
         /// Environment variable which can be used to override <see cref="GetDownloadsPath"/>.
         /// </summary>
-        private const string SKYLINE_DOWNLOAD_PATH = @"SKYLINE_DOWNLOAD_PATH";
+        public const string SKYLINE_DOWNLOAD_PATH = @"SKYLINE_DOWNLOAD_PATH";
 
         // From http://stackoverflow.com/questions/3795023/downloads-folder-not-special-enough
         // Get the path for the Downloads directory, avoiding the assumption that it's under the 
@@ -376,6 +377,38 @@ namespace pwiz.Common.SystemUtil
             return result;
         }
 
+        /// <summary>
+        /// Like PathEx.GetRandomFileName(), but tries to ensure that no unicode characters are in the name
+        /// </summary>
+        /// <returns>a random filename containing only ASCII characters</returns>
+        public static string GetNonUnicodeRandomFileName()
+        {
+            var result = PathEx.GetRandomFileName();
+            if (!result.Any(c => c < 32 || c > 126))
+            {
+                return result;
+            }
+            var sb = new StringBuilder(result.Length);
+            var random = new Random();
+            foreach (var c in result)
+            {
+                if (c < 32 || c > 126)
+                {
+                    var rc = (char)random.Next(32, 127);
+                    while (!IsValidFilenameChar(rc))
+                    {
+                        rc = (char)random.Next(32, 127);
+                    }
+                    sb.Append(rc);
+                }
+                else
+                {
+                    sb.Append(c);
+                }
+            }
+            return sb.ToString();
+        }
+
         // Test framework can set this to something like  @""t^m&p 试验" to help check our handling of unusual filename characters
         public static string RandomFileNameDecoration { get; set; }
 
@@ -394,6 +427,58 @@ namespace pwiz.Common.SystemUtil
             }
             return fileName;
         }
+
+        /// <summary>
+        /// We often encounter tools that can't deal with Unicode characters in file paths, this method
+        /// will try to convert such paths to a non-Unicode version using the 8.3 format short path name.
+        /// Converts only the segments that need it, to avoid trashing filename extensions.
+        /// e.g. "C:\Program Files\Common Files\my files with ünicode\foo.mzml" (note the umlaut U) => ""C:\Program Files\Common Files\MYFILE~1\foo.mzml"
+        ///
+        /// Only works on NTFS volumes, with 8.3 support enabled. So, for example, not on Docker instances.
+        /// </summary>
+        /// <param name="path">Path to an existing file</param>
+        /// <returns>Path with unicode segments changed to 8.3 representation, if possible</returns>    
+        public static string GetNonUnicodePath(string path)
+        {
+            if (string.IsNullOrEmpty(path))
+            {
+                return path;
+            }
+
+            // Check for non-printable or non-ASCII characters
+            var hasNonAscii = path.Any(c => c < 32 || c > 126);
+            if (!hasNonAscii)
+            {
+                return path;
+            }
+
+            var fullPath = Path.GetFullPath(path);
+            var segments = fullPath.Split(new[] { Path.DirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
+            var currentPath = segments[0] + Path.DirectorySeparatorChar; // Root directory
+
+            foreach (var segment in segments.Skip(1))
+            {
+                var nextPath = Path.Combine(currentPath, segment);
+
+                // Replace segment with 8.3 short name only if it contains non-ASCII
+                var needsShort = segment.Any(c => c < 32 || c > 126);
+                if (needsShort && (Directory.Exists(nextPath) || File.Exists(nextPath)))
+                {
+                    var sb = new StringBuilder(260);
+                    var result = Kernel32.GetShortPathName(nextPath, sb, sb.Capacity);
+                    if (result > 0)
+                    {
+                        var shortSegment = Path.GetFileName(sb.ToString());
+                        nextPath = Path.Combine(currentPath, shortSegment);
+                    }
+                }
+
+                currentPath = nextPath;
+            }
+
+            return currentPath;
+        }
+
     }
 
     /// <summary>
