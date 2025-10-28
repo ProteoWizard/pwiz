@@ -782,7 +782,7 @@ namespace pwiz.Common.SystemUtil
                     NetworkFailureType.Timeout, uri, root);
 
             // No network available
-            if (root is NoNetworkTestException || !NetworkInterface.GetIsNetworkAvailable())
+            if (root is NoNetworkTestException || !IsNetworkReallyAvailable())
                 return new NetworkRequestException(
                     MessageResources.HttpClientWithProgress_MapHttpException_No_network_connection_detected__Please_check_your_internet_connection_and_try_again_, 
                     NetworkFailureType.NoConnection, uri, root);
@@ -872,6 +872,30 @@ namespace pwiz.Common.SystemUtil
             }
 
             return root;
+        }
+
+        public static bool IsNetworkReallyAvailable()
+        {
+            if (!NetworkInterface.GetIsNetworkAvailable())
+                return false;
+
+            foreach (NetworkInterface ni in NetworkInterface.GetAllNetworkInterfaces())
+            {
+                // Skip non-operational, loopback, and tunnel interfaces
+                if ((ni.OperationalStatus != OperationalStatus.Up) ||
+                    (ni.NetworkInterfaceType == NetworkInterfaceType.Loopback) ||
+                    (ni.NetworkInterfaceType == NetworkInterfaceType.Tunnel))
+                    continue;
+
+                // Skip virtual adapters
+                if ((ni.Description.IndexOf("virtual", StringComparison.OrdinalIgnoreCase) >= 0) ||
+                    (ni.Name.IndexOf("virtual", StringComparison.OrdinalIgnoreCase) >= 0))
+                    continue;
+
+                return true;
+            }
+
+            return false;
         }
 
         public void Dispose()
