@@ -123,7 +123,7 @@ namespace pwiz.PanoramaClient
         /// </summary>
         private JToken GetJson(Uri queryUri)
         {
-            using (var requestHelper = new PanoramaRequestHelper(new LabkeySessionWebClient(FolderBrowser.GetActiveServer())))
+            using (var requestHelper = new HttpPanoramaRequestHelper(FolderBrowser.GetActiveServer()))
             {
                 JToken json = requestHelper.Get(queryUri);
                 return json;

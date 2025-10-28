@@ -77,7 +77,7 @@ namespace AutoQCTest
             // Create the directory that AutoQC Loader will monitor for raw files
             var folderToWatch = CreateRawDataDir();
 
-            _panoramaClient = new WebPanoramaClient(new Uri(TestUtils.PANORAMAWEB), TestUtils.PANORAMAWEB_USER, _panoramaWebPassword);
+            _panoramaClient = new WebPanoramaClient(new Uri(TestUtils.PANORAMAWEB), TestUtils.GetPanoramaWebUsername(), _panoramaWebPassword);
 
             // Create a test folder on PanoramaWeb
             _panoramaWebTestFolder = TestUtils.CreatePanoramaWebTestFolder(_panoramaClient, TestUtils.PANORAMAWEB_TEST_FOLDER, "Test");
@@ -98,7 +98,7 @@ namespace AutoQCTest
                 newConfigForm.SelectPanoramaTab();
                 newConfigForm.CheckUploadToPanorama(); // Enable upload to Panorama
                 newConfigForm.SetPanoramaServer(TestUtils.PANORAMAWEB);
-                newConfigForm.SetPanoramaUser(TestUtils.PANORAMAWEB_USER);
+                newConfigForm.SetPanoramaUser(TestUtils.GetPanoramaWebUsername());
                 newConfigForm.SetPanoramaPassword(_panoramaWebPassword);
                 newConfigForm.SetPanoramaFolder(_panoramaWebTestFolder);
                 newConfigForm.ClickSave();

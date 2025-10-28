@@ -100,6 +100,123 @@ throw new InvalidOperationException($@"Invalid state: {_currentState}");
 
 Add the comment `// Text for debugging only` or `// Exception text for internal diagnostics, not displayed to user` to document that the string is intentionally non-localized.
 
+## File I/O patterns
+
+### FileSaver for atomic file writes
+**Always use `FileSaver` when writing to disk to avoid partially written corrupted files.**
+
+`FileSaver` (from `pwiz.Common.SystemUtil`) implements the atomic file write pattern:
+1. Writes to a temporary file (`.tmp` extension)
+2. Only renames to the final destination when `Commit()` is called
+3. Automatically deletes the temp file if `Dispose()` is called without `Commit()`
+
+This ensures that if a write operation fails (exception, crash, power loss), the destination file is either:
+- Completely written (success case)
+- Untouched (failure case)
+
+**Never** a partially written corrupted file.
+
+#### Standard usage pattern
+
+```csharp
+using (var fileSaver = new FileSaver(destinationPath))
+{
+    // Write to fileSaver.SafeName (the temp file path)
+    File.WriteAllText(fileSaver.SafeName, content);
+    
+    // Or use with streams
+    using (var writer = new StreamWriter(fileSaver.SafeName))
+    {
+        writer.WriteLine(content);
+    }
+    
+    // Only commit if all writes succeeded
+    // If an exception occurs before this, Dispose() auto-cleans the temp file
+    fileSaver.Commit();
+}
+// After using block: destination file now exists with complete content
+```
+
+#### With exception handling
+
+```csharp
+try
+{
+    using (var fileSaver = new FileSaver(downloadPath))
+    {
+        // Perform file operations on fileSaver.SafeName
+        DownloadToFile(url, fileSaver.SafeName);
+        
+        // Only commit if download succeeded
+        fileSaver.Commit();
+    }
+    return true;
+}
+catch (Exception e)
+{
+    // No need to manually delete temp file - FileSaver.Dispose() already cleaned it up
+    // No need to delete destination - it was never created
+    
+    // Automatically handles programming defects (reports as bugs) vs user errors (shows MessageDlg)
+    ExceptionUtil.DisplayOrReportException(this, e);
+    return false;
+}
+```
+
+**With complex error handling:**
+
+```csharp
+try
+{
+    using (var fileSaver = new FileSaver(downloadPath))
+    {
+        DownloadToFile(url, fileSaver.SafeName);
+        fileSaver.Commit();
+    }
+    return true;
+}
+catch (Exception e)
+{
+    // Re-throw programming defects for bug reporting
+    if (ExceptionUtil.IsProgrammingDefect(e))
+        throw;
+    
+    // Complex handling for expected errors (e.g., check HTTP status codes)
+    var statusCode = GetHttpStatusCode(e);
+    if (statusCode == HttpStatusCode.NotFound)
+    {
+        MessageDlg.ShowWithException(this, 
+            Resources.Error_FileNotFound, e);
+    }
+    else
+    {
+        MessageDlg.ShowException(this, e);
+    }
+    return false;
+}
+```
+
+#### Key points
+- `fileSaver.SafeName` is the temp file path to write to
+- Call `fileSaver.Commit()` only after all writes succeed
+- `FileSaver` is `IDisposable` - always use with `using` statement
+- If `Dispose()` is called without `Commit()`, temp file is automatically deleted
+- Destination file is never touched until `Commit()` succeeds
+- No need to manually delete files on error paths - `FileSaver` handles cleanup
+
+#### Common mistake to avoid
+```csharp
+// BAD - directly writes to destination, risks corruption
+File.WriteAllText(destinationPath, content);
+
+// GOOD - uses FileSaver for atomic write
+using (var fileSaver = new FileSaver(destinationPath))
+{
+    File.WriteAllText(fileSaver.SafeName, content);
+    fileSaver.Commit();
+}
+```
+
 ## Naming conventions (mirrors ReSharper rules)
 - Private instance fields: prefix with `_` and use `camelCase` (e.g., `_filePath`).
 - Private static fields: prefix with `_` and use `camelCase`.

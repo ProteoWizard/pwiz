@@ -24,7 +24,6 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.SystemUtil;
@@ -238,6 +237,14 @@ namespace pwiz.PanoramaClient
             return GetIfErrorInResponse(e.Response);
         }
 
+        public static LabKeyError GetErrorFromNetworkRequestException(NetworkRequestException e)
+        {
+            if (e == null || string.IsNullOrEmpty(e.ResponseBody)) return null;
+            
+            // NetworkRequestException may contain a JSON response body with LabKey-specific error details
+            return GetIfErrorInResponse(e.ResponseBody);
+        }
+
         public static LabKeyError GetIfErrorInResponse(JObject jsonResponse)
         {
             if (jsonResponse?[@"exception"] != null)
@@ -446,7 +453,8 @@ namespace pwiz.PanoramaClient
 
         private PanoramaServerException(string message, Exception e) : base(message, e)
         {
-            HttpStatus = ((e as WebException)?.Response as HttpWebResponse)?.StatusCode;
+            HttpStatus = ((e as WebException)?.Response as HttpWebResponse)?.StatusCode 
+                         ?? (e as NetworkRequestException)?.StatusCode;
         }
 
         public static PanoramaServerException Create(string message, Uri uri, string response, Exception e)
@@ -469,6 +477,26 @@ namespace pwiz.PanoramaClient
                 .LabKeyError(getLabKeyError(e)); // Will read the WebException's Response property.
 
             return CreateWithResponseDisposal(errorMessageBuilder.ToString(), e);
+        }
+
+        public static PanoramaServerException CreateWithResponseDisposal(string message, Uri uri, Func<NetworkRequestException, LabKeyError> getLabKeyError, NetworkRequestException e)
+        {
+            var labKeyError = getLabKeyError?.Invoke(e);
+            var errorMessageBuilder = new ErrorMessageBuilder(message)
+                .Uri(uri);
+
+            // Only include the exception message if there's no LabKey error
+            // When there's a LabKey error, it's more specific and we don't want to duplicate with generic exception message
+            if (labKeyError != null)
+            {
+                errorMessageBuilder.LabKeyError(labKeyError);
+            }
+            else
+            {
+                errorMessageBuilder.ExceptionMessage(e.Message);
+            }
+
+            return new PanoramaServerException(errorMessageBuilder.ToString(), e);
         }
 
         private static PanoramaServerException CreateWithResponseDisposal(string message, Uri uri, string response, WebException e)
@@ -634,139 +662,8 @@ namespace pwiz.PanoramaClient
         }
     }
 
-    public class UTF8WebClient : WebClient
-    {
-        public UTF8WebClient()
-        {
-            Encoding = Encoding.UTF8;
-        }
-    }
 
-    public class LabkeySessionWebClient : UTF8WebClient
-    {
-        private CookieContainer _cookies = new CookieContainer();
-        private string _csrfToken;
-        private readonly Uri _serverUri;
-    
-        private const string LABKEY_CSRF = @"X-LABKEY-CSRF";
-    
-        public LabkeySessionWebClient(PanoramaServer server)
-        {
-            if (server == null)
-            {
-                throw new ArgumentNullException(nameof(server));
-            }
-            // Add the Authorization header only if a username and password is provided. Otherwise, the request will fail.
-            // Prior to LK 24.11 a call that failed authentication would proceed as an unauthenticated user
-            if (server.HasUserAccount())
-            {
-                Headers.Add(HttpRequestHeader.Authorization, server.AuthHeader);
-            }
 
-            _serverUri = server.URI;
-        }
-
-        protected override WebRequest GetWebRequest(Uri address)
-        {
-            var request = base.GetWebRequest(address);
-
-            if (request is HttpWebRequest httpWebRequest)
-            {
-                httpWebRequest.CookieContainer = _cookies;
-    
-                if (request.Method == PanoramaUtil.FORM_POST && !string.IsNullOrEmpty(_csrfToken))
-                {
-                    // All POST requests to LabKey Server will be checked for a CSRF token
-                    request.Headers.Add(LABKEY_CSRF, _csrfToken);
-
-                }
-            }
-            return request;
-        }
-    
-        protected override WebResponse GetWebResponse(WebRequest request)
-        {
-            var response = base.GetWebResponse(request);
-            if (response is HttpWebResponse httpResponse)
-            {
-                GetCsrfToken(httpResponse, request.RequestUri);
-            }
-            return response;
-        }
-    
-        private void GetCsrfToken(HttpWebResponse response, Uri requestUri)
-        {
-            if (!string.IsNullOrEmpty(_csrfToken))
-            {
-                return;
-            }
-
-            var csrf = GetCsrfCookieFromResponse(response);
-            if (csrf == null)
-            {
-                // If we did not find it in the Response cookies look in the Request cookies.
-                // org.labkey.api.util.CSRFUtil.getExpectedToken() will not add the CSRF cookie to the response if the cookie
-                // is already there in the request cookies.
-                // An example of where this can happen is WebPanoramaClient.SendZipFile(). This uses one instance of the web client
-                // to do multiple requests. Normally the first request (getPipelineContainer) retrieves the CSRF token from the response
-                // cookies and saves it for any future requests. But this request may get redirected(302) because the Panorama folder was 
-                // renamed, and if that happens the response cookies get copied to the request's cookie container, and CSRFUtil.getExpectedToken
-                // does not add a response cookie because it sees the CSRF cookie in the request cookies. So when we look for the CSRF cookie
-                // in the response after the redirected request returns we don't find it. But we can find it in the request cookies.
-                csrf = GetCsrfCookieFromRequest(requestUri);
-            }
-            if (csrf != null)
-            {
-                // The server set a cookie called X-LABKEY-CSRF, get its value
-                _csrfToken = csrf.Value;
-            }
-        }
-
-        private Cookie GetCsrfCookieFromResponse(HttpWebResponse response)
-        {
-            return response.Cookies[LABKEY_CSRF];
-        }
-
-        private Cookie GetCsrfCookieFromRequest(Uri requestUri)
-        {
-            return _cookies.GetCookies(requestUri)[LABKEY_CSRF];
-        }
-
-        public void GetCsrfTokenFromServer()
-        {
-            if (string.IsNullOrEmpty(_csrfToken))
-            {
-                // After making this request the client should have the X-LABKEY-CSRF token 
-                DownloadString(new Uri(_serverUri, PanoramaUtil.ENSURE_LOGIN_PATH));
-            }
-        }
-
-        public void ClearCsrfToken()
-        {
-            _csrfToken = null;
-        }
-    }
-
-    public class NonStreamBufferingWebClient : LabkeySessionWebClient
-    {
-        public NonStreamBufferingWebClient(PanoramaServer server)
-            : base(server)
-        {
-        }
-
-        protected override WebRequest GetWebRequest(Uri address)
-        {
-            var request = base.GetWebRequest(address);
-
-            var httpWebRequest = request as HttpWebRequest;
-            if (httpWebRequest != null)
-            {
-                httpWebRequest.Timeout = Timeout.Infinite;
-                httpWebRequest.AllowWriteStreamBuffering = false;
-            }
-            return request;
-        }
-    }
 
     public class PanoramaServer : Immutable
     {

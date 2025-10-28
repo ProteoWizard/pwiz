@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Net;
 using System.Text;
@@ -26,7 +27,7 @@ namespace pwiz.PanoramaClient
 
     public abstract class AbstractRequestHelper : IRequestHelper
     {
-        private const string APPLICATION_JSON = @"application/json";
+        protected const string APPLICATION_JSON = @"application/json";
 
 
         #region IRequestHelper methods
@@ -70,6 +71,12 @@ namespace pwiz.PanoramaClient
             {
                 throw NewPanoramaServerException(messageOnError, uri, @"GET", e);
             }
+            catch (NetworkRequestException e)
+            {
+                // HttpPanoramaRequestHelper throws NetworkRequestException instead of WebException
+                messageOnError ??= string.Format(Resources.AbstractRequestHelper_DoRequest__0__request_was_unsuccessful_, @"GET");
+                throw PanoramaServerException.CreateWithResponseDisposal(messageOnError, uri, PanoramaUtil.GetErrorFromNetworkRequestException, e);
+            }
         }
 
         private PanoramaServerException NewPanoramaServerException(string messageOnError, Uri uri, string requestMethod, WebException e)
@@ -110,6 +117,12 @@ namespace pwiz.PanoramaClient
             catch (WebException e)
             {
                 throw NewPanoramaServerException(messageOnError, uri, @"POST", e);
+            }
+            catch (NetworkRequestException e)
+            {
+                // HttpPanoramaRequestHelper throws NetworkRequestException instead of WebException
+                messageOnError ??= string.Format(Resources.AbstractRequestHelper_DoRequest__0__request_was_unsuccessful_, @"POST");
+                throw PanoramaServerException.CreateWithResponseDisposal(messageOnError, uri, PanoramaUtil.GetErrorFromNetworkRequestException, e);
             }
         }
 
@@ -193,119 +206,283 @@ namespace pwiz.PanoramaClient
         }
     }
 
-    public class PanoramaRequestHelper : AbstractRequestHelper
+    /// <summary>
+    /// RequestHelper implementation using HttpClientWithProgress for all network operations.
+    /// Manages cookies and CSRF tokens for LabKey Server session management.
+    /// </summary>
+    public class HttpPanoramaRequestHelper : AbstractRequestHelper
     {
-        private readonly LabkeySessionWebClient _client;
-        
-        public PanoramaRequestHelper(LabkeySessionWebClient webClient)
+        private readonly CookieContainer _cookies;
+        private readonly Uri _serverUri;
+        private string _csrfToken;
+        private IProgressMonitor _progressMonitor;
+        private IProgressStatus _progressStatus;
+        private const string LABKEY_CSRF = @"X-LABKEY-CSRF";
+        private readonly PanoramaServer _server;
+        private readonly Dictionary<string, string> _customHeaders = new Dictionary<string, string>();
+        private bool _requestJsonResponse;
+
+        public HttpPanoramaRequestHelper(PanoramaServer server, IProgressMonitor progressMonitor = null, IProgressStatus progressStatus = null)
         {
-            _client = webClient;
+            _server = server;
+            _serverUri = server.URI;
+            _cookies = new CookieContainer();
+            _progressMonitor = progressMonitor;
+            _progressStatus = progressStatus;
         }
 
         public override string DoGet(Uri uri)
         {
-            return _client.DownloadString(uri);
-        }
-
-        public override void AddHeader(string name, string value)
-        {
-            _client.Headers.Add(name, value);
-        }
-
-        public override void AddHeader(HttpRequestHeader header, string value)
-        {
-            _client.Headers.Add(header, value);
-        }
-
-        public override void RemoveHeader(string name)
-        {
-            _client.Headers.Remove(name);
+            using var httpClient = CreateHttpClient();
+            return httpClient.DownloadString(uri);
         }
 
         public override byte[] DoPost(Uri uri, NameValueCollection postData)
         {
-            return _client.UploadValues(uri, PanoramaUtil.FORM_POST, postData);
-        }
-
-        public override string DoPost(Uri uri, string postData)
-        {
-            return _client.UploadString(uri, PanoramaUtil.FORM_POST, postData);
-        }
-
-
-        protected override JObject Post(Uri uri, NameValueCollection postData, string postDataString, string messageOnError)
-        {
             try
             {
-                _client.GetCsrfTokenFromServer();
-            }
-            catch (WebException e)
-            {
-                throw PanoramaServerException.CreateWithResponseDisposal(
-                    Resources.PanoramaRequestHelper_Post_There_was_an_error_getting_a_CSRF_token_from_the_server_,
-                    uri,
-                    GetErrorFromException,
-                    e);
-            }
+                // Ensure we have a CSRF token before POST
+                GetCsrfTokenFromServer();
 
-            try
-            {
-                return base.Post(uri, postData, postDataString, messageOnError);
-            }
-            catch (PanoramaServerException e)
-            {
-                if (e.HttpStatus == HttpStatusCode.Unauthorized)
+                using var httpClient = CreateHttpClient();
+                
+                // Add CSRF token header for all POST requests
+                if (!string.IsNullOrEmpty(_csrfToken))
                 {
-                    // Clear the CSRF token if there is an authentication error. We may need to just get a new token and try the request again.
-                    // An example is the PanoramaPinger class in the AutoQC project that sends a POST request to the Panorama server every few minutes.
-                    _client.ClearCsrfToken();
+                    httpClient.AddHeader(LABKEY_CSRF, _csrfToken);
+                }
+
+                // Convert NameValueCollection to URL-encoded form data
+                var formData = new StringBuilder();
+                foreach (string key in postData.Keys)
+                {
+                    if (formData.Length > 0)
+                        formData.Append("&");
+                    formData.Append(Uri.EscapeDataString(key));
+                    formData.Append("=");
+                    formData.Append(Uri.EscapeDataString(postData[key] ?? string.Empty));
+                }
+
+                return Encoding.UTF8.GetBytes(httpClient.UploadString(uri, PanoramaUtil.FORM_POST, formData.ToString()));
+            }
+            catch (NetworkRequestException ex)
+            {
+                // Clear CSRF token on 401 errors - we may need a fresh token
+                if (ex.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    ClearCsrfToken();
                 }
                 throw;
             }
         }
 
-        public override string GetResponse(HttpWebRequest request)
+        public override string DoPost(Uri uri, string postData)
         {
-            return PanoramaUtil.GetResponseString(request.GetResponse());
-        }
+            try
+            {
+                // Ensure we have a CSRF token before POST
+                GetCsrfTokenFromServer();
 
-        public override LabKeyError GetErrorFromException(WebException e)
-        {
-            return PanoramaUtil.GetErrorFromWebException(e);
+                using var httpClient = CreateHttpClient();
+                
+                // Add CSRF token header for all POST requests
+                if (!string.IsNullOrEmpty(_csrfToken))
+                {
+                    httpClient.AddHeader(LABKEY_CSRF, _csrfToken);
+                }
+
+                // Check if a custom Content-Type was set (e.g., application/json for API calls)
+                // Note: HttpRequestHeader.ContentType.ToString() returns "ContentType" (no hyphen)
+                // Also check "Content-Type" in case it was added via string overload
+                string contentType = @"application/x-www-form-urlencoded"; // Default for form posts
+                if (_customHeaders.TryGetValue(HttpRequestHeader.ContentType.ToString(), out var customContentType) ||
+                    _customHeaders.TryGetValue("Content-Type", out customContentType))
+                {
+                    contentType = customContentType;
+                }
+
+                return httpClient.UploadString(uri, PanoramaUtil.FORM_POST, postData, contentType);
+            }
+            catch (NetworkRequestException ex)
+            {
+                // Clear CSRF token on 401 errors - we may need a fresh token
+                if (ex.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    ClearCsrfToken();
+                }
+                throw;
+            }
         }
 
         public override void DoAsyncFileUpload(Uri address, string method, string fileName)
         {
-            _client.UploadFileAsync(address, method, fileName);
+            // Add CSRF token for upload if needed
+            if (method.Equals(PanoramaUtil.FORM_POST, StringComparison.OrdinalIgnoreCase) && string.IsNullOrEmpty(_csrfToken))
+            {
+                GetCsrfTokenFromServer();
+            }
+
+            try
+            {
+                using var httpClient = CreateHttpClient();
+                
+                // Add CSRF token header if available
+                if (!string.IsNullOrEmpty(_csrfToken))
+                {
+                    httpClient.AddHeader(LABKEY_CSRF, _csrfToken);
+                }
+
+                // UploadFile with response body - LabKey can return errors in JSON even with HTTP 200
+                string responseBody = httpClient.UploadFileWithResponse(address, method, fileName);
+
+                // Check for LabKey errors in the response body
+                // This handles the case where LabKey returns HTTP 200 but includes an error in the JSON
+                if (_requestJsonResponse && !string.IsNullOrEmpty(responseBody))
+                {
+                    var labKeyError = PanoramaUtil.GetIfErrorInResponse(responseBody);
+                    if (labKeyError != null)
+                    {
+                        throw new PanoramaServerException(
+                            new ErrorMessageBuilder(Resources.AbstractPanoramaClient_UploadTempZipFile_There_was_an_error_uploading_the_file_)
+                                .Uri(address)
+                                .LabKeyError(labKeyError).ToString());
+                    }
+                }
+            }
+            catch (NetworkRequestException ex)
+            {
+                // NetworkRequestException already has the response body - check for LabKey errors
+                var labKeyError = PanoramaUtil.GetErrorFromNetworkRequestException(ex);
+                if (labKeyError != null)
+                {
+                    // Re-throw with LabKey error details
+                    throw PanoramaServerException.CreateWithResponseDisposal(
+                        Resources.AbstractPanoramaClient_UploadTempZipFile_There_was_an_error_uploading_the_file_,
+                        address,
+                        PanoramaUtil.GetErrorFromNetworkRequestException,
+                        ex);
+                }
+                throw;
+            }
+        }
+
+        private HttpClientWithProgress CreateHttpClient()
+        {
+            var httpClient = new HttpClientWithProgress(_progressMonitor, _progressStatus, _cookies);
+            
+            // Add authorization header if credentials are available
+            if (_server.HasUserAccount())
+            {
+                httpClient.AddAuthorizationHeader(_server.AuthHeader);
+            }
+
+            // Add any custom headers that were set via AddHeader()
+            // Skip Content-Type here - it must be set on HttpContent, not DefaultRequestHeaders
+            foreach (var header in _customHeaders)
+            {
+                if (header.Key != HttpRequestHeader.ContentType.ToString() && header.Key != "Content-Type")
+                {
+                    httpClient.AddHeader(header.Key, header.Value);
+                }
+            }
+
+            // Add Accept: application/json if requested
+            if (_requestJsonResponse)
+            {
+                httpClient.AddHeader("Accept", APPLICATION_JSON);
+            }
+
+            return httpClient;
+        }
+
+        private void GetCsrfTokenFromServer()
+        {
+            if (string.IsNullOrEmpty(_csrfToken))
+            {
+                // Make a request to get the CSRF token from the server
+                // After this, the token will be in the cookie container
+                using var httpClient = CreateHttpClient();
+                httpClient.DownloadString(new Uri(_serverUri, PanoramaUtil.ENSURE_LOGIN_PATH));
+                
+                // Extract the CSRF token from cookies
+                // GetCookie() returns the cookie value as a string
+                _csrfToken = httpClient.GetCookie(new Uri(_serverUri, "/"), LABKEY_CSRF);
+            }
+        }
+
+        public void ClearCsrfToken()
+        {
+            _csrfToken = null;
+        }
+
+        public override void AddHeader(string name, string value)
+        {
+            _customHeaders[name] = value;
+        }
+
+        public override void AddHeader(HttpRequestHeader header, string value)
+        {
+            _customHeaders[header.ToString()] = value;
+        }
+
+        public override void RemoveHeader(string name)
+        {
+            _customHeaders.Remove(name);
+        }
+
+        public new void RequestJsonResponse()
+        {
+            _requestJsonResponse = true;
         }
 
         public override void CancelAsyncUpload()
         {
-            _client.CancelAsync();
+            // Cancellation is handled via IProgressMonitor.IsCanceled
+            // No async operations to cancel - uploads are synchronous with progress callbacks
         }
 
         public override void AddUploadFileCompletedEventHandler(UploadFileCompletedEventHandler handler)
         {
-            _client.UploadFileCompleted += handler;
+            // No-op: HttpClientWithProgress uses synchronous uploads with IProgressMonitor
+            // Event handlers are not needed since UploadFile() blocks until complete
         }
 
         public override void AddUploadProgressChangedEventHandler(UploadProgressChangedEventHandler handler)
         {
-            _client.UploadProgressChanged += handler;
+            // No-op: HttpClientWithProgress uses IProgressMonitor for progress, not events
+            // Progress is reported automatically during upload via the IProgressMonitor passed to constructor
+        }
+
+        public override string GetResponse(HttpWebRequest request)
+        {
+            // DoRequest() calls this after setting Method, Authorization, and Accept headers
+            // We extract the needed info from the HttpWebRequest and use HttpClient instead
+            var uri = request.RequestUri;
+            var method = request.Method;
+            
+            using var httpClient = CreateHttpClient();
+            
+            // The request.Accept was set to application/json in DoRequest()
+            httpClient.AddHeader("Accept", APPLICATION_JSON);
+            
+            // For HEAD/DELETE/MOVE methods, use generic HTTP request
+            using var httpRequest = new System.Net.Http.HttpRequestMessage(new System.Net.Http.HttpMethod(method), uri);
+            var response = httpClient.SendRequest(httpRequest);
+            
+            // Read response body
+            return response.Content.ReadAsStringAsync().Result;
+        }
+
+        public override LabKeyError GetErrorFromException(WebException e)
+        {
+            // For compatibility - but HttpPanoramaRequestHelper throws NetworkRequestException instead
+            return PanoramaUtil.GetErrorFromWebException(e);
         }
 
         public override void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        private void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                _client?.Dispose();
-            }
+            // HttpClientWithProgress instances are created and disposed per-request
+            // CookieContainer and CSRF token persist for the lifetime of this RequestHelper
         }
     }
 
