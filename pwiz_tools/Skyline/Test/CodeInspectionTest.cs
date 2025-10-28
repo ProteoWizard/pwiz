@@ -47,6 +47,8 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.GroupComparison;
+using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 using TestRunnerLib.PInvoke;
@@ -223,6 +225,8 @@ namespace pwiz.SkylineTest
                 @"(new XmlTextWriter|File\.WriteAllText|File\.WriteAllLines|\.SaveAsXml|new StreamWriter)\(.*Encoding\.UTF8[^E]", // Forbidden pattern - catches file writing with Encoding.UTF8 (but not UTF8Encoding)
                 true, // Pattern is a regular expression
                 @"Encoding.UTF8 includes a BOM by default. Use 'new UTF8Encoding(false)' for UTF-8 without BOM, or 'new UTF8Encoding(true)' if you explicitly need a BOM."); // Explanation for prohibition, appears in report
+
+            FilesTreeDataModelInspection();
 
             // A few lines of fake tests that can be useful in development of this mechanism
             // AddInspection(@"*.Designer.cs", Inspection.Required, Level.Error, null, "Windows Form Designer generated code", @"DetectionsToolbar", @"fake, debug purposes only"); // Uncomment for debug purposes
@@ -543,6 +547,14 @@ namespace pwiz.SkylineTest
                 }
                 return settings;
             }
+        }
+
+        // Assert the file data model is not an IIdentityContainer. Implementing IIdentityContainer on the IFile
+        // interface causes other Skyline tests (esp. tutorials) to fail with subtle errors. It would be easy
+        // to implement so this inspection checks that has not happened.
+        private static void FilesTreeDataModelInspection()
+        {
+            Assert.IsFalse(typeof(IIdentiyContainer).IsAssignableFrom(typeof(IFile)));
         }
 
         /// <summary>
