@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -407,8 +407,35 @@ namespace pwiz.Skyline.Controls.Graphs
             Title.Text = null;
             Graph(selectedPeptidePath);
             
-            var chromatogramSetYAxis =
-                Data.Document.MeasuredResults?.Chromatograms.ElementAtOrDefault(Data.TargetIndex);
+            if (Data.TargetIndex < 0)
+            {
+                if (RTGraphController.PlotType == PlotTypeRT.correlation)
+                {
+                    YAxis.Title.Text = Resources.RTLinearRegressionGraphPane_RTLinearRegressionGraphPane_Measured_Time;
+                }
+                else
+                {
+                    YAxis.Title.Text = Data._regressionPredict != null
+                        ? GraphsResources.GraphData_GraphResiduals_Time_from_Prediction
+                        : Resources.GraphData_GraphResiduals_Time_from_Regression;
+                }
+            }
+            else
+            {
+                var chromatogramSetYAxis =
+                    Data.Document.MeasuredResults?.Chromatograms.ElementAtOrDefault(Data.TargetIndex);
+                if (RTGraphController.PlotType == PlotTypeRT.correlation)
+                {
+                    YAxis.Title.Text = string.Format(GraphsResources.GraphData_CorrelationLabel_Measured_Time___0__,
+                        chromatogramSetYAxis?.Name);
+                }
+                else
+                {
+                    YAxis.Title.Text = string.Format(
+                        GraphsResources.GraphData_ResidualsLabel_Time_from_Regression___0__,
+                        chromatogramSetYAxis?.Name);
+                }
+            }
             if (Data.IsRunToRun)
             {
                 var chromatogramSetXAxis =
@@ -422,31 +449,20 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     XAxis.Title.Text = string.Empty;
                 }
-
-                if (RTGraphController.PlotType == PlotTypeRT.correlation)
-                {
-                    YAxis.Title.Text = string.Format(GraphsResources.GraphData_CorrelationLabel_Measured_Time___0__,
-                        chromatogramSetYAxis?.Name);
-                }
-                else
-                {
-                    YAxis.Title.Text = string.Format(
-                        GraphsResources.GraphData_ResidualsLabel_Time_from_Regression___0__,
-                        chromatogramSetYAxis?.Name);
-                }
             }
             else
             {
-                XAxis.Title.Text = Data.Calculator?.Name ?? string.Empty;
-                if (RTGraphController.PlotType == PlotTypeRT.correlation)
+                if (Data.RegressionSettings.CalculatorName != null)
                 {
-                    YAxis.Title.Text = Resources.RTLinearRegressionGraphPane_RTLinearRegressionGraphPane_Measured_Time;
+                    XAxis.Title.Text = Data.RegressionSettings.CalculatorName.AxisTitle;
+                }
+                else if (Data.Calculator != null)
+                {
+                    XAxis.Title.Text = new AlignmentTarget.Irt(Data.Calculator).GetAxisTitle(RTPeptideValue.Retention);
                 }
                 else
                 {
-                    YAxis.Title.Text = Data._regressionPredict != null
-                        ? GraphsResources.GraphData_GraphResiduals_Time_from_Prediction
-                        : Resources.GraphData_GraphResiduals_Time_from_Regression;
+                    XAxis.Title.Text = string.Empty;
                 }
             }
             AxisChange();

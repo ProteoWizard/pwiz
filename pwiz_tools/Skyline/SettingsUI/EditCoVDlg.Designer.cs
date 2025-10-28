@@ -1,4 +1,4 @@
-﻿using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.SettingsUI
 {

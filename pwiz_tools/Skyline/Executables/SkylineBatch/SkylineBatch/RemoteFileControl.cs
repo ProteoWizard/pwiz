@@ -1,4 +1,4 @@
-﻿using SharedBatch;
+using SharedBatch;
 using System;
 using System.Collections.Generic;
 using System.Drawing;

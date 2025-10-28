@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Trevor Killeen <killeent .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -21,8 +21,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
 using Microsoft.Win32;
@@ -39,7 +37,7 @@ namespace pwiz.Skyline.ToolsUI
     public partial class RInstaller : FormEx
     {
         private readonly string _version;
-        private readonly bool _installed;
+        private bool _installed;  // Not readonly - updated when R installation succeeds
         private readonly TextWriter _writer;
         private string PathToInstallScript { get; set; }
         private ICollection<ToolPackage> PackagesToInstall { get; set; }
@@ -119,11 +117,13 @@ namespace pwiz.Skyline.ToolsUI
 
             if ((_installed || GetR()) && (PackagesToInstall.Count == 0 || GetPackages()))
             {
+                // Installation succeeded - close the dialog
                 DialogResult = DialogResult.Yes;
             }
             else
             {
-                DialogResult = DialogResult.No;
+                // Installation failed or was canceled - re-enable the form so user can retry
+                Enabled = true;
             }
         }
 
@@ -131,29 +131,34 @@ namespace pwiz.Skyline.ToolsUI
         {
             try
             {
+                IProgressStatus status;
                 using (var dlg = new LongWaitDlg())
                 {
-                    dlg.Message = ToolsUIResources.RInstaller_InstallR_Downloading_R;
-                    dlg.ProgressValue = 0;
                     // Short wait, because this can't possible happen fast enough to avoid
                     // showing progress, except in testing
-                    dlg.PerformWork(this, 50, DownloadR);
+                    status = dlg.PerformWork(this, 50, progressMonitor =>
+                    {
+                        progressMonitor.UpdateProgress(new ProgressStatus(ToolsUIResources.RInstaller_InstallR_Downloading_R));
+                        DownloadR(progressMonitor);
+                    });
                 }
+                if (status.IsCanceled)
+                    return false; // Stay on form, allow retry
+                    
                 using (var dlg = new LongWaitDlg(null, false))
                 {
                     dlg.Message = ToolsUIResources.RInstaller_GetR_Installing_R;
                     dlg.PerformWork(this, 50, InstallR);
                 }
                 MessageDlg.Show(this, Resources.RInstaller_GetR_R_installation_complete_);
+                
+                // Mark R as installed so we don't try to install it again on retry
+                _installed = true;
             }
-            catch (TargetInvocationException ex)
+            catch (Exception ex)
             {
-                if (ex.InnerException is ToolExecutionException)
-                {
-                    MessageDlg.ShowException(this, ex);
-                    return false;
-                }
-                throw;
+                MessageDlg.ShowException(this, ex);
+                return false; // Stay on form, allow retry
             }
             return true;
         }
@@ -172,9 +177,8 @@ namespace pwiz.Skyline.ToolsUI
             DownloadPath = Path.GetTempPath() + exe;
 
             // create the webclient
-            using (var webClient = TestDownloadClient ?? new MultiFileAsynchronousDownloadClient(longWaitBroker, 2))
+            using (var webClient = new MultiFileAsynchronousDownloadClient(longWaitBroker, 2))
             {
-
                 // First try downloading it as if it is the most recent release of R. The most
                 // recent version is stored in a different location of the CRAN repo than older versions.
                 // Otherwise, check and see if it is an older release
@@ -182,13 +186,20 @@ namespace pwiz.Skyline.ToolsUI
                 var recentUri = new Uri(baseUri + exe);
                 var olderUri = new Uri(baseUri + @"old/" + _version + @"/" + exe);
 
-                Exception downloadException;
-                if (!webClient.DownloadFileAsync(recentUri, DownloadPath, out downloadException) && !webClient.DownloadFileAsync(olderUri, DownloadPath, out downloadException))
-                    throw new ToolExecutionException(
-                        TextUtil.LineSeparate(
-                            Resources.RInstaller_DownloadR_Download_failed_,
-                            Resources
-                                .RInstaller_DownloadPackages_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_), downloadException);
+                try
+                {
+                    webClient.DownloadFileAsyncOrThrow(recentUri, DownloadPath);
+                }
+                catch (OperationCanceledException)
+                {
+                    // Don't try alternate URL on cancellation, just propagate
+                    throw;
+                }
+                catch (Exception)
+                {
+                    // First URL failed, try the older release location
+                    webClient.DownloadFileAsyncOrThrow(olderUri, DownloadPath);
+                }
             }
         }
 
@@ -211,16 +222,10 @@ namespace pwiz.Skyline.ToolsUI
                     dlg.PerformWork(this, 1000, InstallPackages);
                 }
             }
-            catch(TargetInvocationException ex)
+            catch (Exception ex)
             {
-                //Win32Exception is thrown when the user does not ok Administrative Privileges
-                if (ex.InnerException is ToolExecutionException || ex.InnerException is System.ComponentModel.Win32Exception) 
-                {
-                    MessageDlg.ShowException(this, ex);
-                    return false;
-                }
-                else
-                    throw;
+                ExceptionUtil.DisplayOrReportException(this, ex);
+                return false;
             }
             return true;
         }
@@ -233,13 +238,11 @@ namespace pwiz.Skyline.ToolsUI
             if (PackagesToInstall.Count == 0)
                 return;
 
-            if (!PackageInstallHelpers.CheckForInternetConnection(out string checkedSite))
+            const string checkedSite = RUtil.INTERNET_CHECK_SITE;
+            if (!RUtil.CheckForInternetConnection(out var errorMessage))
             {
-                string failedMessage = string.IsNullOrEmpty(checkedSite)
-                    ? Resources.RInstaller_InstallPackages_Error__No_internet_connection_
-                    : string.Format(ToolsUIResources.RInstaller_InstallPackages_Error__Failed_to_connect_to_the_website__0_, checkedSite);
-                throw new ToolExecutionException(
-                    TextUtil.LineSeparate(failedMessage,string.Empty, Resources.RInstaller_InstallPackages_Installing_R_packages_requires_an_internet_connection__Please_check_your_connection_and_try_again));
+                var failureMessage = GetInternetConnectionForPackagesFailureMessage(checkedSite, errorMessage);
+                throw new ToolExecutionException(failureMessage);
             }
 
             string programPath = PackageInstallHelpers.FindRProgramPath(_version);
@@ -287,24 +290,38 @@ namespace pwiz.Skyline.ToolsUI
                                                                   ex.Message));
             }
         }
+
+        public static string GetInternetConnectionForPackagesFailureMessage(string checkedSite, string errorMessage)
+        {
+            var failedMessage = string.IsNullOrEmpty(checkedSite)
+                ? ToolsUIResources.RInstaller_InstallPackages_Error__No_internet_connection_
+                : string.Format(ToolsUIResources.RInstaller_InstallPackages_Error__Failed_to_connect_to_the_website__0_, checkedSite);
+                
+            // Include detailed error message if available (DNS failure, proxy issues, etc.)
+            var messageParts = new List<string> { failedMessage };
+            if (!string.IsNullOrEmpty(errorMessage))
+                messageParts.Add(errorMessage);
+            messageParts.Add(string.Empty);
+            messageParts.Add(ToolsUIResources.RInstaller_InstallPackages_Installing_R_packages_requires_an_internet_connection__Please_check_your_connection_and_try_again);
+            return TextUtil.LineSeparate(messageParts.ToArray());
+        }
+
         #region Functional testing support
 
         public interface IPackageInstallHelpers
         {
             ICollection<ToolPackage> WhichPackagesToInstall(ICollection<ToolPackage> packages, string pathToR);
             string FindRProgramPath(string rVersion);
-            bool CheckForInternetConnection(out string site);
         } 
 
         public IPackageInstallHelpers PackageInstallHelpers
         {
-            get { return _packageInstallHelpers ?? (_packageInstallHelpers = new PackageInstallHelpers()); }
+            get { return _packageInstallHelpers ??= new PackageInstallHelpers(); }
             set { _packageInstallHelpers = value; }
         }
         private IPackageInstallHelpers _packageInstallHelpers { get; set; }
 
         public IRunProcess TestRunProcess { get; set; }
-        public IAsynchronousDownloadClient TestDownloadClient { get; set; }
         public ISkylineProcessRunnerWrapper TestSkylineProcessRunnerWrapper { get; set; }   
 
         public string Message
@@ -329,12 +346,6 @@ namespace pwiz.Skyline.ToolsUI
         public string FindRProgramPath(string rVersion)
         {
             return RUtil.FindRProgramPath(rVersion);
-        }
-
-        public bool CheckForInternetConnection(out string site)
-        {
-            site = RUtil.INTERNET_CHECK_SITE;
-            return RUtil.CheckForInternetConnection();
         }
     }
 
@@ -463,20 +474,26 @@ namespace pwiz.Skyline.ToolsUI
         public const string INTERNET_CHECK_SITE = "www.r-project.org";
 
         /// <summary>
-        /// Returns true if internet connection is avalible.
+        /// Returns true if internet connection is available and can reach r-project.org.
+        /// Uses a lightweight HEAD request to minimize bandwidth and verify connectivity
+        /// to the R Project site specifically (needed for R package downloads).
         /// </summary>
-        public static bool CheckForInternetConnection()
+        /// <param name="errorMessage">If returns false, contains a user-friendly error message explaining the issue</param>
+        public static bool CheckForInternetConnection(out string errorMessage)
         {
+            errorMessage = null;
+
+            // Verify we can actually reach r-project.org with a lightweight HEAD request
             try
             {
-                using (var client = new WebClient())
-                using (client.OpenRead(@"https://" + INTERNET_CHECK_SITE))
-                {
-                    return true;
-                }
+                using var httpClient = new HttpClientWithProgress(new SilentProgressMonitor());
+                return httpClient.Head(@"https://" + INTERNET_CHECK_SITE);
             }
-            catch
+            catch (Exception ex)
             {
+                // HttpClientWithProgress provides detailed error messages (DNS failure, proxy issues, etc.)
+                // Preserve this useful information for the user
+                errorMessage = ex.Message;
                 return false;
             }
         }

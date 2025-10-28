@@ -1,4 +1,4 @@
-﻿//
+//
 // $Id: ProgramHandler.cs 115 2013-08-13 13:54:51Z holmanjd $
 //
 // The contents of this file are subject to the Mozilla Public License

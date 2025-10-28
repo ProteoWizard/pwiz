@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -202,7 +202,7 @@ namespace pwiz.Skyline.Model
         public bool AutoPickChildrenOff { get; set; }
         public int NumberOfDecoys { get; set; }
         public string DecoysMethod { get; set; }
-        public bool NeverShiftDecoyPrecursorMass { get; set; } = false;
+        public bool NeverShiftDecoyPrecursorMass { get; set; }
 
         public enum ReplicateInclusion { all, best }
 

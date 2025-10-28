@@ -347,4 +347,10 @@
   <data name="ChromatogramManager_LoadBackground_Loading__0_" xml:space="preserve">
     <value>加载中{0}</value>
   </data>
+  <data name="Annotation_DisambiguationPrefix_Annotation__" xml:space="preserve">
+    <value>注解：</value>
+  </data>
+  <data name="Property_DisambiguationPrefix_Property__" xml:space="preserve">
+    <value>属性：</value>
+  </data>
 </root>

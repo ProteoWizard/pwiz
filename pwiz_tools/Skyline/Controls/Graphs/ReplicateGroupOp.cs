@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -19,6 +19,7 @@
 using System.ComponentModel;
 using System.Linq;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Controls.Graphs
@@ -64,13 +65,13 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <summary>
         /// Returns the ReplicateGroupOp based on the current value of Settings.Default.GroupByReplicateAnnotation,
         /// and the specified AggregateOp.  Note that if the ReplicateGroupOp is not grouping on an annotation,
-        /// the AggregateOp will be override with the value MEAN.
+        /// the AggregateOp will be overridden with the value MEAN.
         /// </summary>
         public static ReplicateGroupOp FromCurrentSettings(SrmDocument document, GraphValues.AggregateOp aggregateOp)
         {
             ReplicateValue replicateValue = null;
             string annotationName = Settings.Default.GroupByReplicateAnnotation;
-            if (null != annotationName)
+            if (!string.IsNullOrEmpty(annotationName))
             {
                 replicateValue = ReplicateValue.GetGroupableReplicateValues(document)
                     .FirstOrDefault(value => value.ToPersistedString() == annotationName);

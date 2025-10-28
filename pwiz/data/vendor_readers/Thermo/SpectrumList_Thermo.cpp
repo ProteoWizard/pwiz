@@ -823,6 +823,8 @@ PWIZ_API_DECL void SpectrumList_Thermo::createIndex()
     spectraByScanType.resize(ScanType_Count, 0);
     spectraByMSOrder.resize(MSOrder_Count+3, 0); // can't use negative index and a std::map would be inefficient
 
+    auto raw = rawfile_->getRawByThread(0);
+
     // calculate total spectra count from all controllers
     for (int controllerType = Controller_MS;
          controllerType < Controller_Count;
@@ -877,9 +879,28 @@ PWIZ_API_DECL void SpectrumList_Thermo::createIndex()
                                     break;  // break out of switch (scanType)
                                 continue;
                             case ScanType_SRM:
+                            {
                                 if (config_.srmAsSpectra)
                                     break;  // break out of switch (scanType)
+
+                                // if any scan range is bigger than MAX_SRM_SCAN_RANGE, we can't skip the SRM scan
+                                const auto scanInfo = raw->getScanInfo(scan);
+                                bool hasExcessiveSrmScanRange = false;
+                                for (size_t i = 0, end = scanInfo->scanRangeCount(); i < end; ++i)
+                                {
+                                    const double scanRange = scanInfo->scanRange(i).second - scanInfo->scanRange(i).first;
+                                    if (scanRange > MAX_SRM_SCAN_RANGE)
+                                    {
+                                        hasExcessiveSrmScanRange = true;
+                                        break;
+                                    }
+
+                                }
+                                if (hasExcessiveSrmScanRange)
+                                    break;  // break out of switch (scanType)
+
                                 continue;
+                            }
                         }
 
                         index_.push_back(IndexEntry());

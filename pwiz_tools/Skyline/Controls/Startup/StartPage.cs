@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Yuval Boss <yuval .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -684,7 +684,7 @@ namespace pwiz.Skyline.Controls.Startup
         {
             Assume.IsNotNull(skyFileLocation);
 
-            var pathChooserDlg = new PathChooserDlg(StartupResources.StartPage_Tutorial__Folder_for_tutorial_files_, skyFileLocation);
+            using var pathChooserDlg = new PathChooserDlg(StartupResources.StartPage_Tutorial__Folder_for_tutorial_files_, skyFileLocation);
             if (pathChooserDlg.ShowDialog(this) != DialogResult.OK)
                 return;
 

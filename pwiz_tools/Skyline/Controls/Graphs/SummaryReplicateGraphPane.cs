@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -302,12 +302,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     var nodeArray = _document.ToNodeArray(docNodePath);
                     var docNode = nodeArray.Last();
-                    var replicateIndices = Enumerable.Range(0, _document.Settings.MeasuredResults.Chromatograms.Count);
                     // ReSharper disable CanBeReplacedWithTryCastAndCheckForNull
                     if (docNode is TransitionDocNode)
                     {
                         var nodeTran = (TransitionDocNode) docNode;
-                        ReplicateGroups = GetReplicateGroups(replicateIndices).ToArray();
+                        ReplicateGroups = GetReplicateGroups().ToArray();
                         docNodes.Add(nodeTran);
                         docNodePaths.Add(docNodePath);
                         pointPairLists.Add(GetPointPairLists((PeptideDocNode) nodeArray[1], (TransitionGroupDocNode) nodeArray[2], nodeTran, _displayType));
@@ -317,7 +316,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         var nodeGroup = (TransitionGroupDocNode) docNode;
                         var peptideDocNode = (PeptideDocNode) nodeArray[1];
-                        ReplicateGroups = GetReplicateGroups(replicateIndices).ToArray();
+                        ReplicateGroups = GetReplicateGroups().ToArray();
                         if (_displayType == DisplayTypeChrom.single || _displayType == DisplayTypeChrom.total)
                         {
                             docNodes.Add(nodeGroup);
@@ -340,7 +339,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     else if (docNode is PeptideDocNode)
                     {
                         var nodePep = (PeptideDocNode) docNode;
-                        ReplicateGroups = GetReplicateGroups(replicateIndices).ToArray();
+                        ReplicateGroups = GetReplicateGroups().ToArray();
                         var isMultiSelect = _selectedDocNodePaths.Count > 1 ||
                                             (_selectedDocNodePaths.Count == 1 && Program.MainWindow != null &&
                                              Program.MainWindow.SelectedNode is PeptideGroupTreeNode);
@@ -362,7 +361,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var oldGroupNames = ReplicateGroups.Select(g => g.GroupName).ToArray();
                 var uniqueGroupNames = oldGroupNames.Distinct().ToArray();
 
-                // Instert "All" groups and point pair lists in their correct positions
+                // Insert "All" groups and point pair lists in their correct positions
                 InsertAllGroupsAndPointPairLists(uniqueGroupNames, docNodes.Count);
 
                 // Collect all references to points that have a valid Y value
@@ -778,7 +777,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 return MakePointPairLists(DisplayTypeChrom.all, peptideChromInfoDatas, isMissing, createPeptidePointPairFunc).First();
             }
 
-            protected virtual IEnumerable<ReplicateGroup> GetReplicateGroups(IEnumerable<int> replicateIndexes)
+            protected virtual IEnumerable<ReplicateGroup> GetReplicateGroups()
             {
                 if (_document.Settings.MeasuredResults == null)
                 {
@@ -787,94 +786,44 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 var annotationCalculator = new AnnotationCalculator(_document);
                 var chromatograms = _document.Settings.MeasuredResults.Chromatograms;
-
-                var result = new List<ReplicateGroup>();
-                if (ReplicateGroupOp.GroupByValue == null)
+                var result = Enumerable.Range(0, chromatograms.Count).SelectMany(index =>
                 {
-                    foreach (var index in replicateIndexes)
-                    {
-                        var chromatogram = _document.MeasuredResults.Chromatograms[index];
-                        result.AddRange(chromatogram.MSDataFileInfos.Select(fileInfo => new ReplicateGroup(chromatogram.Name, ReplicateIndexSet.Singleton(index), fileInfo)));
-                    }
-
-                    var query = result.OrderBy(g => 0);
-                    if (!string.IsNullOrEmpty(OrderByReplicateAnnotation))
-                    {
-                        var orderByReplicateValue = ReplicateValue.FromPersistedString(_document.Settings, OrderByReplicateAnnotation);
-                        if (orderByReplicateValue != null)
-                        {
-                            query = result.OrderBy(
-                                g => orderByReplicateValue.GetValue(annotationCalculator,
-                                    chromatograms[g.ReplicateIndexes.First()]), CollectionUtil.ColumnValueComparer);
-                        }
-                    }
-
-                    if (ReplicateOrder == SummaryReplicateOrder.document)
-                    {
-                        result = new List<ReplicateGroup>(query.ThenBy(g => g.ReplicateIndexes.ToArray(),
-                                Comparer<int[]>.Create((a, b) =>
-                                {
-                                    for (var i = 0; i < Math.Min(a.Length, b.Length); ++i)
-                                    {
-                                        if (a[i] != b[i])
-                                            return a[i].CompareTo(b[i]);
-                                    }
-
-                                    return a.Length.CompareTo(b.Length);
-                                })).ThenBy(g => g.FileInfo.FileIndex));
-                    }
-                    else if (ReplicateOrder == SummaryReplicateOrder.time)
-                    {
-                        result = new List<ReplicateGroup>(query
-                            .ThenBy(g => g.FileInfo.RunStartTime,
-                                Comparer<DateTime?>.Create(
-                                    (a, b) => (a ?? DateTime.MaxValue).CompareTo(
-                                        b ?? DateTime.MaxValue))).ThenBy(g => g.FileInfo.FileIndex).ToList());
-                    }
+                    var chromatogramSet = chromatograms[index];
+                    return chromatogramSet.MSDataFileInfos.Select(fileInfo =>
+                        new ReplicateGroup(chromatogramSet.Name, ReplicateIndexSet.Singleton(index), fileInfo));
+                });
+                if (ReplicateOrder == SummaryReplicateOrder.time)
+                {
+                    result = result.OrderBy(g => g.FileInfo.RunStartTime ?? DateTime.MaxValue);
                 }
-                else
+
+                if (!string.IsNullOrEmpty(OrderByReplicateAnnotation))
                 {
-                    var lookup = replicateIndexes.ToLookup(replicateIndex =>
-                        ReplicateGroupOp.GroupByValue.GetValue(annotationCalculator, chromatograms[replicateIndex]));
-                    var keys = lookup.Select(grouping => grouping.Key).ToList();
-                    if (keys.Count > 2)
+                    var orderByReplicateValue = ReplicateValue.FromPersistedString(_document.Settings, OrderByReplicateAnnotation);
+                    if (orderByReplicateValue != null)
+                    {
+                        result = result.OrderBy(
+                            g => orderByReplicateValue.GetValue(annotationCalculator,
+                                chromatograms[g.ReplicateIndexes.First()]), CollectionUtil.ColumnValueComparer);
+                    }
+
+                }
+                if (ReplicateGroupOp.GroupByValue != null)
+                {
+                    var groups = result.GroupBy(replicateGroup =>
+                        ReplicateGroupOp.GroupByValue.GetValue(annotationCalculator,
+                            chromatograms[replicateGroup.ReplicateIndexes.First()])).ToList();
+                    if (groups.Count > 2)
                     {
                         // If there are more than 2 groups then exclude replicates with blank annotation values.
-                        keys.Remove(null);
+                        groups = groups.Where(group => group.Key != null).ToList();
                     }
 
-                    keys.Sort(CollectionUtil.ColumnValueComparer);
-                    // ReSharper disable AssignNullToNotNullAttribute
-                    foreach (var key in keys)
-                    {
-                        result.Add(new ReplicateGroup(key?.ToString() ?? string.Empty, ReplicateIndexSet.OfValues(lookup[key])));
-                    }
-                    // ReSharper restore AssignNullToNotNullAttribute
+                    result = groups.Select(group => new ReplicateGroup(group.Key?.ToString() ?? string.Empty,
+                        ReplicateIndexSet.OfValues(group.SelectMany(r => r.ReplicateIndexes))));
                 }
 
                 return result.Distinct();
-            }
-
-            private void AddReplicateGroup(ICollection<ReplicateGroup> replicateGroups, DocNode docNode, int replicateIndex)
-            {
-                var nodeGroup = docNode as TransitionGroupDocNode;
-                if (nodeGroup != null)
-                {
-                    var chromSet = _document.MeasuredResults.Chromatograms[replicateIndex];
-                    foreach (var c in nodeGroup.ChromInfos)
-                    {
-                        var info = chromSet.GetFileInfo(c.FileId);
-                        if (info != null)
-                            replicateGroups.Add(new ReplicateGroup(chromSet.Name, ReplicateIndexSet.Singleton(replicateIndex), info));
-                    }
-                    return;
-                }
-
-                var nodePep = docNode as PeptideDocNode;
-                if (nodePep != null)
-                {
-                   nodePep.TransitionGroups.ForEach(n => AddReplicateGroup(replicateGroups, n, replicateIndex));
-                }
             }
         }
     }

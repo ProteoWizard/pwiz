@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -104,10 +104,11 @@ namespace pwiz.Skyline.Util
     }
 
     /// <summary>
-    /// Exposes <see cref="IProgressMonitor"/> for an action that requires the interface,
+    /// Exposes <see cref="IProgressMonitorWithCancellationToken"/> for an action that requires the
+    /// <see cref="IProgressMonitor" /> interface but may benefit from having access to a CancellationToken,
     /// given a <see cref="ILongWaitBroker"/>.
     /// </summary>
-    public sealed class ProgressWaitBroker : IProgressMonitor
+    public sealed class ProgressWaitBroker : IProgressMonitorWithCancellationToken
     {
         private readonly Action<IProgressMonitor> _performWork;
         private ILongWaitBroker _broker;

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -101,9 +101,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
             var rows = new List<FoldChangeRow>();
             if (null != results)
             {
-                var controlGroupIdentifier =
-                    GroupComparisonModel.GroupComparisonDef.GetControlGroupIdentifier(_skylineDataSchema.Document
-                        .Settings);
+                var controlGroupIdentifier = GroupComparisonModel.GroupComparisonDef
+                    .GetControlGroupIdentifier(_skylineDataSchema.Document.Settings);
                 Dictionary<int, double> criticalValuesByDegreesOfFreedom = new Dictionary<int, double>();
                 var groupComparisonDef = results.GroupComparer.ComparisonDef;
                 var adjustedPValues = PValues.AdjustPValues(results.ResultRows.Select(
@@ -392,7 +391,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         [InvariantDisplayName("ReplicateAbundance")]
         public class ReplicateRow : IReplicateValue
         {
-            public ReplicateRow(Replicate replicate, GroupIdentifier groupIdentifier, String identity, double? abundance)
+            public ReplicateRow(Replicate replicate, GroupIdentifier groupIdentifier, GroupIdentifier? identity, double? abundance)
             {
                 Replicate = replicate;
                 ReplicateGroup = groupIdentifier;
@@ -402,7 +401,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             public Replicate Replicate { get; private set; }
             [Format(Formats.CalibrationCurve)]
             public double? Abundance { get; private set; }
-            public string ReplicateSampleIdentity { get; private set; }
+            public GroupIdentifier? ReplicateSampleIdentity { get; private set; }
             public GroupIdentifier ReplicateGroup { get; private set; }
 
             Replicate IReplicateValue.GetReplicate()
