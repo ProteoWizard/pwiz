@@ -143,16 +143,18 @@ namespace pwiz.Skyline.Model
                     if (File.Exists(outputFilepath))
                         FileEx.SafeDelete(outputFilepath);
 
-                    string tmpFilepath = Path.Combine(Path.GetTempPath(), PathEx.GetRandomFileName() + MsConvertOutputExtension); // N.B. FileEx.GetRandomFileName adds unusual characters in test mode
-                    string tmpParams = Path.Combine(Path.GetDirectoryName(outputFilepath) ?? string.Empty, @$"diaumpire-{DateTime.Now.ToString(@"yyyyMMddhhmm")}.params");
+                    // DiaUmpire doesn't handle unicode paths
+                    string tmpFilepath = PathEx.GetNonUnicodePath(Path.Combine(Path.GetTempPath(), PathEx.GetNonUnicodeRandomFileName() + MsConvertOutputExtension)); // N.B. FileEx.GetRandomFileName adds unusual characters in test mode
+                    string tmpParams = PathEx.GetNonUnicodePath(Path.Combine(Path.GetDirectoryName(outputFilepath) ?? string.Empty, @$"diaumpire-{DateTime.Now.ToString(@"yyyyMMddhhmm")}.params"));
                     //_diaUmpireConfig.Parameters["Thread"] = 1; // needed to compare DIAUMPIRE_DEBUG output
                     _diaUmpireConfig.WriteConfigToFile(tmpParams);
-
+                    
                     var pr = new ProcessRunner();
                     var psi = new ProcessStartInfo(MSCONVERT_EXE)
                     {
                         CreateNoWindow = true,
                         UseShellExecute = false,
+                        WorkingDirectory = Path.GetDirectoryName(tmpFilepath) ?? string.Empty,
                         Arguments =
                             $"-v --32 -z {MsConvertOutputFormatParam} " +
                             $"-o {Path.GetDirectoryName(tmpFilepath).Quote()} " +

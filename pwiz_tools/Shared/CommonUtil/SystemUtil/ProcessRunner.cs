@@ -294,6 +294,24 @@ namespace pwiz.Common.SystemUtil
             throw new IOException(exception.Message, new IOException(sbText.ToString(), exception));
         }
 
+        // Many external tools that we call can't deal with unicode characters, this helps with temp files they may create
+        public void ChangeTmpDirEnvironmentVariableToNonUnicodePath(ProcessStartInfo psi)
+        {
+            ChangeEnvironmentVariableToNonUnicodePath(psi, @"TMP");
+            ChangeEnvironmentVariableToNonUnicodePath(psi,@"TEMP");
+        }
+
+        // Look for unicode characters in path for in environment variable value, replace with 8.3
+        // Path has to exist, and volume has to support 8.3 format
+        public void ChangeEnvironmentVariableToNonUnicodePath(ProcessStartInfo psi, string key)
+        {
+            var tmp = PathEx.GetNonUnicodePath(psi.Environment[key]);
+            if (!string.IsNullOrEmpty(tmp))
+            {
+                psi.Environment[key] = tmp;
+            }
+        }
+
         // Clean out any tempfiles left behind, if forceTempfilesCleanup was set
         private void CleanupTmpDir(ProcessStartInfo psi)
         {

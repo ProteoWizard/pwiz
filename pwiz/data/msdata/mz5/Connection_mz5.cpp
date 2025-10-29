@@ -27,6 +27,7 @@
 #include "Translator_mz5.hpp"
 #include <algorithm>
 #include "boost/thread/mutex.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/String.hpp"
 
 namespace pwiz {
@@ -37,11 +38,13 @@ using namespace H5;
 
 namespace {boost::mutex connectionReadMutex_, connectionWriteMutex_;}
 
-Connection_mz5::Connection_mz5(const std::string filename, const OpenPolicy op,
+Connection_mz5::Connection_mz5(const std::string filenameIn, const OpenPolicy op,
         const Configuration_mz5 config) :
     config_(config)
 {
     boost::mutex::scoped_lock lock(connectionReadMutex_);
+
+    string filename = util::get_non_unicode_path(filenameIn); // Try to convert to Windows short path if necessary - mz5 library doesn't like Unicode in filenames
 
     if (pwiz::util::findUnicodeBytes(filename) != filename.end())
         throw ReaderFail("[Connection_mz5] MZ5 does not support Unicode in filepaths ('" + filename + "')");

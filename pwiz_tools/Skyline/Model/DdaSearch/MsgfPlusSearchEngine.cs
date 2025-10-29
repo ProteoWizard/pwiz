@@ -169,7 +169,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                         $@"-s ""{spectrumFilename}"" -d ""{FastaFileNames[0]}"" -tda 1 " +
                         $@"-t {precursorMzTolerance.Value}{precursorMzTolerance.UnitName} -ti {isotopeErrorRange.Item1},{isotopeErrorRange.Item2} " +
                         $@"-m {fragmentationMethod} -inst {instrumentType} -e {enzyme} -ntt {ntt} -maxMissedCleavages {maxMissedCleavages} " +
-                        $@"-mod ""{modsFile}""")
+                        $@"-mod ""{PathEx.GetNonUnicodePath(modsFile)}""") // MSGF+ doesn't like unicode paths
                     {
                         CreateNoWindow = true,
                         UseShellExecute = false,
