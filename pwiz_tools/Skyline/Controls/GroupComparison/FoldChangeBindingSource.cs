@@ -158,13 +158,28 @@ namespace pwiz.Skyline.Controls.GroupComparison
             var defaultViewSpec = GetDefaultViewSpec(foldChangeRows);
             var clusteredViewSpec = GetClusteredViewSpec(defaultViewSpec);
 
+            // Build canonical row sources and views for the new Model types
+            var fcRowsSource = new FixedSkylineObjectList<FoldChangeRow>(_skylineDataSchema, foldChangeRows);
+            var fcView = new ViewInfo(_skylineDataSchema, typeof(FoldChangeRow), defaultViewSpec)
+                .ChangeViewGroup(ViewGroup.BUILT_IN);
+
+            var fcDetailRowsSource = new FixedSkylineObjectList<FoldChangeDetailRow>(_skylineDataSchema, detailRows);
+            var fcDetailView = new ViewInfo(_skylineDataSchema, typeof(FoldChangeDetailRow), clusteredViewSpec)
+                .ChangeViewGroup(ViewGroup.BUILT_IN);
 
             var rowSourceInfos = new List<RowSourceInfo>()
             {
-                new RowSourceInfo(new FixedSkylineObjectList<FoldChangeRow>(_skylineDataSchema, foldChangeRows),
-                    new ViewInfo(_skylineDataSchema, typeof(FoldChangeRow), defaultViewSpec).ChangeViewGroup(ViewGroup.BUILT_IN)),
-                new RowSourceInfo(new FixedSkylineObjectList<FoldChangeDetailRow>(_skylineDataSchema, detailRows),
-                    new ViewInfo(_skylineDataSchema, typeof(FoldChangeDetailRow), clusteredViewSpec).ChangeViewGroup(ViewGroup.BUILT_IN))
+                // Canonical (current) row sources
+                new RowSourceInfo(fcRowsSource, fcView),
+                new RowSourceInfo(fcDetailRowsSource, fcDetailView),
+
+                // Legacy aliases: preserve compatibility with saved .sky/.skyr using old rowsource names
+                new RowSourceInfo(typeof(FoldChangeRow), fcRowsSource, new[] { fcView },
+                    @"pwiz.Skyline.Controls.GroupComparison.FoldChangeBindingSource+FoldChangeRow",
+                    nameof(FoldChangeRow)),
+                new RowSourceInfo(typeof(FoldChangeDetailRow), fcDetailRowsSource, new[] { fcDetailView },
+                    @"pwiz.Skyline.Controls.GroupComparison.FoldChangeBindingSource+FoldChangeDetailRow",
+                    nameof(FoldChangeDetailRow))
             };
             return rowSourceInfos;
         }
