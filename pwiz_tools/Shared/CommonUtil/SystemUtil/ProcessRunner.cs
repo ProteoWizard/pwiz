@@ -301,7 +301,7 @@ namespace pwiz.Common.SystemUtil
             ChangeEnvironmentVariableToNonUnicodePath(psi,@"TEMP");
         }
 
-        // Look for unicode characters in path for in environment variable value, relace with 8.3
+        // Look for unicode characters in path for in environment variable value, replace with 8.3
         // Path has to exist, and volume has to support 8.3 format
         public void ChangeEnvironmentVariableToNonUnicodePath(ProcessStartInfo psi, string key)
         {
