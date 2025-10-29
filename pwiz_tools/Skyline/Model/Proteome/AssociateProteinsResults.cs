@@ -29,7 +29,6 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Windows.Forms;
 
 namespace pwiz.Skyline.Model.Proteome
 {
@@ -264,11 +263,6 @@ namespace pwiz.Skyline.Model.Proteome
             public bool IsDocumentChanged(SrmDocument docOrig)
             {
                 return false;
-            }
-
-            public DialogResult ShowDialog(Func<IWin32Window, DialogResult> show)
-            {
-                throw new InvalidOperationException();
             }
 
             public void SetProgressCheckCancel(int step, int totalSteps)

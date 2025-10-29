@@ -48,6 +48,7 @@ using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 using TestRunnerLib.PInvoke;
 using Environment = System.Environment;
@@ -177,10 +178,11 @@ namespace pwiz.SkylineTest
                     Level.Error, // Any failure is treated as an error, and overall test fails
                     null, // There are no parts of the codebase that should skip this check
                     cue, // If the file contains this, then check for forbidden pattern
-                    @"using.*(pwiz\.Skyline\.(Alerts|Controls|.*UI)|System\.Windows\.Forms|pwiz\.Common\.GUI)", 
+                    @"using.*(pwiz\.Skyline\.(Alerts|Controls|.*UI)|System\.Windows\.Forms|pwiz\.Common\.GUI)",
                     true, // Pattern is a regular expression
                     why, // Explanation for prohibition, appears in report
                     null, // No explicit exceptions to this rule
+                    // 0); // Use this line to make all occurrences errors - for clickable file and line numbers in report
                     numberToleratedAsWarnings); // Number of existing known failures that we'll tolerate as warnings instead of errors, so no more get added while we wait to fix the rest
 
                 // Also look for fully-qualified references to UI namespaces (no using directive present)
@@ -194,9 +196,9 @@ namespace pwiz.SkylineTest
                     why);
             }
 
-            AddForbiddenUIInspection(@"*.cs", @"namespace pwiz.Skyline.Model", @"Skyline model code must not depend on UI code", 28);
+            AddForbiddenUIInspection(@"*.cs", @"namespace pwiz.Skyline.Model", @"Skyline model code must not depend on UI code", 27);
             // Looking for CommandLine.cs and CommandArgs.cs code depending on UI code
-            AddForbiddenUIInspection(@"CommandLine.cs", @"namespace pwiz.Skyline", @"CommandLine code must not depend on UI code", 2);
+            AddForbiddenUIInspection(@"CommandLine.cs", @"namespace pwiz.Skyline", @"CommandLine code must not depend on UI code", 1);
             AddForbiddenUIInspection(@"CommandArgs.cs", @"namespace pwiz.Skyline", @"CommandArgs code must not depend on UI code");
 
             // Check for using DataGridView.
@@ -938,10 +940,12 @@ namespace pwiz.SkylineTest
                     }
                     else
                     {
-                        counts[patternDetails] = counts[patternDetails] + 1;
+                        counts[patternDetails]++;
                     }
 
-                    if (counts[patternDetails] <= patternDetails.NumberOfToleratedIncidents)
+                    int count = counts[patternDetails];
+                    int expected = patternDetails.NumberOfToleratedIncidents;
+                    if (count <= expected)
                     {
                         result = warnings;
                         tolerated = @"This is an error, but is tolerated for the moment.";
@@ -949,7 +953,8 @@ namespace pwiz.SkylineTest
                     else
                     {
                         tolerated =
-                            @"A certain number of existing cases of this are tolerated for the moment, there appears to be a new one which must be corrected.";
+                            TextUtil.LineSeparate(string.Format($@"Expected {expected} existing cases of this issue but found {count}."),
+                                "Please fix any newly introduced cases to get back to the expected level.");
                     }
                 }
 
