@@ -26,7 +26,7 @@ namespace pwiz.Skyline.Model.GroupComparison
 {
     public abstract class AbstractFoldChangeRow
     {
-        public AbstractFoldChangeRow(Protein protein, Model.Databinding.Entities.Peptide peptide,
+        public AbstractFoldChangeRow(Protein protein, Databinding.Entities.Peptide peptide,
             IsotopeLabelType labelType,
             int? msLevel, IDictionary<Replicate, ReplicateRow> replicateResults)
         {
@@ -38,7 +38,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         }
 
         public Protein Protein { get; private set; }
-        public Model.Databinding.Entities.Peptide Peptide { get; private set; }
+        public Databinding.Entities.Peptide Peptide { get; private set; }
         public IsotopeLabelType IsotopeLabelType { get; private set; }
         public int? MsLevel { get; private set; }
 
@@ -50,7 +50,7 @@ namespace pwiz.Skyline.Model.GroupComparison
 
     public class FoldChangeRow : AbstractFoldChangeRow
     {
-        public FoldChangeRow(Protein protein, Model.Databinding.Entities.Peptide peptide, IsotopeLabelType labelType,
+        public FoldChangeRow(Protein protein, Databinding.Entities.Peptide peptide, IsotopeLabelType labelType,
             int? msLevel, GroupIdentifier group, int replicateCount, FoldChangeResult foldChangeResult,
             IDictionary<Replicate, ReplicateRow> replicateResults)
             : base(protein, peptide, labelType, msLevel, replicateResults)
@@ -72,7 +72,7 @@ namespace pwiz.Skyline.Model.GroupComparison
 
     public class FoldChangeDetailRow : AbstractFoldChangeRow
     {
-        public FoldChangeDetailRow(Protein protein, Model.Databinding.Entities.Peptide peptide,
+        public FoldChangeDetailRow(Protein protein, Databinding.Entities.Peptide peptide,
             IsotopeLabelType labelType,
             int? msLevel, Dictionary<GroupIdentifier, FoldChangeResult> foldChangeResults,
             IDictionary<Replicate, ReplicateRow> replicateResult) : base(protein, peptide, labelType, msLevel,
@@ -105,7 +105,9 @@ namespace pwiz.Skyline.Model.GroupComparison
         }
 
         public Replicate Replicate { get; private set; }
-        [Format(Formats.CalibrationCurve)] public double? Abundance { get; private set; }
+
+        [Format(Formats.CalibrationCurve)] 
+        public double? Abundance { get; private set; }
         public GroupIdentifier? ReplicateSampleIdentity { get; private set; }
         public GroupIdentifier ReplicateGroup { get; private set; }
 
