@@ -21,8 +21,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 
@@ -1457,5 +1457,50 @@ namespace pwiz.Skyline.Model
 
             return null;
         }
+    }
+
+    public class DisplaySettings
+    {
+        internal readonly bool _showBestReplicate;
+        internal readonly int _resultsIndex;
+
+        public DisplaySettings(NormalizedValueCalculator normalizedValueCalculator, PeptideDocNode nodePep, bool showBestReplicate, int resultsIndex, NormalizeOption normalizeOption)
+        {
+            NormalizedValueCalculator = normalizedValueCalculator;
+            _showBestReplicate = showBestReplicate;
+            _resultsIndex = resultsIndex;
+            NormalizeOption = normalizeOption;
+            NodePep = nodePep;
+        }
+
+        public DisplaySettings(DisplaySettings settings, PeptideDocNode nodePep)
+        {
+            _showBestReplicate = settings._showBestReplicate;
+            _resultsIndex = settings._resultsIndex;
+            NormalizeOption = settings.NormalizeOption;
+            NodePep = nodePep;
+        }
+
+        public PeptideDocNode NodePep { get; private set; }
+
+        public int ResultsIndex
+        {
+            get
+            {
+                return _showBestReplicate && NodePep != null && NodePep.BestResult != -1 ? NodePep.BestResult : _resultsIndex;
+            }
+        }
+
+        public NormalizeOption NormalizeOption { get; private set; }
+
+        public NormalizationMethod NormalizationMethod
+        {
+            get
+            {
+                return NormalizedValueCalculator.NormalizationMethodForMolecule(NodePep, NormalizeOption);
+            }
+        }
+
+        public NormalizedValueCalculator NormalizedValueCalculator { get; private set; }
     }
 }

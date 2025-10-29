@@ -35,6 +35,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog.Databinding;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -51,7 +52,7 @@ namespace pwiz.SkylineTest.Reporting
     {
         private static readonly IList<Type> STARTING_TYPES = ImmutableList.ValueOf(new[]
         {
-            typeof(SkylineDocument), typeof(FoldChangeBindingSource.FoldChangeRow), typeof(AuditLogRow),
+            typeof(SkylineDocument), typeof(FoldChangeRow), typeof(AuditLogRow),
             typeof(CandidatePeakGroup), typeof(MatchingPrecursors), typeof(SpectrumClass)
         });
         /// <summary>

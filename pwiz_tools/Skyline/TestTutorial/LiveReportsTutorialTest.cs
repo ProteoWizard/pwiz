@@ -652,8 +652,8 @@ namespace pwiz.SkylineTestTutorial
             {
                 viewEditor.ViewName = "Replicate Abundances";
                 viewEditor.ChooseColumnsTab.AddColumn(PropertyPath.Root
-                    .Property(nameof(FoldChangeBindingSource.FoldChangeRow.ReplicateAbundances)).DictionaryValues()
-                    .Property(nameof(FoldChangeBindingSource.ReplicateRow.Abundance)));
+                    .Property(nameof(FoldChangeRow.ReplicateAbundances)).DictionaryValues()
+                    .Property(nameof(ReplicateRow.Abundance)));
                 viewEditor.OkDialog();
             });
             WaitForCondition(() => groupComparisonGrid.IsComplete);

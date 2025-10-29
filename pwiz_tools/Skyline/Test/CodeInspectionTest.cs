@@ -182,9 +182,19 @@ namespace pwiz.SkylineTest
                     why, // Explanation for prohibition, appears in report
                     null, // No explicit exceptions to this rule
                     numberToleratedAsWarnings); // Number of existing known failures that we'll tolerate as warnings instead of errors, so no more get added while we wait to fix the rest
+
+                // Also look for fully-qualified references to UI namespaces (no using directive present)
+                AddTextInspection(fileMask, // Examine files with this mask
+                    Inspection.Forbidden,
+                    Level.Error,
+                    null,
+                    cue,
+                    @"^(?!\s*///).*?\b(pwiz\.Skyline\.(Alerts|Controls|.*UI)|System\.Windows\.Forms|pwiz\.Common\.GUI)\.",
+                    true,
+                    why);
             }
 
-            AddForbiddenUIInspection(@"*.cs", @"namespace pwiz.Skyline.Model", @"Skyline model code must not depend on UI code", 35);
+            AddForbiddenUIInspection(@"*.cs", @"namespace pwiz.Skyline.Model", @"Skyline model code must not depend on UI code", 28);
             // Looking for CommandLine.cs and CommandArgs.cs code depending on UI code
             AddForbiddenUIInspection(@"CommandLine.cs", @"namespace pwiz.Skyline", @"CommandLine code must not depend on UI code", 2);
             AddForbiddenUIInspection(@"CommandArgs.cs", @"namespace pwiz.Skyline", @"CommandArgs code must not depend on UI code");
@@ -211,7 +221,7 @@ namespace pwiz.SkylineTest
                 DllImportAllowedUsageFilesAndDirectories(), // Skip this check for specific files where DllImport use is explicitly allowed
                 "DllImport", // Only files containing this string get inspected for this
                 @"DllImport", // Forbidden pattern - match [DllImport
-                false, // Pattern is a regular expression
+                false, // Pattern is not a regular expression
                 @"Use of P/Invoke is not allowed. Instead, use the interop library in pwiz.Common.SystemUtil.PInvoke."); // Explanation for prohibition, appears in report
 
             // Looking for uses of Encoding.UTF8 in file writing operations that will create BOM
@@ -1015,9 +1025,12 @@ namespace pwiz.SkylineTest
 
                     var errors = new List<string>();
                     var warnings = new List<string>();
+                    // Track already reported issues for this file to avoid duplicate reports
+                    var reportedMatches = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                    // Per-file tracking for inconsistent line endings and multiline pattern faults
+                    var crlfCount =0;
                     var multiLinePatternFaults = new Dictionary<Pattern, string>();
                     var multiLinePatternFaultLocations = new Dictionary<Pattern, int>();
-                    var crlfCount = 0; // Look for inconsistent line endings
 
                     foreach (var line in lines)
                     {
@@ -1046,11 +1059,16 @@ namespace pwiz.SkylineTest
                                 {
                                     var patternDetails = forbiddenPatternsByFileMask[fileMask][pattern];
                                     var why = patternDetails.Reason;
+                                    // Avoid reporting the same reason at the same file:line more than once
+                                    var matchKey = filename + ":" + lineNum + ":" + why;
+                                    if (reportedMatches.Contains(matchKey))
+                                        continue;
+                                    reportedMatches.Add(matchKey);
                                     var result = CheckForToleratedError(patternDetails, errors, warnings, errorCounts, out var tolerated);
-                                    result.Add(@"Found prohibited use of");
-                                    result.Add(@"""" + pattern.PatternString.Replace("\n", "\\n") + @"""");
+                                    result.Add("Found prohibited use of");
+                                    result.Add("\"" + pattern.PatternString.Replace("\n", "\\n") + "\"");
                                     result.Add("(" + why + ")");
-                                    result.Add($"   at {Path.GetFileName(filename)} in {filename}:line {lineNum}");
+                                    result.Add($" at {Path.GetFileName(filename)} in {filename}:line {lineNum}");
                                     result.Add(line);
                                     if (tolerated != null)
                                     {
@@ -1100,8 +1118,8 @@ namespace pwiz.SkylineTest
                             var why = string.Format(patternDetails.Reason, fault ?? String.Empty);
                             var result = CheckForToleratedError(patternDetails, errors, warnings, errorCounts, out var tolerated);
 
-                            result.Add(@"Did not find required use of");
-                            result.Add(@"""" + pattern.PatternString.Replace("\n","\\n") + @"""");
+                            result.Add("Did not find required use of");
+                            result.Add("\"" + pattern.PatternString.Replace("\n","\\n") + "\"");
                             if (multiLinePatternFaultLocations.TryGetValue(pattern, out var lineNumber))
                             {
                                 result.Add("(" + why + ") at");

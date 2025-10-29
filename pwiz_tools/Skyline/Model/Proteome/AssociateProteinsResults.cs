@@ -29,6 +29,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Windows.Forms;
 
 namespace pwiz.Skyline.Model.Proteome
 {
@@ -265,8 +266,7 @@ namespace pwiz.Skyline.Model.Proteome
                 return false;
             }
 
-            public System.Windows.Forms.DialogResult ShowDialog(
-                Func<System.Windows.Forms.IWin32Window, System.Windows.Forms.DialogResult> show)
+            public DialogResult ShowDialog(Func<IWin32Window, DialogResult> show)
             {
                 throw new InvalidOperationException();
             }
