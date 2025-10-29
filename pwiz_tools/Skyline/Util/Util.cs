@@ -615,6 +615,22 @@ namespace pwiz.Skyline.Util
             }
         }
 
+        public static void SortWithOrderBy<TItem>(TItem[] array, out int[] sortIndexes)
+        {
+            var unsortedIndexes = new int[array.Length];
+            for (int i = 0; i < array.Length; i++)
+                unsortedIndexes[i] = i;
+            sortIndexes = new int[array.Length];
+            var arrayClone = (TItem[])array.Clone();
+            int index = 0;
+            foreach (var item in unsortedIndexes.OrderBy(i => array[i]))
+            {
+                sortIndexes[index] = item;
+                array[index] = arrayClone[item];
+                index++;
+            }
+        }
+
         /// <summary>
         /// Sort an array and produce an output array that shows how the indexes of the
         /// elements have been reordered.  The indexing array can then be applied to a
@@ -629,10 +645,15 @@ namespace pwiz.Skyline.Util
             for (int i = 0; i < array.Length; i++)
                 sortIndexes[i] = i;
 
-            if (Install.IsRunningOnWine) // Array.Sort seems to have memory corruption issues on Wine, e.g. sorting Bruker IMS data
-                array.Sort(sortIndexes);
+            // Array.Sort seems to have memory corruption issues on Wine, e.g. sorting Bruker IMS data
+            SortWithOrderBy(array, out sortIndexes);
+
+            /* TODO(MCC): revisit this after new SortWithOrderBy is shown to be robust on Windows and Wine: Array.Sort is still a bit faster
+            if (Install.IsRunningOnWine)
+                SortWithOrderBy(array, out sortIndexes);
             else
                 Array.Sort(array, sortIndexes);
+            */
         }
 
         /// <summary>
