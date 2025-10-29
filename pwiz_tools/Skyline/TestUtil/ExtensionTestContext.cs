@@ -74,6 +74,7 @@ namespace pwiz.SkylineTestUtil
                 return dir;
             }
 
+            // ReSharper disable once AssignNullToNotNullAttribute
             return Path.Combine(dir, decoration);
         }
 

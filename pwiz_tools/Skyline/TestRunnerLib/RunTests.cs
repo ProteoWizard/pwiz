@@ -125,6 +125,8 @@ namespace TestRunnerLib
         private readonly bool _buildMode;
         private readonly bool _cleanupLevelAll;
 
+        private const string _unicodeSubdirName = @"Ütest"; // We may introduce a subdir into the test path to test unicode support
+
         public readonly TestRunnerContext TestContext;
         public CultureInfo Language = new CultureInfo("en-US");
         public long CheckCrtLeaks;
@@ -349,7 +351,7 @@ namespace TestRunnerLib
                 TestContext.Properties["RetryDataDownloads"] = RetryDataDownloads.ToString();
                 TestContext.Properties["RunSmallMoleculeTestVersions"] = RunsSmallMoleculeVersions.ToString(); // Run the AsSmallMolecule version of tests when available?
                 TestContext.Properties["TestName"] = test.TestMethod.Name;
-                TestContext.Properties["UnicodeDecoration"] = test.DoNotUseUnicode ? null : @"Ütest"; // N.B. "UnicodeDecoration" must agree with ExtensionTestContext.cs
+                TestContext.Properties["UnicodeDecoration"] = test.DoNotUseUnicode ? null : _unicodeSubdirName; // N.B. "UnicodeDecoration" must agree with ExtensionTestContext.cs
                 TestContext.Properties["RecordAuditLogs"] = RecordAuditLogs.ToString();
                 TestContext.Properties["TestPass"] = pass.ToString();
                 if (IsParallelClient)
@@ -367,16 +369,13 @@ namespace TestRunnerLib
                 LocalizationHelper.CurrentCulture = LocalizationHelper.CurrentUICulture = Language;
                 LocalizationHelper.InitThread();
 
-                // Tests in Test.DLL normally don't create files in TMP, so don't mess around with temp dir creation for those
-                var assemblyName = test.TestClassType?.Assembly.ManifestModule.Name;
-                if (!Equals(assemblyName, "Test.dll"))
-                {
-                    // Set the TMP file path to something peculiar - helps guarantee support for
-                    // unusual user names since temp file path is usually in the user directory
-                    // Also helps detect 3rd party tools that leave temp files behind
-                    tmpTestDir = SetTMP(test);
-                    CleanUpTestDir(tmpTestDir, false);   // Attempt to cleanup first, in case something was left behind by a failing test
-                }
+
+                // Set the TMP file path to something peculiar - helps guarantee support for
+                // unusual user names since temp file path is usually in the user directory
+                // Also helps detect 3rd party tools that leave temp files behind
+                tmpTestDir = SetTMP(test);
+                CleanUpTestDir(tmpTestDir, false);   // Attempt to cleanup first, in case something was left behind by a failing test
+
 
                 if (test.SkipTestUntil == null || DateTime.UtcNow >= test.SkipTestUntil)
                 {
@@ -603,6 +602,10 @@ namespace TestRunnerLib
             // But adding Unicode characters (e.g. 试验, means "test") breaks many 3rd party tools
             // (e.g. msFragger), causes trouble with mz5 reader, etc, so watch for custom test
             // attribute that turns that off per test in cases where we were not able to work around it
+            //
+            // N.B as of Oct 2025 we have successfully worked around Unicode issues with msFragger et al
+            // using Windows 8.3 filename conversion where available. So test.DoNotUseUnicode is usually
+            // false on a windows system, but true under Wine or in Docker instances.
             var doNotUseUnicode = test.DoNotUseUnicode;
             var tmpTestDir = string.Empty;
             var unicodeDecoration = string.Empty;
@@ -698,6 +701,13 @@ namespace TestRunnerLib
                 CleanupAbandonedFiles(TestContext.TestDir, !final, abandonedFilesList);
             }
             CleanupAbandonedFiles(tmpTestDir, !final, abandonedFilesList); // It's always an error to leave any tempfiles behind
+
+            // If we added a subdir for unicode testing, it's ok to leave that behind as long as it's empty
+            var unicodeSubDir = abandonedFilesList.Find(entry => entry.EndsWith(_unicodeSubdirName));
+            if (!string.IsNullOrEmpty(unicodeSubDir))
+            {
+                abandonedFilesList.Remove(unicodeSubDir);
+            }
 
             return abandonedFilesList;
         }
