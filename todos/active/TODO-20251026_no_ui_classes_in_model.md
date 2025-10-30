@@ -1,5 +1,26 @@
 # TODO: Remove UI class dependencies from Skyline.Model
 
+## Changes completed in this commit (2025-10-30)
+
+- **RT regression logic fully extracted from UI to Model:**
+    - Created `Model/RetentionTimes/RetentionTimeRegressionGraphData.cs` containing all core RT regression computation.
+    - Moved `PointsTypeRT` enum to Model; updated all references.
+    - UI `RTLinearRegressionGraphPane.GraphData` now delegates to Model’s `ComputeSnapshot()` and only adapts for display.
+    - Removed dead `_refine` field from Model; clarified comments and separation of concerns.
+    - Updated `RefinementSettings.cs` to call Model’s regression logic directly, passing explicit parameters.
+    - All tests pass; CodeInspectionTest now detects one fewer Model/UI dependency.
+
+- **Benefits:**
+    - Model and UI layers are now cleanly separated for RT regression.
+    - No reverse dependencies from Model to UI remain for RT regression.
+    - CodeInspectionTest is effective at preventing new violations.
+
+- **Next steps:**
+    - Build `Skyline.csproj` to validate compilation.
+    - Run focused RT tests (RunToRunRegressionTest, PeakPickingTutorialTest, iRT checks).
+    - Continue with remaining Model/UI dependency removals as listed below.
+
+
 **Status:** Active
 **Priority:** Medium
 **Estimated Effort:** Medium to Large (27 remaining violations as of 2025-10-29: 26 Model, 1 CLI)
