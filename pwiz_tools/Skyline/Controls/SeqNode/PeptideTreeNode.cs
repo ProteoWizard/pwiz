@@ -211,7 +211,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public static string GetLabel(PeptideDocNode nodePep, string resultsText)
         {
-            return nodePep + resultsText;
+            return nodePep.GetSequenceTreeLabel(resultsText);
         }
 
         public override Color? ChromColor
@@ -540,7 +540,8 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public static string DisplayText(PeptideDocNode node, DisplaySettings settings)
         {
-            return GetLabel(node, string.Empty);
+            // Defer to the model for display text formatting using the legacy label semantics.
+            return node.GetSequenceTreeLabel(string.Empty);
         }
 
         #endregion

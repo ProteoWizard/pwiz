@@ -2,19 +2,19 @@
 
 **Status:** Active
 **Priority:** Medium
-**Estimated Effort:** Medium to Large (28 remaining violations as of 2025-10-29: 27 Model, 1 CLI)
+**Estimated Effort:** Medium to Large (27 remaining violations as of 2025-10-29: 26 Model, 1 CLI)
 **Branch:** Skyline/work/20251026_no_ui_classes_in_model
 **Updated:** 2025-10-29
 
 ## Problem
 
-The `pwiz.Skyline.Model` namespace currently has 27 remaining instances where it depends on UI code (namespaces: `pwiz.Skyline.Alerts`, `pwiz.Skyline.Controls`, `pwiz.Skyline.*UI`, `System.Windows.Forms`, `pwiz.Common.GUI`). One CLI violation also remains.
+The `pwiz.Skyline.Model` namespace currently has 26 remaining instances where it depends on UI code (namespaces: `pwiz.Skyline.Alerts`, `pwiz.Skyline.Controls`, `pwiz.Skyline.*UI`, `System.Windows.Forms`, `pwiz.Common.GUI`). One CLI violation also remains.
 
 This violates the Model-View separation principle and creates unnecessary coupling between business logic and presentation layers.
 
 ## Current State
 
-The CodeInspection test detects these violations but tolerates 28 existing instances (Model). Current count: 27 (Model), 1 (CLI):
+The CodeInspection test detects these violations but tolerates 28 existing instances (Model). Current count: 26 (Model), 1 (CLI):
 
 ```csharp
 AddForbiddenUIInspection(@"*.cs", @"namespace pwiz.Skyline.Model",
@@ -87,6 +87,7 @@ Model refactors (high level)
 UI layer adjustments (to support the separation)
 - Updated several files under `pwiz_tools/Skyline/Controls/*` and `Controls/GroupComparison/*` to keep UI logic on the UI side while referencing new/cleaned Model logic.
 - Removed `ShowDialog` from `ILongWaitBroker`; retained a targeted legacy cast usage in `ViewLibraryPepMatching` where a dialog must be shown during a long wait.
+ - `PeptideDocNode` no longer depends on `Controls.SeqNode` (moved display text responsibility into Model).
 
 Other changes on branch
 - `pwiz_tools/Skyline/Test/*`: updates aligned with inspection changes and Model refactors.
@@ -94,20 +95,19 @@ Other changes on branch
 
 ## How to verify current state
 1) Open `pwiz_tools/Skyline/Test/CodeInspectionTest.cs` and confirm:
-   - The fully-qualified namespace inspection exists (the second AddTextInspection inside `AddForbiddenUIInspection`).
-    - The Model tolerance is `28` (current Model count should be `27`).
+    - The fully-qualified namespace inspection exists (the second AddTextInspection inside `AddForbiddenUIInspection`).
+    - The Model tolerance is `28` (current Model count should be `26`).
     - CLI inspections: `CommandLine.cs` tolerated `2` (current CLI count should be `1`); `CommandArgs.cs` no tolerated count.
-2) Run CodeInspectionTest to enumerate the 27 remaining Model offenders and the 1 CLI incident.
+2) Run CodeInspectionTest to enumerate the 26 remaining Model offenders and the 1 CLI incident.
 
-## Remaining violations (27 Model + 1 CLI = 28 total, as of 2025-10-29)
+## Remaining violations (26 Model + 1 CLI = 27 total, as of 2025-10-29)
 
 PR: https://github.com/ProteoWizard/pwiz/pull/3663
 
-### Category 1: SeqNode dependencies (6 files)
+### Category 1: SeqNode dependencies (5 files)
 Core document node classes depend on `pwiz.Skyline.Controls.SeqNode` for tree UI logic.
 
 **Files:**
-- `Model/PeptideDocNode.cs:25` - using pwiz.Skyline.Controls.SeqNode;
 - `Model/SrmDocument.cs:60` - using pwiz.Skyline.Controls.SeqNode;
 - `Model/TransitionDocNode.cs:26` - using pwiz.Skyline.Controls.SeqNode;
 - `Model/TransitionGroupDocNode.cs:22` - using pwiz.Skyline.Controls.SeqNode;
@@ -176,7 +176,113 @@ Model references `pwiz.Skyline.Controls.Databinding` which is UI-specific.
 - **Easiest first:** DataGridViewColumn subclasses - create Model descriptors, use them in UI.
 - **Medium effort:** SeqNode - requires interface + UI implementation + Model update.
 - **Larger effort:** Databinding - cross-cutting concern, may need architectural discussion.
-- **Final step:** Once all 26 Model violations resolved, set tolerance to 0; then tackle CLI separately.## Notes for PR description (when ready)
+- **Final step:** Once all 26 Model violations resolved, set tolerance to 0; then tackle CLI separately.
+
+## Detailed extraction plan: RefinementSettings RT regression dependency
+
+**Current violation:**
+```csharp
+// Model/RefinementSettings.cs line 261
+var outliers = RTLinearRegressionGraphPane.CalcOutliers(document,
+    RTRegressionThreshold.Value, RTRegressionPrecision, UseBestResult);
+```
+
+**Goal:** Move RT regression calculation logic from `Controls.Graphs.RTLinearRegressionGraphPane` to new Model file.
+
+**New file:** `Model/RetentionTimes/RetentionTimeRegressionGraphData.cs`
+
+**Classes to extract and rename:**
+
+1. **RegressionSettings** → **RetentionTimeRegressionParameters**
+   - Pure data/configuration holder
+   - Remove `Settings.Default.RTScoreCalculatorList` dependency (pass explicitly)
+   - Keep as internal nested class or make public if needed elsewhere
+
+2. **GraphData** → **RetentionTimeRegressionGraphData** (primary class)
+   - Main calculation engine for RT regression outliers
+   - Constructor dependencies to externalize:
+     - `RTGraphController.PointsType` → pass as parameter
+     - `RTGraphController.RegressionMethod` → pass as parameter
+   - Already clean of Settings.Default (good!)
+   - Keep PointInfo as nested class (UI-agnostic data)
+
+3. **Static CalcOutliers method** → new public static method on **RetentionTimeRegressionGraphData**
+   - Signature change:
+     ```csharp
+     // OLD (UI):
+     public static PeptideDocNode[] CalcOutliers(SrmDocument document, 
+         double threshold, int? precision, bool bestResult)
+     
+     // NEW (Model):
+     public static PeptideDocNode[] CalcOutliers(SrmDocument document,
+         double threshold, int? precision, bool bestResult,
+         PointsTypeRT pointsType, RegressionMethodRT regressionMethod,
+         RtCalculatorOption calculatorOption, bool refinePeptides)
+     ```
+   - Caller (RefinementSettings) will pass Settings.Default values explicitly
+   - Caller (RTLinearRegressionGraphPane.CalcOutliers wrapper) will pass controller static properties
+
+**Dependencies already in Model namespace:**
+- ✅ `PointsTypeRT` enum (in RTGraphController.cs but will move to Model)
+- ✅ `RegressionMethodRT` enum (already in Model/RetentionTimes/DocumentRetentionTimes.cs)
+- ✅ `RtCalculatorOption` (Model namespace)
+- ✅ `ProductionMonitor`, `CancellationToken` (Common/SystemUtil)
+
+**Dependencies to handle:**
+- `PointsTypeRT` enum: Currently in `Controls/Graphs/RTGraphController.cs`
+    - **Decision: Move to Model/RetentionTimes** alongside `RegressionMethodRT` (UI-agnostic concept)
+    - **Action:**
+        1) Define `public enum PointsTypeRT { targets, targets_fdr, standards, decoys }` in `Model/RetentionTimes/DocumentRetentionTimes.cs` (or a new `PointsTypeRT.cs` in the same namespace)
+        2) Update all references to use `pwiz.Skyline.Model.RetentionTimes.PointsTypeRT`
+        3) Remove the enum from `RTGraphController.cs`
+        4) Ensure `RTGraphController.PointsType` property continues to work by returning the moved enum type
+    - **Rationale:** Allows Model code (extracted regression logic) to accept `PointsTypeRT` without referencing UI
+
+**UI wrapper strategy:**
+After extraction, `RTLinearRegressionGraphPane.CalcOutliers` becomes a thin wrapper:
+```csharp
+public static PeptideDocNode[] CalcOutliers(SrmDocument document, 
+    double threshold, int? precision, bool bestResult)
+{
+    return RetentionTimeRegressionGraphData.CalcOutliers(document,
+        threshold, precision, bestResult,
+        RTGraphController.PointsType,
+        RTGraphController.RegressionMethod,
+        Settings.Default.RtCalculatorOption,
+        Settings.Default.RTRefinePeptides);
+}
+```
+
+**Model caller update:**
+`RefinementSettings.cs` changes to:
+```csharp
+var outliers = RetentionTimeRegressionGraphData.CalcOutliers(document,
+    RTRegressionThreshold.Value, RTRegressionPrecision, UseBestResult,
+    PointsTypeRT.targets,  // Explicit
+    RegressionMethodRT.linear,  // Or passed as parameter
+    Settings.Default.RtCalculatorOption,  // Or passed
+    Settings.Default.RTRefinePeptides);  // Or passed
+```
+
+**Parameterization in GraphData (now RetentionTimeRegressionGraphData):**
+- Replace usage of `RTGraphController.PointsType` with constructor parameter `pointsType`
+- Replace usage of `RTGraphController.RegressionMethod` with constructor parameter `regressionMethod`
+
+**Risk assessment:**
+- **Medium complexity:** ~600 lines of code to move
+- **High test surface:** RT regression is heavily tested
+- **Settings dependencies:** 4-5 Settings.Default calls to externalize
+- **Enum location:** PointsTypeRT needs decision on placement
+
+**Next steps:**
+1. Decide PointsTypeRT placement (move to Model or reference Controls?)
+2. Create RetentionTimeRegressionGraphData.cs with extracted classes
+3. Update RTLinearRegressionGraphPane to delegate
+4. Update RefinementSettings caller
+5. Build, run CodeInspectionTest, verify Model violations drop by 1
+6. Run full RT regression tests
+
+## Notes for PR description (when ready)
 - Tests: added fully-qualified UI namespace inspection; reduced Model UI tolerance from 35 to 28.
 - Model: extracted `FoldChangeRows.cs`; refactored multiple Model files to reduce UI coupling.
 - UI: adjusted GroupComparison and related UI to reference Model-only logic.
