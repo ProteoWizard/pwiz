@@ -15,7 +15,7 @@ namespace pwiz.PanoramaClient
         JObject Get(Uri uri, string messageOnError = null);
         JObject Post(Uri uri, NameValueCollection postData, string messageOnError = null);
         JObject Post(Uri uri, string postData, string messageOnError);
-        void DoRequest(HttpWebRequest request, string method, string authHeader, string messageOnError = null);
+        void DoRequest(Uri uri, string method, IDictionary<string, string> headers, string messageOnError = null);
         void RequestJsonResponse();
         void AddHeader(string name, string value);
         void RemoveHeader(string name);
@@ -56,7 +56,7 @@ namespace pwiz.PanoramaClient
         
         public abstract void AddHeader(HttpRequestHeader header, string value);
 
-        public abstract string GetResponse(HttpWebRequest request);
+        public abstract string GetResponse(Uri uri, string method, IDictionary<string, string> headers);
 
         public abstract LabKeyError GetErrorFromException(WebException e);
 
@@ -143,27 +143,23 @@ namespace pwiz.PanoramaClient
             AddHeader(HttpRequestHeader.Accept, APPLICATION_JSON);
         }
 
-        public void DoRequest(HttpWebRequest request, string method, string authHeader, string messageOnError = null)
+        public void DoRequest(Uri uri, string method, IDictionary<string, string> headers, string messageOnError = null)
         {
-            request.Method = method;
-            request.Headers.Add(HttpRequestHeader.Authorization, authHeader);
-            request.Accept = APPLICATION_JSON; // Get LabKey to send JSON instead of HTML
-
             messageOnError ??= string.Format(Resources.AbstractRequestHelper_DoRequest__0__request_was_unsuccessful_, method);
             try
             {
-                var response = GetResponse(request);
+                var response = GetResponse(uri, method, headers);
                 // If the JSON response contains an exception message, throw a PanoramaServerException
                 var labkeyError = PanoramaUtil.GetIfErrorInResponse(response);
                 if (labkeyError != null)
                 {
-                    throw new PanoramaServerException(new ErrorMessageBuilder(messageOnError).Uri(request.RequestUri)
+                    throw new PanoramaServerException(new ErrorMessageBuilder(messageOnError).Uri(uri)
                         .LabKeyError(labkeyError).ToString());
                 }
             }
             catch (WebException e)
             {
-                throw NewPanoramaServerException(messageOnError, request.RequestUri, method, e);
+                throw NewPanoramaServerException(messageOnError, uri, method, e);
             }
         }
 
@@ -453,18 +449,22 @@ namespace pwiz.PanoramaClient
             // Progress is reported automatically during upload via the IProgressMonitor passed to constructor
         }
 
-        public override string GetResponse(HttpWebRequest request)
+        public override string GetResponse(Uri uri, string method, IDictionary<string, string> headers)
         {
-            // DoRequest() calls this after setting Method, Authorization, and Accept headers
-            // We extract the needed info from the HttpWebRequest and use HttpClient instead
-            var uri = request.RequestUri;
-            var method = request.Method;
-            
+            // Add Accept: application/json
+            RequestJsonResponse();
+
+            // Add headers before creating HttpClient
+            if (headers != null)
+            {
+                foreach (var header in headers)
+                {
+                    AddHeader(header.Key, header.Value);
+                }
+            }
+
             using var httpClient = CreateHttpClient();
-            
-            // The request.Accept was set to application/json in DoRequest()
-            httpClient.AddHeader("Accept", APPLICATION_JSON);
-            
+
             // For HEAD/DELETE/MOVE methods, use generic HTTP request
             using var httpRequest = new System.Net.Http.HttpRequestMessage(new System.Net.Http.HttpMethod(method), uri);
             var response = httpClient.SendRequest(httpRequest);

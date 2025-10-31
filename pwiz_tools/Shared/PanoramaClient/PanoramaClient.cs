@@ -146,7 +146,6 @@ namespace pwiz.PanoramaClient
 
                 var tmpUploadUri = UploadTempZipFile(zipFilePath, baseUploadUri, escapedZipFileName, requestHelper);
 
-                var authHeader = new PanoramaServer(ServerUri, Username, Password).AuthHeader;
                 if (progressMonitor.IsCanceled)
                 {
                     // Delete the temporary file on the server
@@ -154,19 +153,19 @@ namespace pwiz.PanoramaClient
                         _progressStatus =
                             _progressStatus.ChangeMessage(
                                 Resources.AbstractPanoramaClient_SendZipFile_Deleting_temporary_file_on_server));
-                    DeleteTempZipFile(tmpUploadUri, authHeader, requestHelper);
+                    DeleteTempZipFile(tmpUploadUri, requestHelper);
                     return null;
                 }
 
                 // Make sure the temporary file was uploaded to the server
-                ConfirmFileOnServer(tmpUploadUri, authHeader, requestHelper);
+                ConfirmFileOnServer(tmpUploadUri, requestHelper);
 
                 // Rename the temporary file
                 _progressStatus = _progressStatus.ChangeMessage(
                     "Renaming temporary file on server");
                 progressMonitor.UpdateProgress(_progressStatus);
 
-                RenameTempZipFile(tmpUploadUri, uploadUri, authHeader, requestHelper);
+                RenameTempZipFile(tmpUploadUri, uploadUri, requestHelper);
 
                 // Add a document import job to the queue on the Panorama server
                 _progressStatus = _progressStatus.ChangeMessage(Resources.AbstractPanoramaClient_SendZipFile_Waiting_for_data_import_completion___);
@@ -385,45 +384,44 @@ namespace pwiz.PanoramaClient
             Thread.Sleep(sleepTime);
         }
 
-        private void RenameTempZipFile(Uri sourceUri, Uri destUri, string authHeader, IRequestHelper requestHelper)
+        private void RenameTempZipFile(Uri sourceUri, Uri destUri, IRequestHelper requestHelper)
         {
-            var request = (HttpWebRequest)WebRequest.Create(sourceUri);
+            // Headers for MOVE request
+            var headers = new Dictionary<string, string>
+            {
+                // Do not use Uri.ToString since it does not return the escaped version.
+                {"Destination", destUri.AbsoluteUri}, 
 
-            // Destination URI.  
-            // NOTE: Do not use Uri.ToString since it does not return the escaped version.
-            request.Headers.Add(@"Destination", destUri.AbsoluteUri);
-
-            // If a file already exists at the destination URI, it will not be overwritten.  
-            // The server would return a 412 Precondition Failed status code.
-            request.Headers.Add(@"Overwrite", @"F");
-
-            requestHelper.DoRequest(request,
-                @"MOVE",
-                authHeader,
-                Resources
-                    .AbstractPanoramaClient_RenameTempZipFile_There_was_an_error_renaming_the_temporary_zip_file_on_the_server_
+                // If a file already exists at the destination URI, it will not be overwritten.  
+                // The server would return a 412 Precondition Failed status code.
+                {"Overwrite", "F"}
+            };
+            requestHelper.DoRequest(
+                sourceUri,
+                "MOVE",
+                headers,
+                Resources.AbstractPanoramaClient_RenameTempZipFile_There_was_an_error_renaming_the_temporary_zip_file_on_the_server_
             );
         }
 
-        private void DeleteTempZipFile(Uri sourceUri, string authHeader, IRequestHelper requestHelper)
+        private void DeleteTempZipFile(Uri sourceUri, IRequestHelper requestHelper)
         {
-            var request = (HttpWebRequest)WebRequest.Create(sourceUri.ToString());
-
-            requestHelper.DoRequest(request,
-                @"DELETE",
-                authHeader,
-                Resources
-                    .AbstractPanoramaClient_DeleteTempZipFile_There_was_an_error_deleting_the_temporary_zip_file_on_the_server_
+            // DELETE request, no custom headers needed
+            requestHelper.DoRequest(
+                sourceUri,
+                "DELETE",
+                null,
+                Resources.AbstractPanoramaClient_DeleteTempZipFile_There_was_an_error_deleting_the_temporary_zip_file_on_the_server_
             );
         }
 
-        private void ConfirmFileOnServer(Uri sourceUri, string authHeader, IRequestHelper requestHelper)
+        private void ConfirmFileOnServer(Uri sourceUri, IRequestHelper requestHelper)
         {
-            var request = (HttpWebRequest)WebRequest.Create(sourceUri);
-            // Do a HEAD request to check if the file exists on the server.
-            requestHelper.DoRequest(request,
-                @"HEAD",
-                authHeader,
+            // Do a HEAD request to check if the file exists on the server. No custom headers needed.
+            requestHelper.DoRequest(
+                sourceUri,
+                "HEAD",
+                null,
                 Resources.AbstractPanoramaClient_ConfirmFileOnServer_File_was_not_uploaded_to_the_server__Please_try_again__or_if_the_problem_persists__please_contact_your_Panorama_server_administrator_
             );
         }

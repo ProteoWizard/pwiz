@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Net;
@@ -363,15 +364,15 @@ namespace pwiz.SkylineTestFunctional
             {
                 _requestMethod = requestMethod;
             }
-            public override string GetResponse(HttpWebRequest request)
+            public override string GetResponse(Uri uri, string method, IDictionary<string, string> headers)
             {
-                if (request.Method.Equals(_requestMethod.ToString()))
+                if (method.Equals(_requestMethod.ToString()))
                 {
-                    _labkeyError = new LabKeyError(string.Format(MSG_LABKEY_ERR, request.Method), null);
-                    throw new WebException(string.Format(MSG_EXCEPTION, request.Method)); 
+                    _labkeyError = new LabKeyError(string.Format(MSG_LABKEY_ERR, method), null);
+                    throw new WebException(string.Format(MSG_EXCEPTION, method)); 
                 }
 
-                return base.GetResponse(request);
+                return base.GetResponse(uri, method, headers);
             }
             public override LabKeyError GetErrorFromException(WebException e)
             {
@@ -582,7 +583,7 @@ namespace pwiz.SkylineTestFunctional
                 // _uploadProgressChangedEventHandler = handler;
             }
 
-            public override string GetResponse(HttpWebRequest request)
+            public override string GetResponse(Uri uri, string method, IDictionary<string, string> headers)
             {
                 return string.Empty;
             }
