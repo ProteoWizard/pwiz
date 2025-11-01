@@ -196,6 +196,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Group Comparisons.
+        /// </summary>
+        public static string GroupComparisonDefList_Label_Group_Comparisons {
+            get {
+                return ResourceManager.GetString("GroupComparisonDefList_Label_Group_Comparisons", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Define Group Comparisons.
+        /// </summary>
+        public static string GroupComparisonDefList_Title_Define_Group_Comparisons {
+            get {
+                return ResourceManager.GetString("GroupComparisonDefList_Title_Define_Group_Comparisons", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Edit Isotope Modification.
         /// </summary>
         public static string HeavyModList_EditItem_Edit_Isotope_Modification {
@@ -309,6 +327,24 @@ namespace pwiz.Skyline.Properties {
         public static string IsotopeEnrichmentsList_Title_Edit_Isotope_Labeling_Enrichments {
             get {
                 return ResourceManager.GetString("IsotopeEnrichmentsList_Title_Edit_Isotope_Labeling_Enrichments", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Lists.
+        /// </summary>
+        public static string ListDefList_Label_Lists {
+            get {
+                return ResourceManager.GetString("ListDefList_Label_Lists", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Define Lists.
+        /// </summary>
+        public static string ListDefList_Title_Define_Lists {
+            get {
+                return ResourceManager.GetString("ListDefList_Title_Define_Lists", resourceCulture);
             }
         }
         

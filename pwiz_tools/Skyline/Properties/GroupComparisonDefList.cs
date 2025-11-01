@@ -33,12 +33,12 @@ namespace pwiz.Skyline.Properties
 
         public override string Title
         {
-            get { return GroupComparisonStrings.GroupComparisonDefList_Title_Define_Group_Comparisons; }
+            get { return PropertiesResources.GroupComparisonDefList_Title_Define_Group_Comparisons; }
         }
 
         public override string Label
         {
-            get { return GroupComparisonStrings.GroupComparisonDefList_Label_Group_Comparisons; }
+            get { return PropertiesResources.GroupComparisonDefList_Label_Group_Comparisons; }
         }
 
         public override GroupComparisonDef EditItem(Control owner, GroupComparisonDef item, IEnumerable<GroupComparisonDef> existing, object tag)

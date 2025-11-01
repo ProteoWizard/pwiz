@@ -814,6 +814,7 @@
     </Compile>
     <Compile Include="Model\TransitionLossMap.cs" />
     <Compile Include="Properties\GroupComparisonDefList.cs" />
+    <Compile Include="Properties\ListDefList.cs" />
     <Compile Include="Properties\MetadataRuleSetList.cs" />
     <Compile Include="Properties\RemoteAccountList.cs" />
     <Compile Include="Model\Results\Spectra\FileSpectrumInfo.cs" />
