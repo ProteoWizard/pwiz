@@ -482,6 +482,7 @@
     <Compile Include="EditUI\PermuteIsotopeModificationsDlg.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="EditUI\SpectrumFilterAutoComplete.cs" />
     <Compile Include="EditUI\SynchronizedIntegrationDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -607,7 +608,6 @@
     <Compile Include="Model\Results\Spectra\Alignment\SpectrumSummary.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\SpectrumSummaryList.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumClassFilter.cs" />
-    <Compile Include="Model\Results\Spectra\SpectrumFilterAutoComplete.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumMetadatas.cs" />
     <Compile Include="Model\RetentionTimes\AlignmentFunction.cs" />
     <Compile Include="Model\RetentionTimes\Alignments.cs" />
