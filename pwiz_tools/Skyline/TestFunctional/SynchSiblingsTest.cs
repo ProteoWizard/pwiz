@@ -222,7 +222,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(3, nodes.Count);
             // Match "D [y8] - 931.5095+ (rank 18)"
             var regexTran = new Regex(string.Format(@"[A-Z] \[([^\]]+)\]? - [^+]*(\++) (\({0}\))",
-                                                    string.Format(Resources.TransitionTreeNode_GetLabel_rank__0__, @"\d+")));
+                                                    string.Format(ModelResources.TransitionDocNode_GetLabel_rank__0__, @"\d+")));
             for (int i = 0; i < nodes[0].Nodes.Count; i++)
             {
                 var match0 = MatchTransitionText(nodes[0].Nodes[i], regexTran);

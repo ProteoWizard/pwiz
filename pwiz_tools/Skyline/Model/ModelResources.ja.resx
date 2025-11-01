@@ -842,4 +842,14 @@
   <data name="ThermoMassListExporter_EnsureLibraries_Unknown_Thermo_instrument_type___0___installed_" xml:space="preserve">
     <value>インストールされたThermo装置タイプ「{0}」が不明です。</value>
   </data>
+  <data name="TransitionDocNode_GetLabel__0__1__" xml:space="preserve">
+    <value>{0} [{1}]</value>
+  </data>
+  <data name="TransitionDocNode_GetLabel_irank__0__" xml:space="preserve">
+    <value>iランク{0}</value>
+    <comment>Isotope rank "irank" for transition node</comment>
+  </data>
+  <data name="TransitionDocNode_GetLabel_rank__0__" xml:space="preserve">
+    <value>ランク{0}</value>
+  </data>
 </root>

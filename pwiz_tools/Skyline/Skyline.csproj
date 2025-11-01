@@ -529,6 +529,7 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Model\DecoyGenerator.cs" />
+    <Compile Include="Model\GroupComparison\FoldChangeRows.cs" />
     <Compile Include="Model\Lib\AlphaPeptDeep\AlphapeptdeepLibraryBuilder.cs" />
     <Compile Include="Model\AuditLog\EnumNames.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -619,6 +620,7 @@
     <Compile Include="Model\RetentionTimes\PeakImputation\PeakBoundaryImputer.cs" />
     <Compile Include="Model\RetentionTimes\RtCalculatorOption.cs" />
     <Compile Include="Model\RetentionTimes\RTPeptideValue.cs" />
+    <Compile Include="Model\RetentionTimes\RetentionTimeRegressionGraphData.cs" />
     <Compile Include="Model\SearchTool.cs" />
     <Compile Include="Model\SpectrumPropertiesResx.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -811,6 +813,8 @@
       <DependentUpon>ToolsResources.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\TransitionLossMap.cs" />
+    <Compile Include="Properties\GroupComparisonDefList.cs" />
+    <Compile Include="Properties\ListDefList.cs" />
     <Compile Include="Properties\MetadataRuleSetList.cs" />
     <Compile Include="Properties\RemoteAccountList.cs" />
     <Compile Include="Model\Results\Spectra\FileSpectrumInfo.cs" />
@@ -1842,7 +1846,6 @@
     <Compile Include="Model\GroupComparison\FoldChangeResult.cs" />
     <Compile Include="Model\GroupComparison\GroupComparer.cs" />
     <Compile Include="Model\GroupComparison\GroupComparisonDef.cs" />
-    <Compile Include="Model\GroupComparison\GroupComparisonDefList.cs" />
     <Compile Include="Model\GroupComparison\GroupComparisonModel.cs" />
     <Compile Include="Model\GroupComparison\GroupComparisonResult.cs" />
     <Compile Include="Model\GroupComparison\GroupComparisonResults.cs" />

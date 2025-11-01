@@ -3688,9 +3688,6 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   <data name="RInstaller_InstallPackages_Package_installation_failed__Error_log_output_in_immediate_window_" xml:space="preserve">
     <value>パッケージのインストールに失敗しました。即時ウィンドウ内のログ出力エラー。</value>
   </data>
-  <data name="TransitionTreeNode_GetLabel_rank__0__" xml:space="preserve">
-    <value>ランク{0}</value>
-  </data>
   <data name="CalculateIsolationSchemeDlg_OkDialog_Window_width_must_be_less_than_or_equal_to_the_isolation_range" xml:space="preserve">
     <value>ウィンドウ幅は単離範囲以下でなければなりません。</value>
   </data>

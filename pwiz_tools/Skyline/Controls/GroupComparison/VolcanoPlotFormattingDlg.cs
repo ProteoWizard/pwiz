@@ -46,7 +46,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private readonly DataGridViewComboBoxColumn _pointSizeCombo;
 
         public VolcanoPlotFormattingDlg(FoldChangeVolcanoPlot volcanoPlot, IList<MatchRgbHexColor> colorRows,
-            FoldChangeBindingSource.FoldChangeRow[] foldChangeRows, Action<IEnumerable<MatchRgbHexColor>> updateGraph) : 
+            FoldChangeRow[] foldChangeRows, Action<IEnumerable<MatchRgbHexColor>> updateGraph) : 
             this(true, colorRows, foldChangeRows, updateGraph, 
                 volcanoPlot.PerProtein, volcanoPlot.Document)
         {

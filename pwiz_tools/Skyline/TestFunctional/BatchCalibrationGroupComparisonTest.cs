@@ -112,7 +112,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 var foldChangeRows = groupComparisonForm.DataboundGridControl.BindingListSource.OfType<RowItem>()
-                    .Select(rowItem => (FoldChangeBindingSource.FoldChangeRow)rowItem.Value).ToList();
+                    .Select(rowItem => (FoldChangeRow)rowItem.Value).ToList();
                 Assert.AreEqual(foldChangeRows.Count, SkylineWindow.Document.MoleculeCount);
                 foreach (var row in foldChangeRows)
                 {
@@ -138,7 +138,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 var foldChangeRows = groupComparisonForm.DataboundGridControl.BindingListSource.OfType<RowItem>()
-                    .Select(rowItem => (FoldChangeBindingSource.FoldChangeRow)rowItem.Value).ToList();
+                    .Select(rowItem => (FoldChangeRow)rowItem.Value).ToList();
                 Assert.AreEqual(foldChangeRows.Count, SkylineWindow.Document.MoleculeCount);
                 foreach (var row in foldChangeRows)
                 {

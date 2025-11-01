@@ -905,4 +905,14 @@ Would you like to continue?
   <data name="AbstractModificationMatcher_CreateDocNodeFromSettings_In_entry___0___of___1_____2_" xml:space="preserve">
       <value>In entry "{0}" of "{1}": {2}</value>
   </data>
+  <data name="TransitionDocNode_GetLabel__0__1__" xml:space="preserve">
+    <value>{0} [{1}]</value>
+  </data>
+  <data name="TransitionDocNode_GetLabel_irank__0__" xml:space="preserve">
+    <value>irank {0}</value>
+    <comment>Isotope rank "irank" for transition node</comment>
+  </data>
+  <data name="TransitionDocNode_GetLabel_rank__0__" xml:space="preserve">
+    <value>rank {0}</value>
+  </data>
 </root>

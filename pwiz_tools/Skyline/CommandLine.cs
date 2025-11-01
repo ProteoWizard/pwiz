@@ -25,7 +25,6 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Windows.Forms; // for IWin32Window used by ILongWaitBroker
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.PanoramaClient;
@@ -4986,11 +4985,6 @@ namespace pwiz.Skyline
         public bool IsDocumentChanged(SrmDocument docOrig)
         {
             return true;
-        }
-
-        public DialogResult ShowDialog(Func<IWin32Window, DialogResult> show)
-        {
-            return DialogResult.OK;
         }
 
         public void SetProgressCheckCancel(int step, int totalSteps)

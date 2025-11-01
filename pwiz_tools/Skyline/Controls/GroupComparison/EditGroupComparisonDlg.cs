@@ -42,6 +42,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private readonly IEnumerable<GroupComparisonDef> _existingGroupComparisons;
         protected bool _inChangeSettings;
         private readonly bool _pushChangesToDocument;
+        private IDisposable _modelChangeSubscription;
 
         public EditGroupComparisonDlg(IDocumentUIContainer documentContainer,
             GroupComparisonDef groupComparisonDef, IEnumerable<GroupComparisonDef> existingGroupComparisons)
@@ -76,9 +77,32 @@ namespace pwiz.Skyline.Controls.GroupComparison
             InitializeComponent();
             Icon = Resources.Skyline;
             GroupComparisonModel = groupComparisonModel;
-            GroupComparisonModel.AddModelChanged(this, OnModelChanged);
+            HandleCreated += EditGroupComparisonDlg_HandleCreated;
+            HandleDestroyed += EditGroupComparisonDlg_HandleDestroyed;
             Height -= panelAdvanced.Height;
             panelAdvanced.Visible = false;
+        }
+
+        private void EditGroupComparisonDlg_HandleCreated(object sender, EventArgs e)
+        {
+            if (_modelChangeSubscription == null && GroupComparisonModel != null)
+            {
+                _modelChangeSubscription = GroupComparisonModel.AddModelChanged(() =>
+                {
+                    if (IsHandleCreated)
+                    {
+                        BeginInvoke(new Action(() => OnModelChanged(GroupComparisonModel)));
+                    }
+                });
+                // Trigger initial update
+                OnModelChanged(GroupComparisonModel);
+            }
+        }
+
+        private void EditGroupComparisonDlg_HandleDestroyed(object sender, EventArgs e)
+        {
+            _modelChangeSubscription?.Dispose();
+            _modelChangeSubscription = null;
         }
 
         private void btnPreview_Click(object sender, EventArgs e)
