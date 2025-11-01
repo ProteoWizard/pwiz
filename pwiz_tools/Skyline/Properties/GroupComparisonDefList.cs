@@ -19,9 +19,10 @@
 using System.Collections.Generic;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls.GroupComparison;
-using pwiz.Skyline.Properties;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.GroupComparison;
 
-namespace pwiz.Skyline.Model.GroupComparison
+namespace pwiz.Skyline.Properties
 {
     public class GroupComparisonDefList : SettingsList<GroupComparisonDef>
     {

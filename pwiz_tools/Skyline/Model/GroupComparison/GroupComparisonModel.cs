@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using System.Windows.Forms;
 using pwiz.Common.DataAnalysis.Matrices;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util.Extensions;
@@ -192,9 +191,9 @@ namespace pwiz.Skyline.Model.GroupComparison
             }
         }
 
-        public IDisposable AddModelChanged(Control control, Action<GroupComparisonModel> eventHandler)
+        public IDisposable AddModelChanged(Action action)
         {
-            return new ModelChangeSupport(this, control, eventHandler);
+            return new ModelChangeSubscription(this, action);
         }
 
         public GroupComparisonResults Results
@@ -340,68 +339,21 @@ namespace pwiz.Skyline.Model.GroupComparison
             return results;
         }
 
-        private class ModelChangeSupport : IDisposable
+        private class ModelChangeSubscription : IDisposable
         {
             private readonly GroupComparisonModel _model;
-            private Control _control;
-            private readonly Action<GroupComparisonModel> _eventHandler;
-            private bool _controlHandleCreated;
+            private readonly EventHandler _eventHandler;
 
-            public ModelChangeSupport(GroupComparisonModel model, Control control, Action<GroupComparisonModel> eventHandler)
+            public ModelChangeSubscription(GroupComparisonModel model, Action action)
             {
                 _model = model;
-                _control = control;
-                _eventHandler = eventHandler;
-                _control.HandleCreated += ControlHandleCreated;
-                _control.HandleDestroyed += ControlHandleDestroyed;
-            }
-
-            private void ControlHandleCreated(object sender, EventArgs args)
-            {
-                _model.ModelChanged += ModelOnModelChanged;
-                _controlHandleCreated = true;
-                _eventHandler(_model);
-            }
-
-            private void ControlHandleDestroyed(object sender, EventArgs args)
-            {
-                _controlHandleCreated = false;
-                _model.ModelChanged -= ModelOnModelChanged;
-            }
-
-            private void ModelOnModelChanged(object sender, EventArgs args)
-            {
-                if (_controlHandleCreated)
-                {
-                    try
-                    {
-                        _control.BeginInvoke(new Action(() =>
-                        {
-                            _eventHandler(_model);
-                        }));
-                    }
-                    catch (Exception exception)
-                    {
-                        if (_controlHandleCreated)
-                        {
-                            Program.ReportException(exception);
-                        }
-                    }
-                }
+                _eventHandler = (sender, args) => action();
+                _model.ModelChanged += _eventHandler;
             }
 
             public void Dispose()
             {
-                if (null != _control)
-                {
-                    _control.HandleCreated -= ControlHandleCreated;
-                    _control.HandleDestroyed -= ControlHandleDestroyed;
-                    if (_controlHandleCreated)
-                    {
-                        ControlHandleDestroyed(_control, new EventArgs());
-                    }
-                    _control = null;
-                }
+                _model.ModelChanged -= _eventHandler;
             }
         }
     }

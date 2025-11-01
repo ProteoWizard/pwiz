@@ -813,6 +813,7 @@
       <DependentUpon>ToolsResources.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\TransitionLossMap.cs" />
+    <Compile Include="Properties\GroupComparisonDefList.cs" />
     <Compile Include="Properties\MetadataRuleSetList.cs" />
     <Compile Include="Properties\RemoteAccountList.cs" />
     <Compile Include="Model\Results\Spectra\FileSpectrumInfo.cs" />
@@ -1844,7 +1845,6 @@
     <Compile Include="Model\GroupComparison\FoldChangeResult.cs" />
     <Compile Include="Model\GroupComparison\GroupComparer.cs" />
     <Compile Include="Model\GroupComparison\GroupComparisonDef.cs" />
-    <Compile Include="Model\GroupComparison\GroupComparisonDefList.cs" />
     <Compile Include="Model\GroupComparison\GroupComparisonModel.cs" />
     <Compile Include="Model\GroupComparison\GroupComparisonResult.cs" />
     <Compile Include="Model\GroupComparison\GroupComparisonResults.cs" />
