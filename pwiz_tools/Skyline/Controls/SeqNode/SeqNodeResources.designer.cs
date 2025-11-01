@@ -431,24 +431,6 @@ namespace pwiz.Skyline.Controls.SeqNode {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} [{1}].
-        /// </summary>
-        public static string TransitionTreeNode_GetLabel__0__1__ {
-            get {
-                return ResourceManager.GetString("TransitionTreeNode_GetLabel__0__1__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to irank {0}.
-        /// </summary>
-        public static string TransitionTreeNode_GetLabel_irank__0__ {
-            get {
-                return ResourceManager.GetString("TransitionTreeNode_GetLabel_irank__0__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Decoy Mass Shift.
         /// </summary>
         public static string TransitionTreeNode_RenderTip_Decoy_Mass_Shift {

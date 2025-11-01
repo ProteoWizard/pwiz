@@ -241,13 +241,6 @@
   <data name="TransitionGroupTreeNode_Title" xml:space="preserve">
     <value>母离子</value>
   </data>
-  <data name="TransitionTreeNode_GetLabel__0__1__" xml:space="preserve">
-    <value>{0} [{1}]</value>
-  </data>
-  <data name="TransitionTreeNode_GetLabel_irank__0__" xml:space="preserve">
-    <value>i排名 {0}</value>
-    <comment>Isotope rank "irank" for transition node</comment>
-  </data>
   <data name="TransitionTreeNode_RenderTip_Decoy_Mass_Shift" xml:space="preserve">
     <value>诱饵质量偏移</value>
   </data>

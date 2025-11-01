@@ -1344,18 +1344,24 @@ namespace pwiz.Skyline.Model
 
         public override string GetDisplayText(DisplaySettings settings)
         {
-            // Match legacy SequenceTree.DisplayText semantics: GetLabel(node, string.Empty)
-            return GetSequenceTreeLabel(string.Empty);
+            // Match legacy SequenceTree.DisplayText semantics
+            return GetLabel(this, string.Empty);
         }
 
         /// <summary>
         /// Provides the exact same label semantics previously supplied by
-        /// PeptideTreeNode.GetLabel(this, resultsText), but owned by the model.
+        /// PeptideTreeNode.GetLabel(nodePep, resultsText), but owned by the model.
         /// </summary>
+        public static string GetLabel(PeptideDocNode nodePep, string resultsText)
+        {
+            // UI previously returned nodePep.ToString() + resultsText
+            return nodePep.ToString() + resultsText;
+        }
+
+        // Back-compat instance helper used in Model; prefer static GetLabel from callers
         public string GetSequenceTreeLabel(string resultsText)
         {
-            // PeptideTreeNode.GetLabel returned nodePep + resultsText
-            return ToString() + resultsText;
+            return GetLabel(this, resultsText);
         }
 
         public bool IsExcludeFromCalibration(int replicateIndex)

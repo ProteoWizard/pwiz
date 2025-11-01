@@ -2315,6 +2315,33 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} [{1}].
+        /// </summary>
+        public static string TransitionDocNode_GetLabel__0__1__ {
+            get {
+                return ResourceManager.GetString("TransitionDocNode_GetLabel__0__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to irank {0}.
+        /// </summary>
+        public static string TransitionDocNode_GetLabel_irank__0__ {
+            get {
+                return ResourceManager.GetString("TransitionDocNode_GetLabel_irank__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to rank {0}.
+        /// </summary>
+        public static string TransitionDocNode_GetLabel_rank__0__ {
+            get {
+                return ResourceManager.GetString("TransitionDocNode_GetLabel_rank__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Precursor charge {0} must be between {1} and {2}..
         /// </summary>
         public static string TransitionGroup_Validate_Precursor_charge__0__must_be_between__1__and__2__ {

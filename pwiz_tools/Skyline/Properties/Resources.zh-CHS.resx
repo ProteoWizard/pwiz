@@ -3691,9 +3691,6 @@
   <data name="RInstaller_InstallPackages_Package_installation_failed__Error_log_output_in_immediate_window_" xml:space="preserve">
     <value>软件包安装失败。在即时窗口中记录输出失败。</value>
   </data>
-  <data name="TransitionTreeNode_GetLabel_rank__0__" xml:space="preserve">
-    <value>排名 {0}</value>
-  </data>
   <data name="CalculateIsolationSchemeDlg_OkDialog_Window_width_must_be_less_than_or_equal_to_the_isolation_range" xml:space="preserve">
     <value>窗口宽度必须小于或等于分离范围。</value>
   </data>

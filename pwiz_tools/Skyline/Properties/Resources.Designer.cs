@@ -11242,15 +11242,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to rank {0}.
-        /// </summary>
-        public static string TransitionTreeNode_GetLabel_rank__0__ {
-            get {
-                return ResourceManager.GetString("TransitionTreeNode_GetLabel_rank__0__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to [{0}].
         /// </summary>
         public static string TransitionTreeNode_GetResultsText__0__ {
