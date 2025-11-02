@@ -205,7 +205,7 @@
     <value>201, 22</value>
   </data>
   <data name="openContainingFolderMenuItem.Text" xml:space="preserve">
-    <value>Show Containing Folder</value>
+    <value>Open Containing Folder</value>
   </data>
   <data name="openLibraryInLibraryExplorerMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>201, 22</value>

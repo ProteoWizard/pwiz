@@ -217,13 +217,9 @@ namespace pwiz.Skyline.Controls.FilesTree
             {
                 customTable.AddDetailRow(@" ", @" ", rt);
                 customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_Tooltip_FileName, FileName, rt);
-                customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_Tooltip_FilePath, FilePath, rt);
-
-                customTable.AddDetailRow(@" ", @" ", rt);
 
                 // If saved file path and local file path are the same: only show "File Path: c:\foo\bar"
-                // Otherwise, show both "Saved File Path: c:\abc\def" and "Local File Path: c:\foo\bar"
-                // Show LocalFilePath as red if the local file is unavailable.
+                // Use red font if local file path is unavailable
                 if (string.Compare(FilePath, LocalFilePath, StringComparison.Ordinal) == 0)
                 {
                     if (FileState == FileState.available || FileState == FileState.in_memory)
@@ -231,6 +227,8 @@ namespace pwiz.Skyline.Controls.FilesTree
                     else
                         TooltipNewRowWithRedValue(FilesTreeResources.FilesTree_TreeNode_Tooltip_FilePath, FilePath, customTable, rt);
                 }
+                // Otherwise, show both "Saved File Path: c:\abc\def" and "Local File Path: c:\foo\bar"
+                // Use red font if local file path is unavailable
                 else
                 {
                     customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_Tooltip_SavedFilePath, FilePath, rt);
@@ -257,7 +255,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 customTable.AddDetailRow(@"Expect to find a local file?", $@"{(Model.IsBackedByFile ? @"Yes" : @"No")}", rt);
                 if (FileState == FileState.available || FileState == FileState.in_memory)
                 {
-                    var value = FileState == FileState.available ? @"Yes (in local storage)" : @"Yes (in memory)";
+                    var value = FileState == FileState.available ? @"Yes, in local storage" : @"Yes, in memory";
                     customTable.AddDetailRow(@"Found local file?", value, rt);
                 }
                 else

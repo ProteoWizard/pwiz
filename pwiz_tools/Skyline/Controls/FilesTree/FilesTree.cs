@@ -583,6 +583,9 @@ namespace pwiz.Skyline.Controls.FilesTree
                     AfterNodeEdit?.Invoke(this, e);
                 }
             }
+
+            // Put focus back on the tree after label edit is complete
+            Focus();
         }
 
         #endregion

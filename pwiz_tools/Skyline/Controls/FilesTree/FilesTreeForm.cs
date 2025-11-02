@@ -304,8 +304,30 @@ namespace pwiz.Skyline.Controls.FilesTree
         /// <returns>true if the caller should cancel the edit. false otherwise.</returns>
         public bool EditTreeNodeLabel(FilesTreeNode node, string newLabel)
         {
-            if (node == null || string.IsNullOrEmpty(newLabel) || !(node.Model is Replicate replicate))
+            if (node == null || string.IsNullOrEmpty(newLabel) || !node.SupportsRename())
                 return true;
+
+            // CONSIDER: add IFileRenameable interface to FileModel and implement on Replicate and Spectral Library. ISupportsRename should include a validate(...) method.
+            var replicate = node.Model as Replicate;
+
+            if (replicate == null)
+                return true;
+
+            var oldLabel = node.Name;
+
+            // Validate input
+            // Cancel event tif the old and new names match
+            if (string.Compare(oldLabel, newLabel, StringComparison.CurrentCulture) == 0)
+            {
+                return true;
+            }
+            // Cancel event if new name matches the name of another item in the collection
+            else if (replicate.HasItemWithName(SkylineWindow.DocumentUI, newLabel))
+            {
+                var confirmMsg = string.Format(FilesTreeResources.FilesTreeForm_Error_Renaming_Replicate, newLabel);
+                MultiButtonMsgDlg.Show(this, confirmMsg, MessageBoxButtons.OK);
+                return true;
+            }
 
             lock (SkylineWindow.GetDocumentChangeLock())
             {
@@ -429,11 +451,20 @@ namespace pwiz.Skyline.Controls.FilesTree
                 openContainingFolderMenuItem.Enabled = filesTreeNode.LocalFileIsAvailable();
             }
 
+            // Show Remove and Remove All options if supported by the selected node. But only enable them if 
+            // all selected nodes are of the same type.
+            var allSameType = FilesTree.SelectedNodes.Cast<FilesTreeNode>().Select(node => node.Model.GetType()).Distinct().Count() == 1;
             if (filesTreeNode.SupportsRemoveItem())
+            {
                 removeMenuItem.Visible = true;
+                removeMenuItem.Enabled = allSameType;
+            }
 
             if (filesTreeNode.SupportsRemoveAllItems())
+            {
                 removeAllMenuItem.Visible = true;
+                removeAllMenuItem.Enabled = allSameType;
+            }
 
             switch (filesTreeNode.Model)
             {

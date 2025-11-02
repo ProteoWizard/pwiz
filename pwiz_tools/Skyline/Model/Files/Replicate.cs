@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
@@ -166,6 +168,15 @@ namespace pwiz.Skyline.Model.Files
                 newName);
 
             return new ModifiedDocument(newDocument).ChangeAuditLogEntry(entry);
+        }
+
+        public bool HasItemWithName(SrmDocument document, string newName)
+        {
+            Assume.IsNotNull(document);
+            Assume.IsNotNull(document.MeasuredResults);
+
+            var chromSets = document.MeasuredResults.Chromatograms;
+            return chromSets.Any(item => string.Equals(item.Name, newName, StringComparison.CurrentCulture));
         }
     }
 }

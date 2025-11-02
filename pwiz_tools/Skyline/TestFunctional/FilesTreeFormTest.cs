@@ -375,14 +375,51 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => Assert.IsTrue(SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[3].IsExpanded));
 
             //
-            // Rename replicate by editing tree node's label
+            // Edit tree node labels
             //
             newName = "NEW REPLICATE NAME";
             var treeNode = SkylineWindow.FilesTree.Folder<ReplicatesFolder>().NodeAt(0);
-            RunUI(() => SkylineWindow.FilesTreeForm.EditTreeNodeLabel(treeNode, newName));
+            RunUI(() =>
+            {
+                var auditLogSize = SkylineWindow.Document.AuditLog.AuditLogEntries.Count;
+                var cancelEvent = SkylineWindow.FilesTreeForm.EditTreeNodeLabel(treeNode, newName);
+                Assert.IsFalse(cancelEvent);
+                // Check no new entries were added to the audit log
+                Assert.AreEqual(auditLogSize + 1, SkylineWindow.Document.AuditLog.AuditLogEntries.Count);
+            });
             WaitForFilesTree();
 
             Assert.AreEqual(newName, SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[0].Name);
+
+            // Input validation - attempt to rename node to the same name.
+            newName = @"D_138_REP1";
+            treeNode = SkylineWindow.FilesTree.Folder<ReplicatesFolder>().NodeAt(9);
+            RunUI(() =>
+            {
+                var auditLogSize = SkylineWindow.Document.AuditLog.AuditLogEntries.Count;
+                var cancelEvent = SkylineWindow.FilesTreeForm.EditTreeNodeLabel(treeNode, newName);
+
+                Assert.IsTrue(cancelEvent);
+                // Check no new entries were added to the audit log
+                Assert.AreEqual(auditLogSize, SkylineWindow.Document.AuditLog.AuditLogEntries.Count);
+            });
+            WaitForFilesTree();
+            Assert.AreEqual(newName, SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[9].Name);
+
+            // Input validation - attempt to rename a node to a name used by another node in the collection
+            treeNode = SkylineWindow.FilesTree.Folder<ReplicatesFolder>().NodeAt(12);
+            var currentName = treeNode.Name;
+            var cancelEvent = false;
+
+            var auditLogSize = SkylineWindow.Document.AuditLog.AuditLogEntries.Count;
+            var confirmDlg = ShowDialog<MultiButtonMsgDlg>(() => cancelEvent = SkylineWindow.FilesTreeForm.EditTreeNodeLabel(treeNode, newName));
+            OkDialog(confirmDlg, confirmDlg.ClickOk);
+
+            Assert.IsTrue(cancelEvent);
+            Assert.AreEqual(auditLogSize, SkylineWindow.Document.AuditLog.AuditLogEntries.Count);
+
+            WaitForFilesTree();
+            Assert.AreEqual(currentName, SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[12].Name);
 
             //
             // Activating a replicate should update selected graphs
