@@ -196,7 +196,7 @@ namespace pwiz.SkylineTest
                     why);
             }
 
-            AddForbiddenUIInspection(@"*.cs", @"namespace pwiz.Skyline.Model", @"Skyline model code must not depend on UI code", 13);
+            AddForbiddenUIInspection(@"*.cs", @"namespace pwiz.Skyline.Model", @"Skyline model code must not depend on UI code", 12);
             // Looking for CommandLine.cs and CommandArgs.cs code depending on UI code
             AddForbiddenUIInspection(@"CommandLine.cs", @"namespace pwiz.Skyline", @"CommandLine code must not depend on UI code", 1);
             AddForbiddenUIInspection(@"CommandArgs.cs", @"namespace pwiz.Skyline", @"CommandArgs code must not depend on UI code");
@@ -787,9 +787,104 @@ namespace pwiz.SkylineTest
             resourceAssorter.DoWork(errors);
             if (errors.Count > initialErrors)
             {
-                var exePath = Path.Combine(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule!.FileName)??string.Empty, "AssortResources.exe");
+                // Attempt self-healing by running AssortResources.exe to move non-shared resources automatically
+                // Search for AssortResources.exe in several possible locations
+                var assemblyDir = Path.GetDirectoryName(typeof(FormEx).Assembly.Location) ?? string.Empty;
+                var searchPaths = new List<string>
+                {
+                    // Same directory as running assembly (e.g., bin\x64\Debug)
+                    assemblyDir,
+                    // Release build location (typically where it's built by Boost Build)
+                    Path.Combine(root, "bin", "x64", "Release"),
+                    // Debug build location
+                    Path.Combine(root, "bin", "x64", "Debug"),
+                    // Any platform (fallback)
+                    Path.Combine(root, "bin", "Release"),
+                    Path.Combine(root, "bin", "Debug")
+                };
 
-                errors.Add($"\nThis can be done with command:\n\"{exePath}\" --resourcefile \"{resourceFilePath}\" --projectfile \"{csProjPath}\"\nBefore running this command, save all your changes in the IDE.");
+                string exePath = null;
+                foreach (var searchPath in searchPaths)
+                {
+                    var candidate = Path.Combine(searchPath, "AssortResources.exe");
+                    if (File.Exists(candidate))
+                    {
+                        exePath = candidate;
+                        break;
+                    }
+                }
+
+                bool attemptedFix = false;
+                bool fixSucceeded = false;
+                if (exePath != null)
+                {
+                    try
+                    {
+                        var args = $"--resourcefile \"{resourceFilePath}\" --projectfile \"{csProjPath}\"";
+                        var psi = new ProcessStartInfo(exePath, args)
+                        {
+                            WorkingDirectory = root,
+                            UseShellExecute = false,
+                            CreateNoWindow = true
+                        };
+
+                        var processRunner = new ProcessRunner();
+                        var writer = new StringWriter();
+                        IProgressStatus status = new ProgressStatus(string.Empty);
+                        processRunner.Run(psi, null, null, ref status, writer);
+
+                        attemptedFix = true;
+
+                        // Re-run inspection to verify the fix
+                        var verifyErrors = new List<string>();
+                        var verifier = new ResourceAssorter(csProjPath, resourceFilePath, true, otherProjectPaths.ToArray());
+                        verifier.DoWork(verifyErrors);
+                        fixSucceeded = verifyErrors.Count <= initialErrors;
+                        if (fixSucceeded)
+                        {
+                            // Replace the previously-added errors with a single actionable summary
+                            errors.Add(string.Empty);
+                            errors.Add($"Auto-fixed misplaced resources by running AssortResources.exe (found at {exePath}).");
+                            errors.Add("Please review and commit the changes, then re-run the test.");
+                        }
+                        else
+                        {
+                            errors.Add(string.Empty);
+                            errors.Add($"AssortResources.exe (found at {exePath}) was invoked but did not fully resolve the issues.");
+                            errors.Add("You may need to run it manually or investigate the root cause.");
+                        }
+                    }
+                    catch (IOException ioEx)
+                    {
+                        // ProcessRunner throws IOException on failure; capture the message
+                        errors.Add(string.Empty);
+                        errors.Add($"AssortResources.exe (found at {exePath}) was invoked automatically but encountered an error:");
+                        errors.Add(ioEx.Message);
+                    }
+                }
+                else
+                {
+                    // Could not find the tool
+                    errors.Add(string.Empty);
+                    errors.Add("AssortResources.exe was not found in any of the following locations:");
+                    foreach (var searchPath in searchPaths)
+                    {
+                        errors.Add($"  - {Path.Combine(searchPath, "AssortResources.exe")}");
+                    }
+                    errors.Add(string.Empty);
+                    errors.Add("AssortResources.exe is typically built by the Boost Build from the pwiz root.");
+                    errors.Add("Run a full build (e.g., quickbuild.bat) to create it, or run the command manually once built:");
+                }
+
+                if (!fixSucceeded)
+                {
+                    // Always provide the manual instruction if auto-fix didn't succeed
+                    var suggestedPath = exePath ?? Path.Combine(assemblyDir, "AssortResources.exe");
+                    errors.Add(string.Empty);
+                    errors.Add($"This can be done with command:");
+                    errors.Add($"\"{suggestedPath}\" --resourcefile \"{resourceFilePath}\" --projectfile \"{csProjPath}\"");
+                    errors.Add("Before running this command, save all your changes in the IDE.");
+                }
             }
         }
 

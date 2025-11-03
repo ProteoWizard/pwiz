@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Resources {
@@ -8585,24 +8585,6 @@ namespace pwiz.Skyline.Properties {
         public static string ReportSpecList_GetDefaults_Transition_Results {
             get {
                 return ResourceManager.GetString("ReportSpecList_GetDefaults_Transition_Results", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to &amp;Report:.
-        /// </summary>
-        public static string ReportSpecList_Label_Report {
-            get {
-                return ResourceManager.GetString("ReportSpecList_Label_Report", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Edit Reports.
-        /// </summary>
-        public static string ReportSpecList_Title_Edit_Reports {
-            get {
-                return ResourceManager.GetString("ReportSpecList_Title_Edit_Reports", resourceCulture);
             }
         }
         

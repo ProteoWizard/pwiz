@@ -250,6 +250,12 @@
   <data name="RemoteAccountList_Title_Edit_Remote_Accounts" xml:space="preserve">
     <value>编辑远程账户</value>
   </data>
+  <data name="ReportSpecList_Label_Report" xml:space="preserve">
+    <value>报告(&amp;R)：</value>
+  </data>
+  <data name="ReportSpecList_Title_Edit_Reports" xml:space="preserve">
+    <value>编辑报告</value>
+  </data>
   <data name="RetentionTimeList_Label_Retention_Time_Regression" xml:space="preserve">
     <value>保留时间回归(&amp;R)：</value>
   </data>

@@ -250,6 +250,12 @@
   <data name="RemoteAccountList_Title_Edit_Remote_Accounts" xml:space="preserve">
     <value>Edit Remote Accounts</value>
   </data>
+  <data name="ReportSpecList_Label_Report" xml:space="preserve">
+    <value>&amp;Report:</value>
+  </data>
+  <data name="ReportSpecList_Title_Edit_Reports" xml:space="preserve">
+    <value>Edit Reports</value>
+  </data>
   <data name="RetentionTimeList_Label_Retention_Time_Regression" xml:space="preserve">
     <value>&amp;Retention Time Regression:</value>
   </data>

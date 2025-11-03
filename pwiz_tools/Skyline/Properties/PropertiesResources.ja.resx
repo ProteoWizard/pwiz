@@ -250,6 +250,12 @@
   <data name="RemoteAccountList_Title_Edit_Remote_Accounts" xml:space="preserve">
     <value>リモートアカウントを編集</value>
   </data>
+  <data name="ReportSpecList_Label_Report" xml:space="preserve">
+    <value>レポート(&amp;R)：</value>
+  </data>
+  <data name="ReportSpecList_Title_Edit_Reports" xml:space="preserve">
+    <value>レポートを編集</value>
+  </data>
   <data name="RetentionTimeList_Label_Retention_Time_Regression" xml:space="preserve">
     <value>保持時間回帰を編集(&amp;R)：</value>
   </data>

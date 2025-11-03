@@ -1807,6 +1807,7 @@
     <Compile Include="Model\Databinding\RatioPropertyDescriptor.cs" />
     <Compile Include="Model\Databinding\ReplicateSummaries.cs" />
     <Compile Include="Model\Databinding\ReportOrViewSpec.cs" />
+    <Compile Include="Properties\ReportOrViewSpecList.cs" />
     <Compile Include="Model\Databinding\ReportSharing.cs" />
     <Compile Include="Model\Databinding\ReportSpecConverter.cs" />
     <Compile Include="Model\Databinding\ResultsGridViewContext.cs" />
