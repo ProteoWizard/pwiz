@@ -35,11 +35,6 @@ namespace pwiz.Skyline.Controls.SeqNode
 {
     public class PeptideTreeNode : SrmTreeNodeParent
     {
-        /// <summary>
-        /// Peptide
-        /// </summary>
-        public static string TITLE { get { return SeqNodeResources.PeptideTreeNode_Heading_Title; } }
-
         public static PeptideTreeNode CreateInstance(SequenceTree tree, DocNode nodeDoc)
         {
             Debug.Assert(nodeDoc is PeptideDocNode);
@@ -62,7 +57,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public override string Heading
         {
-            get { return  DocNode.IsProteomic ? SeqNodeResources.PeptideTreeNode_Heading_Title : SeqNodeResources.PeptideTreeNode_Heading_Title_Molecule; }
+            get { return  DocNode.IsProteomic ? PeptideDocNode.TITLE : PeptideDocNode.TITLE_MOLECULE; }
         }
 
         public override string ChildHeading

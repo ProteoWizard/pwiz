@@ -38,6 +38,9 @@ namespace pwiz.Skyline.Model
 {
     public class TransitionDocNode : DocNode
     {
+        public static string TITLE => ModelResources.TransitionDocNode_Title;
+        public static string TITLES => ModelResources.TransitionDocNode_Titles;
+
         public TransitionDocNode(Transition id,
                                  TransitionLosses losses,
                                  TypedMass massH,

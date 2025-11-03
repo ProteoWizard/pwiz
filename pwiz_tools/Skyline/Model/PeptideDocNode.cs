@@ -35,6 +35,9 @@ namespace pwiz.Skyline.Model
 {
     public class PeptideDocNode : DocNodeParent
     {
+        public static string TITLE => ModelResources.PeptideDocNode_Title;
+        public static string TITLE_MOLECULE => ModelResources.PeptideDocNode_Title_Molecule;
+
         public static readonly StandardType STANDARD_TYPE_IRT = StandardType.IRT;
         public static readonly StandardType STANDARD_TYPE_QC = StandardType.QC;
         public static readonly StandardType STANDARD_TYPE_GLOBAL = StandardType.GLOBAL_STANDARD;

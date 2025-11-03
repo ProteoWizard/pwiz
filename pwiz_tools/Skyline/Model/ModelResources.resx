@@ -915,4 +915,19 @@ Would you like to continue?
   <data name="TransitionDocNode_GetLabel_rank__0__" xml:space="preserve">
     <value>rank {0}</value>
   </data>
+  <data name="PeptideDocNode_Title" xml:space="preserve">
+    <value>Peptide</value>
+  </data>
+  <data name="PeptideDocNode_Title_Molecule" xml:space="preserve">
+    <value>Molecule</value>
+  </data>
+  <data name="TransitionGroupDocNode_Title" xml:space="preserve">
+    <value>Precursor</value>
+  </data>
+  <data name="TransitionDocNode_Title" xml:space="preserve">
+    <value>Transition</value>
+  </data>
+  <data name="TransitionDocNode_Titles" xml:space="preserve">
+    <value>Transitions</value>
+  </data>
 </root>

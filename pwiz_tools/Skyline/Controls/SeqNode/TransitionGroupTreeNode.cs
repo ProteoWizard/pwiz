@@ -39,14 +39,6 @@ namespace pwiz.Skyline.Controls.SeqNode
 {
     public class TransitionGroupTreeNode : SrmTreeNodeParent
     {
-        /// <summary>
-        /// Precursor
-        /// </summary>
-        public static string TITLE
-        {
-            get { return SeqNodeResources.TransitionGroupTreeNode_Title; }
-        }
-
         public static TransitionGroupTreeNode CreateInstance(SequenceTree tree, DocNode nodeDoc)
         {
             Debug.Assert(nodeDoc is TransitionGroupDocNode);
@@ -72,15 +64,9 @@ namespace pwiz.Skyline.Controls.SeqNode
         public PeptideDocNode PepNode => ((PeptideTreeNode)Parent)?.DocNode;
         public PeptideGroupDocNode PepGroupNode => ((PeptideGroupTreeNode)Parent?.Parent)?.DocNode;
 
-        public override string Heading
-        {
-            get { return SeqNodeResources.TransitionGroupTreeNode_Title; }
-        }
+        public override string Heading => TransitionGroupDocNode.TITLE;
 
-        public override string ChildHeading
-        {
-            get { return TransitionTreeNode.TITLES; }
-        }
+        public override string ChildHeading => TransitionDocNode.TITLES;
 
         public override string ChildUndoHeading
         {

@@ -43,6 +43,8 @@ namespace pwiz.Skyline.Model
 {
     public class TransitionGroupDocNode : DocNodeParent
     {
+        public static string TITLE => ModelResources.TransitionGroupDocNode_Title;
+
         public const int MIN_DOT_PRODUCT_TRANSITIONS = 2;
         public const int MIN_DOT_PRODUCT_MS1_TRANSITIONS = 2;
 

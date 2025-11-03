@@ -1585,6 +1585,24 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Peptide.
+        /// </summary>
+        public static string PeptideDocNode_Title {
+            get {
+                return ResourceManager.GetString("PeptideDocNode_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Molecule.
+        /// </summary>
+        public static string PeptideDocNode_Title_Molecule {
+            get {
+                return ResourceManager.GetString("PeptideDocNode_Title_Molecule", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} (rank {1}).
         /// </summary>
         public static string PeptideDocNodeToString__0__rank__1__ {
@@ -2342,6 +2360,24 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Transition.
+        /// </summary>
+        public static string TransitionDocNode_Title {
+            get {
+                return ResourceManager.GetString("TransitionDocNode_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Transitions.
+        /// </summary>
+        public static string TransitionDocNode_Titles {
+            get {
+                return ResourceManager.GetString("TransitionDocNode_Titles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Precursor charge {0} must be between {1} and {2}..
         /// </summary>
         public static string TransitionGroup_Validate_Precursor_charge__0__must_be_between__1__and__2__ {
@@ -2414,6 +2450,15 @@ namespace pwiz.Skyline.Model {
             get {
                 return ResourceManager.GetString("TransitionGroupDocNode_ChangePrecursorAnnotations_File_Id__0__does_not_match_any_" +
                         "file_in_document_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor.
+        /// </summary>
+        public static string TransitionGroupDocNode_Title {
+            get {
+                return ResourceManager.GetString("TransitionGroupDocNode_Title", resourceCulture);
             }
         }
         

@@ -853,4 +853,19 @@
   <data name="TransitionDocNode_GetLabel_rank__0__" xml:space="preserve">
     <value>排名 {0}</value>
   </data>
+  <data name="PeptideDocNode_Title" xml:space="preserve">
+    <value>肽段</value>
+  </data>
+  <data name="PeptideDocNode_Title_Molecule" xml:space="preserve">
+    <value>分子</value>
+  </data>
+  <data name="TransitionGroupDocNode_Title" xml:space="preserve">
+    <value>母离子</value>
+  </data>
+  <data name="TransitionDocNode_Title" xml:space="preserve">
+    <value>离子对</value>
+  </data>
+  <data name="TransitionDocNode_Titles" xml:space="preserve">
+    <value>离子对</value>
+  </data>
 </root>
