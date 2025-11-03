@@ -18,6 +18,7 @@
 using System;
 using System.Globalization;
 using Newtonsoft.Json.Linq;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.CommonMsData.RemoteApi.WatersConnect
@@ -39,7 +40,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
         public static DateTime? GetDateProperty(JObject jobject, string propertyName)
         {
             string value = GetProperty(jobject, propertyName);
-            if (value == null)
+            if (value.IsNullOrEmpty())
             {
                 return null;
             }

@@ -27,6 +27,7 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using NHibernate;
+using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData.RemoteApi;
 using pwiz.CommonMsData.RemoteApi.WatersConnect;
@@ -1154,7 +1155,7 @@ namespace pwiz.Skyline.FileUI
                           .AppendLine(dpName ?? FileUIResources.ExportMethodDlg_OkDialog_None);
                     }
                     sb.AppendLine().Append(FileUIResources.ExportMethodDlg_OkDialog_Would_you_like_to_use_the_defaults_instead);
-                    var result = MultiButtonMsgDlg.Show(this, sb.ToString(), MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, true);
+                    var result = MessageDlg.Show(this, sb.ToString(), false, MessageBoxButtons.YesNoCancel, CommonAlertDlg.MessageIcon.Warning);
                     if (result == DialogResult.Yes)
                     {
                         documentExport = ChangeInstrumentTypeSettings(documentExport, ceNameDefault, dpNameDefault);

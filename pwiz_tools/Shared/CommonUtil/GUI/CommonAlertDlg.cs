@@ -55,12 +55,20 @@ namespace pwiz.Common.GUI
 
         public CommonAlertDlg() : this(@"Alert dialog for Forms designer")
         {
+            // hide icon by default and restore padding
+            iconAndMessageSplitContainer.Panel1Collapsed = true;
+            labelMessage.Location = labelMessage.Location.Offset(24);
         }
 
         [SuppressMessage("ReSharper", "VirtualMemberCallInConstructor")]
         protected CommonAlertDlg(string message)
         {
             InitializeComponent();
+
+            // hide icon by default and restore padding
+            iconAndMessageSplitContainer.Panel1Collapsed = true;
+            labelMessage.Location = labelMessage.Location.Offset(24);
+
             _originalFormHeight = Height;
             _originalMessageHeight = labelMessage.Height;
             _labelPadding = messageScrollPanel.Width - labelMessage.MaximumSize.Width;

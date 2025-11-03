@@ -176,7 +176,40 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             {
                 return ImmutableList<WatersConnectFileObject>.EMPTY;
             }
-            return ImmutableList.ValueOf(itemsValue.OfType<JObject>().Select(f => new WatersConnectFileObject(f)));
+
+            // if injection is part of a replicate set with more than 1 replicate, add (rep N) to the name to ensure it is unique
+            string FormatInjectionName(JObject o)
+            {
+                var injectionProperties = o["injectionProperties"];
+                int replicateCount = injectionProperties.Value<int>("replicateCount");
+                string name = o.Value<string>("name");
+                if (replicateCount == 1)
+                    return name;
+                return name + @" (rep " + injectionProperties.Value<int>("replicateIndex") + @")";
+            }
+
+            var items = itemsValue.OfType<JObject>().ToList();
+            var itemNames = items.Select(FormatInjectionName).ToList();
+
+            // for any duplicate names, make them unique by appending a numeric suffix
+            var itemNamesByCount = itemNames.ToDictionary(o => o, o => itemNames.Count(i => i == o));
+            var itemNamesIndex = itemNamesByCount.Where(kvp => kvp.Value > 1).ToDictionary(kvp => kvp.Key, kvp => 0);
+            for (var i = 0; i < itemNames.Count; i++)
+            {
+                var name = itemNames[i];
+                if (itemNamesByCount[name] > 1)
+                {
+                    itemNamesIndex[name]++;
+                    itemNames[i] = name + " (" + itemNamesIndex[name] + ")";
+                }
+            }
+
+            var uniqueItems = items.Zip(itemNames, (item, uniqueName) =>
+            {
+                item["skylineName"] = uniqueName;
+                return item;
+            });
+            return ImmutableList.ValueOf(uniqueItems.Select(f => new WatersConnectFileObject(f)));
         }
 
         public override IEnumerable<RemoteItem> ListContents(MsDataFileUri parentUrl)
