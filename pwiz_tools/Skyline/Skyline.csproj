@@ -606,6 +606,7 @@
     <Compile Include="Model\Results\Spectra\Alignment\BinnedSpectrum.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\SimilarityGrid.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\SpectrumSummary.cs" />
+    <Compile Include="Model\Lib\SpectrumDisplayInfo.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\SpectrumSummaryList.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumClassFilter.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumMetadatas.cs" />
