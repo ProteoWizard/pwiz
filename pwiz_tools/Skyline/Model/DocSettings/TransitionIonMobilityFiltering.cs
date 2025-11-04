@@ -872,6 +872,36 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             return string.Format(@"ccs{0}/{1}/he{2}/{3}", CollisionalCrossSectionSqA, IonMobility, HighEnergyIonMobilityValueOffset, Units);
         }
+
+        /// <summary>
+        /// Display the ion mobility and CCS values, including optional tolerance.
+        /// Also shows high energy ion mobility offset if present.
+        /// </summary>
+        /// <param name="imTolerance">optional tolerance value, represents 1/2 the width of a search window</param>
+        /// <returns>String suitable for user display</returns>
+        public string DisplayString(double? imTolerance = null)
+        {
+            var result = string.Empty;
+            if (HasCollisionalCrossSection)
+            {
+                result = string.Format(ResultsResources.IonMobilityAndCCS_DisplayString_CCS_, CollisionalCrossSectionSqA);
+                if (HasIonMobilityValue)
+                {
+                    result += @" "; // Put a space between CCS and IM parts
+                }
+            }
+
+            if (HasIonMobilityValue)
+            {
+                result += string.Format(ResultsResources.IonMobilityAndCCS_DisplayString_IM_And_Tolerance_, IonMobility.Mobility, (imTolerance.HasValue ? $@"+/-{imTolerance.Value:F04}" : string.Empty), IonMobility.UnitsString);
+                if (HighEnergyIonMobilityValueOffset.HasValue)
+                {
+                    result += string.Format(ResultsResources.IonMobilityAndCCS_DisplayString_HighEnergyOffset_, HighEnergyIonMobilityValueOffset);
+                }
+            }
+
+            return result;
+        }
     }
 
 
@@ -1246,7 +1276,12 @@ namespace pwiz.Skyline.Model.DocSettings
             return Nullable.Compare(IonMobilityExtractionWindowWidth, other.IonMobilityExtractionWindowWidth);
         }
 
-        public override string ToString() // For debugging convenience, not user-facing
+        public string DisplayString() // Show CCS, IM, and window expressed as +/- tolerance
+        {
+            return IonMobilityAndCCS.DisplayString(IonMobilityExtractionWindowWidth*.5);
+        }
+
+        public override string ToString()// For debugging convenience, not user-facing
         {
             return string.Format(@"{0}/w{1:F06}", IonMobilityAndCCS, IonMobilityExtractionWindowWidth );
         }
