@@ -19,8 +19,10 @@
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding;
 
-namespace pwiz.Skyline.Model.Databinding
+namespace pwiz.Skyline.Controls.Databinding
 {
     /// <summary>
     /// ComboBoxColumn which updates its item list in response to changes

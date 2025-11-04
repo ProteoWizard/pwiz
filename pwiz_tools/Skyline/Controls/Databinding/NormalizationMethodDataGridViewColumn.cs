@@ -21,7 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using pwiz.Skyline.Model.GroupComparison;
 
-namespace pwiz.Skyline.Model.Databinding
+namespace pwiz.Skyline.Controls.Databinding
 {
     public class NormalizationMethodDataGridViewColumn : BoundComboBoxColumn
     {

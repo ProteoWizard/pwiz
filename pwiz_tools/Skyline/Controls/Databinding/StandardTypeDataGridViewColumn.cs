@@ -2,7 +2,7 @@
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
- * Copyright 2013 University of Washington - Seattle, WA
+ * Copyright 2016 University of Washington - Seattle, WA
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,18 +17,25 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
+using System.Windows.Forms;
+using pwiz.Skyline.Model;
 
-namespace pwiz.Common.DataBinding.Attributes
+namespace pwiz.Skyline.Controls.Databinding
 {
-    /// <summary>
-    /// Specifies the DataGridViewColumn class to use.
-    /// </summary>
-    public class DataGridViewColumnTypeAttribute : Attribute
+    public class StandardTypeDataGridViewColumn : DataGridViewComboBoxColumn
     {
-        public DataGridViewColumnTypeAttribute(Type type)
+        public StandardTypeDataGridViewColumn()
         {
-            ColumnType = type;
+            Items.Add(new KeyValuePair<String, StandardType>(string.Empty, null));
+            foreach (var sampleType in StandardType.ListStandardTypes())
+            {
+                Items.Add(new KeyValuePair<String, StandardType>(sampleType.ToString(), sampleType));
+            }
+            ValueMember = @"Value";
+            DisplayMember = @"Key";
+            FlatStyle = FlatStyle.Flat;
+            DisplayStyleForCurrentCellOnly = true;
         }
-        public Type ColumnType { get; set; }
     }
 }

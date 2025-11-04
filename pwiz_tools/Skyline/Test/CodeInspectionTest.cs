@@ -196,7 +196,7 @@ namespace pwiz.SkylineTest
                     why);
             }
 
-            AddForbiddenUIInspection(@"*.cs", @"namespace pwiz.Skyline.Model", @"Skyline model code must not depend on UI code", 12);
+            AddForbiddenUIInspection(@"*.cs", @"namespace pwiz.Skyline.Model", @"Skyline model code must not depend on UI code", 5);
             // Looking for CommandLine.cs and CommandArgs.cs code depending on UI code
             AddForbiddenUIInspection(@"CommandLine.cs", @"namespace pwiz.Skyline", @"CommandLine code must not depend on UI code", 1);
             AddForbiddenUIInspection(@"CommandArgs.cs", @"namespace pwiz.Skyline", @"CommandArgs code must not depend on UI code");
@@ -814,7 +814,6 @@ namespace pwiz.SkylineTest
                     }
                 }
 
-                bool attemptedFix = false;
                 bool fixSucceeded = false;
                 if (exePath != null)
                 {
@@ -832,8 +831,6 @@ namespace pwiz.SkylineTest
                         var writer = new StringWriter();
                         IProgressStatus status = new ProgressStatus(string.Empty);
                         processRunner.Run(psi, null, null, ref status, writer);
-
-                        attemptedFix = true;
 
                         // Re-run inspection to verify the fix
                         var verifyErrors = new List<string>();
