@@ -834,8 +834,6 @@ namespace pwiz.Skyline.Model.Lib
                 return false;
             }
 
-            // Remove and report nonsense entries (e.g. adduct removes more H2O than present in molecule)
-            libraryEntries = FilterInvalidLibraryEntries(ref status, libraryEntries, blibFilePath);
 
             var valueCache = new ValueCache();
             if (hasRetentionTimesTable) // Only a filtered library will have this table
@@ -876,7 +874,11 @@ namespace pwiz.Skyline.Model.Lib
 
             _librarySourceFiles = librarySourceFiles.ToArray();
             _libraryFiles = new LibraryFiles(_librarySourceFiles.Select(file => file.FilePath));
-            SetLibraryEntries(FilterInvalidLibraryEntries(ref status, libraryEntries.OrderBy(spec=>spec.Id), blibFilePath));
+            
+            // Remove and report nonsense entries (e.g. adduct removes more H2O than present in molecule)
+            libraryEntries = FilterInvalidLibraryEntries(ref status, libraryEntries.OrderBy(spec => spec.Id), blibFilePath);
+            SetLibraryEntries(libraryEntries);
+            
             EnsureConnections(sm);
             loader.UpdateProgress(status.ChangeSegments(segmentCount - 1, segmentCount).Complete());
             return true;
