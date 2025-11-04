@@ -1,8 +1,8 @@
-# TODO: Remove UI class dependencies from Skyline.Model# TODO: Remove UI class dependencies from Skyline.Model
+# TODO: Remove UI class dependencies from Skyline.Model
 
+**Status:** Active  
 
-
-**Status:** Active  ## Changes completed in this commit (2025-11-04)
+## Changes completed in this commit (2025-11-04)
 
 **Priority:** Medium  
 

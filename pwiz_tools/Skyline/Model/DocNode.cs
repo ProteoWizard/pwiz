@@ -1459,6 +1459,10 @@ namespace pwiz.Skyline.Model
         }
     }
 
+    /// <summary>
+    /// Used when getting display text for a <see cref="DocNode"/> for use in
+    /// a targets tree, find results, audit log, etc.
+    /// </summary>
     public class DisplaySettings
     {
         internal readonly bool _showBestReplicate;
@@ -1470,14 +1474,6 @@ namespace pwiz.Skyline.Model
             _showBestReplicate = showBestReplicate;
             _resultsIndex = resultsIndex;
             NormalizeOption = normalizeOption;
-            NodePep = nodePep;
-        }
-
-        public DisplaySettings(DisplaySettings settings, PeptideDocNode nodePep)
-        {
-            _showBestReplicate = settings._showBestReplicate;
-            _resultsIndex = settings._resultsIndex;
-            NormalizeOption = settings.NormalizeOption;
             NodePep = nodePep;
         }
 
