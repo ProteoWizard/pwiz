@@ -2,11 +2,11 @@
 
 
 
-**Status:** Active  ## Changes completed in this commit (2025-11-03)
+**Status:** Active  ## Changes completed in this commit (2025-11-04)
 
 **Priority:** Medium  
 
-**Estimated Effort:** Small (6 remaining violations as of 2025-11-03: 5 Model, 1 CLI)  - **All DataGridView column types moved from Model to Controls:**
+**Estimated Effort:** Small (5 remaining violations as of 2025-11-04: 4 Model, 1 CLI)  - **All DataGridView column types moved from Model to Controls:**
 
 **Branch:** Skyline/work/20251026_no_ui_classes_in_model      - Moved `AuditLogColumn`, `TextImageColumn` to `Controls/Databinding/AuditLog/`
 
@@ -14,7 +14,7 @@
 
 **Started:** 2025-10-26      - Moved `BoundComboBoxColumn` base class to `Controls/Databinding/`
 
-**Updated:** 2025-11-03      - All files moved with `git mv` to preserve history
+**Updated:** 2025-11-04      - All files moved with `git mv` to preserve history
 
 
 
@@ -24,7 +24,7 @@
 
 - **Starting point (2025-10-26):** 35 Model violations detected by CodeInspectionTest    - Added `PropertyTypeToColumnTypeMap` in `SkylineViewContext` for UI-side column type selection
 
-- **Current state (2025-11-03):** 5 Model violations + 1 CLI violation = **6 total remaining**    - Implemented marker types for generic property types (e.g., `SurrogateStandardName`, `TrueFalseAnnotation`, `ValueListAnnotation`)
+- **Current state (2025-11-04):** 4 Model violations + 1 CLI violation = **5 total remaining**    - Implemented marker types for generic property types (e.g., `SurrogateStandardName`, `TrueFalseAnnotation`, `ValueListAnnotation`)
 
 - **Progress:** **86% reduction** in Model violations (from 35 to 5)    - Enhanced `CreateCustomColumn` to check:
 
@@ -65,6 +65,18 @@ The work involved systematic refactoring across six major categories over 11 com
 ---- **Next steps:**
 
     - Continue with remaining Model/UI dependency removals (View Context dependencies)
+
+### Update (2025-11-04): Replicate sublist helper moved to Model
+
+- Added `Model/Databinding/SublistPaths.cs` with `public static PropertyPath GetReplicateSublist(Type)`.
+- Removed the method from `Controls/Databinding/SkylineViewContext` and updated call sites to use `SublistPaths.GetReplicateSublist(...)`:
+    - `Model/Databinding/DocumentViewTransformer.cs`
+    - `Controls/Databinding/SkylineViewContext.cs` (`GetDefaultViewInfo`)
+    - `Controls/Databinding/PivotReplicateAndIsotopeLabelWidget.cs`
+- Impact: Eliminated the Model → Controls dependency in `DocumentViewTransformer`, reducing Model violations from 5 to 4. Remaining Model offenders include:
+    - `Model/Databinding/ReportSharing.cs` (instantiates `DocumentGridViewContext`)
+    - `Model/Tools/ToolDescription.cs` (instantiates `DocumentGridViewContext`)
+    - Plus 1–2 residual references to be confirmed via CodeInspectionTest.
 
 ## Problem
 

@@ -720,6 +720,7 @@
     <Compile Include="Model\Databinding\ListColumnPropertyDescriptor.cs" />
     <Compile Include="Model\Databinding\ListLookupPropertyDescriptor.cs" />
     <Compile Include="Model\Databinding\ProteomicDisplayNameAttribute.cs" />
+  <Compile Include="Model\Databinding\SublistPaths.cs" />
     <Compile Include="Controls\Databinding\BoundComboBoxColumn.cs" />
     <Compile Include="Controls\Databinding\ListLookupDataGridViewColumn.cs" />
     <Compile Include="Controls\Databinding\NormalizationMethodDataGridViewColumn.cs" />
@@ -1314,6 +1315,7 @@
     <Compile Include="Controls\Databinding\LiveResultsGrid.Designer.cs">
       <DependentUpon>LiveResultsGrid.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Databinding\ResultsGridViewContext.cs" />
     <Compile Include="Controls\Databinding\PivotReplicateAndIsotopeLabelWidget.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -1813,7 +1815,6 @@
     <Compile Include="Properties\ReportOrViewSpecList.cs" />
     <Compile Include="Model\Databinding\ReportSharing.cs" />
     <Compile Include="Model\Databinding\ReportSpecConverter.cs" />
-    <Compile Include="Model\Databinding\ResultsGridViewContext.cs" />
     <Compile Include="Model\Databinding\SkylineDataSchema.cs" />
     <Compile Include="Model\Databinding\SkylineRowSource.cs" />
     <Compile Include="Model\Databinding\DocumentViewTransformer.cs" />

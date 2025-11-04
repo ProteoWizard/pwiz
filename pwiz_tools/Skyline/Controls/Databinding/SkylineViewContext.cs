@@ -481,33 +481,10 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 viewSpec = new ViewSpec().SetRowType(columnDescriptor.PropertyType)
                     .SetColumns(columns.Select(pp => new ColumnSpec(pp)));
-                viewSpec = viewSpec.SetSublistId(GetReplicateSublist(columnDescriptor.PropertyType));
+                viewSpec = viewSpec.SetSublistId(SublistPaths.GetReplicateSublist(columnDescriptor.PropertyType));
             }
 
             return new ViewInfo(columnDescriptor, viewSpec).ChangeViewGroup(ViewGroup.BUILT_IN);
-        }
-
-        public static PropertyPath GetReplicateSublist(Type rowType)
-        {
-            if (rowType == typeof(SkylineDocument))
-            {
-                return PropertyPath.Root.Property(nameof(SkylineDocument.Replicates)).LookupAllItems();
-            }
-            if (rowType == typeof(Replicate))
-            {
-                return PropertyPath.Root.Property(nameof(Replicate.Files)).LookupAllItems();
-            }
-            if (rowType == typeof(Protein))
-            {
-                return PropertyPath.Root.Property(nameof(Protein.Results)).DictionaryValues()
-                    .Property(nameof(Replicate.Files));
-            }
-
-            if (typeof(SkylineDocNode).IsAssignableFrom(rowType))
-            {
-                return PropertyPath.Root.Property(@"Results").LookupAllItems();
-            }
-            return PropertyPath.Root;
         }
 
         public override void ExportViews(Control owner, ViewSpecList viewSpecList)
