@@ -262,7 +262,7 @@ PWIZ_API_DECL bool running_on_wine()
 ///
 /// Only works on NTFS volumes, with 8.3 support enabled. So, for example, not on Docker instances.
 /// </summary>
-/// <param name="path">Path to an existing file</param>
+/// <param name="utf8Path">Path to an existing file or directory</param>
 /// <returns>Path with unicode segments changed to 8.3 representation, if possible</returns>
 PWIZ_API_DECL string get_non_unicode_path(const std::string& utf8Path)
 {

@@ -223,7 +223,7 @@ void fillInMetadata(const bfs::path& rootpath, MSData& msd, Reader_Bruker_Format
 
 
 PWIZ_API_DECL
-void Reader_Bruker::read(const string& filenameIn,
+void Reader_Bruker::read(const string& filename,
                          const string& head,
                          MSData& result,
                          int runIndex,
@@ -232,16 +232,17 @@ void Reader_Bruker::read(const string& filenameIn,
     if (runIndex != 0)
         throw ReaderFail("[Reader_Bruker::read] multiple runs not supported");
 
-    string filename = get_non_unicode_path(filenameIn); // Try to convert to Windows 8.3 short path if necessary - Bruker reader doesn't like Unicode in filenames
 
     Reader_Bruker_Format format = Bruker::format(filename);
     if (format == Reader_Bruker_Format_Unknown)
         throw ReaderFail("[Reader_Bruker::read] Path given ('" + filename + "') is not a recognized Bruker format");
 
-    if ((format == Reader_Bruker_Format_YEP || format == Reader_Bruker_Format_FID) &&
-        findUnicodeBytes(filename) != filename.end())
-        throw ReaderFail("[Reader_Bruker::read()] Bruker API does not support Unicode in filepaths ('" + filename + "')");
-
+    if ((format == Reader_Bruker_Format_YEP || format == Reader_Bruker_Format_FID))
+    {
+        string filename83 = get_non_unicode_path(filename); // Try to convert to Windows 8.3 short path if necessary - Bruker reader doesn't like Unicode in filenames
+        if (findUnicodeBytes(filename83) != filename83.end())
+            throw ReaderFail("[Reader_Bruker::read()] Bruker API does not support Unicode in filepaths ('" + filename + "')");
+    }
     // trim filename from end of source path if necessary (it's not valid to pass to CompassXtract)
     bfs::path rootpath = filename;
     if (bfs::is_regular_file(rootpath))

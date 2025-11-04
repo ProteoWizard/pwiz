@@ -426,7 +426,7 @@ const size_t mz5HeaderSize = sizeof(mz5Header) / sizeof(char);
 
 } // namespace
 
-PWIZ_API_DECL std::string Reader_mz5::identify(const string& filenameIn, const string& head) const
+PWIZ_API_DECL std::string Reader_mz5::identify(const string& filename, const string& head) const
 {
     if (head.length() < mz5HeaderSize)
         return "";
@@ -434,8 +434,6 @@ PWIZ_API_DECL std::string Reader_mz5::identify(const string& filenameIn, const s
     for (size_t i=0; i < mz5HeaderSize; ++i)
         if (head[i] != mz5Header[i])
             return "";
-
-    string filename = util::get_non_unicode_path(filenameIn); // Try to convert to Windows short path if necessary - our mz5 library doesn't like Unicode in filenames
 
     try
     {
