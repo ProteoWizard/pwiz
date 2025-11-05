@@ -275,7 +275,7 @@ public void TestDownloadSuccess() { ... }
 - Functional tests have **significant overhead** (create/destroy SkylineWindow)
 - Each `[TestMethod]` starts fresh - can't share SkylineWindow instance
 - Consolidating validations into private methods within one test is much faster
-- See `MEMORY.md` "DRY Principle in Testing" for detailed examples
+- See `ai/MEMORY.md` "DRY Principle in Testing" for detailed examples
 
 ---
 
@@ -729,7 +729,7 @@ protected override void DoTest()
 3. **Minimize file I/O** - use in-memory operations when possible
 4. **Share test data** within a test class
 5. **Avoid duplicate setup** - use helper methods
-6. **See MEMORY.md** for detailed DRY testing examples
+6. **See ai/MEMORY.md** for detailed DRY testing examples
 
 ### When to Split Tests
 
@@ -749,10 +749,10 @@ protected override void DoTest()
 ## Additional Resources
 
 ### Documentation
-- **`WORKFLOW.md`** - Build, test, and commit workflows (includes AI agent guidelines)
-- **`STYLEGUIDE.md`** - Coding conventions and style guidelines
-- **`MEMORY.md`** - DRY principles in testing, translation-proof testing, common patterns
-- **`todos/completed/TODO-20251010_webclient_replacement.md`** - Detailed WebClient → HttpClient migration patterns
+- **`ai/WORKFLOW.md`** - Build, test, and commit workflows (includes AI agent guidelines)
+- **`ai/STYLEGUIDE.md`** - Coding conventions and style guidelines
+- **`ai/MEMORY.md`** - DRY principles in testing, translation-proof testing, common patterns
+- **`ai/todos/completed/TODO-20251010_webclient_replacement.md`** - Detailed WebClient → HttpClient migration patterns
 
 ### Source Code
 - **`AssertEx.cs`** (`pwiz_tools/Skyline/TestUtil/`) - Full assertion library source
@@ -764,7 +764,7 @@ protected override void DoTest()
 
 ### Updating Other Documents
 
-Testing information previously in `STYLEGUIDE.md` and `MEMORY.md` has been consolidated here. Those documents now reference `TESTING.md` for comprehensive testing guidelines.
+Testing information previously in `ai/STYLEGUIDE.md` and `ai/MEMORY.md` has been consolidated here. Those documents now reference `ai/TESTING.md` for comprehensive testing guidelines.
 
 ---
 

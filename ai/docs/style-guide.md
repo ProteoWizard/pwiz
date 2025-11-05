@@ -214,7 +214,7 @@ All source files should include the standard header with copyright and license i
 
 ## Testing guidelines
 
-**For comprehensive testing guidelines, see `TESTING.md`** which covers:
+**For comprehensive testing guidelines, see `ai/TESTING.md`** which covers:
 - Test project structure and selection criteria
 - Test execution tools (TestRunner, SkylineTester, SkylineNightly)
 - Dependency injection patterns for testing
