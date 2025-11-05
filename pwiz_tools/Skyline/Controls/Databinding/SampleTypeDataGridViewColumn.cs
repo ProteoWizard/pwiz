@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 
-namespace pwiz.Skyline.Model.Databinding
+namespace pwiz.Skyline.Controls.Databinding
 {
     public class SampleTypeDataGridViewColumn : DataGridViewComboBoxColumn
     {
