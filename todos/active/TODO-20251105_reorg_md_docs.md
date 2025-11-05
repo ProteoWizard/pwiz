@@ -1,5 +1,10 @@
 # TODO: Reorganize .md Documentation System
 
+## Branch Information
+- **Branch**: Skyline/work/20251105_reorg_md_docs
+- **Created**: 2025-11-05
+- **Objective**: Reorganize .md documentation to improve information density and make critical rules immediately accessible
+
 ## Context
 Current .md documentation has grown to the point where critical rules are buried in detailed explanations. When agents search for essential constraints (like "CRLF line endings"), they must wade through too much context. This dilutes signal-to-noise ratio and makes critical rules harder to find.
 
@@ -152,7 +157,7 @@ project-root/
 ```
 I'm reorganizing our .md documentation system to improve information density.
 
-Read todos/backlog/TODO-reorg_md_docs.md for the full plan.
+Read todos/active/TODO-20251105_reorg_md_docs.md for the full plan.
 Read MEMORY.md and WORKFLOW.md for current project context.
 
 Goals:
