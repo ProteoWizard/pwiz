@@ -1,0 +1,797 @@
+# Testing Guidelines for Skyline/ProteoWizard
+
+## Table of Contents
+1. [Test Project Structure](#test-project-structure)
+2. [Test Types and Organization](#test-types-and-organization)
+3. [Test Execution Tools](#test-execution-tools)
+4. [Dependency Injection Patterns for Testing](#dependency-injection-patterns-for-testing)
+5. [Assertion Best Practices](#assertion-best-practices)
+6. [HttpClient Testing with HttpClientTestHelper](#httpclient-testing-with-httpclienttesthelper)
+7. [Translation-Proof Testing](#translation-proof-testing)
+8. [Test Performance Considerations](#test-performance-considerations)
+
+---
+
+## Test Project Structure
+
+Skyline uses a multi-project test architecture to separate tests by type, complexity, and resource requirements.
+
+### Test Projects Overview
+
+| Project | Purpose | Base Class | Data Files | Network | UI |
+|---------|---------|-----------|------------|---------|-----|
+| **Test.csproj** | Unit tests (fast, no data files) | `AbstractUnitTest` | ❌ | ❌ | ❌ |
+| **TestData.csproj** | Unit tests with mass spec data | `AbstractUnitTestEx` | ✅ | ❌ | ❌ |
+| **TestFunctional.csproj** | General functional tests (UI) | `AbstractFunctionalTestEx` * | ✅ | ❌ | ✅ |
+| **TestConnected.csproj** | Tests requiring network access | varies | ✅ | ✅ | varies |
+| **TestTutorial.csproj** | Automated tutorial tests (screenshot generation) | `AbstractFunctionalTestEx` * | ✅ | ❌ | ✅ |
+| **TestPerf.csproj** | Performance tests (large datasets >100MB) | `AbstractFunctionalTestEx` * | ✅ (large) | ❌ | ✅ |
+| **TestUtil.csproj** | Shared testing utilities | N/A | N/A | N/A | N/A |
+
+\* Use `AbstractFunctionalTestEx` for most tests (high-level helpers). Use `AbstractFunctionalTest` only when you need fine-grained control.
+
+### Project Details
+
+#### Test.csproj - Unit Tests
+- **Purpose**: Fast, isolated unit tests without data files
+- **Base class**: `AbstractUnitTest`
+- **Characteristics**:
+  - No mass spectrometry data files required
+  - May access file system for temporary files
+  - No UI interaction
+  - Fast execution (milliseconds per test)
+  - Ideal for testing pure logic, algorithms, utilities
+
+#### TestData.csproj - Unit Tests with Data Files
+- **Purpose**: Unit tests requiring actual mass spectrometry data
+- **Base class**: `AbstractUnitTestEx`
+- **Characteristics**:
+  - Works with real mass spec data files
+  - Must access file system
+  - No UI interaction
+  - Moderate execution time
+  - Tests data parsing, file format handling, spectrum processing
+
+#### TestFunctional.csproj - Functional Tests
+- **Purpose**: Standard functional tests for UI features
+- **Base class**: `AbstractFunctionalTestEx` (preferred), or `AbstractFunctionalTest` (primitives only)
+- **Characteristics**:
+  - Shows and destroys `SkylineWindow` instance
+  - Tests UI workflows and user interactions
+  - `AbstractFunctionalTestEx` provides high-level helpers like `ImportResultsFile()`, `ShareDocument()`
+  - `AbstractFunctionalTest` provides low-level primitives like `RunUI()`, `ShowDialog<T>()`
+  - Slower than unit tests (seconds per test)
+  - Most common test project for Skyline features
+
+#### TestConnected.csproj - Network Tests
+- **Purpose**: Tests requiring actual network access
+- **Base class**: varies by test type
+- **Characteristics**:
+  - Accesses real web services (Panorama, UniProt, etc.)
+  - May be skipped in offline environments
+  - Run less frequently than other tests
+  - Examples: Panorama upload/download, web service integration
+
+#### TestTutorial.csproj - Tutorial Tests
+- **Purpose**: Automated implementation of documentation tutorials
+- **Base class**: `AbstractFunctionalTestEx` (for workflow helpers)
+- **Characteristics**:
+  - Auto-generates tutorial screenshots
+  - Validates documentation accuracy
+  - Tests step-by-step tutorial workflows
+  - Test data stored in `Skyline/Documentation/Tutorials/`
+  - Examples: `TestIrtTutorial` for `iRT` tutorial
+  - Ensures tutorials stay synchronized with product
+  - Uses `AbstractFunctionalTestEx` helpers for common tutorial operations (import, export, etc.)
+
+#### TestPerf.csproj - Performance Tests
+- **Purpose**: Data-intensive tests with large datasets
+- **Base class**: `AbstractFunctionalTestEx` (for workflow helpers)
+- **Characteristics**:
+  - Requires significant disk space (>1GB)
+  - Requires significant memory (>8GB RAM)
+  - Test data stored in Downloads folder
+  - May not run on resource-constrained machines
+  - Run less frequently (nightly builds, not every commit)
+  - Tests performance, memory usage, large file handling
+  - Uses `AbstractFunctionalTestEx` helpers to navigate complex workflows with large data
+
+#### TestUtil.csproj - Shared Testing Utilities
+- **Purpose**: Shared testing infrastructure and helpers
+- **Contains**:
+  - `AbstractUnitTest`, `AbstractFunctionalTest` base classes
+  - `AssertEx` - Extended assertion library
+  - `HttpClientTestHelper` - HTTP testing utilities
+  - `TestFilesDir` - Test file management
+  - Common test helpers and utilities
+
+---
+
+## Test Execution Tools
+
+Skyline provides several tools for running tests outside Visual Studio/ReSharper:
+
+### TestRunner.exe (TestRunner.csproj)
+- **Purpose**: Console application for running tests programmatically
+- **Used by**: TeamCity CI, nightly test runs, automated build systems
+- **Features**:
+  - Command-line test execution
+  - Parallel test execution
+  - XML test result output
+  - Locale/language switching for localization testing
+  - Integration with TeamCity and other CI systems
+
+### TestRunnerLib (TestRunnerLib.csproj)
+- **Purpose**: Shared library used by TestRunner.exe
+- **Contains**:
+  - Core test execution logic
+  - Test discovery and filtering
+  - Result reporting and logging
+  - Language/locale management
+
+### SkylineTester.exe (SkylineTester.csproj)
+- **Purpose**: Full-featured test harness UI for developers
+- **Features**:
+  - Configure which tests to run (by project, by test name, by pattern)
+  - Monitor test execution in real-time
+  - View test output logs in dedicated Output tab
+  - Locale selection for localization testing
+  - Test result summary with pass/fail counts
+  - Integration with TeamCity for nightly runs
+- **Usage**: Primary tool for developers running tests locally
+- **Workflow**:
+  1. Select test projects and filters
+  2. Click "Run" - launches TestRunner.exe
+  3. Monitor progress in UI
+  4. Review output logs and results
+
+### SkylineNightly.exe (SkylineNightly.csproj)
+- **Purpose**: Small program for scheduling and running nightly tests
+- **Features**:
+  - Schedules nightly test runs on developer machines
+  - Runs tests using TestRunner.exe via SkylineTester
+  - Uploads results to TeamCity or shared storage
+  - Sends notifications on failures
+- **Usage**: Automated nightly testing on developer workstations
+
+### SkylineNightlyShim.exe (SkylineNightlyShim.csproj)
+- **Purpose**: Very small bootstrapper program
+- **Features**:
+  - Downloads latest SkylineNightly.exe from TeamCity artifacts
+  - Downloads latest SkylineTester.exe from TeamCity artifacts
+  - Ensures nightly runs use most recent test infrastructure
+  - Minimal code to avoid needing updates itself
+- **Usage**: Scheduled task on developer machines calls this first
+- **Workflow**:
+  1. Shim downloads latest SkylineNightly.exe and SkylineTester.exe
+  2. Shim launches updated SkylineNightly.exe
+  3. SkylineNightly.exe runs tests with SkylineTester.exe/TestRunner.exe
+
+---
+
+## Test Types and Organization
+
+### Unit Tests vs Functional Tests
+
+**Unit Tests** (`Test.csproj`, `TestData.csproj`):
+- Derive from `AbstractUnitTest` or `AbstractUnitTestEx`
+- Fast, isolated, no UI
+- Test individual components in isolation
+- Preferred when UI is not needed
+
+**Functional Tests** (`TestFunctional.csproj`, `TestPerf.csproj`, `TestTutorial.csproj`):
+- Derive from `AbstractFunctionalTest` or `AbstractFunctionalTestEx`
+- Show SkylineWindow, drive UI
+- Test complete workflows and user interactions
+- Use when testing UI features or integration scenarios
+
+### Functional Test Base Classes
+
+**`AbstractFunctionalTest`** - Testing primitives:
+- **Purpose**: Low-level functional testing infrastructure
+- **Provides**:
+  - `RunUI()` - Execute code on UI thread
+  - `ShowDialog<T>()` - Show and wait for modal dialogs
+  - `WaitForCondition()` - Poll for conditions
+  - `WaitForOpenForm<T>()` - Wait for form to open
+  - `FindOpenForm<T>()` - Find already-open form
+  - Basic SkylineWindow management
+- **Use when**: You need fine-grained control over test flow
+
+**`AbstractFunctionalTestEx`** - High-level helpers:
+- **Extends**: `AbstractFunctionalTest`
+- **Purpose**: Common multi-step operations as single method calls
+- **Provides**:
+  - `ImportResultsFile()` - Import results with all dialogs
+  - `ExportReport()` - Export report with configuration
+  - `ShareDocument()` - Share to Panorama with full workflow
+  - `ImportPeptideSearch()` - Import peptide search with wizard navigation
+  - `ImportFasta()` - Import FASTA with background proteome handling
+  - Many more high-level workflow helpers
+- **Use when**: Testing common workflows (most tests should use this)
+
+**Recommendation**: Prefer `AbstractFunctionalTestEx` unless you need only the low-level primitives from `AbstractFunctionalTest`. The `Ex` helpers save significant code duplication and make tests more readable.
+
+### Test Structure Best Practices
+
+**Use `RunFunctionalTest()` pattern for functional tests:**
+
+```csharp
+[TestMethod]
+public void MyFeatureTest()
+{
+    RunFunctionalTest();
+}
+
+protected override void DoTest()
+{
+    // Test implementation here
+    TestStep1();
+    TestStep2();
+    TestStep3();
+}
+
+private void TestStep1()
+{
+    // First validation
+}
+
+private void TestStep2()
+{
+    // Second validation
+}
+```
+
+**Consolidate related validations into single test method:**
+
+```csharp
+// ✅ GOOD - One test method, multiple validation steps
+[TestMethod]
+public void ToolStoreTest()
+{
+    RunFunctionalTest();
+}
+
+protected override void DoTest()
+{
+    TestToolNotInstalled();
+    TestToolInstalled();
+    TestDownloadSuccess();
+    TestDownloadFailure();
+}
+
+// ❌ AVOID - Separate test methods for each validation (slow)
+[TestMethod]
+public void TestToolNotInstalled() { ... }
+
+[TestMethod]
+public void TestToolInstalled() { ... }
+
+[TestMethod]
+public void TestDownloadSuccess() { ... }
+```
+
+**Why consolidation matters:**
+- Functional tests have **significant overhead** (create/destroy SkylineWindow)
+- Each `[TestMethod]` starts fresh - can't share SkylineWindow instance
+- Consolidating validations into private methods within one test is much faster
+- See `MEMORY.md` "DRY Principle in Testing" for detailed examples
+
+---
+
+## Dependency Injection Patterns for Testing
+
+### Pattern Decision: Call Stack Depth Matters
+
+The choice between **constructor injection** and **static test seam + IDisposable** depends on whether tests can construct the object directly or need to intercept deep in the call stack.
+
+### Pattern 1: Constructor Injection (Shallow Call Stack)
+
+**Use when:** Tests construct the object under test directly.
+
+**Example:** `SkypSupport` (from `SkypSupport.cs`)
+
+```csharp
+// Production class
+public class SkypSupport
+{
+    private readonly Func<IProgressMonitor, IProgressStatus, IDownloadClient> _clientFactory;
+
+    // Production constructor - uses real HttpDownloadClient
+    public SkypSupport(SkylineWindow skyline)
+        : this(skyline, CreateHttpDownloadClient)
+    {
+    }
+
+    // Test constructor - accepts custom factory
+    public SkypSupport(SkylineWindow skyline, Func<IProgressMonitor, IProgressStatus, IDownloadClient> clientFactory)
+    {
+        _skyline = skyline;
+        _clientFactory = clientFactory;
+    }
+
+    // Named factory function (better than lambda for debugging)
+    private static IDownloadClient CreateHttpDownloadClient(IProgressMonitor monitor, IProgressStatus status)
+    {
+        return new HttpDownloadClient(monitor, status);
+    }
+}
+
+// Test code
+var skypSupport = new SkypSupport(SkylineWindow, (monitor, status) =>
+    new TestDownloadClient(srcPath, skyp, monitor, status));
+```
+
+**Benefits:**
+- No static mutable state
+- Clear dependency flow
+- Easy to understand and debug
+
+**When this works:**
+- Tests already construct the object directly
+- No need to traverse deep call stacks
+
+---
+
+### Pattern 2: Static Test Seam + IDisposable (Deep Call Stack)
+
+**Use when:** Tests call high-level production code that eventually needs the dependency deep in the call stack.
+
+**Example:** `ToolStoreUtil.ToolStoreClient` (from `ToolStoreDlg.cs`)
+
+```csharp
+// Production class with static test seam
+public static class ToolStoreUtil
+{
+    public static IToolStoreClient ToolStoreClient { get; set; }
+
+    public static IToolStoreClient CreateClient()
+    {
+        return new WebToolStoreClient();
+    }
+
+    static ToolStoreUtil()
+    {
+        ToolStoreClient = CreateClient();
+    }
+}
+
+// Test class with IDisposable to manage static state
+public class TestToolStoreClient : IToolStoreClient, IDisposable
+{
+    private readonly IToolStoreClient _originalClient;
+
+    public TestToolStoreClient(string toolDirPath)
+    {
+        _toolDir = new DirectoryInfo(toolDirPath);
+        _originalClient = ToolStoreUtil.ToolStoreClient;
+        ToolStoreUtil.ToolStoreClient = this;  // Inject test implementation
+    }
+
+    public void Dispose()
+    {
+        ToolStoreUtil.ToolStoreClient = _originalClient;  // Restore original
+    }
+}
+
+// Test code - high-level production code path
+using (var client = new TestToolStoreClient(toolDirPath))
+{
+    // Calls SkylineWindow.ShowToolStoreDlg()
+    //   -> ToolInstallUI.InstallZipFromWeb()
+    //   -> ToolStoreDlg (uses ToolStoreUtil.ToolStoreClient)
+    //   -> Network download
+    var toolStoreDlg = ShowDialog<ToolStoreDlg>(SkylineWindow.ShowToolStoreDlg);
+    // Test implementation is automatically used deep in the call stack
+}
+```
+
+**Also see:** `HttpClientWithProgress.TestBehavior` - uses the same pattern for the same reason.
+
+**Benefits:**
+- Tests can exercise full production code paths from entry points (e.g., `SkylineWindow.ShowToolStoreDlg()`)
+- No need to add test parameters to every layer
+- Clean production APIs - no test concerns leak through
+
+**When this is necessary:**
+- Deep call stacks (3+ layers)
+- Tests need to call high-level entry points (`SkylineWindow` methods)
+- Alternative would pollute many production methods with test parameters
+
+---
+
+### Decision Heuristic
+
+```
+Can tests construct the object directly?
+  ✅ YES → Constructor injection (Pattern 1)
+  ❌ NO  → Static test seam + IDisposable (Pattern 2)
+
+How many layers between test entry point and dependency?
+  1-2 layers  → Constructor injection usually works
+  3+ layers   → Static test seam often better
+```
+
+---
+
+## Assertion Best Practices
+
+### Use AssertEx Instead of Custom Wrappers
+
+Skyline provides **`AssertEx`** (in `pwiz.SkylineTestUtil`) with many useful assertion methods. **Prefer these over writing custom assertion helpers.**
+
+### Common AssertEx Methods
+
+#### String Assertions
+
+```csharp
+// ✅ GOOD - Use AssertEx.Contains
+AssertEx.Contains(actualString, expectedSubstring);
+AssertEx.DoesNotContain(actualString, unexpectedSubstring);
+
+// ❌ AVOID - Custom wrapper
+private void AssertErrorContains(string actual, string expected)
+{
+    AssertEx.Contains(actual, expected);  // Just call AssertEx directly!
+}
+
+// ❌ AVOID - Manual Assert.IsTrue
+Assert.IsTrue(actualString.Contains(expectedSubstring),
+    $"Expected string to contain '{expectedSubstring}' but got: {actualString}");
+```
+
+**Why AssertEx.Contains is better:**
+- Provides clear failure messages automatically
+- Shows both actual and expected values
+- Consistent with other assertion methods
+- No need to write custom formatting logic
+
+#### File Assertions
+
+```csharp
+// Check file existence
+AssertEx.FileExists(filePath);
+AssertEx.FileNotExists(filePath);
+
+// Compare file contents
+AssertEx.FileEquals(expectedPath, actualPath);
+
+// Compare strings with diff output
+AssertEx.NoDiff(expectedString, actualString);
+```
+
+#### Exception Assertions
+
+```csharp
+// Assert exception is thrown
+AssertEx.ThrowsException<InvalidDataException>(() =>
+{
+    // Code that should throw
+});
+
+// Assert NO exception is thrown (useful for regression tests)
+AssertEx.ThrowsNoException(() =>
+{
+    // Code that should succeed
+});
+```
+
+#### Serialization Testing
+
+```csharp
+// Verify object is serializable
+AssertEx.Serializable<SrmDocument>(document);
+```
+
+### Translation-Proof Assertions with HttpClientTestHelper
+
+When testing network error messages, **always use `HttpClientTestHelper.GetExpectedMessage()`** to get the expected localized error message:
+
+```csharp
+// ✅ GOOD - Works in all locales
+using (var helper = HttpClientTestHelper.SimulateHttp401())
+{
+    var errDlg = ShowDialog<AlertDlg>(() => skypSupport.Open(skypPath, existingServers));
+    var expectedError = helper.GetExpectedMessage(skyp.SkylineDocUri);
+    AssertEx.Contains(errDlg.Message, expectedError);
+}
+
+// ❌ BAD - Hardcoded English text breaks in other locales
+Assert.IsTrue(errDlg.Message.Contains("HTTP 401"), "Expected 401 error");
+```
+
+### Complete AssertEx API
+
+For the full list of assertion methods, see `AssertEx.cs` in `pwiz_tools/Skyline/TestUtil/`.
+
+Notable methods include:
+- `Contains(string, string)` / `DoesNotContain(string, string)`
+- `FileExists(string)` / `FileNotExists(string)`
+- `FileEquals(string, string)`
+- `NoDiff(string, string)`
+- `ThrowsException<TEx>(Action)` / `ThrowsNoException(Action)`
+- `Serializable<TObj>(TObj)`
+- `AreEqual<T>(T, T)` with better formatting than Assert.AreEqual
+- `AreNotEqual<T>(T, T)`
+- `IsNull<T>(T)` / `IsNotNull<T>(T)`
+
+---
+
+## HttpClient Testing with HttpClientTestHelper
+
+### Test Pattern: SUCCESS vs FAILURE
+
+When testing code that uses `HttpClientWithProgress`, follow this established pattern:
+
+1. **SUCCESS path:** Test implementation provides mock data from local files
+2. **FAILURE path:** Real production code + `HttpClientTestHelper` intercepts at HttpClient level
+
+### Example: SkypSupport Download Testing
+
+```csharp
+// SUCCESS - Test implementation copies local file
+public class TestDownloadClient : IDownloadClient
+{
+    private readonly string _srcPath;
+
+    public void Download(SkypFile skyp)
+    {
+        File.Copy(_srcPath, skyp.DownloadPath);  // Mock success
+    }
+}
+
+// FAILURE - Real production code + HttpClientTestHelper
+[TestMethod]
+public void TestSkypDownloadFailure()
+{
+    using (var helper = HttpClientTestHelper.SimulateNoNetworkInterface())
+    {
+        var skypSupport = new SkypSupport(SkylineWindow);  // Uses real HttpDownloadClient
+        var errDlg = ShowDialog<AlertDlg>(() => skypSupport.Open(skypPath, null));
+
+        // Assert using helper's expected message
+        var expectedError = helper.GetExpectedMessage(skyp.SkylineDocUri);
+        AssertEx.Contains(errDlg.Message, expectedError);
+    }
+}
+```
+
+### HttpClientTestHelper Simulation Methods
+
+```csharp
+// Network failures
+HttpClientTestHelper.SimulateNoNetworkInterface()
+HttpClientTestHelper.SimulateHttpTimeout()
+
+// HTTP status codes
+HttpClientTestHelper.SimulateHttp401()  // Unauthorized
+HttpClientTestHelper.SimulateHttp403()  // Forbidden
+HttpClientTestHelper.SimulateHttp404()  // Not Found
+HttpClientTestHelper.SimulateHttp500()  // Internal Server Error
+
+// User cancellation
+HttpClientTestHelper.SimulateCancellation()
+```
+
+### Why This Pattern?
+
+**Benefits:**
+- ✅ No network access in tests (success OR failure)
+- ✅ Production code exercises real `HttpClientWithProgress` in tests
+- ✅ Test interface stays simple - just mock success case
+- ✅ Failure testing uses production error handling paths
+
+**What NOT to do:**
+- ❌ Don't make test interface return error codes or exceptions
+- ❌ Don't create `TestClientError401`, `TestClientError403`, etc.
+- ❌ Don't parse exception messages in tests - use `GetExpectedMessage()`
+
+---
+
+## Translation-Proof Testing
+
+**CRITICAL**: Skyline is localized into multiple languages (English, Chinese, Japanese, Turkish, French). **All test assertions must work in all locales.**
+
+### The Problem
+
+```csharp
+// ❌ BREAKS IN OTHER LOCALES - English-only assertion
+Assert.IsTrue(errorMessage.Contains("File not found"));
+Assert.AreEqual("Invalid format", exception.Message);
+```
+
+These tests pass in English but **fail in Chinese or Japanese** where UI text is translated.
+
+### The Solution
+
+**Always use resource strings for test assertions:**
+
+```csharp
+// ✅ WORKS IN ALL LOCALES - Uses same resource string as production code
+AssertEx.Contains(errorMessage, Resources.ErrorMessage_FileNotFound);
+Assert.AreEqual(Resources.ErrorMessage_InvalidFormat, exception.Message);
+```
+
+### Best Practices
+
+1. **Use the same resource strings production code uses**
+   - Don't duplicate English text in tests
+   - Reference `Resources`, `FileUIResources`, `ToolsUIResources`, etc.
+   - Ensures tests validate actual user-visible text
+
+2. **Use HttpClientTestHelper for network errors**
+   ```csharp
+   using (var helper = HttpClientTestHelper.SimulateHttp404())
+   {
+       // Production code throws exception
+       var errDlg = ShowDialog<AlertDlg>(() => skypSupport.Open(path));
+
+       // Get expected message in current locale
+       var expectedError = helper.GetExpectedMessage(uri);
+       AssertEx.Contains(errDlg.Message, expectedError);
+   }
+   ```
+
+3. **Reconstruct expected messages the same way production code does**
+   ```csharp
+   // Production code builds message like this:
+   var message = string.Format(Resources.Template_WithArgs, arg1, arg2);
+
+   // Test validates using same pattern:
+   var expected = string.Format(Resources.Template_WithArgs, arg1, arg2);
+   Assert.AreEqual(expected, actualMessage);
+   ```
+
+### Testing Localization
+
+**All tests must pass in all supported locales:**
+
+- **English** (en-US) - Default
+- **Chinese Simplified** (zh-CHS)
+- **Japanese** (ja-JP)
+- **Turkish** (tr-TR)
+- **French** (fr-FR)
+
+**Use SkylineTester.exe or TestRunner.exe to run tests in different locales:**
+
+```bash
+# Run tests in Japanese locale
+TestRunner.exe /locale:ja-JP
+
+# Run tests in Chinese locale
+TestRunner.exe /locale:zh-CHS
+```
+
+**TeamCity runs full test suite in all locales** - tests must pass everywhere.
+
+### Common Mistakes to Avoid
+
+```csharp
+// ❌ BAD - Hardcoded English
+Assert.IsTrue(message.Contains("Download failed"));
+Assert.IsTrue(message.Contains("HTTP 401"));
+Assert.AreEqual("Success", statusText);
+
+// ✅ GOOD - Resource strings or helper methods
+AssertEx.Contains(message, Resources.DownloadFailed);
+AssertEx.Contains(message, helper.GetExpectedMessage(uri));
+Assert.AreEqual(Resources.Status_Success, statusText);
+```
+
+---
+
+## Test Performance Considerations
+
+### Functional Test Overhead
+
+**Functional tests are significantly slower than unit tests:**
+
+- **Unit test**: Milliseconds (in-memory, no UI, no file I/O)
+- **Functional test**: Seconds (creates SkylineWindow, loads UI, file operations)
+
+**Each `[TestMethod]` in functional tests incurs overhead:**
+1. Create new `SkylineWindow` instance
+2. Initialize UI framework
+3. Load settings and resources
+4. Execute test
+5. Tear down and destroy SkylineWindow
+
+**Consolidating validations into a single test method saves significant time:**
+
+```csharp
+// ❌ SLOW - 4 tests × overhead = ~40 seconds
+[TestMethod] public void Test1() { /* 5 sec test + 5 sec overhead */ }
+[TestMethod] public void Test2() { /* 5 sec test + 5 sec overhead */ }
+[TestMethod] public void Test3() { /* 5 sec test + 5 sec overhead */ }
+[TestMethod] public void Test4() { /* 5 sec test + 5 sec overhead */ }
+
+// ✅ FAST - 1 test × overhead = ~25 seconds
+[TestMethod]
+public void ConsolidatedTest()
+{
+    RunFunctionalTest();
+}
+
+protected override void DoTest()
+{
+    Test1Logic();  // 5 sec
+    Test2Logic();  // 5 sec
+    Test3Logic();  // 5 sec
+    Test4Logic();  // 5 sec
+}
+// Single overhead (~5 sec) instead of 4× overhead
+```
+
+### Best Practices for Fast Tests
+
+1. **Consolidate related validations** into single test method
+2. **Prefer unit tests** when UI is not required
+3. **Minimize file I/O** - use in-memory operations when possible
+4. **Share test data** within a test class
+5. **Avoid duplicate setup** - use helper methods
+6. **See MEMORY.md** for detailed DRY testing examples
+
+### When to Split Tests
+
+**Do split tests when:**
+- Tests are logically independent features
+- Tests require different test data setup
+- One test failing shouldn't block others from running
+- Tests are in different test projects (unit vs functional)
+
+**Don't split tests when:**
+- Tests validate different aspects of same feature
+- Tests can share SkylineWindow instance
+- Tests execute sequentially anyway
+
+---
+
+## Additional Resources
+
+### Documentation
+- **`WORKFLOW.md`** - Build, test, and commit workflows (includes AI agent guidelines)
+- **`STYLEGUIDE.md`** - Coding conventions and style guidelines
+- **`MEMORY.md`** - DRY principles in testing, translation-proof testing, common patterns
+- **`todos/completed/TODO-20251010_webclient_replacement.md`** - Detailed WebClient → HttpClient migration patterns
+
+### Source Code
+- **`AssertEx.cs`** (`pwiz_tools/Skyline/TestUtil/`) - Full assertion library source
+- **`HttpClientTestHelper.cs`** (`pwiz_tools/Skyline/TestUtil/`) - HTTP testing utilities
+- **`AbstractFunctionalTest.cs`** (`pwiz_tools/Skyline/TestUtil/`) - Functional test base class (low-level primitives)
+- **`AbstractFunctionalTestEx.cs`** (`pwiz_tools/Skyline/TestUtil/`) - Functional test base class (high-level workflow helpers)
+- **`AbstractUnitTest.cs`** (`pwiz_tools/Skyline/TestUtil/`) - Unit test base class
+- **`AbstractUnitTestEx.cs`** (`pwiz_tools/Skyline/TestUtil/`) - Unit test base class (with data file support)
+
+### Updating Other Documents
+
+Testing information previously in `STYLEGUIDE.md` and `MEMORY.md` has been consolidated here. Those documents now reference `TESTING.md` for comprehensive testing guidelines.
+
+---
+
+## Summary
+
+### Test Project Selection
+1. **Test.csproj** - Fast unit tests, no data, no UI
+2. **TestData.csproj** - Unit tests with mass spec data
+3. **TestFunctional.csproj** - Standard UI functional tests (most common)
+4. **TestConnected.csproj** - Tests requiring network access
+5. **TestTutorial.csproj** - Automated tutorial validation
+6. **TestPerf.csproj** - Large dataset performance tests
+
+### Testing Best Practices
+1. **Choose the right test project** based on requirements (data, UI, network)
+2. **Choose the right dependency injection pattern** based on call stack depth
+3. **Use AssertEx methods** instead of custom assertion wrappers
+4. **Use HttpClientTestHelper** for all network failure testing
+5. **Never hardcode English error messages** - always use resource strings
+6. **Consolidate functional tests** to minimize overhead
+7. **Test in all locales** - use SkylineTester.exe for locale-specific testing
+8. **Keep test implementations simple** - mock success, use helpers for failures
+
+### Critical Rules
+- ❌ **NEVER** use English text literals in assertions
+- ❌ **NEVER** parse exception messages for status codes (use structured properties)
+- ❌ **NEVER** create multiple `[TestMethod]` functional tests for related validations
+- ✅ **ALWAYS** use resource strings for user-facing text validation
+- ✅ **ALWAYS** use `HttpClientTestHelper.GetExpectedMessage()` for network errors
+- ✅ **ALWAYS** consolidate related functional test validations into private methods
