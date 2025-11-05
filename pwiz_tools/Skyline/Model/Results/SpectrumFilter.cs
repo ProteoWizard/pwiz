@@ -461,7 +461,7 @@ namespace pwiz.Skyline.Model.Results
                         if (!filter.HasBestWindowGroup)
                         {
                             // No actual overlap in [isolation,IM] space
-                            Messages.WriteAsyncUserMessage(string.Format(ResultsResources.SpectrumFilter_No_Isolation_Window_Found_For_Precursor_, msDataFileUri.GetFileName(), filter.ChromatogramGroupId.Target, filter.Q1, filter.GetIonMobilityWindow().DisplayString()));
+                            Messages.WriteAsyncUserMessage(string.Format(ResultsResources.SpectrumFilter_No_Isolation_Window_Found_For_Precursor_, msDataFileUri.GetFileName(), filter.ChromatogramGroupId.Target, filter.Q1, filter.GetIonMobilityWindow()));
                             filter.ProposeBestWindowGroup(WINDOWGROUP_NONE,float.Epsilon, double.MaxValue);
                         }
                         else
