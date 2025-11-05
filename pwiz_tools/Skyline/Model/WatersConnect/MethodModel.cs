@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -127,7 +126,7 @@ namespace pwiz.Skyline.Model.WatersConnect
         [JsonProperty("group")]
         public string Group { get; set; }
 
-        [ColumnName("compound.info", doNotParse:true)]
+        [ColumnName("compound.note")]
         [JsonProperty("information")]
         public string Information { get; set; }
 
@@ -149,17 +148,14 @@ namespace pwiz.Skyline.Model.WatersConnect
         [JsonProperty("adducts", Order = 8)]
         public List<AdductInfo> Adducts;
 
-        private static readonly Regex _adductRegEx = new Regex(@"\.\[.+\]$");
+        public static readonly Regex _parseNameRegEx = new Regex(@"^(.+?)(\.(\[[^\]]+\]))?(\.([+-]?\d+))?$");
         public override void ParseObject(DsvStreamReader reader)
         {
             base.ParseObject(reader);
-            Name = _adductRegEx.Replace(Name, "");
-
-            var infoHeader = GetColumnName(@"Information");
-            if (reader.TryGetColumn(infoHeader, out var info))
+            var match = _parseNameRegEx.Match(Name);
+            if (match.Success)
             {
-                reader.TryGetColumn(@"document.name", out var documentName);
-                Information = string.Format(CultureInfo.CurrentCulture, ModelResources.Compound_ParseObject_Compound_from_Skyline_document__0_____1_, documentName, info );
+                Name = match.Groups[1].Value;
             }
 
             if (RetentionTime.HasValue && RetentionTime.Value == 0)
@@ -183,8 +179,8 @@ namespace pwiz.Skyline.Model.WatersConnect
             var colAttribute =  GetType().GetProperty("Name")?.GetCustomAttribute(typeof(ColumnNameAttribute)) as ColumnNameAttribute;
             if (colAttribute != null)
             {
-                var name = _adductRegEx.Replace(reader[colAttribute.ColumnName], ""); 
-                return string.Equals(Name, name, StringComparison.OrdinalIgnoreCase);
+                var match = _parseNameRegEx.Match(reader[colAttribute.ColumnName]);
+                return string.Equals(Name, match.Groups[1].Value, StringComparison.OrdinalIgnoreCase);
             }
             return false;
         }

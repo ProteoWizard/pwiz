@@ -52,7 +52,7 @@ namespace pwiz.Skyline.Alerts
 
         public static void ShowWithException(IWin32Window parent, string message, Exception exception, bool ignoreModeUI = false)
         {
-            new MessageDlg(message, ignoreModeUI) { Exception = exception }.ShowAndDispose(parent);
+            new MessageDlg(message, ignoreModeUI, messageIcon: MessageIcon.Error) { Exception = exception }.ShowAndDispose(parent);
         }
 
         // Display a MessageDlg and add additional, caller-provided information about a network failure to the More Info section

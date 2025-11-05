@@ -4605,13 +4605,13 @@ namespace pwiz.Skyline.Model
             writer.Write(FieldSeparator);
             writer.Write("is_quant_ion");
             writer.Write(FieldSeparator);
-            writer.Write("compound.info");
-            writer.Write(FieldSeparator);
             writer.Write("document.name");
             writer.Write(FieldSeparator);
             writer.Write("adduct.info");
             writer.Write(FieldSeparator);
             writer.Write("compound.internal_standard");
+            writer.Write(FieldSeparator);
+            writer.Write("compound.note");
             writer.WriteLine();
         }
         // ReSharper restore LocalizableElement
@@ -4719,13 +4719,16 @@ namespace pwiz.Skyline.Model
             else
                 writer.Write(false);
             writer.Write(FieldSeparator);
-            writer.Write(TextUtil.Quote(nodePepGroup.Name + @"/" + nodePep.ModifiedSequenceDisplay));   // Small molecule names can contain commas, so we have to quote them
-            writer.Write(FieldSeparator);
             writer.Write(SkylineDocumentFileName);
             writer.Write(FieldSeparator);
             writer.Write(nodeTranGroup.PrecursorAdduct.AdductFormula);
             writer.Write(FieldSeparator);
             writer.Write((nodePep.GlobalStandardType == StandardType.GLOBAL_STANDARD).ToString());
+            writer.Write(FieldSeparator);
+            if (string.IsNullOrEmpty(nodePep.Note))
+                writer.WriteDsvField(string.Empty, FieldSeparator, TextUtil.SPACE);
+            else
+                writer.WriteDsvField(nodePep.Note.Substring(0, Math.Min(nodePep.Note.Length, 100)), FieldSeparator, TextUtil.SPACE);
             writer.WriteLine();
         }
 
@@ -5083,7 +5086,8 @@ namespace pwiz.Skyline.Model
         public WatersConnectMethodExporter(SrmDocument document, WatersConnectAccount account)
             : base(document)
         {
-            _wcAccount = account; 
+            _wcAccount = account;
+            ConeVoltage = 10; // Default value, may be overridden by ExplicitValues in TransitionGroup
         }
         public void ExportMethod(string fileName, WatersConnectUrl targetFolderUrl, WatersConnectAcquisitionMethodUrl templateUrl, IProgressMonitor progressMonitor)
         {
