@@ -9,6 +9,7 @@
 6. [HttpClient Testing with HttpClientTestHelper](#httpclient-testing-with-httpclienttesthelper)
 7. [Translation-Proof Testing](#translation-proof-testing)
 8. [Test Performance Considerations](#test-performance-considerations)
+9. [Code Coverage Validation](#code-coverage-validation)
 
 ---
 
@@ -743,6 +744,362 @@ protected override void DoTest()
 - Tests validate different aspects of same feature
 - Tests can share SkylineWindow instance
 - Tests execute sequentially anyway
+
+---
+
+## Code Coverage Validation
+
+### Overview
+
+Code coverage validation using JetBrains dotCover is a critical methodology for ensuring that code changes (especially migrations, refactorings, or new features) are adequately tested. This approach is particularly valuable when working with LLM assistants to validate that automated code changes have complete test coverage.
+
+**Key Benefits:**
+- **Verify test coverage** of migrated/refactored code paths
+- **Identify untested code** that may need additional tests
+- **Validate LLM-generated code** has been properly exercised by existing tests
+- **Catch gaps** before merge that could lead to production bugs
+- **Document testing rigor** for code reviews and pull requests
+
+### dotCover Setup and Configuration
+
+#### Prerequisites
+
+1. **JetBrains dotCover** (bundled with ReSharper or available standalone)
+2. **Visual Studio 2022** with MSTest test adapter
+3. **Test projects** configured and building successfully
+
+#### Running Coverage Analysis
+
+**Option 1: Cover All Tests in Solution (Recommended for comprehensive analysis)**
+
+1. In Visual Studio, open **Test Explorer** (`Test` > `Test Explorer`)
+2. Right-click on the test project or solution node
+3. Select **Cover All Tests with dotCover**
+4. Wait for tests to complete (dotCover shows progress)
+5. dotCover Coverage window opens automatically
+
+**Option 2: Cover Specific Tests**
+
+1. In Test Explorer, select specific test classes or methods
+2. Right-click selection
+3. Select **Cover Tests with dotCover**
+
+**Option 3: Cover from Code (for targeted analysis)**
+
+1. Navigate to a test method in the editor
+2. Click the unit test icon in the left margin
+3. Select **Cover Unit Tests**
+
+#### Exporting Coverage Data
+
+**Export to JSON (for LLM analysis):**
+
+1. After coverage run completes, click the **Export** dropdown in the Coverage window
+2. Select **Export to JSON...**
+3. Navigate to the appropriate `TestResults` folder:
+   - For Skyline: `pwiz_tools/Skyline/TestResults/`
+   - For SkylineBatch: `pwiz_tools/Skyline/Executables/SkylineBatch/TestResults/`
+   - For AutoQC: `pwiz_tools/Skyline/Executables/AutoQC/TestResults/`
+4. Save with naming convention: `<ProjectName>Coverage.json` or simply `Coverage.json`
+
+**Example file locations:**
+```
+pwiz_tools/Skyline/TestResults/SkylineCoverage.json
+pwiz_tools/Skyline/Executables/SkylineBatch/TestResults/SkylineBatchCoverage.json
+pwiz_tools/Skyline/Executables/AutoQC/TestResults/AutoQCCoverage.json
+```
+
+**Export to HTML (for human visual inspection):**
+
+1. Click **Export** dropdown
+2. Select **Export to HTML...**
+3. Save to same `TestResults` folder with `.html` extension
+4. Open in browser for visual coverage inspection (green = covered, red = uncovered)
+
+### JSON Coverage Format
+
+The JSON export uses a hierarchical structure that is easily parsable by both humans and LLMs:
+
+```json
+{
+  "DotCoverVersion": "2025.1",
+  "Kind": "SolutionRoot",
+  "CoveredStatements": 12379,
+  "TotalStatements": 26539,
+  "CoveragePercent": 47,
+  "Children": [
+    {
+      "Kind": "Project",
+      "Name": "PanoramaClient",
+      "CoveredStatements": 574,
+      "TotalStatements": 1163,
+      "CoveragePercent": 49,
+      "Children": [
+        {
+          "Kind": "Namespace",
+          "Name": "pwiz.PanoramaClient",
+          "Children": [
+            {
+              "Kind": "Type",
+              "Name": "HttpPanoramaRequestHelper",
+              "CoveredStatements": 234,
+              "TotalStatements": 267,
+              "CoveragePercent": 88,
+              "Children": [
+                {
+                  "Kind": "Method",
+                  "Name": "DoPost(Uri,string):string",
+                  "CoveredStatements": 12,
+                  "TotalStatements": 15,
+                  "CoveragePercent": 80
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Hierarchy:** `Project` → `Namespace` → `Type` (Class) → `Method`/`Property` → (nested members)
+
+**Key Fields:**
+- `CoveredStatements`: Number of statements executed during tests
+- `TotalStatements`: Total number of executable statements
+- `CoveragePercent`: Coverage percentage (0-100)
+- `Kind`: Node type (`Project`, `Namespace`, `Type`, `Method`, etc.)
+- `Name`: Fully qualified name with signature for methods
+
+### Analysis Workflow
+
+#### For Developers
+
+**1. Identify Critical Code Paths**
+
+After making changes (migration, refactoring, new feature):
+- List the modified classes and methods
+- Identify the most critical/risky changes
+- Determine acceptable coverage thresholds (e.g., 80%+ for critical paths)
+
+**2. Run Coverage Analysis**
+
+- Run tests with dotCover coverage
+- Export to both HTML (visual) and JSON (analysis)
+
+**3. Visual Inspection (HTML)**
+
+- Open HTML report in browser
+- Navigate to modified classes
+- Look for red (uncovered) lines in critical paths
+- Assess risk of uncovered code
+
+**4. Share with LLM (JSON)**
+
+- Provide JSON file path to LLM assistant
+- Ask for coverage analysis of specific classes/methods
+- LLM can parse JSON and identify gaps programmatically
+
+#### For LLM Assistants
+
+**Effective Coverage Analysis Pattern:**
+
+```
+Developer: "Please analyze coverage for HttpPanoramaRequestHelper in 
+           pwiz_tools/Shared/PanoramaClient/TestResults/PanoramaClientCoverage.json"
+
+LLM: [Uses grep to find the class in JSON]
+     [Reads coverage statistics]
+     [Identifies uncovered methods]
+     [Reports findings with percentages]
+     [Recommends additional tests if needed]
+```
+
+**Search Strategy:**
+
+1. Use `grep` to find specific class names in JSON:
+   ```
+   grep '"Name": "HttpPanoramaRequestHelper"' Coverage.json -A 20
+   ```
+
+2. Look for methods with `"CoveragePercent": 0` (completely untested)
+
+3. Check critical methods have >80% coverage
+
+4. Report uncovered code paths with context
+
+**Example Analysis Output:**
+
+```
+Coverage Analysis for Server.GetSize():
+
+✅ GOOD: PanoramaServerConnector.GetFileInfo() - 90% coverage (54/60 statements)
+   - HttpClientWithProgress.DownloadFile() path is well-tested
+
+❌ GAP: Server.GetSize() - 0% coverage (0/14 statements)  
+   - HttpClientWithProgress.GetResponseHeadersRead() path is UNTESTED
+   - RECOMMENDATION: Add test or document as acceptable risk
+
+Overall Assessment: 1 critical gap found requiring attention.
+```
+
+### Use Cases
+
+#### Use Case 1: Validating Code Migration
+
+**Scenario:** Migrating from WebClient to HttpClientWithProgress
+
+**Process:**
+1. Complete migration code changes
+2. Run all tests (verify they pass)
+3. Run dotCover on test suites that exercise the migrated code
+4. Export JSON coverage reports
+5. Share with LLM: "Analyze coverage of [migrated classes]"
+6. LLM identifies any uncovered migration paths
+7. Assess risk and add tests if needed
+8. Document coverage in PR description
+
+**Example:** See `todos/completed/TODO-20251023_panorama_webclient_replacement.md` for a real-world example of this methodology validating a complete WebClient → HttpClientWithProgress migration.
+
+#### Use Case 2: Validating New Feature
+
+**Scenario:** Adding new public API methods
+
+**Process:**
+1. Implement new feature with tests
+2. Run coverage on test project
+3. Verify new methods show >80% coverage
+4. If gaps exist, add tests or document rationale
+5. Include coverage report in PR
+
+#### Use Case 3: Regression Prevention
+
+**Scenario:** Refactoring existing code
+
+**Process:**
+1. Before refactoring: Run coverage baseline
+2. After refactoring: Run coverage again  
+3. Compare: Ensure coverage didn't decrease
+4. Add tests if coverage dropped
+
+### Best Practices
+
+**DO:**
+- ✅ Export both HTML (visual) and JSON (analysis)
+- ✅ Store coverage files in project `TestResults/` folders
+- ✅ Use consistent naming: `<ProjectName>Coverage.json`
+- ✅ Focus on critical paths (new/changed code)
+- ✅ Share JSON with LLM for systematic gap identification
+- ✅ Document acceptable risks (untested error paths, defensive code)
+- ✅ Re-run coverage after adding tests to verify gaps closed
+
+**DON'T:**
+- ❌ Aim for 100% coverage (diminishing returns, false security)
+- ❌ Commit coverage files to git (large, binary, regenerated frequently)
+- ❌ Test defensive/unreachable code just for coverage metrics
+- ❌ Ignore 0% coverage on critical new features
+- ❌ Skip coverage validation on complex migrations
+
+### Acceptable Coverage Gaps
+
+Not all uncovered code requires tests. Acceptable gaps include:
+
+**1. Defensive Programming**
+```csharp
+// Unreachable in practice - validates external invariants
+if (parameter == null)
+    throw new ArgumentNullException(nameof(parameter));
+```
+
+**2. Error Paths Hard to Simulate**
+```csharp
+catch (OutOfMemoryException ex)
+{
+    // Nearly impossible to test reliably
+    Logger.LogCritical(ex);
+    throw;
+}
+```
+
+**3. Legacy Code Not Modified**
+- Code untouched by current changes
+- Low-risk, stable code with no recent bugs
+- Code scheduled for deprecation/removal
+
+**4. Platform-Specific Code**
+```csharp
+if (Environment.OSVersion.Platform == PlatformID.MacOSX)
+{
+    // Mac-specific logic, not testable on Windows build server
+}
+```
+
+**Document these gaps** in PR descriptions or code comments.
+
+### Integration with Workflow
+
+This coverage validation methodology integrates with the workflow documented in `WORKFLOW.md`:
+
+**Workflow 3: Before Creating PR (Coverage Validation)**
+
+1. **Complete code changes** (implementation + tests)
+2. **Run full test suite** locally (verify all pass)
+3. **Run dotCover coverage** on affected test projects
+4. **Export JSON** to `TestResults/<ProjectName>Coverage.json`
+5. **Analyze with LLM** (share JSON path, request gap analysis)
+6. **Address gaps** (add tests or document acceptable risks)
+7. **Create PR** (include coverage summary in description)
+8. **Push to TeamCity** (validate on build server)
+
+**PR Description Template (with coverage):**
+```markdown
+## Changes
+- Migrated PanoramaClient from WebClient to HttpClientWithProgress
+
+## Testing
+- All existing tests pass (Skyline, SkylineBatch, AutoQC)
+- Added comprehensive HttpClient tests (13 upload scenarios)
+
+## Coverage Analysis
+- **HttpPanoramaRequestHelper**: 88% coverage (234/267 statements)
+- **WebPanoramaClient**: 92% coverage (156/170 statements)
+- **Gap identified**: Server.GetSize() 0% coverage (untested helper, low risk)
+- **Action taken**: Documented as acceptable risk (rarely used, defensive code)
+
+See: TestResults/PanoramaClientCoverage.json
+```
+
+### Troubleshooting
+
+**Issue: dotCover shows 0% coverage for all code**
+
+**Solution:**
+- Ensure tests are actually running (check Test Explorer output)
+- Verify PDB files are being generated (Debug build configuration)
+- Check dotCover isn't filtering out test assemblies
+
+**Issue: JSON export is huge (>10MB)**
+
+**Solution:**
+- This is normal for solution-wide coverage
+- Focus analysis on specific projects/namespaces
+- LLMs can grep specific sections efficiently
+- Use HTML for visual overview, JSON for targeted analysis
+
+**Issue: Coverage differs between local and TeamCity**
+
+**Solution:**
+- TeamCity may run different test subsets
+- Compare test counts (local vs. CI)
+- Focus on critical path coverage, not absolute percentages
+
+**Issue: LLM cannot parse JSON structure**
+
+**Solution:**
+- Verify JSON is valid (check for truncation)
+- Use grep to extract specific sections
+- Provide class/method names explicitly for targeted search
 
 ---
 

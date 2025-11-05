@@ -290,9 +290,12 @@ When you have a branch-ready TODO file (e.g., `ai/todos/backlog/TODO-utf8_no_bom
 ```bash
 git checkout master
 git pull origin master
+git submodule update --init --recursive  # Ensure submodules are in sync
 # IMPORTANT: Use git mv to preserve Git history when moving tracked files
 git mv ai/todos/backlog/TODO-utf8_no_bom.md ai/todos/active/TODO-20251015_utf8_no_bom.md
 ```
+
+**Why the submodule update?** The project has Git submodules (e.g., `DocumentConverter`, `BullseyeSharp`) that need to be at the exact commit master expects. Without this step, submodules may show as modified in all your diffs.
 
 **Step 2: Commit and push to master (makes work visible to team)**
 ```bash
@@ -327,10 +330,11 @@ git push -u origin Skyline/work/20251015_utf8_no_bom
 
 When starting fresh without a pre-existing TODO:
 
-**Step 1: Create branch**
+**Step 1: Ensure master is up to date and create branch**
 ```bash
 git checkout master
 git pull origin master
+git submodule update --init --recursive  # Ensure submodules are in sync
 git checkout -b Skyline/work/20251015_new_feature
 ```
 
@@ -361,6 +365,77 @@ git push
 - Key decisions made
 - Files modified
 - Any blockers or issues encountered
+
+### Workflow 3A: Early Pull Request for TeamCity Validation
+
+For multi-phase branches, create a PR after the first testable unit of work for TeamCity validation and team visibility:
+
+**When to create early PR:**
+- Branch has multiple phases or takes >1 week
+- First phase is complete and testable
+- Want TeamCity validation before proceeding
+- Want team feedback during development
+
+**Step 1: Create PR after first testable phase**
+```bash
+# Phase 1 complete, committed, pushed
+# Create pull request on GitHub
+```
+
+**Step 2: Mark PR as Work-In-Progress**
+- Title: `[WIP] Brief description - Phase N Complete` or use GitHub Draft PR
+- Message: Single screen summary (see template below)
+- Reference the TODO file for complete details
+- Indicate current phase and next steps
+
+**Step 3: Continue development**
+```bash
+# Make Phase 2 changes
+git add .
+git commit -m "Phase 2: Description"
+git push  # Updates the same PR
+```
+
+**Step 4: Update PR as phases complete**
+- Edit PR description to reflect progress
+- Update phase status (Phase 2A ✅, Phase 2B 🔄)
+- Add TeamCity results as they complete
+- Respond to team feedback
+
+**Step 5: Final merge (when all work complete)**
+- Remove [WIP] from title or mark Draft as Ready
+- Update PR description with final summary
+- Follow standard merge workflow (see Workflow 4 below)
+
+**Early PR Message Template:**
+```markdown
+## Summary
+[1-2 sentences: what is being migrated/refactored and why]
+
+**Phase N (this commit):** [What this phase accomplishes]
+
+**Next:** [What Phase N+1 will do]
+
+## Status
+✅ Phase N complete - all tests passing in all locales
+⏳ Awaiting TeamCity validation
+🔄 Phase N+1 in progress
+
+## Testing
+[Brief bullet points of test coverage]
+
+## Impact
+[Which solutions/projects affected, API compatibility notes]
+
+See `todos/active/TODO-YYYYMMDD_description.md` for complete details.
+```
+
+**Benefits of early PR:**
+- TeamCity validates each phase before proceeding
+- Team visibility into in-progress work
+- Early feedback on architecture decisions
+- Clear checkpoints for complex migrations
+- Continuous integration validation throughout development
 
 ### Workflow 4: Completing Work and Merging
 
@@ -548,6 +623,29 @@ git checkout Skyline/work/YYYYMMDD_current_feature
 - ✅ All completed TODOs **MUST** have a PR reference before moving to completed/
 - ✅ They serve as a permanent record of decisions, context, and implementation details
 - ✅ If doing follow-up work, create a new TODO that references the completed one
+
+### Git Submodule Management
+This project has Git submodules (e.g., `DocumentConverter`, `BullseyeSharp`, `Hardklor`) that must stay in sync.
+
+**Manual approach (requires discipline):**
+```bash
+# After every pull or checkout
+git submodule update --init --recursive
+```
+
+**Automatic approach (recommended):**
+```bash
+# One-time configuration - Git will auto-update submodules on pull/checkout
+git config submodule.recurse true
+```
+
+**Why this matters:**
+- Out-of-sync submodules show as "modified" in every `git status` and diff
+- Creates noise and confusion about what actually changed
+- Can cause merge conflicts if not handled properly
+- The `git submodule update` command syncs to the exact commit master expects
+
+**Best practice:** Configure `submodule.recurse true` once in your local repository to avoid manual steps.
 
 ### Commit Messages
 - Use clear, descriptive messages
