@@ -3,6 +3,7 @@
 ## Branch Information
 - **Branch**: Skyline/work/20251105_reorg_md_docs
 - **Created**: 2025-11-05
+- **PR**: #3666
 - **Objective**: Reorganize .md documentation to improve information density and make critical rules immediately accessible
 
 ## Context
@@ -42,6 +43,10 @@ project-root/
 ```
 
 ## Tasks
+
+### Phase 0: Update WORKFLOW.md with Improved TODO Lifecycle
+- [x] Update Workflow 1: Move TODO to active on master before branching
+- [x] Add Workflow 5b: Creating backlog TODOs during active branch work
 
 ### Phase 1: Create New Structure
 - [ ] Create `docs/` directory at project root
