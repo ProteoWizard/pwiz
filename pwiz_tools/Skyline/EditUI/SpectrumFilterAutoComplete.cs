@@ -24,8 +24,10 @@ using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Filtering;
 using pwiz.Skyline.Util.Extensions;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Results.Spectra;
 
-namespace pwiz.Skyline.Model.Results.Spectra
+namespace pwiz.Skyline.EditUI
 {
     public class SpectrumFilterAutoComplete : IDisposable, IFilterAutoComplete
     {

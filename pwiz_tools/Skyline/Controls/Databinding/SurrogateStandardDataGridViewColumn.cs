@@ -19,7 +19,9 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace pwiz.Skyline.Model.Databinding
+using pwiz.Skyline.Model;
+
+namespace pwiz.Skyline.Controls.Databinding
 {
     /// <summary>
     /// A combo box column with a list of the surrogate standard molecules in the document.

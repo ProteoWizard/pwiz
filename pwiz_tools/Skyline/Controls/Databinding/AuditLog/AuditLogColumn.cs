@@ -20,9 +20,10 @@
 using System.Collections.Generic;
 using System.Drawing;
 using pwiz.Skyline.Controls.AuditLog;
+using pwiz.Skyline.Model.AuditLog.Databinding;
 using pwiz.Skyline.Properties;
 
-namespace pwiz.Skyline.Model.AuditLog.Databinding
+namespace pwiz.Skyline.Controls.Databinding.AuditLog
 {
     public class AuditLogColumn : TextImageColumn
     {

@@ -38,7 +38,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private BindingListSource _bindingListSource;
         private readonly AxisLabelScaler _axisLabelScaler;
         private CurveItem _barGraph;
-        private FoldChangeBindingSource.FoldChangeRow[] _rows;
+        private FoldChangeRow[] _rows;
         private SkylineWindow _skylineWindow;
         private bool _updatePending;
         public FoldChangeBarGraph()
@@ -280,7 +280,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             return true;
         }
 
-        private FoldChangeBindingSource.FoldChangeRow FoldChangeRowFromPoint(PointF pt)
+        private FoldChangeRow FoldChangeRowFromPoint(PointF pt)
         {
             if (null == _barGraph || null == _rows)
             {
@@ -299,7 +299,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             return _rows[iNearest];
         }
 
-        private bool IsSelected(FoldChangeBindingSource.FoldChangeRow row)
+        private bool IsSelected(FoldChangeRow row)
         {
             if (null == _skylineWindow)
             {
