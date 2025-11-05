@@ -17,9 +17,10 @@
  * limitations under the License.
  */
 using System.Linq;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 
-namespace pwiz.Skyline.Model.Databinding
+namespace pwiz.Skyline.Controls.Databinding
 {
     public class AnnotationValueListDataGridViewColumn : BoundComboBoxColumn
     {
