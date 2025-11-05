@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mzML xmlns="http://psi.hupo.org/ms/mzml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.0.xsd" id="10nmol_Negative_MS_ID_ON_055" version="1.1.0">
   <cvList count="2">
-    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.1.30" URI="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"/>
+    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.1.197" URI="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"/>
     <cv id="UO" fullName="Unit Ontology" version="09:04:2014" URI="https://raw.githubusercontent.com/bio-ontology-research-group/unit-ontology/master/unit.obo"/>
   </cvList>
   <fileDescription>
@@ -9,24 +9,24 @@
       <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
     </fileContent>
     <sourceFileList count="1">
-      <sourceFile id="_x0031_0nmol_Negative_MS_ID_ON_055.lcd" name="10nmol_Negative_MS_ID_ON_055.lcd" location="file:///C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Shimadzu\Reader_Shimadzu_Test.data">
-        <cvParam cvRef="MS" accession="MS:1000776" name="scan number only nativeID format" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000560" name="mass spectrometer file format" value=""/>
+      <sourceFile id="_x0031_0nmol_Negative_MS_ID_ON_055.lcd" name="10nmol_Negative_MS_ID_ON_055.lcd" location="file:///C:\dev\pwiz\pwiz\data\vendor_readers\Shimadzu\Reader_Shimadzu_Test.data">
+        <cvParam cvRef="MS" accession="MS:1002898" name="Shimadzu Biotech QTOF nativeID format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1003009" name="Shimadzu Biotech LCD format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="857158de339649bb8f2c2adc519bfc593b497f2f"/>
       </sourceFile>
     </sourceFileList>
   </fileDescription>
   <softwareList count="2">
-    <software id="Shimadzu_x0020_software" version="4.0">
+    <software id="Shimadzu_x0020_software" version="5.0">
       <cvParam cvRef="MS" accession="MS:1001557" name="Shimadzu Corporation software" value=""/>
     </software>
-    <software id="pwiz" version="3.0.20134">
+    <software id="pwiz" version="3.0.25282">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
   <instrumentConfigurationList count="1">
     <instrumentConfiguration id="IC1">
-      <cvParam cvRef="MS" accession="MS:1000124" name="Shimadzu instrument model" value=""/>
+      <cvParam cvRef="MS" accession="MS:1000603" name="Shimadzu Scientific Instruments instrument model" value=""/>
       <componentList count="5">
         <source order="1">
           <cvParam cvRef="MS" accession="MS:1000073" name="electrospray ionization" value=""/>
