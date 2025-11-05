@@ -21,9 +21,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Lists;
 
-namespace pwiz.Skyline.Model.Databinding
+namespace pwiz.Skyline.Controls.Databinding
 {
     public class ListLookupDataGridViewColumn : BoundComboBoxColumn
     {

@@ -532,7 +532,8 @@ namespace pwiz.SkylineTestFunctional
                 set { _serverSkydVersion = value; }
             }
 
-            public override JToken GetInfoForFolders(string folder)
+            public override JToken GetInfoForFolders(string folder,
+                IProgressMonitor progressMonitor, IProgressStatus progressStatus)
             {
                 // this addition is hacky but necessary as far as I can tell to get PanoramaSavedUri testing to work
                 // basically adds a WRITE_TARGET type folder in the root because the new code to deal with publishing to a 
@@ -553,7 +554,8 @@ namespace pwiz.SkylineTestFunctional
                 return obj;
             }
 
-            public override Uri SendZipFile(string folderPath, string zipFilePath, IProgressMonitor progressMonitor)
+            public override Uri SendZipFile(string folderPath, string zipFilePath,
+                IProgressMonitor progressMonitor, IProgressStatus progressStatus)
             {
                 return null;
             }

@@ -1,7 +1,7 @@
-# TODO-skylinebatch_test_file_cleanup.md
+# TODO-skylinebatch_test_cleanup.md
 
 ## Objective
-Fix SkylineBatch tests to write all temporary and log files to proper test sandbox (`TestResults/`) instead of polluting the source tree.
+Fix SkylineBatch test quality issues: file pollution, flaky tests, and proper test infrastructure.
 
 ## Background
 
@@ -468,6 +468,60 @@ Add this to `TESTING.md` best practices?
 - `Microsoft.VisualStudio.TestTools.UnitTesting.TestContext` - Standard MSTest infrastructure
 - `TestContext.GetTestResultsPath()` - Extension method from Skyline test utilities
 
+## Issue 2: Flaky DataDownloadTest
+
+### Problem
+`DataDownloadFunctionalTest.DataDownloadTest()` fails intermittently (2-3 out of 5 runs in full suite):
+
+**Symptoms:**
+- Test gets stuck showing `ConnectionErrorForm` with "EmptyTemplate" unable to connect
+- Waiting for `CommonAlertDlg` (disk space error) but form never appears
+- Usually passes when run in isolation
+- Fails more often in full test suite runs
+
+**Error:**
+```
+Assert.Fail failed. Timeout 240 seconds exceeded in WaitForOpenForm(CommonAlertDlg). 
+Open forms: MainForm (Skyline Batch 1000.0.0.0), ConnectionErrorForm (Connection Error)
+```
+
+**Root Cause:**
+- Likely race condition or timing issue in FTP connection check
+- May be environmental (FTP server unreachable/slow in CI)
+- Not directly caused by HttpClient migration, but exposed during testing
+
+**Current Workaround:**
+- Re-run test in isolation (usually passes)
+- Run all tests, then re-run DataDownloadTest
+
+### Potential Solutions
+
+**Option 1: Add Retry Logic**
+- Automatically retry connection checks
+- Configurable timeout/retry count
+- Better for real-world flakiness
+
+**Option 2: Mock FTP Connections in Tests**
+- Replace real FTP calls with mocks
+- Deterministic behavior
+- Faster test execution
+- More work to implement
+
+**Option 3: Increase Timeouts**
+- Simple but doesn't fix root cause
+- May hide real issues
+- Not recommended
+
+**Option 4: Skip Connection Check for Test Data**
+- Add flag to bypass real connection checks
+- Use pre-determined file info
+- Fastest, most reliable for tests
+
+### Recommended Approach
+**Phase 1:** Investigate actual FTP connection failures (logging/diagnostics)
+**Phase 2:** Add retry logic with exponential backoff
+**Phase 3:** Consider mocking for unit tests, keep real connections for integration tests
+
 ## Priority
 
 **Medium-High** - Should be fixed before major test infrastructure work.
@@ -477,8 +531,10 @@ Add this to `TESTING.md` best practices?
 - Foundation for other test improvements
 - Quick Phase 1 fix (1-2 hours)
 - Proper Phase 2 fix naturally fits with coverage/warning cleanup
+- Flaky tests reduce confidence in test suite
 
 **Suggested Timeline:**
-- **This week:** Phase 1 (temp folder) - immediate relief
+- **This week:** Phase 1 (temp folder) - immediate relief for file pollution
 - **Next sprint:** Phase 2 (TestContext) - with other test improvements
+- **Investigate flaky test:** When time permits, add better logging/retry logic
 

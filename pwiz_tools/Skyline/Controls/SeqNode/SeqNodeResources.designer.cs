@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Controls.SeqNode {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class SeqNodeResources {
@@ -223,24 +223,6 @@ namespace pwiz.Skyline.Controls.SeqNode {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Peptide.
-        /// </summary>
-        public static string PeptideTreeNode_Heading_Title {
-            get {
-                return ResourceManager.GetString("PeptideTreeNode_Heading_Title", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Molecule.
-        /// </summary>
-        public static string PeptideTreeNode_Heading_Title_Molecule {
-            get {
-                return ResourceManager.GetString("PeptideTreeNode_Heading_Title_Molecule", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to First.
         /// </summary>
         public static string PeptideTreeNode_RenderTip_First {
@@ -422,33 +404,6 @@ namespace pwiz.Skyline.Controls.SeqNode {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Precursor.
-        /// </summary>
-        public static string TransitionGroupTreeNode_Title {
-            get {
-                return ResourceManager.GetString("TransitionGroupTreeNode_Title", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0} [{1}].
-        /// </summary>
-        public static string TransitionTreeNode_GetLabel__0__1__ {
-            get {
-                return ResourceManager.GetString("TransitionTreeNode_GetLabel__0__1__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to irank {0}.
-        /// </summary>
-        public static string TransitionTreeNode_GetLabel_irank__0__ {
-            get {
-                return ResourceManager.GetString("TransitionTreeNode_GetLabel_irank__0__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Decoy Mass Shift.
         /// </summary>
         public static string TransitionTreeNode_RenderTip_Decoy_Mass_Shift {
@@ -517,24 +472,6 @@ namespace pwiz.Skyline.Controls.SeqNode {
         public static string TransitionTreeNode_RenderTip_Product_m_z {
             get {
                 return ResourceManager.GetString("TransitionTreeNode_RenderTip_Product_m_z", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Transition.
-        /// </summary>
-        public static string TransitionTreeNode_Title {
-            get {
-                return ResourceManager.GetString("TransitionTreeNode_Title", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Transitions.
-        /// </summary>
-        public static string TransitionTreeNode_Titles {
-            get {
-                return ResourceManager.GetString("TransitionTreeNode_Titles", resourceCulture);
             }
         }
     }

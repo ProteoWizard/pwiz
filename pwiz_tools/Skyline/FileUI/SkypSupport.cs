@@ -161,13 +161,6 @@ namespace pwiz.Skyline.FileUI
             if (e.InnerException != null)
                 return GetErrorStatusCode(e.InnerException);
 
-            // Legacy WebException support (for any code still using WebClient)
-            if (e is WebException webException && webException.Status == WebExceptionStatus.ProtocolError)
-            {
-                if (webException.Response is HttpWebResponse response)
-                    return response.StatusCode;
-            }
-
             return null;
         }
 

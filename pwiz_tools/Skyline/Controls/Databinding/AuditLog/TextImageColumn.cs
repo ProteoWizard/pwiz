@@ -21,7 +21,7 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 
-namespace pwiz.Skyline.Model.AuditLog.Databinding
+namespace pwiz.Skyline.Controls.Databinding.AuditLog
 {
     public class TextImageCell : DataGridViewTextBoxCell
     {

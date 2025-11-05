@@ -100,6 +100,167 @@ throw new InvalidOperationException($@"Invalid state: {_currentState}");
 
 Add the comment `// Text for debugging only` or `// Exception text for internal diagnostics, not displayed to user` to document that the string is intentionally non-localized.
 
+### User-facing exception messages vs diagnostic details
+
+**Principle: Exception.Message for users, InnerException for developers**
+
+When creating exceptions that will be shown to users, follow this pattern:
+- **`Exception.Message`**: Simple, actionable message the user can understand and act on
+- **`InnerException`**: Technical details, stack traces, and diagnostic information for developers
+
+**Why this matters:**
+
+Most error dialogs show `Exception.Message` with a "More Info" button that expands to show the full exception chain and stack trace. Users see the simple message; developers who need to diagnose issues can click "More Info" and use the "Copy" button to send us the full diagnostic details.
+
+**Good example:**
+```csharp
+try
+{
+    httpClient.DownloadFile(uri, fileName);
+}
+catch (HttpRequestException httpEx)
+{
+    // User-friendly message in outer exception
+    throw new NetworkRequestException(
+        "The request to panoramaweb.org timed out. Please try again.",  // User sees this
+        NetworkFailureType.Timeout,
+        uri,
+        httpEx);  // Technical details in InnerException (for "More Info")
+}
+```
+
+**What users see in MessageDlg:**
+```
+The request to panoramaweb.org timed out. Please try again.
+[More Info button] [Copy button]
+```
+
+**What developers see after clicking "More Info":**
+```
+NetworkRequestException: The request to panoramaweb.org timed out. Please try again.
+  at HttpClientWithProgress.MapHttpException(...)
+  InnerException: TaskCanceledException: A task was canceled.
+    at System.Net.Http.HttpClient.SendAsync(...)
+```
+
+**When we have both LabKey errors and HTTP errors:**
+```csharp
+// LabKey provides specific server-side error
+var labKeyError = new LabKeyError("File name contains invalid characters", 400);
+
+// Don't duplicate with generic HTTP message
+// BAD:  "Error: Response status code does not indicate success: 400 (Bad Request)"
+//       "LabKey Error: File name contains invalid characters"
+// GOOD: "Error: File name contains invalid characters"
+//       "Response status: 400"
+
+throw new PanoramaServerException(
+    errorMessageBuilder
+        .LabKeyError(labKeyError)      // User sees this
+        .Uri(uri)
+        .ToString(),
+    networkRequestException);          // Full HTTP details in InnerException
+```
+
+**Guidelines:**
+- ✅ `Exception.Message`: What the user can understand ("Server is offline", "Invalid credentials", "File not found")
+- ✅ Include actionable guidance ("Please check your network connection", "Go to Tools > Options to update password")
+- ❌ Don't include technical jargon in Message ("Response status code does not indicate success: 500 (Internal Server Error)")
+- ❌ Don't include implementation details ("HEAD request failed", "TaskCanceledException thrown")
+- ✅ Put all technical details in `InnerException` chain
+- ✅ When wrapping exceptions, preserve the original as `InnerException`
+- ✅ When you have a server-specific error (LabKey, Panorama), prefer it over generic HTTP status messages
+
+**Exception hierarchy for diagnostics:**
+```
+PanoramaServerException: "File was not uploaded to the server..."
+  ↓ InnerException
+  NetworkRequestException: "The server panoramaweb.org encountered an error (HTTP 500)..."
+    ↓ InnerException
+    HttpRequestException: "Response status code does not indicate success: 500 (Internal Server Error)"
+      ↓ InnerException (if applicable)
+      SocketException: "The remote server closed the connection"
+```
+
+Users see the top-level message. Developers troubleshooting can inspect the entire chain via "More Info".
+
+### Error messages should explain cause AND solution
+
+**Principle: Tell users what went wrong AND how to fix it**
+
+Good error messages have two parts:
+1. **What happened** (the cause/problem)
+2. **What to do about it** (the solution/next steps)
+
+**Good examples:**
+```csharp
+// Network error with actionable guidance
+"No network connection detected. Please check your internet connection and try again."
+
+// Missing configuration with clear instructions
+"The server {0} is not in your list of Panorama servers.\n\n" +
+"Use Tools > Options > Panorama to add the server to your settings."
+
+// Permission error with remediation steps
+"Access to {0} was denied (HTTP 403).\n\n" +
+"Contact your Panorama administrator to request upload permissions for this folder."
+
+// Validation error with what to change
+"File name contains invalid characters.\n\n" +
+"Remove characters like < > : \" / \\ | ? * from the file name."
+```
+
+**Bad examples:**
+```csharp
+// BAD - Only states the problem, no guidance
+"Server not found."
+
+// BAD - Technical jargon without user-friendly explanation
+"HTTP 403 Forbidden."
+
+// BAD - Vague, doesn't help user know what to do
+"An error occurred."
+```
+
+**Guidelines:**
+- ✅ First sentence: What went wrong in user-friendly terms
+- ✅ Second part: Clear, specific steps to resolve the issue
+- ✅ Use "Please..." or "Use..." for actionable instructions
+- ✅ Reference specific UI paths when helpful ("Tools > Options > Panorama")
+- ✅ For permission errors, tell them who to contact
+- ✅ For validation errors, show examples of what's acceptable
+- ❌ Don't leave users wondering "what do I do now?"
+- ❌ Don't assume users understand technical error codes
+- ❌ Don't just throw the exception message at them without context
+
+**Pattern for RESX strings:**
+```xml
+<!-- Good: Cause + Solution -->
+<data name="Error_ServerNotInList" xml:space="preserve">
+  <value>The server {0} is not in your list of Panorama servers.
+
+Use Tools &gt; Options &gt; Panorama to add the server to your settings.</value>
+</data>
+
+<!-- Good: Problem + What to check -->
+<data name="Error_NoNetworkConnection" xml:space="preserve">
+  <value>No network connection detected.
+
+Please check your internet connection and try again.</value>
+</data>
+```
+
+**Future enhancement consideration:**
+When error messages suggest manual steps (like "Use Tools > Options"), consider whether you can offer to do it for the user:
+```csharp
+// CONSIDER: Instead of just showing error, offer to fix it
+var result = MultiButtonMsgDlg.Show(this,
+    "The server {0} is not in your list...\n\nWould you like to add it now?",
+    "Add Server", "Cancel");
+if (result == DialogResult.OK)
+    ShowAddServerDialog(serverUrl);
+```
+
 ## File I/O patterns
 
 ### FileSaver for atomic file writes
@@ -163,7 +324,27 @@ catch (Exception e)
 }
 ```
 
-**With complex error handling:**
+**Prefer `ExceptionUtil.DisplayOrReportException()` over manual checks:**
+
+```csharp
+// GOOD - DRY, concise, handles programming defects automatically
+catch (Exception e)
+{
+    ExceptionUtil.DisplayOrReportException(this, e);
+    return false;
+}
+
+// AVOID - Repetitive pattern that DisplayOrReportException() already handles
+catch (Exception e)
+{
+    if (ExceptionUtil.IsProgrammingDefect(e))
+        throw;
+    MessageDlg.ShowWithException(this, e.Message, e);
+    return false;
+}
+```
+
+**With complex error handling (when you need custom messages):**
 
 ```csharp
 try
@@ -181,7 +362,7 @@ catch (Exception e)
     if (ExceptionUtil.IsProgrammingDefect(e))
         throw;
     
-    // Complex handling for expected errors (e.g., check HTTP status codes)
+    // Custom handling for specific error types (when generic message isn't appropriate)
     var statusCode = GetHttpStatusCode(e);
     if (statusCode == HttpStatusCode.NotFound)
     {

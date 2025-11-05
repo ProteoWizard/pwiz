@@ -443,7 +443,7 @@ namespace pwiz.PanoramaClient
         }
     }
 
-    public class PanoramaServerException : Exception
+    public class PanoramaServerException : IOException
     {
         public HttpStatusCode? HttpStatus { get; }
 
@@ -485,14 +485,20 @@ namespace pwiz.PanoramaClient
             var errorMessageBuilder = new ErrorMessageBuilder(message)
                 .Uri(uri);
 
-            // Only include the exception message if there's no LabKey error
-            // When there's a LabKey error, it's more specific and we don't want to duplicate with generic exception message
+            // Add LabKey error if available (most specific server-side error)
             if (labKeyError != null)
             {
                 errorMessageBuilder.LabKeyError(labKeyError);
+                
+                // Don't include the NetworkRequestException message when we have a LabKey error
+                // The LabKey error is the server's specific error message and is what users need
+                // The exception message would be technical details (e.g., "Response status code does not indicate success: 500...")
+                // which are redundant when we already show the LabKey error and status code
             }
             else
             {
+                // No LabKey error - use the full NetworkRequestException message which includes helpful context
+                // (e.g., "The request to https://... timed out. Please try again.")
                 errorMessageBuilder.ExceptionMessage(e.Message);
             }
 

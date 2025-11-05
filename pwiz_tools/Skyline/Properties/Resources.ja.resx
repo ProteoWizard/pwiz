@@ -133,9 +133,6 @@
   <data name="FragmentLib" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\fragmentlib.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="ReportSpecList_Title_Edit_Reports" xml:space="preserve">
-    <value>レポートを編集</value>
-  </data>
   <data name="ImportPeptideSearchDlg_NextPage_The_document_specific_spectral_library_does_not_have_valid_retention_times_" xml:space="preserve">
     <value>ドキュメントの特定のスペクトルライブラリには有効な保持時間がありません。</value>
   </data>
@@ -2692,9 +2689,6 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   <data name="Skyline" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\skyline.ico;System.Drawing.Icon, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="ReportSpecList_Label_Report" xml:space="preserve">
-    <value>レポート(&amp;R)：</value>
-  </data>
   <data name="ResultsGrid_ResultsGrid_Fwhm" xml:space="preserve">
     <value>Fwhm</value>
   </data>
@@ -3687,9 +3681,6 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   </data>
   <data name="RInstaller_InstallPackages_Package_installation_failed__Error_log_output_in_immediate_window_" xml:space="preserve">
     <value>パッケージのインストールに失敗しました。即時ウィンドウ内のログ出力エラー。</value>
-  </data>
-  <data name="TransitionTreeNode_GetLabel_rank__0__" xml:space="preserve">
-    <value>ランク{0}</value>
   </data>
   <data name="CalculateIsolationSchemeDlg_OkDialog_Window_width_must_be_less_than_or_equal_to_the_isolation_range" xml:space="preserve">
     <value>ウィンドウ幅は単離範囲以下でなければなりません。</value>
