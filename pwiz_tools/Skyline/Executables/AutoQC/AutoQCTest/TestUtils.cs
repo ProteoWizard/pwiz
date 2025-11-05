@@ -32,14 +32,33 @@ namespace AutoQCTest
     { 
         public const string PANORAMAWEB = "https://panoramaweb.org";
         // public const string PANORAMAWEB = "http://localhost:8080";
-        public const string PANORAMAWEB_USER = "skyline_tester_admin@proteinms.net";
+        
+        // Default test account (shared admin account for automated testing)
+        private const string DEFAULT_PANORAMAWEB_USER = "skyline_tester_admin@proteinms.net";
         public const string PANORAMAWEB_TEST_FOLDER = "SkylineTest/AutoQcTest";
 
         /// <summary>
-        /// Set this environment variable on your system to the password for
-        /// the PANORAMAWEB_USER above. Ask Vagisha or someone else with access
-        /// to share this password with you.
+        /// Environment variables for Panorama test credentials.
+        /// Set these to use your own credentials instead of the shared test account.
+        /// This is safer than editing code, which can be accidentally committed.
+        /// 
+        /// RECOMMENDED: Set persistent user-level environment variables (PowerShell as Admin):
+        ///   [Environment]::SetEnvironmentVariable("PANORAMAWEB_USERNAME", "your.name@yourdomain.edu", "User")
+        ///   [Environment]::SetEnvironmentVariable("PANORAMAWEB_PASSWORD", "your_password", "User")
+        ///   Then restart Visual Studio to pick up the new environment variables.
+        /// 
+        /// ALTERNATIVE: Use Windows GUI (no PowerShell needed):
+        ///   Windows Search > "Environment Variables" > "Edit environment variables for your account"
+        ///   Add both variables under "User variables"
+        ///   Restart Visual Studio
+        /// 
+        /// To clear when done (PowerShell):
+        ///   [Environment]::SetEnvironmentVariable("PANORAMAWEB_USERNAME", $null, "User")
+        ///   [Environment]::SetEnvironmentVariable("PANORAMAWEB_PASSWORD", $null, "User")
+        /// 
+        /// If not set, falls back to DEFAULT_PANORAMAWEB_USER and PASSWORD must be set.
         /// </summary>
+        private const string USERNAME_ENVT_VAR = "PANORAMAWEB_USERNAME";
         private const string PASSWORD_ENVT_VAR = "PANORAMAWEB_PASSWORD";
 
         public static string GetTestFilePath(string fileName)
@@ -81,7 +100,7 @@ namespace AutoQCTest
         public static PanoramaSettings GetTestPanoramaSettings(bool publishToPanorama = true)
         {
             var panoramaServerUrl = publishToPanorama ? PANORAMAWEB : "";
-            var panoramaUserEmail = publishToPanorama ? PANORAMAWEB_USER : "";
+            var panoramaUserEmail = publishToPanorama ? GetPanoramaWebUsername() : "";
             var panoramaPassword = publishToPanorama ? GetPanoramaWebPassword() : "";
             var panoramaProject = publishToPanorama ? PANORAMAWEB_TEST_FOLDER : "";
 
@@ -192,13 +211,29 @@ namespace AutoQCTest
             }
         }
 
+        /// <summary>
+        /// Gets the Panorama username for testing.
+        /// First checks PANORAMAWEB_USERNAME environment variable.
+        /// Falls back to DEFAULT_PANORAMAWEB_USER if not set.
+        /// </summary>
+        public static string GetPanoramaWebUsername()
+        {
+            var username = Environment.GetEnvironmentVariable(USERNAME_ENVT_VAR);
+            return string.IsNullOrWhiteSpace(username) ? DEFAULT_PANORAMAWEB_USER : username;
+        }
+
+        /// <summary>
+        /// Gets the Panorama password for testing.
+        /// Requires PANORAMAWEB_PASSWORD environment variable to be set.
+        /// </summary>
         public static string GetPanoramaWebPassword()
         {
             var panoramaWebPassword = Environment.GetEnvironmentVariable(PASSWORD_ENVT_VAR);
             if (string.IsNullOrWhiteSpace(panoramaWebPassword))
             {
+                var username = GetPanoramaWebUsername();
                 Assert.Fail(
-                    $"Environment variable ({PASSWORD_ENVT_VAR}) with the PanoramaWeb password for {PANORAMAWEB_USER} is not set. Cannot run test.");
+                    $"Environment variable ({PASSWORD_ENVT_VAR}) with the PanoramaWeb password for {username} is not set. Cannot run test.");
             }
 
             return panoramaWebPassword;
