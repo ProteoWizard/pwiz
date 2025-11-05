@@ -2947,15 +2947,17 @@ namespace pwiz.Skyline.SettingsUI
                 float nLines = 1;
                 foreach (var part in parts)
                 {
-                    if (part.Text.StartsWith(Environment.NewLine))
+                    var text = part.Text;
+                    if (text.StartsWith(Environment.NewLine))
                     {
+                        text = text.Substring(Environment.NewLine.Length);
                         lineWidth = 0;
                         nLines++;
                     }
-                    g.DrawString(part.Text, rt.FontNormal, part.Color, new PointF(startX + lineWidth, startY + height));
-                    lineWidth += g.MeasureString(part.Text, rt.FontNormal).Width - 3;
+                    height = Math.Max(height, g.MeasureString(text, rt.FontNormal).Height);
+                    g.DrawString(text, rt.FontNormal, part.Color, new PointF(startX + lineWidth, startY + (nLines-1)*height));
+                    lineWidth += g.MeasureString(text, rt.FontNormal).Width - 3;
                     width = Math.Max(lineWidth, width);
-                    height = Math.Max(height, g.MeasureString(part.Text, rt.FontNormal).Height);
                 }
                 size.Height = nLines * height;
                 size.Width = width;
@@ -2979,6 +2981,11 @@ namespace pwiz.Skyline.SettingsUI
 
                 public string Text { get; private set; }
                 public Brush Color { get; private set; }
+
+                public override string ToString()
+                {
+                    return $@"{Text} ({(Color as SolidBrush)?.Color.ToString() ?? @"?"})"; // For debug convenience
+                }
             }
         }
 
