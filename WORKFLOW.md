@@ -286,30 +286,42 @@ The TODO file in todos/active/ contains full context. Please read it first, then
 
 When you have a branch-ready TODO file (e.g., `todos/backlog/TODO-utf8_no_bom.md`):
 
-**Step 1: Create branch**
+**Step 1: Move TODO to active on master (claims the work)**
 ```bash
 git checkout master
 git pull origin master
-git checkout -b Skyline/work/20251015_utf8_no_bom  # Use today's date
-```
-
-**Step 2: Move and rename TODO file with Git**
-```bash
 # IMPORTANT: Use git mv to preserve Git history when moving tracked files
 git mv todos/backlog/TODO-utf8_no_bom.md todos/active/TODO-20251015_utf8_no_bom.md
 ```
 
-**Step 3: Update TODO file header**
+**Step 2: Commit and push to master (makes work visible to team)**
+```bash
+git commit -m "Start utf8_no_bom work - move TODO to active"
+git push origin master
+```
+
+**Step 3: Create feature branch**
+```bash
+git checkout -b Skyline/work/20251015_utf8_no_bom  # Use today's date matching TODO
+```
+
+**Step 4: Update TODO file header**
 - Change "Branch Information (Future)" to "Branch Information"
 - Fill in actual branch name and creation date
 - Update any "will be" to actual values
 
-**Step 4: Commit TODO to branch**
+**Step 5: Commit TODO update to branch**
 ```bash
-git add todos/
-git commit -m "Start utf8_no_bom work - move TODO to active"
+git add todos/active/TODO-20251015_utf8_no_bom.md
+git commit -m "Update TODO with branch information"
 git push -u origin Skyline/work/20251015_utf8_no_bom
 ```
+
+**Why move TODO to master first?**
+- Makes it immediately visible on master that this work is being claimed
+- Prevents duplicate work by other developers
+- Atomic operation: file move is committed before code changes begin
+- Git history properly tracks the TODO lifecycle
 
 ### Workflow 2: Creating Branch and TODO Together
 
@@ -449,6 +461,8 @@ git rm todos/completed/TODO-20240715_old_work.md
 
 ### Workflow 5: Creating Backlog TODO (Planning)
 
+#### 5a. Planning Future Work on Master
+
 When you want to plan future work without creating a branch:
 
 **Step 1: Create TODO in backlog/**
@@ -465,6 +479,61 @@ git push origin master
 ```
 
 This makes the planned work visible to the team and LLM tools.
+
+#### 5b. Creating Backlog TODO During Active Branch Work
+
+When inspiration strikes during development on a feature branch, you can document the idea immediately and make it available to the team without waiting for your PR to merge.
+
+**Option 1: Create TODO directly on master (recommended)**
+
+```bash
+# Save current work on feature branch
+git stash
+
+# Switch to master and create backlog TODO
+git checkout master
+git pull origin master
+
+# Create todos/backlog/TODO-new_idea.md with planning structure
+# ... edit the file ...
+
+git add todos/backlog/TODO-new_idea.md
+git commit -m "Add backlog TODO for new_idea planning"
+git push origin master
+
+# Return to feature branch and resume work
+git checkout Skyline/work/YYYYMMDD_current_feature
+git stash pop
+```
+
+**Option 2: Cherry-pick from feature branch to master**
+
+```bash
+# Create TODO on your current feature branch
+# Create todos/backlog/TODO-new_idea.md with planning structure
+# ... edit the file ...
+
+git add todos/backlog/TODO-new_idea.md
+git commit -m "Add backlog TODO for new_idea planning"
+
+# Note the commit hash
+git log -1 --oneline
+
+# Switch to master and cherry-pick just that commit
+git checkout master
+git pull origin master
+git cherry-pick <commit-hash>
+git push origin master
+
+# Return to feature branch
+git checkout Skyline/work/YYYYMMDD_current_feature
+```
+
+**Why this matters:**
+- New TODO ideas become available to the team immediately
+- Other developers can start work on the idea without waiting for your PR merge
+- Separates TODO lifecycle from feature branch lifecycle
+- When your feature branch eventually merges, Git handles the duplicate commit gracefully
 
 ## Best Practices
 
