@@ -735,6 +735,8 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
                 exception = exception.InnerException;
             }
 
+            // Note: ArdiaClient uses raw HttpClient (not HttpClientWithProgress), so WebException 
+            // could appear as InnerException of HttpRequestException for DNS failures, etc.
             return exception is HttpRequestException || 
                    exception is WebException || 
                    // Indicates the request timed out

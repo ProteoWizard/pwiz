@@ -25,6 +25,7 @@ using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 using System;
 using System.IO;
+using System.Text;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -39,7 +40,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            // Category: Network failure tests
+            // Category: Download - Network failure tests
             TestDnsFailureHandling();
             TestConnectionFailureHandling();
             TestTimeoutHandling();
@@ -48,7 +49,7 @@ namespace pwiz.SkylineTestFunctional
             TestCancellationClickByException();
             TestNoNetworkInterfaceHandling();
             
-            // Category: HTTP status code tests
+            // Category: Download - HTTP status code tests
             TestHttp404Handling();
             TestHttp401Handling();
             TestHttp403Handling();
@@ -56,16 +57,43 @@ namespace pwiz.SkylineTestFunctional
             TestHttp429Handling();
             TestHttpGenericErrorHandling();
             
-            // Category: Successful download tests (with mock data)
+            // Category: Download - Successful tests (with mock data)
             TestDownloadStringSuccess();
             TestDownloadDataSuccess();
             TestDownloadFileSuccess();
             
-            // Category: Progress reporting tests
+            // Category: Download - Progress reporting tests
             TestDownloadProgressReporting();
             
-            // Category: Cancellation tests
+            // Category: Download - Cancellation tests
             TestDownloadCancellationViaButton();
+            
+            // Category: Upload - Network failure tests
+            TestUploadFileDnsFailure();
+            TestUploadFileConnectionFailure();
+            TestUploadFileTimeout();
+            TestUploadFileConnectionLoss();
+            TestUploadFileNoNetworkInterface();
+            TestUploadFileCancellation();
+            
+            // Category: Upload - HTTP status code tests
+            TestUploadFileHttp401();
+            TestUploadFileHttp403();
+            TestUploadFileHttp404();
+            TestUploadFileHttp500();
+            TestUploadFileHttp429();
+            TestUploadFileHttpGenericError();
+            
+            // Category: Upload - Successful tests (without network)
+            TestUploadFileSuccess();
+            TestUploadDataSuccess();
+            
+            // Category: Upload - Progress reporting tests
+            TestUploadFileProgressReporting();
+            TestProgressMessageDoesNotRepeatSize();
+            
+            // Category: Upload - Cancellation tests
+            TestUploadFileCancellationViaButton();
             
             TestSuccessCase();
         }
@@ -167,7 +195,8 @@ namespace pwiz.SkylineTestFunctional
 
         private static void TestDownloadStringSuccess()
         {
-            const string mockData = "Test download string content with special chars: <>&\"'";
+            // Test with UTF-8 characters to ensure proper encoding/decoding
+            const string mockData = "Test download with UTF-8: café 中文 日本語 🔬, Special: <>&\"'";
             using var helper = HttpClientTestHelper.SimulateSuccessfulDownload(mockData);
             
             RunUI(() =>
@@ -181,7 +210,7 @@ namespace pwiz.SkylineTestFunctional
                 });
                 
                 Assert.IsFalse(status.IsCanceled);
-                Assert.AreEqual(mockData, result);
+                Assert.AreEqual(mockData, result, "Downloaded string should match mock data including UTF-8 characters");
             });
         }
 
@@ -210,7 +239,8 @@ namespace pwiz.SkylineTestFunctional
 
         private void TestDownloadFileSuccess()
         {
-            const string mockData = "Test file content\nLine 2\nLine 3";
+            // Test with UTF-8 to ensure proper encoding through download-to-file path
+            const string mockData = "Downloaded file with UTF-8: café 中文 🧬\nLine 2: Special <>&\nLine 3";
             using var helper = HttpClientTestHelper.SimulateSuccessfulDownload(mockData);
             
             var testFilePath = TestContext.GetTestResultsPath("downloaded_test_file.txt");
@@ -227,8 +257,8 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsFalse(status.IsCanceled);
                 Assert.IsTrue(File.Exists(testFilePath), "Downloaded file should exist");
                 
-                var fileContent = File.ReadAllText(testFilePath);
-                Assert.AreEqual(mockData, fileContent);
+                var fileContent = File.ReadAllText(testFilePath, new UTF8Encoding(false)); // No BOM
+                Assert.AreEqual(mockData, fileContent, "Downloaded file content should match mock data including UTF-8 characters");
             });
         }
 
@@ -412,5 +442,291 @@ namespace pwiz.SkylineTestFunctional
                     dlg.OkDialog();
                 });
         }
+
+        #region Upload Failure Tests
+
+        private void TestUploadFileDnsFailure()
+        {
+            using var helper = HttpClientTestHelper.SimulateDnsFailure();
+            ValidateUploadFailure(helper, "http://nonexistent.example.com");
+        }
+
+        private void TestUploadFileConnectionFailure()
+        {
+            using var helper = HttpClientTestHelper.SimulateConnectionFailure();
+            ValidateUploadFailure(helper, "http://unreachable.example.com");
+        }
+
+        private void TestUploadFileTimeout()
+        {
+            using var helper = HttpClientTestHelper.SimulateTimeout();
+            ValidateUploadFailure(helper, "http://slow.example.com");
+        }
+
+        private void TestUploadFileConnectionLoss()
+        {
+            using var helper = HttpClientTestHelper.SimulateConnectionLoss();
+            ValidateUploadFailure(helper);
+        }
+
+        private void TestUploadFileNoNetworkInterface()
+        {
+            using var helper = HttpClientTestHelper.SimulateNoNetworkInterface();
+            ValidateUploadFailure(helper);
+        }
+
+        private void TestUploadFileCancellation()
+        {
+            using var helper = HttpClientTestHelper.SimulateCancellation();
+            ValidateUploadFailure<OperationCanceledException>(helper);
+        }
+
+        private void TestUploadFileHttp401()
+        {
+            using var helper = HttpClientTestHelper.SimulateHttp401();
+            ValidateUploadFailure(helper, "http://example.com/protected");
+        }
+
+        private void TestUploadFileHttp403()
+        {
+            using var helper = HttpClientTestHelper.SimulateHttp403();
+            ValidateUploadFailure(helper, "http://example.com/forbidden");
+        }
+
+        private void TestUploadFileHttp404()
+        {
+            using var helper = HttpClientTestHelper.SimulateHttp404();
+            ValidateUploadFailure(helper, "http://example.com/notfound");
+        }
+
+        private void TestUploadFileHttp500()
+        {
+            using var helper = HttpClientTestHelper.SimulateHttp500();
+            ValidateUploadFailure(helper, "http://example.com/error");
+        }
+
+        private void TestUploadFileHttp429()
+        {
+            using var helper = HttpClientTestHelper.SimulateHttp429();
+            ValidateUploadFailure(helper, "http://example.com/ratelimited");
+        }
+
+        private void TestUploadFileHttpGenericError()
+        {
+            using var helper = HttpClientTestHelper.SimulateHttpError(503, "Service Unavailable");
+            ValidateUploadFailure(helper, "http://example.com/unavailable");
+        }
+
+        #endregion
+
+        #region Upload Success Tests
+
+        private void TestUploadFileSuccess()
+        {
+            // Test with UTF-8 characters: Latin extended, Greek, Cyrillic, CJK, emoji
+            // Ensures proper encoding/decoding through the entire upload path
+            const string testContent = "Test upload with UTF-8: " +
+                                       "Latin: café, naïve, Zürich\n" +
+                                       "Greek: αβγδ, Ω\n" +
+                                       "Cyrillic: Москва, Київ\n" +
+                                       "CJK: 中文, 日本語, 한글\n" +
+                                       "Emoji: 🔬 🧬 📊\n" +
+                                       "Special: <>&\"'\n";
+            using var helper = HttpClientTestHelper.SimulateSuccessfulUpload();
+            
+            var tempFile = TestContext.GetTestResultsPath("upload_test.txt");
+            File.WriteAllText(tempFile, testContent, new UTF8Encoding(false)); // No BOM
+
+            RunUI(() =>
+            {
+                using var dlg = new LongWaitDlg();
+                dlg.PerformWork(SkylineWindow, 0, progressMonitor =>
+                {
+                    var progressStatus = new ProgressStatus("Uploading test file");
+                    using var httpClient = new HttpClientWithProgress(progressMonitor, progressStatus);
+                    httpClient.UploadFile(new Uri("http://example.com/upload"), "PUT", tempFile);
+                });
+                Assert.IsFalse(dlg.IsCanceled);
+                
+                // Verify uploaded data matches source file (including UTF-8 multi-byte sequences)
+                var captureStream = helper.GetCaptureStream() as MemoryStream;
+                Assert.IsNotNull(captureStream, "Should have capture stream for upload validation");
+                var uploadedData = Encoding.UTF8.GetString(captureStream.ToArray());
+                Assert.AreEqual(testContent, uploadedData, "Uploaded data should match source file content including UTF-8 characters");
+            });
+        }
+
+        private void TestUploadDataSuccess()
+        {
+            // Test with UTF-8 multi-byte sequences and binary data
+            // Ensures byte-level accuracy through upload path
+            var testString = "UTF-8 bytes: café 中文 🔬, Binary: \0\x01\x02\xFF";
+            var testData = Encoding.UTF8.GetBytes(testString);
+            using var helper = HttpClientTestHelper.SimulateSuccessfulUpload();
+
+            RunUI(() =>
+            {
+                using var dlg = new LongWaitDlg();
+                dlg.PerformWork(SkylineWindow, 0, progressMonitor =>
+                {
+                    var progressStatus = new ProgressStatus("Uploading test data");
+                    using var httpClient = new HttpClientWithProgress(progressMonitor, progressStatus);
+                    httpClient.UploadData(new Uri("http://example.com/upload"), "PUT", testData);
+                });
+                Assert.IsFalse(dlg.IsCanceled);
+                
+                // Verify uploaded bytes match source (validates UTF-8 encoding preservation)
+                var captureStream = helper.GetCaptureStream() as MemoryStream;
+                Assert.IsNotNull(captureStream, "Should have capture stream for upload validation");
+                var uploadedBytes = captureStream.ToArray();
+                CollectionAssert.AreEqual(testData, uploadedBytes, "Uploaded bytes should match source including UTF-8 multi-byte sequences");
+                
+                // Also verify we can decode back to original string
+                var uploadedString = Encoding.UTF8.GetString(uploadedBytes);
+                Assert.AreEqual(testString, uploadedString, "UTF-8 decoding should recover original string");
+            });
+        }
+
+        #endregion
+
+        #region Upload Progress Tests
+
+        private void TestUploadFileProgressReporting()
+        {
+            // Create temp file with 20KB data = ~3 chunks of 8192 bytes (multiple progress updates)
+            // Progress reporting logic is shared with downloads via TransferStreamWithProgress,
+            // so we just verify upload completes successfully with chunked reading
+            var tempFile = TestContext.GetTestResultsPath("upload_progress_test.bin");
+            var testData = new byte[20 * 1024];
+            for (int i = 0; i < testData.Length; i++)
+                testData[i] = (byte)(i % 256);
+            File.WriteAllBytes(tempFile, testData);
+
+            using var helper = HttpClientTestHelper.SimulateSuccessfulUpload();
+
+            RunUI(() =>
+            {
+                using var dlg = new LongWaitDlg();
+                var status = dlg.PerformWork(SkylineWindow, 0, progressMonitor =>
+                {
+                    var progressStatus = new ProgressStatus("Uploading large file");
+                    using var httpClient = new HttpClientWithProgress(progressMonitor, progressStatus);
+                    httpClient.UploadFile(new Uri("http://example.com/upload"), "PUT", tempFile);
+                });
+
+                Assert.IsFalse(status.IsCanceled);
+                // Progress logic verified via shared TransferStreamWithProgress method (tested in downloads)
+            });
+        }
+
+        private static void TestProgressMessageDoesNotRepeatSize()
+        {
+            // Regression test: Verify that GetProgressMessageWithSize doesn't append size repeatedly
+            // Original bug: Each progress update would append size to the previous message,
+            // resulting in "Downloading\n\n1 KB\n\n2 KB\n\n3 KB" instead of "Downloading\n\n3 KB"
+            
+            const string baseMessage = "Downloading test file";
+            const long transferred = 5 * 1024 * 1024; // 5 MB
+            const long total = 10 * 1024 * 1024; // 10 MB
+
+            // Build message multiple times with same base - should produce identical results
+            var message1 = HttpClientWithProgress.GetProgressMessageWithSize(baseMessage, transferred, total);
+            var message2 = HttpClientWithProgress.GetProgressMessageWithSize(baseMessage, transferred, total);
+            var message3 = HttpClientWithProgress.GetProgressMessageWithSize(baseMessage, transferred, total);
+
+            Assert.AreEqual(message1, message2, "GetProgressMessageWithSize should be idempotent");
+            Assert.AreEqual(message2, message3, "GetProgressMessageWithSize should be idempotent");
+
+            // Verify structure: base message + blank line + size
+            var lines = message1.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
+            Assert.IsTrue(lines.Length >= 3, "Expected at least 3 lines: base message, blank, size");
+            Assert.AreEqual(baseMessage, lines[0], "First line should be base message");
+            Assert.AreEqual(string.Empty, lines[1], "Second line should be blank");
+            AssertEx.Contains(lines[2], "5"); // Should contain size info
+            AssertEx.Contains(lines[2], "10"); // Should contain total size
+            
+            // Verify no repeated size information
+            var messageText = message1;
+            var sizeOccurrences = 0;
+            for (int i = 0; i < lines.Length; i++)
+            {
+                if (lines[i].Contains("MB") || lines[i].Contains("KB"))
+                    sizeOccurrences++;
+            }
+            Assert.AreEqual(1, sizeOccurrences, "Size should appear exactly once, not be repeated");
+        }
+
+        #endregion
+
+        #region Upload Cancellation Tests
+
+        private void TestUploadFileCancellationViaButton()
+        {
+            using var helper = HttpClientTestHelper.SimulateCancellationClickWithException();
+            RunUI(() =>
+            {
+                var tempFile = TestContext.GetTestResultsPath("upload_cancel_test.txt");
+                File.WriteAllText(tempFile, @"Test upload cancellation content");
+
+                using var waitDlg = new LongWaitDlg();
+                try
+                {
+                    waitDlg.PerformWork(SkylineWindow, 0, progressMonitor =>
+                    {
+                        var progressStatus = new ProgressStatus("Uploading file for cancellation test");
+                        using var httpClient = new HttpClientWithProgress(progressMonitor, progressStatus);
+                        httpClient.UploadFile(new Uri("http://example.com/upload"), "PUT", tempFile);
+                    });
+                }
+                catch (Exception x)
+                {
+                    Assert.Fail($"Unexpected exception thrown {x.Message}");
+                }
+            });
+        }
+
+        #endregion
+
+        #region Upload Helper Methods
+
+        /// <summary>
+        /// Most concise helper - validates upload failure using HttpClientTestHelper.
+        /// The helper provides both the simulation and expected message for the IOException type.
+        /// </summary>
+        private void ValidateUploadFailure(HttpClientTestHelper helper, string urlText = null)
+        {
+            ValidateUploadFailure<IOException>(helper, urlText);
+        }
+
+        /// <summary>
+        /// Helper function to test a failure in HttpClientWithProgress.UploadFile()
+        /// with a type TEx exception.
+        /// </summary>
+        private void ValidateUploadFailure<TEx>(HttpClientTestHelper helper, string urlText = null)
+            where TEx : Exception
+        {
+            var uri = new Uri(urlText ?? "http://example.com");
+            ValidateUploadFileFailure<TEx>(uri, helper.GetExpectedMessage(uri));
+        }
+
+        /// <summary>
+        /// Helper function to test a failure in HttpClientWithProgress.UploadFile()
+        /// with a type TEx exception containing a message that references the requested URI.
+        /// </summary>
+        private void ValidateUploadFileFailure<TEx>(Uri uri, string message)
+            where TEx : Exception
+        {
+            ValidateHttpClient<TEx>(progressMonitor =>
+                {
+                    var tempFile = TestContext.GetTestResultsPath("upload_failure_test.txt");
+                    File.WriteAllText(tempFile, @"Test upload failure content");
+                    
+                    using var httpClient = new HttpClientWithProgress(progressMonitor);
+                    httpClient.UploadFile(uri, "PUT", tempFile);
+                },
+                message);
+        }
+
+        #endregion
     }
 }
