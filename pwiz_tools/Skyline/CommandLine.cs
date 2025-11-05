@@ -4579,12 +4579,12 @@ namespace pwiz.Skyline
 
             private bool PublishDocToPanorama(PanoramaServer panoramaServer, string zipFilePath, string panoramaFolder)
             {
-                var waitBroker = new CommandProgressMonitor(_statusWriter,
-                    new ProgressStatus(SkylineResources.PanoramaPublishHelper_PublishDocToPanorama_Uploading_document_to_Panorama));
+                IProgressStatus progressStatus = new ProgressStatus(SkylineResources.PanoramaPublishHelper_PublishDocToPanorama_Uploading_document_to_Panorama);
+                IProgressMonitor progressMonitor = new CommandProgressMonitor(_statusWriter, progressStatus);
                 IPanoramaClient publishClient = new WebPanoramaClient(panoramaServer.URI, panoramaServer.Username, panoramaServer.Password);
                 try
                 {
-                    publishClient.SendZipFile(panoramaFolder, zipFilePath, waitBroker);
+                    publishClient.SendZipFile(panoramaFolder, zipFilePath, progressMonitor, progressStatus);
                     return true;
                 }
                 catch (Exception x)

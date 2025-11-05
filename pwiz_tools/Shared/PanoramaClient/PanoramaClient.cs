@@ -26,12 +26,14 @@ namespace pwiz.PanoramaClient
 
         void ValidateFolder(string folderPath, PermissionSet permissionSet, bool checkTargetedMs = true);
 
-        JToken GetInfoForFolders(string folder);
+        JToken GetInfoForFolders(string folder,
+            IProgressMonitor progressMonitor, IProgressStatus progressStatus);
 
         void DownloadFile(string fileUrl, string fileName, long fileSize, string realName,
-            IProgressMonitor pm, IProgressStatus progressStatus);
+            IProgressMonitor progressMonitor, IProgressStatus progressStatus);
 
-        Uri SendZipFile(string folderPath, string zipFilePath, IProgressMonitor progressMonitor);
+        Uri SendZipFile(string folderPath, string zipFilePath,
+            IProgressMonitor progressMonitor, IProgressStatus progressStatus);
 
         JObject SupportedVersionsJson();
 
@@ -58,7 +60,7 @@ namespace pwiz.PanoramaClient
         }
 
         public abstract void DownloadFile(string fileUrl, string fileName, long fileSize, string realName,
-            IProgressMonitor pm, IProgressStatus progressStatus);
+            IProgressMonitor progressMonitor, IProgressStatus progressStatus);
 
         public abstract IRequestHelper GetRequestHelper(bool forPublish = false);
 
@@ -104,7 +106,7 @@ namespace pwiz.PanoramaClient
             }
         }
 
-        public virtual JToken GetInfoForFolders(string folder)
+        public virtual JToken GetInfoForFolders(string folder, IProgressMonitor progressMonitor, IProgressStatus progressStatus)
         {
             var server = new PanoramaServer(ServerUri, Username, Password);
             if (server.HasUserAccount())
@@ -118,17 +120,25 @@ namespace pwiz.PanoramaClient
 
             using (var requestHelper = GetRequestHelper())
             {
+                requestHelper.SetProgressMonitor(progressMonitor, progressStatus);
+
+                // Provide a more descriptive folder name in error messages
+                var folderDescription = string.IsNullOrEmpty(folder) 
+                    ? Resources.AbstractPanoramaClient_GetInfoForFolders_all_folders 
+                    : string.Format(Resources.AbstractPanoramaClient_GetInfoForFolders_folder___0__, folder);
+
                 return requestHelper.Get(uri,
                     string.Format(
-                        Resources.AbstractPanoramaClient_GetInfoForFolders_Error_getting_information_for_folder___0__,
-                        folder));
+                        Resources.AbstractPanoramaClient_GetInfoForFolders_Error_getting_information_for__0__,
+                        folderDescription));
             }
         }
 
-        public virtual Uri SendZipFile(string folderPath, string zipFilePath, IProgressMonitor progressMonitor)
+        public virtual Uri SendZipFile(string folderPath, string zipFilePath,
+            IProgressMonitor progressMonitor, IProgressStatus progressStatus)
         {
             _progressMonitor = progressMonitor;
-            _progressStatus = new ProgressStatus(string.Empty);
+            _progressStatus = progressStatus;
             var zipFileName = Path.GetFileName(zipFilePath) ?? string.Empty;
 
             // Upload zip file to pipeline folder.
@@ -162,8 +172,7 @@ namespace pwiz.PanoramaClient
                 ConfirmFileOnServer(tmpUploadUri, authHeader, requestHelper);
 
                 // Rename the temporary file
-                _progressStatus = _progressStatus.ChangeMessage(
-                    "Renaming temporary file on server");
+                _progressStatus = _progressStatus.ChangeMessage(Resources.AbstractPanoramaClient_SendZipFile_Renaming_temporary_file_on_server);
                 progressMonitor.UpdateProgress(_progressStatus);
 
                 RenameTempZipFile(tmpUploadUri, uploadUri, authHeader, requestHelper);
@@ -271,7 +280,6 @@ namespace pwiz.PanoramaClient
             try
             {
                 // For HttpPanoramaRequestHelper, this is synchronous with IProgressMonitor progress
-                // For PanoramaRequestHelper (WebClient), this uses async events with Monitor.Wait()
                 requestHelper.AsyncUploadFile(tmpUploadUri, @"PUT", PathEx.SafePath(zipFilePath));
             }
             catch (NetworkRequestException ex)
@@ -426,30 +434,6 @@ namespace pwiz.PanoramaClient
                 authHeader,
                 Resources.AbstractPanoramaClient_ConfirmFileOnServer_File_was_not_uploaded_to_the_server__Please_try_again__or_if_the_problem_persists__please_contact_your_Panorama_server_administrator_
             );
-        }
-
-        private void webClient_UploadProgressChanged(object sender, UploadProgressChangedEventArgs e,
-            IRequestHelper requestHelper)
-        {
-            var message = e == null
-                ? Resources.AbstractPanoramaClient_webClient_UploadProgressChanged_Progress_Updated
-                : string.Format(FileSize.FormatProvider,
-                    Resources.AbstractPanoramaClient_webClient_UploadProgressChanged_Uploaded__0_fs__of__1_fs_,
-                    e.BytesSent, e.TotalBytesToSend);
-            int percentComplete = e == null ? 20 : e.ProgressPercentage;
-            _progressStatus = _progressStatus.ChangeMessage(message).ChangePercentComplete(percentComplete);
-            _progressMonitor.UpdateProgress(_progressStatus);
-            if (_progressMonitor.IsCanceled)
-                requestHelper.CancelAsyncUpload();
-        }
-
-        private void webClient_UploadFileCompleted(object sender, UploadFileCompletedEventArgs e, out LabKeyError uploadError)
-        {
-            lock (this)
-            {
-                uploadError = ParseUploadFileCompletedEventArgs(e);
-                Monitor.PulseAll(this);
-            }
         }
 
         protected virtual LabKeyError ParseUploadFileCompletedEventArgs(UploadFileCompletedEventArgs e)
@@ -656,29 +640,6 @@ namespace pwiz.PanoramaClient
                     PanoramaUtil.GetErrorFromNetworkRequestException, 
                     ex);
             }
-            catch (WebException ex)
-            {
-                // Legacy path for backward compatibility
-                var response = ex.Response as HttpWebResponse;
-
-                if (response != null && response.StatusCode == HttpStatusCode.NotFound) // 404
-                {
-                    var newServer = pServer.HasContextPath()
-                        ? pServer.RemoveContextPath()
-                        : pServer.AddLabKeyContextPath();
-
-                    if (!ReferenceEquals(pServer, newServer))
-                    {
-                        return EnsureLogin(newServer);
-                    }
-                }
-
-                throw PanoramaServerException.CreateWithResponseDisposal(
-                    UserStateEnum.unknown.Error(ServerUri), 
-                    PanoramaUtil.GetEnsureLoginUri(pServer), 
-                    PanoramaUtil.GetErrorFromWebException, 
-                    ex);
-            }
         }
 
         public override PanoramaServer EnsureLogin(PanoramaServer pServer)
@@ -757,13 +718,14 @@ namespace pwiz.PanoramaClient
         /// Downloads a given file to a given folder path and shows the progress
         /// of the download during downloading
         /// </summary>
-        public override void DownloadFile(string fileUrl, string fileName, long fileSize, string realName, IProgressMonitor pm, IProgressStatus progressStatus)
+        public override void DownloadFile(string fileUrl, string fileName, long fileSize, string realName,
+            IProgressMonitor progressMonitor, IProgressStatus progressStatus)
         {
             var initialMessage = string.Format(Resources.WebPanoramaClient_DownloadFile_Downloading__0_, realName);
             progressStatus = progressStatus.ChangeMessage(initialMessage);
-            pm.UpdateProgress(progressStatus);
+            progressMonitor.UpdateProgress(progressStatus);
 
-            using var httpClient = new HttpClientWithProgress(pm, progressStatus);
+            using var httpClient = new HttpClientWithProgress(progressMonitor, progressStatus);
             
             // Add authorization header if credentials are available
             var pServer = new PanoramaServer(ServerUri, Username, Password);
@@ -782,7 +744,8 @@ namespace pwiz.PanoramaClient
             return new HttpPanoramaRequestHelper(panoramaServer, _progressMonitor, _progressStatus);
         }
 
-
+        // Used by SkylineBatch
+        // ReSharper disable once UnusedMember.Global
         public string DownloadStringAsync(Uri queryUri, CancellationToken cancelToken)
         {
             // Create a progress monitor that respects the cancellation token
@@ -821,18 +784,20 @@ namespace pwiz.PanoramaClient
             throw new InvalidOperationException();
         }
 
-        public virtual JToken GetInfoForFolders(string folder)
+        public virtual JToken GetInfoForFolders(string folder,
+            IProgressMonitor progressMonitor, IProgressStatus progressStatus)
         {
             throw new InvalidOperationException();
         }
 
         public virtual void DownloadFile(string fileUrl, string fileName, long fileSize, string realName,
-            IProgressMonitor pm, IProgressStatus progressStatus)
+            IProgressMonitor progressMonitor, IProgressStatus progressStatus)
         {
             throw new InvalidOperationException();
         }
 
-        public virtual Uri SendZipFile(string folderPath, string zipFilePath, IProgressMonitor progressMonitor)
+        public virtual Uri SendZipFile(string folderPath, string zipFilePath,
+            IProgressMonitor progressMonitor, IProgressStatus progressStatus)
         {
             throw new InvalidOperationException();
         }

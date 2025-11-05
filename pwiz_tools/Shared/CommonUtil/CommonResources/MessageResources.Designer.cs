@@ -241,6 +241,33 @@ namespace pwiz.Common.CommonResources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Downloaded {0} of {1}.
+        /// </summary>
+        public static string HttpClientWithProgress_GetProgressMessageWithSize_Downloaded__0__of__1_ {
+            get {
+                return ResourceManager.GetString("HttpClientWithProgress_GetProgressMessageWithSize_Downloaded__0__of__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} / {1}.
+        /// </summary>
+        public static string HttpClientWithProgress_GetProgressMessageWithSize__0____1_ {
+            get {
+                return ResourceManager.GetString("HttpClientWithProgress_GetProgressMessageWithSize__0____1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Uploaded {0} of {1}.
+        /// </summary>
+        public static string HttpClientWithProgress_GetProgressMessageWithSize_Uploaded__0__of__1_ {
+            get {
+                return ResourceManager.GetString("HttpClientWithProgress_GetProgressMessageWithSize_Uploaded__0__of__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The server {0} returned an error (HTTP {1}). Please try again or contact support..
         /// </summary>
         public static string HttpClientWithProgress_MapHttpException_The_server__0__returned_an_error__HTTP__1____Please_try_again_or_contact_support_ {

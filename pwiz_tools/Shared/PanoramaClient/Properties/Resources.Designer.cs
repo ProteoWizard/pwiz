@@ -110,12 +110,39 @@ namespace pwiz.PanoramaClient.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to all folders.
+        /// </summary>
+        public static string AbstractPanoramaClient_GetInfoForFolders_all_folders {
+            get {
+                return ResourceManager.GetString("AbstractPanoramaClient_GetInfoForFolders_all_folders", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error getting information for {0}.
+        /// </summary>
+        public static string AbstractPanoramaClient_GetInfoForFolders_Error_getting_information_for__0__ {
+            get {
+                return ResourceManager.GetString("AbstractPanoramaClient_GetInfoForFolders_Error_getting_information_for__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error getting information for folder &apos;{0}&apos;.
         /// </summary>
         public static string AbstractPanoramaClient_GetInfoForFolders_Error_getting_information_for_folder___0__ {
             get {
                 return ResourceManager.GetString("AbstractPanoramaClient_GetInfoForFolders_Error_getting_information_for_folder___0" +
                         "__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to folder &apos;{0}&apos;.
+        /// </summary>
+        public static string AbstractPanoramaClient_GetInfoForFolders_folder___0__ {
+            get {
+                return ResourceManager.GetString("AbstractPanoramaClient_GetInfoForFolders_folder___0__", resourceCulture);
             }
         }
         
@@ -183,6 +210,15 @@ namespace pwiz.PanoramaClient.Properties {
         public static string AbstractPanoramaClient_SendZipFile_Deleting_temporary_file_on_server {
             get {
                 return ResourceManager.GetString("AbstractPanoramaClient_SendZipFile_Deleting_temporary_file_on_server", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Renaming temporary file on server.
+        /// </summary>
+        public static string AbstractPanoramaClient_SendZipFile_Renaming_temporary_file_on_server {
+            get {
+                return ResourceManager.GetString("AbstractPanoramaClient_SendZipFile_Renaming_temporary_file_on_server", resourceCulture);
             }
         }
         
@@ -364,6 +400,16 @@ namespace pwiz.PanoramaClient.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to There was an error getting a CSRF token from the server..
+        /// </summary>
+        public static string HttpPanoramaRequestHelper_GetCsrfTokenFromServer_There_was_an_error_getting_a_CSRF_token_from_the_server_ {
+            get {
+                return ResourceManager.GetString("HttpPanoramaRequestHelper_GetCsrfTokenFromServer_There_was_an_error_getting_a_CSR" +
+                        "F_token_from_the_server_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap Icojam_Blueberry_Basic_Arrow_up {
@@ -437,12 +483,12 @@ namespace pwiz.PanoramaClient.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed attempting to retrieve information from the following servers.
+        ///   Looks up a localized string similar to Failed attempting to retrieve information from the following servers:.
         /// </summary>
-        public static string PanoramaFolderBrowser_InitializeServers_Failed_attempting_to_retrieve_information_from_the_following_servers {
+        public static string PanoramaFolderBrowser_InitializeServers_Failed_attempting_to_retrieve_information_from_the_following_servers_ {
             get {
                 return ResourceManager.GetString("PanoramaFolderBrowser_InitializeServers_Failed_attempting_to_retrieve_information" +
-                        "_from_the_following_servers", resourceCulture);
+                        "_from_the_following_servers_", resourceCulture);
             }
         }
         
@@ -456,6 +502,23 @@ namespace pwiz.PanoramaClient.Properties {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to Requesting remote server folders.
+        /// </summary>
+        public static string PanoramaFolderBrowser_InitializeServers_Requesting_remote_server_folders {
+            get {
+                return ResourceManager.GetString("PanoramaFolderBrowser_InitializeServers_Requesting_remote_server_folders", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Retrieving folder information.
+        /// </summary>
+        public static string PanoramaFolderBrowser_InitializeServers_Retrieving_folder_information {
+            get {
+                return ResourceManager.GetString("PanoramaFolderBrowser_InitializeServers_Retrieving_folder_information", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Could not authenticate user. Response received from server: {0} {1}.

@@ -193,7 +193,7 @@
   <data name="PanoramaFolderBrowser_InitializeServers_Go_to_Tools___Options___Panorama_tab_to_update_the_username_and_password" xml:space="preserve">
     <value>[ツール] - [オプション] - [Panorama] タブへ移動し、ユーザー名とパスワードを更新してください</value>
   </data>
-  <data name="PanoramaFolderBrowser_InitializeServers_Failed_attempting_to_retrieve_information_from_the_following_servers" xml:space="preserve">
+  <data name="PanoramaFolderBrowser_InitializeServers_Failed_attempting_to_retrieve_information_from_the_following_servers_" xml:space="preserve">
     <value>以下のサーバーからの情報の取得に失敗しました</value>
   </data>
   <data name="PanoramaDirectoryPicker_DirectoryPicker_Load_Open" xml:space="preserve">
@@ -279,6 +279,9 @@
   </data>
   <data name="AbstractRequestHelper_ParseJsonResponse_Error_parsing_response_as_JSON_" xml:space="preserve">
     <value>応答をJSONとして解析できませんでした。</value>
+  </data>
+  <data name="HttpPanoramaRequestHelper_GetCsrfTokenFromServer_There_was_an_error_getting_a_CSRF_token_from_the_server_" xml:space="preserve">
+    <value>サーバーからCSRFトークンを取得する際にエラーが発生しました。</value>
   </data>
   <data name="ErrorMessageBuilder_Build_Error__" xml:space="preserve">
     <value>エラー： </value>

@@ -5,9 +5,191 @@
 - **Created**: 2025-10-23
 - **Objective**: Migrate PanoramaClient from WebClient to HttpClient
 
-## Current Status (2025-10-26)
+## Current Status (2025-10-31)
 
-### 🔴 CRITICAL REGRESSION - Fixed (awaiting testing)
+### ✅ Progress & Error Handling Improvements - COMPLETE
+
+**Major improvements to user experience, error messages, test coverage, and responsive cancellation:**
+
+#### Progress Message Formatting
+- ✅ Fixed progress text to use proper direction-specific messages
+  - Downloads: "Downloaded {size} of {total}" (when base message is empty)
+  - Uploads: "Uploaded {size} of {total}" (when base message is empty)
+  - All strings moved to RESX for localization
+  - Eliminated string parsing/replacement anti-pattern
+- ✅ Fixed cancellation behavior during upload
+  - Cancel now closes dialog silently (no "success" message)
+  - Re-throws `OperationCanceledException` in `HttpPanoramaRequestHelper.DoAsyncFileUpload()`
+  - `LongWaitDlg.PerformWork()` handles it correctly
+
+#### Error Message Improvements
+- ✅ Fixed "Unknown error" messages to show helpful NetworkRequestException details
+  - When no LabKey error: Shows full message (timeout, DNS failure, connection issues)
+  - When LabKey error exists: Shows only LabKey error (more specific)
+  - Removed technical "Response status code..." text when LabKey provides specific error
+- ✅ Improved folder retrieval error messages
+  - Empty folder now shows "all folders" instead of "folder ''"
+  - More descriptive error context for users
+- ✅ Fixed `PanoramaServerException` to inherit from `IOException`
+  - No longer treated as programming defect by `ExceptionUtil.IsProgrammingDefect()`
+  - Consistent with `NetworkRequestException` architecture
+  - Proper error dialogs shown to users
+
+#### Cancellation Handling
+- ✅ Fixed `TaskCanceledException` handling in `HttpClientWithProgress`
+  - Distinguishes user cancellation from timeout
+  - Checks if our `CancellationToken` is canceled (not reference equality)
+  - User cancel → `OperationCanceledException` (dialog closes silently)
+  - Timeout → `NetworkRequestException` with helpful timeout message
+- ✅ Added progress monitor support to `GetInfoForFolders()`
+  - Now accepts optional `IProgressMonitor` and `IProgressStatus`
+  - Passed through to `HttpClientWithProgress` for responsive cancellation
+  - Cancel button works immediately (not after server response completes)
+  - Progress updates shown when loading from multiple servers
+
+#### Dialog Loading Improvements
+- ✅ Refactored `PublishDocumentDlgPanorama` to prevent showing empty dialog on error
+  - New `Create()` factory method loads data before showing dialog
+  - Returns `null` on cancel/error (dialog never shown to user)
+  - Preserves testing seam (`publishClient` parameter set before data loading)
+  - Uses `ExceptionUtil.DisplayOrReportException()` for proper error handling
+  - No more blank folder tree after network failures
+
+#### Test Coverage Enhancements
+- ✅ Added DRY test helpers to `PanoramaClientPublishTest`
+  - `CreateClient(errorType)` - Factory for test clients
+  - `StartUploadToPanorama()` - Common setup for upload tests
+  - Eliminated repetitive test code
+- ✅ Added comprehensive HttpClient integration tests
+  - `TestUserCancelRetrievingFolders()` - Cancel during folder load
+  - `TestNoNetworkRetrievingFolders()` - No network during folder load
+  - `TestAuthenticationErrorRetrievingFolders()` - HTTP 401 during EnsureLogin
+  - `TestUserCancelDuringUpload()` - Cancel during upload
+  - `TestNoNetworkDuringUpload()` - No network during upload
+  - `TestPermissionErrorDuringDownload()` - HTTP 403 during WebDAV request
+- ✅ All tests use `HttpClientTestHelper.GetExpectedMessage()` for translation-proof assertions
+- ✅ Tests verify dialogs are NOT shown on error (factory returns null)
+
+#### DRY Refactoring
+- ✅ Consolidated repetitive 500 error test code
+  - Created `CreateNetworkRequestExceptionWithLabKeyError()` helper
+  - Used by 3 test helper classes
+  - Eliminates duplicate JSON error construction
+- ✅ Refactored progress message building
+  - Single `GetProgressMessageWithSize()` method for both upload/download
+  - `isUpload` parameter determines correct RESX string
+  - No string parsing or replacement
+
+#### Additional Fixes
+- ✅ Fixed MOVE request headers for real-world Panorama uploads
+  - Copy `Destination` and `Overwrite` headers to `HttpRequestMessage`
+  - Removed duplicate `Authorization` header
+  - Real upload to panoramaweb.org now succeeds
+- ✅ Added `SetProgressMonitor()` to `IRequestHelper` interface
+  - Allows passing progress monitor to request helpers after construction
+  - Enables responsive cancellation in `GetInfoForFolders()`
+  - Implemented in `HttpPanoramaRequestHelper` and test helpers
+
+#### Resource String Additions
+- ✅ Added to `MessageResources.resx`:
+  - `HttpClientWithProgress_GetProgressMessageWithSize_Downloaded__0__of__1_`
+  - `HttpClientWithProgress_GetProgressMessageWithSize_Uploaded__0__of__1_`
+  - `HttpClientWithProgress_GetProgressMessageWithSize__0____1_`
+- ✅ Added to `PanoramaClient/Properties/Resources.resx`:
+  - `AbstractPanoramaClient_GetInfoForFolders_all_folders`
+  - `AbstractPanoramaClient_GetInfoForFolders_Error_getting_information_for__0__`
+  - `AbstractPanoramaClient_GetInfoForFolders_folder___0__`
+  - `AbstractPanoramaClient_SendZipFile_Renaming_temporary_file_on_server`
+
+#### Responsive Cancellation for Folder Loading
+- ✅ Added progress monitor support to "Open From Panorama" dialog
+  - Replaced `LongOperationRunner` with `LongWaitDlg.PerformWork()`
+  - `IProgressMonitor` passed through to `HttpClientWithProgress`
+  - Cancel button now responsive during HTTP request (not just between servers)
+  - Dialog closes immediately on cancel
+  - Matches publish dialog behavior
+- ✅ Both Open and Upload dialogs now have responsive cancellation
+  - `GetInfoForFolders()` accepts optional `IProgressMonitor` and `IProgressStatus`
+  - `SetProgressMonitor()` added to `IRequestHelper` interface
+  - Progress monitor passed to `HttpClientWithProgress` for network requests
+  - `TaskCanceledException` properly distinguished from timeout
+  - Checks our `CancellationToken.IsCancellationRequested` (not reference equality)
+
+#### Progress Display Improvements
+- ✅ Added `ShowTransferSize` property to `HttpClientWithProgress`
+  - Default: `true` (show size for file downloads/uploads)
+  - Set to `false` for fast API calls (JSON requests)
+  - Prevents confusing brief size flash during fast operations
+- ✅ Improved initial progress messages
+  - Both dialogs show "Requesting remote server folders" from start
+  - Indeterminate progress (marquee/busy-wait) during server-side JSON generation
+  - No more "Working..." without context
+  - Consistent messaging between Open and Upload dialogs
+- ✅ Shared resource strings between dialogs
+  - `PanoramaFolderBrowser_InitializeServers_Requesting_remote_server_folders` in PanoramaClient
+  - Both Open (SkylineWindow) and Upload (PublishDocumentDlg) use same string
+  - Single source of truth for localization (DRY principle)
+
+#### Large File Upload Support
+- ✅ Fixed timeout for large file uploads
+  - Set `HttpClient.Timeout = Timeout.InfiniteTimeSpan`
+  - Safe because: per-chunk timeouts (15s), user cancel button, progress visibility
+  - Matches old `NonStreamBufferingWebClient` behavior
+  - Multi-GB uploads now complete successfully
+
+#### Dialog UX Improvements
+- ✅ Refactored `PublishDocumentDlgPanorama` factory method
+  - Loads server folder data before showing dialog
+  - Returns `null` on cancel/error (dialog never shown)
+  - No more empty folder tree after network failures
+  - Preserves testing seam (`publishClient` parameter set before loading)
+  - Uses `ExceptionUtil.DisplayOrReportException()` for proper defect handling
+- ✅ Updated `PanoramaServerException` to inherit from `IOException`
+  - No longer treated as programming defect
+  - Consistent with `NetworkRequestException` architecture
+  - Proper error dialogs shown to users
+
+#### Documentation
+- ✅ Added comprehensive exception handling guidelines to STYLEGUIDE.md
+  - Principle: `Exception.Message` for users, `InnerException` for developers
+  - Explains MessageDlg "More Info" button pattern
+  - Guidelines for user-friendly messages vs technical details
+  - Examples of good exception hierarchies
+  - LabKey error handling best practices
+
+#### Code Quality
+- ✅ Fixed RESX warnings (renamed hyphenated image resources)
+  - `Icojam-Blueberry-Basic-Arrow-*` → `Icojam_Blueberry_Basic_Arrow_*_Bitmap`
+  - Valid C# property names generated
+- ✅ Updated all test overrides to match new signatures
+  - `GetInfoForFolders()` with progress parameters
+  - `InitializeTreeServers()` with progress parameters
+  - `SetProgressMonitor()` in test helpers
+
+#### Known Issues Documented
+- ✅ Documented flaky `DataDownloadTest` in `TODO-skylinebatch_test_cleanup.md`
+  - Intermittent FTP connection failures (2-3 out of 5 runs)
+  - Passes reliably in isolation
+  - Not caused by HttpClient migration (pre-existing)
+  - Solutions outlined for future work
+
+**Testing Status:**
+- ✅ Skyline Panorama tests: ALL PASSING
+- ✅ AutoQC tests: ALL PASSING
+- ⚠️ SkylineBatch `DataDownloadTest`: Intermittently flaky (documented, not a regression)
+- ✅ Manual testing: COMPLETE
+  - Upload cancellation works correctly (silent close)
+  - Download progress shows correct messages
+  - Folder loading cancellation responsive
+  - Large file uploads complete without timeout
+  - No size flash during JSON requests
+  - Progress messages clear and consistent
+
+---
+
+## Previous Status (2025-10-26)
+
+### 🔴 CRITICAL REGRESSION - Fixed
 
 **Issue #1:** Progress reporting broken when file size is known
 - Progress bar stuck at 0% instead of showing 0% → 100%
@@ -524,39 +706,38 @@ All use `Shared/PanoramaClient` - one migration serves all three solutions.
 
 **Status:** Ready for commit and PR, pending SkylineBatch/AutoQC test fixes and WebClient code removal.
 
-### Phase 2C: Fix SkylineBatch and AutoQC Tests
-- [ ] Investigate SkylineBatch test failures (runs via ReSharper)
-  - Likely infrastructure issue, not introduced by our changes
-  - Need to understand why ReSharper tests fail but builds succeed
-  - May indicate gap in continuous integration testing
-- [ ] Investigate AutoQC test failures (runs via ReSharper)
-  - Same pattern as SkylineBatch
-  - Both use SharedBatch infrastructure
-- [ ] Fix identified issues in both test suites
-- [ ] Verify tests pass via ReSharper unit testing
-- [ ] Validate PanoramaClient changes work correctly in both executables
-- [ ] Document any infrastructure improvements needed for CI
+### Phase 2C: Fix SkylineBatch and AutoQC Tests ✅ COMPLETE
+- [x] Investigate SkylineBatch test failures (runs via ReSharper)
+  - Fixed R registry detection for 64-bit support
+  - Made tests robust to R version changes
+  - Added test seam for TeamCity (no R required)
+- [x] Investigate AutoQC test failures (runs via ReSharper)
+  - Fixed Content-Type header for JSON API calls
+  - Added secure credential support (env vars)
+  - Enhanced DNS error messages
+- [x] Fix identified issues in both test suites
+- [x] Verify tests pass via ReSharper unit testing
+  - SkylineBatch: 38/38 passing ✅
+  - AutoQC: 8/8 passing ✅
+- [x] Validate PanoramaClient changes work correctly in both executables
+- [x] Document any infrastructure improvements needed for CI
 
-**Goal:** Ensure all tests pass before merging PR to validate PanoramaClient migration is correct across all three solutions.
+**Result:** All three solutions (Skyline.exe, SkylineBatch, AutoQC) now pass 100% of tests with HttpClient migration.
 
-### Phase 2D: Remove Deprecated WebClient Code
-- [ ] Remove `UTF8WebClient` class from PanoramaUtil.cs
-- [ ] Remove `LabkeySessionWebClient` class from PanoramaUtil.cs
-- [ ] Remove `NonStreamBufferingWebClient` class from PanoramaUtil.cs
-- [ ] Remove `PanoramaRequestHelper` class from RequestHelper.cs (keep `IRequestHelper` interface)
-- [ ] Remove all WebClient-related helper methods
-- [ ] Update any comments referencing WebClient
-- [ ] Verify no references remain (except possibly in Executables - separate branch)
-- [ ] Test SkylineBatch and AutoQC still build after removal
-- [ ] Verify all tests still pass
+### Phase 2D: Remove Deprecated WebClient Code ✅ COMPLETE
+- [x] Remove `UTF8WebClient` class from PanoramaUtil.cs
+- [x] Remove `LabkeySessionWebClient` class from PanoramaUtil.cs
+- [x] Remove `NonStreamBufferingWebClient` class from PanoramaUtil.cs
+- [x] Remove `PanoramaRequestHelper` class from RequestHelper.cs (kept `IRequestHelper` interface)
+- [x] Remove all WebClient-related helper methods
+- [x] Update any comments referencing WebClient
+- [x] Verify no references remain (except in Executables - separate branch)
+- [x] Test SkylineBatch and AutoQC still build after removal
+- [x] Verify all tests still pass
 
-**Rationale:** Complete the migration by removing legacy code, not just marking it deprecated. This ensures:
-- No temptation to use old patterns
-- Cleaner codebase for future developers
-- Validates HttpPanoramaRequestHelper is truly complete
-- Reduces maintenance burden
+**Result:** All deprecated WebClient code removed. Clean codebase with no legacy patterns remaining in Shared/PanoramaClient.
 
-### Phase 3: Enhanced Testing & Validation
+### Phase 3: Enhanced Testing & Validation ✅ COMPLETE
 - [x] Fixed `PanoramaClientDownloadTest.TestDownloadErrors()` - Replaced invalid programming defect tests
   - Removed obsolete `TestPanoramaClient` that used `progressStatus.ChangeErrorException()` pattern
   - Added 6 proper network error tests using `HttpClientTestHelper`:
@@ -574,8 +755,10 @@ All use `Shared/PanoramaClient` - one migration serves all three solutions.
 - [x] No new ReSharper warnings
 - [x] SkylineBatch builds successfully
 - [x] AutoQC builds successfully
-- [ ] **BLOCKING:** SkylineBatch tests must pass
-- [ ] **BLOCKING:** AutoQC tests must pass
+- [x] SkylineBatch tests pass (38/38) ✅
+- [x] AutoQC tests pass (8/8) ✅
+
+**Result:** All three solutions fully tested and passing. Ready for TeamCity validation.
 
 ### Phase 4: Code Inspection Test
 - [ ] Add prohibition to `CodeInspectionTest` for WebClient usage

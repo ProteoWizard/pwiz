@@ -58,7 +58,7 @@ namespace pwiz.PanoramaClient
             noFiles.Visible = false;
         }
 
-        public void InitializeDialog()
+        public void InitializeDialog(IProgressMonitor progressMonitor = null)
         {
             if (FolderBrowser == null)
             {
@@ -68,7 +68,7 @@ namespace pwiz.PanoramaClient
                 }
                 else
                 {
-                    FolderBrowser = new LKContainerBrowser(_servers, _treeState, false, SelectedPath);
+                    FolderBrowser = new LKContainerBrowser(_servers, _treeState, false, SelectedPath, progressMonitor);
                 }
             }
 

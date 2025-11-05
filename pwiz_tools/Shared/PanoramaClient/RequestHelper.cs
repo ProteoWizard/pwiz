@@ -12,6 +12,7 @@ namespace pwiz.PanoramaClient
 {
     public interface IRequestHelper : IDisposable
     {
+        void SetProgressMonitor(IProgressMonitor progressMonitor, IProgressStatus progressStatus);
         JObject Get(Uri uri, string messageOnError = null);
         JObject Post(Uri uri, NameValueCollection postData, string messageOnError = null);
         JObject Post(Uri uri, string postData, string messageOnError);
@@ -20,9 +21,6 @@ namespace pwiz.PanoramaClient
         void AddHeader(string name, string value);
         void RemoveHeader(string name);
         void AsyncUploadFile(Uri address, string method, string fileName);
-        void CancelAsyncUpload();
-        void AddUploadFileCompletedEventHandler(UploadFileCompletedEventHandler handler);
-        void AddUploadProgressChangedEventHandler(UploadProgressChangedEventHandler handler);
     }
 
     public abstract class AbstractRequestHelper : IRequestHelper
@@ -32,15 +30,11 @@ namespace pwiz.PanoramaClient
 
         #region IRequestHelper methods
 
+        public abstract void SetProgressMonitor(IProgressMonitor progressMonitor, IProgressStatus progressStatus);
+
         public abstract void AddHeader(string name, string value);
 
         public abstract void RemoveHeader(string name);
-
-        public abstract void CancelAsyncUpload();
-
-        public abstract void AddUploadFileCompletedEventHandler(UploadFileCompletedEventHandler handler);
-
-        public abstract void AddUploadProgressChangedEventHandler(UploadProgressChangedEventHandler handler);
 
         public abstract void Dispose();
 
@@ -53,12 +47,10 @@ namespace pwiz.PanoramaClient
         public abstract string DoPost(Uri uri, string postData); // Used only in AuditLogTutorialTest
 
         public abstract void DoAsyncFileUpload(Uri address, string method, string fileName);
-        
+
         public abstract void AddHeader(HttpRequestHeader header, string value);
 
         public abstract string GetResponse(HttpWebRequest request);
-
-        public abstract LabKeyError GetErrorFromException(WebException e);
 
         public JObject Get(Uri uri, string messageOnError = null)
         {
@@ -67,22 +59,11 @@ namespace pwiz.PanoramaClient
                 var response = DoGet(uri);
                 return ParseResponse(response, uri, messageOnError);
             }
-            catch (WebException e)
-            {
-                throw NewPanoramaServerException(messageOnError, uri, @"GET", e);
-            }
             catch (NetworkRequestException e)
             {
-                // HttpPanoramaRequestHelper throws NetworkRequestException instead of WebException
                 messageOnError ??= string.Format(Resources.AbstractRequestHelper_DoRequest__0__request_was_unsuccessful_, @"GET");
                 throw PanoramaServerException.CreateWithResponseDisposal(messageOnError, uri, PanoramaUtil.GetErrorFromNetworkRequestException, e);
             }
-        }
-
-        private PanoramaServerException NewPanoramaServerException(string messageOnError, Uri uri, string requestMethod, WebException e)
-        {
-            messageOnError ??= string.Format(Resources.AbstractRequestHelper_DoRequest__0__request_was_unsuccessful_, requestMethod);
-            return PanoramaServerException.CreateWithResponseDisposal(messageOnError, uri, GetErrorFromException, e);
         }
 
         public JObject Post(Uri uri, NameValueCollection postData, string messageOnError = null)
@@ -114,13 +95,9 @@ namespace pwiz.PanoramaClient
                 }
                 return ParseResponse(response, uri, messageOnError);
             }
-            catch (WebException e)
-            {
-                throw NewPanoramaServerException(messageOnError, uri, @"POST", e);
-            }
             catch (NetworkRequestException e)
             {
-                // HttpPanoramaRequestHelper throws NetworkRequestException instead of WebException
+                // HttpPanoramaRequestHelper throws NetworkRequestException
                 messageOnError ??= string.Format(Resources.AbstractRequestHelper_DoRequest__0__request_was_unsuccessful_, @"POST");
                 throw PanoramaServerException.CreateWithResponseDisposal(messageOnError, uri, PanoramaUtil.GetErrorFromNetworkRequestException, e);
             }
@@ -161,9 +138,11 @@ namespace pwiz.PanoramaClient
                         .LabKeyError(labkeyError).ToString());
                 }
             }
-            catch (WebException e)
+            catch (NetworkRequestException e)
             {
-                throw NewPanoramaServerException(messageOnError, request.RequestUri, method, e);
+                // HttpPanoramaRequestHelper throws NetworkRequestException.
+                // NetworkRequestException includes response body for error extraction.
+                throw PanoramaServerException.CreateWithResponseDisposal(messageOnError, request.RequestUri, PanoramaUtil.GetErrorFromNetworkRequestException, e);
             }
         }
 
@@ -173,10 +152,11 @@ namespace pwiz.PanoramaClient
             {
                 DoAsyncFileUpload(address, method, fileName);
             }
-            catch (WebException e)
+            catch (NetworkRequestException e)
             {
+                // HttpPanoramaRequestHelper throws NetworkRequestException.
                 throw PanoramaServerException.CreateWithResponseDisposal(
-                    Resources.AbstractPanoramaClient_UploadTempZipFile_There_was_an_error_uploading_the_file_, address, GetErrorFromException, e);
+                    Resources.AbstractPanoramaClient_UploadTempZipFile_There_was_an_error_uploading_the_file_, address, PanoramaUtil.GetErrorFromNetworkRequestException, e);
             }
         }
 
@@ -231,9 +211,18 @@ namespace pwiz.PanoramaClient
             _progressStatus = progressStatus;
         }
 
+        public override void SetProgressMonitor(IProgressMonitor progressMonitor, IProgressStatus progressStatus)
+        {
+            _progressMonitor = progressMonitor;
+            _progressStatus = progressStatus;
+        }
+
         public override string DoGet(Uri uri)
         {
+            // Don't show size for GET requests (typically fast API calls)
+            // The expensive operation is server-side JSON generation, not the download
             using var httpClient = CreateHttpClient();
+            httpClient.ShowTransferSize = false;
             return httpClient.DownloadString(uri);
         }
 
@@ -399,14 +388,25 @@ namespace pwiz.PanoramaClient
         {
             if (string.IsNullOrEmpty(_csrfToken))
             {
-                // Make a request to get the CSRF token from the server
-                // After this, the token will be in the cookie container
-                using var httpClient = CreateHttpClient();
-                httpClient.DownloadString(new Uri(_serverUri, PanoramaUtil.ENSURE_LOGIN_PATH));
-                
-                // Extract the CSRF token from cookies
-                // GetCookie() returns the cookie value as a string
-                _csrfToken = httpClient.GetCookie(new Uri(_serverUri, "/"), LABKEY_CSRF);
+                try
+                {
+                    // Make a request to get the CSRF token from the server
+                    // After this, the token will be in the cookie container
+                    using var httpClient = CreateHttpClient();
+                    httpClient.DownloadString(new Uri(_serverUri, PanoramaUtil.ENSURE_LOGIN_PATH));
+                    
+                    // Extract the CSRF token from cookies
+                    // GetCookie() returns the cookie value as a string
+                    _csrfToken = httpClient.GetCookie(new Uri(_serverUri, "/"), LABKEY_CSRF);
+                }
+                catch (NetworkRequestException ex)
+                {
+                    // Wrap CSRF token retrieval failures with a more informative error message
+                    var csrfUri = new Uri(_serverUri, PanoramaUtil.ENSURE_LOGIN_PATH);
+                    throw PanoramaServerException.CreateWithResponseDisposal(
+                        Resources.HttpPanoramaRequestHelper_GetCsrfTokenFromServer_There_was_an_error_getting_a_CSRF_token_from_the_server_,
+                        csrfUri, PanoramaUtil.GetErrorFromNetworkRequestException, ex);
+                }
             }
         }
 
@@ -435,24 +435,6 @@ namespace pwiz.PanoramaClient
             _requestJsonResponse = true;
         }
 
-        public override void CancelAsyncUpload()
-        {
-            // Cancellation is handled via IProgressMonitor.IsCanceled
-            // No async operations to cancel - uploads are synchronous with progress callbacks
-        }
-
-        public override void AddUploadFileCompletedEventHandler(UploadFileCompletedEventHandler handler)
-        {
-            // No-op: HttpClientWithProgress uses synchronous uploads with IProgressMonitor
-            // Event handlers are not needed since UploadFile() blocks until complete
-        }
-
-        public override void AddUploadProgressChangedEventHandler(UploadProgressChangedEventHandler handler)
-        {
-            // No-op: HttpClientWithProgress uses IProgressMonitor for progress, not events
-            // Progress is reported automatically during upload via the IProgressMonitor passed to constructor
-        }
-
         public override string GetResponse(HttpWebRequest request)
         {
             // DoRequest() calls this after setting Method, Authorization, and Accept headers
@@ -465,18 +447,31 @@ namespace pwiz.PanoramaClient
             // The request.Accept was set to application/json in DoRequest()
             httpClient.AddHeader("Accept", APPLICATION_JSON);
             
+            // Note: Authorization header is already set by CreateHttpClient() via _server.AuthHeader
+            // The authHeader parameter in DoRequest() comes from the same source, so we don't need to copy it
+            
             // For HEAD/DELETE/MOVE methods, use generic HTTP request
             using var httpRequest = new System.Net.Http.HttpRequestMessage(new System.Net.Http.HttpMethod(method), uri);
-            var response = httpClient.SendRequest(httpRequest);
             
+            // Copy custom headers from HttpWebRequest to HttpRequestMessage
+            // These include headers like "Destination" and "Overwrite" for MOVE requests
+            foreach (string headerName in request.Headers.AllKeys)
+            {
+                var headerValue = request.Headers[headerName];
+                if (!string.IsNullOrEmpty(headerValue))
+                {
+                    // Skip standard headers that are handled separately (Authorization, Accept, etc.)
+                    // Only copy custom headers like "Destination" and "Overwrite"
+                    if (headerName == "Destination" || headerName == "Overwrite")
+                    {
+                        httpRequest.Headers.TryAddWithoutValidation(headerName, headerValue);
+                    }
+                }
+            }
+            
+            var response = httpClient.SendRequest(httpRequest);
             // Read response body
             return response.Content.ReadAsStringAsync().Result;
-        }
-
-        public override LabKeyError GetErrorFromException(WebException e)
-        {
-            // For compatibility - but HttpPanoramaRequestHelper throws NetworkRequestException instead
-            return PanoramaUtil.GetErrorFromWebException(e);
         }
 
         public override void Dispose()
