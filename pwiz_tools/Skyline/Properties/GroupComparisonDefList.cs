@@ -19,9 +19,10 @@
 using System.Collections.Generic;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls.GroupComparison;
-using pwiz.Skyline.Properties;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.GroupComparison;
 
-namespace pwiz.Skyline.Model.GroupComparison
+namespace pwiz.Skyline.Properties
 {
     public class GroupComparisonDefList : SettingsList<GroupComparisonDef>
     {
@@ -32,12 +33,12 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public override string Title
         {
-            get { return GroupComparisonStrings.GroupComparisonDefList_Title_Define_Group_Comparisons; }
+            get { return PropertiesResources.GroupComparisonDefList_Title_Define_Group_Comparisons; }
         }
 
         public override string Label
         {
-            get { return GroupComparisonStrings.GroupComparisonDefList_Label_Group_Comparisons; }
+            get { return PropertiesResources.GroupComparisonDefList_Label_Group_Comparisons; }
         }
 
         public override GroupComparisonDef EditItem(Control owner, GroupComparisonDef item, IEnumerable<GroupComparisonDef> existing, object tag)

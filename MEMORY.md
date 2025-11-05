@@ -53,6 +53,11 @@ Example workflow:
 3. Ensure properties are added in alphabetical order
 4. Build to verify no CS0117 errors
 
+### Resource Designer File Ordering
+- All resource properties in `.Designer.cs` files (e.g., `PropertiesResources.designer.cs`) **must be kept in strict alphabetical order**.
+- When adding new resource strings, insert the corresponding property into the correct alphabetical position—not at the end of the file.
+- This ensures maintainability and consistency for all contributors.
+
 ### Translation-Proof Testing
 **NEVER use English text literals in test assertions** - all UI text is localized to Chinese and Japanese, so English-only assertions will break.
 
