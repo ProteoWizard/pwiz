@@ -151,9 +151,6 @@
   <data name="WebPanoramaClient_SaveFile_Select_the_folder_where_the_file_will_be_downloaded" xml:space="preserve">
     <value>Select the folder where the file will be downloaded</value>
   </data>
-  <data name="Icojam_Blueberry_Basic_Arrow_right_Bitmap" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Icojam-Blueberry-Basic-Arrow-right.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="UserState_GetErrorMessage_There_was_an_error_authenticating_user_credentials_on_the_server__0__" xml:space="preserve">
     <value>There was an error authenticating user credentials on the server {0}.</value>
   </data>
@@ -163,23 +160,8 @@
   <data name="WebPanoramaClient_DownloadFile_Downloading__0_" xml:space="preserve">
     <value>Downloading {0}</value>
   </data>
-  <data name="Icojam_Blueberry_Basic_Arrow_up_Bitmap" type="System.Resources.ResXFileRef, System.Windows.Forms">
+  <data name="Icojam_Blueberry_Basic_Arrow_up" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Icojam-Blueberry-Basic-Arrow-up2.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="Icojam_Blueberry_Basic_Arrow_left" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Icojam-Blueberry-Basic-Arrow-left.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="up_pro32" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\up-pro32.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="Edit_Undo" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Edit_Undo.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="Icojam_Blueberry_Basic_Arrow_right" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Icojam-Blueberry-Basic-Arrow-right.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="Icojam_Blueberry_Basic_Arrow_left_Bitmap" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Icojam-Blueberry-Basic-Arrow-left.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="PanoramaUtil_VerifyFolder_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder__1_" xml:space="preserve">
     <value>User {0} does not have permissions to upload to the Panorama folder {1}</value>
