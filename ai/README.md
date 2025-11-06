@@ -2,21 +2,6 @@
 
 This directory contains all documentation for LLM-assisted development on the Skyline/ProteoWizard project.
 
-## 🔴 MANDATORY: Pre-Commit Validation
-
-**Before committing ANY LLM-generated code**, run:
-
-```powershell
-cd pwiz_tools\Skyline
-.\ai\Build-Skyline.ps1 -RunInspection -RunTests -TestName CodeInspection
-```
-
-**Exit code 0 = Safe to commit. Non-zero = Fix issues first.**
-
-See [pwiz_tools/Skyline/ai/PRE-COMMIT.md](../pwiz_tools/Skyline/ai/PRE-COMMIT.md) for details.
-
----
-
 ## Quick Start
 
 **New LLM session? Start here:**
@@ -61,18 +46,12 @@ These files are kept small (<200 lines each) for quick loading:
   - Common patterns (functional tests, assertions)
   - AssertEx quick reference
 
-- **[BUILD-TEST.md](BUILD-TEST.md)** (NEW)
-  - MSBuild commands for iterative builds
-  - Test execution with TestRunner.exe
-  - ReSharper code inspection
-  - Common build/test workflows
-  - Output interpretation
-
 ## Detailed Documentation (Read On-Demand)
 
 The [docs/](docs/) subdirectory contains comprehensive guides:
 
 - **[docs/README.md](docs/README.md)** - Index of detailed documentation
+- **[docs/build-and-test-guide.md](docs/build-and-test-guide.md)** - Complete build/test command reference
 - **[docs/project-context.md](docs/project-context.md)** - Full project context with detailed examples
 - **[docs/style-guide.md](docs/style-guide.md)** - Comprehensive C# coding standards
 - **[docs/workflow-guide.md](docs/workflow-guide.md)** - Complete workflow guide with all templates
@@ -122,8 +101,8 @@ See [WORKFLOW.md](WORKFLOW.md) for complete TODO workflow.
 - [docs/testing-patterns.md](docs/testing-patterns.md) - Comprehensive patterns (if needed)
 
 ### Before Building or Testing
-- [BUILD-TEST.md](BUILD-TEST.md) - MSBuild and test commands
-- [docs/build-and-test-guide.md](docs/build-and-test-guide.md) - Comprehensive build guide (if needed)
+- [WORKFLOW.md](WORKFLOW.md) - Essential build commands
+- [docs/build-and-test-guide.md](docs/build-and-test-guide.md) - Complete command reference
 
 ### When Handling Edge Cases
 - [docs/project-context.md](docs/project-context.md) - Detailed gotchas and patterns
@@ -174,20 +153,30 @@ See [CRITICAL-RULES.md](CRITICAL-RULES.md) for full list:
 
 - CRITICAL-RULES.md: 81 lines (target <100) ✅
 - MEMORY.md: 144 lines (target <200) ✅
-- WORKFLOW.md: 166 lines (target <200) ✅
+- WORKFLOW.md: 212 lines (target <200, slightly over) ⚠️
 - STYLEGUIDE.md: 162 lines (target <200) ✅
 - TESTING.md: 154 lines (target <200) ✅
-- BUILD-TEST.md: 227 lines (functional reference) ⚠️
-- **Total**: 934 lines (target <1000) ✅
+- **Total core files**: 753 lines (target <1000) ✅
 
-## Project-Specific LLM Tooling
+## Build and Test Automation (Optional)
 
-In addition to this repository-wide `ai/` directory, individual projects have their own `ai/` directories for project-specific tooling:
+For LLM-assisted IDEs that can execute PowerShell, build/test helper scripts are available:
 
-- **[pwiz_tools/Skyline/ai/](../pwiz_tools/Skyline/ai/)** - Skyline build scripts and tools
-  - `Build-Skyline.ps1` - Build automation for LLM-assisted IDEs
+**Skyline project** - [pwiz_tools/Skyline/ai/](../pwiz_tools/Skyline/ai/):
+- `Build-Skyline.ps1` - Automated builds, tests, and ReSharper inspection
+- `Run-Tests.ps1` - Test execution with locale support
+- See [WORKFLOW.md](WORKFLOW.md) for essential commands
+- See [docs/build-and-test-guide.md](docs/build-and-test-guide.md) for complete reference
 
-**Pattern**: Project-specific `ai/` directories contain **build scripts and automation**. Repository-wide `ai/` contains **rules, patterns, and workflows**.
+**Pre-commit validation** (recommended before committing):
+```powershell
+cd pwiz_tools\Skyline
+.\ai\Build-Skyline.ps1 -RunInspection -RunTests -TestName CodeInspection
+```
+
+See [pwiz_tools/Skyline/ai/PRE-COMMIT.md](../pwiz_tools/Skyline/ai/PRE-COMMIT.md) for complete workflow.
+
+**Pattern**: Project-specific `ai/` directories contain **build scripts and automation**. Repository-wide `ai/` contains **rules, patterns, and workflows**. These scripts are helpers for LLM workflows - developers can continue using Visual Studio directly.
 
 ## See Also
 

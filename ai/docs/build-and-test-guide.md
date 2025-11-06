@@ -1,6 +1,8 @@
-# Build and Test - Quick Reference
+# Build and Test - Comprehensive Guide
 
-Essential commands for LLM-assisted IDEs to build, test, and analyze Skyline iteratively. See [ai/docs/build-and-test-guide.md](docs/build-and-test-guide.md) for comprehensive details.
+Detailed reference for building, testing, and analyzing Skyline from LLM-assisted IDEs.
+
+**Quick reference**: See [../WORKFLOW.md](../WORKFLOW.md) for essential build commands.
 
 ## Prerequisites
 
@@ -16,7 +18,7 @@ Essential commands for LLM-assisted IDEs to build, test, and analyze Skyline ite
 # Build entire solution (DEFAULT - recommended, matches Visual Studio Ctrl+Shift+B)
 .\ai\Build-Skyline.ps1
 
-# PRE-COMMIT VALIDATION (MANDATORY before committing LLM-generated code)
+# Pre-commit validation (recommended before committing)
 .\ai\Build-Skyline.ps1 -RunInspection -RunTests -TestName CodeInspection
 
 # Build, run ReSharper inspection
@@ -257,9 +259,9 @@ Skyline requires zero warnings - fix all warnings before committing
 ### Tests fail with "File not found"
 Ensure you're running TestRunner.exe from the output directory (`bin\x64\Debug`)
 
-## Pre-Commit Validation (MANDATORY)
+## Pre-Commit Validation (Recommended)
 
-**Before committing any LLM-generated code**, run:
+**Before committing LLM-generated code**, it's recommended to run:
 
 ```powershell
 .\ai\Build-Skyline.ps1 -RunInspection -RunTests -TestName CodeInspection
@@ -272,15 +274,14 @@ This validates:
 
 **Exit code 0 = Safe to commit. Non-zero = Fix issues first.**
 
-**Why**: LLMs frequently create code that compiles but triggers ReSharper warnings or fails CodeInspectionTest, causing TeamCity failures.
+**Why recommended**: LLMs frequently create code that compiles but triggers ReSharper warnings or fails CodeInspectionTest, which can cause TeamCity failures.
 
-**See**: [pwiz_tools/Skyline/ai/PRE-COMMIT.md](../pwiz_tools/Skyline/ai/PRE-COMMIT.md) for complete pre-commit workflow documentation.
+**See**: [../../pwiz_tools/Skyline/ai/PRE-COMMIT.md](../../pwiz_tools/Skyline/ai/PRE-COMMIT.md) for complete pre-commit workflow documentation.
 
 ## See Also
 
-- **[pwiz_tools/Skyline/ai/PRE-COMMIT.md](../pwiz_tools/Skyline/ai/PRE-COMMIT.md)** - Mandatory pre-commit validation workflow
-- [ai/docs/build-and-test-guide.md](docs/build-and-test-guide.md) - Comprehensive build and test guide  
-- [ai/WORKFLOW.md](WORKFLOW.md) - Git workflows and TODO system
-- [ai/TESTING.md](TESTING.md) - Testing guidelines and patterns
-- [ai/CRITICAL-RULES.md](CRITICAL-RULES.md) - Critical constraints
+- **[../../pwiz_tools/Skyline/ai/PRE-COMMIT.md](../../pwiz_tools/Skyline/ai/PRE-COMMIT.md)** - Recommended pre-commit validation workflow
+- [../WORKFLOW.md](../WORKFLOW.md) - Git workflows and TODO system
+- [../TESTING.md](../TESTING.md) - Testing guidelines and patterns
+- [../CRITICAL-RULES.md](../CRITICAL-RULES.md) - Critical constraints
 

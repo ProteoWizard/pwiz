@@ -1,6 +1,6 @@
 # Pre-Commit Validation Workflow
 
-**MANDATORY** validation steps before committing any LLM-generated code. These checks prevent TeamCity failures.
+**Recommended** validation steps before committing LLM-generated code. These checks help prevent TeamCity failures.
 
 ## Why This Matters
 
@@ -20,7 +20,7 @@ From `pwiz_tools\Skyline`, run:
 .\ai\Build-Skyline.ps1 -RunInspection -RunTests -TestName CodeInspection
 ```
 
-This single command performs all mandatory validation:
+This single command performs all recommended validation:
 1. ✅ Builds entire solution
 2. ✅ Runs ReSharper code inspection
 3. ✅ Runs Code Inspection Test
@@ -107,7 +107,7 @@ jb --version
 
 **Documentation**: https://www.jetbrains.com/help/resharper/ReSharper_Command_Line_Tools.html
 
-**Note**: The script will gracefully skip inspection if not installed, but it's **required** for pre-commit validation to prevent TeamCity failures.
+**Note**: The script will gracefully skip inspection if not installed, but it's **strongly recommended** for pre-commit validation to help prevent TeamCity failures.
 
 ## Workflow Integration
 
@@ -180,7 +180,7 @@ See log: bin\x64\Debug\Test.log
 ## See Also
 
 - **[Build-Skyline.ps1](Build-Skyline.ps1)** - The validation script
-- **[ai/BUILD-TEST.md](../../../ai/BUILD-TEST.md)** - Comprehensive build documentation
+- **[ai/docs/build-and-test-guide.md](../../../ai/docs/build-and-test-guide.md)** - Comprehensive build documentation
 - **[ai/STYLEGUIDE.md](../../../ai/STYLEGUIDE.md)** - Coding conventions
 - **[ai/CRITICAL-RULES.md](../../../ai/CRITICAL-RULES.md)** - Absolute constraints
 

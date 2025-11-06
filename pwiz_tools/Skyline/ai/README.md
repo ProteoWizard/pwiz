@@ -4,12 +4,12 @@ This directory contains scripts and tools specifically for LLM-assisted developm
 
 ## Contents
 
-### PRE-COMMIT.md 🔴 **READ THIS FIRST**
-**MANDATORY** validation workflow before committing any LLM-generated code.
+### PRE-COMMIT.md
+**Recommended** validation workflow before committing LLM-generated code.
 
-Prevents TeamCity failures by running:
+Helps prevent TeamCity failures by running:
 - Build validation
-- ReSharper code inspection  
+- ReSharper code inspection
 - CodeInspectionTest
 
 **Quick command**:
@@ -25,7 +25,7 @@ PowerShell script for building, testing, and validating Skyline from LLM-assiste
 # Build entire solution (default)
 .\ai\Build-Skyline.ps1
 
-# PRE-COMMIT VALIDATION (MANDATORY)
+# Pre-commit validation (recommended)
 .\ai\Build-Skyline.ps1 -RunInspection -RunTests -TestName CodeInspection
 
 # Build and run ReSharper inspection
@@ -67,7 +67,7 @@ PowerShell wrapper for TestRunner.exe with natural language-style test execution
 
 **Intelligent error handling**: If you use a class name by mistake (e.g., "CodeInspectionTest"), the script searches for [TestMethod] annotations and suggests the correct method name.
 
-**See also**: [`ai/BUILD-TEST.md`](../../../ai/BUILD-TEST.md) in the repository root for comprehensive build/test documentation.
+**See also**: [`ai/docs/build-and-test-guide.md`](../../../ai/docs/build-and-test-guide.md) for comprehensive build/test documentation.
 
 ## Purpose
 

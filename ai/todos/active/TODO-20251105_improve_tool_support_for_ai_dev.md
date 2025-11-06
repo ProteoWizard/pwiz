@@ -74,9 +74,36 @@ AI-assisted development has been successful but has two major friction points:
 - [x] Confirmed OutputParser.exe integration works correctly
 - [x] Validated entire workflow: Build → Inspect → Test
 
+### Phase 5: Documentation Reorganization and Balance ✅
+- [x] Identified documentation violations of TODO-20251105_reorg_md_docs.md goals
+  - BUILD-TEST.md (286 lines) violated "no new core files" rule
+  - Pushed total from 707 → 1005 lines (exceeded <1000 target)
+  - Documentation used overly promotional "MANDATORY" language with red emojis
+- [x] Created `ai/docs/documentation-maintenance.md` (550+ lines)
+  - Comprehensive guide for LLMs on maintaining ai/ documentation system
+  - Decision tree: where does new content go?
+  - Common mistakes with ❌/✅ examples
+  - Validation checklist and red flags
+  - Prevention system for future documentation violations
+- [x] Moved `ai/BUILD-TEST.md` → `ai/docs/build-and-test-guide.md`
+  - Proper placement in detailed docs (unlimited size)
+  - Updated all cross-references throughout codebase
+- [x] Updated `ai/WORKFLOW.md` with minimal Build-Skyline.ps1 reference (+28 lines)
+  - Essential commands only in core file
+  - Pointer to detailed guide for complete reference
+  - Added "Commit Messages" section with <10 line guideline
+- [x] Balanced promotional tone throughout all documentation
+  - Changed "MANDATORY" → "Recommended" (7 locations)
+  - Removed 🔴 red emojis
+  - Framed scripts as optional helpers, not requirements
+- [x] Restored TODO-20251105 goals
+  - Core files: 753 lines (was 1005, now under <1000 target) ✅
+  - No new core files in ai/ root ✅
+  - "Append-hostile" architecture maintained ✅
+
 ## Remaining Work
 
-### Phase 5: Resolve Inspection Discrepancies
+### Phase 6: Resolve Inspection Discrepancies
 **Goal**: Understand and resolve 9 warnings reported by ReSharper 2025.2.4 CLI but not shown in VS 2022
 
 **Current discrepancies** (as of 2025-11-06):
@@ -99,7 +126,7 @@ AI-assisted development has been successful but has two major friction points:
 - [ ] Document why TeamCity (ReSharper 9.0 from 2014) reports zero warnings on master
 - [ ] Consider upgrading TeamCity ReSharper tools to match local development
 
-### Phase 6: Optimize Inspection Performance (Optional)
+### Phase 7: Optimize Inspection Performance (Optional)
 **Current**: Full solution inspection takes ~16 minutes
 
 **Possible optimizations**:
@@ -108,11 +135,11 @@ AI-assisted development has been successful but has two major friction points:
 - [ ] Consider running inspection only on changed files during iteration
 - [ ] Full inspection remains mandatory pre-commit
 
-### Phase 7: Documentation and Finalization
+### Phase 8: Documentation and Finalization
 - [ ] Document discrepancy resolution in PRE-COMMIT.md
-- [ ] Update BUILD-TEST.md with lessons learned
+- [ ] Update ai/docs/build-and-test-guide.md with lessons learned
 - [ ] Add note about ReSharper version differences (CLI vs. VS 2022 vs. TeamCity)
-- [ ] Create handoff documentation for maintaining this tooling
+- [x] Create handoff documentation for maintaining this tooling (ai/docs/documentation-maintenance.md)
 
 ## Tools & Scripts Created
 
@@ -141,19 +168,25 @@ AI-assisted development has been successful but has two major friction points:
 
 ### Documentation Created
 
-1. **`ai/BUILD-TEST.md`** (287 lines)
-   - Quick reference for build/test commands
+1. **`ai/docs/build-and-test-guide.md`** (286 lines, moved from ai/BUILD-TEST.md)
+   - Complete build/test command reference
    - MSBuild commands, test execution, ReSharper inspection
    - Pre-commit validation workflow
    - Output interpretation guide
 
-2. **`pwiz_tools/Skyline/ai/PRE-COMMIT.md`** (147 lines)
-   - Mandatory validation workflow before commits
+2. **`ai/docs/documentation-maintenance.md`** (550+ lines, NEW in Phase 5)
+   - Comprehensive guide for LLMs on maintaining ai/ documentation
+   - Decision tree for content placement
+   - Common mistakes with examples
+   - Validation checklist and prevention system
+
+3. **`pwiz_tools/Skyline/ai/PRE-COMMIT.md`** (187 lines)
+   - Recommended validation workflow before commits
    - ReSharper CLI installation instructions
    - Common issues from LLMs and how to fix them
    - Exit code interpretation
 
-3. **`pwiz_tools/Skyline/ai/README.md`** (62 lines)
+4. **`pwiz_tools/Skyline/ai/README.md`** (89 lines)
    - Documents project-specific LLM tooling directory
    - Explains separation: guidance (root ai/) vs tooling (project ai/)
    - Establishes pattern for other projects (SkylineBatch, AutoQC)
@@ -228,9 +261,13 @@ AI-assisted development has been successful but has two major friction points:
 - [x] Test execution works (TestRunner integration)
 - [x] ReSharper inspection works (jb inspectcode + OutputParser.exe)
 - [x] TeamCity parity achieved for localization checks (eliminated false positives)
+- [x] Documentation reorganization complete (Phase 5)
+  - Core files back under 1000 lines (753 total)
+  - Balanced tone throughout (removed "MANDATORY" language)
+  - Created documentation-maintenance.md prevention system
+  - Added commit message guidelines (<10 lines) to WORKFLOW.md
 - [ ] Resolve or document 9 remaining warning discrepancies
 - [ ] CodeInspectionTest passes in automation
-- [ ] Documentation complete and accurate
 - [ ] Process validated across Cursor, VS Code + Copilot, VS Code + Claude Code
 
 ### Stretch Goals (Future)
@@ -241,16 +278,31 @@ AI-assisted development has been successful but has two major friction points:
 
 ## Files Modified/Created
 
-### New Files
-- `ai/BUILD-TEST.md` - Build and test quick reference
-- `pwiz_tools/Skyline/ai/Build-Skyline.ps1` - Build automation script
+### New Files (Phase 1-4)
+- `pwiz_tools/Skyline/ai/Build-Skyline.ps1` - Build automation script (PowerShell)
+- `pwiz_tools/Skyline/ai/Run-Tests.ps1` - Test execution helper (PowerShell)
 - `pwiz_tools/Skyline/ai/README.md` - Project tooling documentation
-- `pwiz_tools/Skyline/ai/PRE-COMMIT.md` - Mandatory validation workflow
+- `pwiz_tools/Skyline/ai/PRE-COMMIT.md` - Pre-commit validation workflow
 
-### Modified Files
-- `ai/README.md` - Added BUILD-TEST.md, pre-commit section, project-specific ai pattern
-- `ai/WORKFLOW.md` - Updated build/test workflow to reflect LLM capability
+### New Files (Phase 5 - Documentation Reorganization)
+- `ai/docs/build-and-test-guide.md` - Moved from ai/BUILD-TEST.md (286 lines)
+- `ai/docs/documentation-maintenance.md` - LLM documentation maintenance guide (550+ lines)
+
+### Modified Files (Phase 1-4)
+- `ai/README.md` - Added build automation section, balanced promotional tone
+- `ai/WORKFLOW.md` - Added Build-Skyline.ps1 section (+18 lines)
 - `pwiz_tools/Skyline/TestData/ResourcesTest.cs` - Fixed test error (removed incomplete `int x`)
+
+### Modified Files (Phase 5 - Documentation Reorganization)
+- `ai/README.md` - Removed BUILD-TEST.md references, updated file size targets
+- `ai/WORKFLOW.md` - Replaced outdated build section with balanced version
+- `ai/docs/README.md` - Added documentation-maintenance.md and build-and-test-guide.md to index
+- `pwiz_tools/Skyline/ai/README.md` - Updated BUILD-TEST.md reference → build-and-test-guide.md
+- `pwiz_tools/Skyline/ai/PRE-COMMIT.md` - Changed "MANDATORY" → "Recommended", updated references
+
+### Deleted Files (Phase 5)
+- `ai/BUILD-TEST.md` - Moved to ai/docs/build-and-test-guide.md
+- `ai/todos/active/TODO-20251106_improve_tool_support_for_ai_dev.md` - Duplicate file, removed
 
 ### Test Files (Used for Validation, Can Be Reverted)
 - `pwiz_tools/Skyline/SkylineFiles.cs:120` - Added redundant initializer (`= null`)

@@ -134,8 +134,9 @@ git checkout Skyline/work/YYYYMMDD_current_feature
 3. Use DRY principles - avoid duplication
 4. Handle exceptions per established patterns
 
-### Build and Test Workflow
-**AI agents CAN now build and test using PowerShell helper script:**
+### Build and Test Automation (Optional)
+
+**For LLM-assisted IDEs that can execute PowerShell:**
 
 ```powershell
 cd pwiz_tools\Skyline
@@ -143,22 +144,55 @@ cd pwiz_tools\Skyline
 # Build entire solution (default)
 .\ai\Build-Skyline.ps1
 
-# Build and run tests
+# Pre-commit validation (recommended before committing)
+.\ai\Build-Skyline.ps1 -RunInspection -RunTests -TestName CodeInspection
+
+# Build and run all unit tests
 .\ai\Build-Skyline.ps1 -RunTests
+
+# Build specific project
+.\ai\Build-Skyline.ps1 -Target Test
 ```
 
-See [ai/BUILD-TEST.md](BUILD-TEST.md) for comprehensive build/test commands.
+See [docs/build-and-test-guide.md](docs/build-and-test-guide.md) for complete command reference.
 
-**Alternative - ask developer:**
-- Build in Visual Studio (Ctrl+Shift+B)
-- Run tests in Test Explorer
-- Run ReSharper inspection
+**Developers can continue using Visual Studio directly:**
+- Build: Ctrl+Shift+B
+- Run tests: Test Explorer
+- Code inspection: ReSharper menu
 
 ### Context Switching
 When switching LLM tools/sessions:
 1. Update TODO with exact progress
 2. Note key decisions and modified files
 3. Provide handoff prompt in TODO
+
+## Commit Messages
+
+**Keep commit messages concise (<10 lines)** - digestible in TortoiseGit's multi-line textbox view.
+
+**Pattern:**
+```
+Brief summary of change (imperative mood)
+
+Optional 2-3 line explanation if needed.
+Details belong in TODO file, not commit message.
+```
+
+**Examples:**
+```bash
+# Good
+git commit -m "Balance documentation tone and restore TODO-20251105 goals
+
+Moved BUILD-TEST.md to ai/docs/, created documentation-maintenance.md.
+See TODO-20251105_improve_tool_support_for_ai_dev.md Phase 5 for details."
+
+# Bad - too verbose
+git commit -m "This commit addresses documentation violations...
+[40 lines of detailed explanation]"
+```
+
+**Rationale:** TODO files tell the whole story. Commit messages just summarize.
 
 ## Critical Rules
 
@@ -168,7 +202,7 @@ See [ai/CRITICAL-RULES.md](CRITICAL-RULES.md) for full list. Key workflow rules:
 - **Update TODO every commit** - Track progress, decisions, files modified
 - **Never modify completed TODOs** - They document merged PRs (historical record)
 - **All TODOs must have PR reference** - Before moving to completed/
-- **Ask developer to build/test** - AI agents cannot run builds or tests
+- **Commit messages <10 lines** - Details go in TODO files
 
 ## See Also
 
