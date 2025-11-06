@@ -4,7 +4,7 @@
 
 .DESCRIPTION
     Wrapper for TestRunner.exe that supports natural language-style commands:
-    - "Run CodeInspectionTest in English"
+    - "Run CodeInspection test in English"
     - "Run current SkylineTester tests in all languages"
     - "Run TestPanoramaDownloadFile in Japanese"
 
@@ -27,12 +27,12 @@
     Debug or Release (default: Debug)
 
 .EXAMPLE
-    .\Run-Tests.ps1 -TestName CodeInspectionTest
-    Run CodeInspectionTest in English (default)
+    .\Run-Tests.ps1 -TestName CodeInspection
+    Run CodeInspection test in English (default)
 
 .EXAMPLE
-    .\Run-Tests.ps1 -TestName CodeInspectionTest -Language all
-    Run CodeInspectionTest in all 5 languages (en, ja, zh, fr, tr)
+    .\Run-Tests.ps1 -TestName CodeInspection -Language all
+    Run CodeInspection test in all 5 languages (en, ja, zh, fr, tr)
 
 .EXAMPLE
     .\Run-Tests.ps1 -TestName TestPanoramaDownloadFile -Language ja

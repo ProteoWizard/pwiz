@@ -270,11 +270,11 @@ Ensure you're running TestRunner.exe from the output directory (`bin\x64\Debug`)
 This validates:
 - ✅ Code compiles (MSBuild)
 - ✅ No ReSharper warnings (inspectcode)
-- ✅ CodeInspectionTest passes
+- ✅ CodeInspection test passes
 
 **Exit code 0 = Safe to commit. Non-zero = Fix issues first.**
 
-**Why recommended**: LLMs frequently create code that compiles but triggers ReSharper warnings or fails CodeInspectionTest, which can cause TeamCity failures.
+**Why recommended**: LLMs frequently create code that compiles but triggers ReSharper warnings or fails CodeInspection test, which can cause TeamCity failures.
 
 **See**: [../../pwiz_tools/Skyline/ai/PRE-COMMIT.md](../../pwiz_tools/Skyline/ai/PRE-COMMIT.md) for complete pre-commit workflow documentation.
 

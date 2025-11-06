@@ -7,7 +7,7 @@
 LLMs frequently create code that:
 - ✅ Compiles successfully (passes MSBuild)
 - ❌ Triggers ReSharper warnings (unused usings, naming violations, etc.)
-- ❌ Fails CodeInspectionTest
+- ❌ Fails CodeInspection test
 - ❌ Causes TeamCity tests to fail
 
 **TeamCity requires zero warnings and all tests passing.**

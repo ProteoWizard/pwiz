@@ -35,12 +35,12 @@
     Build entire solution and run ReSharper code inspection
 
 .EXAMPLE
-    .\Build-Skyline.ps1 -RunTests -TestName CodeInspectionTest
-    Build and run the CodeInspectionTest specifically
+    .\Build-Skyline.ps1 -RunTests -TestName CodeInspection
+    Build and run the CodeInspection test specifically
 
 .EXAMPLE
-    .\Build-Skyline.ps1 -RunInspection -RunTests -TestName CodeInspectionTest
-    Pre-commit validation: Build, run inspection, and run CodeInspectionTest
+    .\Build-Skyline.ps1 -RunInspection -RunTests -TestName CodeInspection
+    Pre-commit validation: Build, run inspection, and run CodeInspection test
 
 .EXAMPLE
     .\Build-Skyline.ps1 -Configuration Release
@@ -64,7 +64,7 @@ param(
     [switch]$RunTests = $false,
     
     [Parameter(Mandatory=$false)]
-    [string]$TestName = $null,  # Specific test to run (e.g., "CodeInspectionTest")
+    [string]$TestName = $null,  # Specific test to run (e.g., "CodeInspection")
     
     [Parameter(Mandatory=$false)]
     [switch]$RunInspection = $false,  # Run ReSharper code inspection

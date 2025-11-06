@@ -10,7 +10,7 @@ This directory contains scripts and tools specifically for LLM-assisted developm
 Helps prevent TeamCity failures by running:
 - Build validation
 - ReSharper code inspection
-- CodeInspectionTest
+- CodeInspection test
 
 **Quick command**:
 ```powershell

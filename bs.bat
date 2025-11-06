@@ -1,0 +1,1 @@
+pwiz_tools\build-skyline.bat --i-agree-to-the-vendor-licenses

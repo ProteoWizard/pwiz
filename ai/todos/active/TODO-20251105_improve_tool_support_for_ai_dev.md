@@ -4,7 +4,7 @@
 - **Branch**: `Skyline/work/20251105_improve_tool_support_for_ai_dev`
 - **Created**: 2025-11-05
 - **Objective**: Enable LLM-assisted IDEs (Cursor, VS Code + Copilot/Claude Code) to run builds, tests, and static analysis autonomously to reduce friction and improve code quality validation
-- **PR**: (To be added when created)
+- **PR**: #3667 (https://github.com/ProteoWizard/pwiz/pull/3667)
 
 ## Background
 
@@ -88,7 +88,7 @@ AI-assisted development has been successful but has two major friction points:
 - [x] Moved `ai/BUILD-TEST.md` → `ai/docs/build-and-test-guide.md`
   - Proper placement in detailed docs (unlimited size)
   - Updated all cross-references throughout codebase
-- [x] Updated `ai/WORKFLOW.md` with minimal Build-Skyline.ps1 reference (+28 lines)
+- [x] Updated `ai/WORKFLOW.md` with minimal Build-Skyline.ps1 reference (+46 lines)
   - Essential commands only in core file
   - Pointer to detailed guide for complete reference
   - Added "Commit Messages" section with <10 line guideline
