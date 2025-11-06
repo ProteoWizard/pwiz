@@ -2,6 +2,21 @@
 
 This directory contains all documentation for LLM-assisted development on the Skyline/ProteoWizard project.
 
+## 🔴 MANDATORY: Pre-Commit Validation
+
+**Before committing ANY LLM-generated code**, run:
+
+```powershell
+cd pwiz_tools\Skyline
+.\ai\Build-Skyline.ps1 -RunInspection -RunTests -TestName CodeInspection
+```
+
+**Exit code 0 = Safe to commit. Non-zero = Fix issues first.**
+
+See [pwiz_tools/Skyline/ai/PRE-COMMIT.md](../pwiz_tools/Skyline/ai/PRE-COMMIT.md) for details.
+
+---
+
 ## Quick Start
 
 **New LLM session? Start here:**
@@ -45,6 +60,13 @@ These files are kept small (<200 lines each) for quick loading:
   - Critical testing rules (translation-proof, structure)
   - Common patterns (functional tests, assertions)
   - AssertEx quick reference
+
+- **[BUILD-TEST.md](BUILD-TEST.md)** (NEW)
+  - MSBuild commands for iterative builds
+  - Test execution with TestRunner.exe
+  - ReSharper code inspection
+  - Common build/test workflows
+  - Output interpretation
 
 ## Detailed Documentation (Read On-Demand)
 
@@ -99,6 +121,10 @@ See [WORKFLOW.md](WORKFLOW.md) for complete TODO workflow.
 - [CRITICAL-RULES.md](CRITICAL-RULES.md) - Testing constraints
 - [docs/testing-patterns.md](docs/testing-patterns.md) - Comprehensive patterns (if needed)
 
+### Before Building or Testing
+- [BUILD-TEST.md](BUILD-TEST.md) - MSBuild and test commands
+- [docs/build-and-test-guide.md](docs/build-and-test-guide.md) - Comprehensive build guide (if needed)
+
 ### When Handling Edge Cases
 - [docs/project-context.md](docs/project-context.md) - Detailed gotchas and patterns
 - [MEMORY.md](MEMORY.md) - Common issues summary
@@ -144,20 +170,31 @@ See [CRITICAL-RULES.md](CRITICAL-RULES.md) for full list:
 9. **Build**: Use `quickbuild.bat` - DO NOT introduce new build systems
 10. **Quality**: Zero warnings, ReSharper green
 
-## File Size Targets (Met!)
+## File Size Targets
 
 - CRITICAL-RULES.md: 81 lines (target <100) ✅
 - MEMORY.md: 144 lines (target <200) ✅
-- WORKFLOW.md: 166 lines (target <150, close!) ✅
+- WORKFLOW.md: 166 lines (target <200) ✅
 - STYLEGUIDE.md: 162 lines (target <200) ✅
 - TESTING.md: 154 lines (target <200) ✅
-- **Total**: 707 lines (target <1000) ✅
+- BUILD-TEST.md: 227 lines (functional reference) ⚠️
+- **Total**: 934 lines (target <1000) ✅
+
+## Project-Specific LLM Tooling
+
+In addition to this repository-wide `ai/` directory, individual projects have their own `ai/` directories for project-specific tooling:
+
+- **[pwiz_tools/Skyline/ai/](../pwiz_tools/Skyline/ai/)** - Skyline build scripts and tools
+  - `Build-Skyline.ps1` - Build automation for LLM-assisted IDEs
+
+**Pattern**: Project-specific `ai/` directories contain **build scripts and automation**. Repository-wide `ai/` contains **rules, patterns, and workflows**.
 
 ## See Also
 
 - **Root [README.md](../README.md)** - ProteoWizard project overview (for humans)
 - **Root [.cursorrules](../.cursorrules)** - Cursor IDE configuration
 - **[doc/](../doc/)** - ProteoWizard website and documentation (for humans)
+- **[pwiz_tools/Skyline/ai/](../pwiz_tools/Skyline/ai/)** - Skyline-specific LLM tooling
 
 ---
 

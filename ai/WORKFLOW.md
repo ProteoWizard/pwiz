@@ -135,12 +135,24 @@ git checkout Skyline/work/YYYYMMDD_current_feature
 4. Handle exceptions per established patterns
 
 ### Build and Test Workflow
-**IMPORTANT**: AI agents should **NOT** build or run tests. Instead:
-- Ask developer to build in Visual Studio (Ctrl+Shift+B)
-- Ask developer to run tests in Test Explorer
-- Ask developer to run ReSharper inspection
-- Point to specific files/lines for review
-- Wait for developer confirmation before proposing commits
+**AI agents CAN now build and test using PowerShell helper script:**
+
+```powershell
+cd pwiz_tools\Skyline
+
+# Build entire solution (default)
+.\ai\Build-Skyline.ps1
+
+# Build and run tests
+.\ai\Build-Skyline.ps1 -RunTests
+```
+
+See [ai/BUILD-TEST.md](BUILD-TEST.md) for comprehensive build/test commands.
+
+**Alternative - ask developer:**
+- Build in Visual Studio (Ctrl+Shift+B)
+- Run tests in Test Explorer
+- Run ReSharper inspection
 
 ### Context Switching
 When switching LLM tools/sessions:
