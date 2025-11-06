@@ -16,7 +16,7 @@ namespace pwiz.PanoramaClient
         JObject Get(Uri uri, string messageOnError = null);
         JObject Post(Uri uri, NameValueCollection postData, string messageOnError = null);
         JObject Post(Uri uri, string postData, string messageOnError);
-        void DoRequest(HttpWebRequest request, string method, string authHeader, string messageOnError = null);
+        void DoRequest(Uri uri, string method, IDictionary<string, string> headers, string messageOnError = null);
         void RequestJsonResponse();
         void AddHeader(string name, string value);
         void RemoveHeader(string name);
@@ -50,7 +50,7 @@ namespace pwiz.PanoramaClient
 
         public abstract void AddHeader(HttpRequestHeader header, string value);
 
-        public abstract string GetResponse(HttpWebRequest request);
+        public abstract string GetResponse(Uri uri, string method, IDictionary<string, string> headers);
 
         public JObject Get(Uri uri, string messageOnError = null)
         {
@@ -77,7 +77,7 @@ namespace pwiz.PanoramaClient
             return Post(uri, null, postData, messageOnError);
         }
 
-        protected virtual JObject Post(Uri uri, NameValueCollection postData, string postDataString, string messageOnError)
+        protected JObject Post(Uri uri, NameValueCollection postData, string postDataString, string messageOnError)
         {
             RequestJsonResponse();
             string response;
@@ -103,7 +103,7 @@ namespace pwiz.PanoramaClient
             }
         }
 
-        public void RequestJsonResponse()
+        public virtual void RequestJsonResponse()
         {
             // Get LabKey to send JSON instead of HTML.
             // When we request a JSON response, the HTTP status can be 200 even when the request fails on the server,
@@ -120,21 +120,17 @@ namespace pwiz.PanoramaClient
             AddHeader(HttpRequestHeader.Accept, APPLICATION_JSON);
         }
 
-        public void DoRequest(HttpWebRequest request, string method, string authHeader, string messageOnError = null)
+        public void DoRequest(Uri uri, string method, IDictionary<string, string> headers, string messageOnError = null)
         {
-            request.Method = method;
-            request.Headers.Add(HttpRequestHeader.Authorization, authHeader);
-            request.Accept = APPLICATION_JSON; // Get LabKey to send JSON instead of HTML
-
             messageOnError ??= string.Format(Resources.AbstractRequestHelper_DoRequest__0__request_was_unsuccessful_, method);
             try
             {
-                var response = GetResponse(request);
+                var response = GetResponse(uri, method, headers);
                 // If the JSON response contains an exception message, throw a PanoramaServerException
                 var labkeyError = PanoramaUtil.GetIfErrorInResponse(response);
                 if (labkeyError != null)
                 {
-                    throw new PanoramaServerException(new ErrorMessageBuilder(messageOnError).Uri(request.RequestUri)
+                    throw new PanoramaServerException(new ErrorMessageBuilder(messageOnError).Uri(uri)
                         .LabKeyError(labkeyError).ToString());
                 }
             }
@@ -142,7 +138,7 @@ namespace pwiz.PanoramaClient
             {
                 // HttpPanoramaRequestHelper throws NetworkRequestException.
                 // NetworkRequestException includes response body for error extraction.
-                throw PanoramaServerException.CreateWithResponseDisposal(messageOnError, request.RequestUri, PanoramaUtil.GetErrorFromNetworkRequestException, e);
+                throw PanoramaServerException.CreateWithResponseDisposal(messageOnError, uri, PanoramaUtil.GetErrorFromNetworkRequestException, e);
             }
         }
 
@@ -365,7 +361,8 @@ namespace pwiz.PanoramaClient
                 httpClient.AddAuthorizationHeader(_server.AuthHeader);
             }
 
-            // Add any custom headers that were set via AddHeader()
+            // Add any custom headers that were set via AddHeader().
+            // This will include the Accept header for JSON responses set via RequestJsonResponse().
             // Skip Content-Type here - it must be set on HttpContent, not DefaultRequestHeaders
             foreach (var header in _customHeaders)
             {
@@ -373,12 +370,6 @@ namespace pwiz.PanoramaClient
                 {
                     httpClient.AddHeader(header.Key, header.Value);
                 }
-            }
-
-            // Add Accept: application/json if requested
-            if (_requestJsonResponse)
-            {
-                httpClient.AddHeader("Accept", APPLICATION_JSON);
             }
 
             return httpClient;
@@ -430,40 +421,33 @@ namespace pwiz.PanoramaClient
             _customHeaders.Remove(name);
         }
 
-        public new void RequestJsonResponse()
+        public override void RequestJsonResponse()
         {
             _requestJsonResponse = true;
+            base.RequestJsonResponse();
         }
 
-        public override string GetResponse(HttpWebRequest request)
+        public override string GetResponse(Uri uri, string method, IDictionary<string, string> headers)
         {
-            // DoRequest() calls this after setting Method, Authorization, and Accept headers
-            // We extract the needed info from the HttpWebRequest and use HttpClient instead
-            var uri = request.RequestUri;
-            var method = request.Method;
-            
             using var httpClient = CreateHttpClient();
-            
-            // The request.Accept was set to application/json in DoRequest()
-            httpClient.AddHeader("Accept", APPLICATION_JSON);
-            
-            // Note: Authorization header is already set by CreateHttpClient() via _server.AuthHeader
-            // The authHeader parameter in DoRequest() comes from the same source, so we don't need to copy it
-            
+
             // For HEAD/DELETE/MOVE methods, use generic HTTP request
             using var httpRequest = new System.Net.Http.HttpRequestMessage(new System.Net.Http.HttpMethod(method), uri);
-            
-            // Copy custom headers from HttpWebRequest to HttpRequestMessage
+
+            // Copy custom headers to HttpRequestMessage for a single request. 
             // These include headers like "Destination" and "Overwrite" for MOVE requests
-            foreach (string headerName in request.Headers.AllKeys)
+            // Do not add via a call to AddHeader(), as those are added to all requests from the client.
+            foreach (var header in headers)
             {
-                var headerValue = request.Headers[headerName];
+                var headerValue = header.Value;
+                var headerName = header.Key;
                 if (!string.IsNullOrEmpty(headerValue))
                 {
                     // Skip standard headers that are handled separately (Authorization, Accept, etc.)
                     // Only copy custom headers like "Destination" and "Overwrite"
                     if (headerName == "Destination" || headerName == "Overwrite")
                     {
+                        // TryAddWithoutValidation silently ignores headers that cannot be added due to restrictions
                         httpRequest.Headers.TryAddWithoutValidation(headerName, headerValue);
                     }
                 }

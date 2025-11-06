@@ -37,7 +37,7 @@ namespace pwiz.PanoramaClient
 
         JObject SupportedVersionsJson();
 
-        IRequestHelper GetRequestHelper(bool forPublish = false);
+        IRequestHelper GetRequestHelper();
     }
 
     public abstract class AbstractPanoramaClient : IPanoramaClient
@@ -62,7 +62,7 @@ namespace pwiz.PanoramaClient
         public abstract void DownloadFile(string fileUrl, string fileName, long fileSize, string realName,
             IProgressMonitor progressMonitor, IProgressStatus progressStatus);
 
-        public abstract IRequestHelper GetRequestHelper(bool forPublish = false);
+        public abstract IRequestHelper GetRequestHelper();
 
         protected abstract Uri ValidateUri(Uri serverUri, bool tryNewProtocol = true);
         protected abstract PanoramaServer ValidateServerAndUser(Uri serverUri, string username, string password);
@@ -142,8 +142,13 @@ namespace pwiz.PanoramaClient
             var zipFileName = Path.GetFileName(zipFilePath) ?? string.Empty;
 
             // Upload zip file to pipeline folder.
-            using (var requestHelper = GetRequestHelper(true))
+            using (var requestHelper = GetRequestHelper())
             {
+                // This request helper will be used for a series of requests.
+                // Request a JSON response (Accept header set to "application/json")
+                // so that we can parse any LabKey-specific errors.
+                requestHelper.RequestJsonResponse(); 
+
                 var webDavUrl = GetWebDavPath(folderPath, requestHelper);
 
                 // Upload Url minus the name of the zip file.
@@ -274,8 +279,7 @@ namespace pwiz.PanoramaClient
             // Add a "Temporary" header so that LabKey marks this as a temporary file.
             // https://www.labkey.org/issues/home/Developer/issues/details.view?issueId=19220
             requestHelper.AddHeader(@"Temporary", @"T");
-            requestHelper.RequestJsonResponse(); // Request a JSON response so that we can parse any LabKey-specific errors
-            
+           
             try
             {
                 // For HttpPanoramaRequestHelper, this is synchronous with IProgressMonitor progress
@@ -736,7 +740,7 @@ namespace pwiz.PanoramaClient
             httpClient.DownloadFile(new Uri(fileUrl), fileName, fileSize);
         }
 
-        public override IRequestHelper GetRequestHelper(bool forPublish = false)
+        public override IRequestHelper GetRequestHelper()
         {
             var panoramaServer = new PanoramaServer(ServerUri, Username, Password);
             return new HttpPanoramaRequestHelper(panoramaServer, _progressMonitor, _progressStatus);
@@ -805,7 +809,7 @@ namespace pwiz.PanoramaClient
             throw new InvalidOperationException();
         }
 
-        public IRequestHelper GetRequestHelper(bool forPublish = false)
+        public IRequestHelper GetRequestHelper()
         {
             throw new InvalidOperationException();
         }
