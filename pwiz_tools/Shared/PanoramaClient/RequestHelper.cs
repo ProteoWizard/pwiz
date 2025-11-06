@@ -309,20 +309,7 @@ namespace pwiz.PanoramaClient
                     httpClient.AddHeader(LABKEY_CSRF, _csrfToken);
                 }
 
-                if (headers != null)
-                {
-                    // Copy custom headers to HttpClientWithProgress for a single request. 
-                    // These include headers like "Temporary" for file upload requests.
-                    foreach (var header in headers)
-                    {
-                        var headerValue = header.Value;
-                        var headerName = header.Key;
-                        if (!string.IsNullOrEmpty(headerValue) && !ShouldSkipHeader(headerName))
-                        {
-                            httpClient.AddHeader(headerName, headerValue);
-                        }
-                    }
-                }
+                AddHeadersToHttpClient(headers, httpClient);
 
                 // UploadFile with response body - LabKey can return errors in JSON even with HTTP 200
                 string responseBody = httpClient.UploadFileWithResponse(address, method, fileName);
@@ -431,26 +418,34 @@ namespace pwiz.PanoramaClient
             // For HEAD/DELETE/MOVE methods, use generic HTTP request
             using var httpRequest = new System.Net.Http.HttpRequestMessage(new System.Net.Http.HttpMethod(method), uri);
 
-            if (headers != null)
-            {
-                // Copy custom headers to HttpRequestMessage for a single request. 
-                // These include headers like "Destination" and "Overwrite" for MOVE requests
-                // Do not add via a call to AddHeader(), as those are added to all requests from RequestHelper.
-                foreach (var header in headers)
-                {
-                    var headerValue = header.Value;
-                    var headerName = header.Key;
-                    if (!string.IsNullOrEmpty(headerValue) && !ShouldSkipHeader(headerName))
-                    {
-                        // TryAddWithoutValidation silently ignores headers that cannot be added due to restrictions
-                        httpRequest.Headers.TryAddWithoutValidation(headerName, headerValue);
-                    }
-                }
-            }
-            
+            AddHeadersToHttpClient(headers, httpClient);
+
             var response = httpClient.SendRequest(httpRequest);
             // Read response body
             return response.Content.ReadAsStringAsync().Result;
+        }
+
+        private static void AddHeadersToHttpClient(IDictionary<string, string> headers, HttpClientWithProgress httpClient)
+        {
+            if (headers == null) return;
+
+            // Copy custom headers to HttpRequestMessage for a single request. 
+            // These include headers like "Destination" and "Overwrite" for MOVE requests,
+            // or "Temporary" for file upload requests.
+            // Do not add via a call to AddHeader(), as those are added to all requests from this RequestHelper.
+            foreach (var header in headers)
+            {
+                var headerValue = header.Value;
+                var headerName = header.Key;
+                if (!string.IsNullOrEmpty(headerValue) && !ShouldSkipHeader(headerName))
+                {
+                    // NOTE: This method will add the headers to underlying HttpClient's DefaultRequestHeaders
+                    // that applies to ALL requests made by the HttpClient.  
+                    // This is safe for HttpPanoramaRequestHelper since it creates a new HttpClientWithProgress
+                    // instance for each request.
+                    httpClient.AddHeader(headerName, headerValue);
+                }
+            }
         }
 
         private static bool ShouldSkipHeader(string headerName)
