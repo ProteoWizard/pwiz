@@ -74,6 +74,12 @@ namespace pwiz.SkylineTestConnected
             _selectItem = "Molecule:/Nucleotide metabolism/UDP";
             _chromatogramPoint = null;
             RunFunctionalTest();
+
+            // test duplicate run renaming
+            _dataPath = new[] { "Company", "Skyline", "Replicates - five injections - all Same - 06NOV25" };
+            _filenames = new[] { "Sample 1 (1)", "Sample 1 (2)", "Sample 1 (3)" };
+            _selectItem = null;
+            RunFunctionalTest();
         }
 
         private void AssertAlertDlgContainsMessage(Action showDlgAction, string expectedMessage)
@@ -131,6 +137,9 @@ namespace pwiz.SkylineTestConnected
                 OkDialog(removeSuffix, () => removeSuffix.YesDialog());
             }
             WaitForDocumentLoaded();
+
+            if (_selectItem == null)
+                return;
 
             RunUI(() => SkylineWindow.SelectElement(ElementRefs.FromObjectReference(ElementLocator.Parse(_selectItem))));
 
