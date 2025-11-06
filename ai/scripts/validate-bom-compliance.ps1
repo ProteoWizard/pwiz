@@ -101,10 +101,10 @@ if ($unexpectedBoms.Count -gt 0) {
     }
     Write-Host ""
     Write-Host "Action required:" -ForegroundColor Yellow
-    Write-Host "  1. If these files should NOT have BOM, remove it using scripts/misc/remove-bom.ps1" -ForegroundColor Yellow
+    Write-Host "  1. If these files should NOT have BOM, remove it using ai/scripts/remove-bom.ps1" -ForegroundColor Yellow
     Write-Host "  2. If these files MUST have BOM, add them to the approved list in this script" -ForegroundColor Yellow
     Write-Host ""
-    Write-Host "For more information, see todos/active/TODO-20251019_utf8_no_bom.md" -ForegroundColor Yellow
+    Write-Host "For more information, see ai/scripts/README.md or ai/todos/completed/TODO-20251019_utf8_no_bom.md" -ForegroundColor Yellow
     Write-Host ""
     exit 1
 }

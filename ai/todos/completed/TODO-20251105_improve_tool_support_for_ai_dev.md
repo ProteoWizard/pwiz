@@ -142,11 +142,35 @@ AI-assisted development has been successful but has two major friction points:
 - Pre-commit: Full inspection (slow but comprehensive)
 - Could scope to specific projects during iteration (`--project=Skyline`)
 
-### Phase 8: Final Documentation Updates
+### Phase 8: AutoQC and SkylineBatch Build Support ✅
+**Goal**: Enable LLM-assisted IDEs to build and test AutoQC and SkylineBatch
+
+**Completed** (2025-11-06):
+- [x] Created `pwiz_tools/Skyline/Executables/AutoQC/ai/Build-AutoQC.ps1`
+  - Build automation using MSBuild (Any CPU platform)
+  - Test execution using vstest.console.exe (standard MSTest)
+  - ReSharper inspection support (simplified - no OutputParser.exe)
+  - Tested: Builds successfully, 19/19 tests pass in ~160s
+- [x] Created `pwiz_tools/Skyline/Executables/SkylineBatch/ai/Build-SkylineBatch.ps1`
+  - Build automation using MSBuild (Any CPU platform)
+  - Test execution using vstest.console.exe (standard MSTest)
+  - ReSharper inspection support (simplified - no OutputParser.exe)
+  - Tested: Builds successfully
+- [x] Created README.md for both projects documenting usage patterns
+- [x] Established project-specific `ai/` directory pattern for all Skyline tools
+
+**Key differences from Skyline**:
+- Simpler: Use standard MSTest (no TestRunner.exe infrastructure)
+- No multi-language support (English only)
+- Platform: "Any CPU" (not x64)
+- Smaller codebases: Faster builds (~5s) and inspections (~2-5 min vs 23 min)
+
+### Phase 9: Final Documentation Updates
 - [ ] Document TeamCity version discovery in PRE-COMMIT.md
 - [ ] Add version parity considerations to build-and-test-guide.md
 - [x] Create handoff documentation (ai/docs/documentation-maintenance.md)
 - [x] Add timing improvements to Build-Skyline.ps1 (show elapsed time on failure)
+- [x] Address Copilot PR feedback (test name consistency, line count correction)
 
 ## Tools & Scripts Created
 
@@ -328,6 +352,22 @@ AI-assisted development has been successful but has two major friction points:
   - Added elapsed time display on inspection failure
   - Updated timing estimate (10-15 min → 20-25 min)
   - Added progress message at inspection start
+
+### Modified Files (Phase 7 - Copilot PR Feedback)
+- `pwiz_tools/Skyline/ai/Build-Skyline.ps1` - Fixed test name: CodeInspection (not CodeInspectionTest)
+- `pwiz_tools/Skyline/ai/Run-Tests.ps1` - Fixed test name consistency
+- `pwiz_tools/Skyline/ai/README.md` - Fixed test name consistency
+- `pwiz_tools/Skyline/ai/PRE-COMMIT.md` - Fixed test name consistency
+- `ai/docs/build-and-test-guide.md` - Fixed test name consistency
+- `ai/todos/active/TODO-20251105_improve_tool_support_for_ai_dev.md`
+  - Fixed WORKFLOW.md line count (+46, not +28)
+  - Added PR #3667 link
+
+### New Files (Phase 8 - AutoQC and SkylineBatch Support)
+- `pwiz_tools/Skyline/Executables/AutoQC/ai/Build-AutoQC.ps1` - Build/test automation
+- `pwiz_tools/Skyline/Executables/AutoQC/ai/README.md` - Usage documentation
+- `pwiz_tools/Skyline/Executables/SkylineBatch/ai/Build-SkylineBatch.ps1` - Build/test automation
+- `pwiz_tools/Skyline/Executables/SkylineBatch/ai/README.md` - Usage documentation
 
 ## Handoff Prompt for Branch Creation
 
