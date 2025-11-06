@@ -34,31 +34,10 @@ namespace pwiz.Skyline.FileUI
     public class SkypSupport
     {
         private readonly SkylineWindow _skyline;
-        private readonly Func<IProgressMonitor, IProgressStatus, IDownloadClient> _clientFactory;
 
-        /// <summary>
-        /// Production constructor - uses HttpDownloadClient for downloads
-        /// </summary>
         public SkypSupport(SkylineWindow skyline)
-            : this(skyline, CreateHttpDownloadClient)
-        {
-        }
-
-        /// <summary>
-        /// Test constructor - accepts custom download client factory for testing
-        /// </summary>
-        public SkypSupport(SkylineWindow skyline, Func<IProgressMonitor, IProgressStatus, IDownloadClient> clientFactory)
         {
             _skyline = skyline;
-            _clientFactory = clientFactory;
-        }
-
-        /// <summary>
-        /// Default factory function for production - creates HttpDownloadClient
-        /// </summary>
-        private static IDownloadClient CreateHttpDownloadClient(IProgressMonitor monitor, IProgressStatus status)
-        {
-            return new HttpDownloadClient(monitor, status);
         }
 
         public bool Open(string skypPath, IEnumerable<Server> servers, FormEx parentWindow = null)
@@ -117,17 +96,6 @@ namespace pwiz.Skyline.FileUI
                 MessageDlg.ShowWithException(parentWindow ?? _skyline, message, e);
                 return false;
             }
-        }
-
-        private void ShowDownloadError(FormEx parentWindow, SkypFile skyp, Exception exception)
-        {
-            var message = TextUtil.LineSeparate(
-                string.Format(
-                    FileUIResources
-                        .SkypSupport_ShowDownloadError_There_was_an_error_downloading_the_Skyline_document__0__from__1__,
-                    skyp.GetSkylineDocName(), skyp.GetDocUrlNoName()),
-                exception.Message);
-            MessageDlg.ShowWithException(parentWindow ?? _skyline, message, exception);
         }
 
         private bool AddServerAndOpen(SkypFile skyp, string message, FormEx parentWindow)
@@ -192,13 +160,6 @@ namespace pwiz.Skyline.FileUI
             // Check inner exception chain recursively
             if (e.InnerException != null)
                 return GetErrorStatusCode(e.InnerException);
-
-            // Legacy WebException support (for any code still using WebClient)
-            if (e is WebException webException && webException.Status == WebExceptionStatus.ProtocolError)
-            {
-                if (webException.Response is HttpWebResponse response)
-                    return response.StatusCode;
-            }
 
             return null;
         }
@@ -297,28 +258,10 @@ namespace pwiz.Skyline.FileUI
             var progressStatus = new ProgressStatus(string.Format(FileUIResources.SkypSupport_Download_Downloading__0__from__1_, skyp.GetSkylineDocName(), skyp.GetDocUrlNoName()));
             progressMonitor.UpdateProgress(progressStatus);
 
-            var downloadClient = _clientFactory(progressMonitor, progressStatus);
             using var fileSaver = new FileSaver(skyp.DownloadPath);
             skyp.DownloadTempPath = fileSaver.SafeName;
-            downloadClient.Download(skyp);
-            fileSaver.Commit();
-        }
-    }
-
-    public class HttpDownloadClient : IDownloadClient
-    {
-        private IProgressMonitor ProgressMonitor { get; }
-        private IProgressStatus ProgressStatus { get; set; }
-
-        public HttpDownloadClient(IProgressMonitor progressMonitor, IProgressStatus progressStatus)
-        {
-            ProgressMonitor = progressMonitor;
-            ProgressStatus = progressStatus;
-        }
-
-        public void Download(SkypFile skyp)
-        {
-            using var httpClient = new HttpClientWithProgress(ProgressMonitor, ProgressStatus);
+            
+            using var httpClient = new HttpClientWithProgress(progressMonitor, progressStatus);
             
             // Add authorization header if credentials are available
             if (skyp.HasCredentials())
@@ -327,14 +270,11 @@ namespace pwiz.Skyline.FileUI
                     PanoramaServer.GetBasicAuthHeader(skyp.ServerMatch.Username, skyp.ServerMatch.Password));
             }
 
-            // HttpClientWithProgress automatically appends download size to progress messages
-            // Download to file
-            httpClient.DownloadFile(skyp.SkylineDocUri, skyp.SafePath);
+            // Use the known file size from .skyp file for accurate progress reporting
+            // If not available, HttpClientWithProgress will try Content-Length header
+            httpClient.DownloadFile(skyp.SkylineDocUri, skyp.SafePath, skyp.Size);
+            
+            fileSaver.Commit();
         }
-    }
-
-    public interface IDownloadClient
-    {
-        void Download(SkypFile skyp);
     }
 }

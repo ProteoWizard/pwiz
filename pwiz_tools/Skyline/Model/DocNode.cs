@@ -1252,7 +1252,7 @@ namespace pwiz.Skyline.Model
         /// Override to change properties to update properties dependent on the
         /// children of this node, when a clone is being created with a new set of children.
         /// </summary>
-        /// <param name="clone">A copy of this instance created with <see cref="object.MemberwiseClone"/>
+        /// <param name="clone">A copy of this instance created with <see cref="Immutable.ImmutableClone" />
         /// with its new children assigned</param>
         /// <param name="indexReplaced">Index to a single replaced node, if that is why the children are changing</param>
         protected virtual IList<DocNode> OnChangingChildren(DocNodeParent clone, int indexReplaced)

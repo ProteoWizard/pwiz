@@ -268,7 +268,10 @@ namespace pwiz.SkylineTestFunctional
 
         private static void ShowToolStore(IToolStoreClient client)
         {
-            using (var dlg = new ToolStoreDlg(client, client.GetToolStoreItems()))
+            // Dummy install delegate for testing - actual installation tested separately
+            ToolInstallUI.InstallProgram installProgram = (ppc, packages, script) => null;
+
+            using (var dlg = new ToolStoreDlg(client, client.GetToolStoreItems(), installProgram))
             {
                 dlg.ShowDialog(SkylineWindow);
             }
@@ -395,24 +398,36 @@ namespace pwiz.SkylineTestFunctional
             return tools;
         }
 
-        public string GetToolZipFile(IProgressMonitor progressMonitor, IProgressStatus progressStatus, string packageIdentifier, string directory)
+        public void GetToolZipFile(IProgressMonitor progressMonitor, IProgressStatus progressStatus, string packageIdentifier, FileSaver fileSaver)
         {
-            if (TestDownloadPath != null)
-                return TestDownloadPath;
+            // Find the tool zip file path for this identifier
+            var toolZipPath = GetToolZipPath(packageIdentifier);
+            if (toolZipPath == null)
+                throw new ToolExecutionException(ToolsUIResources.TestToolStoreClient_GetToolZipFile_Cannot_find_a_file_with_that_identifier_);
 
+            // Use HttpClientTestHelper to mock the download and call the real production code
+            var uri = new UriBuilder(WebToolStoreClient.TOOL_STORE_URI)
+            {
+                Path = "/skyts/home/downloadTool.view",
+                Query = @"lsid=" + Uri.EscapeDataString(packageIdentifier)
+            };
+
+            using var helper = HttpClientTestHelper.WithMockResponseFile(uri.Uri, toolZipPath);
+            WebToolStoreClient.GetToolZipFileWithProgress(progressMonitor, progressStatus, packageIdentifier, fileSaver);
+        }
+
+        private string GetToolZipPath(string packageIdentifier)
+        {
             foreach (var item in ToolStoreItems ?? GetToolStoreItems())
             {
                 if (item.Identifier.Equals(packageIdentifier))
                 {
                     Assert.IsNotNull(item.FilePath);
-                    string fileName = Path.GetFileName(item.FilePath);
-                    string path = Path.Combine(directory, fileName);
-                    File.Copy(item.FilePath, path, true);
-                    return path;
+                    return item.FilePath;
                 }
             }
 
-            throw new ToolExecutionException(ToolsUIResources.TestToolStoreClient_GetToolZipFile_Cannot_find_a_file_with_that_identifier_);
+            return null;
         }
 
         public bool IsToolUpdateAvailable(string identifier, Version version)
@@ -423,8 +438,6 @@ namespace pwiz.SkylineTestFunctional
             var tool = ToolStoreItems.FirstOrDefault(item => item.Identifier.Equals(identifier));
             return tool != null && version < new Version(tool.Version);
         }
-
-        public string TestDownloadPath { get; set; }
 
         public void Dispose()
         {
