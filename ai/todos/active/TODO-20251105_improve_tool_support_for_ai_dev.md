@@ -1,8 +1,10 @@
 # TODO: Improve Tool Support for AI-Assisted Development
 
-## Branch Information (Future)
-- **Branch**: Not yet created - will be `Skyline/work/20251105_improve_tool_support_for_ai_dev`
+## Branch Information
+- **Branch**: `Skyline/work/20251105_improve_tool_support_for_ai_dev`
+- **Created**: 2025-11-05
 - **Objective**: Enable LLM-assisted IDEs (Cursor, VS Code + Copilot/Claude Code) to run builds, tests, and static analysis autonomously to reduce friction and improve code quality validation
+- **PR**: (To be added when created)
 
 ## Background
 
