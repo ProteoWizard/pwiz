@@ -1826,12 +1826,12 @@ namespace pwiz.Skyline
             if (Settings.Default.UIMode == UiModes.PROTEOMIC)
             {
                 expandSelectionProteinsContextMenuItem.Text = SeqNodeResources.PeptideGroupTreeNode_Heading_Protein;
-                expandSelectionPeptidesContextMenuItem.Text = SeqNodeResources.PeptideTreeNode_Heading_Title;
+                expandSelectionPeptidesContextMenuItem.Text = PeptideDocNode.TITLE;
             }
             else
             {
                 expandSelectionProteinsContextMenuItem.Text = SeqNodeResources.PeptideGroupTreeNode_Heading_Molecule_List;
-                expandSelectionPeptidesContextMenuItem.Text = SeqNodeResources.PeptideTreeNode_Heading_Title_Molecule;
+                expandSelectionPeptidesContextMenuItem.Text = PeptideDocNode.TITLE_MOLECULE;
             }
             pickChildrenContextMenuItem.Enabled = SequenceTree.CanPickChildren(SequenceTree.SelectedNode) && enabled;
             editNoteContextMenuItem.Enabled = (SequenceTree.SelectedNode is SrmTreeNode && enabled);

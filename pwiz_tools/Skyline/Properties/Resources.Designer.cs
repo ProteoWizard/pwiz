@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Resources {
@@ -2929,11 +2929,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed attempting to extract the tool from {0}.
+        ///   Looks up a localized string similar to Failed attempting to extract the tool.
         /// </summary>
-        public static string ConfigureToolsDlg_UnpackZipTool_Failed_attempting_to_extract_the_tool_from__0_ {
+        public static string ConfigureToolsDlg_UnpackZipTool_Failed_attempting_to_extract_the_tool {
             get {
-                return ResourceManager.GetString("ConfigureToolsDlg_UnpackZipTool_Failed_attempting_to_extract_the_tool_from__0_", resourceCulture);
+                return ResourceManager.GetString("ConfigureToolsDlg_UnpackZipTool_Failed_attempting_to_extract_the_tool", resourceCulture);
             }
         }
         
@@ -8639,24 +8639,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &amp;Report:.
-        /// </summary>
-        public static string ReportSpecList_Label_Report {
-            get {
-                return ResourceManager.GetString("ReportSpecList_Label_Report", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Edit Reports.
-        /// </summary>
-        public static string ReportSpecList_Title_Edit_Reports {
-            get {
-                return ResourceManager.GetString("ReportSpecList_Title_Edit_Reports", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Peptide Quantification.
         /// </summary>
         public static string Resources_ReportSpecList_GetDefaults_Peptide_Quantification {
@@ -11298,15 +11280,6 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("TransitionSettingsUI_OkDialog_Isotope_enrichment_settings_are_required_for_MS1_fi" +
                         "ltering_on_high_resolution_mass_spectrometers", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to rank {0}.
-        /// </summary>
-        public static string TransitionTreeNode_GetLabel_rank__0__ {
-            get {
-                return ResourceManager.GetString("TransitionTreeNode_GetLabel_rank__0__", resourceCulture);
             }
         }
         

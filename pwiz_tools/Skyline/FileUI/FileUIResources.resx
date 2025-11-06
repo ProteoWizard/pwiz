@@ -575,7 +575,7 @@ Would you like to remove some or all of this suffix to shorten the names used in
     <value>Upload Document</value>
   </data>
   <data name="PublishDocumentDlg_PublishDocumentDlg_Load_Retrieving_information_on_servers" xml:space="preserve">
-    <value>Retrieving information from servers</value>
+    <value>Loading remote server folders</value>
   </data>
   <data name="PublishDocumentDlg_PublishDocumentDlgLoad_Failed_attempting_to_retrieve_information_from_the_following_servers_" xml:space="preserve">
     <value>Failed attempting to retrieve information from the following servers:</value>

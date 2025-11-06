@@ -265,12 +265,6 @@ namespace pwiz.Skyline.Model.Proteome
                 return false;
             }
 
-            public System.Windows.Forms.DialogResult ShowDialog(
-                Func<System.Windows.Forms.IWin32Window, System.Windows.Forms.DialogResult> show)
-            {
-                throw new InvalidOperationException();
-            }
-
             public void SetProgressCheckCancel(int step, int totalSteps)
             {
                 CancellationToken.ThrowIfCancellationRequested();
