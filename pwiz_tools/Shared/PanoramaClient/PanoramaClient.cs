@@ -145,8 +145,7 @@ namespace pwiz.PanoramaClient
             using (var requestHelper = GetRequestHelper())
             {
                 // This request helper will be used for a series of requests.
-                // Request a JSON response (Accept header set to "application/json")
-                // so that we can parse any LabKey-specific errors.
+                // Set the Accept header set to "application/json" for all requests so that we can parse any LabKey-specific errors.
                 requestHelper.RequestJsonResponse(); 
 
                 var webDavUrl = GetWebDavPath(folderPath, requestHelper);
@@ -410,7 +409,8 @@ namespace pwiz.PanoramaClient
                 sourceUri,
                 "MOVE",
                 headers,
-                Resources.AbstractPanoramaClient_RenameTempZipFile_There_was_an_error_renaming_the_temporary_zip_file_on_the_server_
+                Resources
+                    .AbstractPanoramaClient_RenameTempZipFile_There_was_an_error_renaming_the_temporary_zip_file_on_the_server_
             );
         }
 
@@ -421,7 +421,8 @@ namespace pwiz.PanoramaClient
                 sourceUri,
                 "DELETE",
                 null,
-                Resources.AbstractPanoramaClient_DeleteTempZipFile_There_was_an_error_deleting_the_temporary_zip_file_on_the_server_
+                Resources
+                    .AbstractPanoramaClient_DeleteTempZipFile_There_was_an_error_deleting_the_temporary_zip_file_on_the_server_
             );
         }
 

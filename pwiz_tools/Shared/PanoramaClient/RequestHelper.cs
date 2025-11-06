@@ -271,7 +271,6 @@ namespace pwiz.PanoramaClient
                 }
 
                 // Check if a custom Content-Type was set (e.g., application/json for API calls)
-                // Note: HttpRequestHeader.ContentType.ToString() returns "ContentType" (no hyphen)
                 string contentType = @"application/x-www-form-urlencoded"; // Default for form posts
                 if (_customHeaders.TryGetValue(HttpRequestHeader.ContentType, out var customContentType))
                 {
@@ -400,6 +399,7 @@ namespace pwiz.PanoramaClient
             _csrfToken = null;
         }
 
+        // These headers persist for the lifetime of the RequestHelper instance
         public override void AddHeader(HttpRequestHeader header, string value)
         {
             _customHeaders[header] = value;
@@ -429,10 +429,9 @@ namespace pwiz.PanoramaClient
         {
             if (headers == null) return;
 
-            // Copy custom headers to HttpRequestMessage for a single request. 
+            // Copy custom headers to the httpClient for a single request. 
             // These include headers like "Destination" and "Overwrite" for MOVE requests,
             // or "Temporary" for file upload requests.
-            // Do not add via a call to AddHeader(), as those are added to all requests from this RequestHelper.
             foreach (var header in headers)
             {
                 var headerValue = header.Value;
@@ -442,7 +441,7 @@ namespace pwiz.PanoramaClient
                     // NOTE: This method will add the headers to underlying HttpClient's DefaultRequestHeaders
                     // that applies to ALL requests made by the HttpClient.  
                     // This is safe for HttpPanoramaRequestHelper since it creates a new HttpClientWithProgress
-                    // instance for each request.
+                    // instance for each request so there will not be any header carryover.
                     httpClient.AddHeader(headerName, headerValue);
                 }
             }
