@@ -216,6 +216,7 @@ if ($RunInspection -and $Target -ne "Clean") {
         $dotSettings = "Skyline.sln.DotSettings"
         
         $inspectStart = Get-Date
+        Write-Host "`nRunning ReSharper code inspection (typically 20-25 minutes for full solution)..." -ForegroundColor Cyan
         
         # Run inspection matching TeamCity configuration:
         # --severity WARNING: Only report warnings and errors (not suggestions/hints)
@@ -250,7 +251,7 @@ if ($RunInspection -and $Target -ne "Clean") {
             $parserExitCode = $LASTEXITCODE
             
             if ($parserExitCode -ne 0) {
-                Write-Host "`n❌ Code inspection FAILED - TeamCity validation requires zero warnings" -ForegroundColor Red
+                Write-Host "`n❌ Code inspection FAILED in $($inspectDuration.TotalSeconds.ToString('F1'))s - TeamCity validation requires zero warnings" -ForegroundColor Red
                 Write-Host "Fix all warnings and errors listed above before committing" -ForegroundColor Red
                 exit $parserExitCode
             } else {
