@@ -468,7 +468,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 _requestMethod = requestMethod;
             }
-            public override string GetResponse(Uri uri, string method, IDictionary<string, string> headers)
+            public override string GetResponse(Uri uri, string method, IDictionary<string, string> headers = null)
             {
                 if (method.Equals(_requestMethod.ToString()))
                 {
@@ -679,7 +679,7 @@ namespace pwiz.SkylineTestFunctional
                 Thread.Sleep(1000);
             }
 
-            public override string GetResponse(Uri uri, string method, IDictionary<string, string> headers)
+            public override string GetResponse(Uri uri, string method, IDictionary<string, string> headers = null)
             {
                 return string.Empty;
             }
