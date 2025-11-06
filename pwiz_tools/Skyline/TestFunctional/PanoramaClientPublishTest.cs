@@ -527,7 +527,7 @@ namespace pwiz.SkylineTestFunctional
                     .ToString();
             }
 
-            public override void DoAsyncFileUpload(Uri address, string method, string fileName)
+            public override void DoAsyncFileUpload(Uri address, string method, string fileName, IDictionary<string, string> headers = null)
             {
                 // For HttpPanoramaRequestHelper, we need to actually throw an exception with the LabKey error
                 // Create a JSON response with the LabKey error
@@ -670,19 +670,11 @@ namespace pwiz.SkylineTestFunctional
                 return "/_webdav/" + panoramaFolder + "/%40files/";
             }
 
-            public override void AddHeader(string name, string value)
-            {
-            }
-
             public override void AddHeader(HttpRequestHeader header, string value)
             {
             }
 
-            public override void RemoveHeader(string name)
-            {
-            }
-
-            public override void DoAsyncFileUpload(Uri address, string method, string fileName)
+            public override void DoAsyncFileUpload(Uri address, string method, string fileName, IDictionary<string, string> headers = null)
             {
                 Thread.Sleep(1000);
             }

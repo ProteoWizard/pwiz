@@ -16,11 +16,9 @@ namespace pwiz.PanoramaClient
         JObject Get(Uri uri, string messageOnError = null);
         JObject Post(Uri uri, NameValueCollection postData, string messageOnError = null);
         JObject Post(Uri uri, string postData, string messageOnError);
-        void DoRequest(Uri uri, string method, IDictionary<string, string> headers, string messageOnError = null);
+        void DoRequest(Uri uri, string method, IDictionary<string, string> headers = null, string messageOnError = null);
         void RequestJsonResponse();
-        void AddHeader(string name, string value);
-        void RemoveHeader(string name);
-        void AsyncUploadFile(Uri address, string method, string fileName);
+        void AsyncUploadFile(Uri address, string method, string fileName, IDictionary<string, string> headers = null);
     }
 
     public abstract class AbstractRequestHelper : IRequestHelper
@@ -32,10 +30,6 @@ namespace pwiz.PanoramaClient
 
         public abstract void SetProgressMonitor(IProgressMonitor progressMonitor, IProgressStatus progressStatus);
 
-        public abstract void AddHeader(string name, string value);
-
-        public abstract void RemoveHeader(string name);
-
         public abstract void Dispose();
 
         #endregion
@@ -46,11 +40,11 @@ namespace pwiz.PanoramaClient
 
         public abstract string DoPost(Uri uri, string postData); // Used only in AuditLogTutorialTest
 
-        public abstract void DoAsyncFileUpload(Uri address, string method, string fileName);
+        public abstract void DoAsyncFileUpload(Uri address, string method, string fileName, IDictionary<string, string> headers = null);
 
         public abstract void AddHeader(HttpRequestHeader header, string value);
 
-        public abstract string GetResponse(Uri uri, string method, IDictionary<string, string> headers);
+        public abstract string GetResponse(Uri uri, string method, IDictionary<string, string> headers = null);
 
         public JObject Get(Uri uri, string messageOnError = null)
         {
@@ -120,7 +114,7 @@ namespace pwiz.PanoramaClient
             AddHeader(HttpRequestHeader.Accept, APPLICATION_JSON);
         }
 
-        public void DoRequest(Uri uri, string method, IDictionary<string, string> headers, string messageOnError = null)
+        public void DoRequest(Uri uri, string method, IDictionary<string, string> headers = null, string messageOnError = null)
         {
             messageOnError ??= string.Format(Resources.AbstractRequestHelper_DoRequest__0__request_was_unsuccessful_, method);
             try
@@ -142,11 +136,11 @@ namespace pwiz.PanoramaClient
             }
         }
 
-        public void AsyncUploadFile(Uri address, string method, string fileName)
+        public void AsyncUploadFile(Uri address, string method, string fileName, IDictionary<string, string> headers = null)
         {
             try
             {
-                DoAsyncFileUpload(address, method, fileName);
+                DoAsyncFileUpload(address, method, fileName, headers);
             }
             catch (NetworkRequestException e)
             {
@@ -195,7 +189,7 @@ namespace pwiz.PanoramaClient
         private IProgressStatus _progressStatus;
         private const string LABKEY_CSRF = @"X-LABKEY-CSRF";
         private readonly PanoramaServer _server;
-        private readonly Dictionary<string, string> _customHeaders = new Dictionary<string, string>();
+        private readonly Dictionary<HttpRequestHeader, string> _customHeaders = new Dictionary<HttpRequestHeader, string>();
         private bool _requestJsonResponse;
 
         public HttpPanoramaRequestHelper(PanoramaServer server, IProgressMonitor progressMonitor = null, IProgressStatus progressStatus = null)
@@ -278,10 +272,8 @@ namespace pwiz.PanoramaClient
 
                 // Check if a custom Content-Type was set (e.g., application/json for API calls)
                 // Note: HttpRequestHeader.ContentType.ToString() returns "ContentType" (no hyphen)
-                // Also check "Content-Type" in case it was added via string overload
                 string contentType = @"application/x-www-form-urlencoded"; // Default for form posts
-                if (_customHeaders.TryGetValue(HttpRequestHeader.ContentType.ToString(), out var customContentType) ||
-                    _customHeaders.TryGetValue("Content-Type", out customContentType))
+                if (_customHeaders.TryGetValue(HttpRequestHeader.ContentType, out var customContentType))
                 {
                     contentType = customContentType;
                 }
@@ -299,7 +291,7 @@ namespace pwiz.PanoramaClient
             }
         }
 
-        public override void DoAsyncFileUpload(Uri address, string method, string fileName)
+        public override void DoAsyncFileUpload(Uri address, string method, string fileName, IDictionary<string, string> headers = null)
         {
             // Add CSRF token for upload if needed
             if (method.Equals(PanoramaUtil.FORM_POST, StringComparison.OrdinalIgnoreCase) && string.IsNullOrEmpty(_csrfToken))
@@ -315,6 +307,21 @@ namespace pwiz.PanoramaClient
                 if (!string.IsNullOrEmpty(_csrfToken))
                 {
                     httpClient.AddHeader(LABKEY_CSRF, _csrfToken);
+                }
+
+                if (headers != null)
+                {
+                    // Copy custom headers to HttpClientWithProgress for a single request. 
+                    // These include headers like "Temporary" for file upload requests.
+                    foreach (var header in headers)
+                    {
+                        var headerValue = header.Value;
+                        var headerName = header.Key;
+                        if (!string.IsNullOrEmpty(headerValue) && !ShouldSkipHeader(headerName))
+                        {
+                            httpClient.AddHeader(headerName, headerValue);
+                        }
+                    }
                 }
 
                 // UploadFile with response body - LabKey can return errors in JSON even with HTTP 200
@@ -366,9 +373,9 @@ namespace pwiz.PanoramaClient
             // Skip Content-Type here - it must be set on HttpContent, not DefaultRequestHeaders
             foreach (var header in _customHeaders)
             {
-                if (header.Key != HttpRequestHeader.ContentType.ToString() && header.Key != "Content-Type")
+                if (header.Key != HttpRequestHeader.ContentType)
                 {
-                    httpClient.AddHeader(header.Key, header.Value);
+                    httpClient.AddHeader(header.Key.ToString(), header.Value);
                 }
             }
 
@@ -406,19 +413,9 @@ namespace pwiz.PanoramaClient
             _csrfToken = null;
         }
 
-        public override void AddHeader(string name, string value)
-        {
-            _customHeaders[name] = value;
-        }
-
         public override void AddHeader(HttpRequestHeader header, string value)
         {
-            _customHeaders[header.ToString()] = value;
-        }
-
-        public override void RemoveHeader(string name)
-        {
-            _customHeaders.Remove(name);
+            _customHeaders[header] = value;
         }
 
         public override void RequestJsonResponse()
@@ -427,25 +424,23 @@ namespace pwiz.PanoramaClient
             base.RequestJsonResponse();
         }
 
-        public override string GetResponse(Uri uri, string method, IDictionary<string, string> headers)
+        public override string GetResponse(Uri uri, string method, IDictionary<string, string> headers = null)
         {
             using var httpClient = CreateHttpClient();
 
             // For HEAD/DELETE/MOVE methods, use generic HTTP request
             using var httpRequest = new System.Net.Http.HttpRequestMessage(new System.Net.Http.HttpMethod(method), uri);
 
-            // Copy custom headers to HttpRequestMessage for a single request. 
-            // These include headers like "Destination" and "Overwrite" for MOVE requests
-            // Do not add via a call to AddHeader(), as those are added to all requests from the client.
-            foreach (var header in headers)
+            if (headers != null)
             {
-                var headerValue = header.Value;
-                var headerName = header.Key;
-                if (!string.IsNullOrEmpty(headerValue))
+                // Copy custom headers to HttpRequestMessage for a single request. 
+                // These include headers like "Destination" and "Overwrite" for MOVE requests
+                // Do not add via a call to AddHeader(), as those are added to all requests from RequestHelper.
+                foreach (var header in headers)
                 {
-                    // Skip standard headers that are handled separately (Authorization, Accept, etc.)
-                    // Only copy custom headers like "Destination" and "Overwrite"
-                    if (headerName == "Destination" || headerName == "Overwrite")
+                    var headerValue = header.Value;
+                    var headerName = header.Key;
+                    if (!string.IsNullOrEmpty(headerValue) && !ShouldSkipHeader(headerName))
                     {
                         // TryAddWithoutValidation silently ignores headers that cannot be added due to restrictions
                         httpRequest.Headers.TryAddWithoutValidation(headerName, headerValue);
@@ -458,10 +453,23 @@ namespace pwiz.PanoramaClient
             return response.Content.ReadAsStringAsync().Result;
         }
 
+        private static bool ShouldSkipHeader(string headerName)
+        {
+            // Skip headers that are handled by other parts of the code
+            // Note: HttpRequestHeader.ContentType.ToString() returns "ContentType" (no hyphen)
+            // but the actual HTTP header name is "Content-Type" (with hyphen), so check both
+            return headerName.Equals(HttpRequestHeader.Authorization.ToString(), StringComparison.OrdinalIgnoreCase) ||
+                   headerName.Equals(HttpRequestHeader.Accept.ToString(), StringComparison.OrdinalIgnoreCase) ||
+                   headerName.Equals(HttpRequestHeader.ContentType.ToString(), StringComparison.OrdinalIgnoreCase) ||
+                   headerName.Equals("Content-Type", StringComparison.OrdinalIgnoreCase) ||
+                   headerName.Equals(LABKEY_CSRF, StringComparison.OrdinalIgnoreCase);
+        }
+
         public override void Dispose()
         {
             // HttpClientWithProgress instances are created and disposed per-request
             // CookieContainer and CSRF token persist for the lifetime of this RequestHelper
+            // Custom headers added via AddHeader() also persist for the lifetime of this RequestHelper
         }
     }
 

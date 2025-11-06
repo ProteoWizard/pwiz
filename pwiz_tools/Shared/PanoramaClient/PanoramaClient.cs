@@ -275,15 +275,18 @@ namespace pwiz.PanoramaClient
             IRequestHelper requestHelper)
         {
             var tmpUploadUri = new Uri(baseUploadUri, escapedZipFileName + @".part");
-            
-            // Add a "Temporary" header so that LabKey marks this as a temporary file.
-            // https://www.labkey.org/issues/home/Developer/issues/details.view?issueId=19220
-            requestHelper.AddHeader(@"Temporary", @"T");
-           
+
+            var headers = new Dictionary<string, string>
+            {
+                // Add a "Temporary" header so that LabKey marks this as a temporary file.
+                // https://www.labkey.org/issues/home/Developer/issues/details.view?issueId=19220
+                {@"Temporary", @"T"}
+            };
+
             try
             {
                 // For HttpPanoramaRequestHelper, this is synchronous with IProgressMonitor progress
-                requestHelper.AsyncUploadFile(tmpUploadUri, @"PUT", PathEx.SafePath(zipFilePath));
+                requestHelper.AsyncUploadFile(tmpUploadUri, @"PUT", PathEx.SafePath(zipFilePath), headers);
             }
             catch (NetworkRequestException ex)
             {
@@ -293,11 +296,6 @@ namespace pwiz.PanoramaClient
                     tmpUploadUri,
                     PanoramaUtil.GetErrorFromNetworkRequestException,
                     ex);
-            }
-            finally
-            {
-                // Remove the "Temporary" header
-                requestHelper.RemoveHeader(@"Temporary");
             }
 
             return tmpUploadUri;
@@ -402,11 +400,11 @@ namespace pwiz.PanoramaClient
             var headers = new Dictionary<string, string>
             {
                 // Do not use Uri.ToString since it does not return the escaped version.
-                {"Destination", destUri.AbsoluteUri}, 
+                {@"Destination", destUri.AbsoluteUri}, 
 
                 // If a file already exists at the destination URI, it will not be overwritten.  
                 // The server would return a 412 Precondition Failed status code.
-                {"Overwrite", "F"}
+                {@"Overwrite", @"F"}
             };
             requestHelper.DoRequest(
                 sourceUri,
