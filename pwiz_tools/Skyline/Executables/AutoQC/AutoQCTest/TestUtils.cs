@@ -42,19 +42,25 @@ namespace AutoQCTest
         /// Set these to use your own credentials instead of the shared test account.
         /// This is safer than editing code, which can be accidentally committed.
         /// 
-        /// RECOMMENDED: Set persistent user-level environment variables (PowerShell as Admin):
+        /// RECOMMENDED: Set persistent User-level environment variables (PowerShell - no admin needed):
         ///   [Environment]::SetEnvironmentVariable("PANORAMAWEB_USERNAME", "your.name@yourdomain.edu", "User")
         ///   [Environment]::SetEnvironmentVariable("PANORAMAWEB_PASSWORD", "your_password", "User")
         ///   Then restart Visual Studio to pick up the new environment variables.
         /// 
         /// ALTERNATIVE: Use Windows GUI (no PowerShell needed):
         ///   Windows Search > "Environment Variables" > "Edit environment variables for your account"
-        ///   Add both variables under "User variables"
+        ///   Add both variables under "User variables" (NOT System variables)
         ///   Restart Visual Studio
         /// 
-        /// To clear when done (PowerShell):
+        /// To clear when done (PowerShell - no admin needed):
         ///   [Environment]::SetEnvironmentVariable("PANORAMAWEB_USERNAME", $null, "User")
         ///   [Environment]::SetEnvironmentVariable("PANORAMAWEB_PASSWORD", $null, "User")
+        ///   Then restart Visual Studio
+        /// 
+        /// IMPORTANT: Use "User" level, NOT "Machine" level. User-level variables:
+        ///   - Don't require admin privileges
+        ///   - Only affect your user account
+        ///   - Persist across PowerShell sessions after restart
         /// 
         /// If not set, falls back to DEFAULT_PANORAMAWEB_USER and PASSWORD must be set.
         /// </summary>
@@ -266,7 +272,12 @@ namespace AutoQCTest
             {
                 var username = GetPanoramaWebUsername();
                 Assert.Fail(
-                    $"Environment variable ({PASSWORD_ENVT_VAR}) with the PanoramaWeb password for {username} is not set. Cannot run test.");
+                    $"Environment variable ({PASSWORD_ENVT_VAR}) with the PanoramaWeb password for {username} is not set. Cannot run test.\n\n" +
+                    $"To set credentials, run these PowerShell commands (no admin needed):\n" +
+                    $"  [Environment]::SetEnvironmentVariable(\"PANORAMAWEB_USERNAME\", \"your.name@yourdomain.edu\", \"User\")\n" +
+                    $"  [Environment]::SetEnvironmentVariable(\"PANORAMAWEB_PASSWORD\", \"your_password\", \"User\")\n\n" +
+                    $"Then RESTART Visual Studio or your IDE to pick up the new environment variables.\n\n" +
+                    $"For more details, see TestUtils.cs (lines 40-66) or pwiz_tools/Skyline/Executables/AutoQC/ai/README.md");
             }
 
             return panoramaWebPassword;

@@ -6,6 +6,27 @@ This directory contains comprehensive, detailed documentation for LLM-assisted d
 
 ## Available Guides
 
+### [documentation-maintenance.md](documentation-maintenance.md)
+**Guide for LLMs on maintaining this documentation system**
+- Decision tree: where does new content go?
+- Core file line limits and enforcement
+- Common mistakes and corrections
+- Validation checklist before commits
+- Red flags for documentation violations
+
+**When to read:** Before creating/modifying any .md files in the ai/ system. **READ THIS FIRST** if you're adding documentation.
+
+### [build-and-test-guide.md](build-and-test-guide.md)
+**Comprehensive build and test command reference**
+- PowerShell Build-Skyline.ps1 usage
+- MSBuild commands for iterative builds
+- TestRunner.exe execution patterns
+- ReSharper code inspection workflows
+- Pre-commit validation procedures
+- Output interpretation and troubleshooting
+
+**When to read:** When building/testing from LLM-assisted IDEs, debugging build failures.
+
 ### [project-context.md](project-context.md)
 **Full project context with detailed examples**
 - Complete DRY principle examples (with code samples)
@@ -77,6 +98,8 @@ This directory contains comprehensive, detailed documentation for LLM-assisted d
 - **Testing basics?** → [../TESTING.md](../TESTING.md)
 
 **Need detailed examples:**
+- **Doc maintenance?** → [documentation-maintenance.md](documentation-maintenance.md)
+- **Build/test commands?** → [build-and-test-guide.md](build-and-test-guide.md)
 - **Project patterns?** → [project-context.md](project-context.md)
 - **Style examples?** → [style-guide.md](style-guide.md)
 - **Workflow templates?** → [workflow-guide.md](workflow-guide.md)
