@@ -1,7 +1,10 @@
 # TODO-httpclient_to_progress.md
 
-## Branch Information (Future)
-- **Branch**: Not yet created - will be `Skyline/work/YYYYMMDD_httpclient_to_progress`
+## Branch Information
+- **Branch**: `Skyline/work/20251107_httpclient_to_progress`
+- **Created**: 2025-11-07
+- **Status**: In progress
+- **PR**: _pending_
 - **Objective**: Finish consolidating Skyline HTTP usage onto `HttpClientWithProgress`, including retiring remaining `HttpWebRequest` and auditing legacy `System.Net` patterns
 
 ## Background
