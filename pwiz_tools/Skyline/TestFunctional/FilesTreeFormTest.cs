@@ -648,6 +648,55 @@ namespace pwiz.SkylineTestFunctional
                 // Removed libraries should be available again
                 Assert.IsTrue(librariesFolder.HasChildWithName(nodesToDelete[0].Name));
             }
+
+            // Rename spectral library
+            {
+                librariesFolder = SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>();
+                var treeNode = librariesFolder.NodeAt(0);
+                var originalName = treeNode.Name;
+                var newName = "Renamed Library";
+
+                RunUI(() =>
+                {
+                    var auditLogSize = SkylineWindow.Document.AuditLog.AuditLogEntries.Count;
+                    var cancelEvent = SkylineWindow.FilesTreeForm.EditTreeNodeLabel(treeNode, newName);
+                    Assert.IsFalse(cancelEvent);
+                    Assert.AreEqual(auditLogSize + 1, SkylineWindow.Document.AuditLog.AuditLogEntries.Count);
+                });
+                WaitForFilesTree();
+
+                Assert.AreEqual(newName, SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>().Nodes[0].Name);
+                Assert.AreEqual(newName, SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs[0].Name);
+
+                // Input validation - attempt to rename to the same name
+                RunUI(() =>
+                {
+                    var auditLogSize = SkylineWindow.Document.AuditLog.AuditLogEntries.Count;
+                    var cancelEvent = SkylineWindow.FilesTreeForm.EditTreeNodeLabel(treeNode, newName);
+                    Assert.IsTrue(cancelEvent);
+                    Assert.AreEqual(auditLogSize, SkylineWindow.Document.AuditLog.AuditLogEntries.Count);
+                });
+                WaitForFilesTree();
+                Assert.AreEqual(newName, SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>().Nodes[0].Name);
+
+                // Input validation - attempt to rename to a name used by another library
+                var secondLibraryName = SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>().Nodes[1].Name;
+                var confirmDlg = ShowDialog<MultiButtonMsgDlg>(() =>
+                {
+                    var cancelEvent = SkylineWindow.FilesTreeForm.EditTreeNodeLabel(treeNode, secondLibraryName);
+                    Assert.IsTrue(cancelEvent);
+                });
+                OkDialog(confirmDlg, confirmDlg.ClickOk);
+                WaitForFilesTree();
+                Assert.AreEqual(newName, SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>().Nodes[0].Name);
+
+                // Undo rename
+                var doc = SkylineWindow.Document;
+                RunUI(() => SkylineWindow.Undo());
+                WaitForDocumentChange(doc);
+                Assert.AreEqual(originalName, SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>().Nodes[0].Name);
+                Assert.AreEqual(originalName, SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs[0].Name);
+            }
         }
 
         // Assumes rat-plasma.sky is loaded

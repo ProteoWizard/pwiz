@@ -309,7 +309,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         public bool SupportsRename()
         {
-            return Model is Replicate;
+            return Model is Replicate || Model is SpectralLibrary;
         }
 
         public bool SupportsOpenContainingFolder()

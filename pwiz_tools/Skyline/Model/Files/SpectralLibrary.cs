@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
@@ -126,6 +128,51 @@ namespace pwiz.Skyline.Model.Files
             }
 
             return new ModifiedDocument(newDocument).ChangeAuditLogEntry(entry);
+        }
+
+        public static ModifiedDocument Rename(SrmDocument document, SrmSettingsChangeMonitor monitor, SpectralLibrary library, string newName)
+        {
+            var librarySpec = LoadLibrarySpecFromDocument(document, library);
+
+            var oldName = librarySpec.Name;
+            var newLibrarySpec = (LibrarySpec)librarySpec.ChangeName(newName);
+            var libraries = document.Settings.PeptideSettings.Libraries;
+
+            var librarySpecs = libraries.LibrarySpecs.ToArray();
+            var libs = libraries.Libraries.ToArray();
+            
+            for (var i = 0; i < librarySpecs.Length; i++)
+            {
+                if (ReferenceEquals(librarySpecs[i].Id, newLibrarySpec.Id))
+                {
+                    librarySpecs[i] = newLibrarySpec;
+                    if (libs[i] != null)
+                    {
+                        libs[i] = (Library)libs[i].ChangeName(newName);
+                    }
+                }
+            }
+
+            var newPepLibraries = libraries.ChangeLibraries(librarySpecs.ToList(), libs);
+            var newPepSettings = document.Settings.PeptideSettings.ChangeLibraries(newPepLibraries);
+            var newSettings = document.Settings.ChangePeptideSettings(newPepSettings);
+            var newDocument = document.ChangeSettings(newSettings, monitor);
+
+            var entry = AuditLogEntry.CreateSimpleEntry(
+                MessageType.files_tree_node_renamed,
+                document.DocumentType,
+                oldName,
+                newName);
+
+            return new ModifiedDocument(newDocument).ChangeAuditLogEntry(entry);
+        }
+
+        public bool HasItemWithName(SrmDocument document, string newName)
+        {
+            Assume.IsNotNull(document);
+
+            var librarySpecs = document.Settings.PeptideSettings.Libraries.LibrarySpecs;
+            return librarySpecs.Any(item => string.Equals(item.Name, newName, StringComparison.CurrentCulture));
         }
     }
 }

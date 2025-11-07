@@ -307,26 +307,39 @@ namespace pwiz.Skyline.Controls.FilesTree
             if (node == null || string.IsNullOrEmpty(newLabel) || !node.SupportsRename())
                 return true;
 
-            // CONSIDER: add IFileRenameable interface to FileModel and implement on Replicate and Spectral Library. ISupportsRename should include a validate(...) method.
             var replicate = node.Model as Replicate;
+            var spectralLibrary = node.Model as SpectralLibrary;
 
-            if (replicate == null)
+            if (replicate == null && spectralLibrary == null)
                 return true;
 
             var oldLabel = node.Name;
 
             // Validate input
-            // Cancel event tif the old and new names match
+            // Cancel event if the old and new names match
             if (string.Compare(oldLabel, newLabel, StringComparison.CurrentCulture) == 0)
             {
                 return true;
             }
+
             // Cancel event if new name matches the name of another item in the collection
-            else if (replicate.HasItemWithName(SkylineWindow.DocumentUI, newLabel))
+            if (replicate != null)
             {
-                var confirmMsg = string.Format(FilesTreeResources.FilesTreeForm_Error_Renaming_Replicate, newLabel);
-                MultiButtonMsgDlg.Show(this, confirmMsg, MessageBoxButtons.OK);
-                return true;
+                if (replicate.HasItemWithName(SkylineWindow.DocumentUI, newLabel))
+                {
+                    var confirmMsg = string.Format(FilesTreeResources.FilesTreeForm_Error_Renaming_Replicate, newLabel);
+                    MultiButtonMsgDlg.Show(this, confirmMsg, MessageBoxButtons.OK);
+                    return true;
+                }
+            }
+            else /* spectralLibrary is not null */
+            {
+                if (spectralLibrary.HasItemWithName(SkylineWindow.DocumentUI, newLabel))
+                {
+                    var confirmMsg = string.Format(FilesTreeResources.FilesTreeForm_Error_Renaming_SpectralLibrary, newLabel);
+                    MultiButtonMsgDlg.Show(this, confirmMsg, MessageBoxButtons.OK);
+                    return true;
+                }
             }
 
             lock (SkylineWindow.GetDocumentChangeLock())
@@ -339,10 +352,21 @@ namespace pwiz.Skyline.Controls.FilesTree
                 {
                     using var monitor = new SrmSettingsChangeMonitor(progressMonitor, longWaitDlg.Text, SkylineWindow);
 
-                    modifiedDoc = Replicate.Rename(originalDoc, monitor, replicate, newLabel);
+                    if (replicate != null)
+                    {
+                        modifiedDoc = Replicate.Rename(originalDoc, monitor, replicate, newLabel);
+                    }
+                    else if (spectralLibrary != null)
+                    {
+                        modifiedDoc = SpectralLibrary.Rename(originalDoc, monitor, spectralLibrary, newLabel);
+                    }
                 });
 
-                SkylineWindow.ModifyDocument(FilesTreeResources.Change_ReplicateName, DocumentModifier.FromResult(originalDoc, modifiedDoc));
+                var auditLogMessage = replicate != null ? 
+                    FilesTreeResources.Change_ReplicateName : 
+                    FilesTreeResources.Change_SpectralLibraryName;
+
+                SkylineWindow.ModifyDocument(auditLogMessage, DocumentModifier.FromResult(originalDoc, modifiedDoc));
             }
 
             return false;
