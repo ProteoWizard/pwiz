@@ -109,15 +109,17 @@ Modern best practice is **UTF-8 without BOM** for source code. BOM can cause iss
 - [x] Keep analysis and validation scripts for future use
 
 ## Tools & Scripts
-- **`scripts/misc/analyze-bom-git.ps1`** - Analysis script (keep permanently)
+- **`ai/scripts/analyze-bom-git.ps1`** - Analysis script (keep permanently)
   - Now accepts optional `-OutputFile` parameter
   - No longer creates files-with-bom.txt at root by default
-- **`scripts/misc/remove-bom.ps1`** - BOM removal script (keep permanently)
-- **`scripts/misc/validate-bom-compliance.ps1`** - Validation script (keep permanently)
+- **`ai/scripts/remove-bom.ps1`** - BOM removal script (keep permanently)
+- **`ai/scripts/validate-bom-compliance.ps1`** - Validation script (keep permanently)
   - Checks against approved list of 11 files allowed to have BOM
   - Returns exit code 0 if compliant, 1 if unexpected BOMs found
   - Ready for use in CI or commit hooks
 - **`todos/completed/original-files-with-bom.txt`** - Original list of 3,439 files with BOM (historical record)
+
+**Note**: Scripts were moved to `ai/scripts/` in PR #3667 (2025-11-06) to improve discoverability for LLM-assisted development.
 
 ## Risks & Considerations
 - **Large commit**: May affect hundreds of files
