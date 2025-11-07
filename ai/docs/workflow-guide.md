@@ -30,7 +30,7 @@ The TODO file system enables seamless context management for LLM-assisted develo
 ### TODO Directory Structure
 
 ```
-<root>/
+<root>/ai/
   todos/
     active/           # Currently being worked on (committed to branch)
     completed/        # Recently completed (keep 1-3 months for reference)
@@ -43,28 +43,28 @@ The TODO file system enables seamless context management for LLM-assisted develo
 **Format**: `TODO-[YYYYMMDD_]<branch_specifier>.md`
 
 - **Branch specifier**: Lowercase words separated by underscores (matches branch name after date)
-- **No date prefix**: Branch-ready, planning phase (lives in `todos/backlog/`)
-- **With date prefix**: Active branch, dated with branch creation date (lives in `todos/active/`, committed to branch)
+- **No date prefix**: Branch-ready, planning phase (lives in `ai/todos/backlog/`)
+- **With date prefix**: Active branch, dated with branch creation date (lives in `ai/todos/active/`, committed to branch)
 
 **Examples**:
-- `todos/backlog/TODO-utf8_no_bom.md` - Branch-ready, not yet created
-- `todos/active/TODO-20251015_utf8_no_bom.md` - Active branch created 2025-10-15
-- `todos/completed/TODO-20251010_webclient_replacement.md` - Recently merged work
+- `ai/todos/backlog/TODO-utf8_no_bom.md` - Branch-ready, not yet created
+- `ai/todos/active/TODO-20251015_utf8_no_bom.md` - Active branch created 2025-10-15
+- `ai/todos/completed/TODO-20251010_webclient_replacement.md` - Recently merged work
 
 ### TODO File Lifecycle
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ Phase 1: Planning (todos/backlog/)                          │
+│ Phase 1: Planning (ai/todos/backlog/)                       │
 ├─────────────────────────────────────────────────────────────┤
 │ File: TODO-<branch_specifier>.md                            │
 │ Status: Branch-ready, contains scope and task breakdown     │
-│ Location: todos/backlog/, committed to master               │
+│ Location: ai/todos/backlog/, committed to master            │
 └─────────────────────────────────────────────────────────────┘
                          │
                          ▼ Create branch
 ┌─────────────────────────────────────────────────────────────┐
-│ Phase 2: Active Development (todos/active/)                 │
+│ Phase 2: Active Development (ai/todos/active/)              │
 ├─────────────────────────────────────────────────────────────┤
 │ File: TODO-YYYYMMDD_<branch_specifier>.md                   │
 │ Status: Renamed with date, moved to active/, on branch      │
@@ -74,9 +74,9 @@ The TODO file system enables seamless context management for LLM-assisted develo
                          │
                          ▼ Work complete, PR merged
 ┌─────────────────────────────────────────────────────────────┐
-│ Phase 3: Completed (todos/completed/)                       │
+│ Phase 3: Completed (ai/todos/completed/)                    │
 ├─────────────────────────────────────────────────────────────┤
-│ File: Moved to todos/completed/ as final commit on branch   │
+│ File: Moved to ai/todos/completed/ as final commit on branch│
 │ Status: Includes completion summary, merged to master       │
 │ Purpose: Documentation, reference for future work           │
 │ Retention: Keep 1-3 months for reference                    │
@@ -84,9 +84,9 @@ The TODO file system enables seamless context management for LLM-assisted develo
                          │
                          ▼ After 1-3 months
 ┌─────────────────────────────────────────────────────────────┐
-│ Phase 4: Archived (todos/archive/)                          │
+│ Phase 4: Archived (ai/todos/archive/)                       │
 ├─────────────────────────────────────────────────────────────┤
-│ File: Moved to todos/archive/ or deleted (in Git history)   │
+│ File: Moved to ai/todos/archive/ or deleted (in Git history)│
 │ Status: Historical reference only                           │
 │ Purpose: Reduce clutter, preserved in Git forever           │
 └─────────────────────────────────────────────────────────────┘
@@ -94,7 +94,7 @@ The TODO file system enables seamless context management for LLM-assisted develo
 
 ### TODO File Structure (Backlog)
 
-For files **in todos/backlog/** (planning phase):
+For files **in ai/todos/backlog/** (planning phase):
 
 ```markdown
 # TODO-<branch_specifier>.md
@@ -130,7 +130,7 @@ Template for LLM to create branch and begin work
 
 ### TODO File Structure (Active)
 
-For files **in todos/active/** (active branch):
+For files **in ai/todos/active/** (active branch):
 
 ```markdown
 # TODO-YYYYMMDD_<branch_specifier>.md
@@ -164,9 +164,9 @@ Patterns established, key decisions made
 
 ### TODO File Structure (Completed)
 
-For files **in todos/completed/** (after merge):
+For files **in ai/todos/completed/** (after merge):
 
-Add this **final section** before moving to completed/:
+Add this **final section** before moving to ai/todos/completed/:
 
 ```markdown
 ## ✅ Completion Summary
@@ -194,12 +194,12 @@ Add this **final section** before moving to completed/:
 ### Starting a New Session
 1. **Read the TODO file** - Understand current branch context and objectives
 2. **Review recent commits** - Understand what has been done
-3. **Check project conventions** - Read `MEMORY.md` for essential context
+3. **Check project conventions** - Read `ai/MEMORY.md` for essential context
 4. **Understand the scope** - Confirm what remains to be done
 
 ### During Development
 1. **Update TODO with every commit** - Track progress and decisions
-2. **Follow coding standards** - Use `STYLEGUIDE.md` for style guidance
+2. **Follow coding standards** - Use `ai/STYLEGUIDE.md` for style guidance
 3. **Write appropriate tests** - Ensure code quality and regression prevention
 4. **Use DRY principles** - Avoid duplication in long-lived codebase
 5. **Handle exceptions properly** - Use established patterns for error handling
@@ -275,44 +275,56 @@ Next steps: [what remains to be done]
 Key files: [list of important files]
 Decisions made: [architectural choices]
 
-The TODO file in todos/active/ contains full context. Please read it first, then continue with [specific next task].
+The TODO file in ai/todos/active/ contains full context. Please read it first, then continue with [specific next task].
 ```
 
 ## Branch Lifecycle Workflows
 
-**IMPORTANT**: All TODO files in `todos/` are Git-tracked. Always use Git commands (`git mv`, `git add`, `git commit`) when creating, moving, or modifying TODO files. Using regular file system operations (PowerShell `Move-Item`, bash `mv`, etc.) will not properly track changes in Git history.
+**IMPORTANT**: All TODO files in `ai/todos/` are Git-tracked. Always use Git commands (`git mv`, `git add`, `git commit`) when creating, moving, or modifying TODO files. Using regular file system operations (PowerShell `Move-Item`, bash `mv`, etc.) will not properly track changes in Git history.
 
 ### Workflow 1: Creating Branch from Backlog TODO
 
-When you have a branch-ready TODO file (e.g., `todos/backlog/TODO-utf8_no_bom.md`):
+When you have a branch-ready TODO file (e.g., `ai/todos/backlog/TODO-utf8_no_bom.md`):
 
-**Step 1: Ensure master is up to date and create branch**
+**Step 1: Move TODO to active on master (claims the work)**
 ```bash
 git checkout master
 git pull origin master
 git submodule update --init --recursive  # Ensure submodules are in sync
-git checkout -b Skyline/work/20251015_utf8_no_bom  # Use today's date
+# IMPORTANT: Use git mv to preserve Git history when moving tracked files
+git mv ai/todos/backlog/TODO-utf8_no_bom.md ai/todos/active/TODO-20251015_utf8_no_bom.md
 ```
 
 **Why the submodule update?** The project has Git submodules (e.g., `DocumentConverter`, `BullseyeSharp`) that need to be at the exact commit master expects. Without this step, submodules may show as modified in all your diffs.
 
-**Step 2: Move and rename TODO file with Git**
+**Step 2: Commit and push to master (makes work visible to team)**
 ```bash
-# IMPORTANT: Use git mv to preserve Git history when moving tracked files
-git mv todos/backlog/TODO-utf8_no_bom.md todos/active/TODO-20251015_utf8_no_bom.md
+git commit -m "Start utf8_no_bom work - move TODO to active"
+git push origin master
 ```
 
-**Step 3: Update TODO file header**
+**Step 3: Create feature branch**
+```bash
+git checkout -b Skyline/work/20251015_utf8_no_bom  # Use today's date matching TODO
+```
+
+**Step 4: Update TODO file header**
 - Change "Branch Information (Future)" to "Branch Information"
 - Fill in actual branch name and creation date
 - Update any "will be" to actual values
 
-**Step 4: Commit TODO to branch**
+**Step 5: Commit TODO update to branch**
 ```bash
-git add todos/
-git commit -m "Start utf8_no_bom work - move TODO to active"
+git add ai/todos/active/TODO-20251015_utf8_no_bom.md
+git commit -m "Update TODO with branch information"
 git push -u origin Skyline/work/20251015_utf8_no_bom
 ```
+
+**Why move TODO to master first?**
+- Makes it immediately visible on master that this work is being claimed
+- Prevents duplicate work by other developers
+- Atomic operation: file move is committed before code changes begin
+- Git history properly tracks the TODO lifecycle
 
 ### Workflow 2: Creating Branch and TODO Together
 
@@ -328,12 +340,12 @@ git checkout -b Skyline/work/20251015_new_feature
 
 **Step 2: Create TODO file in active/**
 ```bash
-# Create todos/active/TODO-20251015_new_feature.md with structure from template above
+# Create ai/todos/active/TODO-20251015_new_feature.md with structure from template above
 ```
 
 **Step 3: Commit TODO to branch**
 ```bash
-git add todos/active/TODO-20251015_new_feature.md
+git add ai/todos/active/TODO-20251015_new_feature.md
 git commit -m "Initial TODO for new_feature"
 git push -u origin Skyline/work/20251015_new_feature
 ```
@@ -342,7 +354,7 @@ git push -u origin Skyline/work/20251015_new_feature
 
 ```bash
 # Make code changes
-# Update todos/active/TODO-YYYYMMDD_description.md (mark tasks complete, update context)
+# Update ai/todos/active/TODO-YYYYMMDD_description.md (mark tasks complete, update context)
 git add .
 git commit -m "Descriptive message of changes"
 git push
@@ -431,7 +443,7 @@ See `todos/active/TODO-YYYYMMDD_description.md` for complete details.
 ```bash
 # Add completion summary to TODO file
 # Document what was actually done, bugs found, follow-up work
-git add todos/active/TODO-YYYYMMDD_description.md
+git add ai/todos/active/TODO-YYYYMMDD_description.md
 git commit -m "Add completion summary to TODO"
 git push
 ```
@@ -453,9 +465,9 @@ git push
 **Status**: Merged to master
 ```
 
-Add this section to the TODO file in todos/active/ and commit:
+Add this section to the TODO file in ai/todos/active/ and commit:
 ```bash
-git add todos/active/TODO-YYYYMMDD_description.md
+git add ai/todos/active/TODO-YYYYMMDD_description.md
 git commit -m "Add PR #1234 reference to TODO"
 git push
 ```
@@ -502,7 +514,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 ```bash
 # IMPORTANT: Use git mv to preserve Git history when moving tracked files
 # NEVER move to completed/ without a PR reference in the TODO file
-git mv todos/active/TODO-YYYYMMDD_description.md todos/completed/TODO-YYYYMMDD_description.md
+git mv ai/todos/active/TODO-YYYYMMDD_description.md ai/todos/completed/TODO-YYYYMMDD_description.md
 git commit -m "Move TODO to completed - PR #1234 merged"
 git push
 ```
@@ -517,29 +529,86 @@ git branch -d Skyline/work/YYYYMMDD_description  # Delete local branch
 **Step 7: Periodic cleanup (monthly or as needed)**
 ```bash
 # Move old completed TODOs (>3 months) to archive or delete
-git mv todos/completed/TODO-20240715_old_work.md todos/archive/
+git mv ai/todos/completed/TODO-20240715_old_work.md ai/todos/archive/
 # Or simply delete if no longer needed (preserved in Git history)
-git rm todos/completed/TODO-20240715_old_work.md
+git rm ai/todos/completed/TODO-20240715_old_work.md
 ```
 
 ### Workflow 5: Creating Backlog TODO (Planning)
+
+#### 5a. Planning Future Work on Master
 
 When you want to plan future work without creating a branch:
 
 **Step 1: Create TODO in backlog/**
 ```bash
-# Create todos/backlog/TODO-new_feature.md with planning structure
+# Create ai/todos/backlog/TODO-new_feature.md with planning structure
 ```
 
 **Step 2: Commit to master**
 ```bash
 git checkout master
-git add todos/backlog/TODO-new_feature.md
+git add ai/todos/backlog/TODO-new_feature.md
 git commit -m "Add backlog TODO for new_feature planning"
 git push origin master
 ```
 
 This makes the planned work visible to the team and LLM tools.
+
+#### 5b. Creating Backlog TODO During Active Branch Work
+
+When inspiration strikes during development on a feature branch, you can document the idea immediately and make it available to the team without waiting for your PR to merge.
+
+**Option 1: Create TODO directly on master (recommended)**
+
+```bash
+# Save current work on feature branch
+git stash
+
+# Switch to master and create backlog TODO
+git checkout master
+git pull origin master
+
+# Create ai/todos/backlog/TODO-new_idea.md with planning structure
+# ... edit the file ...
+
+git add ai/todos/backlog/TODO-new_idea.md
+git commit -m "Add backlog TODO for new_idea planning"
+git push origin master
+
+# Return to feature branch and resume work
+git checkout Skyline/work/YYYYMMDD_current_feature
+git stash pop
+```
+
+**Option 2: Cherry-pick from feature branch to master**
+
+```bash
+# Create TODO on your current feature branch
+# Create ai/todos/backlog/TODO-new_idea.md with planning structure
+# ... edit the file ...
+
+git add ai/todos/backlog/TODO-new_idea.md
+git commit -m "Add backlog TODO for new_idea planning"
+
+# Note the commit hash
+git log -1 --oneline
+
+# Switch to master and cherry-pick just that commit
+git checkout master
+git pull origin master
+git cherry-pick <commit-hash>
+git push origin master
+
+# Return to feature branch
+git checkout Skyline/work/YYYYMMDD_current_feature
+```
+
+**Why this matters:**
+- New TODO ideas become available to the team immediately
+- Other developers can start work on the idea without waiting for your PR merge
+- Separates TODO lifecycle from feature branch lifecycle
+- When your feature branch eventually merges, Git handles the duplicate commit gracefully
 
 ## Best Practices
 
