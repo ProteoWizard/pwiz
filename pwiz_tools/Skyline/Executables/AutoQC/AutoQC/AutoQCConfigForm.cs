@@ -419,6 +419,16 @@ namespace AutoQC
             tabPanoramaSettings.Select();
         }
 
+        public void SelectSkylineTab()
+        {
+            tabSkylineSettings.Select();
+        }
+
+        public void SetSkylineInstallationDir(string skylineBinDirPath)
+        {
+            _skylineTypeControl.SetInput(skylineBinDirPath);
+        }
+
         public void CheckUploadToPanorama()
         {
             cbPublishToPanorama.Checked = true;

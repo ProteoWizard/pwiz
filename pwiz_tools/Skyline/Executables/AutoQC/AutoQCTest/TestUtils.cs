@@ -83,6 +83,39 @@ namespace AutoQCTest
             return ExtensionTestContext.GetProjectDirectory(@"Executables\AutoQC");
         }
 
+        public static string GetSkylineBinDirectory()
+        {
+            var skylineProjectDir = ExtensionTestContext.GetProjectDirectory("")
+                                    ?? throw new InvalidOperationException("Unable to find Skyline project directory");
+
+            var debugPath = Path.Combine(skylineProjectDir, "bin", "x64", "Debug");
+            var releasePath = Path.Combine(skylineProjectDir, "bin", "x64", "Release");
+
+            var debugExists = Directory.Exists(debugPath);
+            var releaseExists = Directory.Exists(releasePath);
+
+            if (!debugExists && !releaseExists)
+                throw new DirectoryNotFoundException(
+                    $"Neither Debug nor Release bin directory found at {debugPath} or {releasePath}");
+
+            // If only one exists, return it
+            if (!debugExists) return releasePath;
+            if (!releaseExists) return debugPath;
+
+            // Both exist - compare SkylineCmd.exe modification times
+            var debugCmd = Path.Combine(debugPath, SkylineInstallations.SkylineCmdExe);
+            var releaseCmd = Path.Combine(releasePath, SkylineInstallations.SkylineCmdExe);
+
+            var debugCmdExists = File.Exists(debugCmd);
+            var releaseCmdExists = File.Exists(releaseCmd);
+
+            if (debugCmdExists && releaseCmdExists)
+                return File.GetLastWriteTime(debugCmd) > File.GetLastWriteTime(releaseCmd)
+                    ? debugPath : releasePath;
+
+            return debugCmdExists ? debugPath : releasePath;
+        }
+
         public static MainSettings GetTestMainSettings() => GetTestMainSettings(string.Empty, string.Empty, string.Empty);
 
         public static MainSettings GetTestMainSettings(string changedVariable, string value) => GetTestMainSettings(string.Empty, changedVariable, value);
