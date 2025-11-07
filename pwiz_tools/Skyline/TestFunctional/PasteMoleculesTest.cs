@@ -1407,7 +1407,7 @@ namespace pwiz.SkylineTestFunctional
 
         private static string GetAminoAcidsTransitionListText(out string textCSV)
         {
-            var header = string.Join(",", new string[]
+            var header = string.Join(",", new[]
             {
                 SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
                 SmallMoleculeTransitionListColumnHeaders.namePrecursor,
@@ -2710,7 +2710,7 @@ namespace pwiz.SkylineTestFunctional
                 var withHeaders = pass == 1;     // Double check that headers work too
 
                 var input = withHeaders ?
-                    string.Join(",", new string[]
+                    string.Join(",", new[]
                     {
                         SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
                         SmallMoleculeTransitionListColumnHeaders.namePrecursor,
