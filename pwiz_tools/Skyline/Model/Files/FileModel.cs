@@ -17,6 +17,7 @@
 using System.Collections.Generic;
 using System.IO;
 using pwiz.Common.Collections;
+using pwiz.Skyline.Model.DocSettings;
 
 /*
     * rat-plasma.sky
@@ -60,6 +61,35 @@ namespace pwiz.Skyline.Model.Files
     }
 
     internal class StaticFolderId : Identity { }
+
+    /// <summary>
+    /// Interface for FileModel types that support renaming through the FilesTree UI.
+    /// </summary>
+    public interface IFileRenameable
+    {
+        /// <summary>
+        /// Validates whether the new name is acceptable.
+        /// </summary>
+        /// <param name="document">The current document</param>
+        /// <param name="newName">The proposed new name</param>
+        /// <param name="errorMessage">Error message to display if validation fails</param>
+        /// <returns>true if the name is valid, false otherwise</returns>
+        bool ValidateNewName(SrmDocument document, string newName, out string errorMessage);
+
+        /// <summary>
+        /// Performs the rename operation.
+        /// </summary>
+        /// <param name="document">The current document</param>
+        /// <param name="monitor">Progress monitor for the operation</param>
+        /// <param name="newName">The new name to apply</param>
+        /// <returns>Modified document with the rename applied</returns>
+        ModifiedDocument PerformRename(SrmDocument document, SrmSettingsChangeMonitor monitor, string newName);
+
+        /// <summary>
+        /// Gets the audit log message resource string for this rename operation.
+        /// </summary>
+        string AuditLogMessageResource { get; }
+    }
 
     public abstract class FileModel
     {
