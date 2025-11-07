@@ -31,8 +31,12 @@
     Build entire solution and run unit tests (Test.dll)
 
 .EXAMPLE
+    .\Build-Skyline.ps1 -QuickInspection
+    Build and run quick inspection on modified projects only (~1-5 min, ideal for iteration)
+
+.EXAMPLE
     .\Build-Skyline.ps1 -RunInspection
-    Build entire solution and run ReSharper code inspection
+    Build entire solution and run full ReSharper code inspection (~20-25 min, pre-commit)
 
 .EXAMPLE
     .\Build-Skyline.ps1 -RunTests -TestName CodeInspection
@@ -40,7 +44,7 @@
 
 .EXAMPLE
     .\Build-Skyline.ps1 -RunInspection -RunTests -TestName CodeInspection
-    Pre-commit validation: Build, run inspection, and run CodeInspection test
+    Pre-commit validation: Build, run full inspection, and run CodeInspection test
 
 .EXAMPLE
     .\Build-Skyline.ps1 -Configuration Release
@@ -67,12 +71,18 @@ param(
     [string]$TestName = $null,  # Specific test to run (e.g., "CodeInspection")
     
     [Parameter(Mandatory=$false)]
-    [switch]$RunInspection = $false,  # Run ReSharper code inspection
+    [switch]$RunInspection = $false,  # Run ReSharper code inspection (full solution, ~20-25 min)
+    
+    [Parameter(Mandatory=$false)]
+    [switch]$QuickInspection = $false,  # Run quick inspection on modified projects only (~1-5 min)
     
     [Parameter(Mandatory=$false)]
     [ValidateSet("quiet", "minimal", "normal", "detailed", "diagnostic")]
     [string]$Verbosity = "minimal"
 )
+
+# Ensure UTF-8 output for status symbols regardless of terminal settings
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 # Find MSBuild using vswhere
 $vswherePath = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
@@ -191,9 +201,90 @@ if ($RunTests -and $Target -ne "Clean") {
     }
 }
 
+# Helper function to get modified projects from git
+function Get-ModifiedProjects {
+    try {
+        # Get modified files from git (excluding deleted files)
+        $modifiedFiles = git diff --name-only HEAD 2>$null
+        if ($LASTEXITCODE -ne 0) {
+            Write-Warning "Not a git repository or git not available - inspecting all projects"
+            return $null
+        }
+        
+        if (-not $modifiedFiles) {
+            Write-Host "No modified files detected in git working directory" -ForegroundColor Yellow
+            return @()
+        }
+        
+        # Directories to skip (documentation, build artifacts)
+        $skipDirs = @('ai', 'bin', 'obj', 'Executables')
+        
+        # Map files to project names
+        $projects = @{}
+        foreach ($file in $modifiedFiles) {
+            # Only consider C# source files
+            if ($file -notmatch '\.(cs|csproj|resx)$') {
+                continue
+            }
+            
+            # Skip documentation and build artifact directories
+            if ($file -match '^pwiz_tools/Skyline/(ai|bin|obj)/') {
+                continue
+            }
+            
+            # Map to actual project names from Skyline.sln
+            if ($file -match '^pwiz_tools/Skyline/([^/]+)/') {
+                $dirName = $matches[1]
+                # Skip certain directories that aren't projects
+                if ($skipDirs -contains $dirName) {
+                    continue
+                }
+
+                # Prefer project named after directory if corresponding .csproj exists
+                $candidateCsproj = Join-Path "pwiz_tools/Skyline/$dirName" "$dirName.csproj"
+                if (Test-Path $candidateCsproj) {
+                    $projects[$dirName] = $true
+                }
+                else {
+                    # Fallback to main Skyline project (e.g. EditUI, Controls subfolders)
+                    $projects["Skyline"] = $true
+                }
+            }
+            elseif ($file -match '^pwiz_tools/Skyline/[^/]+\.(cs|csproj|resx)') {
+                # Root Skyline files (EditUI, Controls, Model, etc.) map to main Skyline project
+                $projects["Skyline"] = $true
+            }
+            elseif ($file -match '^pwiz_tools/Shared/([^/]+)/') {
+                # Shared projects (CommonUtil, ProteomeDb, etc.)
+                $sharedProject = $matches[1]
+                $projects[$sharedProject] = $true
+            }
+        }
+        
+        $projectList = @($projects.Keys)
+        if ($projectList.Count -gt 0) {
+            Write-Host "Detected $($projectList.Count) modified project(s): $($projectList -join ', ')" -ForegroundColor Cyan
+        }
+        else {
+            Write-Host "No C# code changes detected (only documentation/artifacts modified)" -ForegroundColor Yellow
+        }
+        return $projectList
+    }
+    catch {
+        Write-Warning "Error detecting modified projects: $_"
+        return $null
+    }
+}
+
 # Run ReSharper code inspection if requested
-if ($RunInspection -and $Target -ne "Clean") {
-    Write-Host "`nRunning ReSharper code inspection..." -ForegroundColor Yellow
+if (($RunInspection -or $QuickInspection) -and $Target -ne "Clean") {
+    $isQuickMode = $QuickInspection -and -not $RunInspection
+    $modeLabel = if ($isQuickMode) { "Quick inspection (modified projects only)" } else { "Full solution inspection" }
+    
+    Write-Host "`n========================================" -ForegroundColor Cyan
+    Write-Host "Running ReSharper code inspection" -ForegroundColor Cyan
+    Write-Host "Mode: $modeLabel" -ForegroundColor Cyan
+    Write-Host "========================================" -ForegroundColor Cyan
     
     # Check for ReSharper .NET global tool (jb command)
     try {
@@ -210,32 +301,93 @@ if ($RunInspection -and $Target -ne "Clean") {
     }
     
     if ($jbPath) {
-        Write-Host "Using: jb inspectcode (version $(& jb --version))" -ForegroundColor Cyan
         
         $inspectionOutput = "bin\$Platform\$Configuration\InspectCodeOutput.xml"
         $dotSettings = "Skyline.sln.DotSettings"
         
-        $inspectStart = Get-Date
-        Write-Host "`nRunning ReSharper code inspection (typically 20-25 minutes for full solution)..." -ForegroundColor Cyan
+        # Set up persistent cache directory for faster subsequent runs
+        # Located in bin/ so it's automatically ignored by git and cleaned by clean.bat
+        $cacheDir = "bin\.inspectcode-cache"
+        if (-not (Test-Path $cacheDir)) {
+            New-Item -ItemType Directory -Path $cacheDir | Out-Null
+            Write-Host "Created inspection cache directory: $cacheDir" -ForegroundColor Gray
+        }
         
-        # Run inspection matching TeamCity configuration:
-        # --severity WARNING: Only report warnings and errors (not suggestions/hints)
-        # --format Xml: Use XML format for compatibility with existing OutputParser.exe
-        # --profile: Use solution settings, which automatically discovers project-specific .DotSettings
-        #   (SkylineTester.csproj.DotSettings and TestRunner.csproj.DotSettings disable localization)
-        # --no-swea: Disable solution-wide analysis (not needed for warnings)
-        # NOTE: Removed --no-buildin-settings to allow project-specific .DotSettings to be respected
-        & jb inspectcode Skyline.sln `
-            --profile=$dotSettings `
-            --output=$inspectionOutput `
-            --format=Xml `
-            --severity=WARNING `
-            --no-swea `
-            --properties=Configuration=$Configuration `
-            --verbosity=WARN
+        # Determine which projects to inspect
+        $projectFilter = @()
+        if ($isQuickMode) {
+            $modifiedProjects = Get-ModifiedProjects
+            if ($modifiedProjects -eq $null) {
+                # Git detection failed, fall back to full inspection
+                Write-Warning "Falling back to full solution inspection"
+            }
+            elseif ($modifiedProjects.Count -eq 0) {
+                Write-Host "No modified projects - skipping inspection" -ForegroundColor Yellow
+                $jbPath = $null  # Skip inspection
+            }
+            else {
+                $projectFilter = $modifiedProjects
+            }
+        }
         
-        $inspectExitCode = $LASTEXITCODE
-        $inspectDuration = (Get-Date) - $inspectStart
+        if ($jbPath) {
+            $inspectStart = Get-Date
+            $perProjectEstimate = 2
+            $skylineEstimate = 10
+            $estimatedTime = if ($projectFilter.Count -gt 0) {
+                $hasSkyline = $projectFilter -contains "Skyline"
+                if ($hasSkyline) {
+                    $totalEstimate = $skylineEstimate + ($projectFilter.Count - 1) * $perProjectEstimate
+                    "~${skylineEstimate} minutes for Skyline + ~${perProjectEstimate} minutes per additional project (~$totalEstimate minutes total for $($projectFilter.Count) project(s))"
+                }
+                else {
+                    $totalEstimate = [Math]::Max($perProjectEstimate, $projectFilter.Count * $perProjectEstimate)
+                    "~${perProjectEstimate} minutes per project (~$totalEstimate minutes total for $($projectFilter.Count) project(s))"
+                }
+            } else {
+                "typically 20-25 minutes for full solution"
+            }
+            Write-Host "`nRunning ReSharper code inspection ($estimatedTime)..." -ForegroundColor Cyan
+            
+            # Build inspectcode command
+            $inspectArgs = @(
+                "inspectcode", "Skyline.sln",
+                "--profile=$dotSettings",
+                "--output=$inspectionOutput",
+                "--format=Xml",
+                "--severity=WARNING",
+                "--no-swea",
+                "--no-build",  # Solution already built by MSBuild above
+                "--caches-home=$cacheDir",  # Enable persistent caching
+                "--properties=Configuration=$Configuration",
+                "--verbosity=WARN"
+            )
+            
+            # Add project filters for quick mode
+            if ($projectFilter.Count -gt 0) {
+                foreach ($project in $projectFilter) {
+                    $inspectArgs += "--project=$project"
+                }
+            }
+            
+            # Run inspection matching TeamCity configuration:
+            # --severity WARNING: Only report warnings and errors (not suggestions/hints)
+            # --format Xml: Use XML format for compatibility with existing OutputParser.exe
+            # --profile: Use solution settings, which automatically discovers project-specific .DotSettings
+            #   (SkylineTester.csproj.DotSettings and TestRunner.csproj.DotSettings disable localization)
+            # --no-swea: Disable solution-wide analysis (not needed for warnings)
+            # --no-build: Skip build phase (solution already built by MSBuild above)
+            # --caches-home: Use persistent cache for faster subsequent runs (IDE-like performance)
+            # --project: Filter to specific projects (quick inspection mode only)
+            # NOTE: Removed --no-buildin-settings to allow project-specific .DotSettings to be respected
+            & jb $inspectArgs
+            
+            $inspectExitCode = $LASTEXITCODE
+            $inspectDuration = (Get-Date) - $inspectStart
+        }
+    }
+    
+    if ($jbPath) {
         
         # Use TeamCity's OutputParser.exe for exact parity with CI validation
         $outputParserPath = "Executables\LocalizationHelper\OutputParser.exe"

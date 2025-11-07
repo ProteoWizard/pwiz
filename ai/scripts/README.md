@@ -166,6 +166,18 @@ git commit -m "Remove unexpected UTF-8 BOMs"
 
 ---
 
+### UTF-8 Output for PowerShell Scripts
+
+LLM-authored PowerShell scripts often emit Unicode status icons (`✅`, `❌`, etc.). To ensure these render correctly even if a developer forgets to switch their terminal to UTF-8, add the following guard near the top of every such script:
+
+```powershell
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+```
+
+This keeps the script self-contained and prevents `âœ…`-style mojibake in Cursor, VS Code, or other shells that default to a legacy code page.
+
+---
+
 ## Background & Rationale
 
 ### Why CRLF (Windows line endings)?
@@ -253,8 +265,11 @@ A: This can happen if:
 - Files have mixed line endings (some CRLF, some LF)
 - `.gitattributes` is normalizing line endings differently
 - Git's `core.autocrlf` setting is interfering
+- Cursor has a pending “modified files” list that it keeps reapplying (see note below)
 
 Solution: Run `git diff <file>` to see exact changes.
+
+> **Cursor tip:** Cursor keeps its own “modified files” queue per workspace. If you ignore that queue, the editor may reapply those cached versions—often converting them to LF-only—when you reopen the workspace. Regularly accept/reject the queued files so Cursor doesn’t keep refreshing them with LF endings.
 
 **Q: `validate-bom-compliance.ps1` fails, but I didn't add any BOMs?**
 
@@ -267,10 +282,4 @@ Solution: Use `remove-bom.ps1 -Execute` to fix.
 
 **Q: Should I add `.gitattributes` rules for line endings?**
 
-A: This is controversial. The project historically hasn't used `.gitattributes` for line ending enforcement, relying instead on developer discipline and scripts like `fix-crlf.ps1`. Adding strict `.gitattributes` rules could help prevent issues but might cause churn when first introduced.
-
----
-
-**Last Updated:** 2025-11-06  
-**Related Issues:** PR #3667 (improve tool support for AI development)
-
+A: Not usually. The developer setup guide already instructs everyone to set `git config --global core.autocrlf true`, which keeps Windows checkouts in CRLF automatically. Combined with these scripts, that policy has worked well without additional project-level overrides. If a new third-party file truly needs different handling, document it in `.editorconfig` or the relevant script instead of broad `.gitattributes` changes.

@@ -71,6 +71,9 @@ param(
     [switch]$ShowUI = $false  # Run on-screen (offscreen=off) to see the UI
 )
 
+# Ensure UTF-8 output for status symbols regardless of terminal settings
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
 # Language mapping (supports short codes)
 $languageMap = @{
     "en" = "en-US"

@@ -52,6 +52,8 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
 $Platform = "Any CPU"
 
 # Find MSBuild using vswhere (installed with VS 2022)

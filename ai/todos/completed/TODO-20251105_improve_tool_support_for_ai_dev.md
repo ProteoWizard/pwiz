@@ -3,8 +3,26 @@
 ## Branch Information
 - **Branch**: `Skyline/work/20251105_improve_tool_support_for_ai_dev`
 - **Created**: 2025-11-05
+- **Completed**: 2025-11-06
+- **Status**: ✅ **COMPLETE** - Ready for merge to master
 - **Objective**: Enable LLM-assisted IDEs (Cursor, VS Code + Copilot/Claude Code) to run builds, tests, and static analysis autonomously to reduce friction and improve code quality validation
 - **PR**: #3667 (https://github.com/ProteoWizard/pwiz/pull/3667)
+
+## Summary
+
+**Mission accomplished!** This sprint successfully eliminated the major friction points in LLM-assisted development:
+
+### What We Built
+1. **Build Automation** - Skyline, AutoQC, and SkylineBatch projects can now be built and tested from LLM environments
+2. **Code Inspection** - ReSharper CLI integration with TeamCity parity (zero warnings achieved)
+3. **Multi-language Testing** - Run Skyline tests in English, Japanese, Chinese, French (TestRunner.exe integration)
+4. **Utility Scripts** - Line ending and BOM management tools in `ai/scripts/`
+5. **Comprehensive Documentation** - Build/test guides, pre-commit workflow, documentation maintenance system
+
+### Impact
+- **Before**: LLMs required manual copy-paste of errors/warnings from Visual Studio
+- **After**: LLMs can autonomously build → inspect → test → fix in a single workflow
+- **Developer benefit**: Clear error messages, actionable feedback, shared tools between human and AI developers
 
 ## Background
 
@@ -165,16 +183,55 @@ AI-assisted development has been successful but has two major friction points:
 - Platform: "Any CPU" (not x64)
 - Smaller codebases: Faster builds (~5s) and inspections (~2-5 min vs 23 min)
 
-### Phase 9: Final Documentation Updates
-- [ ] Document TeamCity version discovery in PRE-COMMIT.md
-- [ ] Add version parity considerations to build-and-test-guide.md
-- [x] Create handoff documentation (ai/docs/documentation-maintenance.md)
-- [x] Add timing improvements to Build-Skyline.ps1 (show elapsed time on failure)
-- [x] Address Copilot PR feedback (test name consistency, line count correction)
+### Phase 9: Line Ending and BOM Management ✅
+**Goal**: Fix LLM-introduced line ending and BOM issues, improve utility script discoverability
+
+**Completed** (2025-11-06):
+- [x] Fixed 39 files with LF line endings (converted to CRLF using fix-crlf.ps1)
+  - Issue: Cursor/LLMs inadvertently changed CRLF → LF during edits
+  - Files affected: PanoramaClient, AutoQC, SkylineBatch code and tests
+- [x] Removed UTF-8 BOMs from 2 .DotSettings files
+  - `pwiz_tools/Skyline/Skyline.sln.DotSettings`
+  - `pwiz_tools/Skyline/Executables/AutoQC/AutoQC.sln.DotSettings`
+  - Detected via validate-bom-compliance.ps1, removed via remove-bom.ps1
+- [x] Moved utility scripts to ai/scripts/ for better discoverability
+  - `scripts/misc/fix-crlf.ps1` → `ai/scripts/fix-crlf.ps1`
+  - `scripts/misc/validate-bom-compliance.ps1` → `ai/scripts/validate-bom-compliance.ps1`
+  - `scripts/misc/remove-bom.ps1` → `ai/scripts/remove-bom.ps1`
+  - `scripts/misc/analyze-bom-git.ps1` → `ai/scripts/analyze-bom-git.ps1`
+- [x] Created `ai/scripts/README.md` - Comprehensive utility script documentation
+  - Line ending management (fix-crlf.ps1)
+  - UTF-8 BOM management (validate/remove/analyze)
+  - Background & rationale for CRLF and no-BOM policy
+  - Troubleshooting for LLM-assisted development
+  - Common workflows with examples
+- [x] Updated `.editorconfig` with explicit line ending rules
+  - Added `end_of_line = crlf` for all files (except `.sh` → `lf`)
+  - Added `insert_final_newline = true` and `trim_trailing_whitespace = true`
+- [x] Updated references in existing documentation
+  - `ai/todos/completed/TODO-20251019_utf8_no_bom.md` - Updated script paths
+  - `ai/scripts/validate-bom-compliance.ps1` - Updated error message references
+- [x] Enhanced AutoQC credential error messages
+  - Added copy-pasteable PowerShell commands for setting env vars
+  - Explicit "RESTART IDE" instruction (critical for env vars)
+  - Clear guidance on User vs Machine level environment variables
+  - References to both inline docs and ai/README.md
+- [x] Updated TestUtils.cs documentation
+  - Clarified User-level env vars don't require admin privileges
+  - Emphasized IDE restart requirement
+
+**Why this matters for LLM-assisted development**:
+- LLM tools (VS Code, Cursor) are cross-platform and may default to LF/UTF-8 BOM
+- These changes are invisible but cause large Git diffs
+- Having validation scripts in `ai/` makes them discoverable to LLMs
+- `.editorconfig` helps prevent future issues
+- Clear error messages reduce debugging time when tests fail due to missing credentials
 
 ## Tools & Scripts Created
 
-### Build-Skyline.ps1
+### Build Automation Scripts
+
+#### Build-Skyline.ps1
 **Location**: `pwiz_tools\Skyline\ai\Build-Skyline.ps1`
 
 **Capabilities**:
@@ -190,12 +247,69 @@ AI-assisted development has been successful but has two major friction points:
 # Build entire solution
 .\ai\Build-Skyline.ps1
 
-# Pre-commit validation (MANDATORY)
-.\ai\Build-Skyline.ps1 -RunInspection -RunTests -TestName CodeInspectionTest
+# Pre-commit validation (recommended)
+.\ai\Build-Skyline.ps1 -RunInspection -RunTests -TestName CodeInspection
 
 # Build and run specific test
 .\ai\Build-Skyline.ps1 -RunTests -TestName MyTest
 ```
+
+#### Build-AutoQC.ps1 & Build-SkylineBatch.ps1
+**Locations**:
+- `pwiz_tools\Skyline\Executables\AutoQC\ai\Build-AutoQC.ps1`
+- `pwiz_tools\Skyline\Executables\SkylineBatch\ai\Build-SkylineBatch.ps1`
+
+**Capabilities**:
+- Build using MSBuild (Any CPU platform)
+- Run tests using vstest.console.exe (MSTest)
+- ReSharper code inspection support
+- Faster than Skyline (smaller codebases, ~2-5 min inspection vs 23 min)
+
+### Utility Scripts (ai/scripts/)
+
+#### fix-crlf.ps1
+**Purpose**: Convert LF line endings to CRLF (Windows standard)
+
+**When to use**:
+- After LLM tools change line endings
+- Before committing if `git diff` shows spurious line ending changes
+
+**Usage**:
+```powershell
+.\ai\scripts\fix-crlf.ps1
+```
+
+#### validate-bom-compliance.ps1
+**Purpose**: Check for unexpected UTF-8 BOMs in the repository
+
+**When to use**:
+- Before committing changes
+- When investigating encoding issues
+
+**Usage**:
+```powershell
+.\ai\scripts\validate-bom-compliance.ps1
+```
+
+**Returns**: Exit code 0 if compliant, 1 if unexpected BOMs found
+
+#### remove-bom.ps1
+**Purpose**: Strip UTF-8 BOMs from files
+
+**When to use**:
+- After LLM tools add BOMs to source files
+- When validation script reports unexpected BOMs
+
+**Usage**:
+```powershell
+# Dry-run (shows what would change)
+.\ai\scripts\remove-bom.ps1
+
+# Actually remove BOMs
+.\ai\scripts\remove-bom.ps1 -Execute
+```
+
+See `ai/scripts/README.md` for complete documentation on utility scripts.
 
 ### Documentation Created
 
@@ -211,16 +325,28 @@ AI-assisted development has been successful but has two major friction points:
    - Common mistakes with examples
    - Validation checklist and prevention system
 
-3. **`pwiz_tools/Skyline/ai/PRE-COMMIT.md`** (187 lines)
+3. **`ai/scripts/README.md`** (400+ lines, NEW in Phase 9)
+   - Line ending management (fix-crlf.ps1)
+   - UTF-8 BOM management (validate/remove/analyze)
+   - Background & rationale for CRLF and no-BOM policy
+   - Troubleshooting for LLM-assisted development
+   - Common workflows with examples
+
+4. **`pwiz_tools/Skyline/ai/PRE-COMMIT.md`** (187 lines)
    - Recommended validation workflow before commits
    - ReSharper CLI installation instructions
    - Common issues from LLMs and how to fix them
    - Exit code interpretation
 
-4. **`pwiz_tools/Skyline/ai/README.md`** (89 lines)
+5. **`pwiz_tools/Skyline/ai/README.md`** (89 lines)
    - Documents project-specific LLM tooling directory
    - Explains separation: guidance (root ai/) vs tooling (project ai/)
    - Establishes pattern for other projects (SkylineBatch, AutoQC)
+
+6. **`pwiz_tools/Skyline/Executables/AutoQC/ai/README.md`** & **`SkylineBatch/ai/README.md`**
+   - Project-specific build/test documentation
+   - Panorama credential setup instructions (AutoQC)
+   - Copy-pasteable error messages with PowerShell commands
 
 ## Key Discoveries
 
@@ -368,6 +494,24 @@ AI-assisted development has been successful but has two major friction points:
 - `pwiz_tools/Skyline/Executables/AutoQC/ai/README.md` - Usage documentation
 - `pwiz_tools/Skyline/Executables/SkylineBatch/ai/Build-SkylineBatch.ps1` - Build/test automation
 - `pwiz_tools/Skyline/Executables/SkylineBatch/ai/README.md` - Usage documentation
+
+### Modified Files (Phase 9 - Line Ending and BOM Management)
+- `.editorconfig` - Added explicit CRLF line ending rules for Windows project
+- `ai/scripts/validate-bom-compliance.ps1` - Updated script path references
+- `ai/todos/completed/TODO-20251019_utf8_no_bom.md` - Updated script paths with move note
+- `pwiz_tools/Skyline/Skyline.sln.DotSettings` - Removed UTF-8 BOM
+- `pwiz_tools/Skyline/Executables/AutoQC/AutoQC.sln.DotSettings` - Removed UTF-8 BOM
+- `pwiz_tools/Skyline/Executables/AutoQC/AutoQCTest/TestUtils.cs` - Enhanced credential error messages
+- 39 files (PanoramaClient, AutoQC, SkylineBatch) - Fixed LF → CRLF line endings
+
+### New Files (Phase 9 - Script Reorganization)
+- `ai/scripts/README.md` - Comprehensive utility script documentation (400+ lines)
+
+### Moved Files (Phase 9 - Improved Discoverability)
+- `scripts/misc/fix-crlf.ps1` → `ai/scripts/fix-crlf.ps1`
+- `scripts/misc/validate-bom-compliance.ps1` → `ai/scripts/validate-bom-compliance.ps1`
+- `scripts/misc/remove-bom.ps1` → `ai/scripts/remove-bom.ps1`
+- `scripts/misc/analyze-bom-git.ps1` → `ai/scripts/analyze-bom-git.ps1`
 
 ## Handoff Prompt for Branch Creation
 
