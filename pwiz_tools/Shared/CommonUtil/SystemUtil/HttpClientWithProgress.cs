@@ -1078,6 +1078,18 @@ namespace pwiz.Common.SystemUtil
         {
             return FailureType == NetworkFailureType.DnsResolution;
         }
+
+        public static HttpStatusCode? GetHttpStatusCode(Exception e)
+        {
+            while (e != null)
+            {
+                if (e is NetworkRequestException netEx)
+                    return netEx.StatusCode;
+
+                e = e.InnerException;
+            }
+            return null;
+        }
     }
 }
 

@@ -4,7 +4,7 @@
 - **Branch**: `Skyline/work/20251107_httpclient_to_progress`
 - **Created**: 2025-11-07
 - **Status**: In progress
-- **PR**: _pending_
+- **PR**: [#3669](https://github.com/ProteoWizard/pwiz/pull/3669)
 - **Objective**: Finish consolidating Skyline HTTP usage onto `HttpClientWithProgress`, including retiring remaining `HttpWebRequest` and auditing legacy `System.Net` patterns
 
 ## Background
@@ -126,6 +126,22 @@ After completing the WebClient → HttpClient migration, we discovered several p
 - Removed `MapUnexpectedWebException` and related WebRequest-era helpers; all Panorama exception flows now originate from `NetworkRequestException`.
 - Verified via debugger that DNS failures surface as `HttpRequestException` with inner `WebException`; retained handling in `HttpClientWithProgress` and test helper.
 - Current legitimate `WebException` references: `HttpClientWithProgress` (DNS inner exception), `HttpClientTestHelper`, Ardia OAuth client (still raw `HttpClient`), Web-enabled FASTA importer (legacy APIs), and associated tests. Further reduction depends on migrating those callers to `HttpClientWithProgress`.
+- Began cataloging remaining `System.Net` usage:
+  - **Migration targets / follow-up design**
+    - `CommonMsData/RemoteApi/Ardia/ArdiaClient.cs` (HttpWebRequest delete path, bespoke HttpClient wrapper)
+    - `Shared/ProteomeDb/Fasta/WebEnabledFastaImporter.cs` (WebRequest download pipeline)
+    - `Skyline/Alerts/ArdiaLoginDlg.cs`, `Skyline/Alerts/ArdiaLogoutDlg.cs` (HttpListener, cookie exchange during OAuth)
+    - `Skyline/Alerts/ReportErrorDlg.cs` (WebRequest upload for LabKey error reporting)
+    - `Skyline/Program.cs`, `Skyline/SkylineNightly/Nightly.cs`, `SkylineNightlyShim/Program.cs`, `SkylineTester/Program.cs`, `Skyline/TestRunner/Program.cs` (telemetry/build automation using HttpWebRequest or ServicePointManager)
+  - **Acceptable (status/header-only) — annotated inline**
+    - `CommonMsData/RemoteApi/Ardia/ArdiaResult.cs`
+    - `Shared/PanoramaClient/PanoramaClient.cs`
+    - `Shared/PanoramaClient/PanoramaUtil.cs`
+    - `Skyline/FileUI/PublishDocumentDlgArdia.cs`
+    - `Skyline/FileUI/SkypSupport.cs`
+    - `Skyline/SkylineFiles.cs`
+    - `Skyline/TestFunctional/PanoramaClientPublishTest.cs`
+    - `Skyline/TestFunctional/SkypTest.cs`
 
 ## Risks & Considerations
 
