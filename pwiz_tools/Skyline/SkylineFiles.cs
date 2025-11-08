@@ -1064,7 +1064,7 @@ namespace pwiz.Skyline
         }
 
         /// <summary>
-        /// Extracts HTTP status code from exception (NetworkRequestException or legacy WebException).
+        /// Extracts HTTP status code from a NetworkRequestException
         /// Walks inner exception chain to find the status code.
         /// </summary>
         private static HttpStatusCode? GetHttpStatusCode(Exception e)

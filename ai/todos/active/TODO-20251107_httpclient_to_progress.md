@@ -58,6 +58,9 @@ After completing the WebClient → HttpClient migration, we discovered several p
   - Classify occurrences: `HttpClient`, `HttpWebRequest`, `WebRequest`, `HttpStatusCode`, headers, sockets
   - Identify files that still compile against `HttpWebRequest`
   - Document any acceptable `System.Net` usage (e.g., `HttpStatusCode`, `HttpRequestHeader` enums)
+- [ ] For each file encountered, temporarily remove `using System.Net;` and build to understand dependencies
+  - Record which types still require `System.Net`
+  - Note dead code exposed by the removal (unused helpers, obsolete flows)
 - [ ] Analyze `EditRemoteAccountDlg` Ardia API usage
   - Cookie/session management patterns
   - API endpoints called
@@ -71,6 +74,9 @@ After completing the WebClient → HttpClient migration, we discovered several p
 - [ ] Identify other Panorama/AutoQC/SkylineBatch code paths still using `HttpWebRequest`
   - Confirm overlap with TODOs in backlog (`TODO-tools_webclient_replacement`, `TODO-skylinebatch_test_cleanup`)
   - Propose ownership if migration belongs in this branch vs. follow-up TODO
+- [x] Analyze `HttpClientWithProgress` exception handling
+  - Determine if `MapHttpRequestException` and `MapUnexpectedWebException` remain reachable
+  - If reachable, document real-world repro steps; otherwise plan safe removal/refactor
 
 ### Phase 2: EditRemoteAccountDlg Migration
 - [ ] Replace bare `HttpClient` with `HttpClientWithProgress`
@@ -115,6 +121,11 @@ After completing the WebClient → HttpClient migration, we discovered several p
 - async/await removed from ArdiaLoginDlg (or separate TODO created if too complex)
 - Comprehensive test coverage
 - Code inspection test passes
+
+## Progress (2025-11-07)
+- Removed `MapUnexpectedWebException` and related WebRequest-era helpers; all Panorama exception flows now originate from `NetworkRequestException`.
+- Verified via debugger that DNS failures surface as `HttpRequestException` with inner `WebException`; retained handling in `HttpClientWithProgress` and test helper.
+- Current legitimate `WebException` references: `HttpClientWithProgress` (DNS inner exception), `HttpClientTestHelper`, Ardia OAuth client (still raw `HttpClient`), Web-enabled FASTA importer (legacy APIs), and associated tests. Further reduction depends on migrating those callers to `HttpClientWithProgress`.
 
 ## Risks & Considerations
 

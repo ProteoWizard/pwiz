@@ -399,12 +399,6 @@ namespace pwiz.SkylineTestFunctional
                 return obj;
             }
 
-            protected override LabKeyError ParseUploadFileCompletedEventArgs(UploadFileCompletedEventArgs e)
-            {
-                var requestHelper = GetRequestHelper();
-                return requestHelper is FailOnFileUploadRequestHelper ? FailOnFileUploadRequestHelper.GetLabKeyError() : null;
-            }
-
             protected override Uri ValidateUri(Uri serverUri, bool tryNewProtocol = true)
             {
                 return serverUri;
@@ -548,7 +542,7 @@ namespace pwiz.SkylineTestFunctional
             }
         }
 
-        // TODO: Test WebException vs no exception but exception in JSON.
+        // TODO: Test NetworkRequestException vs no exception but exception in JSON.
         public class FailOnSubmitPipelineJobRequestHelper : TestRequestHelper
         {
             private static readonly string exceptionMessage = "Exception adding to the document import queue.";

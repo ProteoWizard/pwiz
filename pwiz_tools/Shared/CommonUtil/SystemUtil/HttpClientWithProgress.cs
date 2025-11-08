@@ -842,12 +842,6 @@ namespace pwiz.Common.SystemUtil
                 }
             }
 
-            // Defensive: Handle WebException as root exception (unlikely with HttpClient, but just to be safe)
-            if (root is WebException webEx)
-            {
-                return MapUnexpectedWebException(uri, webEx);
-            }
-
             return root;
         }
 
@@ -897,29 +891,29 @@ namespace pwiz.Common.SystemUtil
                 switch ((int)statusCodeValue)
                 {
                     case 404:
-                            // Resource-specific: show full URI so user can verify the exact path
-                            message = string.Format(MessageResources.HttpClientWithProgress_MapHttpException_The_requested_resource_at__0__was_not_found__HTTP_404___Please_verify_the_URL_, uriString);
-                            break;
-                        case 500:
-                            // Server error: show hostname (problem is server-side, not specific resource)
-                            message = string.Format(MessageResources.HttpClientWithProgress_MapHttpException_The_server__0__encountered_an_internal_error__HTTP_500___Please_try_again_later_or_contact_the_server_administrator_, server);
-                            break;
-                        case 401:
-                            // Auth-specific: show full URI so user knows what they're being denied access to
-                            message = string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Access_to__0__was_denied__HTTP_401___Authentication_may_be_required_, uriString);
-                            break;
-                        case 403:
-                            // Permission-specific: show full URI so user knows what resource is forbidden
-                            message = string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Access_to__0__was_forbidden__HTTP_403___You_may_not_have_permission_to_access_this_resource_, uriString);
-                            break;
-                        case 429:
-                            // Rate limit: show hostname (typically server-wide limit, not resource-specific)
-                            message = string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Too_many_requests_to__0___HTTP_429___Please_wait_before_trying_again_, server);
-                            break;
-                        default:
-                            // Generic server error: show hostname
-                            message = string.Format(MessageResources.HttpClientWithProgress_MapHttpException_The_server__0__returned_an_error__HTTP__1____Please_try_again_or_contact_support_, server, (int)statusCodeValue);
-                            break;
+                        // Resource-specific: show full URI so user can verify the exact path
+                        message = string.Format(MessageResources.HttpClientWithProgress_MapHttpException_The_requested_resource_at__0__was_not_found__HTTP_404___Please_verify_the_URL_, uriString);
+                        break;
+                    case 500:
+                        // Server error: show hostname (problem is server-side, not specific resource)
+                        message = string.Format(MessageResources.HttpClientWithProgress_MapHttpException_The_server__0__encountered_an_internal_error__HTTP_500___Please_try_again_later_or_contact_the_server_administrator_, server);
+                        break;
+                    case 401:
+                        // Auth-specific: show full URI so user knows what they're being denied access to
+                        message = string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Access_to__0__was_denied__HTTP_401___Authentication_may_be_required_, uriString);
+                        break;
+                    case 403:
+                        // Permission-specific: show full URI so user knows what resource is forbidden
+                        message = string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Access_to__0__was_forbidden__HTTP_403___You_may_not_have_permission_to_access_this_resource_, uriString);
+                        break;
+                    case 429:
+                        // Rate limit: show hostname (typically server-wide limit, not resource-specific)
+                        message = string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Too_many_requests_to__0___HTTP_429___Please_wait_before_trying_again_, server);
+                        break;
+                    default:
+                        // Generic server error: show hostname
+                        message = string.Format(MessageResources.HttpClientWithProgress_MapHttpException_The_server__0__returned_an_error__HTTP__1____Please_try_again_or_contact_support_, server, (int)statusCodeValue);
+                        break;
                 }
                 // Wrap with NetworkRequestException to provide structured access to status code
                 // Preserves original HttpRequestException as inner exception for detailed troubleshooting
@@ -927,6 +921,8 @@ namespace pwiz.Common.SystemUtil
             }
                 
             // DNS resolution failure (e.g., 'The remote name could not be resolved')
+            // This is real and has been seen in a debugger. The InnerException is a WebException
+            // HttpClient appears to use HttpWebRequest, but wrap its exceptions in HttpRequestException
             if (httpEx.InnerException is WebException { Status: WebExceptionStatus.NameResolutionFailure })
                 return new NetworkRequestException(
                     string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Failed_to_resolve_host__0___Please_check_your_DNS_settings_or_VPN_proxy_, server), 
@@ -936,42 +932,6 @@ namespace pwiz.Common.SystemUtil
             return new NetworkRequestException(
                 string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Failed_to_connect_to__0___Please_check_your_network_connection__VPN_proxy__or_firewall_, server), 
                 NetworkFailureType.ConnectionFailed, uri, httpEx);
-        }
-
-        private static Exception MapUnexpectedWebException(Uri uri, WebException webEx)
-        {
-            string server = uri?.Host ?? MessageResources.HttpClientWithProgress_MapHttpException_server;
-
-            // Map common WebExceptionStatus to NetworkRequestException
-            switch (webEx.Status)
-            {
-                case WebExceptionStatus.NameResolutionFailure:
-                    return new NetworkRequestException(
-                        string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Failed_to_resolve_host__0___Please_check_your_DNS_settings_or_VPN_proxy_, server),
-                        NetworkFailureType.DnsResolution, uri, webEx);
-
-                case WebExceptionStatus.ConnectFailure:
-                case WebExceptionStatus.Timeout:
-                    return new NetworkRequestException(
-                        string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Failed_to_connect_to__0___Please_check_your_network_connection__VPN_proxy__or_firewall_, server),
-                        NetworkFailureType.ConnectionFailed, uri, webEx);
-
-                default:
-                    // For other WebExceptionStatus values, create a generic NetworkRequestException
-                    // This preserves the WebException as inner exception for troubleshooting
-                    if (webEx.Response is HttpWebResponse httpResponse)
-                    {
-                        HttpStatusCode? statusCode = httpResponse.StatusCode;
-                        return new NetworkRequestException(
-                            string.Format(MessageResources.HttpClientWithProgress_MapHttpException_The_server__0__returned_an_error__HTTP__1____Please_try_again_or_contact_support_,
-                                server, (int)statusCode),
-                            statusCode.Value, uri, webEx);
-                    }
-                    // No HTTP response (connection failure, etc.)
-                    return new NetworkRequestException(
-                        string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Failed_to_connect_to__0___Please_check_your_network_connection__VPN_proxy__or_firewall_, server),
-                        NetworkFailureType.ConnectionFailed, uri, webEx);
-            }
         }
 
         public static bool IsNetworkReallyAvailable()

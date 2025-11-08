@@ -70,6 +70,8 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         public static HttpClientTestHelper SimulateDnsFailure(string hostname = "nonexistent.example.com")
         {
+            // This is real and has been seen in a debugger. The InnerException is a WebException
+            // HttpClient appears to use HttpWebRequest, but wrap its exceptions in HttpRequestException
             var webEx = new WebException($"The remote name could not be resolved: '{hostname}'", WebExceptionStatus.NameResolutionFailure);
             var httpEx = new HttpRequestException("An error occurred while sending the request.", webEx);
             return new HttpClientTestHelper(httpEx);
