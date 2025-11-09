@@ -363,6 +363,7 @@ ASALocalRun/
 build-nt-x86
 /src_subset
 /*.log
+/bs*.bat
 /libraries/boost_1_*
 /libraries/expat*
 /libraries/hdf5*

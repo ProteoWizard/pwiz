@@ -21,7 +21,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.Find

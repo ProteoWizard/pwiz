@@ -133,9 +133,6 @@
   <data name="FragmentLib" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\fragmentlib.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="ReportSpecList_Title_Edit_Reports" xml:space="preserve">
-    <value>Edit Reports</value>
-  </data>
   <data name="ImportPeptideSearchDlg_NextPage_The_document_specific_spectral_library_does_not_have_valid_retention_times_" xml:space="preserve">
     <value>The document specific spectral library does not have valid retention times.</value>
   </data>
@@ -1179,8 +1176,8 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="Note" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\note.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="ConfigureToolsDlg_UnpackZipTool_Failed_attempting_to_extract_the_tool_from__0_" xml:space="preserve">
-    <value>Failed attempting to extract the tool from {0}</value>
+  <data name="ConfigureToolsDlg_UnpackZipTool_Failed_attempting_to_extract_the_tool" xml:space="preserve">
+    <value>Failed attempting to extract the tool</value>
   </data>
   <data name="NoPeak" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\nopeak.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -2700,9 +2697,6 @@ Most peptide transition lists can be imported with the "File|Import|Transition L
   <data name="Skyline" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\skyline.ico;System.Drawing.Icon, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="ReportSpecList_Label_Report" xml:space="preserve">
-    <value>&amp;Report:</value>
-  </data>
   <data name="ResultsGrid_ResultsGrid_Fwhm" xml:space="preserve">
     <value>Fwhm</value>
   </data>
@@ -3696,9 +3690,6 @@ Most peptide transition lists can be imported with the "File|Import|Transition L
   </data>
   <data name="RInstaller_InstallPackages_Package_installation_failed__Error_log_output_in_immediate_window_" xml:space="preserve">
     <value>Package installation failed. Error log output in immediate window.</value>
-  </data>
-  <data name="TransitionTreeNode_GetLabel_rank__0__" xml:space="preserve">
-    <value>rank {0}</value>
   </data>
   <data name="CalculateIsolationSchemeDlg_OkDialog_Window_width_must_be_less_than_or_equal_to_the_isolation_range" xml:space="preserve">
     <value>Window width must be less than or equal to the isolation range.</value>

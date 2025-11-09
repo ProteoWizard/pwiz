@@ -127,7 +127,7 @@ namespace pwiz.Common.SystemUtil
                     pnProcInfo = 0,
                     lpdwRebootReasons = RmRebootReasonNone;
 
-                string[] resources = new string[] { fullPathToFile }; // Just checking on one resource.
+                string[] resources = new[] { fullPathToFile }; // Just checking on one resource.
 
                 res = RmRegisterResources(handle, (uint)resources.Length, resources, 0, null, 0, null);
 
