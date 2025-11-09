@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Net;
@@ -419,7 +420,7 @@ namespace pwiz.SkylineTestFunctional
                 return new PanoramaServer(pServer.URI, pServer.Username, pServer.Password);
             }
 
-            public override IRequestHelper GetRequestHelper(bool forUpload = false)
+            public override IRequestHelper GetRequestHelper()
             {
                 IRequestHelper requestHelper = _errorType switch
                 {
@@ -467,18 +468,18 @@ namespace pwiz.SkylineTestFunctional
             {
                 _requestMethod = requestMethod;
             }
-            public override string GetResponse(HttpWebRequest request)
+            public override string GetResponse(Uri uri, string method, IDictionary<string, string> headers = null)
             {
-                if (request.Method.Equals(_requestMethod.ToString()))
+                if (method.Equals(_requestMethod.ToString()))
                 {
-                    _labkeyError = new LabKeyError(string.Format(MSG_LABKEY_ERR, request.Method), null);
-                    var exceptionMessage = string.Format(MSG_EXCEPTION, request.Method);
-                    var labKeyErrorMessage = string.Format(MSG_LABKEY_ERR, request.Method);
+                    _labkeyError = new LabKeyError(string.Format(MSG_LABKEY_ERR, method), null);
+                    var exceptionMessage = string.Format(MSG_EXCEPTION, method);
+                    var labKeyErrorMessage = string.Format(MSG_LABKEY_ERR, method);
                     
-                    throw CreateNetworkRequestExceptionWithLabKeyError(exceptionMessage, labKeyErrorMessage, request.RequestUri);
+                    throw CreateNetworkRequestExceptionWithLabKeyError(exceptionMessage, labKeyErrorMessage, uri);
                 }
 
-                return base.GetResponse(request);
+                return base.GetResponse(uri, method, headers);
             }
 
             public static string GetExpectedError(string sharedZipFile, RequestType requestType)
@@ -526,7 +527,7 @@ namespace pwiz.SkylineTestFunctional
                     .ToString();
             }
 
-            public override void DoAsyncFileUpload(Uri address, string method, string fileName)
+            public override void DoAsyncFileUpload(Uri address, string method, string fileName, IDictionary<string, string> headers = null)
             {
                 // For HttpPanoramaRequestHelper, we need to actually throw an exception with the LabKey error
                 // Create a JSON response with the LabKey error
@@ -669,24 +670,16 @@ namespace pwiz.SkylineTestFunctional
                 return "/_webdav/" + panoramaFolder + "/%40files/";
             }
 
-            public override void AddHeader(string name, string value)
-            {
-            }
-
             public override void AddHeader(HttpRequestHeader header, string value)
             {
             }
 
-            public override void RemoveHeader(string name)
-            {
-            }
-
-            public override void DoAsyncFileUpload(Uri address, string method, string fileName)
+            public override void DoAsyncFileUpload(Uri address, string method, string fileName, IDictionary<string, string> headers = null)
             {
                 Thread.Sleep(1000);
             }
 
-            public override string GetResponse(HttpWebRequest request)
+            public override string GetResponse(Uri uri, string method, IDictionary<string, string> headers = null)
             {
                 return string.Empty;
             }
