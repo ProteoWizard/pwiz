@@ -45,6 +45,7 @@ namespace pwiz.Common.SystemUtil
         private IProgressStatus _progressStatus;
         private string _progressMessageWithoutSize; // Base message before download size is appended
         private const int ReadTimeoutMilliseconds = 15000; // timeout per chunk to avoid long hangs when network drops
+        private TimeSpan? _requestTimeout;
 
         /// <summary>
         /// Gets or sets whether to show transfer size in progress messages.
@@ -52,6 +53,23 @@ namespace pwiz.Common.SystemUtil
         /// Default is true (show size for file downloads/uploads).
         /// </summary>
         public bool ShowTransferSize { get; set; } = true;
+
+        /// <summary>
+        /// Optional request timeout to apply to the underlying HttpClient instance.
+        /// If null, uses Timeout.InfiniteTimeSpan (default). Set per HttpClientWithProgress instance.
+        /// </summary>
+        public TimeSpan? RequestTimeout
+        {
+            get => _requestTimeout;
+            set
+            {
+                if (value.HasValue && value.Value <= TimeSpan.Zero)
+                    throw new ArgumentOutOfRangeException(nameof(value), @"Timeout must be positive.");
+
+                _requestTimeout = value;
+                _httpClient.Timeout = value ?? Timeout.InfiniteTimeSpan;
+            }
+        }
 
         /// <summary>
         /// Creates an HttpClient wrapper with optional progress reporting.
@@ -95,7 +113,7 @@ namespace pwiz.Common.SystemUtil
             // Set infinite timeout for large file uploads/downloads
             // We have per-chunk timeouts (ReadTimeoutMilliseconds) for detecting stalled transfers
             // The overall request timeout should not apply to operations that may take a long time
-            _httpClient.Timeout = Timeout.InfiniteTimeSpan;
+            RequestTimeout = null;
             
             // Default to SilentProgressMonitor if null - maintains non-null invariant
             // This allows simple callers to pass null while complex callers can use SilentProgressMonitor(cancelToken)

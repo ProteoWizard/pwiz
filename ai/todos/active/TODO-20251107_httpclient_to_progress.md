@@ -78,7 +78,16 @@ After completing the WebClient → HttpClient migration, we discovered several p
   - Determine if `MapHttpRequestException` and `MapUnexpectedWebException` remain reachable
   - If reachable, document real-world repro steps; otherwise plan safe removal/refactor
 
-### Phase 2: EditRemoteAccountDlg Migration
+- [x] Replace `WebEnabledFastaImporter` network access with `HttpClientWithProgress`
+  - [x] Update `WebSearchProvider.GetWebResponseStream` to stream via HttpClientWithProgress
+  - [x] Replace `GetXmlTextReader(string url)` with HttpClient-based retrieval
+  - [x] Propagate `IProgressMonitor` and cancellation into web requests
+  - [x] Preserve timeout behavior using linked cancellation tokens
+- [x] Drop legacy `WebRequest`/`HttpWebRequest` usage from FASTA importer tests (interfaces updated; legacy seams remain only until HttpClientTestHelper expansion)
+- [ ] Introduce `HttpClientTestHelper`-based mocks for FASTA web responses
+- [ ] Document the migration pattern in `STYLEGUIDE.md` or importer-specific docs if needed
+
+### Phase 3: EditRemoteAccountDlg Migration
 - [ ] Replace bare `HttpClient` with `HttpClientWithProgress`
 - [ ] Use `CookieContainer` parameter for session management
 - [ ] Add progress reporting for API calls
@@ -86,7 +95,7 @@ After completing the WebClient → HttpClient migration, we discovered several p
 - [ ] Update error handling to use `MapHttpException`
 - [ ] Create tests using `HttpClientTestHelper`
 
-### Phase 3: ArdiaLoginDlg Migration
+### Phase 4: ArdiaLoginDlg Migration
 - [ ] **Decision point:** Can we remove async/await while migrating?
   - If yes: Refactor to ActionUtil.RunAsync() + HttpClientWithProgress
   - If no: Consider splitting into separate async/await removal branch
@@ -95,20 +104,20 @@ After completing the WebClient → HttpClient migration, we discovered several p
 - [ ] Add progress reporting for OAuth flows
 - [ ] Create tests for OAuth scenarios
 
-### Phase 4: Retire HttpWebRequest
+### Phase 5: Retire HttpWebRequest
 - [ ] Replace remaining `HttpWebRequest` usage with `HttpClientWithProgress`
 - [ ] Update helpers/utilities that currently return `HttpWebRequest`
 - [ ] Ensure authentication headers/cookies are handled through `HttpClientWithProgress`
 - [ ] Update any tests relying on `HttpWebRequest` seams
 
-### Phase 5: Testing
+### Phase 6: Testing
 - [ ] Test Ardia login workflows
 - [ ] Test session management
 - [ ] Test OAuth device flow
 - [ ] Test error scenarios (network failures, auth failures)
 - [ ] Verify no regressions in Ardia integration
 
-### Phase 6: Code Inspection & Documentation
+### Phase 7: Code Inspection & Documentation
 - [ ] Update `CodeInspectionTest` to detect bare `HttpClient` usage in core Skyline
 - [ ] Add inspection for `HttpWebRequest` in `pwiz_tools` and `pwiz_tools/Shared`
 - [ ] Verify all network operations use `HttpClientWithProgress`
@@ -142,6 +151,12 @@ After completing the WebClient → HttpClient migration, we discovered several p
     - `Skyline/SkylineFiles.cs`
     - `Skyline/TestFunctional/PanoramaClientPublishTest.cs`
     - `Skyline/TestFunctional/SkypTest.cs`
+
+- Confirmed FASTA importer networking runs on the UI thread with only status-bar updates; decided to migrate to `HttpClientWithProgress` for cancellation and consistent error handling.
+- Drafted migration plan: inject `IProgressMonitor` into `WebSearchProvider`, wrap requests with linked cancellation tokens to respect existing timeout constants, and disable size reporting for small payloads.
+- Identified follow-on work: replace `FakeWebSearchProvider`/`DelayedWebSearchProvider` seams with `HttpClientTestHelper` mocks once the importer understands `HttpClientWithProgress`.
+- Replaced `WebSearchProvider` HTTP helpers to use `HttpClientWithProgress`, including timeout-aware progress monitors and resource-backed status messages. Tests still rely on legacy fake providers until `HttpClientTestHelper` seams are wired in.
+- Verified build + targeted CommonTest suite (`TestBasicFastaImport`, `TestFastaImport`, `WebTestFastaImport`) across English/Chinese/French languages, ensuring cancellation-aware HttpClient flow passes localized scenarios.
 
 ## Risks & Considerations
 

@@ -537,6 +537,7 @@ namespace pwiz.SkylineTestUtil
         public Dictionary<Uri, Stream> MockUploadMap { get; set; }
         public bool SimulateProgress { get; set; }
         public Action OnProgressCallback { get; set; }
+        public Func<Uri, Stream> ResponseFactory { get; set; }
 
         public Stream GetMockUploadStream(Uri uri)
         {
@@ -558,21 +559,39 @@ namespace pwiz.SkylineTestUtil
             }
 
             // Fall back to single response data (backward compatible)
-            if (MockResponseData == null)
+            if (MockResponseData != null)
             {
-                contentLength = 0;
-                return null;
+                contentLength = MockResponseData.Length;
+                
+                if (SimulateProgress)
+                {
+                    // Return a stream that simulates chunked reading for progress reporting
+                    return new ProgressSimulatingStream(MockResponseData, OnProgressCallback);
+                }
+                
+                return new MemoryStream(MockResponseData);
             }
 
-            contentLength = MockResponseData.Length;
-            
-            if (SimulateProgress)
+            if (ResponseFactory != null)
             {
-                // Return a stream that simulates chunked reading for progress reporting
-                return new ProgressSimulatingStream(MockResponseData, OnProgressCallback);
+                var stream = ResponseFactory(uri);
+                if (stream != null)
+                {
+                    if (stream.CanSeek)
+                    {
+                        stream.Position = 0;
+                        contentLength = stream.Length;
+                    }
+                    else
+                    {
+                        contentLength = 0;
+                    }
+                    return stream;
+                }
             }
-            
-            return new MemoryStream(MockResponseData);
+
+            contentLength = 0;
+            return null;
         }
 
         /// <summary>

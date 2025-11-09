@@ -25,7 +25,6 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.ProteomeDatabase.API;
 using pwiz.ProteomeDatabase.DataModel;
@@ -508,111 +507,149 @@ namespace CommonTest
                 _tests = GetTests(0); // The default set of fasta header tests
             }
 
-            public override XmlTextReader GetXmlTextReader(string url)
+            public IDisposable BeginPlayback()
             {
-                // should look something like "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=protein&id=15834432,15834432&tool=%22skyline%22&email=%22johnqdeveloper@proteinms.net%22&retmode=xml"
-                var searches = url.Split('=')[2].Split('&')[0].Split(',');
-                var sb = new StringBuilder();
-                if (url.Contains(".gov")) // watch for deliberately malformed url in tests Not L10N
+                return new HttpClientTestHelper(new HttpClientTestBehavior
                 {
-                    if (url.Contains("rettype=docsum"))
+                    ResponseFactory = uri =>
                     {
-                        sb.Append("<?xml version=\"1.0\"?>\n<eSummaryResult>\n"); // Not L10N
-                        foreach (var search in searches)
-                        {
-                            var test = FindTest(search);
-                            if ((null != test) && !String.IsNullOrEmpty(test.Protein.Accession))
-                            {
-                                var intermediateSearchTerm = test.GetIntermediateSearchterm(search);
-                                sb.AppendFormat("<Id>{0}</Id>",search);
-                                sb.AppendFormat("<DocSum> ");
-                                sb.AppendFormat("<Item Name=\"Caption\" Type=\"String\">{0}</Item>",
-                                    intermediateSearchTerm);
-                                sb.AppendFormat("<Item Name=\"ReplacedBy\" Type=\"String\">{0}</Item>",
-                                    intermediateSearchTerm);
-                                sb.AppendFormat("<Item Name=\"Length\" Type=\"Integer\">{0}</Item>",
-                                    test.SeqLen);
-                                sb.AppendFormat("</DocSum>\n"); // Not L10N
-                            }
-                        }
-                        sb.AppendFormat("</eSummaryResult>\n"); // Not L10N
+                        if (!TryGetResponse(uri, out var text))
+                            throw new WebException("error 404"); // Not L10N
+                        return CreateResponseStream(text);
                     }
-                    else
-                    {
-                        sb.Append("<?xml version=\"1.0\"?>\n<GBSet>\n"); // Not L10N
-                        foreach (var search in searches)
-                        {
-                            var test = FindTest(search);
-                            if ((null != test) && !String.IsNullOrEmpty(test.Protein.Accession))
-                            {
-                                sb.AppendFormat("<GBSeq> ");
-                                sb.AppendFormat("<GBSeq_length>{0}</GBSeq_length> ",
-                                    test.SeqLen);
-                                if (test.Protein.PreferredName != null)
-                                    sb.AppendFormat("<GBSeq_locus>{0}</GBSeq_locus>", test.Protein.PreferredName);
-                                        // Not L10N
-                                if (test.Protein.Description != null)
-                                    sb.AppendFormat(" <GBSeq_definition>{0}</GBSeq_definition> ",
-                                        test.Protein.Description); // Not L10N
-                                if (test.Protein.Accession != null)
-                                    sb.AppendFormat("<GBSeq_primary-accession>{0}</GBSeq_primary-accession>",
-                                        test.Protein.Accession); // Not L10N 
-                                if (test.Protein.Species != null)
-                                    sb.AppendFormat("<GBSeq_organism>{0}</GBSeq_organism> ", test.Protein.Species);
-                                        // Not L10N
-                                if (test.Protein.Gene != null)
-                                    sb.AppendFormat(
-                                        "<GBQualifier> <GBQualifier_name>gene</GBQualifier_name> <GBQualifier_value>{0}</GBQualifier_value> </GBQualifier> ",
-                                        test.Protein.Gene); // Not L10N
-                                sb.AppendFormat("</GBSeq>\n"); // Not L10N
-                            }
-                        }
-                        sb.Append("</GBSet>"); // Not L10N
-                    }
-                    return new XmlTextReader(MakeStream(sb));
-                }
-                else
-                {
-                    throw new WebException("error 404"); // mimic bad url behavior Not L10N
-                }
+                });
             }
 
-            public override Stream GetWebResponseStream(string url, int timeout)
+            private static Stream CreateResponseStream(string text)
             {
-                // should look something like "https://www.uniprot.xyzpdq/uniprot/?query=(P04638+OR+SGD_S000005768+OR+CAB02319.1)&format=tab&columns=id,genes,organism,length,entry name,protein names,reviewed"
-                var searches = url.Split('(')[1].Split(')')[0].Split('+').Where(s => !Equals(s, "OR")).ToArray();
-                var sb = new StringBuilder();
-                if (url.Contains(".org")) // watch for deliberately malformed url in tests Not L10N
-                {
-                    sb.Append("Entry\tEntry name\tProtein names\tGene names\tOrganism\tLength\tStatus\n");
-                    foreach (var search in searches)
-                    {
-                        var test = FindTest(search);
-                        if ((null != test) && !String.IsNullOrEmpty(test.Protein.Accession))
-                        {
-                            sb.AppendFormat(
-                                "{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\n", // Not L10N
-                                test.Protein.Accession , test.Protein.PreferredName ?? String.Empty,
-                                test.Protein.Description ?? String.Empty, test.Protein.Gene ?? String.Empty, test.Protein.Species ?? String.Empty,
-                                test.SeqLen, "reviewed");
-                        }
-                    }
-                    return MakeStream(sb);
-                }
-                else
-                {
-                    throw new WebException("error 404"); //  mimic bad url behavior Not L10N
-                }
+                var bytes = Encoding.UTF8.GetBytes(text);
+                return new MemoryStream(bytes);
             }
 
-            private Stream MakeStream(StringBuilder sb)
+            private bool TryGetResponse(Uri uri, out string response)
             {
-                MemoryStream stream = new MemoryStream();
-                StreamWriter writer = new StreamWriter(stream);
-                writer.Write(sb.ToString());
-                writer.Flush();
-                stream.Position = 0;
-                return stream;
+                var url = uri.ToString();
+
+                if (url.Contains(".gov"))
+                {
+                    response = url.Contains("rettype=docsum")
+                        ? BuildEntrezSummaryResponse(url)
+                        : BuildEntrezDetailResponse(url);
+                    return true;
+                }
+
+                if (url.Contains(".org"))
+                {
+                    response = BuildUniprotResponse(url);
+                    return true;
+                }
+
+                response = null;
+                return false;
+            }
+
+            private string BuildEntrezSummaryResponse(string url)
+            {
+                var searches = ParseEntrezSearchTerms(url);
+                var sb = new StringBuilder();
+                sb.Append("<?xml version=\"1.0\"?>\n<eSummaryResult>\n"); // Not L10N
+
+                foreach (var search in searches)
+                {
+                    var test = FindTest(search);
+                    if (test == null || string.IsNullOrEmpty(test.Protein.Accession))
+                        continue;
+
+                    var intermediateSearchTerm = test.GetIntermediateSearchterm(search);
+                    sb.AppendFormat("<Id>{0}</Id>", search);
+                    sb.Append("<DocSum> ");
+                    sb.AppendFormat("<Item Name=\"Caption\" Type=\"String\">{0}</Item>", intermediateSearchTerm);
+                    sb.AppendFormat("<Item Name=\"ReplacedBy\" Type=\"String\">{0}</Item>", intermediateSearchTerm);
+                    sb.AppendFormat("<Item Name=\"Length\" Type=\"Integer\">{0}</Item>", test.SeqLen);
+                    sb.Append("</DocSum>\n"); // Not L10N
+                }
+
+                sb.Append("</eSummaryResult>\n"); // Not L10N
+                return sb.ToString();
+            }
+
+            private string BuildEntrezDetailResponse(string url)
+            {
+                var searches = ParseEntrezSearchTerms(url);
+                var sb = new StringBuilder();
+                sb.Append("<?xml version=\"1.0\"?>\n<GBSet>\n"); // Not L10N
+
+                foreach (var search in searches)
+                {
+                    var test = FindTest(search);
+                    if (test == null || string.IsNullOrEmpty(test.Protein.Accession))
+                        continue;
+
+                    sb.Append("<GBSeq> ");
+                    sb.AppendFormat("<GBSeq_length>{0}</GBSeq_length> ", test.SeqLen);
+                    if (test.Protein.PreferredName != null)
+                        sb.AppendFormat("<GBSeq_locus>{0}</GBSeq_locus>", test.Protein.PreferredName); // Not L10N
+                    if (test.Protein.Description != null)
+                        sb.AppendFormat(" <GBSeq_definition>{0}</GBSeq_definition> ", test.Protein.Description); // Not L10N
+                    if (test.Protein.Accession != null)
+                        sb.AppendFormat("<GBSeq_primary-accession>{0}</GBSeq_primary-accession>", test.Protein.Accession); // Not L10N
+                    if (test.Protein.Species != null)
+                        sb.AppendFormat("<GBSeq_organism>{0}</GBSeq_organism> ", test.Protein.Species); // Not L10N
+                    if (test.Protein.Gene != null)
+                        sb.AppendFormat("<GBQualifier> <GBQualifier_name>gene</GBQualifier_name> <GBQualifier_value>{0}</GBQualifier_value> </GBQualifier> ", test.Protein.Gene); // Not L10N
+                    sb.Append("</GBSeq>\n"); // Not L10N
+                }
+
+                sb.Append("</GBSet>");
+                return sb.ToString();
+            }
+
+            private string BuildUniprotResponse(string url)
+            {
+                var searches = ParseUniprotSearchTerms(url);
+                var sb = new StringBuilder();
+                sb.Append("Entry\tEntry name\tProtein names\tGene names\tOrganism\tLength\tStatus\n");
+
+                foreach (var search in searches)
+                {
+                    var test = FindTest(search);
+                    if (test == null || string.IsNullOrEmpty(test.Protein.Accession))
+                        continue;
+
+                    sb.AppendFormat(
+                        "{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\n", // Not L10N
+                        test.Protein.Accession,
+                        test.Protein.PreferredName ?? string.Empty,
+                        test.Protein.Description ?? string.Empty,
+                        test.Protein.Gene ?? string.Empty,
+                        test.Protein.Species ?? string.Empty,
+                        test.SeqLen,
+                        "reviewed");
+                }
+
+                return sb.ToString();
+            }
+
+            private static string[] ParseEntrezSearchTerms(string url)
+            {
+                var parts = url.Split('=');
+                if (parts.Length < 3)
+                    return Array.Empty<string>();
+                var queryPart = parts[2].Split('&')[0];
+                return queryPart.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+            }
+
+            private static IEnumerable<string> ParseUniprotSearchTerms(string url)
+            {
+                var start = url.IndexOf("query=(", StringComparison.Ordinal);
+                if (start < 0)
+                    return Array.Empty<string>();
+                start += "query=(".Length;
+                var end = url.IndexOf(')', start);
+                if (end < 0)
+                    return Array.Empty<string>();
+                var query = url.Substring(start, end - start);
+                return query.Split(new[] { "+OR+" }, StringSplitOptions.RemoveEmptyEntries);
             }
 
             private FastaHeaderReaderResult FindTest(string keyword)
@@ -898,29 +935,10 @@ namespace CommonTest
                 dbProteins.Add(dbProtein);
             }
 
-            
+            ExecuteLookupScenario(useActualWebAccess, tests, proteinsToSearch, isPoorInternet: true);
+            ExecuteLookupScenario(useActualWebAccess, tests, proteinsToSearch, isPoorInternet: false);
 
-            for (int test = 2; test-- > 0;)
-            {
-                if (test == 1) // first, test poor internet access
-                    fastaImporter = new WebEnabledFastaImporter(new DoomedWebSearchProvider()); // intentionally messes up the URLs
-                else  // then test web search code - either live in a perf test, or using playback object
-                    fastaImporter = new WebEnabledFastaImporter(useActualWebAccess? new WebEnabledFastaImporter.WebSearchProvider() : new PlaybackProvider(tests));
-                var results = fastaImporter.DoWebserviceLookup(proteinsToSearch, null, false).ToList(); // No progress monitor, and don't be polite get it all at once
-                foreach (var result in results)
-                {
-                    if (result != null)
-                    {
-                        bool searchCompleted =
-                            String.IsNullOrEmpty(result.GetProteinMetadata().GetPendingSearchTerm());
-                        bool searchDelayed = (test==1); // first go round we simulate bad web access
-                        if (!result.ProteinDbInfo.WebSearchInfo.ToString().StartsWith(WebEnabledFastaImporter.SEARCHDONE_TAG.ToString(CultureInfo.InvariantCulture))) // the 'no search possible' case
-                            Assert.IsTrue(searchCompleted == !searchDelayed);
-                    }
-                }
-            }
             Assert.AreEqual(tests.Count, dbProteins.Count);
-
 
             var errStringE = String.Empty;
             var errStringA = String.Empty;
@@ -965,6 +983,52 @@ namespace CommonTest
                 }
             }
             Assert.AreEqual(errStringE + "\n", errStringA + "\n");
+        }
+
+        private void ExecuteLookupScenario(bool useNetAccess, List<FastaHeaderParserTest> testList, List<ProteinSearchInfo> proteins, bool isPoorInternet)
+        {
+            if (isPoorInternet)
+            {
+                var doomedProvider = new DoomedWebSearchProvider(); // intentionally messes up the URLs
+                if (useNetAccess)
+                {
+                    RunLookup(doomedProvider, proteins, simulateDelay: true);
+                }
+                else
+                {
+                    using var helper = HttpClientTestHelper.SimulateHttp404();
+                    RunLookup(doomedProvider, proteins, simulateDelay: true);
+                }
+            }
+            else if (useNetAccess)
+            {
+                var productionProvider = new WebEnabledFastaImporter.WebSearchProvider();
+                RunLookup(productionProvider, proteins, simulateDelay: false);
+            }
+            else
+            {
+                var playbackProvider = new PlaybackProvider(testList);
+                using (playbackProvider.BeginPlayback())
+                {
+                    RunLookup(playbackProvider, proteins, simulateDelay: false);
+                }
+            }
+        }
+
+        private void RunLookup(WebEnabledFastaImporter.WebSearchProvider provider, List<ProteinSearchInfo> proteins, bool simulateDelay)
+        {
+            var importer = new WebEnabledFastaImporter(provider);
+            var results = importer.DoWebserviceLookup(proteins, null, false).ToList(); // No progress monitor, and don't be polite get it all at once
+            foreach (var result in results)
+            {
+                if (result == null)
+                    continue;
+
+                bool searchCompleted = String.IsNullOrEmpty(result.GetProteinMetadata().GetPendingSearchTerm());
+                bool searchDelayed = simulateDelay;
+                if (!result.ProteinDbInfo.WebSearchInfo.ToString().StartsWith(WebEnabledFastaImporter.SEARCHDONE_TAG.ToString(CultureInfo.InvariantCulture))) // the 'no search possible' case
+                    Assert.IsTrue(searchCompleted == !searchDelayed);
+            }
         }
     }
 }

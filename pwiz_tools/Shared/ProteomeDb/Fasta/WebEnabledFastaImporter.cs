@@ -493,6 +493,21 @@ namespace pwiz.ProteomeDatabase.Fasta
         /// </summary>
         public class WebSearchProvider 
         {
+            private const string SKYLINE_USER_AGENT = @"Skyline";
+
+            protected virtual HttpClientWithProgress CreateHttpClient(IProgressMonitor progressMonitor, int timeout)
+            {
+                // Progress status for this request is ignored. The progress monitor is passed only
+                // to support cancellation. Progress for the langer operation that is making the
+                // HTTP requests gets reported based on completed chunks.
+                var httpClient = new HttpClientWithProgress(new CancelOnlyProgressMonitor(progressMonitor), new ProgressStatus());
+                if (timeout > 0)
+                    httpClient.RequestTimeout = TimeSpan.FromMilliseconds(timeout);
+                httpClient.ShowTransferSize = false;
+                httpClient.AddHeader(@"User-Agent", SKYLINE_USER_AGENT);
+                return httpClient;
+            }
+
             /// <summary>
             /// Test overrides should return false to avoid slowing down the tests
             /// </summary>
@@ -501,39 +516,18 @@ namespace pwiz.ProteomeDatabase.Fasta
                 get { return true; }
             }
 
-            public virtual XmlTextReader GetXmlTextReader(string url)
+            public virtual XmlTextReader GetXmlTextReader(string url, IProgressMonitor progressMonitor, int timeout)
             {
-                return new XmlTextReader(url);
+                using var httpClient = CreateHttpClient(progressMonitor, timeout);
+                var xmlContent = httpClient.DownloadString(new Uri(url));
+                return new XmlTextReader(new StringReader(xmlContent));
             }
 
-            public virtual Stream GetWebResponseStream(string url, int timeout)
+            public virtual Stream GetWebResponseStream(string url, IProgressMonitor progressMonitor, int timeout)
             {
-                HttpWebRequest httpRequest = (HttpWebRequest) WebRequest.Create(url);
-                httpRequest.Timeout = timeout;
-                httpRequest.UserAgent = @"Skyline";
-                MemoryStream stream = new MemoryStream();
-                using (HttpWebResponse webResponse = (HttpWebResponse)httpRequest.GetResponse())
-                {
-                    using (var webResponseStream = webResponse.GetResponseStream())
-                    {
-                        if (webResponseStream != null)
-                        {
-                            using (StreamReader reader = new StreamReader(webResponseStream))
-                            {
-                                var sb = new StringBuilder();
-                                while (!reader.EndOfStream)
-                                {
-                                    sb.AppendLine(reader.ReadLine());
-                                }
-                                StreamWriter writer = new StreamWriter(stream);
-                                writer.Write(sb.ToString());
-                                writer.Flush();
-                                stream.Position = 0;
-                            }
-                        }
-                    }
-                }
-                return stream;
+                using var httpClient = CreateHttpClient(progressMonitor, timeout);
+                var responseData = httpClient.DownloadData(new Uri(url));
+                return new MemoryStream(responseData, writable: false);
             }
 
             public virtual int WebRetryCount()
@@ -574,6 +568,29 @@ namespace pwiz.ProteomeDatabase.Fasta
             {
                 return (1000) * (10 + (searchTermCount / 5)); // 10 secs + 1 more for every 5 search terms
             }
+        }
+
+        private class CancelOnlyProgressMonitor : IProgressMonitorWithCancellationToken
+        {
+            private IProgressMonitor _wrappedProgressMonitor;
+
+            public CancelOnlyProgressMonitor(IProgressMonitor wrappedProgressMonitor)
+            {
+                _wrappedProgressMonitor = wrappedProgressMonitor;
+            }
+
+            public bool IsCanceled => _wrappedProgressMonitor.IsCanceled;
+
+            public UpdateProgressResponse UpdateProgress(IProgressStatus status)
+            {
+                // Do nothing. This monitor is only for cancellation.
+                return UpdateProgressResponse.normal;
+            }
+
+            public bool HasUI => false;
+
+            public CancellationToken CancellationToken =>
+                (_wrappedProgressMonitor as IProgressMonitorWithCancellationToken)?.CancellationToken ?? CancellationToken.None;
         }
 
         /// <summary>
@@ -974,7 +991,7 @@ namespace pwiz.ProteomeDatabase.Fasta
             if (searchterms.Count == 0)
                 return 0; // no work, but not error either
             var responses = new List<ProteinSearchInfo>();
-            for (var retries = _webSearchProvider.WebRetryCount();retries-->0;)  // be patient with the web
+            for (var retries = _webSearchProvider.WebRetryCount(); retries-- > 0;)  // be patient with the web
             {
                 if (searchterms.Count == 0)
                     break;
@@ -998,6 +1015,7 @@ namespace pwiz.ProteomeDatabase.Fasta
                         }
 
                         urlString = _webSearchProvider.ConstructEntrezURL(searchterms,true); // get in summary form
+                        int timeout = _webSearchProvider.GetTimeoutMsec(searchterms.Count);
 
                         /*
                          * a search on XP_915497 and 15834432 yields something like this (but don't mix GI and non GI in practice):
@@ -1040,7 +1058,7 @@ namespace pwiz.ProteomeDatabase.Fasta
                             </Item>
                             </DocSum>
                         */
-                        using (var xmlTextReader = _webSearchProvider.GetXmlTextReader(urlString))
+                        using (var xmlTextReader = _webSearchProvider.GetXmlTextReader(urlString, progressMonitor, timeout))
                         {
                             var elementName = String.Empty;
                             var response = new ProteinSearchInfo();
@@ -1151,8 +1169,9 @@ namespace pwiz.ProteomeDatabase.Fasta
                         {
                             // now do full entrez search - unfortunately this pulls down sequence information so it's slow and we try to avoid it
                             urlString = _webSearchProvider.ConstructEntrezURL(searchterms, false); // not a summary
+                            timeout = _webSearchProvider.GetTimeoutMsec(searchterms.Count);
 
-                            using (var xmlTextReader = _webSearchProvider.GetXmlTextReader(urlString))
+                            using (var xmlTextReader = _webSearchProvider.GetXmlTextReader(urlString, progressMonitor, timeout))
                             {
                                 var elementName = String.Empty;
                                 var latestGbQualifierName = string.Empty;
@@ -1235,7 +1254,7 @@ namespace pwiz.ProteomeDatabase.Fasta
                     {
                         int timeout = _webSearchProvider.GetTimeoutMsec(searchterms.Count); // 10 secs + 1 more for every 5 search terms
                         urlString = _webSearchProvider.ConstructUniprotURL(searchterms);
-                        using (var webResponseStream = _webSearchProvider.GetWebResponseStream(urlString, timeout))
+                        using (var webResponseStream = _webSearchProvider.GetWebResponseStream(urlString, progressMonitor, timeout))
                         {
                             if (webResponseStream != null)
                             {
@@ -1286,30 +1305,28 @@ namespace pwiz.ProteomeDatabase.Fasta
                         }
                     } // End if Uniprot
                 }
-                catch (WebException ex)
+                catch (NetworkRequestException ex)
                 {
-                    if (ex.Status == WebExceptionStatus.ProtocolError)
+                    if (ex.StatusCode == HttpStatusCode.BadRequest || ex.StatusCode == HttpStatusCode.RequestUriTooLong)
                     {
-                        switch (((HttpWebResponse)ex.Response).StatusCode)
+                        if (proteins.Count == 1)
                         {
-                            case HttpStatusCode.BadRequest:
-                            case HttpStatusCode.RequestUriTooLong:
-                                // malformed search, stop trying
-                                if (proteins.Count == 1)
-                                {
-                                    proteins[0].SetWebSearchCompleted(); // No more need for lookup
-                                    return 1; // We resolved one
-                                }
-                                return URL_TOO_LONG; // Probably asked for too many at once, caller will go into batch reduction mode
+                            proteins[0].SetWebSearchCompleted(); // No more need for lookup
+                            return 1; // We resolved one
                         }
-                    }
-                    else if (ex.Status == WebExceptionStatus.ConnectionClosed && searchType == UNIPROTKB_TAG) // Uniprot just drops the connection on too-large searches as of Sept 2019
-                    {
                         return URL_TOO_LONG; // Probably asked for too many at once, caller will go into batch reduction mode
                     }
+
+                    if (ex.FailureType == NetworkFailureType.ConnectionLost && searchType == UNIPROTKB_TAG)
+                        return URL_TOO_LONG; // UniProt drops the connection on too-large searches
+
                     caught = true;
                 }
-                catch
+                catch (TimeoutException)
+                {
+                    caught = true;
+                }
+                catch (Exception)
                 {
                     caught = true;
                 }
@@ -1547,6 +1564,7 @@ namespace pwiz.ProteomeDatabase.Fasta
             }
             return lookupCount;
         }
+
         public static void ValidateProteinSequence(string sequence, int lineNumber)
         {
             for (int i = 0; i < sequence.Length; i++)
