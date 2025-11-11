@@ -789,7 +789,7 @@ namespace pwiz.SkylineTestFunctional
             searchSucceeded = null;
             editToolDlg = ShowDialog<EditSearchToolDlg>(() => importPeptideSearchDlg.ClickNextButton());
             RunUI(() => editToolDlg.ToolPath = editToolDlg.ToolPath.Replace(".42.exe", ""));
-            RunUI(editToolDlg.OkDialog); // Purposely using RunUI instead of OkDialog here
+            RunUI(editToolDlg.OkDialog); // Purposely using RunUI instead of OkDialog here (we don't need to wait for window closure, wait for searchSucceeded instead)
 
             WaitForConditionUI(60000, () => searchSucceeded.HasValue);
             Assert.IsTrue(searchSucceeded.Value);
