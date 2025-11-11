@@ -81,6 +81,13 @@ param(
     [string]$Verbosity = "minimal"
 )
 
+$scriptRoot = Split-Path -Parent $PSCommandPath
+$skylineRoot = Split-Path -Parent $scriptRoot
+$initialLocation = Get-Location
+
+try {
+    Set-Location $skylineRoot
+
 # Ensure UTF-8 output for status symbols regardless of terminal settings
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
@@ -495,6 +502,10 @@ if (($RunInspection -or $QuickInspection) -and $Target -ne "Clean") {
     }
 }
 
-Write-Host "`n✅ All operations completed successfully" -ForegroundColor Green
-exit 0
+    Write-Host "`n✅ All operations completed successfully" -ForegroundColor Green
+    exit 0
+}
+finally {
+    Set-Location $initialLocation
+}
 

@@ -1263,7 +1263,7 @@ namespace pwiz.ProteomeDatabase.Fasta
         /// <returns>Outcome indicating success, a too-long request, or that the caller should retry later</returns>
         private WebserviceLookupOutcome DoWebserviceLookup(IList<ProteinSearchInfo> proteins, char searchType, IProgressMonitor progressMonitor)
         {
-            if (_webSearchProvider is FakeWebSearchProvider)
+            if (IsAccessFaked)
                 return WebserviceLookupOutcome.completed;
 
             var searchTerms = _webSearchProvider.ListSearchTerms(proteins);
