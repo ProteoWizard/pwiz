@@ -36,6 +36,7 @@
 #include <boost/pointer_cast.hpp>
 #include <boost/preprocessor/stringize.hpp>
 #include "pwiz/utility/misc/Exception.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include "comdef.h" // for _com_error
 
 #include "pwiz/utility/misc/cpp_cli_utilities.hpp"
@@ -316,5 +317,19 @@ property CLIType Name \
     Type^ Class::Property::get() {return gcnew Type(&base().Property, this);}
 #define IMPLEMENT_REFERENCE_PROPERTY_SET(Type, Class, Property) \
     void Class::Property::set(Type^ value) {base().Property = value;}
+
+
+namespace pwiz { namespace CLI { namespace util {
+public ref class FileSystem
+{
+public:
+    static System::String^ GetNonUnicodePath(System::String^ path)
+    {
+        // Try to use NTFS 8.3 short filename conversion to get a non-Unicode path
+        std::string resultUtf8 = get_non_unicode_path(ToStdString(path));
+        return ToSystemString(resultUtf8);
+    }
+};
+}}}
 
 #endif // _SHAREDCLI_HPP_
