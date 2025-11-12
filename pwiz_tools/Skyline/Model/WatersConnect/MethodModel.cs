@@ -118,7 +118,7 @@ namespace pwiz.Skyline.Model.WatersConnect
         [JsonProperty("id")]
         public string Id { get; set; }
 
-        [ColumnName("peptide.seq")]
+        [ColumnName("compound.name")]
         [JsonProperty("name")]
         public string Name { get; set; }
 
@@ -148,15 +148,9 @@ namespace pwiz.Skyline.Model.WatersConnect
         [JsonProperty("adducts", Order = 8)]
         public List<AdductInfo> Adducts;
 
-        public static readonly Regex _parseNameRegEx = new Regex(@"^(.+?)(\.(\[[^\]]+\]))?(\.([+-]?\d+))?$");
         public override void ParseObject(DsvStreamReader reader)
         {
             base.ParseObject(reader);
-            var match = _parseNameRegEx.Match(Name);
-            if (match.Success)
-            {
-                Name = match.Groups[1].Value;
-            }
 
             if (RetentionTime.HasValue && RetentionTime.Value == 0)
                 RetentionTime = null;
@@ -179,8 +173,7 @@ namespace pwiz.Skyline.Model.WatersConnect
             var colAttribute =  GetType().GetProperty("Name")?.GetCustomAttribute(typeof(ColumnNameAttribute)) as ColumnNameAttribute;
             if (colAttribute != null)
             {
-                var match = _parseNameRegEx.Match(reader[colAttribute.ColumnName]);
-                return string.Equals(Name, match.Groups[1].Value, StringComparison.OrdinalIgnoreCase);
+                return string.Equals(Name, reader[colAttribute.ColumnName], StringComparison.OrdinalIgnoreCase);
             }
             return false;
         }
@@ -224,7 +217,7 @@ namespace pwiz.Skyline.Model.WatersConnect
         }
     }
 
-        public class Transition : ParseableObject
+    public class Transition : ParseableObject
     {
         [ColumnName("precursor.mz")]
         [JsonProperty("precursorMz")]

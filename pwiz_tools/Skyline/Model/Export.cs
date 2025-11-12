@@ -4612,6 +4612,8 @@ namespace pwiz.Skyline.Model
             writer.Write("compound.internal_standard");
             writer.Write(FieldSeparator);
             writer.Write("compound.note");
+            writer.Write(FieldSeparator);
+            writer.Write("compound.name");
             writer.WriteLine();
         }
         // ReSharper restore LocalizableElement
@@ -4729,6 +4731,10 @@ namespace pwiz.Skyline.Model
                 writer.WriteDsvField(string.Empty, FieldSeparator, TextUtil.SPACE);
             else
                 writer.WriteDsvField(nodePep.Note.Substring(0, Math.Min(nodePep.Note.Length, 100)), FieldSeparator, TextUtil.SPACE);
+
+            writer.Write(FieldSeparator);
+            writer.WriteDsvField(FormatMods(GetCompound(nodePep, nodeTranGroup)), FieldSeparator);
+
             writer.WriteLine();
         }
 
