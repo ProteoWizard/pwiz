@@ -192,7 +192,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             var itemNames = items.Select(FormatInjectionName).ToList();
 
             // for any duplicate names, make them unique by appending a numeric suffix
-            var itemNamesByCount = itemNames.ToDictionary(o => o, o => itemNames.Count(i => i == o));
+            var itemNamesByCount = itemNames.Distinct().ToDictionary(o => o, o => itemNames.Count(i => i == o));
             var itemNamesIndex = itemNamesByCount.Where(kvp => kvp.Value > 1).ToDictionary(kvp => kvp.Key, kvp => 0);
             for (var i = 0; i < itemNames.Count; i++)
             {
