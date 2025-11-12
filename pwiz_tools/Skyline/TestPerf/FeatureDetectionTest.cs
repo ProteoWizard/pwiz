@@ -192,6 +192,17 @@ namespace TestPerf
                 {
                     SkylineWindow.NewDocument(true);
                 });
+
+                // There was an issue with TransitionSettings.Libraries.MinIonCount being applied
+                // to detected features, which (uniquely) use spectral libraries without any fragments.
+                // N.B. that change should be revisited if we ever enable the Hardklor/Bullseye
+                // association of fragments with features.
+                var transitionSettings = SkylineWindow.Document.Settings.TransitionSettings;
+                var transitionLibraries = transitionSettings.Libraries.ChangeMinIonCount(3);
+                var docIonCount = SkylineWindow.Document.ChangeSettings(
+                    SkylineWindow.Document.Settings.ChangeTransitionSettings(
+                        transitionSettings.ChangeLibraries(transitionLibraries)));
+                RunUI(() => SkylineWindow.SetDocument(docIonCount, SkylineWindow.Document));
             }
 
             RunUI(() =>
