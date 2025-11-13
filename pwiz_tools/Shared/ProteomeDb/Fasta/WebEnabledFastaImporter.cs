@@ -51,6 +51,7 @@ namespace pwiz.ProteomeDatabase.Fasta
             ProteinDbInfo = dbProteinDbInfo;
             SeqLength = sequenceLength;
             Status = SearchStatus.unsearched;
+            FailureReason = WebSearchFailureReason.none;
         }
 
         public ProteinSearchInfo()
@@ -58,20 +59,57 @@ namespace pwiz.ProteomeDatabase.Fasta
             ProteinDbInfo = new DbProteinName();
             SeqLength = 0;
             Status = SearchStatus.unsearched;
+            FailureReason = WebSearchFailureReason.none;
         }
 
         public enum SearchStatus { unsearched, success, failure };
+
+        public enum WebSearchFailureReason
+        {
+            none,
+            no_response,
+            ambiguous_response,
+            sequence_mismatch,
+            failure_threshold,
+            http_not_found,
+            http_error,
+            invalid_request,
+            url_too_long,
+            dns_failure,
+            connection_failed,
+            connection_lost,
+            no_network,
+            timeout,
+            cancelled,
+            unknown_error
+        }
 
         public DbProteinName ProteinDbInfo { get; set; }
         public int SeqLength { get; set; }  // Useful for disambiguation of multiple responses
         public string ReviewStatus { get; set; } // Status reviewed or unreviewed in Uniprot
         public bool IsReviewed => string.Equals(ReviewStatus,@"reviewed", StringComparison.OrdinalIgnoreCase); // Uniprot reviewed status
         public SearchStatus Status { get; set; }
+        public WebSearchFailureReason FailureReason { get; private set; }
+        public Exception FailureException { get; private set; }
+        public string FailureDetail { get; private set; }
 
-        public void NoteSearchFailure()
+        public void NoteSearchFailure(WebSearchFailureReason reason = WebSearchFailureReason.none,
+            Exception exception = null, string detail = null, bool markFailed = true)
         {
-            if (Status == SearchStatus.unsearched)
+            if (markFailed && Status == SearchStatus.unsearched)
                 Status = SearchStatus.failure;
+            if (reason != WebSearchFailureReason.none || FailureReason == WebSearchFailureReason.none)
+                FailureReason = reason;
+            if (exception != null)
+                FailureException = exception;
+            if (detail != null)
+            {
+                FailureDetail = detail;
+            }
+            else if (exception != null && string.IsNullOrEmpty(FailureDetail))
+            {
+                FailureDetail = exception.Message;
+            }
         }
 
         public ProteinMetadata GetProteinMetadata()
@@ -131,7 +169,22 @@ namespace pwiz.ProteomeDatabase.Fasta
 
         public override string ToString()
         {
-            return $@"{Status} - {PreferredName}: {Description}";
+            var name = PreferredName ?? ProteinDbInfo?.PreferredName ?? string.Empty;
+            var description = Description ?? ProteinDbInfo?.Description ?? string.Empty;
+            if (Status != SearchStatus.failure)
+                return $@"{Status} - {name}: {description}";
+
+            var reasonText = FailureReason == WebSearchFailureReason.none
+                ? @"unspecified"
+                : FailureReason.ToString();
+            var exceptionText = FailureException?.GetType().Name;
+            var detailText = FailureDetail;
+            var message = !string.IsNullOrEmpty(detailText)
+                ? detailText
+                : exceptionText;
+            if (string.IsNullOrEmpty(message))
+                return $@"{Status} ({reasonText}) - {name}: {description}";
+            return $@"{Status} ({reasonText}) - {name}: {description} [{message}]";
         }
     }
 
@@ -918,7 +971,9 @@ namespace pwiz.ProteomeDatabase.Fasta
                             {
                                 if (ss.GetProteinMetadata().GetPendingSearchTerm().Length > 0)
                                 {
-                                    ss.NoteSearchFailure();
+                                    ss.NoteSearchFailure(
+                                        ProteinSearchInfo.WebSearchFailureReason.failure_threshold,
+                                        detail: @"Exceeded consecutive failure threshold.");
                                     ss.SetWebSearchCompleted(); // Just tag this as having been tried
                                     yield return ss; // And move on
                                 }
@@ -1314,10 +1369,14 @@ namespace pwiz.ProteomeDatabase.Fasta
             return WebserviceLookupOutcome.completed;
         }
 
-        private WebserviceLookupOutcome ExecuteLookupIteration(IList<ProteinSearchInfo> proteins, 
+        private WebserviceLookupOutcome ExecuteLookupIteration(IList<ProteinSearchInfo> proteins,
             char searchType, List<string> searchTerms, List<ProteinSearchInfo> responses,
             IProgressMonitor progressMonitor)
         {
+            var failureReason = ProteinSearchInfo.WebSearchFailureReason.none;
+            Exception failureException = null;
+            string failureDetail = null;
+
             try
             {
                 if (searchType == GENINFO_TAG || searchType == ENTREZ_TAG)
@@ -1334,8 +1393,17 @@ namespace pwiz.ProteomeDatabase.Fasta
                 if (ex.StatusCode == HttpStatusCode.BadRequest || ex.StatusCode == HttpStatusCode.RequestUriTooLong)
                 {
                     LastError = ex;
+                    failureReason = MapNetworkFailureReason(ex);
+                    failureException = ex;
+                    failureDetail = ex.Message;
                     if (proteins.Count == 1)
                     {
+                        proteins[0].NoteSearchFailure(
+                            failureReason != ProteinSearchInfo.WebSearchFailureReason.none
+                                ? failureReason
+                                : ProteinSearchInfo.WebSearchFailureReason.invalid_request,
+                            ex,
+                            failureDetail);
                         proteins[0].SetWebSearchCompleted(); // No more need for lookup
                         return WebserviceLookupOutcome.completed; // We resolved one
                     }
@@ -1345,30 +1413,52 @@ namespace pwiz.ProteomeDatabase.Fasta
                 if (ex.FailureType == NetworkFailureType.ConnectionLost && searchType == UNIPROTKB_TAG)
                 {
                     LastError = ex;
+                    failureReason = ProteinSearchInfo.WebSearchFailureReason.connection_lost;
+                    failureException = ex;
+                    failureDetail = ex.Message;
                     return WebserviceLookupOutcome.url_too_long; // UniProt drops the connection on too-large searches
                 }
 
                 if (ex.StatusCode != HttpStatusCode.NotFound)
                 {
                     LastError = ex;
+                    failureReason = MapNetworkFailureReason(ex);
+                    failureException = ex;
+                    failureDetail = ex.Message;
+                    RecordFailure(proteins, failureReason, ex, failureDetail, false);
                     return WebserviceLookupOutcome.retry_later;
                 }
 
                 LastError = ex;
+                failureReason = MapNetworkFailureReason(ex);
+                failureException = ex;
+                failureDetail = ex.Message;
             }
             catch (OperationCanceledException ex)
             {
                 LastError = ex;
+                failureReason = ProteinSearchInfo.WebSearchFailureReason.cancelled;
+                failureException = ex;
+                failureDetail = ex.Message;
+                RecordFailure(proteins, failureReason, ex, failureDetail, false);
                 return WebserviceLookupOutcome.cancelled;
             }
             catch (TimeoutException ex)
             {
                 LastError = ex;
+                failureReason = ProteinSearchInfo.WebSearchFailureReason.timeout;
+                failureException = ex;
+                failureDetail = ex.Message;
+                RecordFailure(proteins, failureReason, ex, failureDetail, false);
                 return WebserviceLookupOutcome.retry_later;
             }
             catch (Exception ex)
             {
                 LastError = ex;
+                failureReason = ProteinSearchInfo.WebSearchFailureReason.unknown_error;
+                failureException = ex;
+                failureDetail = ex.Message;
+                RecordFailure(proteins, failureReason, ex, failureDetail, false);
                 return WebserviceLookupOutcome.retry_later;
             }
 
@@ -1378,10 +1468,55 @@ namespace pwiz.ProteomeDatabase.Fasta
             }
             else
             {
-                HandleNoResponses(proteins, searchType);
+                HandleNoResponses(proteins, searchType, failureReason, failureException, failureDetail);
             }
 
             return WebserviceLookupOutcome.completed;
+        }
+
+        private static void RecordFailure(IEnumerable<ProteinSearchInfo> proteins,
+            ProteinSearchInfo.WebSearchFailureReason reason, Exception exception, string detail, bool markFailed)
+        {
+            if (reason == ProteinSearchInfo.WebSearchFailureReason.none && exception == null && string.IsNullOrEmpty(detail))
+                return;
+
+            foreach (var protein in proteins)
+            {
+                if (!protein.GetProteinMetadata().NeedsSearch())
+                    continue;
+                protein.NoteSearchFailure(reason, exception, detail, markFailed);
+            }
+        }
+
+        private static ProteinSearchInfo.WebSearchFailureReason MapNetworkFailureReason(NetworkRequestException ex)
+        {
+            if (ex == null)
+                return ProteinSearchInfo.WebSearchFailureReason.unknown_error;
+            if (ex.StatusCode.HasValue)
+            {
+                switch (ex.StatusCode.Value)
+                {
+                    case HttpStatusCode.NotFound:
+                        return ProteinSearchInfo.WebSearchFailureReason.http_not_found;
+                    case HttpStatusCode.RequestUriTooLong:
+                        return ProteinSearchInfo.WebSearchFailureReason.url_too_long;
+                    case HttpStatusCode.BadRequest:
+                        return ProteinSearchInfo.WebSearchFailureReason.invalid_request;
+                    default:
+                        return ProteinSearchInfo.WebSearchFailureReason.http_error;
+                }
+            }
+
+            return ex.FailureType switch
+            {
+                NetworkFailureType.HttpError => ProteinSearchInfo.WebSearchFailureReason.http_error,
+                NetworkFailureType.NoConnection => ProteinSearchInfo.WebSearchFailureReason.no_network,
+                NetworkFailureType.ConnectionFailed => ProteinSearchInfo.WebSearchFailureReason.connection_failed,
+                NetworkFailureType.ConnectionLost => ProteinSearchInfo.WebSearchFailureReason.connection_lost,
+                NetworkFailureType.Timeout => ProteinSearchInfo.WebSearchFailureReason.timeout,
+                NetworkFailureType.DnsResolution => ProteinSearchInfo.WebSearchFailureReason.dns_failure,
+                _ => ProteinSearchInfo.WebSearchFailureReason.unknown_error
+            };
         }
 
         public Exception LastError { get; private set; }
@@ -1404,15 +1539,21 @@ namespace pwiz.ProteomeDatabase.Fasta
             HandleUniprotResponses(proteins, responses);
         }
 
-        private void HandleNoResponses(IList<ProteinSearchInfo> proteins, char searchType)
+        private void HandleNoResponses(IList<ProteinSearchInfo> proteins, char searchType,
+            ProteinSearchInfo.WebSearchFailureReason reason,
+            Exception exception, string detail)
         {
+            var resolvedReason = reason != ProteinSearchInfo.WebSearchFailureReason.none
+                ? reason
+                : ProteinSearchInfo.WebSearchFailureReason.no_response;
+
             if (searchType == UNIPROTKB_TAG)
             {
                 // None of the searches hit - Uniprot is our last search so just set these as complete
                 foreach (var protein in proteins.Where(p => p.GetProteinMetadata().NeedsSearch()))
                 {
                     protein.SetWebSearchCompleted();  // No answer found, but we're done
-                    protein.NoteSearchFailure();
+                    protein.NoteSearchFailure(resolvedReason, exception, detail);
                 }
                 return;
             }
@@ -1420,7 +1561,8 @@ namespace pwiz.ProteomeDatabase.Fasta
             if (proteins.Count == 1)
             {
                 proteins[0].SetWebSearchCompleted(); // no response for a single protein - we aren't going to get an answer
-                proteins[0].NoteSearchFailure();
+                if (proteins[0].GetProteinMetadata().NeedsSearch())
+                    proteins[0].NoteSearchFailure(resolvedReason, exception, detail);
             }
         }
 
@@ -1457,7 +1599,9 @@ namespace pwiz.ProteomeDatabase.Fasta
                             protein.ChangeProteinMetadata(MergeSearchResult(common.GetProteinMetadata(), old));
                         }
                         protein.SetWebSearchCompleted(); // We aren't going to get an answer
-                        protein.NoteSearchFailure();
+                        protein.NoteSearchFailure(
+                            ProteinSearchInfo.WebSearchFailureReason.ambiguous_response,
+                            detail: $@"Ambiguous response count: {responses.Count}");
                         return;
                     }
                     result = responses.First();  // We got an unambiguous response
@@ -1477,7 +1621,9 @@ namespace pwiz.ProteomeDatabase.Fasta
                 if ((length > 0) && (responses.Count(r => r.SeqLength == length) == 0)) // No plausible matches (nothing of the proper length)
                 {
                     protein.SetWebSearchCompleted(); // We aren't going to get an answer
-                    protein.NoteSearchFailure();
+                    protein.NoteSearchFailure(
+                        ProteinSearchInfo.WebSearchFailureReason.sequence_mismatch,
+                        detail: $@"No responses with sequence length {length}");
                     return;
                 }
 
@@ -1495,7 +1641,9 @@ namespace pwiz.ProteomeDatabase.Fasta
                         protein.ChangeProteinMetadata(MergeSearchResult(common.GetProteinMetadata(), old));
                     }
                     protein.SetWebSearchCompleted(); // We aren't going to get an answer
-                    protein.NoteSearchFailure();
+                    protein.NoteSearchFailure(
+                        ProteinSearchInfo.WebSearchFailureReason.ambiguous_response,
+                        detail: $@"Ambiguous response count: {responses.Count}");
                     return;
                 }
             }
@@ -1623,7 +1771,7 @@ namespace pwiz.ProteomeDatabase.Fasta
                 if (protein.GetProteinMetadata().NeedsSearch() && uniqueProteinLength)
                 {
                     protein.SetWebSearchCompleted(); // No answer found, but we're done
-                    protein.NoteSearchFailure();
+                    protein.NoteSearchFailure(ProteinSearchInfo.WebSearchFailureReason.no_response);
                 }
             }
         }

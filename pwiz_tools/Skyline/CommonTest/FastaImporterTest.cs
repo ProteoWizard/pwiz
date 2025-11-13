@@ -1336,10 +1336,18 @@ namespace CommonTest
                 // TODO: Decide whether or not to make 404 a fatal error for a single search item
                 // Assert.AreEqual(searchCount, results.Count(p => p.Status == ProteinSearchInfo.SearchStatus.failure));
 
+                var failedProteins = proteins.Where(p => p.Status == ProteinSearchInfo.SearchStatus.failure).ToList();
+                Assert.AreNotEqual(0, failedProteins.Count);
+
                 // Check that the last exception message matches by prefix, because it will contain the URI requested
                 var expectedPrefix = GetExpectedMessagePrefix(helper);
                 Assert.AreNotEqual(0, expectedPrefix.Length);
                 Assert.AreEqual(expectedPrefix, lastError.Message.Substring(0, expectedPrefix.Length));
+
+                Assert.IsTrue(failedProteins.All(p => p.FailureReason == ProteinSearchInfo.WebSearchFailureReason.http_not_found));
+                Assert.IsTrue(failedProteins.All(p => p.FailureException is NetworkRequestException));
+                Assert.IsTrue(failedProteins.All(p => p.FailureDetail != null &&
+                                                      p.FailureDetail.StartsWith(expectedPrefix, StringComparison.Ordinal)));
             }
             else
             {
