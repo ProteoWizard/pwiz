@@ -57,6 +57,7 @@ using System.Text;
 using System.Windows.Forms;
 using System.Xml;
 using pwiz.Skyline.Controls.Lists;
+using pwiz.Skyline.Model.Lib;
 using ZedGraph;
 using PeptideDocNode = pwiz.Skyline.Model.PeptideDocNode;
 using User32 = pwiz.Common.SystemUtil.PInvoke.User32;
