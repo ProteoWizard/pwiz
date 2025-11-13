@@ -128,6 +128,11 @@ namespace pwiz.ProteomeDatabase.Fasta
             }
             return result;
         }
+
+        public override string ToString()
+        {
+            return $@"{Status} - {PreferredName}: {Description}";
+        }
     }
 
     /// <summary>
@@ -788,6 +793,7 @@ namespace pwiz.ProteomeDatabase.Fasta
 
             // CONSIDER(bspratt): Could this be simplified?
             var cancelled = false;
+            var abort = false;
             var politeStopwatch = new Stopwatch();
             var totalSuccessesThisBatch = 0;
             politeStopwatch.Start();
@@ -847,10 +853,12 @@ namespace pwiz.ProteomeDatabase.Fasta
                     else if (lookupResult == WebserviceLookupOutcome.retry_later)
                     {
                         // Some error, we should just try again later so don't retry now
+                        abort = true;
                         break;
                     }
                     else if (lookupResult == WebserviceLookupOutcome.cancelled)
                     {
+                        cancelled = true;
                         break;
                     }
                     var success = false;
@@ -938,6 +946,10 @@ namespace pwiz.ProteomeDatabase.Fasta
                         batchsizeIncreaseThreshold = Math.Max(batchsizeIncreaseThreshold, batchsizeIncreaseThreshold * 2); // Get increasingly pessimistic (watch for integer rollover)
                     }
                 }
+
+                // Failure in the inner loop should end the outer loop also
+                if (abort)
+                    break;
             }
         }
 
@@ -1266,6 +1278,8 @@ namespace pwiz.ProteomeDatabase.Fasta
             if (IsAccessFaked)
                 return WebserviceLookupOutcome.completed;
 
+            LastError = null;
+
             var searchTerms = _webSearchProvider.ListSearchTerms(proteins);
                 
             if (searchTerms.Count == 0)
@@ -1319,6 +1333,7 @@ namespace pwiz.ProteomeDatabase.Fasta
             {
                 if (ex.StatusCode == HttpStatusCode.BadRequest || ex.StatusCode == HttpStatusCode.RequestUriTooLong)
                 {
+                    LastError = ex;
                     if (proteins.Count == 1)
                     {
                         proteins[0].SetWebSearchCompleted(); // No more need for lookup
@@ -1328,20 +1343,32 @@ namespace pwiz.ProteomeDatabase.Fasta
                 }
 
                 if (ex.FailureType == NetworkFailureType.ConnectionLost && searchType == UNIPROTKB_TAG)
+                {
+                    LastError = ex;
                     return WebserviceLookupOutcome.url_too_long; // UniProt drops the connection on too-large searches
+                }
 
-                return WebserviceLookupOutcome.retry_later;
+                if (ex.StatusCode != HttpStatusCode.NotFound)
+                {
+                    LastError = ex;
+                    return WebserviceLookupOutcome.retry_later;
+                }
+
+                LastError = ex;
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException ex)
             {
+                LastError = ex;
                 return WebserviceLookupOutcome.cancelled;
             }
-            catch (TimeoutException)
+            catch (TimeoutException ex)
             {
+                LastError = ex;
                 return WebserviceLookupOutcome.retry_later;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                LastError = ex;
                 return WebserviceLookupOutcome.retry_later;
             }
 
@@ -1356,6 +1383,8 @@ namespace pwiz.ProteomeDatabase.Fasta
 
             return WebserviceLookupOutcome.completed;
         }
+
+        public Exception LastError { get; private set; }
 
         private void ProcessResponsesBySearchType(IList<ProteinSearchInfo> proteins, IList<ProteinSearchInfo> responses,
             char searchType)

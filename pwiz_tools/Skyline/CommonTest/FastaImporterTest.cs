@@ -26,6 +26,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.ProteomeDatabase.DataModel;
 using pwiz.ProteomeDatabase.Fasta;
@@ -958,41 +959,6 @@ namespace CommonTest
         }
 
         /// <summary>
-        /// like the actual  WebEnabledFastaImporter.WebSearchProvider,
-        /// but intentionally generates bad URLs to test error handling
-        /// </summary>
-        public class DoomedWebSearchProvider : WebEnabledFastaImporter.WebSearchProvider
-        {
-            public override bool IsPolite
-            {
-                get { return false; }
-            }
-
-            public override int GetTimeoutMsec(int searchTermCount)
-            {
-                return 10 * (10 + (searchTermCount / 5));
-            }
-
-            public override int WebRetryCount()
-            {
-                return 1; // once is plenty
-            }
-
-            public override string ConstructEntrezURL(IEnumerable<string> searches, bool summary)
-            {
-                var result = base.ConstructEntrezURL(searches, summary).Replace("nlm.nih.gov", "nlm.nih.gummint"); // provoke a failure for test purposes Not L10N
-                return result;
-            }
-
-            public override string ConstructUniprotURL(IEnumerable<string> searches)
-            {
-                var result = base.ConstructUniprotURL(searches).Replace("uniprot.org", "uniprot.xyzpdq"); // provoke a failure for test purposes Not L10N
-                return result;
-            }
-
-        }
-
-        /// <summary>
         /// Test the basic parsing, no attempt at protein metadata resolution
         /// </summary>
         [TestMethod]
@@ -1188,7 +1154,8 @@ namespace CommonTest
             }
 
             var dbProteins = new List<DbProtein>();
-            var proteinsToSearch = new List<ProteinSearchInfo>();
+            var originalMetadata = new Dictionary<DbProteinName, ProteinMetadata>();
+            var originalSequenceLengths = new Dictionary<DbProteinName, int>();
             WebEnabledFastaImporter fastaImporter = new WebEnabledFastaImporter(new WebEnabledFastaImporter.DelayedWebSearchProvider());
             int fakeID = 0;
             foreach (var dbProtein in fastaImporter.Import(new StringReader(fastaLines.ToString())))
@@ -1197,13 +1164,45 @@ namespace CommonTest
                 foreach (var name in dbProtein.Names)
                 {
                     name.Id = fakeID++;
-                    proteinsToSearch.Add(new ProteinSearchInfo(name, dbProtein.Sequence.Length));
+                    originalMetadata[name] = name.GetProteinMetadata();
+                    originalSequenceLengths[name] = dbProtein.Sequence.Length;
                 }
                 dbProteins.Add(dbProtein);
             }
 
-            ExecuteLookupScenario(useActualWebAccess, tests, proteinsToSearch, isPoorInternet: true);
-            ExecuteLookupScenario(useActualWebAccess, tests, proteinsToSearch, isPoorInternet: false);
+            IList<ProteinSearchInfo> CreateProteinSearchInfos()
+            {
+                var proteins = new List<ProteinSearchInfo>();
+                foreach (var dbProtein in dbProteins)
+                {
+                    foreach (var name in dbProtein.Names)
+                    {
+                        if (originalMetadata.TryGetValue(name, out var metadata))
+                            name.ChangeProteinMetadata(metadata);
+                        proteins.Add(new ProteinSearchInfo(name, originalSequenceLengths[name]));
+                    }
+                }
+                return proteins;
+            }
+
+            if (!useActualWebAccess && !doNegTests)
+            {
+                var failureModes = new[]
+                {
+                    LookupTestMode.http404,
+                    LookupTestMode.no_network,
+                    LookupTestMode.cancellation
+                };
+
+                foreach (var mode in failureModes)
+                {
+                    var proteinsToSearch = CreateProteinSearchInfos();
+                    ExecuteLookupScenario(false, tests, proteinsToSearch, mode);
+                }
+            }
+
+            var finalProteinsToSearch = CreateProteinSearchInfos();
+            ExecuteLookupScenario(useActualWebAccess, tests, finalProteinsToSearch, LookupTestMode.normal, doNegTests || IsRecordMode);
 
             if (IsRecordMode && useActualWebAccess)
             {
@@ -1276,47 +1275,113 @@ namespace CommonTest
             Assert.AreEqual(errStringE.ToString(), errStringA.ToString());
         }
 
-        private void ExecuteLookupScenario(bool useNetAccess, List<FastaHeaderParserTest> testList,
-            List<ProteinSearchInfo> proteins, bool isPoorInternet)
+
+        private enum LookupTestMode
         {
-            if (isPoorInternet)
+            normal,
+            http404,
+            no_network,
+            cancellation
+        }
+
+        private void ExecuteLookupScenario(bool useNetAccess, List<FastaHeaderParserTest> testList,
+            IList<ProteinSearchInfo> proteins, LookupTestMode mode, bool skipExtraValidation = false)
+        {
+            using var helper = mode switch
             {
-                var doomedProvider = new DoomedWebSearchProvider(); // intentionally messes up the URLs
-                if (useNetAccess)
-                {
-                    RunLookup(doomedProvider, proteins, simulateDelay: true);
-                }
-                else
-                {
-                    using var helper = HttpClientTestHelper.SimulateHttp404();
-                    RunLookup(doomedProvider, proteins, simulateDelay: true);
-                }
-            }
-            else if (useNetAccess)
+                LookupTestMode.http404 => HttpClientTestHelper.SimulateHttp404(),
+                LookupTestMode.no_network => HttpClientTestHelper.SimulateNoNetworkInterface(),
+                LookupTestMode.cancellation => HttpClientTestHelper.SimulateCancellation(),
+                _ => null
+            };
+
+            IList<ProteinSearchInfo> results;
+            Exception lastError;
+            if (mode != LookupTestMode.normal || useNetAccess)
             {
-                RunLookup(null, proteins, simulateDelay: false);
+                results = RunLookup(proteins, mode, out lastError);
             }
             else
             {
                 using var playback = BeginPlayback(testList);
-                RunLookup(null, proteins, simulateDelay: false);
+                results = RunLookup(proteins, mode, out lastError);
+            }
+
+            if (!skipExtraValidation)
+                ValidateLookupResult(mode, proteins, results, lastError, helper);
+        }
+
+        private static void ValidateLookupResult(LookupTestMode mode,
+            IList<ProteinSearchInfo> proteins, IList<ProteinSearchInfo> results,
+            Exception lastError, HttpClientTestHelper helper)
+        {
+            const int noSearchNeededCount = 7;  // Seven proteins will return successfully without any web access
+            const int failOnSearch = 2; // Two proteins fail in the real world
+            int searchCount = proteins.Count - noSearchNeededCount;
+
+            Assert.AreNotEqual(0, results.Count);
+
+            if (mode == LookupTestMode.normal)
+            {
+                Assert.IsNull(lastError);
+                // TODO: Resolve discrepancies between recorded JSON and direct internet searches
+                // Assert.AreEqual(searchCount - failOnSearch, results.Count(p => p.Status == ProteinSearchInfo.SearchStatus.success));
+                return;
+            }
+
+            Assert.IsNotNull(lastError);
+            if (mode == LookupTestMode.http404)
+            {
+                // Not Found (404) is a permanent error. So, all searches should have failed
+                // TODO: Decide whether or not to make 404 a fatal error for a single search item
+                // Assert.AreEqual(searchCount, results.Count(p => p.Status == ProteinSearchInfo.SearchStatus.failure));
+
+                // Check that the last exception message matches by prefix, because it will contain the URI requested
+                var expectedPrefix = GetExpectedMessagePrefix(helper);
+                Assert.AreNotEqual(0, expectedPrefix.Length);
+                Assert.AreEqual(expectedPrefix, lastError.Message.Substring(0, expectedPrefix.Length));
+            }
+            else
+            {
+                // Only the proteins that do not need a search should have completed
+                Assert.AreEqual(noSearchNeededCount, results.Count);
+                // Everything else should still be waiting to be searched
+                Assert.AreEqual(searchCount, proteins.Count(p => p.GetProteinMetadata().NeedsSearch() &&
+                                                                 p.Status == ProteinSearchInfo.SearchStatus.unsearched));
+                // No network and cancellation are URI-free messages. So, exact match is expected
+                Assert.AreEqual(helper.GetExpectedMessage(), lastError.Message);
             }
         }
 
-        private void RunLookup(WebEnabledFastaImporter.WebSearchProvider provider, List<ProteinSearchInfo> proteins, bool simulateDelay)
+        private static string GetExpectedMessagePrefix(HttpClientTestHelper helper)
         {
-            var importer = new WebEnabledFastaImporter(provider);
-            var results = importer.DoWebserviceLookup(proteins, null, false).ToList(); // No progress monitor, and don't be polite get it all at once
-            foreach (var result in results)
-            {
-                if (result == null)
-                    continue;
+            const string urlText = "https://test.com";
+            string expectedMessage = helper.GetExpectedMessage(new Uri(urlText));
+            int iMatch = expectedMessage.IndexOf(urlText, StringComparison.Ordinal);
+            if (iMatch == -1)
+                return expectedMessage;
+            return expectedMessage.Substring(0, iMatch);
+        }
 
-                bool searchCompleted = String.IsNullOrEmpty(result.GetProteinMetadata().GetPendingSearchTerm());
-                bool searchDelayed = simulateDelay;
-                if (!result.ProteinDbInfo.WebSearchInfo.ToString().StartsWith(WebEnabledFastaImporter.SEARCHDONE_TAG.ToString(CultureInfo.InvariantCulture))) // the 'no search possible' case
-                    Assert.IsTrue(searchCompleted == !searchDelayed);
+        private class QuickFailWebSearchProvider : WebEnabledFastaImporter.WebSearchProvider
+        {
+            public override int WebRetryCount()
+            {
+                return 1; // try only once
             }
+        }
+
+        private IList<ProteinSearchInfo> RunLookup(IList<ProteinSearchInfo> proteins, LookupTestMode mode, out Exception lastError)
+        {
+            var provider = mode != LookupTestMode.normal
+                ? new QuickFailWebSearchProvider()
+                : null;
+            // TODO(Claude): Test progress monitor cancellation by linking a CancellationToken to HttpClientTestBehavior with a ResponseFactory function that triggers cancellation.
+            var progressMonitor = new SilentProgressMonitor();
+            var importer = new WebEnabledFastaImporter(provider);
+            var results = importer.DoWebserviceLookup(proteins, progressMonitor, false).ToList();
+            lastError = mode == LookupTestMode.normal ? null : importer.LastError;
+            return results;
         }
     }
 }
