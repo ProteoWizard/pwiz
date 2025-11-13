@@ -350,7 +350,7 @@ namespace pwiz.ProteowizardWrapper
         }
 
         /// <summary>
-        /// Attempt to get a non-unicode path for use with processes that have trouble with unicode paths
+        /// Attempt to get a non-unicode path for use with launched processes that have trouble with Unicode paths
         ///
         /// N.B should give same result as PathEx.GetNonUnicodePath, primary use of this method is to test that. Prefer PathEx.GetNonUnicodePath when possible.
         /// 
@@ -359,7 +359,7 @@ namespace pwiz.ProteowizardWrapper
         /// <returns>path with Unicode-containing segments replaced with Windows 8.3 equivalent, if possible</returns>
         public static string GetNonUnicodePath(string path)
         {
-            return pwiz.CLI.util.FileSystem.GetNonUnicodePath(path);
+            return CLI.util.FileSystem.GetNonUnicodePath(path);
         }
 
         private class InstrumentConfigurationCacheValues

@@ -282,7 +282,7 @@ namespace pwiz.SkylineTestData
 
             // Create a temporary file with Unicode characters in its name
             var tempFilePath = PathEx.GetTempFileNameWithExtension("test测试文件.txt");
-            File.WriteAllText(tempFilePath, $"This is a test file with Unicode characters in its name.");
+            File.WriteAllText(tempFilePath, @"This is a test file with Unicode characters in its name.");
 
             // Use PathEx.GetNonUnicodePath() to get the non-Unicode path
             var nonUnicodePath = PathEx.GetNonUnicodePath(tempFilePath);
