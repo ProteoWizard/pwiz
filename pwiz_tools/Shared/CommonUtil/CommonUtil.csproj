@@ -96,10 +96,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\Microsoft.ConcurrencyVisualizer.Markers.dll</HintPath>
     </Reference>
-    <Reference Include="pwiz_data_cli, Version=0.0.0.0, Culture=neutral, processorArchitecture=AnyCPU">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\ProteoWizardWrapper\obj\$(Platform)\pwiz_data_cli.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
