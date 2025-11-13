@@ -82,7 +82,7 @@ namespace TestPerf
             public bool HasMissingDependencies { get; private set; }
         }
 
-        [TestMethod, NoUnicodeTesting(TestExclusionReason.HARDKLOR_UNICODE_ISSUES), NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestFeatureDetectionTutorialFuture()
         {
             TestFilesZipPaths = new[]

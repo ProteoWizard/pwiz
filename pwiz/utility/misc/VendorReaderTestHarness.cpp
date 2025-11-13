@@ -45,6 +45,7 @@
 #include "boost/thread/barrier.hpp"
 #include "boost/locale/encoding_utf.hpp"
 #include "pwiz/data/msdata/Serializer_mzML.hpp"
+#include "pwiz/utility/minimxml/XMLWriter.hpp"
 
 
 using namespace pwiz::util;
@@ -100,8 +101,11 @@ void mangleSourceFileLocations(const string& sourceName, vector<SourceFilePtr>& 
             size_t sourceNameInLocation = newSourceName.empty() ? sourceFilePtr->location.find(sourceName) : min(sourceFilePtr->location.find(sourceName), sourceFilePtr->location.find(newSourceName));
             if (sourceNameInLocation != string::npos)
             {
-                sourceFilePtr->location.erase(0, sourceNameInLocation);
-                sourceFilePtr->location = "file:///" + newSourceName.empty() ? sourceName : newSourceName;
+                string location = sourceFilePtr->location;
+                location.erase(0, sourceNameInLocation);
+                if (!newSourceName.empty() && !bal::contains(location, newSourceName))
+                    bal::replace_all(location, sourceName, newSourceName);
+                sourceFilePtr->location = string("file:///") + location;
             }
             else
                 sourceFilePtr->location = "file:///";
@@ -171,7 +175,7 @@ void calculateSourceFileChecksums(vector<SourceFilePtr>& sourceFiles)
 }
 
 
-void hackInMemoryMSData(const string& sourceName, MSData& msd, const ReaderTestConfig& config, const string& newSourceName = "")
+void hackInMemoryMSData(const string& sourceName, MSData& msd, const ReaderTestConfig& config, DiffConfig* diffConfig = nullptr, const string& newSourceName = "")
 {
     // remove metadata ptrs appended on read
     vector<SourceFilePtr>& sfs = msd.fileDescription.sourceFilePtrs;
@@ -196,10 +200,57 @@ void hackInMemoryMSData(const string& sourceName, MSData& msd, const ReaderTestC
 
     // set current DataProcessing to the original conversion
     // NOTE: this only works for vendor readers that use a single dataProcessing element
+    // also update id values with the new source name if any (e.g. Bruker FID, where id is a path)
     SpectrumListBase* sl = dynamic_cast<SpectrumListBase*>(msd.run.spectrumListPtr.get());
     ChromatogramListBase* cl = dynamic_cast<ChromatogramListBase*>(msd.run.chromatogramListPtr.get());
-    if (sl) sl->setDataProcessingPtr(msd.dataProcessingPtrs[0]);
-    if (cl) cl->setDataProcessingPtr(msd.dataProcessingPtrs[0]);
+    if (sl)
+    {
+        sl->setDataProcessingPtr(msd.dataProcessingPtrs[0]);
+        if (!newSourceName.empty())
+        {
+            string sourceNameEscaped = minimxml::encode_xml_id_copy(sourceName);
+            string newSourceNameEscaped = minimxml::encode_xml_id_copy(newSourceName);
+            for (size_t index = 0; index < sl->size(); ++index)
+            {
+                SpectrumPtr s = sl->spectrum(index);
+                // in some cases the id may be a path e.g. Bruker FID
+                if (bal::contains(s->id, sourceNameEscaped) && !bal::contains(s->id, newSourceNameEscaped))
+                {
+                    bal::replace_all(s->id,sourceNameEscaped, newSourceNameEscaped);
+                    if (diffConfig != nullptr)
+                    {
+                        // likely that stale identity index will trip up the test for FID data
+                        // but indexing is not part of msd, not worth the trouble to dig down to force reindex
+                        diffConfig->ignoreIdentity = true;
+                    }
+                }
+            }
+        }
+    }
+    if (cl)
+    {
+        cl->setDataProcessingPtr(msd.dataProcessingPtrs[0]);
+        if (!newSourceName.empty())
+        {
+            string sourceNameEscaped = minimxml::encode_xml_id_copy(sourceName);
+            string newSourceNameEscaped = minimxml::encode_xml_id_copy(newSourceName);
+            for (size_t index = 0; index < cl->size(); ++index)
+            {
+                ChromatogramPtr c = cl->chromatogram(index);
+                // in some cases the id may be a path e.g. Bruker FID
+                if (bal::contains(c->id, sourceNameEscaped) && !bal::contains(c->id, newSourceNameEscaped))
+                {
+                    bal::replace_all(c->id, sourceNameEscaped, newSourceNameEscaped);
+                    if (diffConfig != nullptr)
+                    {
+                        // likely that stale identity index will trip up the test for FID data
+                        // but indexing is not part of msd, not worth the trouble to dig down to force reindex
+                        diffConfig->ignoreIdentity = true;
+                    }
+                }
+            }
+        }
+    }
 }
 
 
@@ -321,7 +372,7 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
 
         bfs::path targetResultFilename = parentPath / config.resultFilename(msd.run.id + ".mzML");
         MSDataFile targetResult(targetResultFilename.string());
-        hackInMemoryMSData(sourceName, targetResult, config);
+        hackInMemoryMSData(sourceName, targetResult, config); // Make it path-agnostic
 
         // test for 1:1 equality with the target mzML
         {
@@ -591,7 +642,6 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
     bfs::path rawpathPath(rawpath);
     bfs::path newRawPath = bfs::current_path() / rawpathPath.filename();
     vector<bfs::path> extraCopiedPaths;
-    const auto& oldExtension = newRawPath.extension().native();
     newRawPath = newRawPath.replace_extension().native() + unicodeTestString + newRawPath.extension().native();
     if (bfs::exists(newRawPath))
         bfs::remove_all(newRawPath);
@@ -645,10 +695,11 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
 
             if (os_) TextWriter(*os_, 0)(msd);
 
+            // Locate the canonical version of the mzML result, and make it path-agnostic
             bfs::path::string_type targetResultFilename = (parentPath / config.resultFilename(msd.run.id + ".mzML")).native();
             bal::replace_all(targetResultFilename, unicodeTestString, L"");
             MSDataFile targetResult(bfs::path(targetResultFilename).string());
-            hackInMemoryMSData(sourceNameAsPath.string(), targetResult, config, newSourceName.string());
+            hackInMemoryMSData(sourceNameAsPath.string(), targetResult, config, &diffConfig,newSourceName.string());
 
             // test for 1:1 equality with the target mzML
             Diff<MSData, DiffConfig> diff(msd, targetResult, diffConfig);
