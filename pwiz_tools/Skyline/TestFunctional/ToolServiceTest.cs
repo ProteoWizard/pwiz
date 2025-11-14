@@ -195,7 +195,7 @@ TTDFDGYWVNHNWYSIYEST*
 
         private string GetSmallMoleculeTransitionsText()
         {
-            var header = string.Join(",", new string[]
+            var header = string.Join(",", new[]
             {
                 SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
                 SmallMoleculeTransitionListColumnHeaders.namePrecursor,

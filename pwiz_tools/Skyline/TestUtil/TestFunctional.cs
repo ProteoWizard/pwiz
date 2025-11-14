@@ -2072,11 +2072,10 @@ namespace pwiz.SkylineTestUtil
             {
                 //Log<AbstractFunctionalTest>.Exception(@"Functional test exception", Program.TestExceptions[0]);
                 const string errorSeparator = "------------------------------------------------------";
-                Assert.Fail("{0}{1}{2}{3}",
-                    Environment.NewLine + Environment.NewLine,
-                    errorSeparator + Environment.NewLine,
-                    Program.TestExceptions[0],
-                    Environment.NewLine + errorSeparator + Environment.NewLine);
+                Assert.Fail(new StringBuilder().AppendLine().AppendLine()
+                    .AppendLine(errorSeparator)
+                    .AppendLine(Program.TestExceptions[0].ToString())
+                    .AppendLine(errorSeparator).ToString());
             }
 
             if (!_testCompleted)

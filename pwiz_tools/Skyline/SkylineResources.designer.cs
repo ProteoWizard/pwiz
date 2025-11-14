@@ -2777,6 +2777,35 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Validating saved folder.
+        /// </summary>
+        public static string SkylineWindow_PublishToSavedUri_Validating_saved_folder {
+            get {
+                return ResourceManager.GetString("SkylineWindow_PublishToSavedUri_Validating_saved_folder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The server {0} is not in your list of Panorama servers..
+        /// </summary>
+        public static string SkylineWindow_PublishToSavedUri_The_server__0__is_not_in_your_list_of_Panorama_servers_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_PublishToSavedUri_The_server__0__is_not_in_your_list_of_Panorama_s" +
+                        "ervers_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Go to Tools &gt; Options &gt; Panorama tab to add the server to your settings..
+        /// </summary>
+        public static string SkylineWindow_PublishToSavedUri_Go_to_Tools___Options___Panorama_tab_to_add_the_server_to_your_settings_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_PublishToSavedUri_Go_to_Tools___Options___Panorama_tab_to_add_the_" +
+                        "server_to_your_settings_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error updating file &apos;{0}&apos;..
         /// </summary>
         public static string SkylineWindow_ReimportChromatograms_Error_updating_file___0___ {

@@ -477,20 +477,49 @@ namespace pwiz.SkylineTestUtil
 
         public static void TestHttpClientWithNoNetwork(Action actionToFail, string prefix = null)
         {
+            TestHttpClientWithNoNetwork(actionToFail, (expectedMessage, actualMessage) =>
+            {
+                if (prefix != null)
+                    expectedMessage = TextUtil.LineSeparate(prefix, expectedMessage);
+
+                Assert.AreEqual(expectedMessage, actualMessage);
+            });
+        }
+
+        public static void TestHttpClientWithNoNetworkEx(Action actionToFail, params string[] extraParts)
+        {
+            TestHttpClientWithNoNetwork(actionToFail, (expectedMessage, actualMessage) =>
+            {
+                AssertEx.Contains(actualMessage, expectedMessage);
+                AssertEx.Contains(actualMessage, extraParts);
+            });
+        }
+
+        public static void TestHttpClientWithNoNetwork(Action actionToFail, Action<string, string> validateMessage)
+        {
             using var helper = HttpClientTestHelper.SimulateNoNetworkInterface();
             var expectedMessage = helper.GetExpectedMessage();
-            if (prefix != null)
-                expectedMessage = TextUtil.LineSeparate(prefix, expectedMessage);
-            TestMessageDlgShown(actionToFail, expectedMessage);
+            TestMessageDlgShown(actionToFail, actualMessage => validateMessage(expectedMessage, actualMessage));
         }
 
         public static void TestMessageDlgShown(Action actionToShow, string expectedMessage)
         {
-            RunDlg<MessageDlg>(actionToShow, errorDlg =>
-            {
-                Assert.AreEqual(expectedMessage, errorDlg.Message);
-                errorDlg.OkDialog();
-            });
+            TestMessageDlgShown(actionToShow, actualMessage =>
+                Assert.AreEqual(expectedMessage, actualMessage));
+        }
+
+        public static void TestMessageDlgShownContaining(Action actionToShow, params string[] parts)
+        {
+            TestMessageDlgShown(actionToShow, actualMessage =>
+                AssertEx.Contains(actualMessage, parts));
+        }
+
+        public static void TestMessageDlgShown(Action actionToShow, Action<string> validateMessage)
+        {
+            // Cannot use RunDlg here because it requires actionShow to complete.
+            var errDlg = ShowDialog<MessageDlg>(actionToShow);
+            RunUI(() => validateMessage(errDlg.Message));
+            OkDialog(errDlg, errDlg.OkDialog);
         }
 
         public class Tool : IDisposable

@@ -121,7 +121,6 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
             get { return _isMultipleUndo; }
         }
 
-        [DataGridViewColumnType(typeof(AuditLogColumn))]
         [Format(Width = 512)]
         public AuditLogRowText UndoRedoMessage
         {
@@ -133,7 +132,6 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
             }
         }
 
-        [DataGridViewColumnType(typeof(AuditLogColumn))]
         [Format(Width = 512)]
         public AuditLogRowText SummaryMessage
         {
