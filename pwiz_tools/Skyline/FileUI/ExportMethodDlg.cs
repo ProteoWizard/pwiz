@@ -1256,9 +1256,21 @@ namespace pwiz.Skyline.FileUI
                     Settings.Default.RemoteAccountList.OfType<WatersConnectAccount>()
                         .Select(a => a as RemoteAccount).ToList());
                 var templateUrl = textTemplateFile.Tag as WatersConnectAcquisitionMethodUrl;
-                // Point the browser to the same folder as the template
-                saveDlg.InitialDirectory = templateUrl
-                    .ChangeType(WatersConnectUrl.ItemType.folder_with_methods);
+
+                if (templateUrl.FindMatchingAccount() is WatersConnectAccount wcacct &&
+                    wcacct.SupportsMethodDevelopment)
+                {
+                    // Point the browser to the same folder as the template
+                    saveDlg.InitialDirectory = templateUrl
+                        .ChangeType(WatersConnectUrl.ItemType.folder_with_methods);
+                }
+                else
+                {
+                    // if the template url points to an account not supporting method development
+                    // direct the dialog to the accounts list
+                    saveDlg.InitialDirectory = RemoteUrl.EMPTY;
+                }
+
                 if (_recalcMethodCountStatus != RecalcMethodCountStatus.running && _methodNameSuffixes.Any())
                     saveDlg.MethodNameSuffixes = new List<string>(_methodNameSuffixes);
 
@@ -1271,6 +1283,22 @@ namespace pwiz.Skyline.FileUI
                 {
                     MultiButtonMsgDlg.Show(this,
                         FileUIResources.ExportMethodDlg_OkDialog_Selected_folder_is_on_a_different_Waters_Connect_account_than_the_template, MessageBoxButtons.OK);
+                    return;
+                }
+
+                if (targetFolder.FindMatchingAccount() is WatersConnectAccount wca)
+                {
+                    if (!wca.SupportsMethodDevelopment)
+                    {
+                        MessageDlg.Show(this, FileUIResources.ExportMethodDlg_OkDialog_Selected_waters_connect_account_does_not_support_method_development_, false, CommonAlertDlg.MessageIcon.Error);
+                        return;
+                    }
+                }
+                else
+                {
+                    // technically, this should never happen because user just selected a folder under this account.
+                    // Maybe it should be an assumption instead of the error message.
+                    MessageDlg.Show(this, FileUIResources.ExportMethodDlg_OkDialog_Cannot_find_waters_connect_account_for_the_selected_URL_, false, CommonAlertDlg.MessageIcon.Error);
                     return;
                 }
 
@@ -1910,9 +1938,7 @@ namespace pwiz.Skyline.FileUI
                     try
                     {
                         var templateUrl = new WatersConnectAcquisitionMethodUrl(templateFileUrl.FilePath);
-                        textTemplateFile.Text = templateUrl.GetFilePath() + RemoteUrl.PATH_SEPARATOR + templateUrl.MethodName;
-                        textTemplateFile.Tag = templateUrl;
-                        helpTip.SetToolTip(textTemplateFile, templateUrl.FormattedString());  // Show full URL string in the tooltip
+                        SetWatersConnectTemplateText(templateUrl);
                     }
                     catch 
                     {   // If settings contain invalid URL, clear the text box and set the tag to null. No need to show the error.
@@ -2332,6 +2358,22 @@ namespace pwiz.Skyline.FileUI
             textRunLength.Visible = showRunLength;
         }
 
+        private void SetWatersConnectTemplateText(WatersConnectAcquisitionMethodUrl url)
+        {
+            textTemplateFile.Tag = url;
+            if (url.SupportsMethodDevelopment)
+            {
+                textTemplateFile.ForeColor = SystemColors.ControlText;
+                helpTip.SetToolTip(textTemplateFile, url.FormattedString());  // Show full URL string in the tooltip
+            }
+            else
+            {
+                textTemplateFile.ForeColor = Color.Maroon;
+                helpTip.SetToolTip(textTemplateFile, FileUIResources.ExportMethodDlg_btnBrowseTemplate_Click_Account_for_this_template_does_not_support_method_development_);
+            }
+            textTemplateFile.Text = url.GetFilePath() + RemoteUrl.PATH_SEPARATOR + url.MethodName;
+        }
+
         private void btnBrowseTemplate_Click(object sender, EventArgs e)
         {
             if (Equals(InstrumentType, ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT))
@@ -2341,10 +2383,20 @@ namespace pwiz.Skyline.FileUI
                 {
                     if (textTemplateFile.Tag is WatersConnectAcquisitionMethodUrl templateUrl)
                     {
-                        // Point the browser to the same folder as the selected template if there is one
-                        var folderId = templateUrl.FolderOrSampleSetId;
-                        dlgOpen.InitialDirectory = templateUrl
-                            .ChangeType(WatersConnectUrl.ItemType.folder_with_methods);
+                        if (templateUrl.SupportsMethodDevelopment)
+                        {
+                            // Point the browser to the same folder as the selected template if there is one
+                            var folderId = templateUrl.FolderOrSampleSetId;
+                            dlgOpen.InitialDirectory = templateUrl
+                                .ChangeType(WatersConnectUrl.ItemType.folder_with_methods);
+                        }
+                        else
+                        {
+                            MessageDlg.Show(this,
+                                FileUIResources.ExportMethodDlg_btnBrowseTemplate_Click_Selected_account_does_not_support_method_development__Please__create_or_select_another_account_,
+                                false, CommonAlertDlg.MessageIcon.Warning);
+                            dlgOpen.InitialDirectory = RemoteUrl.EMPTY;
+                        }
                     }
                     if (dlgOpen.ShowDialog(this) != DialogResult.OK)
                        return;
@@ -2353,9 +2405,7 @@ namespace pwiz.Skyline.FileUI
                     var watersConnectUrl = (WatersConnectAcquisitionMethodUrl)dlgOpen.MethodUrl
                         // Keep folder Id for the save method dialogue to work properly.
                         .ChangeFolderOrSampleSetId((dlgOpen.CurrentDirectory as WatersConnectAcquisitionMethodUrl)?.FolderOrSampleSetId); 
-                    textTemplateFile.Tag = watersConnectUrl;
-                    textTemplateFile.Text = watersConnectUrl.GetFilePath() + RemoteUrl.PATH_SEPARATOR + watersConnectUrl.MethodName;
-                    helpTip.SetToolTip(textTemplateFile, watersConnectUrl.FormattedString());  // Show full URL string in the tooltip
+                    SetWatersConnectTemplateText(watersConnectUrl);
                 }
                 return;
             }

@@ -701,4 +701,19 @@ Would you like to remove some or all of this suffix to shorten the names used in
   <data name="WatersConnectSaveMethodFileDialog_ItemSelected_The_name__0__conflicts_with_the_existing_method__1__since_this_is_a_multiple_file_upload_" xml:space="preserve">
     <value>The name {0} conflicts with the existing method {1} since this is a multiple file upload.</value>
   </data>
+  <data name="ExportMethodDlg_btnBrowseTemplate_Click_Selected_account_does_not_support_method_development__Please__create_or_select_another_account_" xml:space="preserve">
+    <value>Selected account does not support method development. Please, create or select another account.</value>
+  </data>
+  <data name="ExportMethodDlg_btnBrowseTemplate_Click_Account_for_this_template_does_not_support_method_development_" xml:space="preserve">
+    <value>Account for this template does not support method development.</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_Selected_waters_connect_account_does_not_support_method_development_" xml:space="preserve">
+    <value>Selected waters_connect account does not support method development.</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_Cannot_find_waters_connect_account_for_the_selected_URL_" xml:space="preserve">
+    <value>Cannot find waters_connect account for the selected URL.</value>
+  </data>
+  <data name="WatersConnectMethodFileDialog_ListViewPostprocessing_This_account_does_not_support_method_development" xml:space="preserve">
+    <value>This account does not support method development</value>
+  </data>
 </root>

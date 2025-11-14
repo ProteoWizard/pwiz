@@ -425,6 +425,19 @@ namespace pwiz.Skyline.ToolsUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Settings are correct, but this waters_connect instance does not support method development. Method upload will be disabled.
+        ///To enable, install the following items:
+        ///      - waters_connect TQ Skyline Adapter 1.0.0 or later
+        ///      - Relevant MS drivers version 2.0 or later.
+        /// </summary>
+        public static string EditRemoteAccountDlg_TestAccount_Settings_are_correct__but_this_Waters_Connect_instance_does_not_support_method_development__Method_upload_will_be_disabled_ {
+            get {
+                return ResourceManager.GetString("EditRemoteAccountDlg_TestAccount_Settings_are_correct__but_this_Waters_Connect_in" +
+                        "stance_does_not_support_method_development__Method_upload_will_be_disabled_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Testing remote account connection.
         /// </summary>
         public static string EditRemoteAccountDlg_TestAccount_Testing_remote_account_connection {

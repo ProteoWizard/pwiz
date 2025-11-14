@@ -95,6 +95,11 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             return false;
         }
 
+        public bool SupportsMethodDevelopment
+        {
+            get => FindMatchingAccount() is WatersConnectAccount wca && wca.SupportsMethodDevelopment;
+        }
+
         public override RemoteAccountType AccountType
         {
             get { return RemoteAccountType.WATERS_CONNECT; }

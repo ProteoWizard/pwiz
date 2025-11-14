@@ -98,6 +98,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
         }
 
         public string IdentityServer { get; private set; }
+        public bool SupportsMethodDevelopment => DEFAULT.ClientId.Equals(ClientId);
 
         public WatersConnectAccount ChangeIdentityServer(string identityServer)
         {

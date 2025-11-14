@@ -114,7 +114,7 @@ namespace pwiz.Skyline.FileUI
                 desktopButton.Enabled = myComputerButton.Enabled = myDocumentsButton.Enabled = recentDocumentsButton.Enabled = false;
             }
 
-                lookInComboBox.IntegralHeight = false;
+            lookInComboBox.IntegralHeight = false;
             lookInComboBox.DropDownHeight = lookInComboBox.Items.Count * lookInComboBox.ItemHeight + 2;
 
             _specificDataSourceFilter = specificDataSourceFilter;
@@ -196,7 +196,9 @@ namespace pwiz.Skyline.FileUI
             RemoteSession = null;
         }
 
-        protected virtual void OnCurrentDirectoryChange() { }
+        protected virtual void OnCurrentDirectoryChange()
+        {
+        }
 
         protected MsDataFileUri _currentDirectory;
         public MsDataFileUri CurrentDirectory
@@ -295,7 +297,7 @@ namespace pwiz.Skyline.FileUI
             }
             // ReSharper disable LocalizableElement
             if (0 == listView.SelectedIndices.Count && fileName.Contains("\\"))
-            // ReSharper restore LocalizableElement
+                // ReSharper restore LocalizableElement
             {
                 // mimic the action of user pasting an entire path into the textbox
                 sourcePathTextBox.Text = fileName;
@@ -355,16 +357,17 @@ namespace pwiz.Skyline.FileUI
                 dateModified = GetSafeDateModified(dirInfo)
             };
 
-            if(listView.View != View.Details ||
-                    (sourceTypeComboBox.SelectedIndex > 0 &&
-                     sourceTypeComboBox.SelectedItem.ToString() != sourceInfo.type))
+            if (listView.View != View.Details ||
+                (sourceTypeComboBox.SelectedIndex > 0 &&
+                 sourceTypeComboBox.SelectedItem.ToString() != sourceInfo.type))
                 return sourceInfo;
 
-            if(sourceInfo.isFolder)
+            if (sourceInfo.isFolder)
             {
                 return sourceInfo;
             }
-            if(!sourceInfo.isUnknown)
+
+            if (!sourceInfo.isUnknown)
             {
                 sourceInfo.size = 0;
                 foreach( FileInfo fileInfo in dirInfo.GetFiles() )
@@ -385,9 +388,9 @@ namespace pwiz.Skyline.FileUI
             };
             if( !sourceInfo.isUnknown )
             {
-                if(listView.View != View.Details ||
-                   (sourceTypeComboBox.SelectedIndex > 0 &&
-                    sourceTypeComboBox.SelectedItem.ToString() != sourceInfo.type))
+                if (listView.View != View.Details ||
+                    (sourceTypeComboBox.SelectedIndex > 0 &&
+                     sourceTypeComboBox.SelectedItem.ToString() != sourceInfo.type))
                     return sourceInfo;
                 sourceInfo.size = (UInt64) fileInfo.Length;
                 sourceInfo.dateModified = GetSafeDateModified(fileInfo);
@@ -397,6 +400,12 @@ namespace pwiz.Skyline.FileUI
         }
 
         protected bool _abortPopulateList;
+
+        // Overload this method to add custom post-processing after populating the list view
+        protected virtual void ListViewPostprocessing()
+        {
+        }
+
         private void populateListViewFromDirectory(MsDataFileUri directory)
         {
             _abortPopulateList = false;
@@ -614,6 +623,7 @@ namespace pwiz.Skyline.FileUI
                 }
             }
             listView.Items.AddRange(items.ToArray());
+            ListViewPostprocessing();
         }
 
         protected virtual ImageIndex GetRemoteItemImageIndex(RemoteItem item)

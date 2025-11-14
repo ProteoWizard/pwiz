@@ -275,6 +275,26 @@ namespace pwiz.Skyline.FileUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Account for this template does not support method development..
+        /// </summary>
+        public static string ExportMethodDlg_btnBrowseTemplate_Click_Account_for_this_template_does_not_support_method_development_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_btnBrowseTemplate_Click_Account_for_this_template_does_not_suppor" +
+                        "t_method_development_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Selected account does not support method development. Please, create or select another account..
+        /// </summary>
+        public static string ExportMethodDlg_btnBrowseTemplate_Click_Selected_account_does_not_support_method_development__Please__create_or_select_another_account_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_btnBrowseTemplate_Click_Selected_account_does_not_support_method_" +
+                        "development__Please__create_or_select_another_account_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The chosen folder does not appear to contain a Bruker TOF method template. The folder is expected to have a .m extension, and contain the file submethods.xml..
         /// </summary>
         public static string ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_a_Bruker_TOF_method_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_file_submethods_xml_ {
@@ -499,6 +519,16 @@ namespace pwiz.Skyline.FileUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot find waters_connect account for the selected URL..
+        /// </summary>
+        public static string ExportMethodDlg_OkDialog_Cannot_find_waters_connect_account_for_the_selected_URL_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_OkDialog_Cannot_find_waters_connect_account_for_the_selected_URL_" +
+                        "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Collision Energy:.
         /// </summary>
         public static string ExportMethodDlg_OkDialog_Collision_Energy {
@@ -598,6 +628,16 @@ namespace pwiz.Skyline.FileUI {
             get {
                 return ResourceManager.GetString("ExportMethodDlg_OkDialog_Selected_folder_is_on_a_different_Waters_Connect_account" +
                         "_than_the_template", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Selected waters_connect account does not support method development..
+        /// </summary>
+        public static string ExportMethodDlg_OkDialog_Selected_waters_connect_account_does_not_support_method_development_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_OkDialog_Selected_waters_connect_account_does_not_support_method_" +
+                        "development_", resourceCulture);
             }
         }
         
@@ -1827,6 +1867,16 @@ namespace pwiz.Skyline.FileUI {
             get {
                 return ResourceManager.GetString("SkypSupport_ShowDownloadError_There_was_an_error_downloading_the_Skyline_document" +
                         "__0__from__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This account does not support method development.
+        /// </summary>
+        public static string WatersConnectMethodFileDialog_ListViewPostprocessing_This_account_does_not_support_method_development {
+            get {
+                return ResourceManager.GetString("WatersConnectMethodFileDialog_ListViewPostprocessing_This_account_does_not_suppor" +
+                        "t_method_development", resourceCulture);
             }
         }
         

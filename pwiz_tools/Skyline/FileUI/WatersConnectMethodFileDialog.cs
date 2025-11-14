@@ -26,6 +26,25 @@ namespace pwiz.Skyline.FileUI
             labelSourcePath.Text = FileUIResources.WatersConnectSaveMethodFileDialog_SourcePathLabelText;
         }
 
+        protected override void ListViewPostprocessing()
+        {
+            if (string.IsNullOrEmpty((CurrentDirectory as RemoteUrl)?.ServerUrl))
+            {
+                listView.ShowItemToolTips = true;
+                foreach (ListViewItem item in listView.Items)
+                {
+                    if (item.Tag is SourceInfo sourceInfo && sourceInfo.MsDataFileUri is WatersConnectUrl wcu)
+                    {
+                        if (wcu.FindMatchingAccount() is WatersConnectAccount wca && !wca.SupportsMethodDevelopment)
+                        {
+                            item.ToolTipText = FileUIResources.WatersConnectMethodFileDialog_ListViewPostprocessing_This_account_does_not_support_method_development;
+                            item.BackColor = System.Drawing.Color.LightCoral;
+                        }
+                    }
+                }
+            }
+        }
+
         protected override void CreateNewRemoteSession(RemoteAccount remoteAccount)
         {
             if (remoteAccount is WatersConnectAccount wcAccount)
