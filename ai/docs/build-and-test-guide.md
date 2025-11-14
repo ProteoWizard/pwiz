@@ -49,6 +49,8 @@ Detailed reference for building, testing, and analyzing Skyline from LLM-assiste
 
 This script automatically finds MSBuild, handles paths, and provides clear success/failure output.
 
+> ⚠️ **Tests always run the previously compiled binaries.** Run one of the build commands above after every edit and before invoking any test command.
+
 ## MSBuild Path
 
 Use `vswhere` to find MSBuild dynamically:
@@ -99,6 +101,8 @@ C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd6
 ```
 
 ## Running Tests
+
+> ⚠️ **Always build first.** Calling `Run-Tests.ps1` without a prior build simply reuses the last binaries in `bin\x64\Debug\`.
 
 **Test output directory**: `bin\x64\Debug\`
 

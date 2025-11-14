@@ -137,6 +137,8 @@ git checkout Skyline/work/YYYYMMDD_current_feature
 
 ### Build and Test Automation (Optional)
 
+> ⚠️ **Always build before running tests.** Skyline executables load the last compiled binaries, so running tests without rebuilding will exercise stale code.
+
 **For LLM-assisted IDEs that can execute PowerShell:**
 
 ```powershell

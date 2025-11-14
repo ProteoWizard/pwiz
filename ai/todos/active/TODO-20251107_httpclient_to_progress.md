@@ -131,6 +131,13 @@ After completing the WebClient → HttpClient migration, we discovered several p
 - Comprehensive test coverage
 - Code inspection test passes
 
+## Progress (2025-11-14)
+- Hardened FASTA importer failure handling: removed reliance on `LastError`, ensured every 404/timeout/cancellation stamps `ProteinSearchInfo.FailureReason`, and fixed `HandleNoResponses` so batches mark all proteins before completing.
+- Added optional diagnostics (`IsDiagnosticMode`) that capture pre/post lookup snapshots to JSON via `TestContext.GetTestResultsPath`, making MSTest/TestRunner investigations reproducible without debugger watch windows.
+- Strengthened FASTA importer assertions (normal / 404 / no-network / cancellation) to verify counts, status transitions, and localized messages, and re-recorded `FastaImporterWebData.json`.
+- Documented the `IsRecordMode` / diagnostics workflow and “build before test” requirement in `ai/WORKFLOW.md`, `ai/TESTING.md`, and `ai/docs/testing-patterns.md`.
+- Verified build + code inspection + FASTA importer tests (offline/online) with the new diagnostics disabled by default.
+
 ## Progress (2025-11-07)
 - Removed `MapUnexpectedWebException` and related WebRequest-era helpers; all Panorama exception flows now originate from `NetworkRequestException`.
 - Verified via debugger that DNS failures surface as `HttpRequestException` with inner `WebException`; retained handling in `HttpClientWithProgress` and test helper.

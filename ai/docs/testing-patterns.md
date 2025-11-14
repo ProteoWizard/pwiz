@@ -7,9 +7,10 @@
 4. [Dependency Injection Patterns for Testing](#dependency-injection-patterns-for-testing)
 5. [Assertion Best Practices](#assertion-best-practices)
 6. [HttpClient Testing with HttpClientTestHelper](#httpclient-testing-with-httpclienttesthelper)
-7. [Translation-Proof Testing](#translation-proof-testing)
-8. [Test Performance Considerations](#test-performance-considerations)
-9. [Code Coverage Validation](#code-coverage-validation)
+7. [Recording Test Data with IsRecordMode](#recording-test-data-with-isrecordmode)
+8. [Translation-Proof Testing](#translation-proof-testing)
+9. [Test Performance Considerations](#test-performance-considerations)
+10. [Code Coverage Validation](#code-coverage-validation)
 
 ---
 
@@ -586,6 +587,329 @@ HttpClientTestHelper.SimulateCancellation()
 - ❌ Don't make test interface return error codes or exceptions
 - ❌ Don't create `TestClientError401`, `TestClientError403`, etc.
 - ❌ Don't parse exception messages in tests - use `GetExpectedMessage()`
+
+---
+
+## Recording Test Data with IsRecordMode
+
+### Overview
+
+Many tests need to capture expected data during one run and validate against that data in subsequent runs. This pattern is used for:
+- **HTTP interactions** - Recording live web service responses for offline playback
+- **Graph labels and formatting** - Capturing expected chart axis labels, legends, tooltips
+- **Model weights and calculations** - Recording expected values from complex algorithms
+- **Localized strings** - Capturing expected UI text in different locales
+- **File format outputs** - Recording expected file contents for format validation
+
+The `IsRecordMode` pattern provides a standardized way to toggle between recording and validation modes in tests.
+
+### Base Class Support
+
+**`AbstractUnitTestEx`** provides the recording infrastructure:
+
+```csharp
+public abstract class AbstractUnitTestEx : AbstractUnitTest
+{
+    /// <summary>
+    /// Override this property to enable recording mode.
+    /// When true, the test writes expected data instead of validating it.
+    /// </summary>
+    protected virtual bool IsRecordMode
+    {
+        get { return false; }
+    }
+
+    /// <summary>
+    /// Call this at the end of test methods to prevent committing code with IsRecordMode = true.
+    /// Functional tests automatically call this in RunTest().
+    /// </summary>
+    protected void CheckRecordMode()
+    {
+        Assert.IsFalse(IsRecordMode, "Set IsRecordMode to false before commit");
+    }
+}
+```
+
+**`AbstractFunctionalTestEx`** automatically calls `CheckRecordMode()` in `RunTest()`, so functional tests don't need to add it manually.
+
+### Implementing Recording in Tests
+
+**Step 1: Override `IsRecordMode` property**
+
+```csharp
+[TestClass]
+public class MyTest : AbstractUnitTestEx
+{
+    protected override bool IsRecordMode => false;  // Always default to false
+}
+```
+
+**Step 2: Add conditional logic for recording vs. validation**
+
+```csharp
+[TestMethod]
+public void TestMyFeature()
+{
+    if (IsRecordMode)
+    {
+        // Record expected data
+        var expectedData = RunFeatureAndCaptureResults();
+        SaveExpectedData(expectedData);
+        return;  // Exit early - don't validate
+    }
+    
+    // Validation mode - load and compare
+    var expectedData = LoadExpectedData();
+    var actualData = RunFeatureAndCaptureResults();
+    ValidateResults(expectedData, actualData);
+    
+    // Guard against committing with record mode enabled
+    CheckRecordMode();
+}
+```
+
+**Step 3: Use JSON files for recorded data (preferred)**
+
+The modern pattern is to write recorded data to JSON files with the same name prefix as the test:
+
+```csharp
+private const string EXPECTED_DATA_JSON = @"CommonTest\MyTestExpectedData.json";
+
+private void SaveExpectedData(MyExpectedData data)
+{
+    var jsonPath = TestContext.GetProjectDirectory(EXPECTED_DATA_JSON);
+    var json = JsonConvert.SerializeObject(data, Formatting.Indented);
+    File.WriteAllText(jsonPath, json, new UTF8Encoding(false));
+    Console.Out.WriteLine(@"Recorded expected data to: " + jsonPath);
+}
+
+private MyExpectedData LoadExpectedData()
+{
+    var jsonPath = TestContext.GetProjectDirectory(EXPECTED_DATA_JSON);
+    if (!File.Exists(jsonPath))
+        return new MyExpectedData();  // Return empty/default if not recorded yet
+    
+    var json = File.ReadAllText(jsonPath, Encoding.UTF8);
+    return JsonConvert.DeserializeObject<MyExpectedData>(json) ?? new MyExpectedData();
+}
+```
+
+**Legacy pattern (still exists in codebase):** Some older tests output C# code to the console for developers to copy-paste into test source. This pattern is being phased out in favor of JSON files.
+
+### Recording HTTP Interactions
+
+For tests that record HTTP traffic, use `HttpClientTestHelper.HttpInteractionRecorder`:
+
+```csharp
+[TestMethod]
+public void WebTestFastaImport()
+{
+    HttpClientTestHelper.HttpInteractionRecorder recorder = null;
+    if (IsRecordMode && AllowInternetAccess)
+    {
+        recorder = new HttpClientTestHelper.HttpInteractionRecorder();
+    }
+
+    using (recorder != null ? HttpClientTestHelper.BeginRecording(recorder) : null)
+    {
+        // Run test that makes HTTP requests
+        var results = RunFastaImportWithWebLookups();
+        
+        if (IsRecordMode)
+        {
+            // Save both protein metadata and HTTP interactions
+            RecordExpectedData(results, recorder?.Interactions?.ToList());
+            return;
+        }
+        
+        // Validation mode - load and compare
+        var expectedData = LoadExpectedData();
+        ValidateResults(expectedData, results);
+    }
+    
+    CheckRecordMode();
+}
+```
+
+The recorded HTTP interactions are serialized to JSON and can be played back offline using `HttpClientTestHelper.PlaybackFromInteractions()`.
+
+### Workflow: Recording New Test Data
+
+> ⚠️ **After changing `IsRecordMode`, rebuild before running the test.** Without a build the test harness will execute the previous assembly and nothing will be recorded.
+
+**1. Enable recording mode**
+
+```csharp
+protected override bool IsRecordMode => true;  // Temporarily set to true
+```
+
+**2. Run the test with required resources**
+
+- For HTTP tests: Run with `-EnableInternet` flag
+- For UI tests: Run in appropriate locale if testing localization
+- For algorithm tests: Run with representative input data
+
+**3. Verify the recorded data**
+
+- Check that the JSON file was created/updated
+- Inspect the file contents to ensure they look correct
+- Verify file is in the expected location (usually `CommonTest/` or `TestData/`)
+
+**4. Disable recording mode and validate**
+
+```csharp
+protected override bool IsRecordMode => false;  // Set back to false
+```
+
+> ⚠️ **Rebuild again after restoring `IsRecordMode => false`** to ensure validation uses the updated code.
+
+**5. Run the test again (offline if applicable)**
+
+- Test should now load recorded data and validate against it
+- All assertions should pass
+- Test should run without network access (for HTTP tests)
+
+**6. Commit the changes**
+
+- Include the new/updated JSON file in the commit
+- Ensure `IsRecordMode => false` is committed
+- The `CheckRecordMode()` assertion will fail if you forget to set it back
+
+### Best Practices
+
+**DO:**
+- ✅ **Always default to `false`** - Recording mode should be the exception, not the rule
+- ✅ **Use JSON files** for recorded data (easier to inspect, version control friendly)
+- ✅ **Add `CheckRecordMode()`** at the end of unit test methods
+- ✅ **Document what gets recorded** in code comments or test descriptions
+- ✅ **Version control the JSON files** - they're test artifacts that should be committed
+- ✅ **Structure JSON clearly** - Use descriptive property names, add comments in JSON if needed
+- ✅ **Test both modes** - Verify recording works AND validation works with recorded data
+
+**DON'T:**
+- ❌ **Never commit with `IsRecordMode => true`** - The `CheckRecordMode()` assertion prevents this
+- ❌ **Don't record sensitive data** - Avoid API keys, passwords, user tokens in recorded files
+- ❌ **Don't record large binary data** - Use references or hashes instead
+- ❌ **Don't record timestamps** - Use relative times or remove time-dependent fields
+- ❌ **Don't record absolute file paths** - Use relative paths or path placeholders
+- ❌ **Don't skip validation** - Always test that recorded data can be loaded and used
+
+### Common Patterns
+
+#### Pattern 1: Simple Value Recording
+
+```csharp
+[TestMethod]
+public void TestCalculation()
+{
+    var result = PerformComplexCalculation();
+    
+    if (IsRecordMode)
+    {
+        var expected = new { Value = result, Timestamp = DateTime.Now };
+        SaveToJson("TestCalculationExpected.json", expected);
+        return;
+    }
+    
+    var expected = LoadFromJson<ExpectedResult>("TestCalculationExpected.json");
+    Assert.AreEqual(expected.Value, result, tolerance: 0.001);
+    CheckRecordMode();
+}
+```
+
+#### Pattern 2: HTTP Interaction Recording
+
+```csharp
+[TestMethod]
+public void WebTestFeature()
+{
+    var recorder = IsRecordMode && AllowInternetAccess 
+        ? new HttpClientTestHelper.HttpInteractionRecorder() 
+        : null;
+    
+    using (recorder != null ? HttpClientTestHelper.BeginRecording(recorder) : null)
+    {
+        var results = CallWebService();
+        
+        if (IsRecordMode)
+        {
+            var data = new TestData
+            {
+                Results = results,
+                HttpInteractions = recorder?.Interactions?.ToList()
+            };
+            SaveToJson("WebTestFeatureData.json", data);
+            return;
+        }
+        
+        var expected = LoadFromJson<TestData>("WebTestFeatureData.json");
+        ValidateResults(expected, results);
+    }
+    
+    CheckRecordMode();
+}
+```
+
+#### Pattern 3: UI Element Recording
+
+```csharp
+[TestMethod]
+public void TestGraphLabels()
+{
+    var graph = CreateGraph();
+    var labels = ExtractGraphLabels(graph);
+    
+    if (IsRecordMode)
+    {
+        SaveToJson("TestGraphLabelsExpected.json", new { Labels = labels });
+        return;
+    }
+    
+    var expected = LoadFromJson<ExpectedLabels>("TestGraphLabelsExpected.json");
+    Assert.AreEqual(expected.Labels, labels);
+    CheckRecordMode();
+}
+```
+
+### Troubleshooting
+
+**Issue: Test fails with "Set IsRecordMode to false before commit"**
+
+**Solution:** You forgot to set `IsRecordMode => false` after recording. This is intentional - the assertion prevents committing code in recording mode.
+
+**Issue: JSON file not found during validation**
+
+**Solution:** 
+- Ensure the file was created during recording (check file exists)
+- Verify the path is correct (use `TestContext.GetProjectDirectory()`)
+- Check that the file is included in the project (should be visible in Solution Explorer)
+
+**Issue: Recorded data doesn't match validation**
+
+**Solution:**
+- Check if the data source changed (web service responses, algorithm behavior)
+- Verify you're using the same test data and environment
+- Consider if the change is expected (e.g., web service updated their API)
+- Re-record if the change is legitimate
+
+**Issue: JSON file is too large**
+
+**Solution:**
+- Consider splitting into multiple files
+- Use references/IDs instead of duplicating data
+- Store large binary data separately (e.g., in `TestData/` folder)
+- Compress or summarize data where possible
+
+### Integration with HttpClientTestHelper
+
+The HTTP recording infrastructure built for `HttpClientTestHelper` demonstrates the full pattern:
+
+- **Recording:** `HttpClientTestHelper.BeginRecording()` captures all HTTP requests/responses
+- **Storage:** Interactions serialized to JSON with URLs, status codes, response bodies, exceptions
+- **Playback:** `HttpClientTestHelper.PlaybackFromInteractions()` replays recorded interactions offline
+- **Validation:** Tests run identically in both online (recording) and offline (playback) modes
+
+See `FastaImporterTest.cs` for a complete example of HTTP interaction recording.
 
 ---
 

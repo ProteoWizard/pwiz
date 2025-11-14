@@ -346,6 +346,10 @@ namespace pwiz.Common.SystemUtil
             totalBytes = knownTotalBytes ?? response.Content.Headers.ContentLength ?? 0;
             // totalBytes = 0; // TEST: Uncomment to force marquee progress for unknown file sizes
             contentStream = response.Content.ReadAsStreamAsync().Result;
+            if (TestBehavior != null)
+            {
+                contentStream = TestBehavior.WrapResponseStream(uri, contentStream, totalBytes) ?? contentStream;
+            }
             
             using (contentStream)
             {
@@ -367,7 +371,9 @@ namespace pwiz.Common.SystemUtil
                 }
                 catch (Exception ex)
                 {
-                    throw MapHttpException(ex, uri);
+                    var mapped = MapHttpException(ex, uri);
+                    TestBehavior?.OnException(uri, mapped);
+                    throw mapped;
                 }
 
                 if (bytesRead <= 0)
@@ -730,6 +736,38 @@ namespace pwiz.Common.SystemUtil
             /// <param name="uri">The URI being uploaded to</param>
             /// <returns>A stream to capture uploaded data, or null to use actual network</returns>
             Stream GetMockUploadStream(Uri uri);
+
+            /// <summary>
+            /// Notifies the behavior that an HTTP response has been received (including failures).
+            /// </summary>
+            /// <param name="uri">The requested URI</param>
+            /// <param name="response">The HTTP response message</param>
+            void OnResponse(Uri uri, HttpResponseMessage response);
+
+            /// <summary>
+            /// Allows the behavior to wrap or intercept the response stream before it is consumed.
+            /// </summary>
+            /// <param name="uri">The requested URI</param>
+            /// <param name="responseStream">The stream returned by HttpClient</param>
+            /// <param name="contentLength">The reported content length</param>
+            /// <returns>The stream that should be consumed by the caller</returns>
+            Stream WrapResponseStream(Uri uri, Stream responseStream, long contentLength);
+
+            /// <summary>
+            /// Notifies the behavior that an HTTP response will result in an exception.
+            /// </summary>
+            /// <param name="uri">The requested URI</param>
+            /// <param name="response">The HTTP response message</param>
+            /// <param name="responseBody">The response body, if available</param>
+            /// <param name="exception">The exception that will be thrown</param>
+            void OnFailedResponse(Uri uri, HttpResponseMessage response, string responseBody, Exception exception);
+
+            /// <summary>
+            /// Notifies the behavior that an exception is being thrown to the caller.
+            /// </summary>
+            /// <param name="uri">The requested URI</param>
+            /// <param name="exception">The exception being thrown</param>
+            void OnException(Uri uri, Exception exception);
         }
 
         public class NoNetworkTestException : Exception
@@ -751,7 +789,9 @@ namespace pwiz.Common.SystemUtil
             }
             catch (Exception ex)
             {
-                throw MapHttpException(ex, uri);
+                var mapped = MapHttpException(ex, uri);
+                TestBehavior?.OnException(uri, mapped);
+                throw mapped;
             }
         }
 
@@ -763,6 +803,7 @@ namespace pwiz.Common.SystemUtil
                     throw TestBehavior.FailureException;
                 
                 var response = getResponse();
+                TestBehavior?.OnResponse(uri, response);
                 
                 // Check status code and capture response body for error details (e.g., LabKey-specific errors)
                 if (!response.IsSuccessStatusCode)
@@ -787,14 +828,18 @@ namespace pwiz.Common.SystemUtil
                     var message = $"Response status code does not indicate success: {statusCode} ({reasonPhrase}) for {uri}";
                     
                     // Throw with response body attached for server-specific error extraction
-                    throw new NetworkRequestException(message, response.StatusCode, uri, new HttpRequestException(message), responseBody);
+                    var networkException = new NetworkRequestException(message, response.StatusCode, uri, new HttpRequestException(message), responseBody);
+                    TestBehavior?.OnFailedResponse(uri, response, responseBody, networkException);
+                    throw networkException;
                 }
                 
                 return response;
             }
             catch (Exception ex)
             {
-                throw MapHttpException(ex, uri);
+                var mapped = MapHttpException(ex, uri);
+                TestBehavior?.OnException(uri, mapped);
+                throw mapped;
             }
         }
 
