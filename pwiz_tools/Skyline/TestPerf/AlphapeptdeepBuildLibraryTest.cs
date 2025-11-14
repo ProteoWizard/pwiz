@@ -1,5 +1,5 @@
 /*
- * Author: David Shteynberg <dshteyn .at. proteinms.net>,
+ * Author: David Shteynberg <dshteynberg .at. gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
  * Copyright 2025 University of Washington - Seattle, WA
@@ -90,6 +90,8 @@ namespace TestPerf
         protected override void DoTest()
         {
             TestEmptyDocumentMessage();
+            TestEmptyNameMessage();
+            TestEmptyPathMessage();
             
             RunUI(() => OpenDocument(TestFilesDir.GetTestPath(@"Rat_plasma.sky")));
 
@@ -135,6 +137,52 @@ namespace TestPerf
             OkDialog(saveChangesDlg, saveChangesDlg.ClickNo);
 
             TestFilesDir.CheckForFileLocks(TestFilesDir.FullPath);
+
+            if (IsCleanPythonMode)
+                AssertEx.IsTrue(PythonInstaller.DeleteToolsPythonDirectory());
+        }
+
+        private void TestEmptyNameMessage()
+        {
+            var peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
+            var buildLibraryDlg = ShowDialog<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg);
+
+            RunUI(() =>
+            {
+                buildLibraryDlg.AlphaPeptDeep = true;
+            });
+
+            RunDlg<AlertDlg>(buildLibraryDlg.OkWizardPage, dlg =>
+            {
+                Assert.AreEqual(String.Format(Resources.MessageBoxHelper_ValidateNameTextBox__0__cannot_be_empty, "Name"),
+                    dlg.Message);
+                dlg.OkDialog();
+            });
+
+            OkDialog(buildLibraryDlg, buildLibraryDlg.CancelDialog);
+            OkDialog(peptideSettings, peptideSettings.OkDialog);
+        }
+
+        private void TestEmptyPathMessage()
+        {
+            var peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
+            var buildLibraryDlg = ShowDialog<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg);
+
+            RunUI(() =>
+            {
+                buildLibraryDlg.LibraryName = "No peptides prediction";
+                buildLibraryDlg.AlphaPeptDeep = true;
+            });
+
+            RunDlg<MessageDlg>(buildLibraryDlg.OkWizardPage, dlg =>
+            {
+                Assert.AreEqual(SettingsUIResources.BuildLibraryDlg_ValidateBuilder_You_must_specify_an_output_file_path,
+                    dlg.Message);
+                dlg.OkDialog();
+            });
+
+            OkDialog(buildLibraryDlg, buildLibraryDlg.CancelDialog);
+            OkDialog(peptideSettings, peptideSettings.OkDialog);
         }
 
         private void TestEmptyDocumentMessage()
@@ -147,6 +195,7 @@ namespace TestPerf
                 buildLibraryDlg.LibraryName = "No peptides prediction";
                 buildLibraryDlg.LibraryPath = LibraryPathWithoutIrt;
                 buildLibraryDlg.AlphaPeptDeep = true;
+                buildLibraryDlg.OkWizardPage();
             });
 
             RunDlg<MessageDlg>(buildLibraryDlg.OkWizardPage, dlg =>
@@ -175,6 +224,7 @@ namespace TestPerf
             IrtStandard iRTtype = null)
         {
             var buildLibraryDlg = ShowDialog<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg);
+
             RunUI(() =>
             {
                 buildLibraryDlg.LibraryName = libraryName;
@@ -182,6 +232,7 @@ namespace TestPerf
                 buildLibraryDlg.AlphaPeptDeep = true;
                 if (iRTtype != null)
                     buildLibraryDlg.IrtStandard = iRTtype;
+                buildLibraryDlg.OkWizardPage();
             });
 
             if (simulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT) 
@@ -236,9 +287,9 @@ namespace TestPerf
             WaitForCondition(() => File.Exists(builtLibraryPath));
 
             AssertEx.IsFalse(alphaPeptDeepBuilder.FractionOfExpectedOutputLinesGenerated > 2,
-                @"TestAlphaPeptDeepBuildLibrary: Total count of generated output is more than twice of the expected count ... ");
+                $@"TestAlphaPeptDeepBuildLibrary: Total count of generated output ({alphaPeptDeepBuilder.TotalGeneratedLinesOfOutput} lines) is more than twice of the expected count ({alphaPeptDeepBuilder.TotalExpectedLinesOfOutput} lines) ... ");
             AssertEx.IsFalse(alphaPeptDeepBuilder.FractionOfExpectedOutputLinesGenerated < 0.5,
-                @"TestAlphaPeptDeepBuildLibrary: Total count of generated output is less than half of the expected count ... ");
+                $@"TestAlphaPeptDeepBuildLibrary: Total count of generated output ({alphaPeptDeepBuilder.TotalGeneratedLinesOfOutput} lines) less than half of the expected count ({alphaPeptDeepBuilder.TotalExpectedLinesOfOutput} lines) ... ");
             
             TestResultingLibByValues(TestFilesDir.GetTestPath(answerFile), builtLibraryPath);
         }

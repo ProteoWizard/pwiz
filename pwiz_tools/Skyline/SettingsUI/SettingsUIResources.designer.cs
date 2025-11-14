@@ -323,6 +323,43 @@ namespace pwiz.Skyline.SettingsUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot predict library for and tune from the same document..
+        /// </summary>
+        public static string BuildLibraryDlg_Cannot_predict_library_for_and_tune_from_the_same_document {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_Cannot_predict_library_for_and_tune_from_the_same_document", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot predict library for a FASTA file when a Skyline document is already loaded..
+        /// </summary>
+        public static string BuildLibraryDlg_Cannot_predict_library_for_FASTA_file_when_Skyline_document_is_loaded {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_Cannot_predict_library_for_FASTA_file_when_Skyline_document_is_lo" +
+                        "aded", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Current Skyline document is missing peptides..
+        /// </summary>
+        public static string BuildLibraryDlg_Current_Skyline_document_is_missing_peptides {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_Current_Skyline_document_is_missing_peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;DIA-NN report document.
+        /// </summary>
+        public static string BuildLibraryDlg_DIANN_report_document {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_DIANN_report_document", resourceCulture);
+	    }
+	}
+
+	/// <summary>
         ///   Looks up a localized string similar to Add peptide precursors to the document to build a library from AlphaPeptDeep predictions..
         /// </summary>
         public static string BuildLibraryDlg_CreateAlphaBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_AlphaPeptDeep_predictions_ {
@@ -338,6 +375,42 @@ namespace pwiz.Skyline.SettingsUI {
         public static string BuildLibraryDlg_FindInputFiles_Finding_library_input_files_in {
             get {
                 return ResourceManager.GetString("BuildLibraryDlg_FindInputFiles_Finding_library_input_files_in", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No Skyline document is currently loaded. Please load a Skyline document for training..
+        /// </summary>
+        public static string BuildLibraryDlg_No_Skyline_document_is_currently_loaded {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_No_Skyline_document_is_currently_loaded", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select DIA-NN report document:.
+        /// </summary>
+        public static string BuildLibraryDlg_Select_DIANN_report_document {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_Select_DIANN_report_document", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select Skyline Document File.
+        /// </summary>
+        public static string BuildLibraryDlg_Select_Skyline_document_file {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_Select_Skyline_document_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Skyline tuning document:.
+        /// </summary>
+        public static string BuildLibraryDlg_Skyline_tuning_document {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_Skyline_tuning_document", resourceCulture);
             }
         }
         
@@ -385,6 +458,15 @@ namespace pwiz.Skyline.SettingsUI {
             get {
                 return ResourceManager.GetString("BuildLibraryDlg_ValidateBuilder_The_output_path__0__is_a_directory_You_must_speci" +
                         "fy_a_file_path", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You must fill out this form to continue..
+        /// </summary>
+        public static string BuildLibraryDlg_ValidateBuilder_You_must_fill_out_this_form_to_continue {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_ValidateBuilder_You_must_fill_out_this_form_to_continue", resourceCulture);
             }
         }
         

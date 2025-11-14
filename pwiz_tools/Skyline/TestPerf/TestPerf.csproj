@@ -135,9 +135,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AlphapeptdeepBuildLibraryTest.cs" />
+    <Compile Include="AlphaPeptDeepBuildLibraryTutorial.cs" />
     <Compile Include="AcquisitionComparisonTutorialTest.cs" />
     <Compile Include="AreaCVHistogramQValueAndRatioTest.cs" />
     <Compile Include="BullseyeSharpTest.cs" />
+    <Compile Include="CarafeBuildLibraryTest.cs" />
+    <Compile Include="CarafeBuildLibraryTutorial.cs" />
     <Compile Include="DiaNnPeakImputationTest.cs" />
     <Compile Include="DiaSearchTutorialTest.cs" />
     <Compile Include="FeatureDetectionTest.cs" />
@@ -274,6 +277,7 @@
     <None Include="PerfMs3ChromatogramTest.zip" />
     <None Include="SmallMolLibrariesTutorialViews.zip" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
