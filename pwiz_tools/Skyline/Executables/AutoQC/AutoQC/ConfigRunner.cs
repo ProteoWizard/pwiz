@@ -1114,6 +1114,17 @@ namespace AutoQC
             return IsStopped() || IsError();
         }
 
+        public bool PanoramaUploadError
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    return _panoramaUploadError || _panoramaFatalError;
+                }
+            }
+        }
+
         public string ImportResultsFileArgs(ImportContext importContext)
         {
             // Get the current results time window

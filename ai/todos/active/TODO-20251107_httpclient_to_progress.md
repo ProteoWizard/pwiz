@@ -1,12 +1,15 @@
 # TODO-httpclient_to_progress.md
 
-## Branch Information (Future)
-- **Branch**: Not yet created - will be `Skyline/work/YYYYMMDD_httpclient_to_progress`
-- **Objective**: Migrate existing bare HttpClient usage to HttpClientWithProgress for consistency and better UX
+## Branch Information
+- **Branch**: `Skyline/work/20251107_httpclient_to_progress`
+- **Created**: 2025-11-07
+- **Status**: In progress
+- **PR**: _pending_
+- **Objective**: Finish consolidating Skyline HTTP usage onto `HttpClientWithProgress`, including retiring remaining `HttpWebRequest` and auditing legacy `System.Net` patterns
 
 ## Background
 
-After completing the WebClient → HttpClient migration, we discovered several places in core Skyline that use bare `HttpClient` directly, predating the `HttpClientWithProgress` infrastructure. These should be migrated for:
+After completing the WebClient → HttpClient migration, we discovered several places in core Skyline that use bare `HttpClient` directly, predating the `HttpClientWithProgress` infrastructure. A repository-wide search for `using System.Net;` also revealed lingering `HttpWebRequest` usage and ad-hoc `System.Net` patterns that bypass our new error handling. These should be migrated for:
 
 - **Consistency**: All HTTP operations should use the same infrastructure
 - **User experience**: Progress reporting and cancellation for all network operations
@@ -50,7 +53,11 @@ After completing the WebClient → HttpClient migration, we discovered several p
 
 ## Task Checklist
 
-### Phase 1: Analysis
+### Phase 1: Inventory & Analysis
+- [ ] Inventory all `System.Net` usage in Skyline and shared libraries
+  - Classify occurrences: `HttpClient`, `HttpWebRequest`, `WebRequest`, `HttpStatusCode`, headers, sockets
+  - Identify files that still compile against `HttpWebRequest`
+  - Document any acceptable `System.Net` usage (e.g., `HttpStatusCode`, `HttpRequestHeader` enums)
 - [ ] Analyze `EditRemoteAccountDlg` Ardia API usage
   - Cookie/session management patterns
   - API endpoints called
@@ -61,6 +68,9 @@ After completing the WebClient → HttpClient migration, we discovered several p
   - Understand OAuth library requirements
   - Determine if synchronous refactor is feasible
   - Plan async/await removal strategy
+- [ ] Identify other Panorama/AutoQC/SkylineBatch code paths still using `HttpWebRequest`
+  - Confirm overlap with TODOs in backlog (`TODO-tools_webclient_replacement`, `TODO-skylinebatch_test_cleanup`)
+  - Propose ownership if migration belongs in this branch vs. follow-up TODO
 
 ### Phase 2: EditRemoteAccountDlg Migration
 - [ ] Replace bare `HttpClient` with `HttpClientWithProgress`
@@ -79,20 +89,28 @@ After completing the WebClient → HttpClient migration, we discovered several p
 - [ ] Add progress reporting for OAuth flows
 - [ ] Create tests for OAuth scenarios
 
-### Phase 4: Testing
+### Phase 4: Retire HttpWebRequest
+- [ ] Replace remaining `HttpWebRequest` usage with `HttpClientWithProgress`
+- [ ] Update helpers/utilities that currently return `HttpWebRequest`
+- [ ] Ensure authentication headers/cookies are handled through `HttpClientWithProgress`
+- [ ] Update any tests relying on `HttpWebRequest` seams
+
+### Phase 5: Testing
 - [ ] Test Ardia login workflows
 - [ ] Test session management
 - [ ] Test OAuth device flow
 - [ ] Test error scenarios (network failures, auth failures)
 - [ ] Verify no regressions in Ardia integration
 
-### Phase 5: Code Inspection
+### Phase 6: Code Inspection & Documentation
 - [ ] Update `CodeInspectionTest` to detect bare `HttpClient` usage in core Skyline
+- [ ] Add inspection for `HttpWebRequest` in `pwiz_tools` and `pwiz_tools/Shared`
 - [ ] Verify all network operations use `HttpClientWithProgress`
 - [ ] Document the pattern
 
 ## Success Criteria
 - All bare `HttpClient` usage in core Skyline replaced with `HttpClientWithProgress`
+- All remaining `HttpWebRequest` and ad-hoc `System.Net` request code retired or justified
 - Consistent progress reporting and cancellation across all HTTP operations
 - async/await removed from ArdiaLoginDlg (or separate TODO created if too complex)
 - Comprehensive test coverage
