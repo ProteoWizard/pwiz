@@ -311,6 +311,9 @@ PWIZ_API_DECL void ChromatogramList_Waters::createIndex() const
         if (spectrumType != MS_SRM_spectrum && spectrumType != MS_SIM_spectrum)
             continue;
 
+        if (spectrumType == MS_SRM_spectrum && config_.srmAsSpectra)
+            continue;
+
         //rawdata_->Info.GetAcquisitionTimeRange(function, f1, f2);
         //cout << "Time range: " << f1 << " - " << f2 << endl;
 
