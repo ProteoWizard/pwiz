@@ -1,7 +1,9 @@
 # TODO-audit_resharper_localization_settings.md
 
-## Branch Information (Future)
-- **Branch**: Not yet created - will be `Skyline/work/YYYYMMDD_audit_resharper_localization_settings`
+## Branch Information
+- **Branch**: `Skyline/work/20251114_audit_resharper_localization_settings`
+- **Created**: 2025-11-14
+- **PR**: (TBD)
 - **Objective**: Audit and configure ReSharper localization settings for all .csproj files in Skyline.sln to ensure user-facing strings are properly flagged for translation
 
 ## Background
