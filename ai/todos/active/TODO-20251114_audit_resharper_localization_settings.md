@@ -46,21 +46,26 @@ Where:
 ## Task Checklist
 
 ### Phase 1: Audit and Discovery
-- [ ] Run `check-csproj-l10n-settings.ps1` to confirm current state
+- [x] Run `check-csproj-l10n-settings.ps1` to confirm current state
 - [ ] For each high-priority project, do a quick audit of string literals:
-  - [ ] `PanoramaClient.csproj` - Search for user-facing strings
-  - [ ] `CommonUtil.csproj` - Search for user-facing strings
+  - [x] `PanoramaClient.csproj` - Contains many user-facing strings and has existing .resx resources
+  - [x] `CommonUtil.csproj` - Contains user-facing messages and .resx resources
 - [ ] For each medium-priority project, do a quick audit:
-  - [ ] `ProteowizardWrapper.csproj`
-  - [ ] `CommonMsData.csproj`
-  - [ ] `SkylineTool.csproj`
-  - [ ] `SkylineCmd.csproj`
+  - [x] `ProteowizardWrapper.csproj` - Mostly technical strings; some exceptions thrown; likely OK to enable
+  - [x] `CommonMsData.csproj` - Has multiple resource files and user-facing messages
+  - [x] `SkylineTool.csproj` - Minimal strings; mostly protocol/identifiers
+  - [x] `SkylineCmd.csproj` - Has resources and user messages (CLI output)
 - [ ] Document findings: which projects definitely need settings vs. which can be skipped
 
+Findings from script (missing .DotSettings):
+- High priority: PanoramaClient, CommonUtil
+- Medium priority: CommonMsData, SkylineCmd, SkylineTool, ProteowizardWrapper
+- Exclusions/low: ZedGraph (3rd party), BullseyeSharp (3rd party), SkylineNightly, SkylineNightlyShim (internal tools)
+
 ### Phase 2: Configure High Priority Projects
-- [ ] Copy template `.DotSettings` file to high-priority projects
-- [ ] `PanoramaClient.csproj.DotSettings` - Create settings file
-- [ ] `CommonUtil.csproj.DotSettings` - Create settings file
+- [x] Copy template `.DotSettings` file to high-priority projects
+- [x] `PanoramaClient.csproj.DotSettings` - Created
+- [x] `CommonUtil.csproj.DotSettings` - Created
 - [ ] Open each project in Visual Studio and verify ReSharper shows localization warnings
 - [ ] Commit the `.DotSettings` files with message: "Enable ReSharper localization inspection for [project names]"
 
