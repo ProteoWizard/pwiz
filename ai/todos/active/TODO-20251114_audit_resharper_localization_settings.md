@@ -80,10 +80,14 @@ Findings from script (missing .DotSettings):
 - [ ] Commit changes incrementally by category/file
 
 ### Phase 4: Configure Medium Priority Projects (Optional)
-- [ ] Based on Phase 1 audit, decide which medium-priority projects need settings
-- [ ] Create `.DotSettings` files for selected projects
+- [x] Based on Phase 1 audit, decide which medium-priority projects need settings
+  - Selected now: `SkylineCmd`, `CommonMsData`
+  - Defer: `ProteowizardWrapper` (technical messages), `SkylineTool` (minimal UI)
+- [x] Create `.DotSettings` files for selected projects
+  - [x] `SkylineCmd.csproj.DotSettings` - Created
+  - [x] `CommonMsData.csproj.DotSettings` - Created
 - [ ] Address any critical user-facing strings found
-- [ ] Document decision for projects that don't need settings (e.g., "SkylineTool has no user-facing strings")
+- [x] Document decision for projects that don't need settings (currently deferring `ProteowizardWrapper`, `SkylineTool`)
 
 ### Phase 5: Documentation and Process
 - [ ] Update project documentation about localization expectations
