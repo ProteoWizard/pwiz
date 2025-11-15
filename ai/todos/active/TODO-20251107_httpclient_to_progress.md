@@ -84,8 +84,8 @@ After completing the WebClient → HttpClient migration, we discovered several p
   - [x] Propagate `IProgressMonitor` and cancellation into web requests
   - [x] Preserve timeout behavior using linked cancellation tokens
 - [x] Drop legacy `WebRequest`/`HttpWebRequest` usage from FASTA importer tests (interfaces updated; legacy seams remain only until HttpClientTestHelper expansion)
-- [ ] Introduce `HttpClientTestHelper`-based mocks for FASTA web responses
-- [ ] Document the migration pattern in `STYLEGUIDE.md` or importer-specific docs if needed
+- [x] Introduce `HttpClientTestHelper`-based mocks for FASTA web responses
+- [x] Document the migration pattern in `STYLEGUIDE.md` or importer-specific docs if needed
 
 ### Phase 3: EditRemoteAccountDlg Migration
 - [ ] Replace bare `HttpClient` with `HttpClientWithProgress`
@@ -137,6 +137,12 @@ After completing the WebClient → HttpClient migration, we discovered several p
 - Strengthened FASTA importer assertions (normal / 404 / no-network / cancellation) to verify counts, status transitions, and localized messages, and re-recorded `FastaImporterWebData.json`.
 - Documented the `IsRecordMode` / diagnostics workflow and “build before test” requirement in `ai/WORKFLOW.md`, `ai/TESTING.md`, and `ai/docs/testing-patterns.md`.
 - Verified build + code inspection + FASTA importer tests (offline/online) with the new diagnostics disabled by default.
+
+## Progress (2025-11-15)
+- Replaced bespoke FASTA playback seams with `HttpClientTestHelper` recording/interaction files, plus `DiagnosticMode` flags for request/result dumps and row-indexed JSON snapshots.
+- Expanded `ProteinSearchInfo` diagnostics (failure reason/exception/detail, taxonomy ID, species normalization, search URL history) and implemented UniProt fallback queues so live/recorded runs capture equivalent behavior.
+- Promoted `HttpInteractionRecorder` to reusable API, added passive request logging, and ensured ENT/UniProt handlers stamp search histories before completion to keep playback deterministic.
+- Cleaned up `WebEnabledFastaImporter` (removed console logging, fixed 404 failure ordering, species extraction, `SearchUrlHistory` duplication) so production runs stay lean while diagnostics remain opt-in.
 
 ## Progress (2025-11-07)
 - Removed `MapUnexpectedWebException` and related WebRequest-era helpers; all Panorama exception flows now originate from `NetworkRequestException`.

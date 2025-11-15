@@ -333,11 +333,12 @@ namespace pwiz.SkylineTestUtil
         /// <summary>
         /// Provides offline playback using previously recorded HTTP interactions.
         /// </summary>
-        public static HttpClientTestHelper PlaybackFromInteractions(IEnumerable<HttpInteraction> interactions)
+        public static HttpClientTestHelper PlaybackFromInteractions(IEnumerable<HttpInteraction> interactions,
+            ICollection<HttpInteraction> captureInteractions = null)
         {
             if (interactions == null)
                 throw new ArgumentNullException(nameof(interactions));
-            var behavior = new PlaybackHttpClientBehavior(interactions);
+            var behavior = new PlaybackHttpClientBehavior(interactions, captureInteractions);
             return new HttpClientTestHelper(behavior);
         }
 
@@ -721,10 +722,13 @@ namespace pwiz.SkylineTestUtil
     internal class PlaybackHttpClientBehavior : HttpClientTestBehavior
     {
         private readonly Dictionary<string, Queue<HttpInteraction>> _responses;
+        private readonly ICollection<HttpInteraction> _captureInteractions;
 
-        public PlaybackHttpClientBehavior(IEnumerable<HttpInteraction> interactions)
+        public PlaybackHttpClientBehavior(IEnumerable<HttpInteraction> interactions,
+            ICollection<HttpInteraction> captureInteractions = null)
         {
             _responses = BuildResponseQueues(interactions);
+            _captureInteractions = captureInteractions;
             ResponseFactory = HandleResponse;
         }
 
@@ -754,11 +758,19 @@ namespace pwiz.SkylineTestUtil
                 throw new InvalidOperationException($"Unexpected URL during playback: {uri}");
 
             var interaction = queue.Dequeue();
+            CaptureInteraction(interaction);
             if (!string.IsNullOrEmpty(interaction.ExceptionType))
                 throw CreateException(uri, interaction);
 
             var text = interaction.ResponseBody ?? string.Empty;
             return new MemoryStream(Encoding.UTF8.GetBytes(text));
+        }
+
+        private void CaptureInteraction(HttpInteraction interaction)
+        {
+            if (_captureInteractions == null || interaction == null)
+                return;
+            _captureInteractions.Add(interaction.Clone());
         }
 
         private static Exception CreateException(Uri uri, HttpInteraction interaction)
@@ -821,6 +833,11 @@ namespace pwiz.SkylineTestUtil
         public string ExceptionType { get; set; }
         public string ExceptionMessage { get; set; }
         public string FailureType { get; set; }
+
+        public HttpInteraction Clone()
+        {
+            return (HttpInteraction) MemberwiseClone();
+        }
     }
 
     /// <summary>

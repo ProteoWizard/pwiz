@@ -111,7 +111,19 @@ namespace CommonTest
     public class FastaImporterTest : AbstractUnitTestEx
     {
         protected override bool IsRecordMode => false;
-        private bool IsDiagnosticMode => false;
+
+        [Flags]
+        private enum DiagnosticMode
+        {
+            none = 0,
+            results = 1,
+            requests = 2
+        }
+
+        private DiagnosticMode CurrentDiagnosticMode => DiagnosticMode.none;
+
+        private bool CaptureResults => (CurrentDiagnosticMode & DiagnosticMode.results) != 0;
+        private bool CaptureRequests => (CurrentDiagnosticMode & DiagnosticMode.requests) != 0;
 
         private const string FASTA_EXPECTED_JSON_RELATIVE_PATH = @"CommonTest\FastaImporterWebData.json";
  
@@ -1126,7 +1138,7 @@ namespace CommonTest
         [TestMethod]
         public void TestFastaImport()
         {
-            if (IsDiagnosticMode)
+            if (CaptureResults)
                 TestContext.EnsureTestResultsDir();
 
             TestProteinSearchInfoIntersection();
@@ -1136,25 +1148,31 @@ namespace CommonTest
                 DoTestFastaImport(false, false);  // Run with simulated web access
                 DoTestFastaImport(false, true); // Run with simulated web access, using negative tests
             }
+
+            CheckTestFlags();
         }
 
         [TestMethod]
         public void WebTestFastaImport()
         {
-            if (IsDiagnosticMode)
+            if (CaptureResults)
                 TestContext.EnsureTestResultsDir();
 
             // Only run this if SkylineTester has enabled web access or web responses are being recorded
-            if (AllowInternetAccess || IsRecordMode)
+            if (AllowInternetAccess || IsRecordMode || CurrentDiagnosticMode != DiagnosticMode.none)
             {
                 TestProteinSearchInfoIntersection();
                 DoTestFastaImport(true, false); // run with actual web access
                 DoTestFastaImport(true, true); // run with actual web access, using negative tests
             }
 
-            CheckRecordMode();
+            CheckTestFlags();
         }
-
+        private void CheckTestFlags()
+        {
+            CheckRecordMode();
+            Assert.AreEqual(DiagnosticMode.none, CurrentDiagnosticMode, "Set DiagnosticMode to none before commit");
+        }
 
         public void DoTestFastaImport(bool useActualWebAccess, bool doNegTests) // call with useActualWebAccess==true from perf test
         {
@@ -1224,7 +1242,7 @@ namespace CommonTest
 
             var finalProteinsToSearch = CreateProteinSearchInfos();
             ExecuteLookupScenario(useActualWebAccess, tests, finalProteinsToSearch, LookupTestMode.normal,
-                expectedData, doNegTests, recorder);
+                expectedData, skipExtraValidation: doNegTests, allowRecordedPlayback: !doNegTests, recorder: recorder);
 
             _recordedInteractions = recorder?.Interactions?.ToList();
 
@@ -1310,8 +1328,23 @@ namespace CommonTest
 
         private void ExecuteLookupScenario(bool useNetAccess, List<FastaHeaderParserTest> testList,
             IList<ProteinSearchInfo> proteins, LookupTestMode mode, FastaImporterExpectedData expectedData,
-            bool skipExtraValidation = false, HttpInteractionRecorder recorder = null)
+            bool skipExtraValidation = false, bool allowRecordedPlayback = true, HttpInteractionRecorder recorder = null)
         {
+            var captureInteractions = CaptureRequests && mode == LookupTestMode.normal && !skipExtraValidation;
+            HttpInteractionRecorder diagnosticsRecorder = null;
+            List<HttpInteraction> playbackDiagnostics = null;
+            if (captureInteractions)
+            {
+                if (useNetAccess)
+                {
+                    diagnosticsRecorder = recorder == null ? new HttpInteractionRecorder() : null;
+                }
+                else
+                {
+                    playbackDiagnostics = new List<HttpInteraction>();
+                }
+            }
+
             using var helper = mode switch
             {
                 LookupTestMode.http404 => HttpClientTestHelper.SimulateHttp404(),
@@ -1324,19 +1357,22 @@ namespace CommonTest
             {
                 if (useNetAccess)
                 {
-                    if (recorder != null)
-                        return HttpClientTestHelper.BeginRecording(recorder);
+                    var activeRecorder = recorder ?? diagnosticsRecorder;
+                    if (activeRecorder != null)
+                        return HttpClientTestHelper.BeginRecording(activeRecorder);
+                    return null; // use real network access when no recorder is supplied
                 }
-                else if (expectedData?.HttpInteractions != null && expectedData.HttpInteractions.Count > 0)
+                if (allowRecordedPlayback && expectedData?.HttpInteractions != null &&
+                    expectedData.HttpInteractions.Count > 0)
                 {
-                    return HttpClientTestHelper.PlaybackFromInteractions(expectedData.HttpInteractions);
+                    return HttpClientTestHelper.PlaybackFromInteractions(expectedData.HttpInteractions, playbackDiagnostics);
                 }
 
                 return BeginLegacyPlayback(testList);
             }
 
-            var initialSnapshot = IsDiagnosticMode
-                ? proteins.Select(CreateDiagnosticEntry).ToList()
+            var initialSnapshot = CaptureResults
+                ? proteins.Select((p, i) => CreateDiagnosticEntry(p, i, includeHistory: false)).ToList()
                 : null;
 
             IList<ProteinSearchInfo> results = RunLookup(proteins, mode);
@@ -1345,6 +1381,36 @@ namespace CommonTest
             {
                 ValidateLookupResult(mode, proteins, results, helper, initialSnapshot);
             }
+
+            if (captureInteractions)
+            {
+                IReadOnlyCollection<HttpInteraction> interactions =
+                    recorder?.Interactions ??
+                    diagnosticsRecorder?.Interactions ??
+                    playbackDiagnostics;
+                if (interactions != null && interactions.Count > 0)
+                    WriteInteractionDiagnostics(mode, interactions);
+            }
+        }
+
+        private void WriteInteractionDiagnostics(LookupTestMode mode, IEnumerable<HttpInteraction> interactions)
+        {
+            var path = TestContext.GetTestResultsPath($@"Interactions_{mode}.json");
+            var indexedInteractions = interactions?
+                .Select((interaction, index) => new
+                {
+                    Index = index,
+                    interaction.Url,
+                    interaction.Method,
+                    interaction.StatusCode,
+                    interaction.ContentType,
+                    interaction.ResponseBody,
+                    interaction.ExceptionType,
+                    interaction.ExceptionMessage,
+                    interaction.FailureType
+                }).ToList();
+            var json = JsonConvert.SerializeObject(indexedInteractions, Formatting.Indented);
+            File.WriteAllText(path, json, new UTF8Encoding(false));
         }
 
         private void ValidateLookupResult(LookupTestMode mode,
@@ -1352,14 +1418,12 @@ namespace CommonTest
             HttpClientTestHelper helper, IList<object> initialSnapshot)
         {
             const int noSearchNeededCount = 7;  // Seven proteins will return successfully without any web access
-            // NOTE: failOnSearch was 11 based on old recorded data, but live web shows 2 failures.
-            // This constant is currently unused (assertions commented out) until we re-record FastaImporterWebData.json
-            const int failOnSearch = 11; // Historical value from recorded JSON - needs re-recording
+            const int failOnSearch = 8; // 3 failures expected, and 5 just can't be resolved live on web
             int searchCount = proteins.Count - noSearchNeededCount;
 
             Assert.AreNotEqual(0, results.Count);
 
-            if (IsDiagnosticMode)
+            if (CaptureResults)
             {
                 WriteDiagnostics(mode, initialSnapshot, proteins, results, helper);
             }
@@ -1373,15 +1437,14 @@ namespace CommonTest
                 // There should still be the same number of proteins that were resolved without a web search
                 Assert.AreEqual(noSearchNeededCount, proteins.Count(p =>
                     p.Status == ProteinSearchInfo.SearchStatus.unsearched && p.GetProteinMetadata().NeedsSearch() == false));
-                // TODO: Re-record FastaImporterWebData.json to match current web service responses
-                // The recorded data shows 11 failures, but live web shows 2 failures.
-                // Temporarily commenting out strict failure count assertions until we re-record:
-                // Assert.AreEqual(failOnSearch, proteins.Count(p => p.Status == ProteinSearchInfo.SearchStatus.failure));
-                Assert.IsTrue(proteins.All(p => p.Status != ProteinSearchInfo.SearchStatus.failure ||
-                                                p.FailureReason == WebSearchFailureReason.no_response ||
-                                                p.FailureReason == WebSearchFailureReason.ambiguous_response));
-                // TODO: Re-record FastaImporterWebData.json - success count depends on failure count
-                // Assert.AreEqual(searchCount - failOnSearch, results.Count(p => p.Status == ProteinSearchInfo.SearchStatus.success));
+                var failureProteins = proteins.Where(p => p.Status == ProteinSearchInfo.SearchStatus.failure).ToList();
+                Assert.AreEqual(failOnSearch, failureProteins.Count);
+                Assert.AreEqual(failOnSearch - 1,
+                    failureProteins.Count(p => p.FailureReason == WebSearchFailureReason.no_response));
+                Assert.AreEqual(1,
+                    failureProteins.Count(p => p.FailureReason == WebSearchFailureReason.sequence_mismatch));
+                Assert.AreEqual(searchCount - failOnSearch, results.Count(p =>
+                    p.Status == ProteinSearchInfo.SearchStatus.success));
                 return;
             }
 
@@ -1448,19 +1511,20 @@ namespace CommonTest
                 TimestampUtc = DateTime.UtcNow,
                 HelperExpectedMessage = helper?.GetExpectedMessage(),
                 InitialProteins = initialSnapshot,
-                Proteins = proteins.Select(CreateDiagnosticEntry).ToList(),
-                Results = results.Select(CreateDiagnosticEntry).ToList()
+                Proteins = proteins.Select((p, i) => CreateDiagnosticEntry(p, i, includeHistory: true)).ToList(),
+                Results = results.Select((p, i) => CreateDiagnosticEntry(p, i, includeHistory: true)).ToList()
             };
             var json = JsonConvert.SerializeObject(diagnostics, Formatting.Indented);
-            File.WriteAllText(diagnosticsPath, json, Encoding.UTF8);
+            File.WriteAllText(diagnosticsPath, json, new UTF8Encoding(false));
         }
 
-        private static object CreateDiagnosticEntry(ProteinSearchInfo info)
+        private static object CreateDiagnosticEntry(ProteinSearchInfo info, int index, bool includeHistory)
         {
             var metadata = info.GetProteinMetadata();
             var webSearchInfo = metadata?.WebSearchInfo;
             return new
             {
+                Index = index,
                 Status = info.Status.ToString(),
                 FailureReason = info.FailureReason.ToString(),
                 info.FailureDetail,
@@ -1473,7 +1537,8 @@ namespace CommonTest
                 metadata?.Gene,
                 metadata?.Species,
                 NeedsSearch = metadata?.NeedsSearch() ?? false,
-                WebSearchInfo = webSearchInfo?.ToString()
+                WebSearchInfo = webSearchInfo?.ToString(),
+                SearchUrlHistory = includeHistory ? info.SearchUrlHistory : Array.Empty<string>()
             };
         }
 
