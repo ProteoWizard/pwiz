@@ -66,8 +66,13 @@ Findings from script (missing .DotSettings):
 - [x] Copy template `.DotSettings` file to high-priority projects
 - [x] `PanoramaClient.csproj.DotSettings` - Created
 - [x] `CommonUtil.csproj.DotSettings` - Created
-- [ ] Open each project in Visual Studio and verify ReSharper shows localization warnings
-- [ ] Commit the `.DotSettings` files with message: "Enable ReSharper localization inspection for [project names]"
+- [x] Open each project in Visual Studio and verify ReSharper shows localization warnings
+  - ✅ Verified via command-line inspectcode: 76 LocalizableElement warnings found
+  - PanoramaClient: ~25 warnings
+  - CommonUtil: ~38 warnings
+  - CommonMsData: ~4 warnings
+  - SkylineCmd: ~9 warnings
+- [x] Commit the `.DotSettings` files with message: "Enable ReSharper localization inspection for [project names]"
 
 ### Phase 3: Address Flagged String Literals (High Priority)
 - [ ] Review all strings flagged by ReSharper in `PanoramaClient`
