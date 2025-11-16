@@ -80,7 +80,7 @@ namespace pwiz.SkylineTest.Proteome
         }
 
         [TestMethod]
-        public void TestWebProteomeDb()
+        public void TestOlderProteomeDbWeb()
         {
             // Only run this if SkylineTester has enabled web access or web responses are being recorded
             if (AllowInternetAccess || IsRecordMode)

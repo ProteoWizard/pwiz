@@ -1153,7 +1153,7 @@ namespace CommonTest
         }
 
         [TestMethod]
-        public void WebTestFastaImport()
+        public void TestFastaImportWeb()
         {
             if (CaptureResults)
                 TestContext.EnsureTestResultsDir();
