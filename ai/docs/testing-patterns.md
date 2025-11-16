@@ -8,9 +8,10 @@
 5. [Assertion Best Practices](#assertion-best-practices)
 6. [HttpClient Testing with HttpClientTestHelper](#httpclient-testing-with-httpclienttesthelper)
 7. [Recording Test Data with IsRecordMode](#recording-test-data-with-isrecordmode)
-8. [Translation-Proof Testing](#translation-proof-testing)
-9. [Test Performance Considerations](#test-performance-considerations)
-10. [Code Coverage Validation](#code-coverage-validation)
+8. [HTTP Recording/Playback Pattern](#http-recordingplayback-pattern)
+9. [Translation-Proof Testing](#translation-proof-testing)
+10. [Test Performance Considerations](#test-performance-considerations)
+11. [Code Coverage Validation](#code-coverage-validation)
 
 ---
 
@@ -900,16 +901,212 @@ public void TestGraphLabels()
 - Store large binary data separately (e.g., in `TestData/` folder)
 - Compress or summarize data where possible
 
-### Integration with HttpClientTestHelper
+### HTTP Recording/Playback Pattern
 
-The HTTP recording infrastructure built for `HttpClientTestHelper` demonstrates the full pattern:
+The HTTP recording/playback pattern enables tests to run without network access by recording live HTTP interactions and replaying them during offline test runs. This provides:
 
-- **Recording:** `HttpClientTestHelper.BeginRecording()` captures all HTTP requests/responses
-- **Storage:** Interactions serialized to JSON with URLs, status codes, response bodies, exceptions
-- **Playback:** `HttpClientTestHelper.PlaybackFromInteractions()` replays recorded interactions offline
-- **Validation:** Tests run identically in both online (recording) and offline (playback) modes
+- **Fast offline tests** - No network latency, tests run in milliseconds
+- **Deterministic results** - Same responses every time, no flakiness from network issues
+- **Full validation** - Offline tests can validate complete responses, not just success/failure
+- **Easy maintenance** - Re-record when web services change, commit JSON files to version control
 
-See `FastaImporterTest.cs` for a complete example of HTTP interaction recording.
+#### Simple Pattern: HTTP Interactions Only
+
+For tests that only need to record HTTP request/response pairs (no additional expected data), use this minimal pattern:
+
+**Example:** `ProteomeDbTest.cs` - `TestOlderProteomeDb` / `TestWebProteomeDb`
+
+```csharp
+[TestClass]
+public class ProteomeDbTest : AbstractUnitTestEx
+{
+    private const string PROTDB_EXPECTED_JSON_RELATIVE_PATH = @"Test\Proteome\ProteomeDbWebData.json";
+    
+    protected override bool IsRecordMode => false;  // Always default to false
+    
+    private ProteomeDbExpectedData _cachedExpectedData;
+    
+    /// <summary>
+    /// Loads recorded HTTP interactions for playback during offline tests.
+    /// Returns empty data if the recording file doesn't exist.
+    /// </summary>
+    private ProteomeDbExpectedData LoadHttpInteractions()
+    {
+        if (_cachedExpectedData != null)
+            return _cachedExpectedData;
+            
+        var jsonPath = TestContext.GetProjectDirectory(PROTDB_EXPECTED_JSON_RELATIVE_PATH);
+        if (string.IsNullOrEmpty(jsonPath) || !File.Exists(jsonPath))
+        {
+            _cachedExpectedData = new ProteomeDbExpectedData();
+            return _cachedExpectedData;
+        }
+        
+        var json = File.ReadAllText(jsonPath, Encoding.UTF8);
+        _cachedExpectedData = JsonConvert.DeserializeObject<ProteomeDbExpectedData>(json) 
+            ?? new ProteomeDbExpectedData();
+        _cachedExpectedData.HttpInteractions ??= new List<HttpInteraction>();
+        return _cachedExpectedData;
+    }
+    
+    /// <summary>
+    /// Records HTTP interactions for playback during offline tests.
+    /// This enables tests to run without network access by replaying recorded request/response pairs.
+    /// </summary>
+    private void RecordHttpInteractions(IReadOnlyList<HttpInteraction> interactions)
+    {
+        if (interactions == null || interactions.Count == 0)
+            return;
+            
+        var jsonPath = TestContext.GetProjectDirectory(PROTDB_EXPECTED_JSON_RELATIVE_PATH);
+        Assert.IsNotNull(jsonPath, @"Unable to locate project-relative path for HTTP interactions.");
+        
+        var data = new ProteomeDbExpectedData
+        {
+            HttpInteractions = interactions.ToList()
+        };
+        
+        var json = JsonConvert.SerializeObject(data, Formatting.Indented);
+        File.WriteAllText(jsonPath, json, new UTF8Encoding(false));
+        Console.Out.WriteLine(@"Recorded HTTP interactions to: " + jsonPath);
+    }
+    
+    private HttpClientTestHelper CreateHttpClientHelper(bool useNetAccess, 
+        ProteomeDbExpectedData expectedData, HttpInteractionRecorder recorder)
+    {
+        if (useNetAccess)
+        {
+            if (recorder != null)
+                return HttpClientTestHelper.BeginRecording(recorder);
+            return null; // use real network access when no recorder is supplied
+        }
+        // Use playback if we have recorded interactions
+        if (expectedData?.HttpInteractions != null && expectedData.HttpInteractions.Count > 0)
+        {
+            return HttpClientTestHelper.PlaybackFromInteractions(expectedData.HttpInteractions);
+        }
+        return null; // No recorded data available
+    }
+    
+    [TestMethod]
+    public void TestOlderProteomeDb()
+    {
+        DoTestOlderProteomeDb(TestContext, false); // offline mode with playback
+    }
+    
+    [TestMethod]
+    public void TestWebProteomeDb()
+    {
+        // Only run if web access enabled or recording
+        if (AllowInternetAccess || IsRecordMode)
+        {
+            DoTestOlderProteomeDb(TestContext, true); // online mode with recording
+        }
+        CheckRecordMode();
+    }
+    
+    public void DoTestOlderProteomeDb(TestContext testContext, bool doActualWebAccess)
+    {
+        // ... test setup ...
+        
+        var expectedData = LoadHttpInteractions();
+        HttpInteractionRecorder recorder = null;
+        if (doActualWebAccess && IsRecordMode)
+            recorder = new HttpInteractionRecorder();
+            
+        using var helper = CreateHttpClientHelper(doActualWebAccess, expectedData, recorder);
+        // ... test implementation that makes HTTP requests ...
+        
+        if (IsRecordMode && doActualWebAccess)
+        {
+            var recordedInteractions = recorder?.Interactions?.ToList();
+            RecordHttpInteractions(recordedInteractions);
+        }
+    }
+    
+    private class ProteomeDbExpectedData
+    {
+        public List<HttpInteraction> HttpInteractions { get; set; } = new List<HttpInteraction>();
+    }
+}
+```
+
+**Key Components:**
+
+1. **`IsRecordMode` property** - Toggle between recording and playback modes
+2. **`LoadHttpInteractions()`** - Load recorded interactions from JSON file
+3. **`RecordHttpInteractions()`** - Save interactions to JSON file
+4. **`CreateHttpClientHelper()`** - Create recording or playback helper based on mode
+5. **JSON data class** - Simple class with `HttpInteractions` list
+6. **Paired test methods** - One for offline playback, one for online recording
+
+**Workflow:**
+
+1. **Recording:** Set `IsRecordMode => true`, run `TestWebProteomeDb` with internet access enabled
+   - Test makes real HTTP requests
+   - `HttpInteractionRecorder` captures all requests/responses
+   - JSON file is written with recorded interactions
+   - Test fails at end with `CheckRecordMode()` assertion (expected)
+
+2. **Playback:** Set `IsRecordMode => false`, run `TestOlderProteomeDb` without internet access
+   - Test loads recorded interactions from JSON
+   - `HttpClientTestHelper.PlaybackFromInteractions()` replays responses
+   - Test runs identically to online version, but offline
+   - Full validation works because recorded data contains complete responses
+
+**Benefits of this pattern:**
+- ✅ **Simple** - Minimal code, easy to understand
+- ✅ **Fast** - Sub-second execution without network access
+- ✅ **Complete** - Full metadata validation works offline (same as online)
+- ✅ **Maintainable** - Re-record when web services change, commit JSON to git
+
+#### Extended Pattern: HTTP Interactions + Expected Results
+
+For tests that need to record both HTTP interactions AND structured expected results (e.g., protein metadata, calculation results), extend the JSON data class:
+
+**Example:** `FastaImporterTest.cs` - `TestFastaImport` / `WebTestFastaImport`
+
+```csharp
+private class FastaImporterExpectedData
+{
+    public List<FastaImporterExpectedRecord> Records { get; set; } = new List<FastaImporterExpectedRecord>();
+    public List<HttpInteraction> HttpInteractions { get; set; } = new List<HttpInteraction>();
+    
+    [JsonIgnore]
+    public Dictionary<string, FastaImporterExpectedRecord> RecordMap { get; set; }
+}
+```
+
+This pattern allows you to:
+- Record HTTP interactions for offline playback
+- Record expected results (protein metadata, search outcomes) for validation
+- Store both in the same JSON file for easy maintenance
+
+**When to use each pattern:**
+- **Simple pattern** (HTTP interactions only): Use when the HTTP responses themselves contain all validation data needed
+- **Extended pattern** (HTTP + expected results): Use when you need to validate derived/computed results beyond just the raw HTTP responses
+
+#### Implementation Checklist
+
+To add HTTP recording/playback to a test:
+
+1. ✅ Add `IsRecordMode` property (default to `false`)
+2. ✅ Create JSON file path constant
+3. ✅ Add data class with `HttpInteractions` list
+4. ✅ Implement `LoadHttpInteractions()` method
+5. ✅ Implement `RecordHttpInteractions()` method
+6. ✅ Implement `CreateHttpClientHelper()` method
+7. ✅ Create paired test methods (offline/online)
+8. ✅ Add JSON file to project (`.csproj` file)
+9. ✅ Add `CheckRecordMode()` call in online test method
+10. ✅ Record interactions at end of test when `IsRecordMode && doActualWebAccess`
+
+#### References
+
+- **Simple example:** `ProteomeDbTest.cs` - `TestOlderProteomeDb` / `TestWebProteomeDb`
+- **Extended example:** `FastaImporterTest.cs` - `TestFastaImport` / `WebTestFastaImport`
+- **Helper classes:** `HttpClientTestHelper.cs` - `BeginRecording()`, `PlaybackFromInteractions()`
+- **Data classes:** `HttpInteraction`, `HttpInteractionRecorder` in `pwiz_tools/Skyline/TestUtil/`
 
 ---
 

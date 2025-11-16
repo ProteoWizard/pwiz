@@ -86,7 +86,15 @@ After completing the WebClient → HttpClient migration, we discovered several p
 - [x] Drop legacy `WebRequest`/`HttpWebRequest` usage from FASTA importer tests (interfaces updated; legacy seams remain only until HttpClientTestHelper expansion)
 - [x] Introduce `HttpClientTestHelper`-based mocks for FASTA web responses
 - [x] Document the migration pattern in `STYLEGUIDE.md` or importer-specific docs if needed
-- [ ] Convert `ProteomeDbTest` offline mode to `HttpClientTestHelper` playback (replace `FakeWebSearchProvider` usage in `TestOlderProteomeDb`)
+- [x] Convert `ProteomeDbTest` offline mode to `HttpClientTestHelper` playback (replace `FakeWebSearchProvider` usage in `TestOlderProteomeDb`)
+  - [x] Added `IsRecordMode` property and HTTP interaction recording/playback infrastructure
+  - [x] Created `ProteomeDbWebData.json` for recorded HTTP interactions
+  - [x] Removed `FakeWebSearchProvider` fallback - now requires recorded data for offline tests
+  - [x] Full metadata validation now works in offline mode (same as web mode) since recorded data contains complete responses
+  - [x] Test runs sub-second without network access (<10 UniProt requests vs ~90 total requests in TestFastaImport)
+  - [x] Cleaned up naming: `LoadHttpInteractions()` and `RecordHttpInteractions()` with accurate messages
+  - [x] Added XML documentation explaining HTTP recording/playback pattern
+- [ ] Evaluate benefit of using `FastWebSearchProvider` (IsPolite => false) in `TestFastaImport` to skip politeness delays during playback (30+ Entrez requests at 333ms each = 10+ seconds potential savings)
 
 ### Phase 3: EditRemoteAccountDlg Migration
 - [ ] Replace bare `HttpClient` with `HttpClientWithProgress`
@@ -124,6 +132,20 @@ After completing the WebClient → HttpClient migration, we discovered several p
 - [ ] Verify all network operations use `HttpClientWithProgress`
 - [ ] Document the pattern
 
+### Phase 8: Pre-Merge Cleanup & Documentation
+- [ ] Evaluate and implement `FastWebSearchProvider` usage in `TestFastaImport` to skip politeness delays during playback
+  - Potential savings: 30+ Entrez requests at 333ms each = 10+ seconds
+  - `FastWebSearchProvider` class already added to `FastaImporterTest.cs` for evaluation
+- [ ] Move `ProteomeDbTest.cs` to `TestConnected` project (more appropriate for tests that access the web)
+- [ ] Establish naming convention for paired web/offline tests
+  - Use suffix instead of prefix (e.g., `TestFastaImportWeb`, `TestOlderProteomeDbWeb`)
+  - Ensures tests sort together alphabetically instead of being separated
+  - Apply to existing tests: `TestFastaImport`/`WebTestFastaImport` and `TestOlderProteomeDb`/`TestWebProteomeDb`
+- [ ] Document HTTP recording/playback pattern in `ai\docs\testing-patterns.md`
+  - Use `ProteomeDbTest` as the clean, simple example (HTTP interactions only, no extra expectations)
+  - Provide clear instructions for developers and LLMs on how to add HTTP recording to tests
+  - Show the minimal implementation pattern (IsRecordMode, LoadHttpInteractions, RecordHttpInteractions, CreateHttpClientHelper)
+
 ## Success Criteria
 - All bare `HttpClient` usage in core Skyline replaced with `HttpClientWithProgress`
 - All remaining `HttpWebRequest` and ad-hoc `System.Net` request code retired or justified
@@ -144,6 +166,18 @@ After completing the WebClient → HttpClient migration, we discovered several p
 - Expanded `ProteinSearchInfo` diagnostics (failure reason/exception/detail, taxonomy ID, species normalization, search URL history) and implemented UniProt fallback queues so live/recorded runs capture equivalent behavior.
 - Promoted `HttpInteractionRecorder` to reusable API, added passive request logging, and ensured ENT/UniProt handlers stamp search histories before completion to keep playback deterministic.
 - Cleaned up `WebEnabledFastaImporter` (removed console logging, fixed 404 failure ordering, species extraction, `SearchUrlHistory` duplication) so production runs stay lean while diagnostics remain opt-in.
+
+## Progress (2025-11-16)
+- Completed `ProteomeDbTest` HTTP recording/playback implementation as clean template for simple HTTP interaction recording
+  - Removed `FakeWebSearchProvider` fallback - offline tests now require recorded data, enabling full metadata validation
+  - Test runs sub-second without network access (<10 UniProt requests)
+  - Cleaned up naming and documentation to accurately reflect HTTP interaction recording (not "expectations")
+  - Added `FastWebSearchProvider` class to `FastaImporterTest.cs` for future performance optimization evaluation
+- Remaining work before PR merge:
+  1. Evaluate and implement `FastWebSearchProvider` usage in `TestFastaImport` to skip politeness delays (30+ Entrez requests at 333ms each = 10+ seconds potential savings)
+  2. Move `ProteomeDbTest.cs` to `TestConnected` project (more appropriate for tests that access the web)
+  3. Establish naming convention for paired tests: use suffix instead of prefix (e.g., `TestFastaImportWeb`, `TestOlderProteomeDbWeb`) so they sort together
+  4. Document HTTP recording/playback pattern in `ai\docs\testing-patterns.md` using `ProteomeDbTest` as the clean, simple example
 
 ## Progress (2025-11-07)
 - Removed `MapUnexpectedWebException` and related WebRequest-era helpers; all Panorama exception flows now originate from `NetworkRequestException`.

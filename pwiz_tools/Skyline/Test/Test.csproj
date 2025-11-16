@@ -400,6 +400,7 @@
     <None Include="OnDemandFeatureCalculatorTest.zip" />
     <None Include="PeakBoundaryTest.zip" />
     <None Include="PeakGroupIntegratorTest.zip" />
+    <None Include="Proteome\ProteomeDbWebData.json" />
     <EmbeddedResource Include="predict.speclib.tsv" />
     <EmbeddedResource Include="predict_transformed.speclib.tsv" />
     <EmbeddedResource Include="predict_transformed.speclib.blib" />
