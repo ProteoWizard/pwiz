@@ -1,10 +1,28 @@
+/*
+ * Original author: Vagisha Sharma <vsharma .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2024 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Text;
+using System.Net; // HttpStatusCode
 using System.Text.RegularExpressions;
 using System.Threading;
 using Newtonsoft.Json;
@@ -290,7 +308,7 @@ namespace pwiz.PanoramaClient
             catch (NetworkRequestException ex)
             {
                 // Extract LabKey-specific error from response body if available and throw PanoramaServerException
-                throw PanoramaServerException.CreateWithResponseDisposal(
+                throw PanoramaServerException.CreateWithLabKeyError(
                     Resources.AbstractPanoramaClient_UploadTempZipFile_There_was_an_error_uploading_the_file_,
                     tmpUploadUri,
                     PanoramaUtil.GetErrorFromNetworkRequestException,
@@ -437,37 +455,6 @@ namespace pwiz.PanoramaClient
             );
         }
 
-        protected virtual LabKeyError ParseUploadFileCompletedEventArgs(UploadFileCompletedEventArgs e)
-        {
-            if (e == null) return null;
-            // Check the Error and Cancelled properties first to determine whether the asynchronous upload completed.
-            // If the upload file operation did not complete correctly, the Result property's value is not valid
-            // and accessing it to read the server response throws a TargetInvocationException.
-            if (e.Error != null)
-            {
-                return new LabKeyError(e.Error.ToString(), null);
-            }
-            if (e.Cancelled)
-            {
-                return new LabKeyError(Resources.AbstractPanoramaClient_ParseUploadFileCompletedEventArgs_Request_cancelled, null);
-            }
-
-            try
-            {
-                var serverResponse = e.Result;
-                return serverResponse != null ? PanoramaUtil.GetIfErrorInResponse(Encoding.UTF8.GetString(serverResponse)) : null;
-            }
-            catch (Exception ex)
-            {
-                // Asynchronous file upload runs on a worker thread. Handle any exceptions that are thrown otherwise the Skyline window will crash.
-                return new LabKeyError(CommonTextUtil.LineSeparate(
-                    Resources
-                        .AbstractPanoramaClient_ParseUploadFileCompletedEventArgs_There_was_an_error_reading_the_server_response_,
-                    ex.ToString()), null);
-            }
-            
-        }
-
         public virtual JObject SupportedVersionsJson()
         {
             var uri = PanoramaUtil.Call(ServerUri, @"targetedms", null, @"getMaxSupportedVersions");
@@ -575,7 +562,7 @@ namespace pwiz.PanoramaClient
                 // Check if this is a DNS resolution failure
                 if (ex.IsDnsFailure())
                 {
-                    throw PanoramaServerException.CreateWithResponseDisposal(
+                    throw PanoramaServerException.CreateWithLabKeyError(
                         ServerStateEnum.missing.Error(uri),
                         ex.RequestUri ?? uri,
                         PanoramaUtil.GetErrorFromNetworkRequestException,
@@ -598,7 +585,7 @@ namespace pwiz.PanoramaClient
                     }
                 }
 
-                throw PanoramaServerException.CreateWithResponseDisposal(
+                throw PanoramaServerException.CreateWithLabKeyError(
                     ServerStateEnum.unknown.Error(ServerUri),
                     uri,
                     PanoramaUtil.GetErrorFromNetworkRequestException,
@@ -616,7 +603,6 @@ namespace pwiz.PanoramaClient
             }
             catch (NetworkRequestException ex)
             {
-                // EnsureLogin now throws NetworkRequestException instead of WebException
                 if (ex.StatusCode == HttpStatusCode.NotFound) // 404
                 {
                     var newServer = pServer.HasContextPath()
@@ -635,7 +621,7 @@ namespace pwiz.PanoramaClient
                     }
                 }
 
-                throw PanoramaServerException.CreateWithResponseDisposal(
+                throw PanoramaServerException.CreateWithLabKeyError(
                     UserStateEnum.unknown.Error(ServerUri), 
                     PanoramaUtil.GetEnsureLoginUri(pServer), 
                     PanoramaUtil.GetErrorFromNetworkRequestException, 
@@ -704,7 +690,7 @@ namespace pwiz.PanoramaClient
                         return pServer;
                     }
 
-                    throw PanoramaServerException.CreateWithResponseDisposal(
+                    throw PanoramaServerException.CreateWithLabKeyError(
                         UserStateEnum.nonvalid.Error(ServerUri),
                         requestUri,
                         PanoramaUtil.GetErrorFromNetworkRequestException,

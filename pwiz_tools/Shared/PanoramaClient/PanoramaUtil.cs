@@ -21,7 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
+using System.Net; // HttpStatusCode
 using System.Text;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
@@ -69,37 +69,6 @@ namespace pwiz.PanoramaClient
             }
 
             return serverName;
-        }
-
-        public static bool TryGetJsonResponse(WebResponse response, ref JObject jsonResponse)
-        {
-            var responseText = GetResponseString(response);
-            if (responseText != null)
-            {
-                try
-                {
-                    jsonResponse = JObject.Parse(responseText);
-                    return true;
-                }
-                catch (JsonReaderException) { }
-            }
-            return false;
-        }
-
-        public static string GetResponseString(WebResponse response)
-        {
-            using (var stream = response?.GetResponseStream())
-            {
-                if (stream != null)
-                {
-                    using (var reader = new StreamReader(stream, Encoding.UTF8))
-                    {
-                        return reader.ReadToEnd();
-                    }
-                }
-            }
-
-            return null;
         }
 
         public static bool IsValidEnsureLoginResponse(JObject jsonResponse, string expectedEmail)
@@ -226,17 +195,6 @@ namespace pwiz.PanoramaClient
                 @"query.queryName=job&schemaName=pipeline&query.rowId~eq=" + pipelineJobRowId);
         }
 
-        public static LabKeyError GetErrorFromWebException(WebException e)
-        {
-            if (e == null || e.Response == null) return null;
-            
-            // A WebException is usually thrown if the response status code is something other than 200
-            // We could still have a LabKey error in the JSON response. For example, when we get a 404
-            // response when trying to upload to a folder that does not exist. The response contains a 
-            // LabKey error like "No such folder or workbook..."
-            return GetIfErrorInResponse(e.Response);
-        }
-
         public static LabKeyError GetErrorFromNetworkRequestException(NetworkRequestException e)
         {
             if (e == null || string.IsNullOrEmpty(e.ResponseBody)) return null;
@@ -252,13 +210,6 @@ namespace pwiz.PanoramaClient
                 return new LabKeyError(jsonResponse[@"exception"].ToString(), jsonResponse[@"status"]?.ToObject<int>());
             }
             return null;
-        }
-
-        public static LabKeyError GetIfErrorInResponse(WebResponse response)
-        {
-            JObject jsonResponse = null;
-            TryGetJsonResponse(response, ref jsonResponse);
-            return jsonResponse != null ? GetIfErrorInResponse(jsonResponse) : null;
         }
 
         public static LabKeyError GetIfErrorInResponse(string responseString)
@@ -451,35 +402,12 @@ namespace pwiz.PanoramaClient
         {
         }
 
-        private PanoramaServerException(string message, Exception e) : base(message, e)
+        public PanoramaServerException(string message, Exception e) : base(message, e)
         {
-            HttpStatus = ((e as WebException)?.Response as HttpWebResponse)?.StatusCode 
-                         ?? (e as NetworkRequestException)?.StatusCode;
+            HttpStatus = (e as NetworkRequestException)?.StatusCode;
         }
 
-        public static PanoramaServerException Create(string message, Uri uri, string response, Exception e)
-        {
-            if (e is WebException webException)
-            {
-                return CreateWithResponseDisposal(message, uri, response, webException);
-            }
-
-            var errorMessage = new ErrorMessageBuilder (Resources.AbstractRequestHelper_ParseJsonResponse_Error_parsing_response_as_JSON_)
-                    .ExceptionMessage(e.Message).Uri(uri).Response(response).ToString();
-            return new PanoramaServerException(errorMessage, e);
-        }
-
-        public static PanoramaServerException CreateWithResponseDisposal(string message, Uri uri, Func<WebException, LabKeyError> getLabKeyError, WebException e)
-        {
-            var errorMessageBuilder = new ErrorMessageBuilder(message)
-                .Uri(uri)
-                .ExceptionMessage(e.Message)
-                .LabKeyError(getLabKeyError(e)); // Will read the WebException's Response property.
-
-            return CreateWithResponseDisposal(errorMessageBuilder.ToString(), e);
-        }
-
-        public static PanoramaServerException CreateWithResponseDisposal(string message, Uri uri, Func<NetworkRequestException, LabKeyError> getLabKeyError, NetworkRequestException e)
+        public static PanoramaServerException CreateWithLabKeyError(string message, Uri uri, Func<NetworkRequestException, LabKeyError> getLabKeyError, NetworkRequestException e)
         {
             var labKeyError = getLabKeyError?.Invoke(e);
             var errorMessageBuilder = new ErrorMessageBuilder(message)
@@ -503,23 +431,6 @@ namespace pwiz.PanoramaClient
             }
 
             return new PanoramaServerException(errorMessageBuilder.ToString(), e);
-        }
-
-        private static PanoramaServerException CreateWithResponseDisposal(string message, Uri uri, string response, WebException e)
-        {
-            var errorMessageBuilder = new ErrorMessageBuilder(message)
-                .Uri(uri)
-                .ExceptionMessage(e.Message)
-                .Response(response);
-
-            return CreateWithResponseDisposal(errorMessageBuilder.ToString(), e);
-        }
-
-        private static PanoramaServerException CreateWithResponseDisposal(string errorMessage, WebException e)
-        {
-            var exception = new PanoramaServerException(errorMessage, e); // Will read WebException's Response.StatusCode
-            e.Response?.Dispose();
-            return exception;
         }
     }
 
@@ -786,5 +697,4 @@ namespace pwiz.PanoramaClient
             return authHeader;
         }
     }
-
 }

@@ -15,7 +15,7 @@
  */
 
 using System;
-using System.Net;
+using System.Net; // HttpStatusCode
 
 namespace pwiz.CommonMsData.RemoteApi.Ardia
 {

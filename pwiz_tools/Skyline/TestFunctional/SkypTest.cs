@@ -18,7 +18,7 @@
 
 using System;
 using System.IO;
-using System.Net;
+using System.Net; // HttpStatusCode
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.PanoramaClient;
 using pwiz.Skyline.Alerts;

@@ -68,8 +68,15 @@ param(
     [string]$Configuration = "Debug",
     
     [Parameter(Mandatory=$false)]
-    [switch]$ShowUI = $false  # Run on-screen (offscreen=off) to see the UI
+    [switch]$ShowUI = $false,  # Run on-screen (offscreen=off) to see the UI
+    
+    [Parameter(Mandatory=$false)]
+    [switch]$EnableInternet = $false
 )
+
+$scriptRoot = Split-Path -Parent $PSCommandPath
+$skylineRoot = Split-Path -Parent $scriptRoot
+$initialLocation = Get-Location
 
 # Ensure UTF-8 output for status symbols regardless of terminal settings
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
@@ -100,13 +107,6 @@ $Platform = "x64"
 $outputDir = "bin\$Platform\$Configuration"
 $testRunner = "$outputDir\TestRunner.exe"
 
-# Check TestRunner.exe exists
-if (-not (Test-Path $testRunner)) {
-    Write-Host "❌ TestRunner.exe not found at: $testRunner" -ForegroundColor Red
-    Write-Host "Build first with: .\ai\Build-Skyline.ps1" -ForegroundColor Yellow
-    exit 1
-}
-
 # Handle @file references - convert to absolute path if needed
 $testParam = $TestName
 if ($TestName -match '^@(.+)$') {
@@ -127,6 +127,7 @@ Write-Host "Running tests with TestRunner.exe" -ForegroundColor Cyan
 Write-Host "  Test: $TestName" -ForegroundColor Gray
 Write-Host "  Language(s): $languageParam" -ForegroundColor Gray
 Write-Host "  UI Mode: $(if ($ShowUI) { 'On-screen (visible)' } else { 'Offscreen (hidden)' })" -ForegroundColor Gray
+Write-Host "  Internet: $(if ($EnableInternet) { 'Enabled' } else { 'Disabled' })" -ForegroundColor Gray
 Write-Host "  Log: $outputDir\$logFile`n" -ForegroundColor Gray
 
 # Build TestRunner command line
@@ -142,86 +143,95 @@ $offscreenParam = if ($ShowUI) { "off" } else { "on" }
 # Only use buildcheck for English-only runs (buildcheck forces language=en-US and loop=1)
 $useBuildCheck = ($languageParam -eq "en-US")
 
-Push-Location $outputDir
 try {
-    # Build full command line for display
-    if ($useBuildCheck) {
-        $cmdLine = ".\TestRunner.exe buildcheck=1 test=$testParam language=$languageParam offscreen=$offscreenParam log=$logFile"
-    } else {
-        $cmdLine = ".\TestRunner.exe loop=1 test=$testParam language=$languageParam offscreen=$offscreenParam log=$logFile"
+    Set-Location $skylineRoot
+
+    # Ensure TestRunner build exists
+    $Platform = "x64"
+    $outputDir = "bin\$Platform\$Configuration"
+    $testRunner = Join-Path $skylineRoot "$outputDir\TestRunner.exe"
+    if (-not (Test-Path $testRunner)) {
+        Write-Host "❌ TestRunner.exe not found at: $testRunner" -ForegroundColor Red
+        Write-Host "Build first with: .\ai\Build-Skyline.ps1" -ForegroundColor Yellow
+        return
     }
-    Write-Host "Command: $cmdLine`n" -ForegroundColor Gray
-    
-    $testStart = Get-Date
-    
-    if ($useBuildCheck) {
-        & .\TestRunner.exe `
-            buildcheck=1 `
-            test=$testParam `
-            language=$languageParam `
-            offscreen=$offscreenParam `
-            log=$logFile
-    } else {
-        # For multi-language or non-English: use loop=1 instead of buildcheck
-        & .\TestRunner.exe `
-            loop=1 `
-            test=$testParam `
-            language=$languageParam `
-            offscreen=$offscreenParam `
-            log=$logFile
-    }
-    
-    $exitCode = $LASTEXITCODE
-    $duration = (Get-Date) - $testStart
-    
-    # Check if no tests were found (common if using class name instead of method name)
-    $logContent = Get-Content $logFile -Raw
-    if ($logContent -match "No tests found" -and $TestName -notmatch '@|\.dll$') {
-        Write-Host "`n⚠️ No tests found for: $TestName" -ForegroundColor Yellow
-        Write-Host "`nSearching for [TestMethod] in class ${TestName}..." -ForegroundColor Cyan
-        
-        # Search for the test class and find [TestMethod] annotations
-        $classFile = Get-ChildItem -Recurse -Filter "${TestName}.cs" | Select-Object -First 1
-        if ($classFile) {
-            Write-Host "Found class file: $($classFile.FullName)" -ForegroundColor Gray
-            
-            $content = Get-Content $classFile.FullName -Raw
-            $methodMatches = [regex]::Matches($content, '\[TestMethod\]\s+public\s+void\s+(\w+)\s*\(')
-            
-            if ($methodMatches.Count -gt 0) {
-                Write-Host "`nFound [TestMethod] in ${TestName}:" -ForegroundColor Green
-                foreach ($match in $methodMatches) {
-                    $methodName = $match.Groups[1].Value
-                    Write-Host "  • $methodName" -ForegroundColor Cyan
-                }
-                Write-Host "`nTip: Use the method name, not the class name. For example:" -ForegroundColor Yellow
-                Write-Host "  .\ai\Run-Tests.ps1 -TestName $($methodMatches[0].Groups[1].Value) -Language en" -ForegroundColor Cyan
-            } else {
-                Write-Host "No [TestMethod] found in $($classFile.Name)" -ForegroundColor Yellow
-            }
+
+    Push-Location $outputDir
+    try {
+        # Build full command line for display
+        $commonArgs = @("test=$testParam", "language=$languageParam", "offscreen=$offscreenParam", "log=$logFile")
+
+        if ($useBuildCheck) {
+            $runnerArgs = @("buildcheck=1") + $commonArgs
         } else {
-            Write-Host "Class file ${TestName}.cs not found" -ForegroundColor Yellow
+            $runnerArgs = @("loop=1") + $commonArgs
+        }
+
+        if ($EnableInternet) {
+            $runnerArgs += "internet=on"
+        }
+
+        $cmdLine = ".\TestRunner.exe " + ($runnerArgs -join ' ')
+        Write-Host "Command: $cmdLine`n" -ForegroundColor Gray
+
+        $testStart = Get-Date
+        & .\TestRunner.exe $runnerArgs
+        
+        $exitCode = $LASTEXITCODE
+        $duration = (Get-Date) - $testStart
+        
+        # Check if no tests were found (common if using class name instead of method name)
+        $logContent = Get-Content $logFile -Raw
+        if ($logContent -match "No tests found" -and $TestName -notmatch '@|\.dll$') {
+            Write-Host "`n⚠️ No tests found for: $TestName" -ForegroundColor Yellow
+            Write-Host "`nSearching for [TestMethod] in class ${TestName}..." -ForegroundColor Cyan
+            
+            # Search for the test class and find [TestMethod] annotations
+            $classFile = Get-ChildItem -Recurse -Filter "${TestName}.cs" | Select-Object -First 1
+            if ($classFile) {
+                Write-Host "Found class file: $($classFile.FullName)" -ForegroundColor Gray
+                
+                $content = Get-Content $classFile.FullName -Raw
+                $methodMatches = [regex]::Matches($content, '\[TestMethod\]\s+public\s+void\s+(\w+)\s*\(')
+                
+                if ($methodMatches.Count -gt 0) {
+                    Write-Host "`nFound [TestMethod] in ${TestName}:" -ForegroundColor Green
+                    foreach ($match in $methodMatches) {
+                        $methodName = $match.Groups[1].Value
+                        Write-Host "  • $methodName" -ForegroundColor Cyan
+                    }
+                    Write-Host "`nTip: Use the method name, not the class name. For example:" -ForegroundColor Yellow
+                    Write-Host "  .\ai\Run-Tests.ps1 -TestName $($methodMatches[0].Groups[1].Value) -Language en" -ForegroundColor Cyan
+                } else {
+                    Write-Host "No [TestMethod] found in $($classFile.Name)" -ForegroundColor Yellow
+                }
+            } else {
+                Write-Host "Class file ${TestName}.cs not found" -ForegroundColor Yellow
+            }
+            
+            exit 1
         }
         
-        exit 1
-    }
-    
-    if ($exitCode -ne 0) {
-        Write-Host "`n❌ Tests FAILED (exit code: $exitCode) in $($duration.TotalSeconds.ToString('F1'))s" -ForegroundColor Red
-        Write-Host "`nLog file: $outputDir\$logFile" -ForegroundColor Gray
+        if ($exitCode -ne 0) {
+            Write-Host "`n❌ Tests FAILED (exit code: $exitCode) in $($duration.TotalSeconds.ToString('F1'))s" -ForegroundColor Red
+            Write-Host "`nLog file: $outputDir\$logFile" -ForegroundColor Gray
+            
+            # Show last 30 lines of log for quick diagnosis
+            Write-Host "`nLast 30 lines of log:" -ForegroundColor Yellow
+            Get-Content $logFile -Tail 30 | ForEach-Object { Write-Host "  $_" }
+            
+            exit $exitCode
+        }
         
-        # Show last 30 lines of log for quick diagnosis
-        Write-Host "`nLast 30 lines of log:" -ForegroundColor Yellow
-        Get-Content $logFile -Tail 30 | ForEach-Object { Write-Host "  $_" }
-        
-        exit $exitCode
+        Write-Host "`n✅ All tests PASSED in $($duration.TotalSeconds.ToString('F1'))s" -ForegroundColor Green
+        Write-Host "Full log: $outputDir\$logFile" -ForegroundColor Gray
+        exit 0
     }
-    
-    Write-Host "`n✅ All tests PASSED in $($duration.TotalSeconds.ToString('F1'))s" -ForegroundColor Green
-    Write-Host "Full log: $outputDir\$logFile" -ForegroundColor Gray
-    exit 0
+    finally {
+        Pop-Location
+    }
 }
 finally {
-    Pop-Location
+    Set-Location $initialLocation
 }
 

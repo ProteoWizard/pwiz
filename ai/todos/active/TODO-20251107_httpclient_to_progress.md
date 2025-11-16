@@ -4,7 +4,7 @@
 - **Branch**: `Skyline/work/20251107_httpclient_to_progress`
 - **Created**: 2025-11-07
 - **Status**: In progress
-- **PR**: _pending_
+- **PR**: [#3669](https://github.com/ProteoWizard/pwiz/pull/3669)
 - **Objective**: Finish consolidating Skyline HTTP usage onto `HttpClientWithProgress`, including retiring remaining `HttpWebRequest` and auditing legacy `System.Net` patterns
 
 ## Background
@@ -58,6 +58,9 @@ After completing the WebClient → HttpClient migration, we discovered several p
   - Classify occurrences: `HttpClient`, `HttpWebRequest`, `WebRequest`, `HttpStatusCode`, headers, sockets
   - Identify files that still compile against `HttpWebRequest`
   - Document any acceptable `System.Net` usage (e.g., `HttpStatusCode`, `HttpRequestHeader` enums)
+- [ ] For each file encountered, temporarily remove `using System.Net;` and build to understand dependencies
+  - Record which types still require `System.Net`
+  - Note dead code exposed by the removal (unused helpers, obsolete flows)
 - [ ] Analyze `EditRemoteAccountDlg` Ardia API usage
   - Cookie/session management patterns
   - API endpoints called
@@ -71,8 +74,21 @@ After completing the WebClient → HttpClient migration, we discovered several p
 - [ ] Identify other Panorama/AutoQC/SkylineBatch code paths still using `HttpWebRequest`
   - Confirm overlap with TODOs in backlog (`TODO-tools_webclient_replacement`, `TODO-skylinebatch_test_cleanup`)
   - Propose ownership if migration belongs in this branch vs. follow-up TODO
+- [x] Analyze `HttpClientWithProgress` exception handling
+  - Determine if `MapHttpRequestException` and `MapUnexpectedWebException` remain reachable
+  - If reachable, document real-world repro steps; otherwise plan safe removal/refactor
 
-### Phase 2: EditRemoteAccountDlg Migration
+- [x] Replace `WebEnabledFastaImporter` network access with `HttpClientWithProgress`
+  - [x] Update `WebSearchProvider.GetWebResponseStream` to stream via HttpClientWithProgress
+  - [x] Replace `GetXmlTextReader(string url)` with HttpClient-based retrieval
+  - [x] Propagate `IProgressMonitor` and cancellation into web requests
+  - [x] Preserve timeout behavior using linked cancellation tokens
+- [x] Drop legacy `WebRequest`/`HttpWebRequest` usage from FASTA importer tests (interfaces updated; legacy seams remain only until HttpClientTestHelper expansion)
+- [x] Introduce `HttpClientTestHelper`-based mocks for FASTA web responses
+- [x] Document the migration pattern in `STYLEGUIDE.md` or importer-specific docs if needed
+- [ ] Convert `ProteomeDbTest` offline mode to `HttpClientTestHelper` playback (replace `FakeWebSearchProvider` usage in `TestOlderProteomeDb`)
+
+### Phase 3: EditRemoteAccountDlg Migration
 - [ ] Replace bare `HttpClient` with `HttpClientWithProgress`
 - [ ] Use `CookieContainer` parameter for session management
 - [ ] Add progress reporting for API calls
@@ -80,7 +96,7 @@ After completing the WebClient → HttpClient migration, we discovered several p
 - [ ] Update error handling to use `MapHttpException`
 - [ ] Create tests using `HttpClientTestHelper`
 
-### Phase 3: ArdiaLoginDlg Migration
+### Phase 4: ArdiaLoginDlg Migration
 - [ ] **Decision point:** Can we remove async/await while migrating?
   - If yes: Refactor to ActionUtil.RunAsync() + HttpClientWithProgress
   - If no: Consider splitting into separate async/await removal branch
@@ -89,20 +105,20 @@ After completing the WebClient → HttpClient migration, we discovered several p
 - [ ] Add progress reporting for OAuth flows
 - [ ] Create tests for OAuth scenarios
 
-### Phase 4: Retire HttpWebRequest
+### Phase 5: Retire HttpWebRequest
 - [ ] Replace remaining `HttpWebRequest` usage with `HttpClientWithProgress`
 - [ ] Update helpers/utilities that currently return `HttpWebRequest`
 - [ ] Ensure authentication headers/cookies are handled through `HttpClientWithProgress`
 - [ ] Update any tests relying on `HttpWebRequest` seams
 
-### Phase 5: Testing
+### Phase 6: Testing
 - [ ] Test Ardia login workflows
 - [ ] Test session management
 - [ ] Test OAuth device flow
 - [ ] Test error scenarios (network failures, auth failures)
 - [ ] Verify no regressions in Ardia integration
 
-### Phase 6: Code Inspection & Documentation
+### Phase 7: Code Inspection & Documentation
 - [ ] Update `CodeInspectionTest` to detect bare `HttpClient` usage in core Skyline
 - [ ] Add inspection for `HttpWebRequest` in `pwiz_tools` and `pwiz_tools/Shared`
 - [ ] Verify all network operations use `HttpClientWithProgress`
@@ -115,6 +131,46 @@ After completing the WebClient → HttpClient migration, we discovered several p
 - async/await removed from ArdiaLoginDlg (or separate TODO created if too complex)
 - Comprehensive test coverage
 - Code inspection test passes
+
+## Progress (2025-11-14)
+- Hardened FASTA importer failure handling: removed reliance on `LastError`, ensured every 404/timeout/cancellation stamps `ProteinSearchInfo.FailureReason`, and fixed `HandleNoResponses` so batches mark all proteins before completing.
+- Added optional diagnostics (`IsDiagnosticMode`) that capture pre/post lookup snapshots to JSON via `TestContext.GetTestResultsPath`, making MSTest/TestRunner investigations reproducible without debugger watch windows.
+- Strengthened FASTA importer assertions (normal / 404 / no-network / cancellation) to verify counts, status transitions, and localized messages, and re-recorded `FastaImporterWebData.json`.
+- Documented the `IsRecordMode` / diagnostics workflow and “build before test” requirement in `ai/WORKFLOW.md`, `ai/TESTING.md`, and `ai/docs/testing-patterns.md`.
+- Verified build + code inspection + FASTA importer tests (offline/online) with the new diagnostics disabled by default.
+
+## Progress (2025-11-15)
+- Replaced bespoke FASTA playback seams with `HttpClientTestHelper` recording/interaction files, plus `DiagnosticMode` flags for request/result dumps and row-indexed JSON snapshots.
+- Expanded `ProteinSearchInfo` diagnostics (failure reason/exception/detail, taxonomy ID, species normalization, search URL history) and implemented UniProt fallback queues so live/recorded runs capture equivalent behavior.
+- Promoted `HttpInteractionRecorder` to reusable API, added passive request logging, and ensured ENT/UniProt handlers stamp search histories before completion to keep playback deterministic.
+- Cleaned up `WebEnabledFastaImporter` (removed console logging, fixed 404 failure ordering, species extraction, `SearchUrlHistory` duplication) so production runs stay lean while diagnostics remain opt-in.
+
+## Progress (2025-11-07)
+- Removed `MapUnexpectedWebException` and related WebRequest-era helpers; all Panorama exception flows now originate from `NetworkRequestException`.
+- Verified via debugger that DNS failures surface as `HttpRequestException` with inner `WebException`; retained handling in `HttpClientWithProgress` and test helper.
+- Current legitimate `WebException` references: `HttpClientWithProgress` (DNS inner exception), `HttpClientTestHelper`, Ardia OAuth client (still raw `HttpClient`), Web-enabled FASTA importer (legacy APIs), and associated tests. Further reduction depends on migrating those callers to `HttpClientWithProgress`.
+- Began cataloging remaining `System.Net` usage:
+  - **Migration targets / follow-up design**
+    - `CommonMsData/RemoteApi/Ardia/ArdiaClient.cs` (HttpWebRequest delete path, bespoke HttpClient wrapper)
+    - `Shared/ProteomeDb/Fasta/WebEnabledFastaImporter.cs` (WebRequest download pipeline)
+    - `Skyline/Alerts/ArdiaLoginDlg.cs`, `Skyline/Alerts/ArdiaLogoutDlg.cs` (HttpListener, cookie exchange during OAuth)
+    - `Skyline/Alerts/ReportErrorDlg.cs` (WebRequest upload for LabKey error reporting)
+    - `Skyline/Program.cs`, `Skyline/SkylineNightly/Nightly.cs`, `SkylineNightlyShim/Program.cs`, `SkylineTester/Program.cs`, `Skyline/TestRunner/Program.cs` (telemetry/build automation using HttpWebRequest or ServicePointManager)
+  - **Acceptable (status/header-only) — annotated inline**
+    - `CommonMsData/RemoteApi/Ardia/ArdiaResult.cs`
+    - `Shared/PanoramaClient/PanoramaClient.cs`
+    - `Shared/PanoramaClient/PanoramaUtil.cs`
+    - `Skyline/FileUI/PublishDocumentDlgArdia.cs`
+    - `Skyline/FileUI/SkypSupport.cs`
+    - `Skyline/SkylineFiles.cs`
+    - `Skyline/TestFunctional/PanoramaClientPublishTest.cs`
+    - `Skyline/TestFunctional/SkypTest.cs`
+
+- Confirmed FASTA importer networking runs on the UI thread with only status-bar updates; decided to migrate to `HttpClientWithProgress` for cancellation and consistent error handling.
+- Drafted migration plan: inject `IProgressMonitor` into `WebSearchProvider`, wrap requests with linked cancellation tokens to respect existing timeout constants, and disable size reporting for small payloads.
+- Identified follow-on work: replace `FakeWebSearchProvider`/`DelayedWebSearchProvider` seams with `HttpClientTestHelper` mocks once the importer understands `HttpClientWithProgress`.
+- Replaced `WebSearchProvider` HTTP helpers to use `HttpClientWithProgress`, including timeout-aware progress monitors and resource-backed status messages. Tests still rely on legacy fake providers until `HttpClientTestHelper` seams are wired in.
+- Verified build + targeted CommonTest suite (`TestBasicFastaImport`, `TestFastaImport`, `WebTestFastaImport`) across English/Chinese/French languages, ensuring cancellation-aware HttpClient flow passes localized scenarios.
 
 ## Risks & Considerations
 

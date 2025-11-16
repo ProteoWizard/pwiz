@@ -18,7 +18,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Net;
+using System.Net; // HttpStatusCode
 using System.Windows.Forms;
 using pwiz.PanoramaClient;
 using pwiz.Common.SystemUtil;
@@ -77,7 +77,7 @@ namespace pwiz.Skyline.FileUI
                 if (ExceptionUtil.IsProgrammingDefect(e))
                     throw;
 
-                var statusCode = GetErrorStatusCode(e);
+                var statusCode = NetworkRequestException.GetHttpStatusCode(e);
                 var message = GetMessage(skyp, e, statusCode);
                 
                 if (statusCode is HttpStatusCode.Unauthorized)
@@ -149,20 +149,6 @@ namespace pwiz.Skyline.FileUI
 
 
         #region Error Handling Helpers
-
-        private static HttpStatusCode? GetErrorStatusCode(Exception e)
-        {
-            // Check for NetworkRequestException with structured status code
-            // HttpClientWithProgress throws this for HTTP errors with status code as a property
-            if (e is NetworkRequestException netEx)
-                return netEx.StatusCode;
-
-            // Check inner exception chain recursively
-            if (e.InnerException != null)
-                return GetErrorStatusCode(e.InnerException);
-
-            return null;
-        }
 
         private static string GetMessage(SkypFile skyp, Exception ex, HttpStatusCode? statusCode)
         {

@@ -45,6 +45,7 @@ namespace pwiz.Common.SystemUtil
         private IProgressStatus _progressStatus;
         private string _progressMessageWithoutSize; // Base message before download size is appended
         private const int ReadTimeoutMilliseconds = 15000; // timeout per chunk to avoid long hangs when network drops
+        private TimeSpan? _requestTimeout;
 
         /// <summary>
         /// Gets or sets whether to show transfer size in progress messages.
@@ -52,6 +53,23 @@ namespace pwiz.Common.SystemUtil
         /// Default is true (show size for file downloads/uploads).
         /// </summary>
         public bool ShowTransferSize { get; set; } = true;
+
+        /// <summary>
+        /// Optional request timeout to apply to the underlying HttpClient instance.
+        /// If null, uses Timeout.InfiniteTimeSpan (default). Set per HttpClientWithProgress instance.
+        /// </summary>
+        public TimeSpan? RequestTimeout
+        {
+            get => _requestTimeout;
+            set
+            {
+                if (value.HasValue && value.Value <= TimeSpan.Zero)
+                    throw new ArgumentOutOfRangeException(nameof(value), @"Timeout must be positive.");
+
+                _requestTimeout = value;
+                _httpClient.Timeout = value ?? Timeout.InfiniteTimeSpan;
+            }
+        }
 
         /// <summary>
         /// Creates an HttpClient wrapper with optional progress reporting.
@@ -95,7 +113,7 @@ namespace pwiz.Common.SystemUtil
             // Set infinite timeout for large file uploads/downloads
             // We have per-chunk timeouts (ReadTimeoutMilliseconds) for detecting stalled transfers
             // The overall request timeout should not apply to operations that may take a long time
-            _httpClient.Timeout = Timeout.InfiniteTimeSpan;
+            RequestTimeout = null;
             
             // Default to SilentProgressMonitor if null - maintains non-null invariant
             // This allows simple callers to pass null while complex callers can use SilentProgressMonitor(cancelToken)
@@ -328,6 +346,10 @@ namespace pwiz.Common.SystemUtil
             totalBytes = knownTotalBytes ?? response.Content.Headers.ContentLength ?? 0;
             // totalBytes = 0; // TEST: Uncomment to force marquee progress for unknown file sizes
             contentStream = response.Content.ReadAsStreamAsync().Result;
+            if (TestBehavior != null)
+            {
+                contentStream = TestBehavior.WrapResponseStream(uri, contentStream, totalBytes) ?? contentStream;
+            }
             
             using (contentStream)
             {
@@ -349,7 +371,9 @@ namespace pwiz.Common.SystemUtil
                 }
                 catch (Exception ex)
                 {
-                    throw MapHttpException(ex, uri);
+                    var mapped = MapHttpException(ex, uri);
+                    TestBehavior?.OnException(uri, mapped);
+                    throw mapped;
                 }
 
                 if (bytesRead <= 0)
@@ -712,6 +736,38 @@ namespace pwiz.Common.SystemUtil
             /// <param name="uri">The URI being uploaded to</param>
             /// <returns>A stream to capture uploaded data, or null to use actual network</returns>
             Stream GetMockUploadStream(Uri uri);
+
+            /// <summary>
+            /// Notifies the behavior that an HTTP response has been received (including failures).
+            /// </summary>
+            /// <param name="uri">The requested URI</param>
+            /// <param name="response">The HTTP response message</param>
+            void OnResponse(Uri uri, HttpResponseMessage response);
+
+            /// <summary>
+            /// Allows the behavior to wrap or intercept the response stream before it is consumed.
+            /// </summary>
+            /// <param name="uri">The requested URI</param>
+            /// <param name="responseStream">The stream returned by HttpClient</param>
+            /// <param name="contentLength">The reported content length</param>
+            /// <returns>The stream that should be consumed by the caller</returns>
+            Stream WrapResponseStream(Uri uri, Stream responseStream, long contentLength);
+
+            /// <summary>
+            /// Notifies the behavior that an HTTP response will result in an exception.
+            /// </summary>
+            /// <param name="uri">The requested URI</param>
+            /// <param name="response">The HTTP response message</param>
+            /// <param name="responseBody">The response body, if available</param>
+            /// <param name="exception">The exception that will be thrown</param>
+            void OnFailedResponse(Uri uri, HttpResponseMessage response, string responseBody, Exception exception);
+
+            /// <summary>
+            /// Notifies the behavior that an exception is being thrown to the caller.
+            /// </summary>
+            /// <param name="uri">The requested URI</param>
+            /// <param name="exception">The exception being thrown</param>
+            void OnException(Uri uri, Exception exception);
         }
 
         public class NoNetworkTestException : Exception
@@ -733,7 +789,9 @@ namespace pwiz.Common.SystemUtil
             }
             catch (Exception ex)
             {
-                throw MapHttpException(ex, uri);
+                var mapped = MapHttpException(ex, uri);
+                TestBehavior?.OnException(uri, mapped);
+                throw mapped;
             }
         }
 
@@ -745,6 +803,7 @@ namespace pwiz.Common.SystemUtil
                     throw TestBehavior.FailureException;
                 
                 var response = getResponse();
+                TestBehavior?.OnResponse(uri, response);
                 
                 // Check status code and capture response body for error details (e.g., LabKey-specific errors)
                 if (!response.IsSuccessStatusCode)
@@ -769,14 +828,18 @@ namespace pwiz.Common.SystemUtil
                     var message = $"Response status code does not indicate success: {statusCode} ({reasonPhrase}) for {uri}";
                     
                     // Throw with response body attached for server-specific error extraction
-                    throw new NetworkRequestException(message, response.StatusCode, uri, new HttpRequestException(message), responseBody);
+                    var networkException = new NetworkRequestException(message, response.StatusCode, uri, new HttpRequestException(message), responseBody);
+                    TestBehavior?.OnFailedResponse(uri, response, responseBody, networkException);
+                    throw networkException;
                 }
                 
                 return response;
             }
             catch (Exception ex)
             {
-                throw MapHttpException(ex, uri);
+                var mapped = MapHttpException(ex, uri);
+                TestBehavior?.OnException(uri, mapped);
+                throw mapped;
             }
         }
 
@@ -842,12 +905,6 @@ namespace pwiz.Common.SystemUtil
                 }
             }
 
-            // Defensive: Handle WebException as root exception (unlikely with HttpClient, but just to be safe)
-            if (root is WebException webEx)
-            {
-                return MapUnexpectedWebException(uri, webEx);
-            }
-
             return root;
         }
 
@@ -897,29 +954,29 @@ namespace pwiz.Common.SystemUtil
                 switch ((int)statusCodeValue)
                 {
                     case 404:
-                            // Resource-specific: show full URI so user can verify the exact path
-                            message = string.Format(MessageResources.HttpClientWithProgress_MapHttpException_The_requested_resource_at__0__was_not_found__HTTP_404___Please_verify_the_URL_, uriString);
-                            break;
-                        case 500:
-                            // Server error: show hostname (problem is server-side, not specific resource)
-                            message = string.Format(MessageResources.HttpClientWithProgress_MapHttpException_The_server__0__encountered_an_internal_error__HTTP_500___Please_try_again_later_or_contact_the_server_administrator_, server);
-                            break;
-                        case 401:
-                            // Auth-specific: show full URI so user knows what they're being denied access to
-                            message = string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Access_to__0__was_denied__HTTP_401___Authentication_may_be_required_, uriString);
-                            break;
-                        case 403:
-                            // Permission-specific: show full URI so user knows what resource is forbidden
-                            message = string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Access_to__0__was_forbidden__HTTP_403___You_may_not_have_permission_to_access_this_resource_, uriString);
-                            break;
-                        case 429:
-                            // Rate limit: show hostname (typically server-wide limit, not resource-specific)
-                            message = string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Too_many_requests_to__0___HTTP_429___Please_wait_before_trying_again_, server);
-                            break;
-                        default:
-                            // Generic server error: show hostname
-                            message = string.Format(MessageResources.HttpClientWithProgress_MapHttpException_The_server__0__returned_an_error__HTTP__1____Please_try_again_or_contact_support_, server, (int)statusCodeValue);
-                            break;
+                        // Resource-specific: show full URI so user can verify the exact path
+                        message = string.Format(MessageResources.HttpClientWithProgress_MapHttpException_The_requested_resource_at__0__was_not_found__HTTP_404___Please_verify_the_URL_, uriString);
+                        break;
+                    case 500:
+                        // Server error: show hostname (problem is server-side, not specific resource)
+                        message = string.Format(MessageResources.HttpClientWithProgress_MapHttpException_The_server__0__encountered_an_internal_error__HTTP_500___Please_try_again_later_or_contact_the_server_administrator_, server);
+                        break;
+                    case 401:
+                        // Auth-specific: show full URI so user knows what they're being denied access to
+                        message = string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Access_to__0__was_denied__HTTP_401___Authentication_may_be_required_, uriString);
+                        break;
+                    case 403:
+                        // Permission-specific: show full URI so user knows what resource is forbidden
+                        message = string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Access_to__0__was_forbidden__HTTP_403___You_may_not_have_permission_to_access_this_resource_, uriString);
+                        break;
+                    case 429:
+                        // Rate limit: show hostname (typically server-wide limit, not resource-specific)
+                        message = string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Too_many_requests_to__0___HTTP_429___Please_wait_before_trying_again_, server);
+                        break;
+                    default:
+                        // Generic server error: show hostname
+                        message = string.Format(MessageResources.HttpClientWithProgress_MapHttpException_The_server__0__returned_an_error__HTTP__1____Please_try_again_or_contact_support_, server, (int)statusCodeValue);
+                        break;
                 }
                 // Wrap with NetworkRequestException to provide structured access to status code
                 // Preserves original HttpRequestException as inner exception for detailed troubleshooting
@@ -927,6 +984,8 @@ namespace pwiz.Common.SystemUtil
             }
                 
             // DNS resolution failure (e.g., 'The remote name could not be resolved')
+            // This is real and has been seen in a debugger. The InnerException is a WebException
+            // HttpClient appears to use HttpWebRequest, but wrap its exceptions in HttpRequestException
             if (httpEx.InnerException is WebException { Status: WebExceptionStatus.NameResolutionFailure })
                 return new NetworkRequestException(
                     string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Failed_to_resolve_host__0___Please_check_your_DNS_settings_or_VPN_proxy_, server), 
@@ -936,42 +995,6 @@ namespace pwiz.Common.SystemUtil
             return new NetworkRequestException(
                 string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Failed_to_connect_to__0___Please_check_your_network_connection__VPN_proxy__or_firewall_, server), 
                 NetworkFailureType.ConnectionFailed, uri, httpEx);
-        }
-
-        private static Exception MapUnexpectedWebException(Uri uri, WebException webEx)
-        {
-            string server = uri?.Host ?? MessageResources.HttpClientWithProgress_MapHttpException_server;
-
-            // Map common WebExceptionStatus to NetworkRequestException
-            switch (webEx.Status)
-            {
-                case WebExceptionStatus.NameResolutionFailure:
-                    return new NetworkRequestException(
-                        string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Failed_to_resolve_host__0___Please_check_your_DNS_settings_or_VPN_proxy_, server),
-                        NetworkFailureType.DnsResolution, uri, webEx);
-
-                case WebExceptionStatus.ConnectFailure:
-                case WebExceptionStatus.Timeout:
-                    return new NetworkRequestException(
-                        string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Failed_to_connect_to__0___Please_check_your_network_connection__VPN_proxy__or_firewall_, server),
-                        NetworkFailureType.ConnectionFailed, uri, webEx);
-
-                default:
-                    // For other WebExceptionStatus values, create a generic NetworkRequestException
-                    // This preserves the WebException as inner exception for troubleshooting
-                    if (webEx.Response is HttpWebResponse httpResponse)
-                    {
-                        HttpStatusCode? statusCode = httpResponse.StatusCode;
-                        return new NetworkRequestException(
-                            string.Format(MessageResources.HttpClientWithProgress_MapHttpException_The_server__0__returned_an_error__HTTP__1____Please_try_again_or_contact_support_,
-                                server, (int)statusCode),
-                            statusCode.Value, uri, webEx);
-                    }
-                    // No HTTP response (connection failure, etc.)
-                    return new NetworkRequestException(
-                        string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Failed_to_connect_to__0___Please_check_your_network_connection__VPN_proxy__or_firewall_, server),
-                        NetworkFailureType.ConnectionFailed, uri, webEx);
-            }
         }
 
         public static bool IsNetworkReallyAvailable()
@@ -1117,6 +1140,18 @@ namespace pwiz.Common.SystemUtil
         public bool IsDnsFailure()
         {
             return FailureType == NetworkFailureType.DnsResolution;
+        }
+
+        public static HttpStatusCode? GetHttpStatusCode(Exception e)
+        {
+            while (e != null)
+            {
+                if (e is NetworkRequestException netEx)
+                    return netEx.StatusCode;
+
+                e = e.InnerException;
+            }
+            return null;
         }
     }
 }
