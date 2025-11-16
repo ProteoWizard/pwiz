@@ -1375,7 +1375,11 @@ namespace CommonTest
                 ? proteins.Select((p, i) => CreateDiagnosticEntry(p, i, includeHistory: false)).ToList()
                 : null;
 
-            IList<ProteinSearchInfo> results = RunLookup(proteins, mode);
+            // Use FastWebSearchProvider for playback to skip politeness delays
+            bool useFastProvider = !useNetAccess && allowRecordedPlayback && 
+                                   expectedData?.HttpInteractions != null && 
+                                   expectedData.HttpInteractions.Count > 0;
+            IList<ProteinSearchInfo> results = RunLookup(proteins, mode, useFastProvider);
 
             if (!skipExtraValidation && recorder == null)
             {
@@ -1569,11 +1573,29 @@ namespace CommonTest
             }
         }
 
-        private IList<ProteinSearchInfo> RunLookup(IList<ProteinSearchInfo> proteins, LookupTestMode mode)
+        /// <summary>
+        /// WebSearchProvider optimized for playback scenarios (no politeness delays)
+        /// Use this when using HttpClientTestHelper.PlaybackFromInteractions to speed up tests
+        /// </summary>
+        private class FastWebSearchProvider : WebEnabledFastaImporter.WebSearchProvider
         {
-            var provider = mode != LookupTestMode.normal
-                ? new QuickFailWebSearchProvider()
-                : null;
+            public override bool IsPolite
+            {
+                get { return false; } // Skip Thread.Sleep delays for in-memory playback
+            }
+        }
+
+        private IList<ProteinSearchInfo> RunLookup(IList<ProteinSearchInfo> proteins, LookupTestMode mode, bool useFastProvider = false)
+        {
+            WebEnabledFastaImporter.WebSearchProvider provider = null;
+            if (mode != LookupTestMode.normal)
+            {
+                provider = new QuickFailWebSearchProvider();
+            }
+            else if (useFastProvider)
+            {
+                provider = new FastWebSearchProvider(); // Skip politeness delays during playback
+            }
             // TODO(Claude): Test progress monitor cancellation by linking a CancellationToken to HttpClientTestBehavior with a ResponseFactory function that triggers cancellation.
             var progressMonitor = new SilentProgressMonitor();
             var importer = new WebEnabledFastaImporter(provider);

@@ -133,9 +133,10 @@ After completing the WebClient → HttpClient migration, we discovered several p
 - [ ] Document the pattern
 
 ### Phase 8: Pre-Merge Cleanup & Documentation
-- [ ] Evaluate and implement `FastWebSearchProvider` usage in `TestFastaImport` to skip politeness delays during playback
-  - Potential savings: 30+ Entrez requests at 333ms each = 10+ seconds
-  - `FastWebSearchProvider` class already added to `FastaImporterTest.cs` for evaluation
+- [x] Evaluate and implement `FastWebSearchProvider` usage in `TestFastaImport` to skip politeness delays during playback
+  - [x] Implemented `FastWebSearchProvider` usage in `RunLookup()` when playback mode is detected
+  - [x] Measured impact: ~10 seconds improvement (19 sec → 10-11 sec per test run)
+  - [x] Test passes in all 5 languages with FastWebSearchProvider enabled
 - [ ] Move `ProteomeDbTest.cs` to `TestConnected` project (more appropriate for tests that access the web)
 - [ ] Establish naming convention for paired web/offline tests
   - Use suffix instead of prefix (e.g., `TestFastaImportWeb`, `TestOlderProteomeDbWeb`)
@@ -172,12 +173,15 @@ After completing the WebClient → HttpClient migration, we discovered several p
   - Removed `FakeWebSearchProvider` fallback - offline tests now require recorded data, enabling full metadata validation
   - Test runs sub-second without network access (<10 UniProt requests)
   - Cleaned up naming and documentation to accurately reflect HTTP interaction recording (not "expectations")
-  - Added `FastWebSearchProvider` class to `FastaImporterTest.cs` for future performance optimization evaluation
+  - Added `FastWebSearchProvider` class to `FastaImporterTest.cs` for performance optimization
+- Implemented `FastWebSearchProvider` in `TestFastaImport` playback mode
+  - Measured ~10 seconds improvement (19 sec → 10-11 sec per test run)
+  - Skips politeness delays (333ms per Entrez request, 10ms per UniProt request) during in-memory playback
+  - Test passes in all 5 languages (en, zh, fr, ja, tr)
+- Documented HTTP recording/playback pattern in `ai\docs\testing-patterns.md` using `ProteomeDbTest` as clean example
 - Remaining work before PR merge:
-  1. Evaluate and implement `FastWebSearchProvider` usage in `TestFastaImport` to skip politeness delays (30+ Entrez requests at 333ms each = 10+ seconds potential savings)
-  2. Move `ProteomeDbTest.cs` to `TestConnected` project (more appropriate for tests that access the web)
-  3. Establish naming convention for paired tests: use suffix instead of prefix (e.g., `TestFastaImportWeb`, `TestOlderProteomeDbWeb`) so they sort together
-  4. Document HTTP recording/playback pattern in `ai\docs\testing-patterns.md` using `ProteomeDbTest` as the clean, simple example
+  1. Move `ProteomeDbTest.cs` to `TestConnected` project (more appropriate for tests that access the web)
+  2. Establish naming convention for paired tests: use suffix instead of prefix (e.g., `TestFastaImportWeb`, `TestOlderProteomeDbWeb`) so they sort together
 
 ## Progress (2025-11-07)
 - Removed `MapUnexpectedWebException` and related WebRequest-era helpers; all Panorama exception flows now originate from `NetworkRequestException`.
