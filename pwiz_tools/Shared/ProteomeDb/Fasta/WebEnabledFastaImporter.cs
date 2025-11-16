@@ -121,6 +121,9 @@ namespace pwiz.ProteomeDatabase.Fasta
 
         public bool TryActivateNextSearchTerm()
         {
+            // Don't activate alternate search terms if this protein is already marked as complete
+            if (!GetProteinMetadata().NeedsSearch())
+                return false;
             while (_alternateSearchTerms.Count > 0)
             {
                 var next = _alternateSearchTerms.Dequeue();
@@ -1496,13 +1499,13 @@ namespace pwiz.ProteomeDatabase.Fasta
         /// <returns>Outcome indicating success, a too-long request, or that the caller should retry later</returns>
         private WebserviceLookupOutcome DoWebserviceLookup(IList<ProteinSearchInfo> proteins, char searchType, IProgressMonitor progressMonitor)
         {
-            if (IsAccessFaked)
-                return WebserviceLookupOutcome.completed;
-
             var searchTerms = _webSearchProvider.ListSearchTerms(proteins);
-                
+
             if (searchTerms.Count == 0)
                 return WebserviceLookupOutcome.completed; // no work, but not error either
+
+            if (IsAccessFaked)
+                return WebserviceLookupOutcome.completed;
             var responses = new List<ProteinSearchInfo>();
             for (var retries = _webSearchProvider.WebRetryCount(); retries-- > 0;)  // be patient with the web
             {

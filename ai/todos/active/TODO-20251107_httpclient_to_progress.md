@@ -86,6 +86,7 @@ After completing the WebClient → HttpClient migration, we discovered several p
 - [x] Drop legacy `WebRequest`/`HttpWebRequest` usage from FASTA importer tests (interfaces updated; legacy seams remain only until HttpClientTestHelper expansion)
 - [x] Introduce `HttpClientTestHelper`-based mocks for FASTA web responses
 - [x] Document the migration pattern in `STYLEGUIDE.md` or importer-specific docs if needed
+- [ ] Convert `ProteomeDbTest` offline mode to `HttpClientTestHelper` playback (replace `FakeWebSearchProvider` usage in `TestOlderProteomeDb`)
 
 ### Phase 3: EditRemoteAccountDlg Migration
 - [ ] Replace bare `HttpClient` with `HttpClientWithProgress`
