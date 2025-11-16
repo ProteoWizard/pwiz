@@ -914,7 +914,7 @@ The HTTP recording/playback pattern enables tests to run without network access 
 
 For tests that only need to record HTTP request/response pairs (no additional expected data), use this minimal pattern:
 
-**Example:** `ProteomeDbTest.cs` - `TestOlderProteomeDb` / `TestWebProteomeDb`
+**Example:** `ProteomeDbTest.cs` - `TestOlderProteomeDb` / `TestOlderProteomeDbWeb`
 
 ```csharp
 [TestClass]
@@ -995,7 +995,7 @@ public class ProteomeDbTest : AbstractUnitTestEx
     }
     
     [TestMethod]
-    public void TestWebProteomeDb()
+    public void TestOlderProteomeDbWeb()
     {
         // Only run if web access enabled or recording
         if (AllowInternetAccess || IsRecordMode)
@@ -1040,9 +1040,26 @@ public class ProteomeDbTest : AbstractUnitTestEx
 5. **JSON data class** - Simple class with `HttpInteractions` list
 6. **Paired test methods** - One for offline playback, one for online recording
 
+**Naming Convention:**
+
+For tests that use HTTP recording/playback, use the suffix pattern `TestName[Web]`:
+- **Offline test** (playback): `TestOlderProteomeDb` - Uses recorded HTTP interactions
+- **Online test** (recording): `TestOlderProteomeDbWeb` - Records HTTP interactions with live network access
+
+This naming convention:
+- ✅ Keeps related tests together alphabetically in test runners
+- ✅ Clearly indicates which test requires network access
+- ✅ Makes it easy to identify "Connected" tests that should be in `TestConnected` project
+- ✅ Follows the pattern: base test name for offline, `[Web]` suffix for online
+
+**Examples:**
+- `TestFastaImport` / `TestFastaImportWeb`
+- `TestOlderProteomeDb` / `TestOlderProteomeDbWeb`
+- `TestPanoramaUpload` / `TestPanoramaUploadWeb`
+
 **Workflow:**
 
-1. **Recording:** Set `IsRecordMode => true`, run `TestWebProteomeDb` with internet access enabled
+1. **Recording:** Set `IsRecordMode => true`, run `TestOlderProteomeDbWeb` with internet access enabled
    - Test makes real HTTP requests
    - `HttpInteractionRecorder` captures all requests/responses
    - JSON file is written with recorded interactions
@@ -1103,8 +1120,8 @@ To add HTTP recording/playback to a test:
 
 #### References
 
-- **Simple example:** `ProteomeDbTest.cs` - `TestOlderProteomeDb` / `TestWebProteomeDb`
-- **Extended example:** `FastaImporterTest.cs` - `TestFastaImport` / `WebTestFastaImport`
+- **Simple example:** `ProteomeDbTest.cs` - `TestOlderProteomeDb` / `TestOlderProteomeDbWeb`
+- **Extended example:** `FastaImporterTest.cs` - `TestFastaImport` / `TestFastaImportWeb`
 - **Helper classes:** `HttpClientTestHelper.cs` - `BeginRecording()`, `PlaybackFromInteractions()`
 - **Data classes:** `HttpInteraction`, `HttpInteractionRecorder` in `pwiz_tools/Skyline/TestUtil/`
 

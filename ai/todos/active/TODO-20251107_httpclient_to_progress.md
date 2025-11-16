@@ -137,15 +137,28 @@ After completing the WebClient → HttpClient migration, we discovered several p
   - [x] Implemented `FastWebSearchProvider` usage in `RunLookup()` when playback mode is detected
   - [x] Measured impact: ~10 seconds improvement (19 sec → 10-11 sec per test run)
   - [x] Test passes in all 5 languages with FastWebSearchProvider enabled
-- [ ] Move `ProteomeDbTest.cs` to `TestConnected` project (more appropriate for tests that access the web)
-- [ ] Establish naming convention for paired web/offline tests
-  - Use suffix instead of prefix (e.g., `TestFastaImportWeb`, `TestOlderProteomeDbWeb`)
-  - Ensures tests sort together alphabetically instead of being separated
-  - Apply to existing tests: `TestFastaImport`/`WebTestFastaImport` and `TestOlderProteomeDb`/`TestWebProteomeDb`
-- [ ] Document HTTP recording/playback pattern in `ai\docs\testing-patterns.md`
-  - Use `ProteomeDbTest` as the clean, simple example (HTTP interactions only, no extra expectations)
-  - Provide clear instructions for developers and LLMs on how to add HTTP recording to tests
-  - Show the minimal implementation pattern (IsRecordMode, LoadHttpInteractions, RecordHttpInteractions, CreateHttpClientHelper)
+- [x] Establish naming convention for paired web/offline tests
+  - [x] Applied suffix pattern: `TestFastaImport`/`TestFastaImportWeb` and `TestOlderProteomeDb`/`TestOlderProteomeDbWeb`
+  - [x] Tests now sort together alphabetically instead of being separated
+  - [x] Documented `TestName[Web]` naming pattern in `ai\docs\testing-patterns.md`
+- [x] Document HTTP recording/playback pattern in `ai\docs\testing-patterns.md`
+  - [x] Used `ProteomeDbTest` as the clean, simple example (HTTP interactions only, no extra expectations)
+  - [x] Provided clear instructions for developers and LLMs on how to add HTTP recording to tests
+  - [x] Documented minimal implementation pattern (IsRecordMode, LoadHttpInteractions, RecordHttpInteractions, CreateHttpClientHelper)
+  - [x] Added `TestName[Web]` naming convention guidance
+
+### Phase 9: Connected Tests Review & Organization (Future PR)
+- [ ] **Comprehensive review of all "Connected" tests**
+  - [ ] Identify all tests that fail when `AllowInternetAccess` is enabled but computer is disconnected from network
+  - [ ] These are the true "Connected" tests that require network access
+  - [ ] Document which tests are currently in wrong project (e.g., `ProteomeDbTest` in `Test` project)
+  - [ ] Consider annotation or naming convention (e.g., `[Web]` suffix) to identify connected tests
+  - [ ] Review TeamCity configuration for "TestConnected tests" - ensure it runs with `-EnableInternet` flag
+    - Current issue: TeamCity runs `TestConnected` project but doesn't set `AllowInternetAccess`, causing `TestFastaImportWeb` to short-circuit
+  - [ ] Move appropriate tests from `Test`/`TestData`/`TestFunctional` to `TestConnected` project
+  - [ ] Ensure all connected tests follow `TestName[Web]` naming convention
+  - [ ] Verify TeamCity configuration properly enables internet access for connected test runs
+  - [ ] Document connected test requirements and TeamCity setup
 
 ## Success Criteria
 - All bare `HttpClient` usage in core Skyline replaced with `HttpClientWithProgress`
@@ -179,9 +192,16 @@ After completing the WebClient → HttpClient migration, we discovered several p
   - Skips politeness delays (333ms per Entrez request, 10ms per UniProt request) during in-memory playback
   - Test passes in all 5 languages (en, zh, fr, ja, tr)
 - Documented HTTP recording/playback pattern in `ai\docs\testing-patterns.md` using `ProteomeDbTest` as clean example
-- Remaining work before PR merge:
-  1. Move `ProteomeDbTest.cs` to `TestConnected` project (more appropriate for tests that access the web)
-  2. Establish naming convention for paired tests: use suffix instead of prefix (e.g., `TestFastaImportWeb`, `TestOlderProteomeDbWeb`) so they sort together
+- Established naming convention for paired web/offline tests: suffix pattern (e.g., `TestFastaImportWeb`, `TestOlderProteomeDbWeb`)
+  - Applied to `TestFastaImport`/`TestFastaImportWeb` and `TestOlderProteomeDb`/`TestOlderProteomeDbWeb`
+  - Tests now sort together alphabetically in test runners
+  - Documented `TestName[Web]` naming pattern in `ai\docs\testing-patterns.md`
+- **Ready for checkpoint merge to master** - This PR covers WebEnabledFastaImporter HTTP recording/playback infrastructure
+- Deferred to future PR (Phase 9): Comprehensive review and organization of all "Connected" tests
+  - Identify all tests requiring network access (fail when disconnected)
+  - Move appropriate tests to `TestConnected` project
+  - Fix TeamCity configuration to properly enable internet access for connected tests
+  - Establish clear identification mechanism (naming convention or annotation)
 
 ## Progress (2025-11-07)
 - Removed `MapUnexpectedWebException` and related WebRequest-era helpers; all Panorama exception flows now originate from `NetworkRequestException`.
