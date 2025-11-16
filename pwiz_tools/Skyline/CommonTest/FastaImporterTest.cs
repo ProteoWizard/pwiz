@@ -995,7 +995,7 @@ namespace CommonTest
             // ReSharper disable once CollectionNeverQueried.Local
             // ReSharper disable once UnusedVariable
             var dbProteinNames = new List<DbProteinName>(); // Convenient for debugging
-            WebEnabledFastaImporter fastaImporter = new WebEnabledFastaImporter(new WebEnabledFastaImporter.FakeWebSearchProvider());
+            var fastaImporter = new WebEnabledFastaImporter(new WebEnabledFastaImporter.FakeWebSearchProvider());
             int fakeID = 0;
             foreach (var dbProtein in fastaImporter.Import(new StringReader(GetFastaTestText())))
             {

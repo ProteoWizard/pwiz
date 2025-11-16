@@ -721,30 +721,30 @@ namespace pwiz.SkylineTestUtil
 
     internal class PlaybackHttpClientBehavior : HttpClientTestBehavior
     {
-        private readonly Dictionary<string, Queue<HttpInteraction>> _responses;
+        private readonly Dictionary<string, HttpInteraction> _responses;
         private readonly ICollection<HttpInteraction> _captureInteractions;
 
         public PlaybackHttpClientBehavior(IEnumerable<HttpInteraction> interactions,
             ICollection<HttpInteraction> captureInteractions = null)
         {
-            _responses = BuildResponseQueues(interactions);
+            _responses = BuildResponseMap(interactions);
             _captureInteractions = captureInteractions;
             ResponseFactory = HandleResponse;
         }
 
-        private static Dictionary<string, Queue<HttpInteraction>> BuildResponseQueues(IEnumerable<HttpInteraction> interactions)
+        private static Dictionary<string, HttpInteraction> BuildResponseMap(IEnumerable<HttpInteraction> interactions)
         {
-            var map = new Dictionary<string, Queue<HttpInteraction>>(StringComparer.Ordinal);
+            var map = new Dictionary<string, HttpInteraction>(StringComparer.Ordinal);
             foreach (var interaction in interactions)
             {
                 if (interaction?.Url == null)
                     continue;
-                if (!map.TryGetValue(interaction.Url, out var queue))
+                // Store one interaction per URL - if the same URL appears multiple times in the recording,
+                // use the first one (they should all be identical anyway for consistent web behavior)
+                if (!map.ContainsKey(interaction.Url))
                 {
-                    queue = new Queue<HttpInteraction>();
-                    map.Add(interaction.Url, queue);
+                    map.Add(interaction.Url, interaction);
                 }
-                queue.Enqueue(interaction);
             }
             return map;
         }
@@ -754,10 +754,10 @@ namespace pwiz.SkylineTestUtil
             if (uri == null)
                 throw new ArgumentNullException(nameof(uri));
 
-            if (!_responses.TryGetValue(uri.ToString(), out var queue) || queue.Count == 0)
+            var urlKey = uri.ToString();
+            if (!_responses.TryGetValue(urlKey, out var interaction))
                 throw new InvalidOperationException($"Unexpected URL during playback: {uri}");
 
-            var interaction = queue.Dequeue();
             CaptureInteraction(interaction);
             if (!string.IsNullOrEmpty(interaction.ExceptionType))
                 throw CreateException(uri, interaction);

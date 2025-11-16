@@ -65,7 +65,7 @@ namespace pwiz.SkylineTestFunctional
             // Examine the various View | Targets | By* modes
             foreach (ProteinMetadataManager.ProteinDisplayMode mode in Enum.GetValues(typeof(ProteinMetadataManager.ProteinDisplayMode)))
             {
-                ProteinMetadataManager.ProteinDisplayMode arg = mode;
+                var arg = mode;
                 RunUI(() => SkylineWindow.ViewMenu.UpdateTargetsDisplayMode(arg)); // This should alter the text displayed by the node in the sequence tree view
                 WaitForConditionUI(() =>
                 {

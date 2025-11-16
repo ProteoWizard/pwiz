@@ -1598,6 +1598,7 @@ namespace pwiz.ProteomeDatabase.Fasta
             }
             catch (Exception ex)
             {
+                // CONSIDER: Move ExceptionUtil to CommonUtil.SystemUtil so that IsProgrammingDefect can be used here
                 RecordFailure(proteins, WebSearchFailureReason.unknown_error, ex);
                 return WebserviceLookupOutcome.retry_later;
             }
