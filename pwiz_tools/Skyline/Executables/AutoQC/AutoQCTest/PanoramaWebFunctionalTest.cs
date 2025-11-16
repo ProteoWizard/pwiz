@@ -74,6 +74,10 @@ namespace AutoQCTest
             var skylineDocPath = Path.Combine(TestFolder, "test-with-results.sky");
             var annotationsFilePath = Path.Combine(TestFolder, "ReplicateAnnotations.csv");
 
+            // Get the Skyline bin directory (where we expect to find SkylineCmd.exe) for the test
+            var skylineBinDir = TestUtils.GetSkylineBinDirectory();
+            Assert.IsTrue(Directory.Exists(skylineBinDir), $"Skyline bin directory not found: {skylineBinDir}");
+
             // Create the directory that AutoQC Loader will monitor for raw files
             var folderToWatch = CreateRawDataDir();
 
@@ -100,7 +104,9 @@ namespace AutoQCTest
                 newConfigForm.SetPanoramaServer(TestUtils.PANORAMAWEB);
                 newConfigForm.SetPanoramaUser(TestUtils.GetPanoramaWebUsername());
                 newConfigForm.SetPanoramaPassword(_panoramaWebPassword);
-                newConfigForm.SetPanoramaFolder(_panoramaWebTestFolder);
+                newConfigForm.SetPanoramaFolder(_panoramaWebTestFolder); 
+                newConfigForm.SelectSkylineTab();
+                newConfigForm.SetSkylineInstallationDir(skylineBinDir);
                 newConfigForm.ClickSave();
             });
             WaitForClosedForm(newConfigForm);
@@ -111,6 +117,10 @@ namespace AutoQCTest
 
             // Skyline document has replicates. It should be uploaded to PanoramaWeb after config starts.
             WaitForConfigRunnerWaiting(MainForm, configIndex);
+
+            // Wait for the upload to complete successfully
+            WaitForPanoramaUploadSuccess(MainForm, configIndex);
+
             // Verify expected status on PanoramaWeb. One row each in targetedms.Runs and pipeline.Job.
             Assert.AreEqual(1, GetJobCountInFolder(_panoramaClient, _panoramaWebTestFolder),
                 $"Unexpected number of pipeline jobs in the PanoramaWeb folder {_panoramaWebTestFolder}");
@@ -135,7 +145,7 @@ namespace AutoQCTest
                 "Importing annotations file",
                 "Annotations file was imported",
                 "Uploading Skyline document to Panorama",
-                "Running SkylineRunner.exe with args",
+                "Running SkylineCmd.exe with args",
                 "Importing new files",
                 "Waiting for files");
 
@@ -149,6 +159,10 @@ namespace AutoQCTest
 
             // Wait for the file to be imported into the document, and document uploaded to PanoramaWeb
             WaitForConfigRunnerWaiting(MainForm, configIndex);
+
+            // Wait for the upload to complete successfully
+            WaitForPanoramaUploadSuccess(MainForm, configIndex);
+
             // Verify expected status on PanoramaWeb. Two rows in pipeline.Job. 
             // We expect to see only one row in the targetedms.Runs table since the previous run becomes redundant and is deleted.
             Assert.AreEqual(2, GetJobCountInFolder(_panoramaClient, _panoramaWebTestFolder),
@@ -160,7 +174,7 @@ namespace AutoQCTest
             TestUtils.AssertTextsInThisOrder(logText,
                 "Importing new files",
                 rawFile + " added to directory",
-                "Running SkylineRunner.exe with args",
+                "Running SkylineCmd.exe with args",
                 "--import-file=\"" + rawFileTestPath + "\"",
                 "Uploading Skyline document to Panorama",
                 "Waiting for files");

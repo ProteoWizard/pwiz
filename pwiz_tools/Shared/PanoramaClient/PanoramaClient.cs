@@ -37,7 +37,7 @@ namespace pwiz.PanoramaClient
 
         JObject SupportedVersionsJson();
 
-        IRequestHelper GetRequestHelper(bool forPublish = false);
+        IRequestHelper GetRequestHelper();
     }
 
     public abstract class AbstractPanoramaClient : IPanoramaClient
@@ -62,7 +62,7 @@ namespace pwiz.PanoramaClient
         public abstract void DownloadFile(string fileUrl, string fileName, long fileSize, string realName,
             IProgressMonitor progressMonitor, IProgressStatus progressStatus);
 
-        public abstract IRequestHelper GetRequestHelper(bool forPublish = false);
+        public abstract IRequestHelper GetRequestHelper();
 
         protected abstract Uri ValidateUri(Uri serverUri, bool tryNewProtocol = true);
         protected abstract PanoramaServer ValidateServerAndUser(Uri serverUri, string username, string password);
@@ -142,8 +142,12 @@ namespace pwiz.PanoramaClient
             var zipFileName = Path.GetFileName(zipFilePath) ?? string.Empty;
 
             // Upload zip file to pipeline folder.
-            using (var requestHelper = GetRequestHelper(true))
+            using (var requestHelper = GetRequestHelper())
             {
+                // This request helper will be used for a series of requests.
+                // Set the Accept header set to "application/json" for all requests so that we can parse any LabKey-specific errors.
+                requestHelper.RequestJsonResponse(); 
+
                 var webDavUrl = GetWebDavPath(folderPath, requestHelper);
 
                 // Upload Url minus the name of the zip file.
@@ -156,7 +160,6 @@ namespace pwiz.PanoramaClient
 
                 var tmpUploadUri = UploadTempZipFile(zipFilePath, baseUploadUri, escapedZipFileName, requestHelper);
 
-                var authHeader = new PanoramaServer(ServerUri, Username, Password).AuthHeader;
                 if (progressMonitor.IsCanceled)
                 {
                     // Delete the temporary file on the server
@@ -164,18 +167,18 @@ namespace pwiz.PanoramaClient
                         _progressStatus =
                             _progressStatus.ChangeMessage(
                                 Resources.AbstractPanoramaClient_SendZipFile_Deleting_temporary_file_on_server));
-                    DeleteTempZipFile(tmpUploadUri, authHeader, requestHelper);
+                    DeleteTempZipFile(tmpUploadUri, requestHelper);
                     return null;
                 }
 
                 // Make sure the temporary file was uploaded to the server
-                ConfirmFileOnServer(tmpUploadUri, authHeader, requestHelper);
+                ConfirmFileOnServer(tmpUploadUri, requestHelper);
 
                 // Rename the temporary file
                 _progressStatus = _progressStatus.ChangeMessage(Resources.AbstractPanoramaClient_SendZipFile_Renaming_temporary_file_on_server);
                 progressMonitor.UpdateProgress(_progressStatus);
 
-                RenameTempZipFile(tmpUploadUri, uploadUri, authHeader, requestHelper);
+                RenameTempZipFile(tmpUploadUri, uploadUri, requestHelper);
 
                 // Add a document import job to the queue on the Panorama server
                 _progressStatus = _progressStatus.ChangeMessage(Resources.AbstractPanoramaClient_SendZipFile_Waiting_for_data_import_completion___);
@@ -271,16 +274,18 @@ namespace pwiz.PanoramaClient
             IRequestHelper requestHelper)
         {
             var tmpUploadUri = new Uri(baseUploadUri, escapedZipFileName + @".part");
-            
-            // Add a "Temporary" header so that LabKey marks this as a temporary file.
-            // https://www.labkey.org/issues/home/Developer/issues/details.view?issueId=19220
-            requestHelper.AddHeader(@"Temporary", @"T");
-            requestHelper.RequestJsonResponse(); // Request a JSON response so that we can parse any LabKey-specific errors
-            
+
+            var headers = new Dictionary<string, string>
+            {
+                // Add a "Temporary" header so that LabKey marks this as a temporary file.
+                // https://www.labkey.org/issues/home/Developer/issues/details.view?issueId=19220
+                {@"Temporary", @"T"}
+            };
+
             try
             {
                 // For HttpPanoramaRequestHelper, this is synchronous with IProgressMonitor progress
-                requestHelper.AsyncUploadFile(tmpUploadUri, @"PUT", PathEx.SafePath(zipFilePath));
+                requestHelper.AsyncUploadFile(tmpUploadUri, @"PUT", PathEx.SafePath(zipFilePath), headers);
             }
             catch (NetworkRequestException ex)
             {
@@ -290,11 +295,6 @@ namespace pwiz.PanoramaClient
                     tmpUploadUri,
                     PanoramaUtil.GetErrorFromNetworkRequestException,
                     ex);
-            }
-            finally
-            {
-                // Remove the "Temporary" header
-                requestHelper.RemoveHeader(@"Temporary");
             }
 
             return tmpUploadUri;
@@ -393,45 +393,46 @@ namespace pwiz.PanoramaClient
             Thread.Sleep(sleepTime);
         }
 
-        private void RenameTempZipFile(Uri sourceUri, Uri destUri, string authHeader, IRequestHelper requestHelper)
+        private void RenameTempZipFile(Uri sourceUri, Uri destUri, IRequestHelper requestHelper)
         {
-            var request = (HttpWebRequest)WebRequest.Create(sourceUri);
+            // Headers for MOVE request
+            var headers = new Dictionary<string, string>
+            {
+                // Do not use Uri.ToString since it does not return the escaped version.
+                {@"Destination", destUri.AbsoluteUri}, 
 
-            // Destination URI.  
-            // NOTE: Do not use Uri.ToString since it does not return the escaped version.
-            request.Headers.Add(@"Destination", destUri.AbsoluteUri);
-
-            // If a file already exists at the destination URI, it will not be overwritten.  
-            // The server would return a 412 Precondition Failed status code.
-            request.Headers.Add(@"Overwrite", @"F");
-
-            requestHelper.DoRequest(request,
-                @"MOVE",
-                authHeader,
+                // If a file already exists at the destination URI, it will not be overwritten.  
+                // The server would return a 412 Precondition Failed status code.
+                {@"Overwrite", @"F"}
+            };
+            requestHelper.DoRequest(
+                sourceUri,
+                "MOVE",
+                headers,
                 Resources
                     .AbstractPanoramaClient_RenameTempZipFile_There_was_an_error_renaming_the_temporary_zip_file_on_the_server_
             );
         }
 
-        private void DeleteTempZipFile(Uri sourceUri, string authHeader, IRequestHelper requestHelper)
+        private void DeleteTempZipFile(Uri sourceUri, IRequestHelper requestHelper)
         {
-            var request = (HttpWebRequest)WebRequest.Create(sourceUri.ToString());
-
-            requestHelper.DoRequest(request,
-                @"DELETE",
-                authHeader,
+            // DELETE request, no custom headers needed
+            requestHelper.DoRequest(
+                sourceUri,
+                "DELETE",
+                null,
                 Resources
                     .AbstractPanoramaClient_DeleteTempZipFile_There_was_an_error_deleting_the_temporary_zip_file_on_the_server_
             );
         }
 
-        private void ConfirmFileOnServer(Uri sourceUri, string authHeader, IRequestHelper requestHelper)
+        private void ConfirmFileOnServer(Uri sourceUri, IRequestHelper requestHelper)
         {
-            var request = (HttpWebRequest)WebRequest.Create(sourceUri);
-            // Do a HEAD request to check if the file exists on the server.
-            requestHelper.DoRequest(request,
-                @"HEAD",
-                authHeader,
+            // Do a HEAD request to check if the file exists on the server. No custom headers needed.
+            requestHelper.DoRequest(
+                sourceUri,
+                "HEAD",
+                null,
                 Resources.AbstractPanoramaClient_ConfirmFileOnServer_File_was_not_uploaded_to_the_server__Please_try_again__or_if_the_problem_persists__please_contact_your_Panorama_server_administrator_
             );
         }
@@ -738,7 +739,7 @@ namespace pwiz.PanoramaClient
             httpClient.DownloadFile(new Uri(fileUrl), fileName, fileSize);
         }
 
-        public override IRequestHelper GetRequestHelper(bool forPublish = false)
+        public override IRequestHelper GetRequestHelper()
         {
             var panoramaServer = new PanoramaServer(ServerUri, Username, Password);
             return new HttpPanoramaRequestHelper(panoramaServer, _progressMonitor, _progressStatus);
@@ -807,7 +808,7 @@ namespace pwiz.PanoramaClient
             throw new InvalidOperationException();
         }
 
-        public IRequestHelper GetRequestHelper(bool forPublish = false)
+        public IRequestHelper GetRequestHelper()
         {
             throw new InvalidOperationException();
         }
