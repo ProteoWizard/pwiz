@@ -27,16 +27,19 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     path-constant BIBLIO_SPEC_PATH :  $(PWIZ_ROOT_PATH)/pwiz_tools/Shared/BiblioSpec ;
     path-constant CRT_PATH : "$(SKYLINE_PATH)/University of Washington (MacCoss Lab).crt" ;
     constant CRT_KEY : "key_637015839" ;
-    path-constant NUGET_PATH : "C:/Program Files/dotnet/dotnet.exe" ;
-    if ! [ path.exists $(NUGET_PATH) ]
+    local NUGET_PATH : "C:/Program Files/dotnet/dotnet.exe" ;
+	local NUGET_PATH_145 : "C:/Program Files/Microsoft Visual Studio/18/Community/dotnet/runtime/dotnet.exe" ;
+	local NUGET_PATH_143 : "C:/Program Files/Microsoft Visual Studio/2022/Community/dotnet/runtime/dotnet.exe" ;
+	
+    if ( <toolset-msvc:version>14.5 in $(properties) && [ path.exists $(NUGET_PATH_145) ] )
     {
-        path-constant NUGET_PATH : "C:/Program Files/Microsoft Visual Studio/2022/Community/dotnet/runtime/dotnet.exe" ;
-        if ! [ path.exists $(NUGET_PATH) ]
-        {
-            path-constant NUGET_PATH : "C:/Program Files/Microsoft Visual Studio/2022/Community/dotnet/net8.0/runtime/dotnet.exe" ;
-        }
-    }
-
+		NUGET_PATH = NUGET_PATH_145 ;
+	}
+	else if ( <toolset-msvc:version>14.3 in $(properties) && [ path.exists $(NUGET_PATH_143) ] )
+    {
+		NUGET_PATH = NUGET_PATH_143 ;
+	}
+echo HEY!!! $(properties)
     if ! --incremental in [ modules.peek : ARGV ]
     {
        echo "Updating submodules for Hardklor etc..." ;
@@ -91,7 +94,14 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
 
     rule do_nuget_restore ( targets + : source * : properties * )
     {
-        MSVC_CURRENT_SETUP_SCRIPT on $(targets) = [ get-current-msvc-setup-script "<toolset-msvc:version>14.3" ] ;
+	    if <toolset-msvc:version>14.5 in $(properties)
+	    {
+        	MSVC_CURRENT_SETUP_SCRIPT on $(targets) = [ get-current-msvc-setup-script "<toolset-msvc:version>14.5" ] ;
+        }
+        else
+        {
+        	MSVC_CURRENT_SETUP_SCRIPT on $(targets) = [ get-current-msvc-setup-script "<toolset-msvc:version>14.3" ] ;
+        }
     }
 
     actions do_nuget_restore

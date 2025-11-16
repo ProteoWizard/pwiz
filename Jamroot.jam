@@ -358,6 +358,7 @@ project pwiz
         <toolset>msvc,<toolset-msvc:version>14.1:<define>_HAS_TR1
         <toolset>msvc,<toolset-msvc:version>14.2:<define>_HAS_TR1
         <toolset>msvc,<toolset-msvc:version>14.3:<define>_HAS_TR1
+        <toolset>msvc,<toolset-msvc:version>14.5:<define>_HAS_TR1
 
         # link-time optimization for release builds
         #<variant>release:<lto>on
@@ -1000,7 +1001,8 @@ rule secure-scl-throws ( properties * )
        ! ( <toolset-msvc:version>14.0 in $(properties) ) &&
        ! ( <toolset-msvc:version>14.1 in $(properties) ) &&
        ! ( <toolset-msvc:version>14.2 in $(properties) ) &&
-       ! ( <toolset-msvc:version>14.3 in $(properties) )
+       ! ( <toolset-msvc:version>14.3 in $(properties) ) &&
+       ! ( <toolset-msvc:version>14.5 in $(properties) )
     {
         return <define>_SILENCE_DEPRECATION_OF_SECURE_SCL_THROWS
                <define>_SECURE_SCL_THROWS=1 ;
@@ -1041,7 +1043,7 @@ rule msvc-has-current-dotnet ( properties * )
 {
     # require VS 2017 or higher because of .NET Framework version
     if <toolset>msvc in $(properties) && 
-       [ feature.get-values <toolset-msvc:version> : $(properties) ] in "14.1" "14.2" "14.3"
+       [ feature.get-values <toolset-msvc:version> : $(properties) ] in "14.1" "14.2" "14.3" "14.5"
     {
         return 1 ;
     }
@@ -1222,7 +1224,7 @@ rule msparser-path ( properties * )
     }
     else if <toolset>msvc in $(properties)
     {
-        if [ feature.get-values <toolset-msvc:version> : $(properties) ] in "14.0" "14.1" "14.2" "14.3"
+        if [ feature.get-values <toolset-msvc:version> : $(properties) ] in "14.0" "14.1" "14.2" "14.3" "14.5"
         {
             lib-location = "$(PWIZ_LIBRARIES_PATH)\\msparser_3_1_0_x86_win64\\vs2015" ;
         }
@@ -1240,7 +1242,7 @@ rule msparser-path ( properties * )
     {
         lib-location = "$(PWIZ_LIBRARIES_PATH)/msparser_3_1_0_x86_linux64/gnu" ;
     }
-    else
+    else  if <toolset>* in $(properties)
     {
         if ! $(.warn-once)
         {
@@ -1261,25 +1263,25 @@ rule msparser-path ( properties * )
     # Check for msparser existence.
     else if <toolset>msvc in $(properties) && [ path.exists $(lib-location)/lib/msparser.lib ]
     {
-        if ! $(.warn-once)
+        if ! $(.warn-once-msvc)
         {
-            .warn-once = true ;
+            .warn-once-msvc = true ;
             echo "Using Mascot Parser in $(lib-location)" ;
         }
         return $(lib-location) ;
     }
     else if <toolset>gcc in $(properties) && [ path.exists $(lib-location)/lib/libmsparser.a ]
     {
-        if ! $(.warn-once)
+        if ! $(.warn-once-gcc)
         {
-            .warn-once = true ;
+            .warn-once-gcc = true ;
             echo "Using Mascot Parser in $(lib-location)" ;
         }
         return $(lib-location) ;
     }
-    else if ! $(.warn-once)
+    else if <toolset>gcc in $(properties) && ! $(.warn-once-gcc)
     {
-        .warn-once = true ;
+        .warn-once-gcc = true ;
         
         if $(lib-location)
         {
@@ -1289,7 +1291,21 @@ rule msparser-path ( properties * )
         {
             echo "Warning: No Mascot Parser found." ;
         }
-        echo "         Mascot support will be disabled." ;
+        echo "         Mascot support will be disabled in gcc builds, if any." ;
+    }
+	else if <toolset>msvc in $(properties) && ! $(.warn-once-msvc)
+    {
+        .warn-once-msvc = true ;
+        
+        if $(lib-location)
+        {
+            echo "Warning: No Mascot Parser found at $(lib-location)." ;
+        }
+        else
+        {
+            echo "Warning: No Mascot Parser found." ;
+        }
+        echo "         Mascot support will be disabled in MSVC builds, if any." ;
     }
 }
 
