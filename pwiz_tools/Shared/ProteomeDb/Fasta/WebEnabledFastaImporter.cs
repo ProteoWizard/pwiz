@@ -1239,9 +1239,9 @@ namespace pwiz.ProteomeDatabase.Fasta
 
         private static string BuildUniprotSearchTerm(string accession, string taxId)
         {
-            // If accession is null or empty, cannot build a search term
+            // If accession is null or empty, cannot build a search term - return null to indicate no search possible
             if (string.IsNullOrEmpty(accession))
-                return accession;
+                return null;
             // If taxId is not available, return just the accession without organism filter
             if (string.IsNullOrEmpty(taxId))
                 return accession;
