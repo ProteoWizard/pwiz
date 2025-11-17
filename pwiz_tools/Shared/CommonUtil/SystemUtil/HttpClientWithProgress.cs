@@ -556,7 +556,7 @@ namespace pwiz.Common.SystemUtil
                 // Check status code - but don't call EnsureSuccessStatusCode() yet
                 // We need to return the response so caller can read the body
                 if (!response.IsSuccessStatusCode)
-                    throw CreateResponseFailedException(uri, response);
+                    ThrowResponseFailedException(uri, response);
                 
                 return response;
             });
@@ -789,11 +789,7 @@ namespace pwiz.Common.SystemUtil
                 
                 // Check status code and capture response body for error details (e.g., LabKey-specific errors)
                 if (!response.IsSuccessStatusCode)
-                {
-                    var exception = CreateResponseFailedException(uri, response);
-                    TestBehavior?.OnFailedResponse(uri, response, exception.ResponseBody, exception);
-                    throw exception;
-                }
+                    ThrowResponseFailedException(uri, response);
                 
                 return response;
             }
@@ -805,6 +801,21 @@ namespace pwiz.Common.SystemUtil
             }
         }
 
+        /// <summary>
+        /// Handles a failed HTTP response by creating an exception, notifying test behavior, and throwing.
+        /// This ensures consistent error handling across all response failure paths (downloads and uploads).
+        /// </summary>
+        private void ThrowResponseFailedException(Uri uri, HttpResponseMessage response)
+        {
+            var exception = CreateResponseFailedException(uri, response);
+            TestBehavior?.OnFailedResponse(uri, response, exception.ResponseBody, exception);
+            throw exception;
+        }
+
+        /// <summary>
+        /// Creates a NetworkRequestException for a failed HTTP response and notifies test behavior.
+        /// This ensures consistent error handling across all response failure paths.
+        /// </summary>
         private NetworkRequestException CreateResponseFailedException(Uri uri, HttpResponseMessage response)
         {
             string responseBody = null;
