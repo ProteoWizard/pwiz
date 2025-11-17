@@ -236,9 +236,9 @@ namespace pwiz.PanoramaClient
                 foreach (string key in postData.Keys)
                 {
                     if (formData.Length > 0)
-                        formData.Append("&");
+                        formData.Append(@"&");
                     formData.Append(Uri.EscapeDataString(key));
-                    formData.Append("=");
+                    formData.Append(@"=");
                     formData.Append(Uri.EscapeDataString(postData[key] ?? string.Empty));
                 }
 
@@ -455,7 +455,7 @@ namespace pwiz.PanoramaClient
             return headerName.Equals(HttpRequestHeader.Authorization.ToString(), StringComparison.OrdinalIgnoreCase) ||
                    headerName.Equals(HttpRequestHeader.Accept.ToString(), StringComparison.OrdinalIgnoreCase) ||
                    headerName.Equals(HttpRequestHeader.ContentType.ToString(), StringComparison.OrdinalIgnoreCase) ||
-                   headerName.Equals("Content-Type", StringComparison.OrdinalIgnoreCase) ||
+                   headerName.Equals(@"Content-Type", StringComparison.OrdinalIgnoreCase) ||
                    headerName.Equals(LABKEY_CSRF, StringComparison.OrdinalIgnoreCase);
         }
 

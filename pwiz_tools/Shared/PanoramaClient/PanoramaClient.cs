@@ -425,7 +425,7 @@ namespace pwiz.PanoramaClient
             };
             requestHelper.DoRequest(
                 sourceUri,
-                "MOVE",
+                @"MOVE",
                 headers,
                 Resources
                     .AbstractPanoramaClient_RenameTempZipFile_There_was_an_error_renaming_the_temporary_zip_file_on_the_server_
@@ -437,7 +437,7 @@ namespace pwiz.PanoramaClient
             // DELETE request, no custom headers needed
             requestHelper.DoRequest(
                 sourceUri,
-                "DELETE",
+                @"DELETE",
                 null,
                 Resources
                     .AbstractPanoramaClient_DeleteTempZipFile_There_was_an_error_deleting_the_temporary_zip_file_on_the_server_
@@ -449,7 +449,7 @@ namespace pwiz.PanoramaClient
             // Do a HEAD request to check if the file exists on the server. No custom headers needed.
             requestHelper.DoRequest(
                 sourceUri,
-                "HEAD",
+                @"HEAD",
                 null,
                 Resources.AbstractPanoramaClient_ConfirmFileOnServer_File_was_not_uploaded_to_the_server__Please_try_again__or_if_the_problem_persists__please_contact_your_Panorama_server_administrator_
             );
@@ -833,8 +833,9 @@ namespace pwiz.PanoramaClient
 
             private bool HasChildren() => _children.Count > 0;
 
-            public string GetPath() => $"{_parentPath ?? "/"}{Name}/";
+            public string GetPath() => $@"{_parentPath ?? @"/"}{Name}/";
 
+            // ReSharper disable LocalizableElement
             public JObject ToJson(bool addRoot = false)
             {
                 if (!HasChildren() && (!Writable || !IsTargetedMsModuleEnabled))
@@ -872,6 +873,7 @@ namespace pwiz.PanoramaClient
                 };
                 return root;
             }
+            // ReSharper restore LocalizableElement
         }
     }
 }
