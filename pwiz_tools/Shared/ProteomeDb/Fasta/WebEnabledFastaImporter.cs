@@ -629,7 +629,7 @@ namespace pwiz.ProteomeDatabase.Fasta
             protected virtual HttpClientWithProgress CreateHttpClient(IProgressMonitor progressMonitor, int timeout)
             {
                 // Progress status for this request is ignored. The progress monitor is passed only
-                // to support cancellation. Progress for the langer operation that is making the
+                // to support cancellation. Progress for the larger operation that is making the
                 // HTTP requests gets reported based on completed chunks.
                 var httpClient = new HttpClientWithProgress(new CancelOnlyProgressMonitor(progressMonitor), new ProgressStatus());
                 if (timeout > 0)

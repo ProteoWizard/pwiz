@@ -1596,7 +1596,7 @@ namespace CommonTest
             {
                 provider = new FastWebSearchProvider(); // Skip politeness delays during playback
             }
-            // TODO(Claude): Test progress monitor cancellation by linking a CancellationToken to HttpClientTestBehavior with a ResponseFactory function that triggers cancellation.
+            // CONSIDER(brendanx): Test progress monitor cancellation by linking a CancellationToken to HttpClientTestBehavior with a ResponseFactory function that triggers cancellation.
             var progressMonitor = new SilentProgressMonitor();
             var importer = new WebEnabledFastaImporter(provider);
             var results = importer.DoWebserviceLookup(proteins, progressMonitor, false).ToList();
