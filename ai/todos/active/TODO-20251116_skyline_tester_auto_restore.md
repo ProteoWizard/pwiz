@@ -1,5 +1,10 @@
 # TODO: SkylineTester Auto-Restore Checked Tests
 
+## Branch Information
+- **Branch**: Skyline/work/20251116_skyline_tester_auto_restore
+- **Created**: 2025-11-16
+- **PR**: (To be added when created)
+
 ## Objective
 
 Enable SkylineTester to automatically restore checked tests from `SkylineTester test list.txt` on startup, providing workflow persistence across sessions and enabling seamless handoff with LLM-driven test execution.
