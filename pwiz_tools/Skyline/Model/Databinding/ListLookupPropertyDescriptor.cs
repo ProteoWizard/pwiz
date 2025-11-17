@@ -137,10 +137,7 @@ namespace pwiz.Skyline.Model.Databinding
 
         private static Attribute[] GetAttributes(PropertyDescriptor innerPropertyDescriptor)
         {
-            var attributes = new List<Attribute>
-            {
-                new DataGridViewColumnTypeAttribute(typeof(ListLookupDataGridViewColumn)),
-            };
+            var attributes = new List<Attribute>();
             var annotationDef = (innerPropertyDescriptor as AnnotationPropertyDescriptor)?.AnnotationDef;
             if (!string.IsNullOrEmpty(annotationDef?.Lookup))
             {

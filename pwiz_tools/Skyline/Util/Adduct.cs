@@ -90,7 +90,7 @@ namespace pwiz.Skyline.Util
         private int _hashCode; // We want comparisons to be on the same order as comparing ints, as when we used to just use integer charge instead of proper adducts
 
         // We tend to see the same strings again and again, save some parsing time by maintaining a threadsafe lookup for each ADDUCT_TYPE
-        private static ConcurrentDictionary<string, Adduct>[] _knownAdducts = new ConcurrentDictionary<string, Adduct>[]
+        private static ConcurrentDictionary<string, Adduct>[] _knownAdducts = new[]
         {
             new ConcurrentDictionary<string, Adduct>(),
             new ConcurrentDictionary<string, Adduct>(),
