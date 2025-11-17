@@ -886,8 +886,8 @@ namespace pwiz.PanoramaClient
                     ["children"] = new JArray(folderJson)
                 };
                 return root;
-                // ReSharper restore LocalizableElement
             }
+            // ReSharper restore LocalizableElement
         }
     }
 }

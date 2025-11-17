@@ -112,7 +112,7 @@ namespace pwiz.PanoramaClient
         private static Uri BuildQuery(string server, string folderPath, string queryName, string folderFilter, string[] columns, string sortParam)
         {
             var columnsQueryParam = columns != null ? @"&query.columns=" + string.Join(@",", columns) : string.Empty;
-            var sortQueryParam = !string.IsNullOrEmpty(sortParam) ? @"&query.sort={sortParam}" : string.Empty;
+            var sortQueryParam = !string.IsNullOrEmpty(sortParam) ? $@"&query.sort={sortParam}" : string.Empty;
             var allQueryParams = $@"schemaName=targetedms&query.queryName={queryName}&query.containerFilterName={folderFilter}{columnsQueryParam}{sortQueryParam}";
             var queryUri = PanoramaUtil.CallNewInterface(new Uri(server), @"query", folderPath, @"selectRows", allQueryParams);
             return queryUri;
