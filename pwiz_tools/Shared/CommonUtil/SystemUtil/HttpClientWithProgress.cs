@@ -110,7 +110,7 @@ namespace pwiz.Common.SystemUtil
         /// <param name="authHeaderValue">The authorization header value (e.g., "Basic base64credentials" or "Bearer token")</param>
         public void AddAuthorizationHeader(string authHeaderValue)
         {
-            _httpClient.DefaultRequestHeaders.Add("Authorization", authHeaderValue);
+            _httpClient.DefaultRequestHeaders.Add(@"Authorization", authHeaderValue);
         }
 
         /// <summary>
@@ -495,7 +495,7 @@ namespace pwiz.Common.SystemUtil
 
             if (!string.IsNullOrEmpty(fileName))
             {
-                request.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment")
+                request.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue(@"attachment")
                 {
                     FileName = fileName
                 };
@@ -532,25 +532,7 @@ namespace pwiz.Common.SystemUtil
                 // Check status code - but don't call EnsureSuccessStatusCode() yet
                 // We need to return the response so caller can read the body
                 if (!response.IsSuccessStatusCode)
-                {
-                    // Read response body for error details before throwing
-                    string responseBody = null;
-                    try
-                    {
-                        responseBody = response.Content.ReadAsStringAsync().Result;
-                    }
-                    catch
-                    {
-                        // Continue without response body
-                    }
-
-                    var statusCode = (int)response.StatusCode;
-                    var reasonPhrase = string.IsNullOrEmpty(response.ReasonPhrase) 
-                        ? response.StatusCode.ToString() 
-                        : response.ReasonPhrase;
-                    var message = $"Response status code does not indicate success: {statusCode} ({reasonPhrase}) for {uri}";
-                    throw new NetworkRequestException(message, response.StatusCode, uri, new HttpRequestException(message), responseBody);
-                }
+                    throw CreateResponseFailedException(uri, response);
                 
                 return response;
             });
@@ -748,29 +730,7 @@ namespace pwiz.Common.SystemUtil
                 
                 // Check status code and capture response body for error details (e.g., LabKey-specific errors)
                 if (!response.IsSuccessStatusCode)
-                {
-                    string responseBody = null;
-                    try
-                    {
-                        // Attempt to read response body for server-specific error details
-                        // This is important for servers like LabKey that include structured error info in responses
-                        responseBody = response.Content.ReadAsStringAsync().Result;
-                    }
-                    catch
-                    {
-                        // If we can't read the response body, continue without it
-                    }
-
-                    // Create an HttpRequestException similar to what EnsureSuccessStatusCode() would throw
-                    var statusCode = (int)response.StatusCode;
-                    var reasonPhrase = string.IsNullOrEmpty(response.ReasonPhrase) 
-                        ? response.StatusCode.ToString() 
-                        : response.ReasonPhrase;
-                    var message = $"Response status code does not indicate success: {statusCode} ({reasonPhrase}) for {uri}";
-                    
-                    // Throw with response body attached for server-specific error extraction
-                    throw new NetworkRequestException(message, response.StatusCode, uri, new HttpRequestException(message), responseBody);
-                }
+                    throw CreateResponseFailedException(uri, response);
                 
                 return response;
             }
@@ -778,6 +738,32 @@ namespace pwiz.Common.SystemUtil
             {
                 throw MapHttpException(ex, uri);
             }
+        }
+
+        private NetworkRequestException CreateResponseFailedException(Uri uri, HttpResponseMessage response)
+        {
+            string responseBody = null;
+            try
+            {
+                // Attempt to read response body for server-specific error details
+                // This is important for servers like LabKey that include structured error info in responses
+                responseBody = response.Content.ReadAsStringAsync().Result;
+            }
+            catch
+            {
+                // If we can't read the response body, continue without it
+            }
+
+            // Create an HttpRequestException similar to what EnsureSuccessStatusCode() would throw
+            var statusCode = (int)response.StatusCode;
+            var reasonPhrase = string.IsNullOrEmpty(response.ReasonPhrase) 
+                ? response.StatusCode.ToString() 
+                : response.ReasonPhrase;
+            var message = string.Format(MessageResources.HttpClientWithProgress_CreateResponseFailedException_Response_status_code_does_not_indicate_success___0____1___for__2_,
+                statusCode, reasonPhrase, uri);
+                    
+            // Throw with response body attached for server-specific error extraction
+            return new NetworkRequestException(message, response.StatusCode, uri, new HttpRequestException(message), responseBody);
         }
 
         private Exception MapHttpException(Exception ex, Uri uri)
@@ -988,8 +974,8 @@ namespace pwiz.Common.SystemUtil
                     continue;
 
                 // Skip virtual adapters
-                if ((ni.Description.IndexOf("virtual", StringComparison.OrdinalIgnoreCase) >= 0) ||
-                    (ni.Name.IndexOf("virtual", StringComparison.OrdinalIgnoreCase) >= 0))
+                if ((ni.Description.IndexOf(@"virtual", StringComparison.OrdinalIgnoreCase) >= 0) ||
+                    (ni.Name.IndexOf(@"virtual", StringComparison.OrdinalIgnoreCase) >= 0))
                     continue;
 
                 return true;
