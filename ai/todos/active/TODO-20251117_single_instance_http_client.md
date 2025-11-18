@@ -1,4 +1,10 @@
-# TODO-single-instance-http-client.md
+# TODO-20251117_single_instance_http_client.md
+
+## Branch Information
+- **Branch**: `Skyline/work/20251117_single_instance_http_client`
+- **Created**: 2025-11-17
+- **Status**: In progress
+- **Objective**: Eliminate thread handle leaks caused by repeated `HttpClient` creation/disposal by implementing a singleton `HttpClient` pattern in `HttpClientWithProgress`, following Microsoft's official guidance.
 
 ## Objective
 Eliminate thread handle leaks caused by repeated `HttpClient` creation/disposal by implementing a singleton `HttpClient` pattern in `HttpClientWithProgress`, following Microsoft's official guidance.
