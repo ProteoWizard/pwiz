@@ -1,11 +1,12 @@
-# TODO-httpclient_to_progress.md
+# TODO-20251107_httpclient_to_progress.md
 
 ## Branch Information
 - **Branch**: `Skyline/work/20251107_httpclient_to_progress`
 - **Created**: 2025-11-07
-- **Status**: In progress
+- **Completed**: 2025-11-17
+- **Status**: ✅ Completed
 - **PR**: [#3669](https://github.com/ProteoWizard/pwiz/pull/3669)
-- **Objective**: Finish consolidating Skyline HTTP usage onto `HttpClientWithProgress`, including retiring remaining `HttpWebRequest` and auditing legacy `System.Net` patterns
+- **Objective**: Migrate `WebEnabledFastaImporter` to use `HttpClientWithProgress` with comprehensive HTTP recording/playback infrastructure for offline testing
 
 ## Background
 
@@ -51,114 +52,61 @@ After completing the WebClient → HttpClient migration, we discovered several p
 - `TODO-remove_async_and_await.md` - ArdiaLoginDlg has async/await to remove
 - `TODO-tools_webclient_replacement.md` - Tools migration (deferred, lower priority)
 
-## Task Checklist
+## Completed Work Summary
 
-### Phase 1: Inventory & Analysis
-- [ ] Inventory all `System.Net` usage in Skyline and shared libraries
-  - Classify occurrences: `HttpClient`, `HttpWebRequest`, `WebRequest`, `HttpStatusCode`, headers, sockets
-  - Identify files that still compile against `HttpWebRequest`
-  - Document any acceptable `System.Net` usage (e.g., `HttpStatusCode`, `HttpRequestHeader` enums)
-- [ ] For each file encountered, temporarily remove `using System.Net;` and build to understand dependencies
-  - Record which types still require `System.Net`
-  - Note dead code exposed by the removal (unused helpers, obsolete flows)
-- [ ] Analyze `EditRemoteAccountDlg` Ardia API usage
-  - Cookie/session management patterns
-  - API endpoints called
-  - Error handling approach
-  - Progress/cancellation needs
-- [ ] Analyze `ArdiaLoginDlg` OAuth integration
-  - Identify async/await usage
-  - Understand OAuth library requirements
-  - Determine if synchronous refactor is feasible
-  - Plan async/await removal strategy
-- [ ] Identify other Panorama/AutoQC/SkylineBatch code paths still using `HttpWebRequest`
-  - Confirm overlap with TODOs in backlog (`TODO-tools_webclient_replacement`, `TODO-skylinebatch_test_cleanup`)
-  - Propose ownership if migration belongs in this branch vs. follow-up TODO
-- [x] Analyze `HttpClientWithProgress` exception handling
-  - Determine if `MapHttpRequestException` and `MapUnexpectedWebException` remain reachable
-  - If reachable, document real-world repro steps; otherwise plan safe removal/refactor
-
-- [x] Replace `WebEnabledFastaImporter` network access with `HttpClientWithProgress`
-  - [x] Update `WebSearchProvider.GetWebResponseStream` to stream via HttpClientWithProgress
-  - [x] Replace `GetXmlTextReader(string url)` with HttpClient-based retrieval
-  - [x] Propagate `IProgressMonitor` and cancellation into web requests
-  - [x] Preserve timeout behavior using linked cancellation tokens
-- [x] Drop legacy `WebRequest`/`HttpWebRequest` usage from FASTA importer tests (interfaces updated; legacy seams remain only until HttpClientTestHelper expansion)
-- [x] Introduce `HttpClientTestHelper`-based mocks for FASTA web responses
-- [x] Document the migration pattern in `STYLEGUIDE.md` or importer-specific docs if needed
-- [x] Convert `ProteomeDbTest` offline mode to `HttpClientTestHelper` playback (replace `FakeWebSearchProvider` usage in `TestOlderProteomeDb`)
+### Phase 1: WebEnabledFastaImporter Migration ✅
+- [x] Replaced `WebEnabledFastaImporter` network access with `HttpClientWithProgress`
+  - [x] Updated `WebSearchProvider.GetWebResponseStream` to stream via HttpClientWithProgress
+  - [x] Replaced `GetXmlTextReader(string url)` with HttpClient-based retrieval
+  - [x] Propagated `IProgressMonitor` and cancellation into web requests
+  - [x] Preserved timeout behavior using linked cancellation tokens
+- [x] Dropped legacy `WebRequest`/`HttpWebRequest` usage from FASTA importer tests
+- [x] Introduced `HttpClientTestHelper`-based mocks for FASTA web responses
+- [x] Converted `ProteomeDbTest` offline mode to `HttpClientTestHelper` playback
   - [x] Added `IsRecordMode` property and HTTP interaction recording/playback infrastructure
   - [x] Created `ProteomeDbWebData.json` for recorded HTTP interactions
   - [x] Removed `FakeWebSearchProvider` fallback - now requires recorded data for offline tests
-  - [x] Full metadata validation now works in offline mode (same as web mode) since recorded data contains complete responses
-  - [x] Test runs sub-second without network access (<10 UniProt requests vs ~90 total requests in TestFastaImport)
-  - [x] Cleaned up naming: `LoadHttpInteractions()` and `RecordHttpInteractions()` with accurate messages
-  - [x] Added XML documentation explaining HTTP recording/playback pattern
-- [ ] Evaluate benefit of using `FastWebSearchProvider` (IsPolite => false) in `TestFastaImport` to skip politeness delays during playback (30+ Entrez requests at 333ms each = 10+ seconds potential savings)
+  - [x] Full metadata validation now works in offline mode (same as web mode)
+  - [x] Test runs sub-second without network access
 
-### Phase 3: EditRemoteAccountDlg Migration
-- [ ] Replace bare `HttpClient` with `HttpClientWithProgress`
-- [ ] Use `CookieContainer` parameter for session management
-- [ ] Add progress reporting for API calls
-- [ ] Add cancellation support
-- [ ] Update error handling to use `MapHttpException`
-- [ ] Create tests using `HttpClientTestHelper`
-
-### Phase 4: ArdiaLoginDlg Migration
-- [ ] **Decision point:** Can we remove async/await while migrating?
-  - If yes: Refactor to ActionUtil.RunAsync() + HttpClientWithProgress
-  - If no: Consider splitting into separate async/await removal branch
-- [ ] Migrate OAuth flows to use HttpClientWithProgress (if feasible)
-- [ ] Remove async/await keywords (if feasible)
-- [ ] Add progress reporting for OAuth flows
-- [ ] Create tests for OAuth scenarios
-
-### Phase 5: Retire HttpWebRequest
-- [ ] Replace remaining `HttpWebRequest` usage with `HttpClientWithProgress`
-- [ ] Update helpers/utilities that currently return `HttpWebRequest`
-- [ ] Ensure authentication headers/cookies are handled through `HttpClientWithProgress`
-- [ ] Update any tests relying on `HttpWebRequest` seams
-
-### Phase 6: Testing
-- [ ] Test Ardia login workflows
-- [ ] Test session management
-- [ ] Test OAuth device flow
-- [ ] Test error scenarios (network failures, auth failures)
-- [ ] Verify no regressions in Ardia integration
-
-### Phase 7: Code Inspection & Documentation
-- [ ] Update `CodeInspectionTest` to detect bare `HttpClient` usage in core Skyline
-- [ ] Add inspection for `HttpWebRequest` in `pwiz_tools` and `pwiz_tools/Shared`
-- [ ] Verify all network operations use `HttpClientWithProgress`
-- [ ] Document the pattern
-
-### Phase 8: Pre-Merge Cleanup & Documentation
-- [x] Evaluate and implement `FastWebSearchProvider` usage in `TestFastaImport` to skip politeness delays during playback
-  - [x] Implemented `FastWebSearchProvider` usage in `RunLookup()` when playback mode is detected
-  - [x] Measured impact: ~10 seconds improvement (19 sec → 10-11 sec per test run)
-  - [x] Test passes in all 5 languages with FastWebSearchProvider enabled
-- [x] Establish naming convention for paired web/offline tests
+### Phase 2: Testing Infrastructure & Performance ✅
+- [x] Implemented `FastWebSearchProvider` to skip politeness delays during playback
+  - [x] Measured ~10 seconds improvement (19 sec → 10-11 sec per test run)
+  - [x] Test passes in all 5 languages (en, zh, fr, ja, tr)
+- [x] Established naming convention for paired web/offline tests
   - [x] Applied suffix pattern: `TestFastaImport`/`TestFastaImportWeb` and `TestOlderProteomeDb`/`TestOlderProteomeDbWeb`
-  - [x] Tests now sort together alphabetically instead of being separated
-  - [x] Documented `TestName[Web]` naming pattern in `ai\docs\testing-patterns.md`
-- [x] Document HTTP recording/playback pattern in `ai\docs\testing-patterns.md`
-  - [x] Used `ProteomeDbTest` as the clean, simple example (HTTP interactions only, no extra expectations)
-  - [x] Provided clear instructions for developers and LLMs on how to add HTTP recording to tests
-  - [x] Documented minimal implementation pattern (IsRecordMode, LoadHttpInteractions, RecordHttpInteractions, CreateHttpClientHelper)
-  - [x] Added `TestName[Web]` naming convention guidance
+  - [x] Tests now sort together alphabetically in test runners
 
-### Phase 9: Connected Tests Review & Organization (Future PR)
-- [ ] **Comprehensive review of all "Connected" tests**
-  - [ ] Identify all tests that fail when `AllowInternetAccess` is enabled but computer is disconnected from network
-  - [ ] These are the true "Connected" tests that require network access
-  - [ ] Document which tests are currently in wrong project (e.g., `ProteomeDbTest` in `Test` project)
-  - [ ] Consider annotation or naming convention (e.g., `[Web]` suffix) to identify connected tests
-  - [ ] Review TeamCity configuration for "TestConnected tests" - ensure it runs with `-EnableInternet` flag
-    - Current issue: TeamCity runs `TestConnected` project but doesn't set `AllowInternetAccess`, causing `TestFastaImportWeb` to short-circuit
-  - [ ] Move appropriate tests from `Test`/`TestData`/`TestFunctional` to `TestConnected` project
-  - [ ] Ensure all connected tests follow `TestName[Web]` naming convention
-  - [ ] Verify TeamCity configuration properly enables internet access for connected test runs
-  - [ ] Document connected test requirements and TeamCity setup
+### Phase 3: Documentation ✅
+- [x] Documented HTTP recording/playback pattern in `ai\docs\testing-patterns.md`
+  - [x] Used `ProteomeDbTest` as the clean, simple example
+  - [x] Provided clear instructions for developers and LLMs
+  - [x] Documented minimal implementation pattern
+  - [x] Added `TestName[Web]` naming convention guidance
+- [x] Updated comment style guidelines in `ai/docs/style-guide.md`
+  - [x] Comments should start with capital letter
+  - [x] True sentences should end with period
+  - [x] XML documentation should use `<see cref="ClassName">` for class references
+  - [x] Return-only documentation guidelines (no empty `<param>` or `<returns>` tags)
+
+### Phase 4: Code Quality Improvements ✅
+- [x] Fixed `ToString()` bug in `ProteinSearchInfo` (PreferredName was being overwritten)
+- [x] Improved `BuildUniprotSearchTerm` with explicit null return and clarifying comments
+- [x] Restored valuable XML example comment block in `ReadEntrezSummary`
+- [x] Fixed comment capitalization throughout `WebEnabledFastaImporter`
+- [x] Improved error handling consistency with `ThrowResponseFailedException` method
+  - [x] Ensures both upload and download paths consistently notify test behaviors
+  - [x] Prevents future inconsistencies in error handling
+
+## Remaining Work
+
+**Moved to:** `ai/todos/backlog/TODO-httpclient_to_progress_continued.md`
+
+The following work has been deferred to a future PR:
+- Ardia integration migration (`EditRemoteAccountDlg`, `ArdiaLoginDlg`)
+- Remaining `HttpWebRequest` retirement
+- Code inspection updates
+- Connected tests review and organization
 
 ## Success Criteria
 - All bare `HttpClient` usage in core Skyline replaced with `HttpClientWithProgress`
