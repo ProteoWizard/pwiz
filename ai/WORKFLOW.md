@@ -34,6 +34,7 @@ ai/todos/
 ### Workflow 1: Start Work from Backlog TODO
 
 **On master - claim the work:**
+> **Tip:** If your working tree has in-progress changes, `git stash push -u` before these steps so the TODO move commit is the only change on `master`. After switching to the new branch, `git stash pop` to restore your work.
 ```bash
 git checkout master
 git pull origin master
@@ -135,6 +136,8 @@ git checkout Skyline/work/YYYYMMDD_current_feature
 4. Handle exceptions per established patterns
 
 ### Build and Test Automation (Optional)
+
+> ⚠️ **Always build before running tests.** Skyline executables load the last compiled binaries, so running tests without rebuilding will exercise stale code.
 
 **For LLM-assisted IDEs that can execute PowerShell:**
 

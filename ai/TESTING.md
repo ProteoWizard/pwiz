@@ -17,6 +17,9 @@ Essential testing patterns and rules. See [ai/docs/testing-patterns.md](docs/tes
 
 See [ai/CRITICAL-RULES.md](CRITICAL-RULES.md) for the full list. Key rules:
 
+### Build Before Testing
+- **ALWAYS** build after edits and before running tests – the test harness executes the last compiled binaries, not your unbuilt source.
+
 ### Translation-Proof Testing
 - **NEVER** use English text literals in test assertions
 - **ALWAYS** use resource strings from production code

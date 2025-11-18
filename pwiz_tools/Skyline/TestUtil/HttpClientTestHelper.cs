@@ -24,6 +24,8 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using pwiz.Common.CommonResources;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
@@ -70,6 +72,8 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         public static HttpClientTestHelper SimulateDnsFailure(string hostname = "nonexistent.example.com")
         {
+            // This is real and has been seen in a debugger. The InnerException is a WebException
+            // HttpClient appears to use HttpWebRequest, but wrap its exceptions in HttpRequestException
             var webEx = new WebException($"The remote name could not be resolved: '{hostname}'", WebExceptionStatus.NameResolutionFailure);
             var httpEx = new HttpRequestException("An error occurred while sending the request.", webEx);
             return new HttpClientTestHelper(httpEx);
@@ -316,6 +320,29 @@ namespace pwiz.SkylineTestUtil
         }
 
         /// <summary>
+        /// Begins recording live HTTP interactions for later playback.
+        /// </summary>
+        public static HttpClientTestHelper BeginRecording(HttpInteractionRecorder recorder)
+        {
+            if (recorder == null)
+                throw new ArgumentNullException(nameof(recorder));
+            var behavior = new RecordingHttpClientBehavior(recorder);
+            return new HttpClientTestHelper(behavior);
+        }
+
+        /// <summary>
+        /// Provides offline playback using previously recorded HTTP interactions.
+        /// </summary>
+        public static HttpClientTestHelper PlaybackFromInteractions(IEnumerable<HttpInteraction> interactions,
+            ICollection<HttpInteraction> captureInteractions = null)
+        {
+            if (interactions == null)
+                throw new ArgumentNullException(nameof(interactions));
+            var behavior = new PlaybackHttpClientBehavior(interactions, captureInteractions);
+            return new HttpClientTestHelper(behavior);
+        }
+
+        /// <summary>
         /// Gets the stream that captured uploaded data during a simulated upload.
         /// Use this to verify the uploaded data matches expectations.
         /// </summary>
@@ -535,6 +562,24 @@ namespace pwiz.SkylineTestUtil
         public Dictionary<Uri, Stream> MockUploadMap { get; set; }
         public bool SimulateProgress { get; set; }
         public Action OnProgressCallback { get; set; }
+        public Func<Uri, Stream> ResponseFactory { get; set; }
+
+        public virtual void OnResponse(Uri uri, HttpResponseMessage response)
+        {
+        }
+
+        public virtual Stream WrapResponseStream(Uri uri, Stream responseStream, long contentLength)
+        {
+            return responseStream;
+        }
+
+        public virtual void OnFailedResponse(Uri uri, HttpResponseMessage response, string responseBody, Exception exception)
+        {
+        }
+
+        public virtual void OnException(Uri uri, Exception exception)
+        {
+        }
 
         public Stream GetMockUploadStream(Uri uri)
         {
@@ -556,21 +601,39 @@ namespace pwiz.SkylineTestUtil
             }
 
             // Fall back to single response data (backward compatible)
-            if (MockResponseData == null)
+            if (MockResponseData != null)
             {
-                contentLength = 0;
-                return null;
+                contentLength = MockResponseData.Length;
+                
+                if (SimulateProgress)
+                {
+                    // Return a stream that simulates chunked reading for progress reporting
+                    return new ProgressSimulatingStream(MockResponseData, OnProgressCallback);
+                }
+                
+                return new MemoryStream(MockResponseData);
             }
 
-            contentLength = MockResponseData.Length;
-            
-            if (SimulateProgress)
+            if (ResponseFactory != null)
             {
-                // Return a stream that simulates chunked reading for progress reporting
-                return new ProgressSimulatingStream(MockResponseData, OnProgressCallback);
+                var stream = ResponseFactory(uri);
+                if (stream != null)
+                {
+                    if (stream.CanSeek)
+                    {
+                        stream.Position = 0;
+                        contentLength = stream.Length;
+                    }
+                    else
+                    {
+                        contentLength = 0;
+                    }
+                    return stream;
+                }
             }
-            
-            return new MemoryStream(MockResponseData);
+
+            contentLength = 0;
+            return null;
         }
 
         /// <summary>
@@ -621,4 +684,439 @@ namespace pwiz.SkylineTestUtil
             public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
         }
     }
+
+    internal class RecordingHttpClientBehavior : HttpClientTestBehavior
+    {
+        private readonly HttpInteractionRecorder _recorder;
+
+        public RecordingHttpClientBehavior(HttpInteractionRecorder recorder)
+        {
+            _recorder = recorder ?? throw new ArgumentNullException(nameof(recorder));
+        }
+
+        public override void OnResponse(Uri uri, HttpResponseMessage response)
+        {
+            _recorder.StartResponse(uri, response);
+        }
+
+        public override Stream WrapResponseStream(Uri uri, Stream responseStream, long contentLength)
+        {
+            var entry = _recorder.DequeuePendingResponse();
+            if (entry != null)
+                return _recorder.WrapResponseStream(entry, responseStream);
+            return base.WrapResponseStream(uri, responseStream, contentLength);
+        }
+
+        public override void OnFailedResponse(Uri uri, HttpResponseMessage response, string responseBody, Exception exception)
+        {
+            var entry = _recorder.DequeuePendingResponse();
+            _recorder.RecordFailedResponse(entry, uri, response, responseBody, exception);
+        }
+
+        public override void OnException(Uri uri, Exception exception)
+        {
+            _recorder.RecordException(uri, exception);
+        }
+    }
+
+    internal class PlaybackHttpClientBehavior : HttpClientTestBehavior
+    {
+        private readonly Dictionary<string, HttpInteraction> _responses;
+        private readonly ICollection<HttpInteraction> _captureInteractions;
+
+        public PlaybackHttpClientBehavior(IEnumerable<HttpInteraction> interactions,
+            ICollection<HttpInteraction> captureInteractions = null)
+        {
+            _responses = BuildResponseMap(interactions);
+            _captureInteractions = captureInteractions;
+            ResponseFactory = HandleResponse;
+        }
+
+        private static Dictionary<string, HttpInteraction> BuildResponseMap(IEnumerable<HttpInteraction> interactions)
+        {
+            var map = new Dictionary<string, HttpInteraction>(StringComparer.Ordinal);
+            foreach (var interaction in interactions)
+            {
+                if (interaction?.Url == null)
+                    continue;
+                // Store one interaction per URL - if the same URL appears multiple times in the recording,
+                // use the first one (they should all be identical anyway for consistent web behavior)
+                if (!map.ContainsKey(interaction.Url))
+                {
+                    map.Add(interaction.Url, interaction);
+                }
+            }
+            return map;
+        }
+
+        private Stream HandleResponse(Uri uri)
+        {
+            if (uri == null)
+                throw new ArgumentNullException(nameof(uri));
+
+            var urlKey = uri.ToString();
+            if (!_responses.TryGetValue(urlKey, out var interaction))
+                throw new InvalidOperationException($"Unexpected URL during playback: {uri}");
+
+            CaptureInteraction(interaction);
+            if (!string.IsNullOrEmpty(interaction.ExceptionType))
+                throw CreateException(uri, interaction);
+
+            var text = interaction.ResponseBody ?? string.Empty;
+            return new MemoryStream(Encoding.UTF8.GetBytes(text));
+        }
+
+        private void CaptureInteraction(HttpInteraction interaction)
+        {
+            if (_captureInteractions == null || interaction == null)
+                return;
+            _captureInteractions.Add(interaction.Clone());
+        }
+
+        private static Exception CreateException(Uri uri, HttpInteraction interaction)
+        {
+            if (interaction.ExceptionType == typeof(NetworkRequestException).FullName)
+            {
+                if (interaction.StatusCode.HasValue)
+                {
+                    return new NetworkRequestException(
+                        interaction.ExceptionMessage ?? $"Recorded HTTP error for {uri}",
+                        (HttpStatusCode)interaction.StatusCode.Value,
+                        uri,
+                        new HttpRequestException(interaction.ExceptionMessage ?? $"Recorded HTTP error for {uri}"),
+                        interaction.ResponseBody);
+                }
+
+                if (!string.IsNullOrEmpty(interaction.FailureType) &&
+                    Enum.TryParse(interaction.FailureType, true, out NetworkFailureType failureType) &&
+                    failureType != NetworkFailureType.HttpError)
+                {
+                    return new NetworkRequestException(
+                        interaction.ExceptionMessage ?? $"Recorded network error for {uri}",
+                        failureType,
+                        uri,
+                        new IOException(interaction.ExceptionMessage ?? $"Recorded network error for {uri}"));
+                }
+            }
+
+            var exceptionType = interaction.ExceptionType != null ? Type.GetType(interaction.ExceptionType) : null;
+            if (exceptionType != null && typeof(Exception).IsAssignableFrom(exceptionType))
+            {
+                try
+                {
+                    return (Exception)Activator.CreateInstance(exceptionType, interaction.ExceptionMessage);
+                }
+                catch
+                {
+                    try
+                    {
+                        return (Exception)Activator.CreateInstance(exceptionType);
+                    }
+                    catch
+                    {
+                        // ignored
+                    }
+                }
+            }
+
+            return new Exception(interaction.ExceptionMessage ?? $"Recorded exception: {interaction.ExceptionType}");
+        }
+    }
+
+    public class HttpInteraction
+    {
+        public string Url { get; set; }
+        public string Method { get; set; }
+        public int? StatusCode { get; set; }
+        public string ContentType { get; set; }
+        public string ResponseBody { get; set; }
+        public string ExceptionType { get; set; }
+        public string ExceptionMessage { get; set; }
+        public string FailureType { get; set; }
+
+        public HttpInteraction Clone()
+        {
+            return (HttpInteraction) MemberwiseClone();
+        }
+    }
+
+    /// <summary>
+    /// Records HTTP traffic for use in offline playback.
+    /// </summary>
+    public class HttpInteractionRecorder
+    {
+        internal class RecordingEntry
+        {
+            public RecordingEntry(HttpInteraction interaction)
+            {
+                Interaction = interaction;
+                ResponseBuffer = new MemoryStream();
+            }
+
+            public HttpInteraction Interaction { get; }
+            public MemoryStream ResponseBuffer { get; }
+            public bool Completed { get; set; }
+        }
+
+        private readonly List<HttpInteraction> _interactions = new List<HttpInteraction>();
+        private readonly Queue<RecordingEntry> _pendingResponses = new Queue<RecordingEntry>();
+        private readonly object _lock = new object();
+
+        public IReadOnlyList<HttpInteraction> Interactions
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    return _interactions.ToList();
+                }
+            }
+        }
+
+        internal RecordingEntry StartResponse(Uri uri, HttpResponseMessage response)
+        {
+            if (uri == null)
+                throw new ArgumentNullException(nameof(uri));
+            if (response == null)
+                throw new ArgumentNullException(nameof(response));
+
+            var interaction = new HttpInteraction
+            {
+                Url = uri.ToString(),
+                Method = response.RequestMessage?.Method?.Method,
+                StatusCode = (int)response.StatusCode,
+                ContentType = response.Content?.Headers?.ContentType?.ToString()
+            };
+            var entry = new RecordingEntry(interaction);
+
+            lock (_lock)
+            {
+                _interactions.Add(interaction);
+                _pendingResponses.Enqueue(entry);
+            }
+
+            return entry;
+        }
+
+        internal RecordingEntry DequeuePendingResponse()
+        {
+            lock (_lock)
+            {
+                if (_pendingResponses.Count == 0)
+                    return null;
+                return _pendingResponses.Dequeue();
+            }
+        }
+
+        internal Stream WrapResponseStream(RecordingEntry entry, Stream responseStream)
+        {
+            if (entry == null)
+                throw new ArgumentNullException(nameof(entry));
+            if (responseStream == null)
+                throw new ArgumentNullException(nameof(responseStream));
+            return new RecordingStream(responseStream, entry, this);
+        }
+
+        internal void RecordFailedResponse(RecordingEntry entry, Uri uri, HttpResponseMessage response, string responseBody, Exception exception)
+        {
+            if (entry == null)
+            {
+                var interaction = new HttpInteraction
+                {
+                    Url = uri?.ToString(),
+                    Method = response?.RequestMessage?.Method?.Method,
+                    ContentType = response?.Content?.Headers?.ContentType?.ToString(),
+                    StatusCode = response != null ? (int)response.StatusCode : (int?)null
+                };
+                entry = new RecordingEntry(interaction);
+                lock (_lock)
+                {
+                    _interactions.Add(interaction);
+                }
+            }
+
+            entry.Interaction.ResponseBody = responseBody;
+            UpdateException(entry.Interaction, exception);
+            entry.Completed = true;
+        }
+
+        internal void RecordException(Uri uri, Exception exception)
+        {
+            if (exception == null)
+                return;
+
+            RecordingEntry pendingEntry = null;
+            HttpInteraction interaction;
+            lock (_lock)
+            {
+                if (_pendingResponses.Count > 0)
+                    pendingEntry = _pendingResponses.Dequeue();
+
+                interaction = pendingEntry?.Interaction ?? _interactions.LastOrDefault(i => Equals(i.Url, uri?.ToString()));
+
+                if (pendingEntry == null && interaction != null && !string.IsNullOrEmpty(interaction.ExceptionType))
+                    return;
+
+                if (pendingEntry != null && !_interactions.Contains(pendingEntry.Interaction))
+                    _interactions.Add(pendingEntry.Interaction);
+
+                if (interaction == null)
+                {
+                    interaction = new HttpInteraction
+                    {
+                        Url = uri?.ToString()
+                    };
+                    _interactions.Add(interaction);
+                }
+            }
+
+            if (pendingEntry != null)
+            {
+                UpdateException(pendingEntry.Interaction, exception);
+                AssignResponseBody(pendingEntry.Interaction, pendingEntry.ResponseBuffer.ToArray());
+                pendingEntry.Completed = true;
+            }
+            else
+            {
+                UpdateException(interaction, exception);
+            }
+        }
+
+        private static void UpdateException(HttpInteraction interaction, Exception exception)
+        {
+            if (interaction == null || exception == null)
+                return;
+
+            interaction.ExceptionType = exception.GetType().FullName;
+            interaction.ExceptionMessage = exception.Message;
+
+            if (exception is NetworkRequestException networkException)
+            {
+                interaction.StatusCode = networkException.StatusCode != null ? (int)networkException.StatusCode : interaction.StatusCode;
+                interaction.FailureType = networkException.FailureType.ToString();
+                if (!string.IsNullOrEmpty(networkException.ResponseBody))
+                    interaction.ResponseBody = networkException.ResponseBody;
+            }
+        }
+
+        internal void CompleteSuccess(RecordingEntry entry)
+        {
+            if (entry == null)
+                return;
+
+            lock (_lock)
+            {
+                if (entry.Completed)
+                    return;
+
+                entry.Completed = true;
+                AssignResponseBody(entry.Interaction, entry.ResponseBuffer.ToArray());
+            }
+        }
+
+        private static void AssignResponseBody(HttpInteraction interaction, byte[] bytes)
+        {
+            interaction.ResponseBody = bytes == null || bytes.Length == 0
+                ? string.Empty
+                : Encoding.UTF8.GetString(bytes);
+        }
+
+        private class RecordingStream : Stream
+        {
+            private readonly Stream _inner;
+            private readonly RecordingEntry _entry;
+            private readonly HttpInteractionRecorder _owner;
+            private bool _completed;
+
+            public RecordingStream(Stream inner, RecordingEntry entry, HttpInteractionRecorder owner)
+            {
+                _inner = inner ?? throw new ArgumentNullException(nameof(inner));
+                _entry = entry ?? throw new ArgumentNullException(nameof(entry));
+                _owner = owner ?? throw new ArgumentNullException(nameof(owner));
+            }
+
+            public override bool CanRead => _inner.CanRead;
+            public override bool CanSeek => _inner.CanSeek;
+            public override bool CanWrite => false;
+            public override long Length => _inner.Length;
+            public override long Position
+            {
+                get => _inner.Position;
+                set => _inner.Position = value;
+            }
+
+            public override void Flush()
+            {
+                _inner.Flush();
+            }
+
+            public override long Seek(long offset, SeekOrigin origin)
+            {
+                return _inner.Seek(offset, origin);
+            }
+
+            public override void SetLength(long value)
+            {
+                _inner.SetLength(value);
+            }
+
+            public override int Read(byte[] buffer, int offset, int count)
+            {
+                var bytesRead = _inner.Read(buffer, offset, count);
+                if (bytesRead > 0)
+                {
+                    _entry.ResponseBuffer.Write(buffer, offset, bytesRead);
+                }
+                else
+                {
+                    Complete();
+                }
+                return bytesRead;
+            }
+
+            public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+            {
+                var bytesRead = await _inner.ReadAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
+                if (bytesRead > 0)
+                {
+                    _entry.ResponseBuffer.Write(buffer, offset, bytesRead);
+                }
+                else
+                {
+                    Complete();
+                }
+                return bytesRead;
+            }
+
+            public override void Write(byte[] buffer, int offset, int count)
+            {
+                throw new NotSupportedException();
+            }
+
+            protected override void Dispose(bool disposing)
+            {
+                if (disposing)
+                {
+                    try
+                    {
+                        Complete();
+                    }
+                    finally
+                    {
+                        _inner.Dispose();
+                    }
+                }
+                base.Dispose(disposing);
+            }
+
+            private void Complete()
+            {
+                if (_completed)
+                    return;
+                _completed = true;
+                _owner.CompleteSuccess(_entry);
+            }
+        }
+    }
+
 }
