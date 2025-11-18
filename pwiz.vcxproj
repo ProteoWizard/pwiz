@@ -580,6 +580,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|x64'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="pwiz\utility\bindings\CLI\common\util.cpp" />
     <ClCompile Include="pwiz\utility\bindings\CLI\Diff.cpp" />
     <ClCompile Include="pwiz\utility\bindings\CLI\DiffTest.cpp" />
     <ClCompile Include="pwiz\utility\bindings\CLI\MSData.cpp" />
@@ -1035,6 +1036,7 @@
     <ClInclude Include="pwiz\utility\bindings\CLI\common\SharedCLI.hpp" />
     <ClInclude Include="pwiz\utility\bindings\CLI\common\Unimod.hpp" />
     <ClInclude Include="pwiz\utility\bindings\CLI\common\unit.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\common\util.hpp" />
     <ClInclude Include="pwiz\utility\bindings\CLI\common\vector.hpp" />
     <ClInclude Include="pwiz\utility\bindings\CLI\common\virtual_map.hpp" />
     <ClInclude Include="pwiz\utility\bindings\CLI\msdata\Diff.hpp" />
