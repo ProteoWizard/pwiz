@@ -130,7 +130,28 @@ namespace pwiz.Skyline.Model.Files
             return new ModifiedDocument(newDocument).ChangeAuditLogEntry(entry);
         }
 
-        public ModifiedDocument Rename(SrmDocument document, SrmSettingsChangeMonitor monitor, string newName)
+        #region IFileRenameable implementation
+
+        public bool HasItemWithName(SrmDocument document, string newName)
+        {
+            Assume.IsNotNull(document);
+
+            var librarySpecs = document.Settings.PeptideSettings.Libraries.LibrarySpecs;
+            return librarySpecs.Any(item => string.Equals(item.Name, newName, StringComparison.CurrentCulture));
+        }
+
+        public bool ValidateNewName(SrmDocument document, string newName, out string errorMessage)
+        {
+            if (HasItemWithName(document, newName))
+            {
+                errorMessage = string.Format(Controls.FilesTree.FilesTreeResources.FilesTreeForm_Error_Renaming_SpectralLibrary, newName);
+                return false;
+            }
+            errorMessage = null;
+            return true;
+        }
+
+        public ModifiedDocument PerformRename(SrmDocument document, SrmSettingsChangeMonitor monitor, string newName)
         {
             var librarySpec = LoadLibrarySpecFromDocument(document, this);
 
@@ -140,7 +161,7 @@ namespace pwiz.Skyline.Model.Files
 
             var librarySpecs = libraries.LibrarySpecs.ToArray();
             var libs = libraries.Libraries.ToArray();
-            
+
             for (var i = 0; i < librarySpecs.Length; i++)
             {
                 if (ReferenceEquals(librarySpecs[i].Id, newLibrarySpec.Id))
@@ -165,32 +186,6 @@ namespace pwiz.Skyline.Model.Files
                 newName);
 
             return new ModifiedDocument(newDocument).ChangeAuditLogEntry(entry);
-        }
-
-        public bool HasItemWithName(SrmDocument document, string newName)
-        {
-            Assume.IsNotNull(document);
-
-            var librarySpecs = document.Settings.PeptideSettings.Libraries.LibrarySpecs;
-            return librarySpecs.Any(item => string.Equals(item.Name, newName, StringComparison.CurrentCulture));
-        }
-
-        #region IFileRenameable implementation
-
-        public bool ValidateNewName(SrmDocument document, string newName, out string errorMessage)
-        {
-            if (HasItemWithName(document, newName))
-            {
-                errorMessage = string.Format(Controls.FilesTree.FilesTreeResources.FilesTreeForm_Error_Renaming_SpectralLibrary, newName);
-                return false;
-            }
-            errorMessage = null;
-            return true;
-        }
-
-        public ModifiedDocument PerformRename(SrmDocument document, SrmSettingsChangeMonitor monitor, string newName)
-        {
-            return Rename(document, monitor, newName);
         }
 
         public string AuditLogMessageResource => Controls.FilesTree.FilesTreeResources.Change_SpectralLibraryName;
