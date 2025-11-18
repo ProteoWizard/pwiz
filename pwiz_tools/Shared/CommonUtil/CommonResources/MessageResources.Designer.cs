@@ -142,12 +142,77 @@ namespace pwiz.Common.CommonResources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The file &apos;{0}&apos; is locked by: {1}.
+        /// </summary>
+        public static string FileLockingProcessFinder_ToFileLockingException_The_file___0___is_locked_by___1_ {
+            get {
+                return ResourceManager.GetString("FileLockingProcessFinder_ToFileLockingException_The_file___0___is_locked_by___1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The file &apos;{0}&apos; was locked but has since been deleted from &apos;{1}&apos;.
+        /// </summary>
+        public static string FileLockingProcessFinder_ToFileLockingException_The_file___0___was_locked_but_has_since_been_deleted_from___1__ {
+            get {
+                return ResourceManager.GetString("FileLockingProcessFinder_ToFileLockingException_The_file___0___was_locked_but_has" +
+                        "_since_been_deleted_from___1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to this process.
+        /// </summary>
+        public static string FileLockingProcessFinder_ToFileLockingException_this_process {
+            get {
+                return ResourceManager.GetString("FileLockingProcessFinder_ToFileLockingException_this_process", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Response status code does not indicate success: {0} ({1}) for {2}.
+        /// </summary>
+        public static string HttpClientWithProgress_CreateResponseFailedException_Response_status_code_does_not_indicate_success___0____1___for__2_ {
+            get {
+                return ResourceManager.GetString("HttpClientWithProgress_CreateResponseFailedException_Response_status_code_does_no" +
+                        "t_indicate_success___0____1___for__2_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} / {1}.
+        /// </summary>
+        public static string HttpClientWithProgress_GetProgressMessageWithSize__0____1_ {
+            get {
+                return ResourceManager.GetString("HttpClientWithProgress_GetProgressMessageWithSize__0____1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Downloaded {0} of {1}.
+        /// </summary>
+        public static string HttpClientWithProgress_GetProgressMessageWithSize_Downloaded__0__of__1_ {
+            get {
+                return ResourceManager.GetString("HttpClientWithProgress_GetProgressMessageWithSize_Downloaded__0__of__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Uploaded {0} of {1}.
+        /// </summary>
+        public static string HttpClientWithProgress_GetProgressMessageWithSize_Uploaded__0__of__1_ {
+            get {
+                return ResourceManager.GetString("HttpClientWithProgress_GetProgressMessageWithSize_Uploaded__0__of__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Access to {0} was denied (HTTP 401). Authentication may be required..
         /// </summary>
         public static string HttpClientWithProgress_MapHttpException_Access_to__0__was_denied__HTTP_401___Authentication_may_be_required_ {
             get {
-                return ResourceManager.GetString("HttpClientWithProgress_MapHttpException_Access_to__0__was_denied__HTTP_401___Authe" +
-                        "ntication_may_be_required_", resourceCulture);
+                return ResourceManager.GetString("HttpClientWithProgress_MapHttpException_Access_to__0__was_denied__HTTP_401___Auth" +
+                        "entication_may_be_required_", resourceCulture);
             }
         }
         
@@ -156,8 +221,8 @@ namespace pwiz.Common.CommonResources {
         /// </summary>
         public static string HttpClientWithProgress_MapHttpException_Access_to__0__was_forbidden__HTTP_403___You_may_not_have_permission_to_access_this_resource_ {
             get {
-                return ResourceManager.GetString("HttpClientWithProgress_MapHttpException_Access_to__0__was_forbidden__HTTP_403___Yo" +
-                        "u_may_not_have_permission_to_access_this_resource_", resourceCulture);
+                return ResourceManager.GetString("HttpClientWithProgress_MapHttpException_Access_to__0__was_forbidden__HTTP_403___Y" +
+                        "ou_may_not_have_permission_to_access_this_resource_", resourceCulture);
             }
         }
         
@@ -237,33 +302,6 @@ namespace pwiz.Common.CommonResources {
             get {
                 return ResourceManager.GetString("HttpClientWithProgress_MapHttpException_The_server__0__encountered_an_internal_er" +
                         "ror__HTTP_500___Please_try_again_later_or_contact_the_server_administrator_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Downloaded {0} of {1}.
-        /// </summary>
-        public static string HttpClientWithProgress_GetProgressMessageWithSize_Downloaded__0__of__1_ {
-            get {
-                return ResourceManager.GetString("HttpClientWithProgress_GetProgressMessageWithSize_Downloaded__0__of__1_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0} / {1}.
-        /// </summary>
-        public static string HttpClientWithProgress_GetProgressMessageWithSize__0____1_ {
-            get {
-                return ResourceManager.GetString("HttpClientWithProgress_GetProgressMessageWithSize__0____1_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Uploaded {0} of {1}.
-        /// </summary>
-        public static string HttpClientWithProgress_GetProgressMessageWithSize_Uploaded__0__of__1_ {
-            get {
-                return ResourceManager.GetString("HttpClientWithProgress_GetProgressMessageWithSize_Uploaded__0__of__1_", resourceCulture);
             }
         }
         
