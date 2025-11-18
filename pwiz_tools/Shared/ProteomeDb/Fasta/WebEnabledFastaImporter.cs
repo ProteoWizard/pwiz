@@ -1114,6 +1114,7 @@ namespace pwiz.ProteomeDatabase.Fasta
 
         private bool EnsureEntrezKnownGood(IList<string> searchterms, char searchType)
         {
+            // Throw in something we know will hit (Note: it's important that this particular value appear in the unit tests, so we can mimic web response)
             string knowngood = (searchType == GENINFO_TAG) ? KNOWNGOOD_GENINFO_SEARCH_TARGET : KNOWNGOOD_ENTREZ_SEARCH_TARGET;
             if (searchterms.Any(searchterm => SimilarSearchTerms(searchterm, knowngood)))
                 return false;
@@ -1127,6 +1128,48 @@ namespace pwiz.ProteomeDatabase.Fasta
             var urlString = _webSearchProvider.ConstructEntrezURL(searchterms, true); // Get in summary form
             int timeout = _webSearchProvider.GetTimeoutMsec(searchterms.Count);
             StampRequestUrl(proteins, urlString);
+
+            /*
+             * A search on XP_915497 and 15834432 yields something like this (but don't mix GI and non GI in practice):
+                <DocSum>
+                <Id>82891194</Id>
+                <Item Name="Caption" Type="String">XP_915497</Item>
+                <Item Name="Title" Type="String">
+                PREDICTED: similar to Syntaxin binding protein 3 (UNC-18 homolog 3) (UNC-18C) (MUNC-18-3) [Mus musculus]
+                </Item>
+                <Item Name="Extra" Type="String">gi|82891194|ref|XP_915497.1|[82891194]</Item>
+                <Item Name="Gi" Type="Integer">82891194</Item>
+                <Item Name="CreateDate" Type="String">2005/12/01</Item>
+                <Item Name="UpdateDate" Type="String">2005/12/01</Item>
+                <Item Name="Flags" Type="Integer">512</Item>
+                <Item Name="TaxId" Type="Integer">10090</Item>
+                <Item Name="Length" Type="Integer">566</Item>
+                <Item Name="Status" Type="String">replaced</Item>
+                <Item Name="ReplacedBy" Type="String">NP_035634</Item>   <-- useful for Uniprot search
+                <Item Name="Comment" Type="String">
+                <![CDATA[ This record was replaced or removed. ]]>
+                </Item>
+                </DocSum>
+                <DocSum>
+                <Id>15834432</Id>
+                <Item Name="Caption" Type="String">NP_313205</Item>    <-- useful for Uniprot search
+                <Item Name="Title" Type="String">
+                30S ribosomal protein S18 [Escherichia coli O157:H7 str. Sakai]
+                </Item>
+                <Item Name="Extra" Type="String">gi|15834432|ref|NP_313205.1|[15834432]</Item>
+                <Item Name="Gi" Type="Integer">15834432</Item>
+                <Item Name="CreateDate" Type="String">2001/03/07</Item>
+                <Item Name="UpdateDate" Type="String">2013/12/20</Item>
+                <Item Name="Flags" Type="Integer">512</Item>
+                <Item Name="TaxId" Type="Integer">386585</Item>
+                <Item Name="Length" Type="Integer">75</Item>
+                <Item Name="Status" Type="String">live</Item>
+                <Item Name="ReplacedBy" Type="String"/>
+                <Item Name="Comment" Type="String">
+                <![CDATA[ ]]>
+                </Item>
+                </DocSum>
+            */
             using var xmlTextReader = _webSearchProvider.GetXmlTextReader(urlString, progressMonitor, timeout);
             var elementName = String.Empty;
             var response = new ProteinSearchInfo();
