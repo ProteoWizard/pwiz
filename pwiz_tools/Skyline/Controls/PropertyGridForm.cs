@@ -33,6 +33,8 @@ namespace pwiz.Skyline.Controls
             HideOnClose = true; // Hide the form when closed, but do not dispose it
             SkylineWindow = skylineWindow;
             ((IDocumentUIContainer)SkylineWindow).ListenUI(SkylineWindow_OnUiDocumentChanged);
+            KeyPreview = true;
+            KeyDown += PropertyGridForm_KeyDown;
         }
 
         private SkylineWindow SkylineWindow { get; }
@@ -40,7 +42,8 @@ namespace pwiz.Skyline.Controls
         public void SetPropertyObject(RootSkylineObject properties)
         {
             propertyGrid.SelectedObject = properties;
-            propertyGrid.ExpandAllGridItems();
+            if (properties != null)
+                propertyGrid.ExpandAllGridItems();
             propertyGrid.Refresh();
         }
 

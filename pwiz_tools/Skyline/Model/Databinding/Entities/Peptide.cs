@@ -56,7 +56,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public override ResourceManager GetResourceManager() => PropertyGridDocNodeResources.ResourceManager;
 
-        protected override PropertyDescriptor GetRootAliasProperty() => TypeDescriptor.GetProperties(GetType())[nameof(Sequence)];
+        protected override PropertyPath GetRootAliasPropertyPath() => PropertyPath.Root.Property(nameof(Sequence));
 
         #endregion
 

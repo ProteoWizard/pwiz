@@ -15,13 +15,12 @@
  */
 
 using Newtonsoft.Json;
-using pwiz.Common.SystemUtil;
+using pwiz.Common.DataBinding;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -277,8 +276,8 @@ namespace pwiz.Skyline.Model
         private const string DESCRIPTION_PREFIX = @"Description_";
         protected const string CATEGORY_PREFIX = @"Category_";
 
-        private readonly ResourceManager _resourceManager;
-        private readonly PropertyDescriptor _basePropertyDescriptor;
+        protected readonly ResourceManager _resourceManager;
+        protected readonly PropertyDescriptor _basePropertyDescriptor;
 
         public GlobalizedPropertyDescriptor(PropertyDescriptor basePropertyDescriptor, ResourceManager resourceManager)
             : base(basePropertyDescriptor)
@@ -304,7 +303,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public override string Description => _resourceManager.GetString(DESCRIPTION_PREFIX + _basePropertyDescriptor.Name) ?? string.Empty;
+        public override string Description => _resourceManager?.GetString(DESCRIPTION_PREFIX + _basePropertyDescriptor.Name) ?? string.Empty;
 
         public override string Category
         {
@@ -313,10 +312,7 @@ namespace pwiz.Skyline.Model
                 if (_basePropertyDescriptor is AnnotationPropertyDescriptor)
                     return PropertyGridResources.Category_Annotations;
 
-                if (_basePropertyDescriptor.Category != null)
-                    return _resourceManager.GetString(CATEGORY_PREFIX + _basePropertyDescriptor.Category) ?? string.Empty;
-
-                return null;
+                return _basePropertyDescriptor.Category != null ? _resourceManager?.GetString(CATEGORY_PREFIX + _basePropertyDescriptor.Category) : null;
             }
         }
 
@@ -336,7 +332,7 @@ namespace pwiz.Skyline.Model
 
         public override Type PropertyType => _basePropertyDescriptor.PropertyType;
 
-        public override TypeConverter Converter => _basePropertyDescriptor.PropertyType == typeof(double) ? new TwoDecimalDoubleConverter() : _basePropertyDescriptor.Converter;
+        public override TypeConverter Converter => _basePropertyDescriptor.Converter;
 
         public override void ResetValue(object component)
         {
@@ -356,11 +352,11 @@ namespace pwiz.Skyline.Model
 
     public class PropertyGridPropertyDescriptor : GlobalizedPropertyDescriptor
     {
-        private readonly PropertyDescriptor _basePropertyDescriptor;
-        private readonly ResourceManager _resourceManager;
-
         private string _invariantDisplayName;
         private string _category;
+
+        private readonly ColumnDescriptor _columnDescriptor; // For properties tied to the document
+        private readonly DataSchema _dataSchema;
 
         // Since many property grid object setters don't actually change the value, just the document, need to store actual value for display
         private object _displayValue;
@@ -368,8 +364,57 @@ namespace pwiz.Skyline.Model
         public PropertyGridPropertyDescriptor(PropertyDescriptor basePropertyDescriptor, ResourceManager resourceManager)
             : base(basePropertyDescriptor, resourceManager)
         {
-            _basePropertyDescriptor = basePropertyDescriptor;
-            _resourceManager = resourceManager;
+        }
+
+        public PropertyGridPropertyDescriptor(ResourceManager resourceManager,
+            DataSchema dataSchema, Type rootType, PropertyPath propertyPath)
+            : base(GetColumnDescriptor(dataSchema, rootType, propertyPath).ReflectedPropertyDescriptor, resourceManager)
+        {
+            _columnDescriptor = GetColumnDescriptor(dataSchema, rootType, propertyPath);
+            _dataSchema = dataSchema;
+        }
+
+        private static ColumnDescriptor GetColumnDescriptor(DataSchema dataSchema, Type rootType, PropertyPath propertyPath)
+        {
+            // set column descriptor
+            var current = ColumnDescriptor.RootColumn(dataSchema, rootType);
+            if (propertyPath.IsRoot)
+            {
+                return current;
+            }
+
+            // Collect path segments from root->leaf
+            var segments = new List<PropertyPath>();
+            for (var p = propertyPath; p is { IsRoot: false }; p = p.Parent)
+                segments.Add(p);
+            segments.Reverse();
+
+            // Walk segments and build ColumnDescriptor
+            foreach (var seg in segments)
+            {
+                if (seg.IsProperty)
+                {
+                    // Resolve a child property on the current ColumnDescriptor
+                    current = current.ResolveChild(seg.Name);
+                    if (current == null)
+                    {
+                        return null;
+                    }
+                }
+                else
+                {
+                    // Lookup into a collection -> represent by the collection element column
+                    var coll = current.GetCollectionColumn();
+                    if (coll == null)
+                    {
+                        return null;
+                    }
+
+                    current = coll;
+                }
+            }
+
+            return current;
         }
 
         public void SetDisplayName(string displayName)
@@ -382,9 +427,29 @@ namespace pwiz.Skyline.Model
             _category = category;
         }
 
-        public override string DisplayName => _invariantDisplayName ?? _resourceManager?.GetString(_basePropertyDescriptor.Name) ?? _basePropertyDescriptor.Name;
+        public override string DisplayName
+        {
+            get
+            {
+                if (_invariantDisplayName != null) return _invariantDisplayName;
+                var columnCaption = _columnDescriptor?.GetColumnCaption(ColumnCaptionType.localized);
+                if (columnCaption != null) return columnCaption;
+                var columnCaptionInvariant = _columnDescriptor?.GetColumnCaption(ColumnCaptionType.invariant);
+                if (columnCaptionInvariant != null) return columnCaptionInvariant;
+                else return _resourceManager.GetString(Name) ?? base.DisplayName ?? base.Name;
+            }
+        }
 
-        public override string Category => _category != null ? _resourceManager.GetString(CATEGORY_PREFIX + _category) : base.Category;
+        public override string Description => _columnDescriptor?.Description ?? base.Description;
+
+        public override string Category
+        {
+            get
+            {
+                if (_category != null) return _resourceManager.GetString(CATEGORY_PREFIX + _category);
+                return base.Category ?? ColumnDescriptor.RootColumn(_dataSchema, ComponentType).GetColumnCaption(ColumnCaptionType.localized);
+            }
+        }
 
         public override object GetValue(object component)
         {
@@ -401,33 +466,20 @@ namespace pwiz.Skyline.Model
         {
             get
             {
-                if (_basePropertyDescriptor.PropertyType == typeof(double))
-                    return new TwoDecimalDoubleConverter();
-
                 if (_basePropertyDescriptor is AnnotationPropertyDescriptor annotationProperty &&
                     annotationProperty.AnnotationDef.Type == AnnotationDef.AnnotationType.value_list)
-                    return new DropDownConverter(annotationProperty.AnnotationDef.Items.ToList());
+                    return new DropDownStringConverter(annotationProperty.AnnotationDef.Items.ToList());
 
                 return _basePropertyDescriptor.Converter;
             }
         }
     }
 
-    public class TwoDecimalDoubleConverter : DoubleConverter
-    {
-        public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
-        {
-            if (destinationType == typeof(string) && value is double d)
-                return d.ToString("F2", culture ?? CultureInfo.CurrentCulture);
-            return base.ConvertTo(context, culture, value, destinationType);
-        }
-    }
-
-    public class DropDownConverter : StringConverter
+    public class DropDownStringConverter : StringConverter
     {
         private readonly List<string> _options;
 
-        public DropDownConverter(List<string> options)
+        public DropDownStringConverter(List<string> options)
         {
             _options = options;
             _options.Insert(0, null); // default is no option selected

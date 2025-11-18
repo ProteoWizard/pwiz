@@ -49,7 +49,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public override ResourceManager GetResourceManager() => PropertyGridFileNodeResources.ResourceManager;
 
-        protected override PropertyDescriptor GetRootAliasProperty() => TypeDescriptor.GetProperties(GetType())[nameof(Name)];
+        protected override PropertyPath GetRootAliasPropertyPath() => PropertyPath.Root.Property(nameof(Name));
 
         #endregion
 

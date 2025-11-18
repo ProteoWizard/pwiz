@@ -19,11 +19,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Resources;
 using pwiz.Common.Chemistry;
+using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.Databinding.Collections;
@@ -51,7 +51,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public override ResourceManager GetResourceManager() => PropertyGridDocNodeResources.ResourceManager;
 
-        protected override PropertyDescriptor GetRootAliasProperty() => TypeDescriptor.GetProperties(GetType())[nameof(Name)];
+        protected override PropertyPath GetRootAliasPropertyPath() => PropertyPath.Root.Property(nameof(Name));
 
         #endregion
 

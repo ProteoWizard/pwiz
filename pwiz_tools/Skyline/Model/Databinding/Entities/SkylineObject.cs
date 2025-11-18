@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Resources;
@@ -106,7 +107,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         protected virtual bool PropertyFilter(PropertyDescriptor prop) =>
             prop != null;
 
-        protected virtual PropertyDescriptor PropertyTransform(PropertyDescriptor prop)
+        protected virtual PropertyGridPropertyDescriptor PropertyTransform(PropertyDescriptor prop)
         {
             var transformed = new PropertyGridPropertyDescriptor(prop, GetResourceManager());
             if (prop is AnnotationPropertyDescriptor annotationProperty)
@@ -119,17 +120,19 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         // Override to provide a property to use as the alias for the root object, e.g. Sequence for Peptide
-        protected virtual PropertyDescriptor GetRootAliasProperty() => null;
+        protected virtual PropertyPath GetRootAliasPropertyPath() => null;
 
-        // assumes path is depth 1 or null (for root)
-        private PropertyDescriptor GetPropertyDescriptorFromPath(PropertyPath path)
+        private PropertyDescriptor GetTransformedPropertyDescriptorFromPath(PropertyPath path)
         {
             // if root path used as property, must defer to object to tell what to display.
             // For example, Peptide uses Sequence as its "root" property and is displayed as "Peptide"
-            if (path.Name == null && GetRootAliasProperty() != null)
-                return GetRootAliasProperty();
+            var rootAliasPropPath = GetRootAliasPropertyPath();
+            if (path.IsRoot && rootAliasPropPath != null)
+            {
+                path = rootAliasPropPath;
+            }
 
-            return TypeDescriptor.GetProperties(GetType())[path.Name ?? string.Empty];
+            return new PropertyGridPropertyDescriptor(null, DataSchema, GetType(), path);
         }
 
         // version of GetProperties that simply collects all properties on the object and does the standard transform.
@@ -153,16 +156,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             // Get default displayed props
             var propertyPaths = new BuiltInReports(_dataSchema.Document).GetDefaultColumns(GetType());
             if (propertyPaths == null) return new PropertyDescriptorCollection(new PropertyDescriptor[]{});
-            var allProps = propertyPaths.Select(GetPropertyDescriptorFromPath);
+            var allProps = propertyPaths.Select(GetTransformedPropertyDescriptorFromPath);
             var filteredProps = allProps.Where(PropertyFilter).ToList();
 
             // Add applicable annotation props
-            var annotationProps = _dataSchema.GetAnnotations(GetType()).ToList();
-            filteredProps.AddRange(annotationProps);
+            var annotationProps = _dataSchema.GetAnnotations(GetType());
+            //filteredProps.AddRange(annotationProps.Select(PropertyTransform));
 
-            // Convert to PropertyGridPropertyDescriptor
-            var transformedProps = filteredProps.Select(PropertyTransform);
-            return new PropertyDescriptorCollection(transformedProps.ToArray());
+            return new PropertyDescriptorCollection(filteredProps.ToArray());
         }
 
         public PropertyDescriptorCollection GetProperties(Attribute[] attributes) => GetProperties();
