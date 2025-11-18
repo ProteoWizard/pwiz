@@ -2667,7 +2667,7 @@ namespace pwiz.Skyline.Model
             {
                 var lineExpected = linesExpected[lineNumber];
                 var lineActual = linesActual[lineNumber];
-                if (!Equals(lineExpected, lineActual))
+                if (!CommonTextUtil.LinesEquivalentIgnoringTimeStampsAndGUIDs(lineExpected, lineActual))
                 {
                     return $@"Expected XML representation of document does not match actual at line {lineNumber}\n" +
                            $@"Expected line:\n{lineExpected}\n" +
@@ -2683,7 +2683,38 @@ namespace pwiz.Skyline.Model
                        $@"Actual full document:\n{textActual}\n";
             }
 
-            return @"Expected document does not match actual, but the difference does not appear in the XML representation. Difference may be in a library instead.";
+            if (expected.Settings.PeptideSettings.Libraries.Libraries.Count != actual.Settings.PeptideSettings.Libraries.Libraries.Count)
+            {
+                return @"Expected document does not match actual, but the difference does not appear in the XML representation. Library count differs, though.";
+            }
+
+            for (var i = 0; i < expected.Settings.PeptideSettings.Libraries.Libraries.Count; i++)
+            {
+                var libE = expected.Settings.PeptideSettings.Libraries.Libraries[i];
+                var libA = actual.Settings.PeptideSettings.Libraries.Libraries[i];
+                var result = string.Empty;
+                foreach (var key in libE.Keys)
+                {
+                    if (!libA.Keys.Contains(key))
+                    {
+                        result += $@"expected to find key {key} in {libA.FileNameHint}\n";
+                    }
+                }
+                foreach (var key in libA.Keys)
+                {
+                    if (!libE.Keys.Contains(key))
+                    {
+                        result += $@"unexpected key {key} in {libA.FileNameHint}\n";
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(result))
+                {
+                    return result;
+                }
+            }
+
+            return @"Expected document does not match actual, but the difference does not appear in the XML representation.";
         }
 
         /// <summary>
@@ -2761,6 +2792,15 @@ namespace pwiz.Skyline.Model
             {
                 return (base.GetHashCode()*397) ^ Settings.GetHashCode();
             }
+        }
+
+        public override string ToString()
+        {
+            // For debugging convenience, not user-facing
+            // These are the same values in the same order used to summarize the document in the UI (lower right corner of Skyline window).
+            // That's also the same values and order as used in CheckDocumentState() calls.
+            // This is terse by design, for ease of display in debugger.
+            return $@"doc {MoleculeGroupCount},{MoleculeCount},{MoleculeTransitionGroupCount},{MoleculeTransitionCount}"; 
         }
 
         #endregion
