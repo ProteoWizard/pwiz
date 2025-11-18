@@ -220,9 +220,10 @@ namespace pwiz.ProteomeDatabase.Fasta
 
         public override string ToString()
         {
-            // Prefer PreferredName, fall back to Accession if PreferredName is not available
-            var name = PreferredName ?? ProteinDbInfo?.PreferredName ??
-                Accession ?? ProteinDbInfo?.Accession ?? string.Empty;
+            // Prefer Accession, fall back to PreferredName if Accession is not available
+            // Accession gets used in request URLs more than PreferredName
+            var name = Accession ?? ProteinDbInfo?.Accession ??
+                PreferredName ?? ProteinDbInfo?.PreferredName ?? string.Empty;
             var description = Description ?? ProteinDbInfo?.Description ?? string.Empty;
             if (Status != SearchStatus.failure)
                 return $@"{Status} - {name}: {description}";
