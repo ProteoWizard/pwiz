@@ -161,7 +161,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             var tokenResponse = Authenticate();
 
             var services = new ServiceCollection();
-            var builder = services.AddHttpClient("customClient");
+            var builder = services.AddHttpClient(@"customClient");
             builder.ConfigurePrimaryHttpMessageHandler(() =>
             {
                 var handler = new WebRequestHandler();

@@ -182,4 +182,16 @@
 	<data name="HttpClientWithProgress_GetProgressMessageWithSize__0____1_" xml:space="preserve">
     <value>{0} / {1}</value>
   </data>
+	<data name="HttpClientWithProgress_CreateResponseFailedException_Response_status_code_does_not_indicate_success___0____1___for__2_" xml:space="preserve">
+		<value>Response status code does not indicate success: {0} ({1}) for {2}</value>
+	</data>
+	<data name="FileLockingProcessFinder_ToFileLockingException_The_file___0___was_locked_but_has_since_been_deleted_from___1__" xml:space="preserve">
+		<value>The file '{0}' was locked but has since been deleted from '{1}'</value>
+	</data>
+	<data name="FileLockingProcessFinder_ToFileLockingException_this_process" xml:space="preserve">
+		<value>this process</value>
+	</data>
+	<data name="FileLockingProcessFinder_ToFileLockingException_The_file___0___is_locked_by___1_" xml:space="preserve">
+		<value>The file '{0}' is locked by: {1}</value>
+	</data>
 </root>

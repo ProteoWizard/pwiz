@@ -21,7 +21,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net;
+using System.Net; // HttpStatusCode
 using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
@@ -1048,7 +1048,7 @@ namespace pwiz.Skyline
                     throw;
                 
                 // Check for 404 Not Found - show user-friendly message
-                var statusCode = GetHttpStatusCode(e);
+                var statusCode = NetworkRequestException.GetHttpStatusCode(e);
                 if (statusCode == HttpStatusCode.NotFound)
                 {
                     MessageDlg.ShowWithException(this,
@@ -1061,24 +1061,6 @@ namespace pwiz.Skyline
                 }
                 return false;
             }
-        }
-
-        /// <summary>
-        /// Extracts HTTP status code from exception (NetworkRequestException or legacy WebException).
-        /// Walks inner exception chain to find the status code.
-        /// </summary>
-        private static HttpStatusCode? GetHttpStatusCode(Exception e)
-        {
-            // Check for NetworkRequestException with structured status code
-            // HttpClientWithProgress throws this for HTTP errors
-            if (e is NetworkRequestException netEx)
-                return netEx.StatusCode;
-
-            // Check inner exception chain recursively
-            if (e.InnerException != null)
-                return GetHttpStatusCode(e.InnerException);
-
-            return null;
         }
 
         private void saveMenuItem_Click(object sender, EventArgs e)

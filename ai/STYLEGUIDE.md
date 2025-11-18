@@ -122,6 +122,12 @@ All source files should include:
 
 **Always include AI assistance line** when code is created/modified with AI tools.
 
+## Comments and XML Documentation
+
+**CRITICAL**: Comments should start with a capital letter (especially imperative sentences). True sentences should end with a period. Use `<see cref="ClassName">` for class references in XML docs.
+
+See [ai/docs/style-guide.md](docs/style-guide.md) for detailed guidelines and examples.
+
 ## User Interface Guidelines
 
 ### Menu Items
