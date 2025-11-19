@@ -1380,7 +1380,7 @@ local rule generate-setup-cmd ( version : command : parent : options * : cpu : g
         }
         else
         {
-		    if [ MATCH "(14.5)" : $(version) ]
+            if [ MATCH "(14.5)" : $(version) ]
             {
                 if $(.debug-configuration)
                 {
@@ -1997,13 +1997,17 @@ local rule default-path ( version )
         # And fortunately, forward slashes do also work in native Windows.
         local vswhere = "$(root)/Microsoft Visual Studio/Installer/vswhere.exe" ;
         # The check for $(root) is to avoid a segmentation fault if not found.
-        if $(version) in 14.1 14.2 14.3 default && $(root) && [ path.exists $(vswhere) ]
+        if $(version) in 14.1 14.2 14.3 14.5 default && $(root) && [ path.exists $(vswhere) ]
         {
             local req = "-requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64" ;
             local prop = "-property installationPath" ;
             local limit ;
 
-            if $(version) = 14.3
+            if $(version) = 14.5
+            {
+                limit = "-version \"[18.0,19.0)\" -prerelease" ;
+            }
+            else if $(version) = 14.3
             {
                 limit = "-version \"[17.0,18.0)\" -prerelease" ;
             }
@@ -2588,7 +2592,6 @@ for local arch in [ MATCH "^\\.cpus-on-(.*)" : [ VARNAMES $(__name__) ] ]
     "Microsoft Visual Studio/2022/*/VC/Tools/MSVC/*/bin/Host*/*"
     ;
 .version-14.3-env = VS170COMNTOOLS ProgramFiles ProgramFiles(x86) ;
-
 .version-14.5-path =
     "../../VC/Tools/MSVC/*/bin/Host*/*"
     "Microsoft Visual Studio/18/*/VC/Tools/MSVC/*/bin/Host*/*"
