@@ -27,20 +27,20 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     path-constant BIBLIO_SPEC_PATH :  $(PWIZ_ROOT_PATH)/pwiz_tools/Shared/BiblioSpec ;
     path-constant CRT_PATH : "$(SKYLINE_PATH)/University of Washington (MacCoss Lab).crt" ;
     constant CRT_KEY : "key_637015839" ;
-	
-	path-constant NUGET_PATH : "C:/Program Files/Microsoft Visual Studio/18/Community/dotnet/net8.0/runtime/dotnet.exe" ;
-	if ! [ path.exists $(NUGET_PATH) ]
+
+    path-constant NUGET_PATH : "C:/Program Files/dotnet/dotnet.exe" ;
+    if ! [ path.exists $(NUGET_PATH) ]
     {
-		path-constant NUGET_PATH : "C:/Program Files/dotnet/dotnet.exe" ;
-		if ! [ path.exists $(NUGET_PATH) ]
-		{
-			path-constant NUGET_PATH : "C:/Program Files/Microsoft Visual Studio/2022/Community/dotnet/runtime/dotnet.exe" ;
-			if ! [ path.exists $(NUGET_PATH) ]
-			{
-				path-constant NUGET_PATH : "C:/Program Files/Microsoft Visual Studio/2022/Community/dotnet/net8.0/runtime/dotnet.exe" ;
-			}
-		}
-	}
+        path-constant NUGET_PATH : "C:/Program Files/Microsoft Visual Studio/18/Community/dotnet/net8.0/runtime/dotnet.exe" ;
+        if ! [ path.exists $(NUGET_PATH) ]
+        {
+            path-constant NUGET_PATH : "C:/Program Files/Microsoft Visual Studio/2022/Community/dotnet/runtime/dotnet.exe" ;
+            if ! [ path.exists $(NUGET_PATH) ]
+            {
+                path-constant NUGET_PATH : "C:/Program Files/Microsoft Visual Studio/2022/Community/dotnet/net8.0/runtime/dotnet.exe" ;
+            }
+        }
+    }
 
     if ! --incremental in [ modules.peek : ARGV ]
     {
